@@ -425,6 +425,68 @@ Examples:
 When in doubt, ask: "Would the user be annoyed if I spent tokens on this?"
 ```
 
+### Expansion Depth is Also LLM-Judged
+
+Two layers of judgment:
+1. **Whether** to expand (relevance to seed)
+2. **How much** to expand (practical utility)
+
+You don't need a Wikipedia article about the Joetsu Shinkansen. You need a cheat sheet:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                     EXPANSION DEPTH: CHEAT SHEET VS WIKIPEDIA              │
+│                                                                             │
+│   JOETSU SHINKANSEN                                                        │
+│                                                                             │
+│   ✗ Wikipedia mode (DON'T DO THIS):                                       │
+│   │  "The Jōetsu Shinkansen is a high-speed rail line connecting          │
+│   │   Tokyo and Niigata, opened in 1982. It was Japan's third             │
+│   │   shinkansen line and represented a major engineering feat..."        │
+│   │                                                                         │
+│   │   [800 words of history, engineering, cultural significance]          │
+│   │                                                                         │
+│   ✓ Cheat sheet mode (DO THIS):                                           │
+│   │                                                                         │
+│   │   # Joetsu Shinkansen                                                  │
+│   │   **Route:** Tokyo Station → Echigo-Yuzawa (for Yuzawa skiing)        │
+│   │   **Time:** ~70 minutes                                                │
+│   │   **Cost:** ¥6,260 (reserved seat)                                    │
+│   │   **Tip:** JR Pass valid. Reserve seats during peak ski season.       │
+│   │   **Backlink:** [[trips/japan-trip-itinerary]]                        │
+│   │                                                                         │
+│   │   Done. 5 lines. Everything you need.                                  │
+│   │                                                                         │
+│   The question: "What would I actually look up during the trip?"           │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+The prompt should encode this:
+
+```markdown
+## Expansion Depth
+
+Write notes like cheat sheets, not encyclopedia entries.
+
+Ask: "If I'm standing in Tokyo Station, what do I need to know?"
+
+Include:
+- Actionable facts (times, costs, routes, hours)
+- Decision-relevant info (booking tips, alternatives)
+- Gotchas and warnings (reservation required, cash only, etc.)
+
+Skip:
+- History and background
+- Technical details
+- Cultural context (unless it affects behavior)
+- Anything you'd skim past looking for the practical stuff
+
+A good note is 5-15 lines. If it's longer, you're in Wikipedia mode.
+```
+
+This keeps token spend proportional to utility. The Nozawa Fire Festival might deserve 20 lines (dates, viewing spots, crowd tips) while Joetsu Shinkansen gets 5.
+
 ### Natural Convergence Without Hard Limits
 
 With LLM-based relevance:
