@@ -588,6 +588,250 @@ FINAL STATE:
 
 ---
 
+## Minimal Seed Example: Shimanami Kaido
+
+Starting from almost nothing - just a one-line idea:
+
+### The Seed
+
+```markdown
+# Trip Idea
+
+1.5 weeks cycling the Shimanami Kaido. Start in Onomichi, end in Imabari.
+```
+
+That's it. 15 words. Watch it expand.
+
+### Wave 1: Extract from Seed
+
+```
+ITERATION 1: Initial entity extraction
+├── Seed content: 15 words
+├── Entities found:
+│   • Shimanami Kaido (the route)
+│   • Onomichi (start city)
+│   • Imabari (end city)
+├── Creates: /frontier/entities.md with 3 entities
+└── Commit: "init: extract 3 entities from seed"
+
+Frontier: [ ] Shimanami Kaido, [ ] Onomichi, [ ] Imabari
+```
+
+### Wave 1 Expansions
+
+```
+ITERATION 2: Expand "Shimanami Kaido"
+├── Research: 70km cycling route, 6 islands, 6 bridges, bike rental
+├── Creates: /knowledge/routes/shimanami-kaido.md
+│
+│   # Shimanami Kaido
+│   **Distance:** 70km (Onomichi → Imabari)
+│   **Islands:** 6 (Mukaishima, Innoshima, Ikuchijima, Omishima, Hakatajima, Oshima)
+│   **Terrain:** Mostly flat, bridge approaches have grades
+│   **Time:** 1 day fast, 2-3 days relaxed, 1.5 weeks = very relaxed + exploration
+│   **Rental:** Giant bikes at either end, drop-off included
+│   **Blue Line:** Painted route on road, impossible to get lost
+│   **Backlink:** [[trips/shimanami-idea]]
+│
+├── Discovers: 6 island names, "Giant bike rental", "blue line"
+└── Commit: "expand: shimanami-kaido"
+
+ITERATION 3: Expand "Onomichi"
+├── Research: start point, how to get there, vibe
+├── Creates: /knowledge/places/onomichi.md
+│
+│   # Onomichi
+│   **Role:** Start point for Shimanami Kaido
+│   **Getting there:** Shinkansen to Fukuyama (2hr from Osaka), local train 20min
+│   **Vibe:** Hillside temple town, cats, retro shopping streets
+│   **Stay:** Night before departure recommended (early start)
+│   **Bike pickup:** Giant store near station, opens 9am
+│   **Backlink:** [[trips/shimanami-idea]]
+│
+├── Discovers: "Fukuyama Station", "Onomichi temple walk", "cat alley"
+└── Commit: "expand: onomichi"
+
+ITERATION 4: Expand "Imabari"
+├── Research: end point, what to do after, onward travel
+├── Creates: /knowledge/places/imabari.md
+│
+│   # Imabari
+│   **Role:** End point for Shimanami Kaido
+│   **Known for:** Towels (seriously, it's the towel capital)
+│   **Onward:** Train to Matsuyama (1hr), ferry to Hiroshima
+│   **Bike drop-off:** Giant store or any rental station
+│   **Don't miss:** Imabari yakitori (local style, no skewers)
+│   **Backlink:** [[trips/shimanami-idea]]
+│
+├── Discovers: "Matsuyama", "Imabari towels", "yakitori style"
+└── Commit: "expand: imabari"
+
+Frontier after Wave 1:
+[x] Shimanami Kaido
+[x] Onomichi
+[x] Imabari
+[ ] Mukaishima        (from Shimanami)
+[ ] Innoshima         (from Shimanami)
+[ ] Ikuchijima        (from Shimanami)
+[ ] Omishima          (from Shimanami)
+[ ] Hakatajima        (from Shimanami)
+[ ] Oshima            (from Shimanami)
+[ ] Giant bike rental (from Shimanami)
+[ ] Fukuyama Station  (from Onomichi)
+[ ] Onomichi temples  (from Onomichi)
+[ ] Cat alley         (from Onomichi)
+[ ] Matsuyama         (from Imabari)
+[ ] Imabari towels    (from Imabari)
+```
+
+### Wave 2: LLM Judges Relevance
+
+```
+ITERATION 5-10: Expand the 6 islands
+├── Each island gets a cheat sheet:
+│   • What's there (beaches, cafes, shrines)
+│   • Where to stay (if camping/guesthouse exists)
+│   • Recommended stops
+│   • Distance from previous island
+│
+├── Ikuchijima especially rich:
+│   • Setoda town (great guesthouses)
+│   • Kosanji Temple (weird/beautiful)
+│   • Dolce gelato (famous stop)
+│   • Discovers: "Setoda", "Kosanji", "Shimanami gelato spots"
+│
+└── Islands expanded: 6 notes created, 8 new entities discovered
+
+ITERATION 11: Expand "Giant bike rental"
+├── Cheat sheet:
+│   • Cost: ¥1,000/day + ¥1,100 drop-off fee
+│   • Reservation: Not needed for regular bikes
+│   • E-bikes: ¥2,500/day, reserve ahead
+│   • Hours: 9am-5pm (return by 5pm or next day)
+│   • Cross-rental: Pick up Onomichi, drop Imabari ✓
+├── Discovers: nothing new (practical info, no entities)
+└── Commit: "expand: giant-bike-rental"
+
+ITERATION 12: LLM SKIPS "Onomichi temples"
+├── Judgment: "User is cycling through, not doing temple tourism.
+│   Temples are nice but not actionable for bike trip."
+├── Marks as: SKIPPED (not relevant to cycling focus)
+└── Commit: "skip: onomichi-temples (not trip-relevant)"
+
+ITERATION 13: LLM SKIPS "Cat alley"
+├── Judgment: "Cute but tangential. 1.5 weeks is about the route."
+├── Marks as: SKIPPED
+└── No commit needed (just frontier update)
+
+ITERATION 14: Expand "Matsuyama"
+├── Judgment: "Natural extension - where do you go AFTER Imabari?"
+├── Cheat sheet:
+│   • Dogo Onsen (oldest onsen in Japan, must-visit)
+│   • 1 hour train from Imabari
+│   • Good place to recover post-ride
+│   • Matsuyama Castle worth a visit
+├── Discovers: "Dogo Onsen"
+└── Commit: "expand: matsuyama"
+
+ITERATION 15: LLM SKIPS "Imabari towels"
+├── Judgment: "Shopping tangent. Won't affect trip planning."
+├── Marks as: SKIPPED
+└── No commit
+```
+
+### Wave 3: Going Deeper (Selectively)
+
+```
+ITERATION 16: Expand "Setoda" (from Ikuchijima)
+├── Judgment: "This is WHERE TO STAY. Critical for 1.5 week trip."
+├── Cheat sheet:
+│   • Best overnight stop on the route
+│   • Azumi Setoda (luxury ryokan, $$$)
+│   • Shimapan hostel (budget, great vibes)
+│   • Shiomachi Shotengai (retro shopping street)
+│   • Restaurants: Kou, Minatoya
+├── Discovers: "Azumi Setoda", "Shimapan hostel"
+└── Commit: "expand: setoda"
+
+ITERATION 17: Expand "Dogo Onsen" (from Matsuyama)
+├── Judgment: "Post-ride recovery. 1.5 weeks = time to soak."
+├── Cheat sheet:
+│   • Honkan (main building, ¥420, crowded but iconic)
+│   • Annex Asuka (¥1,280, less crowded, nicer)
+│   • Open 6am-11pm
+│   • Bring own towel or buy there (this is Imabari towel territory)
+├── Discovers: nothing new
+└── Commit: "expand: dogo-onsen"
+
+ITERATION 18: LLM SKIPS "Kosanji Temple"
+├── Judgment: "It's on the route, mentioned in Ikuchijima note.
+│   Doesn't need its own expansion - just a stop."
+├── Marks as: SKIPPED
+└── No commit
+
+ITERATION 19-20: Expand accommodations
+├── Azumi Setoda: Luxury option, ¥40,000/night, book ahead
+├── Shimapan hostel: ¥3,500/night, dorms + private, bike storage
+└── Commit: "expand: setoda-accommodations"
+
+ITERATION 21: Check frontier
+├── Pending: 4 entities (Fukuyama, blue line, gelato spots, etc.)
+├── LLM judges all as SKIP or too granular
+├── Discovery rate last 5: 0, 1, 0, 0, 0
+├── Decision: CONVERGED
+└── Commit: "converged: 15 entities expanded"
+```
+
+### Final State
+
+```
+From 15 words → 15 cheat sheet notes
+
+/trips/
+└── shimanami-idea.md (enriched with backlinks)
+
+/knowledge/
+├── routes/
+│   └── shimanami-kaido.md
+├── places/
+│   ├── onomichi.md
+│   ├── imabari.md
+│   ├── matsuyama.md
+│   ├── setoda.md
+│   └── [6 island notes]
+├── services/
+│   └── giant-bike-rental.md
+├── accommodations/
+│   ├── azumi-setoda.md
+│   └── shimapan-hostel.md
+└── experiences/
+    └── dogo-onsen.md
+
+Stats:
+├── Entities discovered: 24
+├── Expanded: 15
+├── Skipped: 7 (temples, cats, towels, granular stops)
+├── Unresearchable: 2
+└── Waves: 3 (converged on wave 3)
+```
+
+### What the LLM Learned
+
+The expansion naturally followed the trip's PURPOSE:
+
+```
+Cycling trip → WHERE to ride (route, islands)
+            → WHERE to stay (Setoda, hostels)
+            → WHERE to recover (Matsuyama, Dogo Onsen)
+            → HOW to do it (bike rental, logistics)
+
+NOT → temples, cats, towels, food spots (nice but tangential)
+```
+
+From 15 words, the system built a complete trip planning resource. Each note is a cheat sheet. The LLM's judgment kept it focused on "cycling trip" not "general Japan tourism."
+
+---
+
 ## Note Format: Obsidian-Style with Backlinks
 
 Each knowledge note follows a consistent format:
