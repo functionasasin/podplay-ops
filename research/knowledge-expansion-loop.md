@@ -402,27 +402,39 @@ The relevance filter lives in the expansion prompt, not in code:
 ```markdown
 ## Your Relevance Filter
 
-When you discover new entities during research, ask:
+When you discover new entities during research, ask TWO questions:
 
-"Would knowing more about this help the user with their ORIGINAL goal?"
+1. "Would this help plan/execute the trip?" (ACTIONABLE)
+2. "Is this a novel discovery about a place I'm going anyway?" (SERENDIPITY)
+
+Either one is enough to expand.
 
 For this knowledge base, the seed content is about:
 - A Japan snowboarding trip (Jan 21 - Feb 13)
 - Buying tea equipment and a live spider crab
 - Logistics (luggage shipping, transport, accommodations)
 
-Expand entities that are ACTIONABLE or DECISION-RELEVANT.
-Skip entities that are merely INTERESTING or EDUCATIONAL.
-
-Examples:
+EXPAND if actionable:
 ✓ "Nozawa Fire Festival" - timing could affect trip plans
 ✓ "Togari night skiing hours" - affects daily schedule
 ✓ "Live crab airline policies" - critical for the mission
-✗ "History of bamboo whisks" - interesting but won't change what you buy
-✗ "Shinto traditions" - not visiting temples
-✗ "Japanese spider crab mating habits" - not relevant to transport
 
-When in doubt, ask: "Would the user be annoyed if I spent tokens on this?"
+EXPAND if novel (about places you're visiting):
+✓ "Imabari towels" - you'd never know this, might buy some
+✓ "Imabari yakitori style" - local food thing, worth trying
+✓ "Nozawa Onsen has free public baths" - unexpected, cool
+
+SKIP if generic or unrelated:
+✗ "History of bamboo whisks" - not novel, just background
+✗ "Shinto traditions" - not visiting temples, too broad
+✗ "Japanese spider crab mating habits" - not about YOUR trip
+✗ "Joetsu Shinkansen engineering" - you know trains exist
+
+The key distinction:
+- "Imabari is the towel capital" → NOVEL (you're going there, wouldn't know this)
+- "History of Japanese towel-making" → SKIP (too deep, not about Imabari specifically)
+
+When in doubt: "Would I tell a friend about this after the trip?"
 ```
 
 ### Expansion Depth is Also LLM-Judged
@@ -733,10 +745,17 @@ ITERATION 14: Expand "Matsuyama"
 ├── Discovers: "Dogo Onsen"
 └── Commit: "expand: matsuyama"
 
-ITERATION 15: LLM SKIPS "Imabari towels"
-├── Judgment: "Shopping tangent. Won't affect trip planning."
-├── Marks as: SKIPPED
-└── No commit
+ITERATION 15: Expand "Imabari towels"
+├── Judgment: "Novel discovery - you'd never know Imabari is Japan's
+│   towel capital. Going there anyway, might buy some."
+├── Cheat sheet:
+│   • Imabari = 60% of Japan's towel production
+│   • Famous for soft, absorbent cotton (great for onsen)
+│   • Imabari Towel Museum: free, surprisingly cool
+│   • Factory outlets: way cheaper than Tokyo
+│   • Good souvenir, light to carry
+├── Discovers: "Imabari Towel Museum"
+└── Commit: "expand: imabari-towels"
 ```
 
 ### Wave 3: Going Deeper (Selectively)
@@ -774,18 +793,18 @@ ITERATION 19-20: Expand accommodations
 ├── Shimapan hostel: ¥3,500/night, dorms + private, bike storage
 └── Commit: "expand: setoda-accommodations"
 
-ITERATION 21: Check frontier
-├── Pending: 4 entities (Fukuyama, blue line, gelato spots, etc.)
-├── LLM judges all as SKIP or too granular
+ITERATION 22: Check frontier
+├── Pending: 3 entities (Fukuyama, blue line, gelato spots)
+├── LLM judges all as SKIP (too granular, already covered)
 ├── Discovery rate last 5: 0, 1, 0, 0, 0
 ├── Decision: CONVERGED
-└── Commit: "converged: 15 entities expanded"
+└── Commit: "converged: 17 entities expanded"
 ```
 
 ### Final State
 
 ```
-From 15 words → 15 cheat sheet notes
+From 15 words → 17 cheat sheet notes
 
 /trips/
 └── shimanami-idea.md (enriched with backlinks)
@@ -804,28 +823,39 @@ From 15 words → 15 cheat sheet notes
 ├── accommodations/
 │   ├── azumi-setoda.md
 │   └── shimapan-hostel.md
-└── experiences/
-    └── dogo-onsen.md
+├── experiences/
+│   └── dogo-onsen.md
+└── discoveries/
+    └── imabari-towels.md    ← novel find!
 
 Stats:
-├── Entities discovered: 24
-├── Expanded: 15
-├── Skipped: 7 (temples, cats, towels, granular stops)
+├── Entities discovered: 25
+├── Expanded: 17
+├── Skipped: 6 (temples, cats, granular stops)
 ├── Unresearchable: 2
 └── Waves: 3 (converged on wave 3)
 ```
 
 ### What the LLM Learned
 
-The expansion naturally followed the trip's PURPOSE:
+The expansion followed TWO threads:
 
 ```
-Cycling trip → WHERE to ride (route, islands)
-            → WHERE to stay (Setoda, hostels)
-            → WHERE to recover (Matsuyama, Dogo Onsen)
-            → HOW to do it (bike rental, logistics)
+ACTIONABLE (trip planning):
+├── WHERE to ride (route, islands)
+├── WHERE to stay (Setoda, hostels)
+├── WHERE to recover (Matsuyama, Dogo Onsen)
+└── HOW to do it (bike rental, logistics)
 
-NOT → temples, cats, towels, food spots (nice but tangential)
+NOVEL (serendipitous discoveries):
+├── Imabari = towel capital of Japan
+├── Imabari yakitori = no skewers, unique style
+└── Things you'd tell friends about after
+
+SKIPPED (generic or too granular):
+├── Temples (not the trip's focus)
+├── Cat alley (cute but tangential)
+└── Specific gelato shops (already noted in island pages)
 ```
 
 From 15 words, the system built a complete trip planning resource. Each note is a cheat sheet. The LLM's judgment kept it focused on "cycling trip" not "general Japan tourism."
