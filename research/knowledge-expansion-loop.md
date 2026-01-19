@@ -289,9 +289,9 @@ The frontier is the heart of the convergence mechanism. It tracks:
 │      └── Last N expansions discovered 0 new entities                       │
 │          (expanding but finding nothing new)                               │
 │                                                                             │
-│   3. DEPTH LIMIT REACHED                                                   │
-│      └── Entities are N hops from original seed content                    │
-│          (prevent infinite tangent chains)                                 │
+│   3. LLM JUDGES "NOT RELEVANT"                                             │
+│      └── Remaining entities judged too tangential to seed                  │
+│          (LLM decides, not hop count)                                      │
 │                                                                             │
 │   4. MANUAL CONVERGENCE                                                    │
 │      └── User adds /status/converged.txt                                   │
@@ -323,40 +323,126 @@ When the line flatlines at 0-1 new entities, convergence is near.
 
 ---
 
-## Depth Control: Preventing Infinite Expansion
+## Breadth-First Expansion with LLM Relevance Control
 
-Without limits, expansion could spiral forever (Nozawa → Fire Festival → Shinto traditions → Japanese mythology → ...).
+No hard depth limits. Instead: **breadth-first exploration** with **LLM-based relevance judgment**.
+
+### Why Breadth-First?
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                           DEPTH TRACKING                                    │
+│                      BREADTH-FIRST EXPANSION ORDER                          │
 │                                                                             │
-│   Seed content (depth 0):                                                  │
-│   └── japan-trip-itinerary.md                                              │
-│       └── japan-shopping-list.md                                           │
+│   Wave 1 (all entities from seed):                                         │
+│   ├── Togari Onsen                                                         │
+│   ├── Nozawa Onsen                                                         │
+│   ├── Yamato Takkyubin                                                     │
+│   ├── Ippodo Tea                                                           │
+│   ├── Toyosu Market                                                        │
+│   └── ... (all 23 from seed)                                               │
 │                                                                             │
-│   Depth 1 (directly mentioned):                                            │
-│   └── Togari Onsen                                                         │
-│   └── Nozawa Onsen                                                         │
-│   └── Yamato Takkyubin                                                     │
-│   └── Ippodo Tea                                                           │
+│   Wave 2 (all entities discovered in wave 1):                              │
+│   ├── Nozawa Fire Festival (from Nozawa Onsen)                            │
+│   ├── Uji region (from Ippodo Tea)                                        │
+│   ├── Suruga Bay (from spider crab research)                              │
+│   └── ... (all discovered entities)                                        │
 │                                                                             │
-│   Depth 2 (discovered from depth 1):                                       │
-│   └── Nozawa Fire Festival (from Nozawa Onsen)                            │
-│   └── Uji region tea history (from Ippodo Tea)                            │
-│   └── Takkyubin pricing/booking (from Yamato Takkyubin)                   │
+│   Wave 3 (all entities discovered in wave 2):                              │
+│   ├── Dosojin deity (from Nozawa Fire Festival)                           │
+│   ├── Matcha grades (from Uji region)                                     │
+│   └── ...                                                                   │
 │                                                                             │
-│   Depth 3 (discovered from depth 2):                                       │
-│   └── Dosojin deity (from Nozawa Fire Festival)  ← maybe stop here?       │
-│   └── Matcha grades explained (from Uji region)                           │
-│                                                                             │
-│   Depth 4+ (probably too tangential):                                      │
-│   └── Shinto shrine practices (from Dosojin)  ← too far from trip         │
-│                                                                             │
-│   RECOMMENDATION: Default max depth = 2-3 hops from seed                   │
+│   Breadth-first ensures you cover the obvious stuff before going deep.     │
+│   All ski resorts before all fire festival traditions.                     │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
+
+### LLM-Based Relevance (Not Hop Count)
+
+The problem with hard depth limits:
+- "Nozawa Fire Festival" at depth 2 is **extremely relevant** (happens during your trip dates!)
+- "Joetsu Shinkansen" at depth 1 might be **less relevant** (you already know trains exist)
+
+Hop count doesn't equal relevance. **The LLM should decide.**
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                     LLM RELEVANCE JUDGMENT                                  │
+│                                                                             │
+│   For each discovered entity, the LLM asks:                                │
+│                                                                             │
+│   "Given the ORIGINAL seed content (Japan snowboarding trip),              │
+│    is this entity worth expanding?"                                        │
+│                                                                             │
+│   │                                                                         │
+│   ├── EXPAND: Would help the user plan/enjoy/execute the trip             │
+│   │   • Nozawa Fire Festival → YES (timing matters!)                       │
+│   │   • Togari terrain parks → YES (affects riding plans)                  │
+│   │   • Chasen craftsmanship → YES (buying one, good to know quality)     │
+│   │                                                                         │
+│   ├── SKIP: Interesting but not actionable for THIS trip                  │
+│   │   • History of Uji tea farming → SKIP (nice to know, not useful)      │
+│   │   • Shinto shrine etiquette → SKIP (not visiting shrines)             │
+│   │   • Spider crab biology → SKIP (just need to transport it)            │
+│   │                                                                         │
+│   └── DEFER: Might be relevant, revisit if nothing better                 │
+│       • Regional train timetables → DEFER (only if needed)                │
+│                                                                             │
+│   This is JUDGMENT, not algorithm. The LLM maintains context of what      │
+│   the seed content is actually about.                                      │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### The Prompt Carries the Constraint
+
+The relevance filter lives in the expansion prompt, not in code:
+
+```markdown
+## Your Relevance Filter
+
+When you discover new entities during research, ask:
+
+"Would knowing more about this help the user with their ORIGINAL goal?"
+
+For this knowledge base, the seed content is about:
+- A Japan snowboarding trip (Jan 21 - Feb 13)
+- Buying tea equipment and a live spider crab
+- Logistics (luggage shipping, transport, accommodations)
+
+Expand entities that are ACTIONABLE or DECISION-RELEVANT.
+Skip entities that are merely INTERESTING or EDUCATIONAL.
+
+Examples:
+✓ "Nozawa Fire Festival" - timing could affect trip plans
+✓ "Togari night skiing hours" - affects daily schedule
+✓ "Live crab airline policies" - critical for the mission
+✗ "History of bamboo whisks" - interesting but won't change what you buy
+✗ "Shinto traditions" - not visiting temples
+✗ "Japanese spider crab mating habits" - not relevant to transport
+
+When in doubt, ask: "Would the user be annoyed if I spent tokens on this?"
+```
+
+### Natural Convergence Without Hard Limits
+
+With LLM-based relevance:
+
+```
+Wave 1: 23 entities → expand all (directly from seed)
+Wave 2: 15 entities discovered → LLM judges 12 relevant, 3 skipped
+Wave 3: 8 entities discovered → LLM judges 4 relevant, 4 skipped
+Wave 4: 2 entities discovered → LLM judges 0 relevant, 2 skipped
+Wave 5: 0 entities discovered → CONVERGED
+```
+
+The system naturally stops when:
+1. New discoveries aren't relevant enough to expand
+2. Expansions stop yielding new discoveries
+3. Both happen together = fixed point reached
+
+**No arbitrary "depth 3" cutoff.** The LLM's judgment IS the depth control.
 
 ---
 
@@ -420,10 +506,10 @@ ITERATION 7: Expand "Chasen (bamboo whisk)"
 ├── Discovers: "Takayama city", "chasen craftsmen"
 └── Commit: "expand: chasen"
 
-... continues until frontier exhausted or depth limit ...
+... continues until frontier exhausted or nothing relevant remains ...
 
 ITERATION 31: Check frontier
-├── Pending entities: 2 (both depth 4, below threshold)
+├── Pending entities: 2 (LLM judged not relevant to trip)
 ├── Discovery rate last 5 iterations: 0, 0, 1, 0, 0
 ├── Decision: CONVERGED
 ├── Creates: /status/converged.txt
@@ -433,7 +519,7 @@ FINAL STATE:
 ├── 29 knowledge notes created
 ├── 47 total entities discovered
 ├── 4 marked unresearchable (private/minimal info)
-├── 14 skipped (depth 4+, too tangential)
+├── 14 skipped (LLM judged not actionable for trip)
 ├── All seed documents enriched with backlinks
 └── Git history shows clean expansion trail
 ```
@@ -563,7 +649,7 @@ f8c2b6e expand: nozawa-fire-festival (depth 2, 2 new)
 | Entities discovered | 47 |
 | Entities expanded | 29 |
 | Unresearchable | 4 |
-| Depth-limited | 14 |
+| Skipped (not relevant) | 14 |
 | Avg entities/expansion | 1.2 |
 | Discovery rate (last 5) | 0.2 |
 
@@ -663,7 +749,7 @@ Think of your knowledge base as a function `K`:
 
 Fixed-point iteration finds where `K(K(K(...K(x)...))) = x`
 
-At that point, expanding further yields nothing new. Your knowledge base is *complete* for the given seed content and depth limit.
+At that point, expanding further yields nothing new. Your knowledge base is *complete* for the given seed content - not by arbitrary cutoff, but by the LLM's judgment of what's actually relevant.
 
 ---
 
