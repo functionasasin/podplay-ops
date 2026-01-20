@@ -1,0 +1,19 @@
+# Environment and secrets
+.env
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+
+# Data dumps and caches (large files, regenerable)
+data/Timeline.json
+data/Timeline.json:Zone.Identifier
+data/*.json
+
+# OS files
+.DS_Store
+*.Zone.Identifier
