@@ -802,7 +802,129 @@ Overall Score: weighted average
 - [ ] Re-validate
 ```
 
-### 3.6 Iteration Loop
+### 3.6 Tiered Validation (Fast Iteration)
+
+**Problem**: Rendering a 60-minute video for each iteration is too slow.
+
+**Solution**: Validate in tiers - only render when necessary.
+
+#### Tier 1: Timeline Validation (No Render) ⚡ ~5 seconds
+
+Validate the *plan* before any rendering:
+
+| Check | Data Source | What It Catches |
+|-------|-------------|-----------------|
+| Total duration | Sum of clip durations + narration | Video too long/short |
+| WPM | Script word count / narration duration | Pacing issues |
+| Clip duration distribution | Timeline clip list | Cuts too long/short |
+| Scene type ratio | Scene metadata | Wrong scene mix |
+| Coverage gaps | Timeline analysis | Missing content |
+| Duplicate scenes | Scene IDs | Repeated clips |
+
+**Output**: `timeline_report.json` with all metrics calculated from data, no video needed.
+
+```
+If Tier 1 fails → fix script/scene selection → re-run Tier 1
+If Tier 1 passes → proceed to Tier 2
+```
+
+#### Tier 2: Audio-Only Render ⚡ ~2-3 minutes
+
+Render only the audio track (narration + ducked music):
+
+| Check | Method | What It Catches |
+|-------|--------|-----------------|
+| Narration clarity | Listen / SNR | Bad TTS output |
+| Ducking timing | Volume envelope | Music too loud/soft |
+| Pause naturalness | Gap analysis | Awkward silences |
+| Total audio duration | File length | Timing drift |
+
+**Output**: `audio_draft.mp3` (~50MB vs ~2GB for video)
+
+```
+If Tier 2 fails → fix TTS/audio mix → re-run Tier 2
+If Tier 2 passes → proceed to Tier 3
+```
+
+#### Tier 3: Sample Segments ⚡ ~5-10 minutes
+
+Render 3-5 short segments (30-60 sec each) at key points:
+
+| Sample | Timestamp | Purpose |
+|--------|-----------|---------|
+| Hook | 0:00-1:00 | Opening quality |
+| Early arc | ~5:00 | Normal pacing |
+| Mid transition | ~20:00 | Section change |
+| Climax | ~35:00 | Emotional peak |
+| Outro | Last 60s | Ending quality |
+
+**Output**: `samples/sample_{N}.mp4` (5 files, ~30 sec each)
+
+```
+If Tier 3 fails → fix specific segments → re-run Tier 3
+If Tier 3 passes → proceed to Tier 4
+```
+
+#### Tier 4: Full Render 🐢 ~30-60 minutes
+
+Only after Tiers 1-3 pass:
+
+- Full 1080p render
+- Final quality check
+- Human review if desired
+
+**Output**: `output_final.mp4`
+
+#### Iteration Flow
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    ITERATION LOOP                           │
+│                                                             │
+│   Generate Script + Scene Selection                         │
+│            │                                                │
+│            ▼                                                │
+│   ┌─────────────────┐                                       │
+│   │  Tier 1: Data   │◄────────────────────┐                │
+│   │   Validation    │                      │                │
+│   └────────┬────────┘                      │                │
+│            │ pass                     fail │                │
+│            ▼                               │                │
+│   ┌─────────────────┐                      │                │
+│   │  Tier 2: Audio  │──── fail ───────────┤                │
+│   │     Render      │                      │                │
+│   └────────┬────────┘                      │                │
+│            │ pass                          │                │
+│            ▼                               │                │
+│   ┌─────────────────┐                      │                │
+│   │ Tier 3: Sample  │──── fail ───────────┘                │
+│   │    Segments     │                                       │
+│   └────────┬────────┘                                       │
+│            │ pass                                           │
+│            ▼                                                │
+│   ┌─────────────────┐                                       │
+│   │  Tier 4: Full   │                                       │
+│   │     Render      │                                       │
+│   └────────┬────────┘                                       │
+│            │                                                │
+│            ▼                                                │
+│         Done                                                │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### Typical Iteration Counts
+
+| Tier | Expected Iterations | Time per Iteration |
+|------|--------------------|--------------------|
+| Tier 1 | 3-5 | ~5 seconds |
+| Tier 2 | 1-2 | ~2-3 minutes |
+| Tier 3 | 1-2 | ~5-10 minutes |
+| Tier 4 | 1 | ~30-60 minutes |
+
+**Total time for 5 Tier 1 + 2 Tier 2 + 2 Tier 3 + 1 Tier 4**: ~1-1.5 hours
+**vs. 5 full renders**: ~3-5 hours
+
+### 3.7 Iteration Triggers
 
 Based on validation report:
 
@@ -818,7 +940,7 @@ Based on validation report:
 
 3. **Convergence**
    - Target: Overall score > 80
-   - Max iterations: 3-5 before manual intervention
+   - Max iterations: 3-5 at Tier 1 before escalating
    - Track score progression across iterations
 
 ---
