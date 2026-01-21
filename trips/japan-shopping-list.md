@@ -135,12 +135,59 @@ Japanese spider crab (タカアシガニ / takaashigani) is a deep-sea species p
 - [ ] Yunker Sonne Royal
 - [ ] Ryukakusan Direct
 
+### Eye Care / Skincare
+- [ ] Hadariki Kumargic Eye Cream (~$18) - cult favorite for dark circles & puffiness
+- [ ] Sana Nameraka Soy Milk Eye Cream - most popular eye cream in Japan
+- [ ] Hada Labo Tokyo Age Correcting Eye Cream - hyaluronic acid + caffeine
+
 ### Crab Mission
 - [ ] Contact Toyosu vendors about live spider crab availability
 - [ ] Confirm airline policy for live seafood
 - [ ] Purchase styrofoam cooler + packing materials
 - [ ] Buy crab Thursday evening
 - [ ] Pack with ice packs + wet newspaper/seaweed
+
+---
+
+## Eye Care Products for Eye Bags & Puffiness
+
+Japanese eye creams are known for their effective formulations. Here are the top picks by price range:
+
+### Budget-Friendly (Under $30)
+
+| Product | Price | Key Ingredients | Notes |
+|---------|-------|-----------------|-------|
+| Hadariki Kumargic Eye Cream | ~$18 | Vitamin C derivatives | Cult favorite, gel-like texture. Tip: refrigerate for extra de-puffing |
+| Sana Nameraka Soy Milk Eye Cream | ~$15 | Soy isoflavones | Most popular eye cream in Japan, hydrates and firms |
+| Hada Labo Tokyo Age Correcting Eye Cream | ~$25 | Super Hyaluronic Acid, collagen, caffeine | Lightweight, non-greasy |
+
+### Mid-Range
+
+| Product | Key Ingredients | Notes |
+|---------|-----------------|-------|
+| Kose Kumaranai Repair Eye Cream | Retinol derivatives, niacinamide, hyaluronic acid | Gentle, fragrance-free |
+| Astalift Anti-Aging Eye Cream | Nano-astaxanthin | Targets wrinkles, puffiness, dark circles |
+
+### Luxury
+
+| Product | Key Ingredients | Notes |
+|---------|-----------------|-------|
+| Clé de Peau Beauté Eye Contour Cream Supreme | Retinol ACE, Citrus Unshiu Peel Extract | Comes with platinum massage tool for lymphatic drainage |
+| SK-II R.N.A. Power Eye Cream | PITERA, yeast extracts | Firming and brightening |
+
+### Key Ingredients for Puffiness
+
+- **Caffeine** - boosts circulation
+- **Green tea extract** - anti-inflammatory
+- **Hyaluronic acid** - plumping
+- **Peptides/collagen** - firming
+
+### Where to Buy
+
+- Matsumoto Kiyoshi (マツモトキヨシ) - drugstore chain
+- Don Quijote (ドン・キホーテ) - discount store
+- @cosme store - curated J-beauty products
+- Department store cosmetics floors
 
 ---
 
