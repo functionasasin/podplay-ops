@@ -129,6 +129,12 @@ Japanese spider crab (タカアシガニ / takaashigani) is a deep-sea species p
 - [ ] Genmaicha
 - [ ] Travel/portable matcha set
 
+### Groceries & Pharmacy
+- [ ] Nissin seafood milk cup noodles
+- [ ] Blendy matcha capsules (liquid)
+- [ ] Yunker Sonne Royal
+- [ ] Ryukakusan Direct
+
 ### Crab Mission
 - [ ] Contact Toyosu vendors about live spider crab availability
 - [ ] Confirm airline policy for live seafood
