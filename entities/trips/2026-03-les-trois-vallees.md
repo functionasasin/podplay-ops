@@ -93,6 +93,75 @@ Full accommodation masterlist covering 85+ locations with mid-March pricing: [[l
 
 The car adds ~17% to total cost. Worth it mainly if you want flexibility to explore beyond the 3 Vallées or prefer driving over bus schedules. For a pure 2-week snowboard immersion staying in Brides, the no-car option is solid — free shuttles and the Olympe gondola handle everything.
 
+## Best Timing: 2026-2027 Season
+
+### Holidays to Avoid
+
+**French Winter Holidays (Vacances d'Hiver) — the big one:**
+
+| Zone | Dates | Académies |
+|------|-------|-----------|
+| Zone C | Sat Feb 6 → Mon Feb 22 | Paris, Créteil, Versailles, Montpellier, Toulouse |
+| Zone A | Sat Feb 13 → Mon Mar 1 | **Lyon, Grenoble**, Bordeaux, Clermont-Ferrand, Dijon |
+| Zone B | Sat Feb 20 → Mon Mar 8 | Aix-Marseille, Lille, Nantes, Rennes, Strasbourg, Nice |
+
+Combined French winter holiday window: **Feb 6 – Mar 8** (5 weeks of peak crowds).
+Zone A includes Grenoble/Lyon — the local Savoie families. Slopes are rammed.
+
+**UK Half Term:** ~Feb 15–19 (overlaps French holidays, double whammy)
+
+**UK Easter:** Fri Mar 26 → Fri Apr 9 (Easter Sunday = Mar 28). British families flood the Alps.
+
+**French Spring Holidays (Vacances de Printemps):**
+
+| Zone | Dates |
+|------|-------|
+| Zone C | Sat Apr 3 → Mon Apr 19 |
+| Zone A | Sat Apr 10 → Mon Apr 26 |
+| Zone B | Sat Apr 17 → Mon May 3 |
+
+**Season dates (estimated from 2025-2026 pattern):**
+- Val Thorens / Orelle open: ~late Nov 2026
+- Full 3 Vallées links: ~early Dec 2026 → mid-Apr 2027
+- Brides-les-Bains gondola: ~mid-Dec 2026 → mid-Apr 2027
+
+### The Sweet Spot
+
+**★ Sat March 13 → Sat March 27, 2027**
+
+| ✓ | Why |
+|---|-----|
+| All French zones back in school | Zone B (last) returns Mon Mar 8 — you arrive 5 days later |
+| Before UK Easter | UK break starts Fri Mar 26 — you leave Sat Mar 27 as Brits arrive |
+| Late-March discounts | 10-15% off accommodation after March 20 |
+| Spring snow conditions | Longer days, warmer, corn snow in afternoon, still deep at altitude |
+| Sat-to-Sat timing | Aligns with apartment changeover days and Ben's Bus schedule |
+
+**Runner-up: Sat March 6 → Sat March 20, 2027**
+- First weekend (Mar 6-7) still has Zone B families on the mountain
+- From Mar 8 onward, fully clear
+- Doesn't benefit from late-March discounts
+- Further from UK Easter = zero British holiday overlap
+
+### Visual Calendar
+
+```
+         FEBRUARY 2027                    MARCH 2027
+ Mo Tu We Th Fr Sa Su          Mo Tu We Th Fr Sa Su
+  1  2  3  4  5  6  7           1  2  3  4  5  6  7
+  8  9 10 11 12 13 14           8  9 10 11 12 ★13 14
+ 15 16 17 18 19 20 21          15 16 17 18 19 20 21
+ 22 23 24 25 26 27 28          22 23 24 25 26 ★27 28
+                               29 30 31
+
+ ███ = French holidays (Feb 6–Mar 8)
+ ★13–★27 = Recommended 2-week window
+```
+
+### January Alternative (Budget Hunters)
+
+**Sat Jan 9 → Sat Jan 23, 2027** — after New Year crowds, before any February holidays. Cheapest period of the season. Tradeoffs: shorter daylight hours, possibly thinner snowpack at 600m (Brides), colder temperatures.
+
 ## Money-Saving Tips
 
 - Book Brides-les-Bains or Orelle for 30-50% savings
