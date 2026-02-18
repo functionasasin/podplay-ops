@@ -17,6 +17,15 @@ Master distribution and franchise operation for [[Pod Play]] and [[Ping Pod]] ac
 - **Pod Play rights**: Team holds Southeast Asia distribution rights
 - **Philippines deployment**: Payment platform working via [[Magpie]], booking system functional
 - **HQ location**: [[Singapore]] being evaluated — EDB supportive with tax incentives and visa support
+- **First venue target**: [[Tela Park]] in Las Piñas — facility checklist created, pre-installation site survey needed
+
+### Current Activity (as of 2026-02-18)
+
+- Syncing with [[Dominic]] tomorrow (2026-02-19) — PodPlay coordination
+- Syncing with [[Marco Basug]] next week — TBD
+- Emailed [[Niko]] to set up a meeting next week — TBD
+- [[2026-03 NJ PodPlay Training]] booked for March 2–10
+- [[Tela Park]] facility checklist created — need someone to do site survey before NJ training
 
 ## Revenue Model
 
@@ -40,9 +49,13 @@ Master distribution and franchise operation for [[Pod Play]] and [[Ping Pod]] ac
 
 ## Action Items
 
+- **Site survey [[Tela Park]]** — send someone or go personally to check all items on the facility checklist before NJ training
+- Sync with [[Dominic]] (2026-02-19)
+- Sync with [[Marco Basug]] (week of 2026-02-23)
+- Meeting with [[Niko]] (week of 2026-02-23, pending confirmation)
+- Complete NJ training trip and document all Asia-specific configuration differences
+- Get PodPlay Stripe integration details for Magpie compatibility assessment
 - Finalize legal agreements urgently
 - Follow up with Cutie on legal completion
 - Schedule Singapore EDB briefing visit
 - Negotiate wallet partnership terms with [[Magpie]]
-- Complete NJ training trip and document all Asia-specific configuration differences
-- Get PodPlay Stripe integration details for Magpie compatibility assessment
