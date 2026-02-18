@@ -31,9 +31,18 @@ Master distribution and franchise operation for [[Pod Play]] and [[Ping Pod]] ac
 - [[Central Group]] potential Thailand franchise deal
 - EDB Singapore for HQ setup
 
+## Training & Deployment Readiness
+
+- **NJ Training Trip**: [[2026-03 NJ PodPlay Training]] — March 2–10, 2026 in Jersey City
+- **Config Guide**: [[PodPlay Config Guide v1]] — full hardware setup documentation
+- **Infrastructure Analysis**: [[PodPlay Asia Infrastructure Analysis]] — shared vs. local components, payment questions, PAL/NTSC issues
+- Key blocker: Payment integration (Stripe → [[Magpie]]) needs API surface understanding from training
+
 ## Action Items
 
 - Finalize legal agreements urgently
 - Follow up with Cutie on legal completion
 - Schedule Singapore EDB briefing visit
 - Negotiate wallet partnership terms with [[Magpie]]
+- Complete NJ training trip and document all Asia-specific configuration differences
+- Get PodPlay Stripe integration details for Magpie compatibility assessment
