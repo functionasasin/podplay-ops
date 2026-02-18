@@ -1,129 +1,96 @@
-# PodPlay On-Premises Venue Setup — Brief for Magpie
+# PodPlay Venue Setup — How Stripe Fits In & What We Need to Understand About Magpie's Equivalent
 
 **Date:** February 18, 2026
-**From:** Pod Play SEA Distribution Team
-**To:** Magpie Team
-**Re:** How PodPlay venues are physically set up — the on-premises environment your integration runs in
 
 ---
 
-## Why This Matters to You
+## Background
 
-Your payment integration with PodPlay is already working (GCash + credit cards). But as we deploy venues in the Philippines, you need to understand the **physical hardware and network environment** at each venue so you can:
+We're deploying PodPlay venues in the Philippines and Southeast Asia. PodPlay's hardware configuration guide (written for US deployments) references **Stripe** at several points in the setup process. Since Magpie is handling payments for our region, we need to understand **what the Magpie analog is for each Stripe component** so we can set up venues correctly.
 
-1. Know how the iPads (where customers pay) connect to the internet
-2. Understand the network topology in case payment issues arise
-3. Know who configures what during venue setup
-4. Be aware of any on-premises config that touches your integration
-
-This is based on PodPlay's official hardware configuration guide (v1.0, Sept 2024).
+This doc maps out every place Stripe appears in the on-premises setup, and asks: **what's the equivalent on Magpie's side?**
 
 ---
 
-## 1. What Gets Installed at Each Venue
+## How a PodPlay Venue Works (Quick Overview)
 
-Every PodPlay venue has this hardware stack, per court:
+Each venue has cloud services and local hardware:
 
 ```
-PER COURT                              SHARED (1 per venue)
-──────────                             ─────────────────────
-
-┌──────────────┐                       ┌──────────────────┐
-│    Camera    │  Records gameplay     │   Mac Mini       │
-│  (1 per ct)  │                       │   - Replay svc   │
-└──────────────┘                       │   - Samsung SSD  │
-                                       └──────────────────┘
-┌──────────────┐
-│    iPad      │  Customer-facing      ┌──────────────────┐
-│  (1 per ct)  │  app — THIS IS WHERE  │   UDM Gateway    │
-│  POE-powered │  PAYMENT HAPPENS      │   (router/fw)    │
-└──────────────┘                       └──────────────────┘
-
-┌──────────────┐                       ┌──────────────────┐
-│  Apple TV    │  Displays instant     │   Unifi Switch   │
-│  (1 per ct)  │  replays on TV        │   (network)      │
-│  HDMI → TV   │                       └──────────────────┘
-└──────────────┘
-                                       ┌──────────────────┐
-                                       │   PDU            │
-                                       │   (power dist)   │
-                                       └──────────────────┘
+┌──────────────────────────────────────────────────────┐
+│                  CLOUD SERVICES                       │
+│                                                      │
+│  ┌────────────┐  ┌────────────┐  ┌───────────────┐  │
+│  │   Admin    │  │  Booking   │  │   Payment     │  │
+│  │ Dashboard  │  │    API     │  │   Provider    │  │
+│  │            │  │            │  │               │  │
+│  │ (venue     │  │ (users,    │  │  US = Stripe  │  │
+│  │  config)   │  │  bookings) │  │  PH = Magpie? │  │
+│  └────────────┘  └────────────┘  └───────────────┘  │
+└──────────────────────────┬───────────────────────────┘
+                           │ Internet
+┌──────────────────────────┼───────────────────────────┐
+│              ON-PREMISES (at each venue)              │
+│                          │                           │
+│   ┌──────────┐    ┌──────▼──────┐    ┌───────────┐  │
+│   │ Cameras  │───▶│  Mac Mini   │───▶│ Apple TV  │  │
+│   │ (replay) │    │ (replay svc)│    │ (display) │  │
+│   └──────────┘    └─────────────┘    └───────────┘  │
+│                                                      │
+│   ┌──────────────────────────────────────────────┐   │
+│   │  iPads (1 per court)                         │   │
+│   │  - PodPlay app installed via Mosyle MDM      │   │
+│   │  - Customer browses, books, PAYS here        │   │
+│   │  - Connected via POE ethernet (not WiFi)     │   │
+│   │  - All internet traffic goes through UDM     │   │
+│   │    gateway → ISP router → internet           │   │
+│   └──────────────────────────────────────────────┘   │
+└──────────────────────────────────────────────────────┘
 ```
-
-**Key for Magpie:** The iPads are where your payment integration lives. Customers use the PodPlay app on these iPads to browse courts, book, and pay.
 
 ---
 
-## 2. Network Architecture
+## Every Place Stripe Appears in the Setup Guide
 
-All devices sit behind a Unifi Dream Machine (UDM) gateway. The network is segmented into VLANs:
+### 1. Admin Dashboard — Stripe Account ID
 
-```
-                          INTERNET
-                             │
-                      ┌──────▼──────┐
-                      │  ISP Router │
-                      │  (PLDT,     │
-                      │   Globe,    │
-                      │   Converge) │
-                      └──────┬──────┘
-                             │  Port 4000 forwarded
-                      ┌──────▼──────┐
-                      │    UDM      │  Unifi Dream Machine
-                      │  Gateway    │  (router + firewall)
-                      └──────┬──────┘
-                             │
-                      ┌──────▼──────┐
-                      │   Unifi     │
-                      │   Switch    │
-                      └──────┬──────┘
-                             │
-              ┌──────────────┼──────────────┐
-              │              │              │
-     ┌────────▼───────┐     │     ┌────────▼────────┐
-     │  DEFAULT VLAN  │     │     │  REPLAY VLAN    │
-     │  192.168.30.x  │     │     │  192.168.32.x   │
-     │                │     │     │                 │
-     │  • iPads ◄─────┼─ PAYMENT  │  • Mac Mini     │
-     │  • Apple TVs   │  TRAFFIC  │    (.32.100)    │
-     │  • NVR         │  GOES     │  • Cameras      │
-     │                │  THROUGH  │                 │
-     └────────────────┘  HERE     └─────────────────┘
-```
-
-### What this means for payment flow:
+The very first step before any hardware is configured is setting up the venue in PodPlay's admin dashboard. There's a **Stripe Account ID** field:
 
 ```
-┌───────────┐     WiFi/POE      ┌───────────┐     Internet     ┌───────────┐
-│           │    Ethernet        │           │                  │           │
-│   iPad    │ ──────────────►   │    UDM    │ ─────────────►  │  PodPlay  │
-│  PodPlay  │                   │  Gateway  │                  │  Backend  │
-│   App     │ ◄──────────────   │           │ ◄─────────────   │ + Magpie  │
-│           │                   │           │                  │           │
-└───────────┘                   └───────────┘                  └───────────┘
-
-iPad sends payment request → UDM routes to internet → PodPlay backend
-→ Magpie processes payment → response back same path
+┌───────────────────────────────────────────────────────┐
+│           PODPLAY ADMIN DASHBOARD                      │
+│                                                       │
+│  Settings > Venues > [Venue Name]                     │
+│                                                       │
+│  ┌───────────────────────────────────────────────┐    │
+│  │                                               │    │
+│  │  Venue Name:        [Example Venue       ]    │    │
+│  │  Location:          [City, Country       ]    │    │
+│  │                                               │    │
+│  │  ── Payment ─────────────────────────────     │    │
+│  │                                               │    │
+│  │  Stripe Account ID: [acct_1234567890    ]  ◄──┼─── THIS
+│  │                                               │    │
+│  │  ── Replays ─────────────────────────────     │    │
+│  │  On-premises Replays: [✅ Enabled       ]     │    │
+│  │  API URL:    [http://venue.podplaydns...]     │    │
+│  │  Local URL:  [http://192.168.32.100:4000]     │    │
+│  │                                               │    │
+│  └───────────────────────────────────────────────┘    │
+└───────────────────────────────────────────────────────┘
 ```
 
-**iPads connect to the internet through the UDM.** If there's a payment timeout or failure at a venue, the first thing to check is the UDM's internet connection, not your backend.
+**What Stripe Account ID does in the US:** Each venue has its own Stripe account. This ID ties the venue to its Stripe merchant account so payments from that venue's iPads go to the right place.
+
+> **Question for Magpie:** What is your equivalent of a Stripe Account ID? When we set up a new venue in the admin dashboard, what identifier from Magpie do we enter here — or does your integration work differently? Does PodPlay even have a field for Magpie, or did you handle this another way?
 
 ---
 
-## 3. iPad Setup & App Configuration
+### 2. iPad App — Payment Is Processed Here
 
-This is the most relevant section for Magpie — it's how the devices running your payment integration get configured.
+The PodPlay app runs on iPads at each court. Customers use it to book and pay. In the US, the app calls Stripe to process payment.
 
-### How iPads are provisioned:
-
-1. iPads are managed via **Mosyle** (MDM — mobile device management)
-2. Each iPad is enrolled under "Pingpod Inc" in Apple Business Manager
-3. During setup, iPads display "This device is managed by Pingpod Inc"
-4. Mosyle pushes the **PodPlay app** to each iPad automatically
-
-### How the PodPlay app knows which venue it belongs to:
-
-Mosyle pushes a **custom app configuration** per client:
+The app knows which venue it belongs to via a config pushed by Mosyle (MDM):
 
 ```xml
 <dict>
@@ -132,184 +99,138 @@ Mosyle pushes a **custom app configuration** per client:
 </dict>
 ```
 
-This `CUSTOMERNAME` string is what tells the PodPlay app which venue/backend to connect to. **This is likely the same identifier that determines which payment configuration (i.e., your Magpie merchant account) gets used.**
-
-### iPad naming convention:
+This customer ID maps to a venue in the admin dashboard, which has the payment config (Stripe Account ID in the US).
 
 ```
-iPad {ClientName} Court {Number}
+HOW THE IPAD KNOWS WHERE TO SEND PAYMENT (US / STRIPE):
+
+  Mosyle pushes              PodPlay app             Admin dashboard
+  config to iPad             reads venue config       has payment config
+
+  ┌─────────────┐           ┌─────────────┐         ┌────────────────┐
+  │ id:         │           │ "I am the   │         │ Venue:         │
+  │ "VenueName" │──────────▶│  VenueName  │────────▶│ "VenueName"    │
+  │             │           │  iPad"      │  fetch   │                │
+  └─────────────┘           └──────┬──────┘         │ Stripe ID:     │
+                                   │                │ acct_xxxxx     │
+                                   │                └────────────────┘
+                                   │
+                                   ▼
+                            ┌─────────────┐
+                            │ Payment via │
+                            │ Stripe SDK  │
+                            │ using that  │
+                            │ account ID  │
+                            └─────────────┘
 ```
 
-Example: `iPad Manila Court 1`, `iPad Manila Court 2`
-
-### iPads are POE-powered:
-
-iPads are connected via **POE (Power over Ethernet) adapters** plugged into the Unifi switch. They get power and network from the same cable — no WiFi involved.
+> **Question for Magpie:** In your integration, how does the iPad app know to use Magpie instead of Stripe? Is it:
+> - A different SDK embedded in the PodPlay app?
+> - The same app, but it detects the region and routes to Magpie?
+> - Something configured per-venue in the admin dashboard?
+> - Something else entirely?
+>
+> We don't know the specifics of how your integration was wired in — can you walk us through the flow from the customer tapping "Pay" on the iPad to the money arriving?
 
 ---
 
-## 4. Admin Dashboard — Where Payment Config Lives
+### 3. Stripe in the Booking / Charge Flow
 
-Before any hardware is set up, the venue is configured in PodPlay's **admin dashboard**. This is where your integration gets tied to a specific venue:
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                  PODPLAY ADMIN DASHBOARD                     │
-│                                                             │
-│  Settings > Venues > [Venue Name]                           │
-│                                                             │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │                                                     │    │
-│  │  Venue Name:          [Manila PingPod          ]    │    │
-│  │  Location:            [Manila, Philippines     ]    │    │
-│  │                                                     │    │
-│  │  ── Payment ──────────────────────────────────      │    │
-│  │  Stripe Account ID:   [acct_xxxxxx           ]     │◄── Your Magpie
-│  │                                                     │    merchant ID or
-│  │  ── Replays ──────────────────────────────────      │    equivalent goes
-│  │  On-premises Replays: [✅ Enabled            ]     │    here (or in a
-│  │  API URL:             [http://customer.podplay]     │    similar field)
-│  │  Local API URL:       [http://192.168.32.100 ]     │    │
-│  │                                                     │    │
-│  └─────────────────────────────────────────────────────┘    │
-│                                                             │
-│  This is configured BEFORE hardware is shipped/installed.   │
-│  The Mosyle app config (CUSTOMERNAME) maps to this venue.   │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### How venue config connects to payment:
+When a customer books a court in the US, the flow is:
 
 ```
-Admin Dashboard                    Mosyle MDM                    iPad
-─────────────────                  ──────────                    ────
-
-┌─────────────────┐  matches    ┌─────────────────┐  pushed   ┌────────────┐
-│ Venue:          │ ─────────► │ App Config:      │ ───────► │ PodPlay    │
-│ "Manila"        │  venue ID   │ id: "Manila"     │  to iPad  │ App knows  │
-│                 │             │                  │           │ it's the   │
-│ Payment:        │             └─────────────────┘           │ "Manila"   │
-│ Magpie ID: xxx  │                                           │ venue      │
-│                 │◄──────────────────────────────────────────│            │
-│ Replay URLs:    │     App fetches venue config               │ Payment    │
-│ http://...      │     (including payment provider)           │ goes thru  │
-└─────────────────┘                                           │ Magpie     │
-                                                              └────────────┘
+Customer taps "Book" on iPad
+         │
+         ▼
+PodPlay app sends booking request to PodPlay backend
+         │
+         ▼
+PodPlay backend creates a Stripe PaymentIntent
+(using the venue's Stripe Account ID)
+         │
+         ▼
+Stripe processes the charge
+(GCash / credit card in PH context)
+         │
+         ▼
+Stripe sends webhook to PodPlay backend
+confirming payment succeeded
+         │
+         ▼
+PodPlay backend confirms the reservation
+         │
+         ▼
+iPad shows "Booking Confirmed"
 ```
+
+> **Question for Magpie:** What does this flow look like with your integration?
+> - Does PodPlay's backend call Magpie's API directly (like it calls Stripe)?
+> - Or does the iPad app call Magpie directly, bypassing the backend?
+> - Does Magpie send webhooks/callbacks to PodPlay when a payment is confirmed?
+> - How does GCash payment work in this flow specifically — does the customer get redirected to GCash, or is it in-app?
 
 ---
 
-## 5. The On-Premises Replay System (Not Payment-Related, But Context)
+### 4. Stripe in Refunds / Credits
 
-Each venue has a local replay system that runs independently of payments. You don't need to worry about this, but it helps to know it exists:
+In the US, if a customer cancels a booking, PodPlay issues a refund through Stripe. In the Philippines, e-wallet refunds (GCash) are one-way — you can't easily refund back to the wallet.
 
-- A **Mac Mini** at each venue runs a Node.js replay service on port 4000
-- **Cameras** (one per court) stream video to the Mac Mini over a local VLAN (192.168.32.x)
-- Clips are stored on a **Samsung SSD** attached to the Mac Mini
-- When a customer requests an **instant replay**, the Mac Mini serves it to the Apple TV on the same network
-- The Mac Mini is reachable externally via **DDNS** (`CUSTOMER.podplaydns.com:4000`)
-
-```
-Camera ──► Mac Mini ──► Apple TV (instant replay on TV)
-              │
-              ▼
-         Samsung SSD (clip storage)
-              │
-              ▼
-         PodPlay Cloud (async upload for later viewing)
-```
-
-**Port 4000 is for the replay service, not payments.** Payments go through the normal internet path from the iPad to PodPlay's cloud backend to Magpie.
+> **Question for Magpie:** How are refunds/cancellations handled in your integration?
+> - When PodPlay's backend triggers a refund, what happens on Magpie's side?
+> - Do GCash payments get refunded back to GCash, or does the customer get a PodPlay credit instead?
+> - For credit card payments, can you do standard refunds?
+> - Is there anything we need to configure per venue for the refund flow to work?
 
 ---
 
-## 6. Full Setup Sequence (What Happens When We Deploy a Venue)
+### 5. Stripe During Venue Testing
 
-Here's the order of operations, with your touchpoints highlighted:
+The config guide's testing section says to "give yourself a few hundred free replays on your user profile so you do not get charged accidentally." This tells us payment is **live during testing** — there's no separate test mode mentioned in the guide.
 
-```
-SETUP PHASE                               MAGPIE TOUCHPOINT?
-───────────                               ──────────────────
+The testing steps are:
+1. Create an operations reservation via admin dashboard
+2. Use the iPad to book a court (this triggers a real payment)
+3. Verify instant replay works
 
-1. Create venue in Admin Dashboard ────── ✅ Payment config set here
-   (name, location, payment ID,              (Magpie merchant ID)
-    replay URLs)
-
-2. Configure Mosyle device groups ──────  ❌ No
-   (iPad + AppleTV groups for client)
-
-3. Set app config in Mosyle ────────────  ⚠️ Indirect — the CUSTOMERNAME
-   (customer ID pushed to devices)            maps to the venue where your
-                                              payment config lives
-
-4. Hardware: Network setup ─────────────  ❌ No
-   (UDM, switch, VLANs)
-
-5. Hardware: Camera setup ──────────────  ❌ No
-
-6. Hardware: Mac Mini setup ────────────  ❌ No
-   (replay service, SSD, DDNS)
-
-7. Hardware: iPad setup ────────────────  ⚠️ Indirect — these are the
-   (POE, Mosyle enrollment, app install)      devices running PodPlay app
-                                              where customers pay via Magpie
-
-8. Hardware: Apple TV setup ────────────  ❌ No
-
-9. Testing: Make a booking ─────────────  ✅ Payment test — verify Magpie
-   via iPad, trigger replay,                  charges work from this venue
-   verify everything works
-
-10. Ship equipment to venue ────────────  ❌ No
-```
+> **Question for Magpie:** When we're testing a new venue setup before shipping it to the customer:
+> - Is there a test/sandbox mode, or are we running live transactions?
+> - If live: how do we reverse test charges?
+> - Do we need to do anything on Magpie's side to "activate" a venue for payments, or is it live as soon as the config is in the admin dashboard?
 
 ---
 
-## 7. Questions for Magpie
+### 6. Per-Venue Payment Configuration (Stripe Has One Account Per Venue)
 
-Now that you understand the venue environment, here's what we need from you:
+In the US, each venue gets its own Stripe Account ID. This means payment revenue is separated per venue.
 
-### Venue Setup
-
-| # | Question |
-|---|---|
-| 1 | What **credential or ID** do we enter in the admin dashboard per venue? (merchant ID, API key, etc.) |
-| 2 | Do you need to **create/register** anything on your side per venue before we configure it? |
-| 3 | Is venue onboarding something we can do **self-service**, or does it require Magpie to provision? |
-
-### Device & Network
-
-| # | Question |
-|---|---|
-| 4 | Does the Magpie SDK/integration on the iPad have any **specific network requirements**? (ports, domains to whitelist, certificate pinning, etc.) |
-| 5 | If the venue's internet goes down temporarily, does your SDK **queue payments** and retry, or does it fail immediately? |
-| 6 | Are there any **timeout settings** we should configure on the UDM/network for payment traffic? |
-
-### Testing & Troubleshooting
-
-| # | Question |
-|---|---|
-| 7 | What's the **test/sandbox mode** process for verifying payments work at a new venue before going live? |
-| 8 | What **logs or diagnostics** are available if a payment fails at a venue? (on the iPad, on your dashboard, etc.) |
-| 9 | Is there a **health check endpoint** we can hit from the venue network to verify Magpie connectivity? |
-| 10 | Who do we contact for **venue-level payment issues** during and after deployment? |
-
-### Multi-Venue Scale
-
-| # | Question |
-|---|---|
-| 11 | As we deploy multiple venues, is there a **parent account / dashboard** where we can see all venues' payment status? |
-| 12 | Can we **bulk-create** venue merchant accounts, or is it one at a time? |
-| 13 | Are there any **per-venue costs** on Magpie's side we should factor into the deployment BOM? |
+> **Question for Magpie:** How does venue-level separation work on your side?
+> - Does each venue have its own Magpie merchant account?
+> - Or do all venues share one account with some internal tagging?
+> - When we add a new venue, do we need to register it with Magpie first?
+> - Is there a self-service process, or do we coordinate with your team each time?
 
 ---
 
-## 8. Venue Deployment Checklist — Magpie Items
+## Summary: Stripe Components & Magpie Equivalents
 
-For each new venue deployment, here's what involves Magpie:
+| Stripe Component (US) | What It Does | Magpie Equivalent? |
+|---|---|---|
+| **Stripe Account ID** | Per-venue merchant identifier, entered in admin dashboard | ❓ |
+| **Stripe SDK** (in PodPlay app) | Processes payment on the iPad | ❓ |
+| **PaymentIntent** | Backend creates a charge for a booking | ❓ |
+| **Webhooks** | Stripe notifies PodPlay backend that payment succeeded/failed | ❓ |
+| **Refunds** | Backend triggers refund on cancellation | ❓ |
+| **Customer objects** | Saved payment methods for returning users | ❓ |
+| **Test mode** | Sandbox for testing without real charges | ❓ |
+| **Dashboard** | Stripe dashboard to see transactions per venue | ❓ |
 
-- [ ] **Before setup:** Magpie merchant account/ID created for the venue
-- [ ] **Admin dashboard:** Payment credential entered in venue settings
-- [ ] **After iPad setup:** Test payment from each iPad to verify Magpie connectivity
-- [ ] **Before shipping:** Confirm test transaction appears in Magpie dashboard
-- [ ] **After on-site install:** Verify payment works on live network (different ISP/IP than test environment)
+We're not asking you to fill this in abstractly — we'd love a quick call or written walkthrough of **how your integration actually works** for each of these, so we know what to expect when setting up venues.
+
+---
+
+## What We're Doing Next
+
+- **March 2–10:** Training in New Jersey at PodPlay HQ. We'll see the full setup process in person and can ask PodPlay's team how the Stripe integration was built, which will help us understand where Magpie plugs in.
+- **After March 10:** We'll share what we learned and can do a technical sync to make sure we're aligned on the venue deployment process for the Philippines.
+
+If you can share your answers (or even partial answers) before March 2, that would help us ask smarter questions during training.
