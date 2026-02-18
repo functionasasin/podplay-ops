@@ -44,3 +44,13 @@ Software/booking platform originally built for [[Ping Pod]], now a separate comp
 ## Philippines Tax
 
 - 17% withholding tax applies
+
+## Technical Architecture
+
+PodPlay is a hybrid cloud + on-premises system. See [[PodPlay Asia Infrastructure Analysis]] for full breakdown.
+
+- **Cloud**: Admin dashboard, booking API, payment processing (Stripe US), Mosyle MDM, Apple Business Manager
+- **On-premises per venue**: Unifi network stack (UDM + Switch + PDU), Mac Mini running Node.js replay service, cameras (1/court), iPads (1/court), Apple TVs (1/court), Samsung SSD for clip storage
+- **Communication**: Mac Mini ↔ PodPlay backend via port 4000; DDNS via FreeDNS (podplaydns.com)
+- **Replay flow**: Cameras → Mac Mini (local VLAN 192.168.32.x) → Apple TV (instant replay); clips uploaded async to cloud
+- **Configuration guide**: See [[PodPlay Config Guide v1]] (written by [[Stan Wu]], dated Sept 2024)
