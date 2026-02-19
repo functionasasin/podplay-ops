@@ -125,34 +125,33 @@ The wallet vision is big but the details are unresolved.
 
 ### G. Legal & Compliance
 
-49. **Data privacy**: Where is user data stored? GDPR/Philippine Data Privacy Act compliance?
-50. **Terms of service**: Does Pod Play have standard ToS for the app? Do we need Philippines-specific terms?
-51. **Payment compliance**: PCI-DSS handled by Magpie? Or do we have obligations?
-52. **Liability**: If equipment malfunctions (camera, replay, booking error), who's liable? Pod Play or distributor?
-53. **Insurance**: Is there venue insurance required? What does Pod Play recommend?
+49. **Terms of service**: Does Pod Play have standard ToS for the app? Do we need Philippines-specific terms?
+50. **Payment & tax compliance**: How does Pod Play handle tax (VAT, withholding) in the US today? We need to understand their model so we can tell Magpie what to implement — Magpie said they'll build whatever we specify.
+51. **Liability**: If equipment malfunctions (camera, replay, booking error), who's liable? Pod Play or distributor?
+52. **Insurance**: Is there venue insurance required? What does Pod Play recommend?
 
 ### H. Hardware Specifics (Need Exact Answers)
 
-54. **Camera exact model and part number** — need to source in Philippines
-55. **Mac Mini exact specs** (year, chip, RAM, storage) — need to source locally
-56. **Samsung SSD exact model and capacity** — need to source locally
-57. **POE charger exact brand/model** — need to source locally
-58. **All Unifi gear exact models** (UDM variant, switch model, PDU model)
-59. **Kisi controller/reader model** — if applicable
-60. **Brother label maker model** — minor but for completeness
-61. **Bill of Materials (BOM) template** — get a sample for an actual past deployment
-62. **Cables and connectors** — full list of what's needed (ethernet, HDMI, SFP, power)
+53. **Camera exact model and part number** — need to source in Philippines
+54. **Mac Mini exact specs** (year, chip, RAM, storage) — need to source locally
+55. **Samsung SSD exact model and capacity** — need to source locally
+56. **POE charger exact brand/model** — need to source locally
+57. **All Unifi gear exact models** (UDM variant, switch model, PDU model)
+58. **Kisi controller/reader model** — if applicable
+59. **Brother label maker model** — minor but for completeness
+60. **Bill of Materials (BOM) template** — get a sample for an actual past deployment
+61. **Cables and connectors** — full list of what's needed (ethernet, HDMI, SFP, power)
 
 ### I. Port 4000 — What Actually Flows?
 
 This is architecturally critical for understanding latency and reliability.
 
-63. **What data flows over port 4000 between Mac Mini and Pod Play servers?**
-64. **Is it synchronous (real-time) or asynchronous (queue-based)?**
-65. **Is it just health checks and clip uploads? Or is there real-time booking data?**
-66. **What happens if the connection drops?** Does the venue still function? Can users still book? Can replays still play?
-67. **Bandwidth requirements**: How much upload bandwidth does a venue need? Per court?
-68. **Is there a fallback if port 4000 is blocked by ISP?** VPN tunnel? Alternative port?
+62. **What data flows over port 4000 between Mac Mini and Pod Play servers?**
+63. **Is it synchronous (real-time) or asynchronous (queue-based)?**
+64. **Is it just health checks and clip uploads? Or is there real-time booking data?**
+65. **What happens if the connection drops?** Does the venue still function? Can users still book? Can replays still play?
+66. **Bandwidth requirements**: How much upload bandwidth does a venue need? Per court?
+67. **Is there a fallback if port 4000 is blocked by ISP?** VPN tunnel? Alternative port?
 
 ---
 
@@ -170,8 +169,8 @@ This is architecturally critical for understanding latency and reliability.
 
 ### Email 3: Infrastructure & Setup Questions (Send 1 Week Before Trip)
 - Questions 32–40 (Operations & deployment)
-- Questions 54–62 (Exact hardware specs)
-- Questions 63–68 (Port 4000 details)
+- Questions 53–61 (Exact hardware specs)
+- Questions 62–67 (Port 4000 details)
 - These are the hands-on training questions — they should prepare materials
 
 ### Things We Need to Resolve Internally (Before Trip)
@@ -203,10 +202,10 @@ When all these questions are answered, we should be able to:
 | Priority | Category | Questions | Why |
 |----------|----------|-----------|-----|
 | **CRITICAL** | Payment abstraction | 11–21 | Blocks Magpie integration — the #1 technical risk |
-| **CRITICAL** | Hardware specs | 54–62 | Blocks first venue deployment — need to source locally |
-| **CRITICAL** | Port 4000 | 63–68 | Determines if PH latency is a problem |
+| **CRITICAL** | Hardware specs | 53–61 | Blocks first venue deployment — need to source locally |
+| **CRITICAL** | Port 4000 | 62–67 | Determines if PH latency is a problem |
 | **HIGH** | Venue discovery | 1–10 | Need to explain the product to venue partners |
 | **HIGH** | Merchant experience | 22–31 | Need to onboard Tela Park |
 | **MEDIUM** | Operations | 32–40 | Important but can learn during/after training |
 | **MEDIUM** | Digital wallet | 41–48 | Important for strategy but not day-1 blocker |
-| **LOW** | Legal/compliance | 49–53 | Important but separate workstream |
+| **LOW** | Legal/compliance | 49–52 | Important but separate workstream |
