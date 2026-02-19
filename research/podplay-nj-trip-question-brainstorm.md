@@ -67,17 +67,16 @@ Magpie integration is done — Pod Play assigned a resource to integrate with Ma
 
 We understand the player/user side somewhat, but the merchant side is vague.
 
-22. **What does merchant onboarding look like end-to-end?** From signing up to first booking — what are all the steps?
-23. **What does the merchant dashboard show?** Revenue, bookings, utilization, customer data?
-24. **Can merchants set their own pricing?** Or is pricing controlled by the admin/distributor?
-25. **Can merchants set their own hours of operation?** Blackout dates? Holiday schedules?
-26. **Can merchants add their own products?** (Coaching, merch, food — per the digital wallet vision)
-27. **How does a merchant get paid?** What's the payout report look like? How do they reconcile?
-28. **Merchant permissions**: What can a merchant do vs. what can only a distributor/admin do?
-29. **Multi-location merchants**: Can one merchant own multiple venues under one account?
-30. **Merchant branding**: Can each venue have its own branding in the app, or is it all Pod Play branded?
-31. **Merchant notifications**: Do merchants get notified of new bookings, cancellations, issues?
-32. **Staff accounts**: Can a venue have multiple staff logins with different permission levels?
+9. **What does merchant onboarding look like end-to-end?** From signing up to first booking — what are all the steps?
+10. **What does the merchant dashboard show?** Revenue, bookings, utilization, customer data?
+11. **Can merchants set their own pricing?** Or is pricing controlled by the admin/distributor?
+12. **Can merchants set their own hours of operation?** Blackout dates? Holiday schedules?
+13. **Can merchants add their own products?** (Coaching, merch, food — per the digital wallet vision)
+14. **How does a merchant get paid?** What's the payout report look like? How do they reconcile?
+15. **Merchant permissions**: What can a merchant do vs. what can only a distributor/admin do?
+16. **Multi-location merchants**: Can one merchant own multiple venues under one account?
+17. **Merchant branding**: Can each venue have its own branding in the app, or is it all Pod Play branded?
+18. **Merchant notifications**: Do merchants get notified of new bookings, cancellations, issues?
 
 ### D. Setup & Configuration — Philippines vs US Differences
 
