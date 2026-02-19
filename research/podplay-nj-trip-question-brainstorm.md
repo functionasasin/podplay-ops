@@ -110,64 +110,49 @@ After initial setup, how do we run this day-to-day?
 39. **Scaling**: If a venue adds more courts later, what's the process? New cameras + update config? Or full re-deployment?
 40. **Escalation path**: When something breaks, who do we contact? Stan? Chad? Is there a support SLA?
 
-### F. User Experience & Booking Flow
-
-Understanding the end-to-end user journey.
-
-59. **User registration**: How does a new user sign up? Email, phone, social login?
-60. **Booking flow**: Step by step, what does a user do to book a court? (Open app → find venue → pick time → pay → confirm?)
-61. **Cancellation policy**: How are cancellations handled? Refund to credit? Full refund? Configurable per venue?
-62. **Waitlist**: Is there a waitlist feature for popular time slots?
-63. **Recurring bookings**: Can users book recurring weekly slots?
-64. **Group bookings**: Can a user book for a group? Split payments?
-65. **Replay sharing**: How do users share their instant replays? Social media integration? Direct link?
-66. **User profiles**: What data does a user profile contain? Booking history, replays, credits?
-67. **Push notifications**: Does the app send notifications? Booking reminders, replay ready, promotions?
-68. **Ratings/reviews**: Can users rate venues or leave reviews?
-
-### G. Cross-Venue Credits & Digital Wallet
+### F. Cross-Venue Credits & Digital Wallet
 
 The wallet vision is big but the details are unresolved.
 
-69. **Cross-venue credits**: If user loads credits at Venue A, can they spend at Venue B? How does settlement work across different venue owners?
-70. **Credit expiration**: Do credits expire? Configurable per venue or platform-wide?
-71. **Credit transfer**: Can users transfer credits to other users?
-72. **Minimum load amount**: Is there a minimum credit purchase?
-73. **Refund to credits**: When a booking is cancelled, do credits go back to wallet automatically?
-74. **Credit visibility**: Can users see their credit balance in the app? Transaction history?
-75. **Multi-currency credits**: If a user loads pesos, can they use those credits at a Singapore venue (SGD)?
-76. **Merchant payout on credits**: When a user spends cross-venue credits, how does the merchant (court owner) get paid? Does Magpie handle the splitting?
+41. **Cross-venue credits**: If user loads credits at Venue A, can they spend at Venue B? How does settlement work across different venue owners?
+42. **Credit expiration**: Do credits expire? Configurable per venue or platform-wide?
+43. **Credit transfer**: Can users transfer credits to other users?
+44. **Minimum load amount**: Is there a minimum credit purchase?
+45. **Refund to credits**: When a booking is cancelled, do credits go back to wallet automatically?
+46. **Credit visibility**: Can users see their credit balance in the app? Transaction history?
+47. **Multi-currency credits**: If a user loads pesos, can they use those credits at a Singapore venue (SGD)?
+48. **Merchant payout on credits**: When a user spends cross-venue credits, how does the merchant (court owner) get paid? Does Magpie handle the splitting?
 
-### H. Legal & Compliance
+### G. Legal & Compliance
 
-77. **Data privacy**: Where is user data stored? GDPR/Philippine Data Privacy Act compliance?
-78. **Terms of service**: Does Pod Play have standard ToS for the app? Do we need Philippines-specific terms?
-79. **Payment compliance**: PCI-DSS handled by Magpie? Or do we have obligations?
-80. **Liability**: If equipment malfunctions (camera, replay, booking error), who's liable? Pod Play or distributor?
-81. **Insurance**: Is there venue insurance required? What does Pod Play recommend?
+49. **Data privacy**: Where is user data stored? GDPR/Philippine Data Privacy Act compliance?
+50. **Terms of service**: Does Pod Play have standard ToS for the app? Do we need Philippines-specific terms?
+51. **Payment compliance**: PCI-DSS handled by Magpie? Or do we have obligations?
+52. **Liability**: If equipment malfunctions (camera, replay, booking error), who's liable? Pod Play or distributor?
+53. **Insurance**: Is there venue insurance required? What does Pod Play recommend?
 
-### I. Hardware Specifics (Need Exact Answers)
+### H. Hardware Specifics (Need Exact Answers)
 
-82. **Camera exact model and part number** — need to source in Philippines
-83. **Mac Mini exact specs** (year, chip, RAM, storage) — need to source locally
-84. **Samsung SSD exact model and capacity** — need to source locally
-85. **POE charger exact brand/model** — need to source locally
-86. **All Unifi gear exact models** (UDM variant, switch model, PDU model)
-87. **Kisi controller/reader model** — if applicable
-88. **Brother label maker model** — minor but for completeness
-89. **Bill of Materials (BOM) template** — get a sample for an actual past deployment
-90. **Cables and connectors** — full list of what's needed (ethernet, HDMI, SFP, power)
+54. **Camera exact model and part number** — need to source in Philippines
+55. **Mac Mini exact specs** (year, chip, RAM, storage) — need to source locally
+56. **Samsung SSD exact model and capacity** — need to source locally
+57. **POE charger exact brand/model** — need to source locally
+58. **All Unifi gear exact models** (UDM variant, switch model, PDU model)
+59. **Kisi controller/reader model** — if applicable
+60. **Brother label maker model** — minor but for completeness
+61. **Bill of Materials (BOM) template** — get a sample for an actual past deployment
+62. **Cables and connectors** — full list of what's needed (ethernet, HDMI, SFP, power)
 
-### J. Port 4000 — What Actually Flows?
+### I. Port 4000 — What Actually Flows?
 
 This is architecturally critical for understanding latency and reliability.
 
-91. **What data flows over port 4000 between Mac Mini and Pod Play servers?**
-92. **Is it synchronous (real-time) or asynchronous (queue-based)?**
-93. **Is it just health checks and clip uploads? Or is there real-time booking data?**
-94. **What happens if the connection drops?** Does the venue still function? Can users still book? Can replays still play?
-95. **Bandwidth requirements**: How much upload bandwidth does a venue need? Per court?
-96. **Is there a fallback if port 4000 is blocked by ISP?** VPN tunnel? Alternative port?
+63. **What data flows over port 4000 between Mac Mini and Pod Play servers?**
+64. **Is it synchronous (real-time) or asynchronous (queue-based)?**
+65. **Is it just health checks and clip uploads? Or is there real-time booking data?**
+66. **What happens if the connection drops?** Does the venue still function? Can users still book? Can replays still play?
+67. **Bandwidth requirements**: How much upload bandwidth does a venue need? Per court?
+68. **Is there a fallback if port 4000 is blocked by ISP?** VPN tunnel? Alternative port?
 
 ---
 
@@ -175,19 +160,18 @@ This is architecturally critical for understanding latency and reliability.
 
 ### Email 1: Venue & App Questions (Send Immediately)
 - Questions 1–10 (Venue discovery, Spotlight, region locking)
-- Questions 59–68 (User experience and booking flow)
-- These help us understand the product from the user/venue perspective
+- These help us understand the product from the venue perspective
 
 ### Email 2: Payment & Merchant Technical Questions (Send This Week)
 - Questions 11–21 (Payment abstraction, Stripe integration depth)
-- Questions 22–32 (Merchant experience)
-- Questions 69–76 (Cross-venue credits)
+- Questions 22–31 (Merchant experience)
+- Questions 41–48 (Cross-venue credits)
 - These need engineering input — give them time to prepare
 
 ### Email 3: Infrastructure & Setup Questions (Send 1 Week Before Trip)
-- Questions 33–48 (Philippines vs US setup differences)
-- Questions 82–90 (Exact hardware specs)
-- Questions 91–96 (Port 4000 details)
+- Questions 32–40 (Operations & deployment)
+- Questions 54–62 (Exact hardware specs)
+- Questions 63–68 (Port 4000 details)
 - These are the hands-on training questions — they should prepare materials
 
 ### Things We Need to Resolve Internally (Before Trip)
@@ -219,12 +203,10 @@ When all these questions are answered, we should be able to:
 | Priority | Category | Questions | Why |
 |----------|----------|-----------|-----|
 | **CRITICAL** | Payment abstraction | 11–21 | Blocks Magpie integration — the #1 technical risk |
-| **CRITICAL** | PAL/NTSC + hardware | 33–36, 82–90 | Blocks first venue deployment |
-| **CRITICAL** | Port 4000 | 91–96 | Determines if PH latency is a problem |
+| **CRITICAL** | Hardware specs | 54–62 | Blocks first venue deployment — need to source locally |
+| **CRITICAL** | Port 4000 | 63–68 | Determines if PH latency is a problem |
 | **HIGH** | Venue discovery | 1–10 | Need to explain the product to venue partners |
-| **HIGH** | Merchant experience | 22–32 | Need to onboard Tela Park |
-| **HIGH** | Accounts & access | 38–45 | Need before first deployment |
-| **MEDIUM** | User experience | 59–68 | Important but can figure out once app is live |
-| **MEDIUM** | Digital wallet | 69–76 | Important for strategy but not day-1 blocker |
-| **MEDIUM** | Operations | 49–58 | Important but can learn during/after training |
-| **LOW** | Legal/compliance | 77–81 | Important but separate workstream |
+| **HIGH** | Merchant experience | 22–31 | Need to onboard Tela Park |
+| **MEDIUM** | Operations | 32–40 | Important but can learn during/after training |
+| **MEDIUM** | Digital wallet | 41–48 | Important for strategy but not day-1 blocker |
+| **LOW** | Legal/compliance | 49–53 | Important but separate workstream |
