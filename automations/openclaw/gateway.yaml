@@ -1,5 +1,5 @@
 # OpenClaw Gateway Configuration
-# Hosted on Fly.io — always-on Telegram bot
+# Hosted on Fly.io — always-on Telegram + WhatsApp bot
 # Docs: https://openclaw.ai/docs/gateway
 
 gateway:
@@ -38,8 +38,20 @@ channels:
     # to give updates, ask questions, or dump information
 
   whatsapp:
-    enabled: false
+    enabled: true
     type: whatsapp-web
+    # Pair via: openclaw channels login --channel whatsapp
+    # Uses Baileys (WhatsApp Web protocol) — QR code pairing
+    # Recommended: use a separate/dedicated phone number
+    dmPolicy: pairing # pairing | allowlist | open | disabled
+    groupPolicy: disabled
+    sendReadReceipts: true
+    ackReaction:
+      emoji: "👀"
+      direct: true
+      group: never
+    historyLimit: 50
+    mode: conversational
 
   outlook:
     enabled: true
