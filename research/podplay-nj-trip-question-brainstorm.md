@@ -45,20 +45,14 @@ Everything we need to know before, during, and after the NJ training trip (March
 
 ## What's NOT Clear — The Gaps
 
-### A. Venue Discovery & the "Spotlight" Question
+### A. Venue Discovery & Region
 
-This is the biggest UX gap. We've seen the backend and payment side, but how does the **user-facing experience** actually work?
-
-1. **How do venues appear in the Pod Play app?** Is there a map view? A list? Search by location?
-2. **What is "Spotlight"?** Is this a feature name? A promotional placement? A way venues get featured?
-3. **Region locking**: If I'm in the Philippines, do I see US venues in the app? Or is it filtered by region/country?
-4. **Venue visibility controls**: Can a venue be hidden, private, invite-only, or soft-launched before going public?
-5. **How does a brand-new venue appear to users?** Automatically after setup? After some approval process? After a certain configuration threshold?
-6. **Venue metadata**: What information does a venue listing show? (Photos, hours, pricing, court types, amenities, ratings?)
-7. **Multi-sport**: The app started with ping pong (Ping Pod). Now padel is in the picture. How does the app handle different sports at different venues? Is there sport-specific filtering?
-8. **Venue search radius**: How does the app determine which venues to show? GPS-based? City-based? Country-based?
-9. **Can venue owners control their listing?** Edit description, photos, hours, pricing? Or is that all admin-controlled?
-10. **Is there a venue approval workflow?** Who decides a venue goes live? Pod Play HQ? The distributor (us)?
+1. **Region locking**: If I'm in the Philippines, do I see US venues in the app? Or is it filtered by region/country? How are venues scoped to a region?
+2. **Venue visibility controls**: Can a venue be hidden, private, invite-only, or soft-launched before going public?
+3. **How does a brand-new venue appear to users?** Automatically after setup? After a certain configuration threshold? (We control when it goes live, but what are the technical steps?)
+4. **Venue metadata**: What information does a venue listing show? (Photos, hours, pricing, court types, amenities?)
+5. **Multi-sport**: The app started with ping pong (Ping Pod). Now pickleball is in the picture (Tela Park). How does the app handle different sports at different venues? Is there sport-specific filtering?
+6. **Can venue owners control their listing?** Edit description, photos, hours, pricing? Or is that all admin-controlled?
 
 ### B. Payment Integration (Technical Deep Dive)
 
