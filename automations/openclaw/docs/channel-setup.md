@@ -27,12 +27,46 @@ The bot runs on Fly.io and is always listening on Telegram. You can message it a
 
 Everything you tell the bot gets persisted as entities in the monorepo.
 
-## WhatsApp (People Comms — Planned)
+## WhatsApp (People Comms — Always-On Conversation)
 
-1. Run `openclaw onboard` and select WhatsApp
-2. Scan QR code from terminal
-3. Once linked, messages route through OpenClaw
-4. **Security**: Limit who can message the bot
+WhatsApp runs via Baileys (WhatsApp Web protocol). It connects your phone number to the bot so you can message it from WhatsApp just like Telegram. OpenClaw recommends using a separate/dedicated phone number.
+
+### Pair Your Phone
+
+1. SSH into your Fly.io instance or run locally:
+   ```bash
+   fly ssh console
+   openclaw channels login --channel whatsapp
+   ```
+2. Scan the QR code from your WhatsApp app (Settings → Linked Devices → Link a Device)
+3. Credentials are stored in the persistent volume at `/app/monorepo/.openclaw/credentials/whatsapp/`
+
+### Access Control
+
+By default `dmPolicy` is set to `pairing` — unknown senders get a pairing code challenge before they can chat with the bot. To lock it down to specific numbers:
+
+```yaml
+# In gateway.yaml
+channels:
+  whatsapp:
+    dmPolicy: allowlist
+    allowFrom:
+      - "+1XXXXXXXXXX"
+```
+
+### Manage Pairing
+
+```bash
+# List pending pairing requests
+openclaw pairing list whatsapp
+
+# Approve a specific request
+openclaw pairing approve whatsapp <CODE>
+```
+
+### Use It
+
+Same as Telegram — message the bot to give updates, dump transcripts, ask questions, or log decisions. Everything gets persisted as entities in the monorepo.
 
 ## Outlook (Email Ingestion — Twice Daily)
 
@@ -85,4 +119,7 @@ fly secrets set GIT_REPO_URL=https://x-access-token:<PAT>@github.com/<user>/mono
 # When enabling Outlook
 fly secrets set OUTLOOK_EMAIL=<your-email>
 fly secrets set OUTLOOK_APP_PASSWORD=<app-password>
+
+# WhatsApp — no secrets needed, pair via QR code:
+# fly ssh console → openclaw channels login --channel whatsapp
 ```
