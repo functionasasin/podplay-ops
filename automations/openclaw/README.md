@@ -6,12 +6,13 @@ Always-on AI assistant hosted on [Fly.io](https://fly.io), connected via Telegra
 
 ```
 You (Telegram) ←→ OpenClaw (Fly.io) ←→ Monorepo (Git)
-                        ↓
+Outlook (IMAP) ──→       ↓
                    Claude API
 ```
 
 - **Fly.io** hosts the OpenClaw gateway as an always-on process
 - **Telegram** is the primary interface — message the bot anytime
+- **Outlook** emails are ingested twice daily (9am + 6pm) — people, meetings, action items extracted into entities
 - **Monorepo** is the persistent state layer — every update you give the bot gets written back as structured entities and committed to git
 - **Claude** powers the LLM reasoning
 
@@ -37,8 +38,8 @@ There is no separate database. The monorepo **is** the bot's memory:
 | Channel | Purpose | Status |
 |---------|---------|--------|
 | Telegram | Always-on conversation, updates, queries, briefings | setup |
+| Outlook | Email ingestion twice daily (9am + 6pm) | setup |
 | WhatsApp | People comms, meeting follow-ups | planned |
-| Outlook | Email triage, calendar integration | planned |
 
 ## Skills
 
@@ -46,6 +47,7 @@ There is no separate database. The monorepo **is** the bot's memory:
 |-------|---------|---------|
 | `podplay-briefing` | Cron (8am daily) | Morning PodPlay status report |
 | `monorepo-ingest` | Conversational | Parse updates/transcripts → write entities |
+| `email-ingest` | Cron (9am + 6pm) | Pull Outlook emails → extract entities |
 | `git-sync` | Cron (every 15min) | Keep local clone in sync with remote |
 
 ## Deploy to Fly.io
@@ -57,6 +59,7 @@ There is no separate database. The monorepo **is** the bot's memory:
 - Telegram bot token from @BotFather
 - Anthropic API key
 - GitHub Personal Access Token (for git push from the bot)
+- Outlook email + app password (for email ingestion)
 
 ### Steps
 
@@ -73,7 +76,9 @@ fly volumes create monorepo_data --region sjc --size 1
 fly secrets set \
   ANTHROPIC_API_KEY=sk-ant-... \
   TELEGRAM_BOT_TOKEN=123456:ABC-... \
-  GIT_REPO_URL=https://x-access-token:<GITHUB_PAT>@github.com/<user>/monorepo.git
+  GIT_REPO_URL=https://x-access-token:<GITHUB_PAT>@github.com/<user>/monorepo.git \
+  OUTLOOK_EMAIL=you@outlook.com \
+  OUTLOOK_APP_PASSWORD=<app-password>
 
 # 4. Deploy
 fly deploy
@@ -113,6 +118,9 @@ automations/openclaw/
 │   ├── monorepo-ingest/
 │   │   ├── skill.yaml     # Ingest skill definition
 │   │   └── prompt.md      # Entity extraction + write-back prompt
+│   ├── email-ingest/
+│   │   ├── skill.yaml     # Email ingestion skill definition
+│   │   └── prompt.md      # Email → entity extraction prompt
 │   └── git-sync/
 │       ├── skill.yaml     # Git sync skill definition
 │       └── prompt.md      # Pull/push logic
@@ -127,3 +135,5 @@ automations/openclaw/
 | `ANTHROPIC_API_KEY` | Fly.io secret | Claude API access |
 | `TELEGRAM_BOT_TOKEN` | Fly.io secret | Telegram bot authentication |
 | `GIT_REPO_URL` | Fly.io secret | Monorepo clone URL with PAT for push access |
+| `OUTLOOK_EMAIL` | Fly.io secret | Outlook email address for IMAP |
+| `OUTLOOK_APP_PASSWORD` | Fly.io secret | Microsoft app password (not regular password) |

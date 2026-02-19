@@ -34,14 +34,43 @@ Everything you tell the bot gets persisted as entities in the monorepo.
 3. Once linked, messages route through OpenClaw
 4. **Security**: Limit who can message the bot
 
-## Outlook (Email Triage — Planned)
+## Outlook (Email Ingestion — Twice Daily)
 
-1. Create a Microsoft app password
-2. Set Fly.io secrets:
-   ```
+The bot connects to your Outlook inbox via IMAP and ingests emails twice a day (9am and 6pm). It extracts people, meetings, action items, and decisions into monorepo entities. Newsletters and automated notifications are skipped.
+
+### Setup
+
+1. Go to your Microsoft account → Security → App Passwords
+2. Create a new app password (you can't use your regular password for IMAP)
+3. Set Fly.io secrets:
+   ```bash
    fly secrets set OUTLOOK_EMAIL=you@outlook.com OUTLOOK_APP_PASSWORD=<app-password>
    ```
-3. Enable in `gateway.yaml` and redeploy
+4. Redeploy: `fly deploy`
+
+### What gets ingested
+
+- **New contacts** → `entities/people/` (name, email, last_contact)
+- **Meeting invites/recaps** → `entities/meetings/` (attendees, agenda, action items)
+- **Project updates** → appended to existing `entities/projects/`
+- **Action items** → flagged in relevant entity files
+- **Travel/event info** → `entities/trips/` or `entities/events/`
+
+### What gets skipped
+
+- Newsletters and marketing emails
+- Automated notifications (GitHub, Jira, CI)
+- Spam
+- Emails with no actionable content
+
+### Schedule
+
+| Run | Time | Purpose |
+|-----|------|---------|
+| Morning | 9:00 AM | Catch overnight and early emails |
+| Evening | 6:00 PM | Catch afternoon emails |
+
+If something time-sensitive is found, the bot sends a summary to Telegram.
 
 ## Secrets Summary
 

@@ -42,10 +42,15 @@ channels:
     type: whatsapp-web
 
   outlook:
-    enabled: false
+    enabled: true
     type: email-imap
+    # Set OUTLOOK_EMAIL and OUTLOOK_APP_PASSWORD in Fly.io secrets
     imap_host: outlook.office365.com
+    imap_port: 993
     smtp_host: smtp.office365.com
+    smtp_port: 587
+    fetch_folders: [INBOX, "Sent Items"]
+    max_emails_per_run: 50 # Cap per ingestion run to stay within LLM context
 
 # Scheduled Jobs (run alongside always-on conversation)
 cron:
@@ -54,6 +59,18 @@ cron:
     channel: telegram
     skill: podplay-briefing
     description: Daily PodPlay status report
+
+  email-ingest-morning:
+    schedule: "0 9 * * *" # Every day at 9:00 AM
+    channel: outlook
+    skill: email-ingest
+    description: Morning email ingestion — extract entities from new emails
+
+  email-ingest-evening:
+    schedule: "0 18 * * *" # Every day at 6:00 PM
+    channel: outlook
+    skill: email-ingest
+    description: Evening email ingestion — catch afternoon emails
 
   monorepo-pull:
     schedule: "*/15 * * * *" # Every 15 minutes
@@ -64,6 +81,7 @@ cron:
 skills:
   - podplay-briefing    # Daily status report
   - monorepo-ingest     # Ingest updates/transcripts/decisions into entities
+  - email-ingest        # Ingest Outlook emails into entities twice daily
   - git-sync            # Keep local repo in sync with remote
 
 # Memory & Context
