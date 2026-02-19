@@ -54,21 +54,14 @@ Everything we need to know before, during, and after the NJ training trip (March
 5. **Multi-sport**: The app started with ping pong (Ping Pod). Now pickleball is in the picture (Tela Park). How does the app handle different sports at different venues? Is there sport-specific filtering?
 6. **Can venue owners control their listing?** Edit description, photos, hours, pricing? Or is that all admin-controlled?
 
-### B. Payment Integration (Technical Deep Dive)
+### B. Payment Integration
 
-We know Magpie works for payments, but we don't know how deep Stripe is wired into Pod Play's codebase.
+Magpie integration is done — Pod Play assigned a resource to integrate with Magpie's platform. Magpie ID is a drop-in replacement for Stripe Account ID. Payment UI is a redirect in both US and PH. Credits bypass the payment gateway for subsequent transactions. No refunds for now. Callback to Pod Play stores credits, Pod Play handles credit-to-booking.
 
-11. **Is Stripe hardcoded throughout the codebase, or is there a payment provider abstraction layer?**
-12. **What specific Stripe APIs does Pod Play call?** (Charges, Payment Intents, Customers, Subscriptions, Refunds?)
-13. **What Stripe webhook events does Pod Play listen for?** (payment_intent.succeeded, charge.refunded, etc.)
-14. **Can the admin dashboard's "Stripe Account ID" field be repurposed for a different provider per venue?**
-15. **Is payment configuration per-venue or per-region?** Can Venue A use Stripe while Venue B uses Magpie?
-16. **What's the payment data model?** What gets stored in the database when a payment happens? How does it tie to bookings?
-17. **Does the Pod Play app handle payment UI, or does it redirect to Stripe's hosted checkout?** (We know Marcelo is using Stripe Payment Elements — is that the standard or custom?)
-18. **What happens when a payment fails?** Retry logic? User notification? Booking held or released?
-19. **Refund flow**: What does Pod Play expect from the payment provider for refunds? (Magpie has the one-way e-wallet limitation)
-20. **Does the credit/wallet system bypass the payment gateway for subsequent transactions?** Or does every credit spend still hit Stripe/Magpie?
-21. **What would it actually take to add a second payment provider?** Days? Weeks? Months? Is there precedent?
+**Remaining questions:**
+
+7. **App-side payment routing**: Pod Play did the backend swap for PH, but how does the **app** know to route to Magpie vs Stripe? Is it based on the venue config, the user's region, or something else? How is this enforced on the client side?
+8. **Per-venue or per-region payment config?** Can individual venues within a region use different payment providers? Or is it locked at the region level?
 
 ### C. Merchant / Venue Owner Experience
 
