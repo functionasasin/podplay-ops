@@ -2,7 +2,7 @@
 type: project
 name: Pod Play Southeast Asia
 status: active
-people: [[Carlos]], [[Ernesto]]
+people: [[Carlos]], [[Ernesto]], [[Dominic]], [[Marco Basu]], [[Nico]]
 places: [[Philippines]], [[Singapore]], [[Thailand]]
 related: [[Pod Play]], [[Ping Pod]], [[Magpie]], [[Digital Wallet]], [[Ping Pod Asia Franchise]]
 tags: [business, franchise, asia, distribution]
@@ -46,6 +46,19 @@ Master distribution and franchise operation for [[Pod Play]] and [[Ping Pod]] ac
 - **Config Guide**: [[PodPlay Config Guide v1]] — full hardware setup documentation
 - **Infrastructure Analysis**: [[PodPlay Asia Infrastructure Analysis]] — shared vs. local components, payment questions, PAL/NTSC issues
 - Key blocker: Payment integration (Stripe → [[Magpie]]) needs API surface understanding from training
+
+## Current Status (2026-02-18)
+
+- Meeting with [[Dominic]] tomorrow (Feb 19) — PodPlay sync
+- Meeting with [[Marco Basu]] planned for this weekend or next week
+- Meeting with [[Nico]] tentatively next week — pending confirmation
+- Number of courts to be set up TBD
+- NJ training trip in ~12 days (March 2-10)
+
+## Automation
+
+- OpenClaw bot being set up for daily Telegram briefings (see `automations/openclaw/`)
+- Morning status report covers: project status, meetings, action items, people to message, blockers
 
 ## Action Items
 

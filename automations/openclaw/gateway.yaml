@@ -1,0 +1,128 @@
+# OpenClaw Gateway Configuration
+# Hosted on Fly.io — always-on Telegram bot
+# Docs: https://openclaw.ai/docs/gateway
+
+gateway:
+  name: monorepo-bot
+  workspace: /app/monorepo
+
+# LLM Provider
+llm:
+  provider: anthropic
+  model: claude-sonnet-4-20250514
+  # Set ANTHROPIC_API_KEY in Fly.io secrets
+
+# The monorepo IS the persistent state.
+# Every update, decision, meeting note, or transcript that comes through
+# Telegram gets written back to the monorepo as entity files and committed.
+persistence:
+  type: git-repo
+  repo_path: /app/monorepo
+  remote: origin
+  branch: main
+  auto_commit: true
+  auto_push: true
+  commit_prefix: "bot: "
+  # Bot commits are distinguishable from manual commits
+
+# Connected Channels
+channels:
+  telegram:
+    enabled: true
+    type: telegram-bot
+    # Set TELEGRAM_BOT_TOKEN in Fly.io secrets
+    # Create via @BotFather on Telegram
+    allowed_users: [] # Add your Telegram user ID(s)
+    mode: conversational # Always-on, not just cron
+    # The bot is always listening — you can message it anytime
+    # to give updates, ask questions, or dump information
+
+  whatsapp:
+    enabled: false
+    type: whatsapp-web
+
+  outlook:
+    enabled: true
+    type: email-imap
+    # Set OUTLOOK_EMAIL and OUTLOOK_APP_PASSWORD in Fly.io secrets
+    imap_host: outlook.office365.com
+    imap_port: 993
+    smtp_host: smtp.office365.com
+    smtp_port: 587
+    fetch_folders: [INBOX, "Sent Items"]
+    max_emails_per_run: 50 # Cap per ingestion run to stay within LLM context
+
+# Scheduled Jobs (run alongside always-on conversation)
+cron:
+  podplay-daily-briefing:
+    schedule: "0 8 * * *" # Every day at 8:00 AM
+    channel: telegram
+    skill: podplay-briefing
+    description: Daily PodPlay status report
+
+  email-ingest-morning:
+    schedule: "0 9 * * *" # Every day at 9:00 AM
+    channel: outlook
+    skill: email-ingest
+    description: Morning email ingestion — extract entities from new emails
+
+  email-ingest-evening:
+    schedule: "0 18 * * *" # Every day at 6:00 PM
+    channel: outlook
+    skill: email-ingest
+    description: Evening email ingestion — catch afternoon emails
+
+  monorepo-pull:
+    schedule: "*/15 * * * *" # Every 15 minutes
+    skill: git-sync
+    description: Pull latest monorepo changes so bot state stays current
+
+# Skills — what the bot can do
+skills:
+  - podplay-briefing    # Daily status report
+  - monorepo-ingest     # Ingest updates/transcripts/decisions into entities
+  - email-ingest        # Ingest Outlook emails into entities twice daily
+  - git-sync            # Keep local repo in sync with remote
+
+# Memory & Context
+# The monorepo itself is the memory layer — not a separate DB.
+# The bot reads entities/ for current state and writes back to it.
+memory:
+  persistent: true
+  workspace_index: true
+  index_paths:
+    - entities/
+    - research/
+    - inbox/
+    - dashboards/
+
+# System prompt context — tells the bot what the monorepo is
+system_context: |
+  You are a personal operations assistant. Your persistent memory is the monorepo —
+  a git repository containing entities (people, places, businesses, trips, meetings,
+  projects, ideas, events) organized as markdown files with YAML frontmatter.
+
+  When the user gives you an update, decision, meeting note, or transcript:
+  1. Extract entities (people, projects, meetings, action items, decisions)
+  2. Update existing entity files or create new ones in entities/<type>/
+  3. Link entities together using [[wikilinks]]
+  4. Commit changes with a descriptive message
+
+  When the user asks a question:
+  1. Search across all entities and content
+  2. Synthesize from multiple sources
+  3. Provide context about when/where information came from
+
+  The monorepo structure:
+  - entities/people/     — Person files
+  - entities/businesses/  — Business/company files
+  - entities/projects/    — Project files
+  - entities/meetings/    — Meeting notes
+  - entities/trips/       — Trip plans
+  - entities/places/      — Location files
+  - entities/ideas/       — Ideas
+  - entities/events/      — Events
+  - inbox/               — Raw dumps awaiting organization
+
+  Always follow the entity frontmatter schema. See the CLAUDE.md in the repo root
+  for full details on entity types, statuses, and frontmatter fields.

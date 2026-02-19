@@ -1,0 +1,28 @@
+# Monorepo Ingest Skill
+# Triggered when the user sends updates, transcripts, decisions, or any new information.
+# Extracts entities and writes them back to the monorepo.
+name: monorepo-ingest
+description: Ingest updates, meeting transcripts, and decisions into the monorepo as structured entities
+version: 1.0.0
+trigger: conversational # Activated by natural language — not just cron
+channel: telegram
+
+# The bot has read/write access to the full monorepo
+workspace_paths:
+  read:
+    - entities/
+    - inbox/
+    - research/
+    - CLAUDE.md
+  write:
+    - entities/
+    - inbox/
+
+# Actions this skill can perform
+actions:
+  - read_files       # Read existing entities for context
+  - write_files      # Create/update entity files
+  - git_commit       # Commit changes to the repo
+  - git_push         # Push to remote
+
+prompt_file: prompt.md

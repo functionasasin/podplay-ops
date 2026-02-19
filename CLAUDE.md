@@ -67,7 +67,27 @@ Everything becomes a typed entity with standardized frontmatter. This enables:
 
 ## How This Works
 
-### The Ingestion Loop
+### The Monorepo is the Persistent State
+
+The monorepo is the single source of truth for everything. There is no separate database. Two systems write to it:
+
+1. **OpenClaw Bot (Telegram)** — Always-on bot hosted on Fly.io. When you message it with updates, meeting transcripts, decisions, or random info, it extracts entities and commits them back to the repo. Bot commits are prefixed with `bot:`. See `automations/openclaw/` for full setup.
+
+2. **Ingestion Loop (CI/cron)** — A periodic Claude Code job that organizes raw content from `inbox/` into structured entities.
+
+Both write paths follow the same entity schema and use the same `entities/` directory.
+
+### Write Path: OpenClaw Bot (Primary)
+
+The bot runs on Fly.io, always listening on Telegram. You can message it anytime:
+- Give updates: "We had a meeting with Carlos about the wallet launch"
+- Paste transcripts: The bot extracts entities, action items, decisions
+- Log decisions: "We're going with Stripe for payments"
+- Ask questions: "What's the status of the digital wallet project?"
+
+The bot reads `entities/` for context, writes back to `entities/`, and commits + pushes. A git-sync cron job pulls every 15 minutes so manual edits are picked up too.
+
+### Write Path: Ingestion Loop (Background)
 
 A CI/cron job runs Claude Code periodically to organize content:
 
