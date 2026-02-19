@@ -158,16 +158,17 @@ This is architecturally critical for understanding latency and reliability.
 ## Questions to Send Pod Play BEFORE the Trip
 
 ### Email 1: Venue & App Questions (Send Immediately)
-- Questions 1–10 (Venue discovery, Spotlight, region locking)
+- Questions 1–6 (Venue discovery, region locking, multi-sport)
 - These help us understand the product from the venue perspective
 
 ### Email 2: Payment & Merchant Technical Questions (Send This Week)
-- Questions 11–21 (Payment abstraction, Stripe integration depth)
-- Questions 22–31 (Merchant experience)
+- Questions 7–8 (Payment routing)
+- Questions 9–18 (Merchant experience)
 - Questions 41–48 (Cross-venue credits)
 - These need engineering input — give them time to prepare
 
 ### Email 3: Infrastructure & Setup Questions (Send 1 Week Before Trip)
+- Questions 19–31 (Philippines vs US setup differences)
 - Questions 32–40 (Operations & deployment)
 - Questions 53–61 (Exact hardware specs)
 - Questions 62–67 (Port 4000 details)
@@ -201,11 +202,12 @@ When all these questions are answered, we should be able to:
 
 | Priority | Category | Questions | Why |
 |----------|----------|-----------|-----|
-| **CRITICAL** | Payment abstraction | 11–21 | Blocks Magpie integration — the #1 technical risk |
-| **CRITICAL** | Hardware specs | 53–61 | Blocks first venue deployment — need to source locally |
+| **CRITICAL** | Payment routing | 7–8 | Blocks Magpie integration — the #1 technical risk |
+| **CRITICAL** | PH vs US setup | 19–31 | Blocks first venue deployment — PAL/NTSC, power, MDM |
+| **CRITICAL** | Hardware specs | 53–61 | Need exact part numbers to source locally |
 | **CRITICAL** | Port 4000 | 62–67 | Determines if PH latency is a problem |
-| **HIGH** | Venue discovery | 1–10 | Need to explain the product to venue partners |
-| **HIGH** | Merchant experience | 22–31 | Need to onboard Tela Park |
+| **HIGH** | Venue discovery | 1–6 | Need to explain the product to venue partners |
+| **HIGH** | Merchant experience | 9–18 | Need to onboard Tela Park |
 | **MEDIUM** | Operations | 32–40 | Important but can learn during/after training |
 | **MEDIUM** | Digital wallet | 41–48 | Important for strategy but not day-1 blocker |
 | **LOW** | Legal/compliance | 49–52 | Important but separate workstream |
