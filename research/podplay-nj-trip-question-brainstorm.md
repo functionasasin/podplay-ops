@@ -82,22 +82,19 @@ We understand the player/user side somewhat, but the merchant side is vague.
 
 The config guide is US-specific. What changes for Philippines?
 
-33. **PAL vs NTSC**: Does changing the camera video standard from NTSC to PAL break the replay pipeline? Does frame rate change from 30fps to 25fps? Does the Mac Mini's Node.js replay service care?
-34. **Camera region setting**: The config guide says "Region: United States" during camera setup. What happens if we select Philippines? Different firmware? Different encoding defaults?
-35. **Camera model**: What exact camera model is used? Is it available in the Philippines? Region-locked firmware?
-36. **ISP configuration for Philippines providers**: PLDT, Globe, Converge, Sky Fiber — the DMZ/port forwarding procedures will be different. Any tips from Pod Play on non-US ISPs?
-37. **Power standards**: US is 120V/60Hz, Philippines is 220V/60Hz. Do the Unifi equipment, Mac Mini, cameras, POE chargers all support 220V? Or do we need transformers?
-38. **Apple Business Manager**: Does the "Managed by Pingpod Inc" enrollment work in the Philippines? Or do we need our own Apple Business account for Asia?
-39. **Mosyle MDM**: Shared instance with US or separate instance for Asia? Who creates device groups for PH clients?
-40. **FreeDNS / DDNS**: Same podplaydns.com domain for Asian venues? Or separate DNS?
-41. **Deployment server**: The Jersey City server — can we access it remotely from the Philippines for `deploy.py`? Or do we need our own?
-42. **What does `deploy.py setup <AREA_NAME>` actually generate?** A macOS installer package? A config bundle? Can we inspect it?
-43. **Can we run our own deployment server in Asia?** Is deploy.py open-source or proprietary?
-44. **App binary**: Is the Pod Play iOS/tvOS app the same binary worldwide? Or are there regional builds?
-45. **App distribution**: Through App Store, TestFlight, or Mosyle? How does the customer ID in the Mosyle config route to the correct backend/venue?
-46. **Time zone handling**: Does the system handle Philippine time (UTC+8) correctly for bookings, schedules, and replay timestamps?
-47. **Currency**: How does the system handle Philippine pesos? Is currency configurable per venue? What about the admin dashboard — does it show pesos or always USD?
-48. **Language**: Is the app English-only? Any localization for Filipino/Tagalog? Does the merchant dashboard support other languages?
+19. **PAL vs NTSC**: Does changing the camera video standard from NTSC to PAL break the replay pipeline? Does frame rate change from 30fps to 25fps? Does the Mac Mini's Node.js replay service care?
+20. **Camera region setting**: The config guide says "Region: United States" during camera setup. What happens if we select Philippines? Different firmware? Different encoding defaults?
+21. **Camera model**: What exact camera model is used? Is it available in the Philippines? Region-locked firmware?
+22. **ISP configuration for Philippines providers**: PLDT, Globe, Converge, Sky Fiber — the DMZ/port forwarding procedures will be different. Any tips from Pod Play on non-US ISPs?
+23. **Power standards**: US is 120V/60Hz, Philippines is 220V/60Hz. Do the Unifi equipment, Mac Mini, cameras, POE chargers all support 220V? Or do we need transformers?
+24. **Apple Business Manager**: Does the "Managed by Pingpod Inc" enrollment work in the Philippines? Or do we need our own Apple Business account for Asia?
+25. **Mosyle MDM**: Shared instance with US or separate instance for Asia? Who creates device groups for PH clients?
+26. **FreeDNS / DDNS**: Same podplaydns.com domain for Asian venues? Or separate DNS?
+27. **Deployment server**: The Jersey City server — can we access it remotely from the Philippines for `deploy.py`? Or do we need our own?
+28. **What does `deploy.py setup <AREA_NAME>` actually generate?** A macOS installer package? A config bundle? Can we inspect it?
+29. **Can we run our own deployment server in Asia?** Is deploy.py open-source or proprietary?
+30. **App binary**: Is the Pod Play iOS/tvOS app the same binary worldwide? Or are there regional builds?
+31. **App distribution**: Through App Store, TestFlight, or Mosyle? How does the customer ID in the Mosyle config route to the correct backend/venue?
 
 ### E. Deployment & Ongoing Operations
 
