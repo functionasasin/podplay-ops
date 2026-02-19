@@ -100,16 +100,15 @@ The config guide is US-specific. What changes for Philippines?
 
 After initial setup, how do we run this day-to-day?
 
-49. **Remote Mac Mini access**: After deployment, can we SSH or screen-share into the Mac Mini remotely for support?
-50. **App updates**: How do app updates get pushed? Via Mosyle MDM, App Store, or manually?
-51. **Firmware updates**: Cameras, Unifi equipment, Mac Mini OS updates — who manages these? Automatic or manual?
-52. **Monitoring & alerting**: Is there a health monitoring dashboard? Does Pod Play get notified if a venue's Mac Mini goes offline?
-53. **The health check endpoint** (`/health` on port 4000) — is there a central dashboard that shows all venues' health status? Or do we have to check each one?
-54. **Replay clip storage**: How long are clips kept? Auto-deleted? How much SSD space per court per day?
-55. **Backup & recovery**: If the Mac Mini dies, what's the recovery process? Re-run deploy.py? Or full reinstall?
-56. **Scaling**: If a venue adds more courts later, what's the process? New cameras + update config? Or full re-deployment?
-57. **Escalation path**: When something breaks, who do we contact? Stan? Chad? Is there a support SLA?
-58. **Software licensing**: What's the licensing model for Asia? Per-venue? Per-court? Flat fee?
+32. **Remote Mac Mini access**: After deployment, can we SSH or screen-share into the Mac Mini remotely for support?
+33. **App updates**: How do app updates get pushed? Via Mosyle MDM, App Store, or manually?
+34. **Firmware updates**: Cameras, Unifi equipment, Mac Mini OS updates — who manages these? Automatic or manual?
+35. **Monitoring & alerting**: Is there a health monitoring dashboard? Does Pod Play get notified if a venue's Mac Mini goes offline?
+36. **Health check endpoint** (`/health` on port 4000) — is there a central dashboard that shows all venues' health status? Or do we have to check each one?
+37. **Replay clip storage**: How long are clips kept? Auto-deleted? How much SSD space per court per day?
+38. **Backup & recovery**: If the Mac Mini dies, what's the recovery process? Re-run deploy.py? Or full reinstall?
+39. **Scaling**: If a venue adds more courts later, what's the process? New cameras + update config? Or full re-deployment?
+40. **Escalation path**: When something breaks, who do we contact? Stan? Chad? Is there a support SLA?
 
 ### F. User Experience & Booking Flow
 
