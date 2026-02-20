@@ -2,15 +2,15 @@
 
 ## Statistics
 - Total aspects discovered: 15
-- Analyzed: 1
-- Pending: 14
-- Convergence: 6.7%
+- Analyzed: 2
+- Pending: 13
+- Convergence: 13.3%
 
 ## Pending Aspects (ordered by dependency)
 
 ### Wave 1: Raw Data Extraction (tools required)
 - [x] transcription — Run Whisper on reference video narration; output word-level timestamps to raw/transcription.json and summary to analysis/narration-transcript.md
-- [ ] scene-detection — Run PySceneDetect on reference video; output scene boundaries to raw/scenes.json and summary to analysis/scene-boundaries.md
+- [x] scene-detection — Run PySceneDetect on reference video; output scene boundaries to raw/scenes.json and summary to analysis/scene-boundaries.md
 - [ ] audio-levels — Run ffmpeg loudness analysis on reference video; output volume envelope to raw/audio-levels.json and summary to analysis/audio-profile.md
 - [ ] audio-separation — Run Demucs on reference audio; output separated stems to raw/separated/ and summary to analysis/audio-layers.md
 
@@ -31,6 +31,7 @@
 
 ## Recently Analyzed
 - transcription — Parsed SRT with overlap de-duplication into raw/transcription.json. 1,636 segments, 10,759 narration words, 144.1 WPM, 25 anime dialogue moments, 24 episode markers, 8 significant pauses. Full analysis at analysis/narration-transcript.md.
+- scene-detection — PySceneDetect at threshold 27. 2,171 scenes, 28.8 cuts/min, median 1.83s shots, stdev 1.09s. Full analysis at analysis/scene-boundaries.md.
 
 ## Discovered Aspects
 (none yet — new aspects discovered during analysis will be added here then moved to Pending)
