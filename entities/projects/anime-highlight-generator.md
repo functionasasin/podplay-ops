@@ -1,7 +1,7 @@
 ---
 type: project
 name: Anime Highlight Generator
-status: idea
+status: active
 tags: [video, ai, automation, content-creation]
 created: 2026-01-21
 ---
@@ -136,3 +136,9 @@ Given a source anime, generate a complete highlight video:
 
 - jaranime YouTube channel (target style)
 - [[ralph-loop-pattern]] - agentic loop methodology
+
+---
+
+## Current Work
+
+**2026-02-20**: Reverse ralph loop built in `automations/anime-recap-reverse-ralph/`. Analyzing JarAnime's Parasyte recap (75 min) to extract the formula and generate a forward engine spec. See `docs/plans/2026-02-20-reverse-ralph-loop-design.md`.
