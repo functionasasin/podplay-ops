@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 15
-- Analyzed: 10
-- Pending: 5
-- Convergence: 66.7%
+- Analyzed: 11
+- Pending: 4
+- Convergence: 73.3%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -21,7 +21,7 @@
 - [x] pacing-metrics — Calculate WPM, pause timing, segment durations, breathing room patterns from transcription.json
 - [x] scene-type-distribution — Classify scenes by type (action/dialogue/reaction/emotional/establishing) using scenes.json + transcript
 - [x] clip-duration-stats — Calculate statistical distribution of visual clip durations from scenes.json
-- [ ] anime-dialogue-moments — Identify all moments where anime audio plays through (>> markers in transcript), analyze criteria for selection
+- [x] anime-dialogue-moments — Identify all moments where anime audio plays through (>> markers in transcript), analyze criteria for selection
 - [ ] narration-style — Analyze narrator tone, personality, pop culture references, commentary-vs-recap ratio, viewer address patterns
 - [ ] music-patterns — Analyze music energy mapping to content type, ducking curves, genre/mood using audio analysis data
 
@@ -40,6 +40,7 @@
 - pacing-metrics — Three-zone pacing model: Baseline (130-145 WPM, eps 1-13), Rising (145-150, transitional), Accelerated (150-157, eps 14-24). Global 144.6 WPM, CV 10.8%, 5.4% acceleration 1st→2nd half. Near-continuous narration (99.2% coverage). Breathing events every 2.2 min median (19 total: 8 pauses + 11 anime dialogue clusters). WPM variation comes from silence insertion, NOT speech rate changes. Sentences avg 15.2 words, 41% in 13-20 word range. Act 4 has longest uninterrupted stretch (12 min, 1 event). Full analysis at analysis/pacing-metrics.md.
 - scene-type-distribution — 7-type visual taxonomy: CCU 31%, ACT 24%, DLG 15%, EST 13%, OBJ 7%, RXN 7%, FLS 3%. Duration is strongest type signal (sub-1s=action flash, 1-3s=standard, 5s+=anime dialogue holds). 85/8/4/1 functional rule: 85% narration illustration, 8% visual punctuation, 4% structural transitions, 1% anime dialogue pass-throughs. Anime dialogue has two modes: Held (30%, single 5-10s clip) and Woven (70%, standard editing continues). Flash cuts cluster in 2nd half. Narrator commentary has zero visual impact. Full analysis at analysis/scene-type-distribution.md.
 - clip-duration-stats — Log-normal distribution fit (mu=0.607, sigma=0.502) matches actual percentiles within 0.1-7.7%. Median 1.83s, mean 2.08s. IQR 1.30-2.65s, 58 outliers (2.7%) above 4.675s — all intentional (anime dialogue, dramatic holds, transitions). Near-zero autocorrelation (0.131 lag-1, ~0 lag-10) — independent sampling valid. Flash cuts (<1s) increase from 10.1% (Q1) to 15.0% (Q4). CPM remarkably stable: mean 28.8, CV 12.9%. 156 unique frame counts — content-driven editing, not rhythmic. Full analysis at analysis/clip-duration-stats.md.
+- anime-dialogue-moments — 25 >> segments cluster into 11 distinct moments (2.6% of video time). Three-beat micro-structure: narrator sets up (73%) → anime speaks → narrator reacts. Three delivery modes: Woven (73%), Held (18%), Rapid Cluster (9%). Front-loaded: 7 moments in first half, 4 in second. Only 8/24 episodes (33%) get moments. Act 4 has ZERO moments (intentional 21-min drought). 52% of >> segments are anime character voice, 48% are narrator reactions. Each moment serves unique function: character-defining, emotional peak, comedy, plot twist, climax. Selection criteria: memorable/punchy line + turning point + comedy potential. Mean moment duration 10.5s, mean gap 6.6 min. Full analysis at analysis/anime-dialogue-moments.md.
 
 ## Discovered Aspects
 (none yet — new aspects discovered during analysis will be added here then moved to Pending)
