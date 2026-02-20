@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 15
-- Analyzed: 5
-- Pending: 10
-- Convergence: 33.3%
+- Analyzed: 6
+- Pending: 9
+- Convergence: 40.0%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -16,7 +16,7 @@
 
 ### Wave 2: Pattern Analysis (LLM reasoning over raw data)
 - [x] script-structure — Read transcript and identify sections (hook, context, arcs, climax, outro) with timestamps
-- [ ] hook-pattern — Analyze the opening 60 seconds: rhetorical devices, pacing, what makes it engaging
+- [x] hook-pattern — Analyze the opening 60 seconds: rhetorical devices, pacing, what makes it engaging
 - [ ] transition-phrases — Catalog all recurring connector/transition language with timestamps from transcript
 - [ ] pacing-metrics — Calculate WPM, pause timing, segment durations, breathing room patterns from transcription.json
 - [ ] scene-type-distribution — Classify scenes by type (action/dialogue/reaction/emotional/establishing) using scenes.json + transcript
@@ -35,6 +35,7 @@
 - audio-levels — EBU R128 loudnorm + frame-level RMS analysis. -25.36 LUFS integrated, -2.90 dBTP peak, 6.0 LU range (very compressed). Hook is 3-5 dB louder than body. Only 3 silence regions in 75 min. Full analysis at analysis/audio-profile.md.
 - audio-separation — Demucs htdemucs two-stem separation on 3x5-min samples. Three-layer architecture: narration (-22 to -27 LUFS, 97-99% coverage), music (-37 to -61 LUFS, sidechain ducked), anime dialogue (pass-through in vocals stem). Hook has 14.4 dB vocal-music gap with dynamic music swells; body has 9.6 dB gap with subtle pad; end has 34 dB gap (music nearly absent). Full analysis at analysis/audio-layers.md.
 - script-structure — 8-part macro structure: Hook (0.8%) → 5 narrative acts (94.8%) → Resolution (3.6%) → Outro (0.6%). Acts follow source anime's plot arc, not episode-sequential. 83% explicit episode markers, 17% arc-merged. 96% pure recap, 4% narrator commentary. WPM steady at 142-160 across body. 100% anime footage visuals. Full analysis at analysis/script-structure.md.
+- hook-pattern — 4-beat structure (36s): Rhetorical Q (17.5s, 24 cuts/min) → Anime Teaser (11.4s, 31.6 cuts/min, 2 clips) → Narrator Reaction (5s, loudest moment at -26.1 dB) → Transition (2.3s). Effective WPM ~108 (25% slower than body due to 8.1s strategic pauses). Audio energy arc: moderate → dip (anime) → SPIKE (+5 dB) → settle. Visual rhythm: slow → fast → hold → burst. Contrast is core mechanism. Full analysis at analysis/hook-pattern.md.
 
 ## Discovered Aspects
 (none yet — new aspects discovered during analysis will be added here then moved to Pending)
