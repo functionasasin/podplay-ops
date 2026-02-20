@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 15
-- Analyzed: 8
-- Pending: 7
-- Convergence: 53.3%
+- Analyzed: 9
+- Pending: 6
+- Convergence: 60.0%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -19,7 +19,7 @@
 - [x] hook-pattern — Analyze the opening 60 seconds: rhetorical devices, pacing, what makes it engaging
 - [x] transition-phrases — Catalog all recurring connector/transition language with timestamps from transcript
 - [x] pacing-metrics — Calculate WPM, pause timing, segment durations, breathing room patterns from transcription.json
-- [ ] scene-type-distribution — Classify scenes by type (action/dialogue/reaction/emotional/establishing) using scenes.json + transcript
+- [x] scene-type-distribution — Classify scenes by type (action/dialogue/reaction/emotional/establishing) using scenes.json + transcript
 - [ ] clip-duration-stats — Calculate statistical distribution of visual clip durations from scenes.json
 - [ ] anime-dialogue-moments — Identify all moments where anime audio plays through (>> markers in transcript), analyze criteria for selection
 - [ ] narration-style — Analyze narrator tone, personality, pop culture references, commentary-vs-recap ratio, viewer address patterns
@@ -38,6 +38,7 @@
 - hook-pattern — 4-beat structure (36s): Rhetorical Q (17.5s, 24 cuts/min) → Anime Teaser (11.4s, 31.6 cuts/min, 2 clips) → Narrator Reaction (5s, loudest moment at -26.1 dB) → Transition (2.3s). Effective WPM ~108 (25% slower than body due to 8.1s strategic pauses). Audio energy arc: moderate → dip (anime) → SPIKE (+5 dB) → settle. Visual rhythm: slow → fast → hold → burst. Contrast is core mechanism. Full analysis at analysis/hook-pattern.md.
 - transition-phrases — 10 categories, ~160+ transition phrases cataloged. Dominant: "So," (25x, 0.33/min), "Unfortunately/Fortunately" (21x, 2:1 ratio), "Meanwhile" (9x, 1 per 8min), "Anyway/Anyways" (10x, narrator personality reset). Two episode boundary templates: Template A ("The Nth episode opens with...") for early eps, Template B ("In the Nth episode...") for later eps. Low formality register — 0 uses of "However/Nevertheless/Furthermore". "So-But-Unfortunately" micro-cycle engine drives narrative momentum. Full analysis at analysis/transition-phrases.md.
 - pacing-metrics — Three-zone pacing model: Baseline (130-145 WPM, eps 1-13), Rising (145-150, transitional), Accelerated (150-157, eps 14-24). Global 144.6 WPM, CV 10.8%, 5.4% acceleration 1st→2nd half. Near-continuous narration (99.2% coverage). Breathing events every 2.2 min median (19 total: 8 pauses + 11 anime dialogue clusters). WPM variation comes from silence insertion, NOT speech rate changes. Sentences avg 15.2 words, 41% in 13-20 word range. Act 4 has longest uninterrupted stretch (12 min, 1 event). Full analysis at analysis/pacing-metrics.md.
+- scene-type-distribution — 7-type visual taxonomy: CCU 31%, ACT 24%, DLG 15%, EST 13%, OBJ 7%, RXN 7%, FLS 3%. Duration is strongest type signal (sub-1s=action flash, 1-3s=standard, 5s+=anime dialogue holds). 85/8/4/1 functional rule: 85% narration illustration, 8% visual punctuation, 4% structural transitions, 1% anime dialogue pass-throughs. Anime dialogue has two modes: Held (30%, single 5-10s clip) and Woven (70%, standard editing continues). Flash cuts cluster in 2nd half. Narrator commentary has zero visual impact. Full analysis at analysis/scene-type-distribution.md.
 
 ## Discovered Aspects
 (none yet — new aspects discovered during analysis will be added here then moved to Pending)
