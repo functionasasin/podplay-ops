@@ -4,7 +4,7 @@
 - Total aspects discovered: 15
 - Analyzed: 1
 - Pending: 14
-- Convergence: 7%
+- Convergence: 6.7%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -30,7 +30,7 @@
 - [ ] spec-review — Review generated spec for completeness: can a developer build the entire forward engine from this spec alone?
 
 ## Recently Analyzed
-- transcription (iteration 1) — Parsed SRT into raw/transcription.json. 1,636 segments, 10,916 narration words, 73.9 WPM, 25 anime dialogue moments.
+- transcription — Parsed SRT with overlap de-duplication into raw/transcription.json. 1,636 segments, 10,759 narration words, 144.1 WPM, 25 anime dialogue moments, 24 episode markers, 8 significant pauses. Full analysis at analysis/narration-transcript.md.
 
 ## Discovered Aspects
 (none yet — new aspects discovered during analysis will be added here then moved to Pending)

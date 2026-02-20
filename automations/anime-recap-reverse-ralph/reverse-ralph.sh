@@ -6,10 +6,13 @@
 
 set -euo pipefail
 
+# Allow nested Claude Code sessions
+unset CLAUDECODE 2>/dev/null || true
+
 WORK_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROMPT_FILE="$WORK_DIR/PROMPT.md"
 STATUS_FILE="$WORK_DIR/status/converged.txt"
-MAX_ITERATIONS=40
+MAX_ITERATIONS=${1:-40}
 SLEEP_BETWEEN=5
 
 cd "$WORK_DIR"
@@ -31,8 +34,13 @@ while [ ! -f "$STATUS_FILE" ] && [ "$iteration" -lt "$MAX_ITERATIONS" ]; do
     echo "--- Iteration $iteration / $MAX_ITERATIONS ---"
     echo "$(date '+%Y-%m-%d %H:%M:%S')"
 
-    # Run Claude Code with the prompt
-    cat "$PROMPT_FILE" | claude --print 2>&1 | tee "/tmp/reverse-ralph-iter-${iteration}.log"
+    # Run Claude Code with the prompt (bypass permissions for autonomous operation)
+    # Timeout per iteration: 10 minutes for tool-heavy tasks, most finish in 2-5 min
+    timeout 600 bash -c 'unset CLAUDECODE; cat "$1" | claude --print --dangerously-skip-permissions' _ "$PROMPT_FILE" 2>&1 | tee "/tmp/reverse-ralph-iter-${iteration}.log"
+    iter_exit=$?
+    if [ "$iter_exit" -eq 124 ]; then
+        echo "WARNING: Iteration $iteration timed out after 600s"
+    fi
 
     echo ""
     echo "Iteration $iteration complete. Sleeping ${SLEEP_BETWEEN}s..."

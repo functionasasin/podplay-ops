@@ -37,8 +37,17 @@ Analyze the reference video to extract every quantifiable pattern, then synthesi
 ### Wave 1: Raw Data Extraction
 
 **transcription**:
+If GPU is available (`python3 -c "import torch; print(torch.cuda.is_available())"`), run Whisper:
 ```bash
 whisper input/reference/jaranime-parasyte.mp4 --model large-v3 --output_format json --output_dir raw/ --word_timestamps True
+```
+If NO GPU, use the `base` model instead (faster on CPU):
+```bash
+whisper input/reference/jaranime-parasyte.mp4 --model base --output_format json --output_dir raw/ --word_timestamps True
+```
+If Whisper is too slow or times out, fall back to parsing the existing SRT transcript using `parse_srt.py`:
+```bash
+python3 parse_srt.py input/reference/jaranime-parasyte.en-orig.srt raw/transcription.json
 ```
 Then read the JSON output and write a summary to `analysis/narration-transcript.md` including:
 - Total word count
