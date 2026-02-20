@@ -2,14 +2,14 @@
 
 ## Statistics
 - Total aspects discovered: 15
-- Analyzed: 0
-- Pending: 15
-- Convergence: 0%
+- Analyzed: 1
+- Pending: 14
+- Convergence: 7%
 
 ## Pending Aspects (ordered by dependency)
 
 ### Wave 1: Raw Data Extraction (tools required)
-- [ ] transcription — Run Whisper on reference video narration; output word-level timestamps to raw/transcription.json and summary to analysis/narration-transcript.md
+- [x] transcription — Run Whisper on reference video narration; output word-level timestamps to raw/transcription.json and summary to analysis/narration-transcript.md
 - [ ] scene-detection — Run PySceneDetect on reference video; output scene boundaries to raw/scenes.json and summary to analysis/scene-boundaries.md
 - [ ] audio-levels — Run ffmpeg loudness analysis on reference video; output volume envelope to raw/audio-levels.json and summary to analysis/audio-profile.md
 - [ ] audio-separation — Run Demucs on reference audio; output separated stems to raw/separated/ and summary to analysis/audio-layers.md
@@ -30,7 +30,7 @@
 - [ ] spec-review — Review generated spec for completeness: can a developer build the entire forward engine from this spec alone?
 
 ## Recently Analyzed
-(none yet)
+- transcription (iteration 1) — Parsed SRT into raw/transcription.json. 1,636 segments, 10,916 narration words, 73.9 WPM, 25 anime dialogue moments.
 
 ## Discovered Aspects
 (none yet — new aspects discovered during analysis will be added here then moved to Pending)
