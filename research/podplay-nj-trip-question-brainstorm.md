@@ -48,12 +48,7 @@ Everything we need to know before, during, and after the NJ training trip (March
 ### A. Venue Discovery & Region
 
 1. **Region locking**: If I'm in the Philippines, do I see US venues in the app? Or is it filtered by region/country? How are venues scoped to a region?
-2. **Venue visibility controls**: Can a venue be hidden, private, invite-only, or soft-launched before going public?
 3. **How does a brand-new venue appear to users?** Automatically after setup? After a certain configuration threshold? (We control when it goes live, but what are the technical steps?)
-4. **Venue metadata**: What information does a venue listing show? (Photos, hours, pricing, court types, amenities?)
-5. **Multi-sport**: The app started with ping pong (Ping Pod). Now pickleball is in the picture (Tela Park). How does the app handle different sports at different venues? Is there sport-specific filtering?
-6. **Can venue owners control their listing?** Edit description, photos, hours, pricing? Or is that all admin-controlled?
-
 ### B. Payment Integration
 
 Magpie integration is done — Pod Play assigned a resource to integrate with Magpie's platform. Magpie ID is a drop-in replacement for Stripe Account ID. Payment UI is a redirect in both US and PH. Credits bypass the payment gateway for subsequent transactions. No refunds for now. Callback to Pod Play stores credits, Pod Play handles credit-to-booking.
@@ -61,7 +56,6 @@ Magpie integration is done — Pod Play assigned a resource to integrate with Ma
 **Remaining questions:**
 
 7. **App-side payment routing**: Pod Play did the backend swap for PH, but how does the **app** know to route to Magpie vs Stripe? Is it based on the venue config, the user's region, or something else? How is this enforced on the client side?
-8. **Per-venue or per-region payment config?** Can individual venues within a region use different payment providers? Or is it locked at the region level?
 
 ### C. Merchant / Venue Owner Experience
 
@@ -82,9 +76,7 @@ We understand the player/user side somewhat, but the merchant side is vague.
 
 The config guide is US-specific. What changes for Philippines?
 
-19. **PAL vs NTSC**: Does changing the camera video standard from NTSC to PAL break the replay pipeline? Does frame rate change from 30fps to 25fps? Does the Mac Mini's Node.js replay service care?
 20. **Camera region setting**: The config guide says "Region: United States" during camera setup. What happens if we select Philippines? Different firmware? Different encoding defaults?
-21. **Camera model**: What exact camera model is used? Is it available in the Philippines? Region-locked firmware?
 22. **ISP configuration for Philippines providers**: PLDT, Globe, Converge, Sky Fiber — the DMZ/port forwarding procedures will be different. Any tips from Pod Play on non-US ISPs?
 23. **Power standards**: US is 120V/60Hz, Philippines is 220V/60Hz. Do the Unifi equipment, Mac Mini, cameras, POE chargers all support 220V? Or do we need transformers?
 24. **Apple Business Manager**: Does the "Managed by Pingpod Inc" enrollment work in the Philippines? Or do we need our own Apple Business account for Asia?
@@ -117,16 +109,13 @@ The wallet vision is big but the details are unresolved.
 41. **Cross-venue credits**: If user loads credits at Venue A, can they spend at Venue B? How does settlement work across different venue owners?
 42. **Credit expiration**: Do credits expire? Configurable per venue or platform-wide?
 43. **Credit transfer**: Can users transfer credits to other users?
-44. **Minimum load amount**: Is there a minimum credit purchase?
 45. **Refund to credits**: When a booking is cancelled, do credits go back to wallet automatically?
 46. **Credit visibility**: Can users see their credit balance in the app? Transaction history?
-47. **Multi-currency credits**: If a user loads pesos, can they use those credits at a Singapore venue (SGD)?
 48. **Merchant payout on credits**: When a user spends cross-venue credits, how does the merchant (court owner) get paid? Does Magpie handle the splitting?
 
 ### G. Legal & Compliance
 
 49. **Terms of service**: Does Pod Play have standard ToS for the app? Do we need Philippines-specific terms?
-50. **Payment & tax compliance**: How does Pod Play handle tax (VAT, withholding) in the US today? We need to understand their model so we can tell Magpie what to implement — Magpie said they'll build whatever we specify.
 51. **Liability**: If equipment malfunctions (camera, replay, booking error), who's liable? Pod Play or distributor?
 52. **Insurance**: Is there venue insurance required? What does Pod Play recommend?
 
