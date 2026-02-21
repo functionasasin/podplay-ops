@@ -2,9 +2,9 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Auto-capture The Bazaar game window at intervals so Claude can read game state from screenshots without manual input.
+**Goal:** Capture The Bazaar game window on demand when the user asks for coaching, so Claude can read game state visually without manual input.
 
-**Architecture:** A Python script uses `win32gui`/`win32ui` to find and capture The Bazaar's window every 15s, saving timestamped PNGs. A cursor file tracks what Claude has already seen. A Claude Code skill reads new screenshots automatically when the user asks for coaching.
+**Architecture:** A one-shot Python script captures The Bazaar window via `win32gui`/`PrintWindow` and saves it to `.screenshots/latest.png`. A Claude Code skill runs this script, reads the image, and proceeds with coaching.
 
 **Tech Stack:** Python 3, pywin32, Pillow
 
@@ -36,7 +36,7 @@ git commit -m "bazaar-coach: add screen capture dependencies"
 
 ---
 
-### Task 2: Create the screen capture script
+### Task 2: Create the one-shot capture script
 
 **Files:**
 - Create: `projects/bazaar-coach/tools/screen-capture.py`
@@ -47,27 +47,22 @@ git commit -m "bazaar-coach: add screen capture dependencies"
 """
 Bazaar Coach Screen Capture
 
-Finds The Bazaar game window and captures it at regular intervals.
-Screenshots are saved as timestamped PNGs for Claude to read.
+Finds The Bazaar game window and captures it once.
+Saves to .screenshots/latest.png and exits.
 
 Usage:
-    python screen-capture.py              # Default 15s interval
-    python screen-capture.py --interval 10  # Custom interval
-    python screen-capture.py --title "The Bazaar"  # Custom window title
+    python screen-capture.py                    # Default window title
+    python screen-capture.py --title "Notepad"  # Custom window title
 """
 
 import argparse
 import ctypes
-import os
 import sys
-import time
-from datetime import datetime, timezone
 from pathlib import Path
 
 try:
     import win32gui
     import win32ui
-    import win32con
     from PIL import Image
 except ImportError as e:
     print(f"Missing dependency: {e}")
@@ -76,6 +71,7 @@ except ImportError as e:
 
 
 SCREENSHOTS_DIR = Path(__file__).parent.parent / ".screenshots"
+OUTPUT_PATH = SCREENSHOTS_DIR / "latest.png"
 
 
 def find_window(title_pattern: str) -> int | None:
@@ -96,7 +92,6 @@ def find_window(title_pattern: str) -> int | None:
 def capture_window(hwnd: int) -> Image.Image | None:
     """Capture the contents of a window by its handle."""
     try:
-        # Get window dimensions
         left, top, right, bottom = win32gui.GetClientRect(hwnd)
         width = right - left
         height = bottom - top
@@ -104,20 +99,17 @@ def capture_window(hwnd: int) -> Image.Image | None:
         if width <= 0 or height <= 0:
             return None
 
-        # Set up device contexts
         hwnd_dc = win32gui.GetDC(hwnd)
         mfc_dc = win32ui.CreateDCFromHandle(hwnd_dc)
         save_dc = mfc_dc.CreateCompatibleDC()
 
-        # Create bitmap
         bitmap = win32ui.CreateBitmap()
         bitmap.CreateCompatibleBitmap(mfc_dc, width, height)
         save_dc.SelectObject(bitmap)
 
-        # Use PrintWindow for reliable capture (works even if partially occluded)
+        # PrintWindow with PW_RENDERFULLCONTENT for reliable capture
         ctypes.windll.user32.PrintWindow(hwnd, save_dc.GetSafeHdc(), 3)
 
-        # Convert to PIL Image
         bmpinfo = bitmap.GetInfo()
         bmpstr = bitmap.GetBitmapBits(True)
         img = Image.frombuffer(
@@ -126,7 +118,6 @@ def capture_window(hwnd: int) -> Image.Image | None:
             bmpstr, "raw", "BGRX", 0, 1,
         )
 
-        # Cleanup
         win32gui.DeleteObject(bitmap.GetHandle())
         save_dc.DeleteDC()
         mfc_dc.DeleteDC()
@@ -134,81 +125,55 @@ def capture_window(hwnd: int) -> Image.Image | None:
 
         return img
     except Exception as e:
-        print(f"  Capture error: {e}")
+        print(f"Capture error: {e}", file=sys.stderr)
         return None
-
-
-def timestamp() -> str:
-    """ISO-like timestamp safe for filenames."""
-    return datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
-
-
-def run(interval: int, title_pattern: str):
-    """Main capture loop."""
-    SCREENSHOTS_DIR.mkdir(parents=True, exist_ok=True)
-
-    print(f"Bazaar Coach Screen Capture")
-    print(f"  Window pattern: '{title_pattern}'")
-    print(f"  Interval: {interval}s")
-    print(f"  Output: {SCREENSHOTS_DIR}")
-    print(f"  Press Ctrl+C to stop\n")
-
-    frame = 0
-    while True:
-        hwnd = find_window(title_pattern)
-        if hwnd is None:
-            now = datetime.now().strftime("%H:%M:%S")
-            print(f"  [{now}] Waiting for '{title_pattern}' window...")
-            time.sleep(3)
-            continue
-
-        img = capture_window(hwnd)
-        if img is None:
-            time.sleep(interval)
-            continue
-
-        frame += 1
-        ts = timestamp()
-        filepath = SCREENSHOTS_DIR / f"capture-{ts}.png"
-        img.save(filepath)
-
-        now = datetime.now().strftime("%H:%M:%S")
-        print(f"  [{now}] Captured frame {frame} -> {filepath.name}")
-
-        time.sleep(interval)
 
 
 def main():
     parser = argparse.ArgumentParser(description="Capture The Bazaar game window")
-    parser.add_argument("--interval", type=int, default=15, help="Seconds between captures (default: 15)")
-    parser.add_argument("--title", type=str, default="The Bazaar", help="Window title to search for (default: 'The Bazaar')")
+    parser.add_argument("--title", type=str, default="The Bazaar",
+                        help="Window title to search for (default: 'The Bazaar')")
     args = parser.parse_args()
 
-    try:
-        run(args.interval, args.title)
-    except KeyboardInterrupt:
-        print("\nStopped.")
+    hwnd = find_window(args.title)
+    if hwnd is None:
+        print(f"Window '{args.title}' not found.", file=sys.stderr)
+        sys.exit(1)
+
+    img = capture_window(hwnd)
+    if img is None:
+        print("Failed to capture window.", file=sys.stderr)
+        sys.exit(1)
+
+    SCREENSHOTS_DIR.mkdir(parents=True, exist_ok=True)
+    img.save(OUTPUT_PATH)
+    print(OUTPUT_PATH)
 
 
 if __name__ == "__main__":
     main()
 ```
 
-**Step 2: Test that the script starts and waits for a window**
+On success, the script prints the output path to stdout and exits 0. On failure, it prints an error to stderr and exits 1.
 
-Run: `cd projects/bazaar-coach && python tools/screen-capture.py --interval 5`
-Expected: Prints header and "Waiting for 'The Bazaar' window..." (Ctrl+C to stop)
+**Step 2: Test with a known window**
 
-**Step 3: Test with a known window to verify capture works**
+Open Notepad. Run:
+```bash
+cd projects/bazaar-coach && python tools/screen-capture.py --title "Notepad"
+```
+Expected: Prints path to `.screenshots/latest.png`. Verify the PNG contains the Notepad window.
 
-Run: `cd projects/bazaar-coach && python tools/screen-capture.py --title "Notepad" --interval 3`
-Expected: If Notepad is open, captures frames. Verify `.screenshots/capture-*.png` files are created and contain the Notepad window content.
+**Step 3: Test window-not-found case**
+
+Run: `cd projects/bazaar-coach && python tools/screen-capture.py --title "NonexistentApp123"`
+Expected: Prints error, exits with code 1.
 
 **Step 4: Commit**
 
 ```bash
 git add projects/bazaar-coach/tools/screen-capture.py
-git commit -m "bazaar-coach: add window-aware screen capture script"
+git commit -m "bazaar-coach: add one-shot window capture script"
 ```
 
 ---
@@ -224,7 +189,7 @@ git commit -m "bazaar-coach: add window-aware screen capture script"
 .screenshots/
 ```
 
-**Step 2: Verify screenshots dir won't be tracked**
+**Step 2: Verify**
 
 Run: `cd projects/bazaar-coach && mkdir -p .screenshots && touch .screenshots/test.png && git status`
 Expected: `.screenshots/` does NOT appear in untracked files
@@ -239,116 +204,78 @@ git commit -m "bazaar-coach: gitignore screenshot output directory"
 
 ---
 
-### Task 4: Create the game-state skill with auto-screenshot reading
+### Task 4: Create the game-state skill
 
 **Files:**
 - Create: `projects/bazaar-coach/.claude/skills/game-state/SKILL.md`
-
-This skill replaces the manual screenshot workflow. When invoked, it:
-1. Reads `.screenshots/cursor.json` to find when Claude last looked
-2. Finds all `capture-*.png` files newer than the cursor
-3. Caps at 10 most recent
-4. Reads them with the Read tool (Claude's vision handles PNG)
-5. Updates the cursor
-6. Deletes old screenshots (before cursor)
 
 **Step 1: Write the skill**
 
 ```markdown
 ---
 name: game-state
-description: Automatically read recent game screenshots and analyze board state. Use this before any coaching recommendation. Invoke automatically when user asks for advice.
+description: Capture and read the current game screen before making any recommendation. Invoke automatically when user asks for advice.
 user-invocable: true
 disable-model-invocation: false
 ---
 
-# Game State from Screenshots
+# Game State from Screenshot
 
-Read the latest screenshots captured by the screen capture script to understand the current game state.
-
-## Prerequisites
-
-The screen capture script must be running in a background terminal:
-```
-python projects/bazaar-coach/tools/screen-capture.py
-```
+Capture The Bazaar's game window and analyze the current board state.
 
 ## Steps
 
-1. **Read the cursor file** at `projects/bazaar-coach/.screenshots/cursor.json`
-   - If it doesn't exist, this is the first read — treat all screenshots as new
-   - The file contains: `{"last_read": "2026-02-21T15-32-01"}`
-
-2. **List screenshot files** with Glob: `projects/bazaar-coach/.screenshots/capture-*.png`
-   - Filter to only files with timestamps AFTER `last_read` from cursor
-   - The timestamp is embedded in the filename: `capture-YYYY-MM-DDTHH-MM-SS.png`
-   - If more than 10 new screenshots, take only the 10 most recent (by filename sort)
-   - If zero new screenshots, tell the user no new captures are available
-
-3. **Read the screenshots** using the Read tool on each PNG file (newest last)
-   - Claude's vision will see the game state in each image
-   - Note changes between frames (new items bought, battles fought, gold spent)
-
-4. **Update the cursor** — Write `cursor.json` with the timestamp of the newest screenshot read:
-   ```json
-   {"last_read": "2026-02-21T15-47-16"}
+1. **Capture the screen** — Run the capture script:
    ```
+   python projects/bazaar-coach/tools/screen-capture.py
+   ```
+   - If it fails with "Window not found", tell the user The Bazaar needs to be open
+   - The script saves to `projects/bazaar-coach/.screenshots/latest.png`
 
-5. **Clean up old screenshots** — Use Bash to delete all `capture-*.png` files with timestamps before the new cursor value. Keep the ones at or after the cursor.
+2. **Read the screenshot** — Use the Read tool on `projects/bazaar-coach/.screenshots/latest.png`
+   - Claude's vision will see the game state in the image
 
-6. **Synthesize the game state** using the current-state skill's framework:
-   - List all board items (names, types, sizes, tiers, cooldowns)
-   - Count weapons vs non-weapons, aquatic items, friends, status effects
-   - List stash/backpack contents
-   - Note active skills and enchantments
+3. **Extract game state** using the current-state skill's framework:
+   - All board items (names, types, sizes, tiers, cooldowns)
+   - Weapons vs non-weapons, aquatic items, friends, status effects
+   - Stash/backpack contents
+   - Active skills and enchantments
    - Key stats: Gold, income, prestige, day/hour, HP, regen
-   - Identify what the board needs (primary engine, weakest slot, highest marginal impact)
+   - What the board needs: primary engine, weakest slot, highest marginal impact
 
-7. **Proceed with coaching** — Now give the user the recommendation they asked for, informed by the visual game state.
+4. **Give recommendations** — Proceed with the coaching advice the user asked for.
 
 ## Important
 
-- ALWAYS read screenshots before giving advice — don't ask the user to describe their board
-- If the capture script isn't running (no .screenshots dir or no files), tell the user to start it
-- The screen capture script finds The Bazaar window automatically — it handles window movement
-- Screenshots are taken every 15 seconds by default
+- ALWAYS capture a fresh screenshot before giving advice — don't rely on stale state
+- If the user just wants to chat about strategy without needing current state, skip the capture
+- The capture script finds The Bazaar window wherever it is on screen
 ```
 
-**Step 2: Verify the skill file is well-formed**
-
-Run: `cd projects/bazaar-coach && cat .claude/skills/game-state/SKILL.md | head -5`
-Expected: Shows the YAML frontmatter header
-
-**Step 3: Commit**
+**Step 2: Commit**
 
 ```bash
 git add projects/bazaar-coach/.claude/skills/game-state/SKILL.md
-git commit -m "bazaar-coach: add game-state skill for auto-screenshot reading"
+git commit -m "bazaar-coach: add game-state skill for on-demand screenshot capture"
 ```
 
 ---
 
-### Task 5: Update CLAUDE.md to reference auto-screenshot workflow
+### Task 5: Update CLAUDE.md to reference the screenshot workflow
 
 **Files:**
 - Modify: `projects/bazaar-coach/CLAUDE.md`
 
-**Step 1: Add screenshot workflow section to CLAUDE.md**
+**Step 1: Add screenshot section after line 8 (after "## How This Works" section, before "## When You Receive a Screenshot")**
 
-After the existing "## When You Receive a Screenshot" section, add a new section that tells Claude about the auto-screenshot system. The key change: Claude should check for recent screenshots FIRST before asking the user for a screenshot.
-
-Add this section after line 9 (before the numbered steps):
+Insert before the "## When You Receive a Screenshot" heading:
 
 ```markdown
-## Auto-Screenshot System
+## Auto-Screenshot Capture
 
-A background script captures The Bazaar's game window every 15 seconds. Before asking the user for a screenshot or game state description, **always check for recent captures first** by invoking the `game-state` skill.
+When the user asks for advice, **capture a fresh screenshot first** by invoking the `game-state` skill. This runs a script that finds The Bazaar's window and captures it — no need to ask the user for a screenshot.
 
-**Setup:** User runs `python tools/screen-capture.py` in a background terminal.
-
-**Workflow:** When the user asks for advice, the game-state skill reads all screenshots captured since the last coaching question (up to 10), extracts the game state visually, then proceeds with recommendations.
-
-If no screenshots are available (script not running), fall back to asking the user for a screenshot or description.
+If The Bazaar isn't open (capture fails), fall back to asking the user for a screenshot or description.
 
 ```
 
@@ -356,37 +283,30 @@ If no screenshots are available (script not running), fall back to asking the us
 
 ```bash
 git add projects/bazaar-coach/CLAUDE.md
-git commit -m "bazaar-coach: document auto-screenshot workflow in CLAUDE.md"
+git commit -m "bazaar-coach: document auto-screenshot capture in CLAUDE.md"
 ```
 
 ---
 
 ### Task 6: End-to-end manual test
 
-**No files to create — this is a verification task.**
+**No files to create — verification only.**
 
-**Step 1: Start the capture script with a test window**
+**Step 1: Test capture with a known window**
 
-Open Notepad (or any window). Run:
+Open Notepad. In the bazaar-coach project:
 ```bash
-cd projects/bazaar-coach && python tools/screen-capture.py --title "Notepad" --interval 5
+python tools/screen-capture.py --title "Notepad"
 ```
-Wait for 3-4 captures.
+Verify `.screenshots/latest.png` exists and contains Notepad.
 
-**Step 2: Verify screenshots exist**
+**Step 2: Test the skill flow**
 
-Run: `ls projects/bazaar-coach/.screenshots/capture-*.png`
-Expected: 3-4 timestamped PNG files
+In a Claude Code session in the bazaar-coach project, ask "what should I buy?" and verify Claude:
+- Runs the capture script
+- Reads the resulting screenshot
+- Analyzes the game state from the image
 
-**Step 3: Verify the game-state skill can read them**
+**Step 3: Test failure case**
 
-In a separate Claude Code session in the bazaar-coach project, ask for coaching. Verify Claude:
-- Finds and reads the screenshot files
-- Creates/updates `cursor.json`
-- Cleans up old screenshots after reading
-
-**Step 4: Verify cursor works across asks**
-
-Wait for more captures, then ask again. Verify Claude only reads the NEW screenshots (after the cursor).
-
-**Step 5: Stop capture script (Ctrl+C), verify clean exit**
+Close Notepad/The Bazaar. Ask for advice again. Verify Claude reports the window wasn't found and asks for a manual screenshot.
