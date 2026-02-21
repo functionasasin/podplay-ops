@@ -81,7 +81,7 @@ Reduces enemy health immediately when an item triggers.
 
 ### Heal
 - Restores health up to Max Health (cannot overheal)
-- **Cleanses 5% of heal amount** from both Poison and Burn (previously 10%, may vary by patch)
+- **Cleanses 5% of heal amount** from both Poison and Burn
 - Lifesteal healing does NOT cleanse Poison or Burn
 
 ### Regeneration (Regen)

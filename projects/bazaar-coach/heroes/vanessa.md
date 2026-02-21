@@ -10,7 +10,7 @@ Vanessa is The Bazaar's most aggressive hero, with the tools to strike first and
 
 - **Archetype**: Aggressive / Burst / DoT
 - **Signature traits**: Weapons, Ammo, Aquatic friends, Poison, Burn
-- **Item pool size**: ~127 items (51 Small, 54 Medium, 22 Large)
+- **Item pool size**: ~130 items (52 Small, 57 Medium, 21 Large)
 - **Flexibility**: High -- three distinct build paths with multiple variants each
 
 ## Build Archetypes

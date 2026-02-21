@@ -1,4 +1,4 @@
-# Vanessa - Large Items (22 total)
+# Vanessa - Large Items (21 total)
 
 Large items define your late-game strategy. Most builds pivot around acquiring one or two of these.
 
@@ -102,6 +102,14 @@ Rating key:
 - **Effect**: Aquatic items gain +1 Multicast.
 - **Rating**: **S** -- THE Aquatic capstone. Every Aquatic item gets +1 Multicast. Game-changing.
 - **Synergies**: Any Aquatic build, Pufferfish, Catfish, Beach Ball, Astrolabe (permanent Haste at Diamond)
+
+## Stealth Glider
+- **Size**: Large | **Types**: Vehicle, Tech
+- **Cooldown**: Passive
+- **Starting Tier**: Gold
+- **Effect**: You take no Damage for the first 8/10 seconds of each fight, or until you use an item.
+- **Rating**: **B** -- Situational Large item. Damage immunity window is strong but ends on first item use, limiting it. Worth it for the enchantment slot — Turbo/Shiny/Deadly enchants trigger on first use. Takes 3 board slots for a passive.
+- **Synergies**: Enchantment-driven builds, slow-starting boards that need protection, Crit builds (Deadly enchant)
 
 ## Slumbering Primordial
 - **Size**: Large | **Types**: Aquatic, Burn, Charge, Damage, Freeze, Friend, Poison, Weapon

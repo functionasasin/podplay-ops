@@ -1,4 +1,4 @@
-# Vanessa - Medium Items (54 total)
+# Vanessa - Medium Items (57 total)
 
 Items are listed with their tier progression (Bronze > Silver > Gold > Diamond) where values change across tiers.
 
@@ -68,6 +68,14 @@ Rating key:
 - **Rating**: **B** -- Damage + Burn in one item. Filler for Burn builds.
 - **Synergies**: Burn builds, Ammo support
 
+## Cauterizing Blade
+- **Size**: Medium | **Types**: Weapon, Tech
+- **Cooldown**: 5.0s
+- **Starting Tier**: Silver
+- **Effect**: Deal 20 Damage. Burn 2. Quest: Choose Slow or Haste path (10 triggers). Gains +10/+20/+30 Damage and +2/+4/+6 Burn for fight.
+- **Rating**: **A** -- Flexible quest item. Slow path fits Shot Glasses builds; Haste path fits Aquatic Haste. Effectively a medium Mantis Shrimp without Ammo limitations.
+- **Synergies**: Shot Glasses (Slow + Haste both count), Slow triggers, Haste sources, Burn builds
+
 ## Captain's Wheel
 - **Size**: Medium | **Types**: Aquatic, Tool, Haste
 - **Cooldown**: 5.0s
@@ -88,6 +96,13 @@ Rating key:
 - **Effect**: Shield 50. Gains +5/10/15/20 Shield when buying Aquatic items.
 - **Rating**: **A** -- Permanent scaling shield. Gets tankier every shop.
 - **Synergies**: Aquatic builds, defensive strategies
+
+## Cyber-Sai
+- **Size**: Medium | **Types**: Weapon, Tech
+- **Cooldown**: 3.0s
+- **Effect**: Deal 10/20/30/40 Damage. First 2/3/4/5 Crits each fight: take no Damage for 1s.
+- **Rating**: **A** -- Fastest medium weapon (3s CD). Damage immunity on Crit removes need for sustain, enabling full aggro builds. Needs reliable Crit Chance to activate.
+- **Synergies**: Crit stacking (Korxena Crest, Spyglass, Sextant), aggressive builds, Silencer
 
 ## Cutlass
 - **Size**: Medium | **Types**: Weapon, Crit, Damage
@@ -208,6 +223,14 @@ Rating key:
 - **Effect**: Deal 100/150/200 Damage. Gains +25 Damage on reload. Reloads 1 Ammo when adjacent item Burns.
 - **Rating**: **A** -- Self-scaling damage with infinite reload from adjacent Burn. Position next to Lighter for permanent uptime.
 - **Synergies**: Lighter (adjacent Burn), any adjacent Burn source, Sharkclaws buff
+
+## Oni Mask
+- **Size**: Medium | **Types**: Apparel, Tech
+- **Cooldown**: 10.0s
+- **Starting Tier**: Silver
+- **Effect**: Burn 6/9/12. When you Crit, Burn items gain +4/+6/+8 Burn for fight. Charges 2s when Slowing.
+- **Rating**: **A** -- Bridges Crit and Burn archetypes. Self-charging from Slow. Passive Burn scaling from Crits compounds with Lighter/Volcanic Vents.
+- **Synergies**: Slow sources (Dock Lines, Clamera), Crit stacking, Burn builds, Lighthouse/Darkwater Anglerfish
 
 ## Orange Julian
 - **Size**: Medium | **Types**: Friend, Economy, DamageReference
@@ -377,6 +400,13 @@ Rating key:
 - **Effect**: Gain 1 XP per Hero win (+1 if had item on board). Items gain 10/20/30% Crit.
 - **Rating**: **S** -- XP generation + Crit buff. Accelerates progression and damage.
 - **Synergies**: Any build, especially aggressive win-fast strategies
+
+## Wetware
+- **Size**: Medium | **Types**: Aquatic, Apparel, Tech
+- **Cooldown**: 8.0s
+- **Effect**: Shield. When you use a Weapon, gains +15/+25/+35/+45 Shield for fight. Cooldown reduced 2s with another Tech item.
+- **Rating**: **B** -- Weapon-triggered shield scaling. The old Barrel concept but for Weapon builds. Needs Tech adjacency for 6s effective CD.
+- **Synergies**: Weapon builds with Tech support, Cyber-Sai/Bladed Hoverboard (Tech), defensive Gunslinger
 
 ## Weather Glass
 - **Size**: Medium | **Types**: Tool, Poison, Burn, Freeze, Slow
