@@ -35,6 +35,16 @@ Everything we need to know before, during, and after the NJ training trip (March
 - Replay is local (Mac Mini → Apple TV on same VLAN) — no latency concern for playback
 - Config guide v1 exists (Stan Wu, Sept 2024)
 
+### Hardware (from Pod Play BOM — see [[podplay-hardware-bom]])
+- **Network rack**: TrippLite 12-outlet PDU, UDM-SE/Pro/Pro-Max (firewall), USW-Pro-24-POE / USW-24-POE / USW-Pro-48-POE (switches), patch panels, SFP DAC cables, Cat6 patch cables (1'/3'/10')
+- **Replay system**: Mac Mini 16GB/256GB SSD, Samsung T7 external SSD (1TB/2TB/4TB by venue size), EmpireTech IPC-T54IR-ZE replay cameras (4MP varifocal, Dahua OEM), Flic buttons (scoring)
+- **Displays**: Apple TV 4K + Ethernet, HIDEit mounts, Amazon Basics 3ft HDMI
+- **Surveillance**: UNVR / UNVR-Pro (NVR), WD Purple 8TB HD, UniFi G5 Turret Ultra / G5 Dome cameras + junction boxes
+- **Access control**: Kisi Controller Pro 2 + Kisi Reader Pro 2
+- **Front desk**: Anker PowerConf C200 2K webcam, 2D QR barcode scanner
+- **PingPod-specific**: UniFi U6-Plus Wi-Fi AP
+- **Not in BOM**: Brother label maker (Q59 still open), PoE is built into UDM-SE / switches (no separate charger needed)
+
 ### What's In Progress
 - Marcelo has payment instance, testing as "Cosmos" (merchant role)
 - 3rd iteration of Stripe Payment Elements UI
@@ -119,17 +129,19 @@ The wallet vision is big but the details are unresolved.
 51. **Liability**: If equipment malfunctions (camera, replay, booking error), who's liable? Pod Play or distributor?
 52. **Insurance**: Is there venue insurance required? What does Pod Play recommend?
 
-### H. Hardware Specifics (Need Exact Answers)
+### H. Hardware Specifics
 
-53. **Camera exact model and part number** — need to source in Philippines
-54. **Mac Mini exact specs** (year, chip, RAM, storage) — need to source locally
-55. **Samsung SSD exact model and capacity** — need to source locally
-56. **POE charger exact brand/model** — need to source locally
-57. **All Unifi gear exact models** (UDM variant, switch model, PDU model)
-58. **Kisi controller/reader model** — if applicable
-59. **Brother label maker model** — minor but for completeness
-60. **Bill of Materials (BOM) template** — get a sample for an actual past deployment
-61. **Cables and connectors** — full list of what's needed (ethernet, HDMI, SFP, power)
+BOM received from Pod Play — see [[podplay-hardware-bom]] for full list. Most questions answered:
+
+53. ~~**Camera exact model and part number**~~ — **ANSWERED**: EmpireTech IPC-T54IR-ZE (4MP varifocal, Dahua OEM), white and black variants. Need to confirm Philippines sourcing availability.
+54. **Mac Mini exact specs** — **PARTIAL**: 16GB RAM, 256GB SSD confirmed. Still need: chip (M1? M2? M4?) and year. Important for local sourcing.
+55. ~~**Samsung SSD exact model and capacity**~~ — **ANSWERED**: Samsung T7 — 1TB (small club), 2TB (large club), 4TB (extra large club)
+56. ~~**POE charger exact brand/model**~~ — **ANSWERED**: No separate PoE charger needed. UDM-SE has built-in PoE; otherwise USW-Pro-24-POE or USW-24-POE switches provide PoE.
+57. ~~**All Unifi gear exact models**~~ — **ANSWERED**: UDM-SE/Pro/Pro-Max (firewall), USW-Pro-24-POE/USW-24-POE/USW-Pro-48-POE (switches), UNVR/UNVR-Pro (NVR), G5 Turret Ultra/G5 Dome/G5 Dome Ultra (cameras), U6-Plus (Wi-Fi AP)
+58. ~~**Kisi controller/reader model**~~ — **ANSWERED**: Kisi Controller Pro 2 + Kisi Reader Pro 2
+59. **Brother label maker model** — Still unknown, not in BOM
+60. ~~**Bill of Materials (BOM) template**~~ — **ANSWERED**: Full BOM received, saved as [[podplay-hardware-bom]]
+61. ~~**Cables and connectors**~~ — **ANSWERED**: UACC-DAC-SFP10-0.5M (SFP), Cat6 1'/3'/10' (Monoprice), Amazon Basics 3ft HDMI
 
 ### I. Port 4000 — What Actually Flows?
 
@@ -159,9 +171,10 @@ This is architecturally critical for understanding latency and reliability.
 ### Email 3: Infrastructure & Setup Questions (Send 1 Week Before Trip)
 - Questions 19–31 (Philippines vs US setup differences)
 - Questions 32–40 (Operations & deployment)
-- Questions 53–61 (Exact hardware specs)
+- Questions 54, 59 (Remaining hardware: Mac Mini chip/year, Brother label maker)
 - Questions 62–67 (Port 4000 details)
 - These are the hands-on training questions — they should prepare materials
+- Note: Most hardware questions (53–61) resolved via BOM — see [[podplay-hardware-bom]]
 
 ### Things We Need to Resolve Internally (Before Trip)
 - Cross-venue vs venue-locked credits → get answer from Kim and padel partners
@@ -193,7 +206,7 @@ When all these questions are answered, we should be able to:
 |----------|----------|-----------|-----|
 | **CRITICAL** | Payment routing | 7–8 | Blocks Magpie integration — the #1 technical risk |
 | **CRITICAL** | PH vs US setup | 19–31 | Blocks first venue deployment — PAL/NTSC, power, MDM |
-| **CRITICAL** | Hardware specs | 53–61 | Need exact part numbers to source locally |
+| ~~CRITICAL~~ **MOSTLY RESOLVED** | Hardware specs | 53–61 | BOM received. Remaining: Mac Mini chip/year (Q54), Brother label maker (Q59) |
 | **CRITICAL** | Port 4000 | 62–67 | Determines if PH latency is a problem |
 | **HIGH** | Venue discovery | 1–6 | Need to explain the product to venue partners |
 | **HIGH** | Merchant experience | 9–18 | Need to onboard Tela Park |

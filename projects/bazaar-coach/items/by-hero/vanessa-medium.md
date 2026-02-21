@@ -42,6 +42,7 @@ Rating key:
 ## Beach Ball
 - **Size**: Medium | **Types**: Aquatic, Toy, Haste
 - **Cooldown**: 5.0s
+- **Cost**: 4/8/16/32
 - **Effect**: Haste 2/3/4/5 Aquatic/Toy items 2s.
 - **Rating**: **A** -- Go-to Aquatic Haste enabler. Hits up to 5 items at Diamond.
 - **Synergies**: Shipwreck (Multicast), Pufferfish, Catfish, any Aquatic engine
@@ -77,8 +78,8 @@ Rating key:
 ## Card Table
 - **Size**: Medium | **Types**: --
 - **Cooldown**: 4.0s
-- **Effect**: Friend gains +1 Multicast for fight. Cooldown increased 4/3/2s for fight.
-- **Rating**: **B** -- Permanent Multicast buff on Friends, but self-slowing.
+- **Effect**: Friend gains +1 Multicast for fight. Cooldown increased 1s per non-Friend item.
+- **Rating**: **B** -- Permanent Multicast buff on Friends. Best in Friend-heavy boards where the CD penalty is minimal.
 - **Synergies**: Friend-heavy boards, Tortuga
 
 ## Coral Armor
@@ -154,6 +155,7 @@ Rating key:
 ## Fishing Rod
 - **Size**: Medium | **Types**: Aquatic, Tool, Haste
 - **Cooldown**: 5.0s
+- **Cost**: 4/8/16/32
 - **Effect**: Haste right Aquatic item 2s. Grants Small Aquatic at day start.
 - **Rating**: **A** -- Economy item: daily free Aquatic + targeted Haste.
 - **Synergies**: Aquatic builds, Pufferfish (haste trigger), board expansion
@@ -203,9 +205,9 @@ Rating key:
 ## Musket
 - **Size**: Medium | **Types**: Weapon, Ammo, Burn, Damage
 - **Cooldown**: 6.0s | **Ammo**: 1
-- **Effect**: Deal 100/150/200 Damage. Reloads 1 Ammo when Burning. 100% Crit Chance.
-- **Rating**: **A** -- Guaranteed Crit with self-reload from Burn. Very high burst.
-- **Synergies**: Lighter, Burn sources for infinite reload, Crit damage multipliers
+- **Effect**: Deal 100/150/200 Damage. Gains +25 Damage on reload. Reloads 1 Ammo when adjacent item Burns.
+- **Rating**: **A** -- Self-scaling damage with infinite reload from adjacent Burn. Position next to Lighter for permanent uptime.
+- **Synergies**: Lighter (adjacent Burn), any adjacent Burn source, Sharkclaws buff
 
 ## Orange Julian
 - **Size**: Medium | **Types**: Friend, Economy, DamageReference
@@ -287,7 +289,8 @@ Rating key:
 ## Sharkclaws
 - **Size**: Medium | **Types**: Aquatic, Weapon, Damage
 - **Cooldown**: 5.0s
-- **Effect**: Deal 10/20/30/40 Damage. Other Weapons gain +10/20/30/40 Damage.
+- **Cost**: 4/8/16/32
+- **Effect**: Deal 10/20/30/40 Damage. Other Weapons gain +10/20/30/40 Damage **for the fight** (stacks each trigger).
 - **Rating**: **A** -- Board-wide weapon damage buff. Classic opener with Katana.
 - **Synergies**: Multi-weapon boards, Katana (classic combo), Gunslinger builds
 

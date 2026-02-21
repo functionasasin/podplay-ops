@@ -119,6 +119,7 @@ Rating key:
 ## Grappling Hook
 - **Size**: Small | **Types**: Weapon, Tool, Damage, Slow
 - **Cooldown**: 7.0s
+- **Cost**: 2/4/8/16
 - **Effect**: Deal 12/18/24/32 Damage. Slow 1/2/3/4 items 1 second.
 - **Rating**: **B** -- Utility weapon with multi-target Slow at higher tiers.
 - **Synergies**: Slow triggers, Lighthouse/Darkwater Anglerfish
@@ -216,7 +217,7 @@ Rating key:
 
 ## Narwhal
 - **Size**: Small | **Types**: Aquatic, Weapon, Friend, Damage
-- **Cooldown**: 4.0s
+- **Cooldown**: 3.0s
 - **Effect**: Deal 10/20/30/40 Damage.
 - **Rating**: **C** -- Fast but low damage. Filler Aquatic weapon.
 - **Synergies**: Shipwreck (Multicast), fast trigger boards
@@ -259,6 +260,7 @@ Rating key:
 ## Piranha
 - **Size**: Small | **Types**: Aquatic, Weapon, Crit, Damage, Friend
 - **Cooldown**: 6.0s
+- **Cost**: 2/4/8/16
 - **Effect**: Deal 6/12/18/24 Damage. Double Crit Damage. 20% Crit Chance.
 - **Rating**: **B** -- Free from Chum/Fishing Net. Decent Aquatic weapon with Crit scaling.
 - **Synergies**: Crit builds, Chum, Shipwreck

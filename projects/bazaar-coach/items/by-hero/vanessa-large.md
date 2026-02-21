@@ -55,10 +55,11 @@ Rating key:
 
 ## Electric Eels
 - **Size**: Large | **Types**: Aquatic, Weapon, Friend, Damage, Slow
-- **Cooldown**: 8.0s (Bronze) / 7.0s (Silver-Gold) / 6.0s (Diamond)
-- **Effect**: Deal 50 Damage. Slow 1 item 2s. Charges 2s when enemy uses items.
-- **Rating**: **A** -- Self-charging from enemy activity. Damage + Slow disruption.
-- **Synergies**: Sharkray, Old Saltclaw (Tortuga variant), Slow triggers
+- **Cooldown**: 7.0s (Gold) / 6.0s (Diamond)
+- **Cost**: 24/48
+- **Effect**: Deal 100 Damage. Slow 1 item 1s. Charges 2s when enemy uses items.
+- **Rating**: **A** -- Self-charging from enemy activity. Damage + Slow disruption. Aquatic + Weapon + Friend = triple synergy typing.
+- **Synergies**: Sharkclaws (weapon buff), Beach Ball (Aquatic haste), Kusarigama (Slow triggers scaling), Clamera, Slow triggers, Tortuga (Friend)
 
 ## Flagship
 - **Size**: Large | **Types**: Aquatic, Vehicle, Weapon, AmmoReference, Damage
@@ -117,10 +118,11 @@ Rating key:
 - **Synergies**: Captain's Wheel (2.5s effective CD), Torpedo, Vehicle builds
 
 ## The Boulder
-- **Size**: Large | **Types**: Weapon, Ammo, Damage
-- **Cooldown**: 20.0s (Bronze-Gold) / 16.0s (Diamond) | **Ammo**: 1
+- **Size**: Large | **Types**: Weapon, Ammo, Damage, Relic
+- **Cooldown**: 20.0s (Gold) / 16.0s (Diamond) | **Ammo**: 1
+- **Cost**: 24/48
 - **Effect**: Deal Damage equal to opponent's Max Health.
-- **Rating**: **S** -- One-shots anything it hits. THE finisher item.
+- **Rating**: **S** -- One-shots anything it hits. THE finisher item. BUT 20s cooldown and Large (3 slots) is a huge cost. Needs charge acceleration or Ammo reload to justify the board space.
 - **Synergies**: Ammo reload (Port, Powder Flask), charge acceleration, Burn builds for Powder Keg comparison
 
 ## Tortuga
