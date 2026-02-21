@@ -24,7 +24,7 @@ The Bazaar has several properties that make it amenable to exact computation:
 | Property | Implication |
 |----------|-------------|
 | **Deterministic combat** | Given two boards, outcome is fully simulatable. Items trigger on fixed cooldowns. No micro or reaction time. |
-| **Known item pools** | Vanessa has 127 items. Track what's been seen. Compute remaining pool probabilities. |
+| **Known item pools** | Vanessa has 130 items. Track what's been seen. Compute remaining pool probabilities. |
 | **Finite action space** | At any shop: buy A, buy B, buy C, sell X, reroll, skip. ~10-15 actions to evaluate. |
 | **Fixed merchant progression** | Bronze Day 1, Silver Day 3, Gold Day 7, Diamond Day 9. Known tier distribution. |
 | **Quantifiable combat mechanics** | Burn = N*(N+1)/2 total damage. Poison = N/sec persistent. Haste = 2x speed. All computable. |
@@ -233,7 +233,7 @@ The engine should maintain cumulative state across multiple screenshots/queries 
 ### Item Pool Probability
 
 Given:
-- Hero item pool: 127 items (Vanessa), distributed across sizes and types
+- Hero item pool: 130 items (Vanessa), distributed across sizes and types
 - Current day → merchant tier distribution
 - Items at Diamond → removed from pool
 - Merchant specialization → narrows pool
@@ -507,7 +507,7 @@ LEVEL UP — Choose upgrade target:
 ## Implementation Phases
 
 ### Phase 1: Data Foundation
-- Convert Vanessa's 127 items from markdown to structured JSON
+- Convert Vanessa's 130 items from markdown to structured JSON
 - Build merchant pool mappings
 - Define combat mechanics as computable rules
 - Create item effect type system

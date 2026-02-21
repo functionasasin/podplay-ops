@@ -1,4 +1,4 @@
-# Vanessa - Small Items (51 total)
+# Vanessa - Small Items (52 total)
 
 Items are listed with their tier progression (Bronze > Silver > Gold > Diamond) where values change across tiers.
 
@@ -102,6 +102,14 @@ Rating key:
 - **Rating**: **B** -- Strong in single-weapon builds (Sniper Rifle, Flagship).
 - **Synergies**: Silencer builds, single-weapon strategies
 
+## Dart Launcher
+- **Size**: Small | **Types**: Weapon, Tech
+- **Cooldown**: 4.0s | **Ammo**: 4
+- **Starting Tier**: Silver
+- **Effect**: Deal 5/10/15 Damage. If adjacent to a Slow item, Slow 1/2/3 item(s) 1s. If adjacent to a Poison item, Poison 3/6/9.
+- **Rating**: **A** -- Versatile conditional weapon. 4 Ammo is generous. Adapts to whatever's next to it.
+- **Synergies**: Dock Lines/Clamera (adjacent Slow), Pufferfish/Catfish (adjacent Poison), Ammo builds
+
 ## Dive Weights
 - **Size**: Small | **Types**: Ammo, Aquatic, Cooldown, Haste, Tool, Apparel
 - **Cooldown**: 8.0s | **Ammo**: 4
@@ -166,6 +174,14 @@ Rating key:
 - **Rating**: **A** -- Multi-target Slow that scales with Friends. Charges Tortuga 3x per activation.
 - **Synergies**: Tortuga (triple charge trigger), Friend-heavy boards, Slow triggers
 
+## Integrated HUD
+- **Size**: Small | **Types**: Apparel, Tech
+- **Cooldown**: Passive
+- **Starting Tier**: Silver
+- **Effect**: Right item gains +20/30/40% Crit Chance. When you Crit with right item, Slow 1 item 1s.
+- **Rating**: **A** -- Passive Crit + Slow-on-Crit for any item type. Not restricted to Weapons.
+- **Synergies**: Any strong right-adjacent item, Slow triggers (Darkwater Anglerfish, Lighthouse), Crit builds
+
 ## Incendiary Rounds
 - **Size**: Small | **Types**: AmmoReference, Burn
 - **Cooldown**: Passive
@@ -193,6 +209,14 @@ Rating key:
 - **Effect**: Items gain +10/20/30/40% Crit Chance.
 - **Rating**: **A** -- Board-wide Crit buff. Excellent Fiery enchant target.
 - **Synergies**: Any build with Crit scaling, Fiery enchant for bonus Burn
+
+## Kusarigama
+- **Size**: Small | **Types**: Weapon, Tech
+- **Cooldown**: 5.0s
+- **Starting Tier**: Silver
+- **Effect**: Deal 5/10/15 Damage. Passive: When you Slow or Crit, this and adjacent Weapons gain +5/+10/+15 Damage for the fight.
+- **Rating**: **S** -- Insane in-fight scaling. Essentially a build-your-own Mantis Shrimp with no downsides. Buffs itself AND adjacent Weapons on Slow or Crit. Likely nerf candidate.
+- **Synergies**: Any Slow source (Dock Lines, Clamera, Shot Glasses), Crit stacking, adjacent Weapons, Proboscis
 
 ## Lighter
 - **Size**: Small | **Types**: Tool, Burn
@@ -313,6 +337,13 @@ Rating key:
 - **Effect**: Haste items 1s. Slow items 1s.
 - **Rating**: **S** -- Dual Haste + Slow triggers in one item. Enables both sides of the speed game.
 - **Synergies**: Any Haste or Slow trigger, Lighthouse, Pufferfish, Darkwater Anglerfish
+
+## Shuriken
+- **Size**: Small | **Types**: Weapon, Tech
+- **Cooldown**: 8.0s | **Ammo**: 3/4/5/6
+- **Effect**: Deal 5/10/15/20 Damage. Multicast equal to current Ammo. Spends all Ammo on use.
+- **Rating**: **S** -- #1 combo piece for late-game Gunslinger. ALWAYS BUY when offered. With Ammo support, fires 6x Multicast nuke. Devastating with Bladed Hoverboard passive triggers.
+- **Synergies**: Bladed Hoverboard (passive damage per use), Powder Flask/Port (reload), Cannonball (+Ammo), Dive Weights, Captain's Quarters
 
 ## Silencer
 - **Size**: Small | **Types**: DamageReference, Cooldown

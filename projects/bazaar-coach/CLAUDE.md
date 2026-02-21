@@ -124,7 +124,7 @@ Present ALL evaluated actions ranked by EV in a table:
 ### Item Pool Tracking
 
 Track items seen across the entire run. Use this to compute remaining pool probabilities:
-- Vanessa has 127 items total. Each merchant draws from a subset based on specialization.
+- Vanessa has 130 items total. Each merchant draws from a subset based on specialization.
 - Items at Diamond tier are removed from merchant pools.
 - P(specific item in next shop) depends on merchant type, tier, and remaining pool size.
 - P(item within N shops) = 1 - (1 - P(per shop))^N
