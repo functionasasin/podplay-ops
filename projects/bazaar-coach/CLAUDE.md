@@ -65,4 +65,18 @@ mechanics/merchants.md → Merchant types, specialties, and how to look up inven
 mechanics/events.md    → Event options and verdicts
 strategy/        → Build archetypes, run pacing, shop evaluation, PvE encounters
 meta/            → Current tier list, patch notes, common mistakes
+knowledge/       → Scraped and extracted knowledge from top players
+  transcripts/   → Raw video transcripts organized by channel
+  extracted/     → AI-extracted strategies, habits, and insights
+  channels.json  → List of YouTube channels to scrape
 ```
+
+## Video Knowledge Pipeline
+
+Transcripts from top Bazaar content creators are scraped and processed into the KB:
+
+1. **Scrape**: `python tools/scrape-transcripts.py` fetches transcripts from YouTube
+2. **Extract**: `python tools/extract-knowledge.py` uses Claude to pull out strategies, item evaluations, decision frameworks, and meta observations
+3. **Search**: When coaching, search `knowledge/extracted/` for relevant insights from top players
+
+This gives the coach access to the collective reasoning of players like Kripparrian, Rhapsody, Shurkou, and others — not just wiki facts, but *why* top players make the decisions they do.
