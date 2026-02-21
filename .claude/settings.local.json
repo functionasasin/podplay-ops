@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd:*)",
+      "Bash(ls:*)",
+      "WebSearch",
+      "WebFetch(domain:flic.io)",
+      "WebFetch(domain:shop.ibahn.net.ph)",
+      "WebFetch(domain:itwarehouse.ph)",
+      "WebFetch(domain:pcx.com.ph)",
+      "WebFetch(domain:empiretech01.com)",
+      "WebFetch(domain:www.lazada.com.ph)",
+      "WebFetch(domain:ecommerce.datablitz.com.ph)",
+      "WebFetch(domain:www.xbsasia.ph)",
+      "WebFetch(domain:mec.ph)",
+      "WebFetch(domain:benson.ph)"
+    ]
+  }
+}
