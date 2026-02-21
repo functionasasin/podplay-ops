@@ -177,8 +177,7 @@ Rating key:
 ## Integrated HUD
 - **Size**: Small | **Types**: Apparel, Tech
 - **Cooldown**: Passive
-- **Starting Tier**: Silver
-- **Effect**: Right item gains +20/30/40% Crit Chance. When you Crit with right item, Slow 1 item 1s.
+- **Effect**: Right item gains +10/20/30/40% Crit Chance. When you Crit with right item, Slow 1 item 1s.
 - **Rating**: **A** -- Passive Crit + Slow-on-Crit for any item type. Not restricted to Weapons.
 - **Synergies**: Any strong right-adjacent item, Slow triggers (Darkwater Anglerfish, Lighthouse), Crit builds
 
