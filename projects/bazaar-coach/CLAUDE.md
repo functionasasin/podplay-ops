@@ -29,12 +29,23 @@ If The Bazaar isn't open (capture fails), fall back to asking the user for a scr
 
 ### Step 1: Parse Game State (Structured)
 
-Extract into a structured model — not prose:
-- **Hero**, **Day**, **Hour**, **Gold**, **Income**, **Prestige**, **Health/Max Health**, **Level**
-- **Board items**: name, tier, enchantment, position, size, types (for each item)
-- **Stash items**: same fields
-- **Shop**: merchant name, merchant tier, each item (name, tier, price, enchantment)
-- **Run history** (maintain across the conversation): items seen, merchants seen, items purchased
+Extract into the structured model defined in `mechanics/game-state-model.md` — not prose. Identify which **decision type** you're looking at (event choice, PvE choice, shop, or level-up).
+
+**Run state**: Hero, Day, Hour, Gold, Income, Prestige (run HP — 0 = near elimination), Health/Max Health, Level, XP, Wins/Losses
+
+**Board**: Items in their exact positions (left-to-right order matters — adjacency effects are real). For each: name, size (S=1/M=2/L=3 slots), tier, enchantment, types, ammo. Board has 4→10 slots (maxes at Level 4).
+
+**Stash**: Off-board items (10 size-units capacity, inactive in combat). Same fields minus position.
+
+**Skills**: All acquired skills with name, tier, and effect. Skills are permanent, ~10 slots, acquired from level-ups and events. Often build-defining.
+
+**Current decision**:
+- If **event choice**: the 3 options available this hour (shops are one event type among many — free items, skill trainers, enchantments, gold/XP rewards, etc.)
+- If **PvE choice**: the 3 monster encounters with visible info and rewards (no Prestige risk)
+- If **shop**: merchant name/tier, items (name, tier, price, enchantment, size), reroll cost. Can buy multiple.
+- If **level-up**: options offered (skill picks, upgrade targets, items, enchantments)
+
+**Run history** (maintain across the conversation): items seen, merchants seen (with day/tier), events encountered, skills acquired, PvE results, PvP results with Prestige changes
 
 ### Step 2: Compute Board Power
 
@@ -61,7 +72,14 @@ For the current board, estimate effective combat power:
 
 ### Step 3: Evaluate Every Action
 
-For **each possible action** (buy item A, buy item B, sell item X, reroll, skip), compute:
+The actions to evaluate depend on the **decision type**:
+
+- **Event choice**: Compare the EV of each of the 3 options (e.g., shop visit vs free item vs skill trainer). A shop is only valuable if it likely contains items you want to buy.
+- **PvE choice**: Compare reward value vs risk. PvE has no Prestige risk, so pick the highest-reward encounter you can beat. If a monster drops a build-defining item (e.g., Augmented Weaponry from Trashtown Mayor), that outweighs gold differences.
+- **Shop**: Evaluate buy/sell/reroll/skip (detailed below).
+- **Level-up**: Compute exact power delta for each option (which skill, which upgrade target, which item).
+
+**For shop decisions**, evaluate each possible action:
 
 **Buy Item X (cost N gold):**
 ```
