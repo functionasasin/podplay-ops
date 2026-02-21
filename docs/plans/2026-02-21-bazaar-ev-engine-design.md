@@ -404,7 +404,43 @@ Sort all actions by EV. Present the top actions with:
 - Key reasoning (which synergy, which probability drove the decision)
 - Confidence level (how sensitive is the recommendation to model assumptions)
 
-## Layer 6: Pro Player Pattern Matching
+## Layer 6: Pro Player Ground Truth & Pattern Matching
+
+### Why Transcripts Are the Foundation, Not a Nice-to-Have
+
+This game is not in Claude's training data. We cannot model everything from scratch — it would take forever and produce unreliable results. Reinforcement learning is out of scope. The only reliable source of **ground truth correct play** is the behavior of top-level players captured in their stream/video transcripts.
+
+The transcripts serve three critical roles:
+
+1. **Ground truth for what correct play looks like** — When a top player with consistent 8+ win runs makes a decision, that's the closest thing we have to a known-correct answer. The EV engine's calculations should converge toward reproducing these decisions, not the other way around.
+
+2. **Extractable principles and decision frameworks** — Pro players don't just make moves, they explain *why*. These explanations encode principles ("never buy off-archetype before Day 6", "reroll is always wrong at 4g if you have a core item path", "Shipwreck is worth warping your entire build around"). These principles are computable heuristics that the engine can apply directly.
+
+3. **Calibration signal for the EV model** — When the EV engine disagrees with consistent pro behavior, the engine is probably wrong. Pro patterns calibrate the model's assumptions (opponent strength estimates, item power ratings, opportunity cost weights).
+
+### The Integration Model: Best of All Worlds
+
+The practical approach is not pure computation OR pure pattern matching — it's both working together. When Claude Code opens a fresh context window, seizes game state from a screenshot, and activates the coaching skill, the engine should:
+
+1. **Parse game state** into structured model (Layer 2)
+2. **Run EV calculations** on all possible actions (Layer 5)
+3. **Pattern match the current state against ingested transcripts** — find moments where pros faced similar board states, similar gold, similar day, similar build trajectory
+4. **Identify which extracted principles apply** — e.g., "pro players consistently skip off-archetype items at this stage", "this is a known power spike window where aggressive spending is correct"
+5. **Reconcile** — when EV math and pro principles agree, high confidence. When they disagree, flag it and weight toward pro behavior unless the math is overwhelming.
+6. **Surface the reasoning** — show the user both the EV calculation AND the pro pattern match: "Buy Catfish. EV: +1.78/gold. Rhapsody did this in 3 similar spots, all 8+ win runs. Principle: 'always take haste-scaling poison when it's offered in an aquatic build.'"
+
+This is not RL. We're not training a model. We're using Claude's pattern recognition to read-based-reason over ingested transcripts, grab the relevant principles, seize the applicable abilities/items/states, do the math, check which principles apply, and synthesize the best move. Practical, not theoretical.
+
+### Transcript Quality Matters
+
+The quality of the scraped and extracted transcripts directly determines the quality of the coaching output. The extraction pipeline should produce:
+
+1. **Clear principles** — not "this item is good" but "this item is good *because* it double-dips with the passive and scales with haste, making it worth buying even off-curve on Day 4"
+2. **Situational context** — what day, what build, what gold level, what board state was the principle stated in
+3. **Decision reasoning chains** — the full "I could do X or Y, but I'm doing X because Z" reasoning
+4. **Outcome correlation** — did runs where this principle was followed end well?
+
+When the scraping plan is implemented, knowing this end-goal should improve transcript extraction quality — the extractor should be tuned to pull out principles and decision frameworks, not just "player bought item X."
 
 ### Structured Transcript Tags
 
@@ -428,6 +464,7 @@ When extracting knowledge from pro player transcripts, tag each decision with:
     "reasoning": "saving for silver merchant tomorrow, nothing in shop advances the build",
     "alternatives_considered": ["buy bayonet"]
   },
+  "principle": "save gold when no shop item advances your core build path and a higher-tier merchant is coming",
   "outcome": {
     "final_wins": 8,
     "run_result": "good"
@@ -435,17 +472,30 @@ When extracting knowledge from pro player transcripts, tag each decision with:
 }
 ```
 
-### Pattern Matching
+Note the added `principle` field — every tagged decision should have the generalizable principle extracted, not just the specific action.
 
-When evaluating moves, query the transcript database:
+### Pattern Matching at Query Time
+
+When evaluating moves, the engine queries the transcript knowledge base:
 1. Find decisions where game state is similar (same hero, similar day, similar build, similar gold)
 2. Weight by player skill and run outcome
-3. Surface as supporting evidence: "Kripp faced a similar state 3 times and skipped 2/3, with 75% win rate on skips vs 50% on buys"
+3. Extract the principles that applied in those situations
+4. Check if any principle directly applies to the current decision
+5. Surface as supporting evidence: "Kripp faced a similar state 3 times and skipped 2/3, with 75% win rate on skips vs 50% on buys. Principle: 'save for silver merchant when nothing advances the build.'"
 
-This is a **secondary signal**, not the primary driver. The EV calculation is primary. Pro patterns serve as:
-- Sanity check on the model
-- Coverage for edge cases the model doesn't handle well
-- Training data for calibrating the model
+### Relationship Between EV Engine and Pro Patterns
+
+The EV calculation and pro patterns are **co-primary signals**, not primary/secondary:
+
+| Scenario | What Wins | Why |
+|----------|-----------|-----|
+| EV math is clear AND pros agree | EV + pro confirmation | Highest confidence |
+| EV math is clear BUT no pro data for this state | EV alone | Still good — math doesn't need validation for every case |
+| EV math is close between options AND pros consistently pick one | Pro pattern | Pros have internalized factors the model might miss |
+| EV math says one thing BUT pros consistently do the opposite | Flag and investigate | The model's assumptions are probably wrong — recalibrate |
+| No EV math possible (missing data) AND pro pattern exists | Pro pattern | Better than nothing, and pros are reliable |
+
+Over time, disagreements between the EV model and pro behavior should decrease as we use the disagreements to improve the model's assumptions.
 
 ## Output Format
 
@@ -535,10 +585,14 @@ LEVEL UP — Choose upgrade target:
 - Win probability against reference opponent boards
 - Replaces heuristic DPS with precise simulation
 
-### Phase 6: Pro Player Integration
-- Structure transcript extractions with game state tags
-- Pattern match current state against pro decisions
-- Use as calibration data and secondary signal
+### Phase 6: Pro Player Ground Truth Integration
+- **Scrape pro transcripts** — Run the transcript scraper against top creators (channels.json). This is the raw material for everything else.
+- **Extract principles, not just facts** — Tune the extraction pipeline to pull out generalizable decision principles with situational context, not just "player bought X." Each extracted decision gets a `principle` field.
+- **Tag decisions with structured game state** — Every extracted decision is tagged with hero, day, build archetype, gold, key items, and the principle behind it. This makes them queryable.
+- **Build the pattern matcher** — When the EV engine evaluates a game state, it fuzzy-matches against the tagged transcript database to find similar situations. Claude's pattern recognition handles the fuzzy matching — no need for exact vector similarity.
+- **Reconciliation logic** — Define how EV calculations and pro patterns interact (see Layer 6 table). When they agree, boost confidence. When they disagree, flag for investigation and weight toward pro behavior.
+- **Calibrate EV model against pro behavior** — Use systematic disagreements between EV output and pro decisions to identify wrong assumptions in the model (opponent strength estimates, item power ratings, opportunity cost weights). This is the feedback loop that improves the engine over time.
+- **Surface both signals in output** — Every recommendation shows the EV math AND any relevant pro pattern match with the applicable principle.
 
 ## What This Changes in the Coach
 

@@ -172,12 +172,25 @@ Don't say "upgrade the important one." Compute which upgrade gives the biggest b
 - Don't hedge — commit to the highest EV move
 - Don't dump KB file contents — extract and compute
 
-## Pro Player Pattern Matching
+## Pro Player Ground Truth & Pattern Matching
 
-Transcripts from top players are in `knowledge/`. Use them as a **secondary signal**:
-- When the EV calculation is close between two options, check if pro players faced similar states
-- Surface as: "Kripp chose X in 3 similar spots, those runs went 8+ wins"
-- **Never** let pro patterns override a clear EV calculation. Pros play on intuition too — the whole point is to be better than intuition.
+This game is not in Claude's training data. We cannot model everything from scratch. The only reliable source of **ground truth correct play** is the behavior and reasoning of top-level players captured in transcripts. Transcripts are in `knowledge/`.
+
+Pro transcripts serve as **co-primary signal** alongside EV calculations, not a secondary afterthought:
+
+1. **Ground truth** — Top players with consistent 8+ win runs define what correct play looks like. The EV engine should converge toward their behavior.
+2. **Extractable principles** — Pro explanations encode computable heuristics ("never buy off-archetype before Day 6", "Shipwreck is worth warping your entire build around"). Apply these directly.
+3. **Calibration** — When the EV engine disagrees with consistent pro behavior, the engine's assumptions are probably wrong.
+
+### How to Use Transcripts When Coaching
+
+At every decision point:
+- **Pattern match** the current game state against the ingested transcript database — find moments where pros faced similar boards, gold, day, build trajectory
+- **Identify which extracted principles apply** to the current decision
+- **Reconcile with EV math**: when both agree, high confidence. When they disagree, flag it and weight toward pro behavior unless the math is overwhelming.
+- **Surface both signals**: "Buy Catfish. EV: +1.78/gold. Rhapsody did this in 3 similar spots, all 8+ win runs. Principle: 'always take haste-scaling poison when offered in an aquatic build.'"
+
+See `docs/plans/2026-02-21-bazaar-ev-engine-design.md` Layer 6 for the full integration model and reconciliation table.
 
 ## Knowledge Base Structure
 
