@@ -30,6 +30,7 @@ import re
 import subprocess
 import sys
 import time
+from datetime import datetime, timedelta
 from pathlib import Path
 
 try:
@@ -112,22 +113,32 @@ def extract_video_id(url: str) -> str | None:
     return None
 
 
-def get_channel_videos(channel_url: str, max_videos: int = 50) -> list[dict]:
+def get_channel_videos(channel_url: str, max_videos: int = 50, days: int | None = None) -> list[dict]:
     """Get list of videos from a YouTube channel using yt-dlp."""
     print(f"  Fetching video list from {channel_url}...")
 
     # Use yt-dlp to get video metadata without downloading
     cmd = [
         "yt-dlp",
-        "--flat-playlist",
         "--dump-json",
         "--no-download",
         "--playlist-end", str(max_videos),
-        f"{channel_url}/videos",
     ]
 
+    if days:
+        # Use dateafter to filter to recent videos (requires full metadata, slower)
+        cutoff = (datetime.now() - timedelta(days=days)).strftime("%Y%m%d")
+        cmd.extend(["--dateafter", cutoff, "--no-warnings"])
+        print(f"  Filtering to videos after {cutoff}")
+    else:
+        # Fast mode: flat-playlist (no dates, but much faster)
+        cmd.insert(1, "--flat-playlist")
+
+    cmd.append(f"{channel_url}/videos")
+
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+        timeout = 900 if days else 120
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
         if result.returncode != 0:
             print(f"  WARNING: yt-dlp failed: {result.stderr[:200]}")
             return []
@@ -227,8 +238,9 @@ def _fetch_via_api(video_id: str) -> str | None:
 
         lines = []
         for snippet in result:
-            text = snippet.text if hasattr(snippet, "text") else str(snippet)
-            lines.append(text)
+            text = snippet.text if hasattr(snippet, "text") else (snippet.get("text", "") if isinstance(snippet, dict) else str(snippet))
+            if text:
+                lines.append(text)
 
         return " ".join(lines) if lines else None
 
@@ -347,6 +359,21 @@ extracted: false
     return filepath
 
 
+def filter_by_date(videos: list[dict], days: int) -> list[dict]:
+    """Filter videos to only those uploaded within the last N days."""
+    cutoff = (datetime.now() - timedelta(days=days)).strftime("%Y%m%d")
+    filtered = []
+    for video in videos:
+        upload_date = video.get("upload_date") or ""
+        # upload_date is YYYYMMDD format from yt-dlp
+        if upload_date and upload_date >= cutoff:
+            filtered.append(video)
+        elif not upload_date:
+            # Keep videos with unknown date (will be fetched individually)
+            filtered.append(video)
+    return filtered
+
+
 def filter_bazaar_videos(videos: list[dict], keywords: list[str] | None = None) -> list[dict]:
     """Filter videos to only Bazaar-related content."""
     bazaar_keywords = [
@@ -367,7 +394,7 @@ def filter_bazaar_videos(videos: list[dict], keywords: list[str] | None = None) 
     return filtered
 
 
-def scrape_channel(channel: dict, max_videos: int, title_filter: list[str] | None, skip_existing: bool = True):
+def scrape_channel(channel: dict, max_videos: int, title_filter: list[str] | None, skip_existing: bool = True, days: int | None = None):
     """Scrape transcripts from a single channel."""
     name = channel["name"]
     url = channel["url"]
@@ -376,7 +403,7 @@ def scrape_channel(channel: dict, max_videos: int, title_filter: list[str] | Non
     print(f"URL: {url}")
     print(f"{'='*60}")
 
-    videos = get_channel_videos(url, max_videos=max_videos * 3)  # fetch extra since we filter
+    videos = get_channel_videos(url, max_videos=max_videos * 3, days=days)  # fetch extra since we filter
 
     if not videos:
         print(f"  No videos found for {name}")
@@ -488,6 +515,7 @@ def main():
     parser.add_argument("--no-filter", action="store_true", help="Don't filter by Bazaar keywords (scrape all)")
     parser.add_argument("--init-channels", action="store_true", help="Save default channels.json for editing")
     parser.add_argument("--no-skip", action="store_true", help="Re-scrape even if transcript file exists")
+    parser.add_argument("--days", type=int, help="Only scrape videos from the last N days")
 
     args = parser.parse_args()
 
@@ -531,7 +559,7 @@ def main():
         match = re.search(r'@([\w-]+)', args.channel)
         if match:
             channel["name"] = match.group(1)
-        scrape_channel(channel, args.max_videos, title_filter, skip_existing=not args.no_skip)
+        scrape_channel(channel, args.max_videos, title_filter, skip_existing=not args.no_skip, days=args.days)
         return
 
     # Default: scrape all configured channels
@@ -540,7 +568,7 @@ def main():
 
     total_scraped = 0
     for channel in channels:
-        count = scrape_channel(channel, args.max_videos, title_filter, skip_existing=not args.no_skip)
+        count = scrape_channel(channel, args.max_videos, title_filter, skip_existing=not args.no_skip, days=args.days)
         total_scraped += count
 
     print(f"\n{'='*60}")
