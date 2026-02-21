@@ -159,7 +159,15 @@ projects/bazaar-coach/data/
 
 ## Layer 2: Game State Model
 
-Structured representation populated from screenshot analysis.
+> **Canonical spec**: See `projects/bazaar-coach/mechanics/game-state-model.md` for the full schema, decision types, day structure, and board layout rules.
+
+Structured representation populated from screenshot analysis. The model must capture four distinct decision types (event choice, PvE choice, shop, level-up) — not just the shop phase.
+
+### Day Structure
+
+Each day follows: **PvP → Hour 1 (pick 1 of 3 events) → Hour 2 (pick 1 of 3 events) → Hour 3 (pick 1 of 3 PvE encounters) → Hour 4 (pick 1 of 3 events) → Hour 5 (pick 1 of 3 events) → PvP**. Shops are one event type among many (free items, skill trainers, enchantment stations, gold/XP rewards, special encounters). One option per hour is typically economic (free stuff).
+
+### Example: Shop Decision Point
 
 ```json
 {
@@ -173,48 +181,113 @@ Structured representation populated from screenshot analysis.
     "health": 200,
     "max_health": 200,
     "level": 7,
+    "xp": 3,
     "wins": 2,
     "losses": 1
   },
-  "board": [
-    {
-      "item_id": "pufferfish",
-      "tier": "silver",
-      "enchantment": "toxic",
-      "position": 0,
-      "ammo": null
-    },
-    {
-      "item_id": "jellyfish",
-      "tier": "bronze",
-      "enchantment": null,
-      "position": 1,
-      "ammo": null
-    },
-    {
-      "item_id": "beach_ball",
-      "tier": "bronze",
-      "enchantment": null,
-      "position": 2,
-      "ammo": null
-    }
+  "board": {
+    "slots_total": 10,
+    "slots_used": 5,
+    "items": [
+      {
+        "name": "Pufferfish",
+        "size": "M",
+        "tier": "silver",
+        "enchantment": "toxic",
+        "position": 0,
+        "types": ["aquatic", "friend", "haste", "poison"],
+        "ammo": null
+      },
+      {
+        "name": "Jellyfish",
+        "size": "S",
+        "tier": "bronze",
+        "enchantment": null,
+        "position": 2,
+        "types": ["aquatic", "poison"],
+        "ammo": null
+      },
+      {
+        "name": "Beach Ball",
+        "size": "M",
+        "tier": "bronze",
+        "enchantment": null,
+        "position": 3,
+        "types": ["aquatic", "haste"],
+        "ammo": null
+      }
+    ]
+  },
+  "stash": {
+    "slots_total": 10,
+    "slots_used": 0,
+    "items": []
+  },
+  "skills": [
+    { "name": "Final Dose", "tier": "bronze", "effect": "+3 Poison on first Poison application each fight" },
+    { "name": "Strength", "tier": "silver", "effect": "+5 Damage to all Weapons" }
   ],
-  "stash": [],
-  "shop": {
-    "merchant": "jay_jay",
+  "decision": {
+    "type": "shop",
+    "merchant": "Jay Jay",
     "merchant_tier": "silver",
     "items": [
-      { "item_id": "catfish", "tier": "bronze", "price": 8, "enchantment": null },
-      { "item_id": "bayonet", "tier": "bronze", "price": 5, "enchantment": null },
-      { "item_id": "handaxe", "tier": "bronze", "price": 4, "enchantment": null }
+      { "name": "Catfish", "tier": "bronze", "price": 8, "enchantment": null, "size": "S" },
+      { "name": "Bayonet", "tier": "bronze", "price": 5, "enchantment": null, "size": "S" },
+      { "name": "Handaxe", "tier": "bronze", "price": 4, "enchantment": null, "size": "S" }
     ],
     "reroll_cost": 4
   },
   "history": {
-    "items_seen": ["pufferfish", "jellyfish", "beach_ball", "lighter", "bayonet"],
-    "items_purchased": ["pufferfish", "jellyfish", "beach_ball"],
-    "merchants_seen": ["jay_jay", "aila", "kina", "jay_jay"],
-    "rerolls_this_shop": 0
+    "items_seen": ["Pufferfish", "Jellyfish", "Beach Ball", "Lighter", "Bayonet"],
+    "items_purchased": ["Pufferfish", "Jellyfish", "Beach Ball"],
+    "merchants_seen": [
+      { "name": "Jay Jay", "tier": "bronze", "day": 1 },
+      { "name": "Aila", "tier": "bronze", "day": 2 },
+      { "name": "Jay Jay", "tier": "silver", "day": 5 }
+    ],
+    "events_encountered": [],
+    "pve_results": [],
+    "skills_acquired": [
+      { "name": "Final Dose", "tier": "bronze", "day": 2, "source": "level_up" },
+      { "name": "Strength", "tier": "silver", "day": 4, "source": "event" }
+    ],
+    "pvp_results": [
+      { "day": 1, "result": "win" },
+      { "day": 2, "result": "win" },
+      { "day": 3, "result": "loss", "prestige_cost": 3 },
+      { "day": 4, "result": "win" }
+    ]
+  }
+}
+```
+
+### Example: Event Choice Decision Point
+
+```json
+{
+  "decision": {
+    "type": "event_choice",
+    "options": [
+      { "event_type": "shop", "description": "Jay Jay (Silver merchant)" },
+      { "event_type": "free_item", "description": "Treasure Chest — free item" },
+      { "event_type": "gold_reward", "description": "Borrow — lose 1 income, gain 7 gold" }
+    ]
+  }
+}
+```
+
+### Example: PvE Choice Decision Point
+
+```json
+{
+  "decision": {
+    "type": "pve_choice",
+    "encounters": [
+      { "monster": "Flame Juggler", "tier": "gold", "rewards": { "gold": 4, "xp": 3 }, "notes": "54 fight-start Burn" },
+      { "monster": "Trashtown Mayor", "tier": "diamond", "rewards": { "gold": 5, "xp": 4, "drop": "Augmented Weaponry skill" }, "notes": "Hard but amazing drop" },
+      { "monster": "Crab", "tier": "bronze", "rewards": { "gold": 2, "xp": 3 }, "notes": "Free win" }
+    ]
   }
 }
 ```
@@ -224,9 +297,12 @@ Structured representation populated from screenshot analysis.
 The engine should maintain cumulative state across multiple screenshots/queries within a run. Key fields to track:
 
 - **items_seen**: Every item offered in every shop. Informs probability calculations.
-- **merchants_seen**: Every merchant encountered. Informs merchant distribution model.
+- **merchants_seen**: Every merchant encountered with day/tier. Informs merchant distribution model.
+- **events_encountered**: Events seen and choices made. Informs event probability model.
+- **skills_acquired**: Skills gained, when, and from where. Skills are permanent and build-defining.
+- **pve_results**: PvE encounters fought, outcomes, drops. No Prestige risk but affects gold/XP/items.
+- **pvp_results**: Win/loss record with Prestige changes. Critical for run trajectory assessment.
 - **decisions_made**: What was bought/sold/skipped and why. Enables retrospective analysis.
-- **combat_results**: Win/loss and approximate board power of opponents faced. Calibrates opponent model.
 
 ## Layer 3: Probability Engine
 
