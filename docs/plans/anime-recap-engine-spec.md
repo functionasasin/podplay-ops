@@ -15,9 +15,10 @@ The Anime Recap Engine converts a complete anime season (12-24 episodes) into a 
 ### Architecture
 
 ```
-Episodes Folder + config.yaml
-        │
-        ▼
+INPUT 1: episodes/*.mp4    INPUT 2: config.yaml
+        │                          │
+        └──────────┬───────────────┘
+                   ▼
 ┌─── STAGE 1: Content Ingestion ───┐
 │  Scene detection, transcription,  │
 │  audio separation per episode     │
@@ -57,29 +58,37 @@ Episodes Folder + config.yaml
 ┌─── STAGE 7: Video Assembly & Render ───┐
 │  Merge visual timeline + audio →       │
 │  ffmpeg render → quality validation    │
-└────────────────────────────────────────┘
+└──────────────────┬─────────────────────┘
+                   │
+                   ▼
+           OUTPUT: recap.mp4
 ```
 
 ---
 
 ## 2. Input Contract
 
-### Required Files
+Exactly two inputs. Nothing else.
+
+### Input 1: Episode MP4 Files
+
+A directory of MP4 files — one per episode, named in order. Subtitles are either embedded in the MP4 or auto-generated via Whisper. No separate subtitle files.
 
 ```
-input/
-├── episodes/
-│   ├── S01E01.mkv    # or .mp4 — video files for each episode
-│   ├── S01E02.mkv
-│   ├── ...
-│   └── S01E24.mkv
-├── subtitles/        # Optional: external subtitle files
-│   ├── S01E01.srt    # If not embedded in video
-│   └── ...
-└── config.yaml       # Configuration (see Config Schema below)
+episodes/
+├── S01E01.mp4
+├── S01E02.mp4
+├── ...
+└── S01E24.mp4
 ```
 
-### config.yaml Minimal Example
+**Naming**: `S{season:02d}E{episode:02d}.mp4`. Files are sorted lexicographically to determine episode order.
+
+**Format**: MP4 container. Any resolution/framerate — the pipeline detects source FPS from the files and adapts. Subtitles embedded as SRT/ASS streams are preferred; if absent, Whisper generates them.
+
+### Input 2: config.yaml
+
+A single YAML file containing every parameter the engine needs. See Section 5 for full schema.
 
 ```yaml
 anime:
@@ -96,13 +105,19 @@ output:
   quality: "1080p"             # 720p | 1080p | 4k
 ```
 
+### Invocation
+
+```bash
+anime-recap-engine --episodes ./episodes/ --config ./config.yaml --output ./recap.mp4
+```
+
 ---
 
 ## 3. Pipeline Stages
 
 ### 3.1 Content Ingestion
 
-**Input**: Episode video files + optional subtitles
+**Input**: Episode MP4 files
 **Output**: Per-episode scene lists, transcriptions, separated audio stems
 
 #### 3.1.1 Scene Detection
@@ -932,10 +947,7 @@ tools:
 ### Primary Output
 
 ```
-output/
-├── recap.mp4                 # Final rendered video
-├── recap_audio.wav           # Final mixed audio (pre-mux)
-└── recap_metadata.json       # Timing manifest
+recap.mp4                 # The finished recap video
 ```
 
 ### Intermediate Artifacts
