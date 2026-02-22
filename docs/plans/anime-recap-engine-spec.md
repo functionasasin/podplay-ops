@@ -72,7 +72,7 @@ Exactly two inputs. Nothing else.
 
 ### Input 1: Episode MP4 Files
 
-A directory of MP4 files — one per episode, named in order. Subtitles are either embedded in the MP4 or auto-generated via Whisper. No separate subtitle files.
+A directory of MP4 files — one per episode, named in order. **Minimum 12 episodes.** Below 12, the compression ratio inverts (recap becomes longer than source) and scaling parameters break down. Subtitles are either embedded in the MP4 or auto-generated via Whisper. No separate subtitle files.
 
 ```
 episodes/
@@ -332,7 +332,11 @@ def scale_parameters(total_eps: int) -> dict:
     """Derive all season-length-dependent parameters.
 
     Reference: 24 episodes → 75 min, 5 acts, 11 moments, 19 breathing events.
+    Minimum: 12 episodes. Below this, the compression ratio inverts and
+    scaling floors produce nonsensical parameters.
     """
+    if total_eps < 12:
+        raise ValueError(f"Minimum 12 episodes required, got {total_eps}")
     # Target duration scales linearly: ~3.1 min per episode
     target_min = max(30.0, total_eps * 3.1)
 
@@ -368,7 +372,7 @@ def scale_parameters(total_eps: int) -> dict:
         "max_episode_min": round(max_ep_min, 1),
     }
 
-# Examples:
+# Examples (minimum 12 episodes):
 # 12 eps → 37 min, 3 acts, 5 moments, 9 breathing, 5,328 words
 # 13 eps → 40 min, 3 acts, 6 moments, 10 breathing, 5,760 words
 # 24 eps → 75 min, 5 acts, 11 moments, 19 breathing, 10,800 words
@@ -2051,3 +2055,598 @@ Watch the entire video and check:
 | Music mixing | ~5 min | ~5 min |
 | Video rendering | ~30 min | ~15 min |
 | **Total** | **~5-6 hours** | **~1.5-2 hours** |
+
+---
+
+## 9. Per-Stage Development & Testing
+
+Build top-down: implement and validate each stage before moving to the next. Every stage reads from and writes to a shared **work directory**. Each stage can be run independently via CLI.
+
+### Dependency Graph
+
+```
+Stage 1 (ingest)
+  ├→ Stage 2 (script)
+  │    ├→ Stage 3 (match) ──────────→ Stage 7 (render)
+  │    ├→ Stage 4 (narrate) → Stage 6 (mix) → Stage 7
+  │    └→ Stage 5 (moments) → Stage 6
+  └→ Stage 5 (moments)
+```
+
+**Development order**: 1 → 2 → 4 → 3 → 5 → 6 → 7
+
+Stage 4 (TTS) before Stage 3 (matching) because TTS only needs the script text and is simpler to validate — hearing the narration early catches script quality issues before investing in scene classification.
+
+### Work Directory Layout
+
+Every stage reads/writes within this structure:
+
+```
+work/
+├── manifest.json                    # Stage 1 output
+├── episodes/
+│   └── {01..N}/
+│       ├── scenes.json              # Stage 1
+│       ├── transcription.json       # Stage 1
+│       └── separated/
+│           ├── vocals.wav           # Stage 1
+│           └── no_vocals.wav        # Stage 1
+├── summaries/
+│   └── episode_{01..N}.md           # Stage 2 Phase 1
+├── arc_structure.json               # Stage 2 Phase 2
+├── script.md                        # Stage 2 Phase 5
+├── script_validation.json           # Stage 2 Phase 5
+├── scene_classifications.json       # Stage 3
+├── visual_timeline.json             # Stage 3
+├── narration/
+│   ├── segments/
+│   │   └── segment_{001..N}.wav     # Stage 4
+│   ├── narration_raw.wav            # Stage 4
+│   └── narration_compressed.wav     # Stage 4
+├── moments/
+│   └── moment_{01..N}.wav           # Stage 5
+├── music/
+│   ├── hook_track.wav               # User-provided or generated
+│   ├── body_track.wav               # User-provided or generated
+│   ├── music_combined.wav           # Stage 6
+│   └── music_automated.wav          # Stage 6
+├── mixed_audio.wav                  # Stage 6
+├── final_audio.wav                  # Stage 6
+└── recap.mp4                        # Stage 7
+```
+
+### CLI Interface
+
+```bash
+# Run a single stage
+anime-recap-engine ingest  --episodes ./episodes/ --config ./config.yaml --work-dir ./work/
+anime-recap-engine script  --config ./config.yaml --work-dir ./work/
+anime-recap-engine match   --config ./config.yaml --work-dir ./work/
+anime-recap-engine narrate --config ./config.yaml --work-dir ./work/
+anime-recap-engine moments --config ./config.yaml --work-dir ./work/
+anime-recap-engine mix     --config ./config.yaml --work-dir ./work/
+anime-recap-engine render  --config ./config.yaml --work-dir ./work/ --output ./recap.mp4
+
+# Full pipeline (runs all stages sequentially)
+anime-recap-engine run     --episodes ./episodes/ --config ./config.yaml --output ./recap.mp4
+```
+
+Each stage checks that its required inputs exist in the work directory before starting. If a prerequisite is missing, it exits with an error naming the missing file and the stage that produces it.
+
+---
+
+### 9.1 Stage 1: Content Ingestion
+
+**Run**: `anime-recap-engine ingest --episodes ./episodes/ --config ./config.yaml --work-dir ./work/`
+
+**Reads**:
+- `episodes/S01E{01..N}.mp4` (minimum 12 files)
+- `config.yaml` (for `anime.language`, `tools.scene_detect_threshold`, `tools.whisper_model`)
+
+**Writes**:
+- `work/manifest.json`
+- `work/episodes/{01..N}/scenes.json`
+- `work/episodes/{01..N}/transcription.json`
+- `work/episodes/{01..N}/separated/vocals.wav`
+- `work/episodes/{01..N}/separated/no_vocals.wav`
+
+**Validation**:
+
+```python
+def validate_stage1(work_dir: str, config: dict) -> tuple[bool, list[str]]:
+    manifest = json.load(open(f"{work_dir}/manifest.json"))
+    issues = []
+
+    # Episode count
+    n = len(manifest["episodes"])
+    if n < 12:
+        issues.append(f"HARD: Only {n} episodes, minimum 12")
+
+    for ep in manifest["episodes"]:
+        num = ep["number"]
+
+        # FPS detected
+        if not ep.get("fps") or ep["fps"] <= 0:
+            issues.append(f"HARD: Episode {num} missing FPS")
+
+        # Scene count reasonable (50-200 per 24-min episode)
+        active_scenes = [s for s in ep["scenes"] if not s.get("skip")]
+        if len(active_scenes) < 30:
+            issues.append(f"HARD: Episode {num} has only {len(active_scenes)} scenes")
+
+        # Transcription non-empty
+        if len(ep["transcription"]) < 50:
+            issues.append(f"HARD: Episode {num} has only {len(ep['transcription'])} transcript segments")
+
+        # Audio stems exist
+        for stem in ["vocals", "no_vocals"]:
+            path = ep["audio_stems"][stem]
+            if not os.path.exists(path):
+                issues.append(f"HARD: Episode {num} missing {stem} stem at {path}")
+
+        # OP/ED detected (warn if missing — some episodes legitimately lack them)
+        if ep.get("op") is None and num > 1:
+            issues.append(f"SOFT: Episode {num} has no OP detected")
+
+    passed = not any(i.startswith("HARD:") for i in issues)
+    return passed, issues
+```
+
+**Test approach**: Use a real 12-episode anime. This stage has no synthetic shortcut — it needs actual MP4 files with video, audio, and (ideally) embedded subtitles. A 12-episode series keeps ingestion time manageable (~45 min with GPU).
+
+---
+
+### 9.2 Stage 2: Script Generation
+
+**Run**: `anime-recap-engine script --config ./config.yaml --work-dir ./work/`
+
+**Reads**:
+- `work/manifest.json` (transcription data only — no video/audio access needed)
+- `config.yaml`
+
+**Writes**:
+- `work/summaries/episode_{01..N}.md` (Phase 1 — one per episode)
+- `work/arc_structure.json` (Phase 2 — act boundaries)
+- `work/script.md` (Phase 5 — final stitched script)
+- `work/script_validation.json` (Phase 5 — validation results)
+
+**Validation**: Uses the Section 3.2.4 validation gate. Stage 2 writes the full validation output:
+
+```json
+{
+  "passed": true,
+  "total_words": 5312,
+  "target_words": 5328,
+  "hook_words": 63,
+  "outro_words": 88,
+  "acts": 3,
+  "dialogue_slots": 6,
+  "forbidden_connectors": 0,
+  "commentary_ratio": 0.041,
+  "mean_sentence_length": 14.8,
+  "issues": ["SOFT: Commentary ratio 4.1% slightly above ideal 4.0%"]
+}
+```
+
+**Test without Stage 1** (synthetic input): Create a mock `manifest.json` with transcription data only — hand-write or paste episode dialogue from a wiki/transcript site. This lets you iterate on the LLM prompts, voice profile, and validation gate without running ingestion.
+
+```bash
+# Create synthetic manifest with just transcription data
+python -c "
+import json
+manifest = {'episodes': []}
+for i in range(1, 13):
+    manifest['episodes'].append({
+        'number': i,
+        'transcription': [{'text': f'Episode {i} dialogue here...', 'start': 0, 'end': 1}],
+        # Stubs for fields Stage 2 doesn't use
+        'fps': 23.976, 'scenes': [], 'audio_stems': {'vocals': '', 'no_vocals': ''}
+    })
+json.dump(manifest, open('work/manifest.json', 'w'), indent=2)
+"
+```
+
+Replace the stub transcription text with real dialogue transcripts for meaningful output.
+
+---
+
+### 9.3 Stage 4: TTS Narration
+
+> Developed before Stage 3. Hearing the narration early catches script pacing and voice issues before investing in scene classification.
+
+**Run**: `anime-recap-engine narrate --config ./config.yaml --work-dir ./work/`
+
+**Reads**:
+- `work/script.md`
+- `config.yaml` (TTS provider config, WPM targets)
+
+**Writes**:
+- `work/narration/segments/segment_{001..N}.wav` (one per script section)
+- `work/narration/narration_raw.wav` (concatenated with pauses)
+- `work/narration/narration_compressed.wav` (after compression)
+
+**Validation**:
+
+```python
+def validate_stage4(work_dir: str, config: dict) -> tuple[bool, list[str]]:
+    issues = []
+    params = scale_parameters(config["anime"]["total_episodes"])
+
+    # Total duration check
+    duration_s = get_audio_duration(f"{work_dir}/narration/narration_compressed.wav")
+    target_s = params["target_duration_min"] * 60
+    deviation = abs(duration_s - target_s) / target_s
+    if deviation > 0.10:
+        issues.append(f"HARD: Duration {duration_s:.0f}s is {deviation:.0%} off target {target_s:.0f}s")
+    elif deviation > 0.05:
+        issues.append(f"SOFT: Duration {duration_s:.0f}s is {deviation:.0%} off target {target_s:.0f}s")
+
+    # Global WPM
+    total_words = count_words(open(f"{work_dir}/script.md").read())
+    global_wpm = total_words / (duration_s / 60)
+    if not (130 <= global_wpm <= 160):
+        issues.append(f"HARD: Global WPM {global_wpm:.1f} outside 130-160 range")
+
+    # LRA check
+    lra = measure_lra(f"{work_dir}/narration/narration_compressed.wav")
+    if lra > 4.5:
+        issues.append(f"HARD: Narration LRA {lra:.1f} LU exceeds 4.5 LU max")
+
+    # Per-segment WPM spot check (first, middle, last segment)
+    segments = sorted(glob(f"{work_dir}/narration/segments/segment_*.wav"))
+    for seg_path in [segments[0], segments[len(segments)//2], segments[-1]]:
+        seg_duration = get_audio_duration(seg_path)
+        seg_words = get_segment_word_count(seg_path, f"{work_dir}/script.md")
+        seg_wpm = seg_words / (seg_duration / 60) if seg_duration > 0 else 0
+        if abs(seg_wpm - 144) / 144 > 0.10:
+            issues.append(f"SOFT: {os.path.basename(seg_path)} WPM {seg_wpm:.1f} is >10% off 144")
+
+    passed = not any(i.startswith("HARD:") for i in issues)
+    return passed, issues
+```
+
+**Test without Stage 2** (synthetic input): Write a short test script (~500 words, ~3.5 min) by hand in the narrator voice style. Run TTS on it to validate provider config, voice quality, WPM accuracy, and compression before generating the full script.
+
+```markdown
+<!-- work/script.md (synthetic test) -->
+[HOOK]
+What would you do if one day, something crawled inside you while you slept?
+Not a nightmare. Something real. Something alive. Parasyte, the anime that
+turned a quiet high school kid into the most dangerous thing walking the streets.
+[ANIME_DIALOGUE_SLOT: "test clip", ep=1, mode=woven, function=character_voice]
+Now that's how you start a show.
+So, let's get right into it.
+
+[ACT_1: episodes 1-2]
+[EP_1]
+The first episode opens with Shinichi Izumi, just a normal high school kid...
+(continue with ~400 more words of test narration)
+[/EP_1]
+
+[OUTRO]
+And that's the story. Peace.
+```
+
+**Key thing to listen for**: Does the TTS voice sound like "a friend retelling" or "a robot reading"? If the latter, adjust `stability` (ElevenLabs) or try a different `voice` (OpenAI) before proceeding.
+
+---
+
+### 9.4 Stage 3: Scene Selection & Matching
+
+**Run**: `anime-recap-engine match --config ./config.yaml --work-dir ./work/`
+
+**Reads**:
+- `work/manifest.json` (scenes + episode metadata)
+- `work/script.md` (narration with dialogue slot markers)
+- `config.yaml`
+
+**Writes**:
+- `work/scene_classifications.json` (per-scene type labels + confidence)
+- `work/visual_timeline.json` (ordered clip list)
+
+**Validation**:
+
+```python
+def validate_stage3(work_dir: str, config: dict) -> tuple[bool, list[str]]:
+    issues = []
+    timeline = json.load(open(f"{work_dir}/visual_timeline.json"))
+    manifest = json.load(open(f"{work_dir}/manifest.json"))
+    script = open(f"{work_dir}/script.md").read()
+
+    # Clip count
+    total_clips = len(timeline)
+    params = scale_parameters(config["anime"]["total_episodes"])
+    expected_clips = int(params["target_duration_min"] * 28.8)  # CPM * minutes
+    if abs(total_clips - expected_clips) / expected_clips > 0.15:
+        issues.append(f"HARD: {total_clips} clips, expected ~{expected_clips} (±15%)")
+
+    # CPM per minute (rolling window)
+    for minute in range(int(params["target_duration_min"])):
+        start_s = minute * 60
+        end_s = start_s + 60
+        clips_in_window = [c for c in timeline
+                           if c["timeline_start_s"] >= start_s and c["timeline_start_s"] < end_s]
+        cpm = len(clips_in_window)
+        if cpm < 18 or cpm > 38:
+            issues.append(f"HARD: Minute {minute} has {cpm} CPM (hard bounds: 18-38)")
+        elif cpm < 25 or cpm > 33:
+            issues.append(f"SOFT: Minute {minute} has {cpm} CPM (soft range: 25-33)")
+
+    # Spoiler prevention
+    script_episodes = extract_episode_positions(script)  # map timeline position → narrating episode N
+    for clip in timeline:
+        narrating_ep = get_narrating_episode(clip["timeline_start_s"], script_episodes)
+        if clip["source_episode"] > narrating_ep + 1:
+            issues.append(
+                f"HARD: Spoiler — clip from ep {clip['source_episode']} used during "
+                f"narration of ep {narrating_ep} (max allowed: ep {narrating_ep + 1})"
+            )
+
+    # Scene type distribution
+    type_counts = Counter(c["type"] for c in timeline)
+    total = len(timeline)
+    ccu_pct = type_counts.get("CCU", 0) / total
+    if not (0.25 <= ccu_pct <= 0.40):
+        issues.append(f"SOFT: CCU is {ccu_pct:.0%}, target 30-35%")
+
+    # No gaps in timeline (clips must be continuous)
+    for i in range(1, len(timeline)):
+        gap = timeline[i]["timeline_start_s"] - timeline[i-1]["timeline_end_s"]
+        if gap > 0.1:  # allow 100ms tolerance
+            issues.append(f"HARD: {gap:.2f}s gap between clips {i-1} and {i}")
+
+    passed = not any(i.startswith("HARD:") for i in issues)
+    return passed, issues
+```
+
+**Test without Stage 2** (synthetic input): Use a hand-written 500-word script + real Stage 1 scene data. This tests classification and matching independently of the LLM script generation.
+
+**Classification spot-check**: After running, sample 20 random scenes from `scene_classifications.json` and manually verify the labels by viewing the source frames:
+
+```bash
+# Extract a frame from a classified scene for manual inspection
+ffmpeg -i episodes/S01E01.mp4 -ss 14.2 -frames:v 1 -q:v 2 work/spot_check/scene_042.jpg
+```
+
+---
+
+### 9.5 Stage 5: Anime Dialogue Moments
+
+**Run**: `anime-recap-engine moments --config ./config.yaml --work-dir ./work/`
+
+**Reads**:
+- `work/script.md` (for `[ANIME_DIALOGUE_SLOT]` markers with episode + timestamp refs)
+- `work/manifest.json` (for vocal stem paths)
+- `work/episodes/{N}/separated/vocals.wav`
+- `work/episodes/{N}/separated/no_vocals.wav`
+
+**Writes**:
+- `work/moments/moment_{01..N}.wav` (normalized dialogue clips)
+- `work/moments/moments_manifest.json` (metadata: timestamps, durations, delivery modes)
+
+**Validation**:
+
+```python
+def validate_stage5(work_dir: str, config: dict) -> tuple[bool, list[str]]:
+    issues = []
+    moments = json.load(open(f"{work_dir}/moments/moments_manifest.json"))
+    params = scale_parameters(config["anime"]["total_episodes"])
+
+    # Count
+    n = len(moments)
+    target = params["moment_count"]
+    if abs(n - target) > 2:
+        issues.append(f"HARD: {n} moments, target {target} (±2)")
+
+    for m in moments:
+        # Duration by delivery mode
+        if m["mode"] == "woven" and not (6 <= m["duration_s"] <= 14):
+            issues.append(f"HARD: Moment {m['id']} (woven) duration {m['duration_s']:.1f}s outside 6-14s")
+        if m["mode"] == "held" and not (10 <= m["duration_s"] <= 18):
+            issues.append(f"HARD: Moment {m['id']} (held) duration {m['duration_s']:.1f}s outside 10-18s")
+
+        # Audio file exists and is non-silent
+        wav_path = f"{work_dir}/moments/moment_{m['id']:02d}.wav"
+        if not os.path.exists(wav_path):
+            issues.append(f"HARD: Missing {wav_path}")
+            continue
+        rms = measure_rms(wav_path)
+        if rms < -60:  # dBFS
+            issues.append(f"HARD: Moment {m['id']} appears silent (RMS {rms:.1f} dBFS)")
+
+    # Temporal spacing (minimum 80s gap)
+    sorted_moments = sorted(moments, key=lambda m: m["timeline_start_s"])
+    for i in range(1, len(sorted_moments)):
+        gap = sorted_moments[i]["timeline_start_s"] - sorted_moments[i-1]["timeline_end_s"]
+        if gap < 80:
+            issues.append(f"SOFT: Only {gap:.0f}s between moments {sorted_moments[i-1]['id']} "
+                         f"and {sorted_moments[i]['id']} (min 80s)")
+
+    passed = not any(i.startswith("HARD:") for i in issues)
+    return passed, issues
+```
+
+**Test with minimal input**: Extract just 1-2 moments from a single episode manually to verify the Demucs stem extraction → ffmpeg clip → amix → loudnorm pipeline works and sounds clean. The audio quality of the vocal stem is the key risk here.
+
+---
+
+### 9.6 Stage 6: Audio Mixing
+
+**Run**: `anime-recap-engine mix --config ./config.yaml --work-dir ./work/`
+
+**Reads**:
+- `work/narration/narration_compressed.wav` (Stage 4)
+- `work/moments/moment_{01..N}.wav` + `moments_manifest.json` (Stage 5)
+- `work/music/hook_track.wav` + `work/music/body_track.wav` (user-provided or generated)
+- `config.yaml` (audio levels, sidechain params)
+
+**Writes**:
+- `work/music/music_combined.wav` (hook+body crossfaded)
+- `work/music/music_automated.wav` (gain automation applied)
+- `work/mixed_audio.wav` (3-track mix before loudnorm)
+- `work/final_audio.wav` (loudnorm applied — final audio)
+
+**Validation**:
+
+```python
+def validate_stage6(work_dir: str, config: dict) -> tuple[bool, list[str]]:
+    issues = []
+    final = f"{work_dir}/final_audio.wav"
+
+    # Loudness
+    stats = measure_loudnorm(final)
+    if not (-16 <= stats["integrated_lufs"] <= -12):
+        issues.append(f"HARD: Integrated loudness {stats['integrated_lufs']:.1f} LUFS "
+                     f"outside -16 to -12 range")
+    if stats["true_peak_dbtp"] > -1.0:
+        issues.append(f"HARD: True peak {stats['true_peak_dbtp']:.1f} dBTP exceeds -1.0")
+    if not (3 <= stats["lra_lu"] <= 10):
+        issues.append(f"HARD: LRA {stats['lra_lu']:.1f} LU outside 3-10 range")
+
+    # Voice-to-music gap (sample 5 random 10s windows from the body section)
+    # Compare narration RMS to music RMS in each window
+    narration = f"{work_dir}/narration/narration_compressed.wav"
+    music = f"{work_dir}/music/music_automated.wav"
+    body_start_s = 300  # 5:00
+    for offset in [body_start_s + i * 600 for i in range(5)]:
+        nar_rms = measure_rms_window(narration, offset, 10)
+        mus_rms = measure_rms_window(music, offset, 10)
+        gap_db = nar_rms - mus_rms
+        if gap_db < 10:
+            issues.append(f"HARD: Voice-music gap only {gap_db:.1f} dB at {offset}s (min 10 dB)")
+
+    # Duration matches narration
+    nar_dur = get_audio_duration(narration)
+    final_dur = get_audio_duration(final)
+    if abs(final_dur - nar_dur) > 2.0:
+        issues.append(f"SOFT: Final audio {final_dur:.1f}s vs narration {nar_dur:.1f}s "
+                     f"(diff {abs(final_dur - nar_dur):.1f}s)")
+
+    passed = not any(i.startswith("HARD:") for i in issues)
+    return passed, issues
+```
+
+**Test with minimal input**: Take 60 seconds of narration audio (from Stage 4 test), one moment clip, and a royalty-free music track. Run the full mix pipeline on this short segment to verify crossfade, gain automation, sidechain ducking, and loudnorm without processing the full-length audio.
+
+```bash
+# Quick 60s mix test
+ffmpeg -i work/narration/narration_compressed.wav -ss 0 -t 60 work/test_nar_60s.wav
+# Then run: anime-recap-engine mix --test-segment 0-60 --config ./config.yaml --work-dir ./work/
+```
+
+**Listen check (cannot be automated)**: Play `final_audio.wav` and verify:
+- Music is audible in the hook (first 5 min) but not distracting
+- Music is barely perceptible in the body
+- Anime dialogue moments are clearly audible and the music swells subtly around them
+- No audible artifacts at the hook-to-body crossfade point (~3:30-5:00)
+- Narration is never drowned out by music or dialogue
+
+---
+
+### 9.7 Stage 7: Video Assembly & Render
+
+**Run**: `anime-recap-engine render --config ./config.yaml --work-dir ./work/ --output ./recap.mp4`
+
+**Reads**:
+- `work/visual_timeline.json` (Stage 3)
+- `work/final_audio.wav` (Stage 6)
+- Original episode MP4s (referenced by visual_timeline entries)
+- `config.yaml` (resolution, codec, CRF)
+
+**Writes**:
+- `work/visual_timeline.txt` (ffmpeg concat file — generated from JSON)
+- `./recap.mp4` (final output)
+
+**Validation**:
+
+```python
+def validate_stage7(output_path: str, work_dir: str, config: dict) -> tuple[bool, list[str]]:
+    issues = []
+    params = scale_parameters(config["anime"]["total_episodes"])
+
+    # File exists and is non-trivial
+    size_mb = os.path.getsize(output_path) / (1024 * 1024)
+    if size_mb < 100:
+        issues.append(f"HARD: Output only {size_mb:.0f} MB — expected 500+ MB for 1080p")
+
+    # Probe output
+    probe = ffprobe_json(output_path)
+    video = next(s for s in probe["streams"] if s["codec_type"] == "video")
+    audio = next(s for s in probe["streams"] if s["codec_type"] == "audio")
+
+    # Duration
+    duration_s = float(probe["format"]["duration"])
+    target_s = params["target_duration_min"] * 60
+    if abs(duration_s - target_s) / target_s > 0.05:
+        issues.append(f"HARD: Duration {duration_s:.0f}s vs target {target_s:.0f}s "
+                     f"({abs(duration_s - target_s)/target_s:.0%} off)")
+
+    # Video specs
+    width = int(video["width"])
+    height = int(video["height"])
+    quality = config.get("output", {}).get("quality", "1080p")
+    expected_h = {"720p": 720, "1080p": 1080, "4k": 2160}.get(quality, 1080)
+    if height != expected_h:
+        issues.append(f"HARD: Resolution {width}x{height}, expected {quality}")
+
+    if video["codec_name"] not in ("h264", "hevc"):
+        issues.append(f"HARD: Video codec {video['codec_name']}, expected h264 or hevc")
+
+    # Audio specs
+    if audio["codec_name"] != "aac":
+        issues.append(f"HARD: Audio codec {audio['codec_name']}, expected aac")
+
+    # A/V sync spot check — compare audio duration to video duration
+    audio_dur = float(audio.get("duration", duration_s))
+    video_dur = float(video.get("duration", duration_s))
+    if abs(audio_dur - video_dur) > 1.0:
+        issues.append(f"HARD: A/V desync — audio {audio_dur:.1f}s, video {video_dur:.1f}s")
+
+    passed = not any(i.startswith("HARD:") for i in issues)
+    return passed, issues
+```
+
+**Test with minimal input**: Build a short concat file (~20 clips, ~60s) and a 60s audio file. Render to verify ffmpeg concat works, codecs are correct, and A/V sync holds.
+
+```bash
+# Generate a 20-clip test timeline
+python -c "
+clips = []
+# Take 20 clips from episode 1, 3 seconds each
+for i in range(20):
+    clips.append(f\"file 'episodes/S01E01.mp4'\ninpoint {i*30}\noutpoint {i*30+3}\n\")
+open('work/test_timeline.txt', 'w').write('\n'.join(clips))
+"
+
+# Render test segment
+ffmpeg -f concat -safe 0 -i work/test_timeline.txt \
+  -i work/test_nar_60s.wav \
+  -c:v libx264 -crf 18 -preset fast \
+  -c:a aac -b:a 192k \
+  -map 0:v -map 1:a -shortest \
+  -movflags +faststart \
+  work/test_recap.mp4
+```
+
+---
+
+### 9.8 Full Pipeline Validation
+
+After all stages pass individually, run the complete pipeline end-to-end:
+
+```bash
+anime-recap-engine run --episodes ./episodes/ --config ./config.yaml --output ./recap.mp4
+```
+
+This executes Stages 1-7 sequentially, running each stage's validation gate between stages. If any stage fails validation, the pipeline halts and reports which stage failed and why.
+
+**Post-run checks** (require human review):
+
+| Check | Method |
+|-------|--------|
+| Watch the hook (first 60s) | Does it grab attention? Is the anime teaser well-placed? |
+| Skip to a random mid-body minute | Does the visual-narration alignment make sense? |
+| Skip to an anime dialogue moment | Is the moment audible, properly motivated, with narrator reaction? |
+| Skip to the Act 4/5 boundary | Does Act 4 feel relentless? Does Act 5 hit harder by contrast? |
+| Watch the outro | Does it feel conclusive? |
+| Listen on phone speakers | Is the narration audible over music at low volume? |
