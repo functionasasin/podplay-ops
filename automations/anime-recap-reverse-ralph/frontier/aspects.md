@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 15
-- Analyzed: 12
-- Pending: 3
-- Convergence: 80.0%
+- Analyzed: 13
+- Pending: 2
+- Convergence: 86.7%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -23,7 +23,7 @@
 - [x] clip-duration-stats — Calculate statistical distribution of visual clip durations from scenes.json
 - [x] anime-dialogue-moments — Identify all moments where anime audio plays through (>> markers in transcript), analyze criteria for selection
 - [x] narration-style — Analyze narrator tone, personality, pop culture references, commentary-vs-recap ratio, viewer address patterns
-- [ ] music-patterns — Analyze music energy mapping to content type, ducking curves, genre/mood using audio analysis data
+- [x] music-patterns — Analyze music energy mapping to content type, ducking curves, genre/mood using audio analysis data
 
 ### Wave 3: Synthesis
 - [ ] spec-draft — Read ALL analysis/ files and synthesize into complete software spec at docs/plans/anime-recap-engine-spec.md
@@ -42,6 +42,8 @@
 - clip-duration-stats — Log-normal distribution fit (mu=0.607, sigma=0.502) matches actual percentiles within 0.1-7.7%. Median 1.83s, mean 2.08s. IQR 1.30-2.65s, 58 outliers (2.7%) above 4.675s — all intentional (anime dialogue, dramatic holds, transitions). Near-zero autocorrelation (0.131 lag-1, ~0 lag-10) — independent sampling valid. Flash cuts (<1s) increase from 10.1% (Q1) to 15.0% (Q4). CPM remarkably stable: mean 28.8, CV 12.9%. 156 unique frame counts — content-driven editing, not rhythmic. Full analysis at analysis/clip-duration-stats.md.
 - anime-dialogue-moments — 25 >> segments cluster into 11 distinct moments (2.6% of video time). Three-beat micro-structure: narrator sets up (73%) → anime speaks → narrator reacts. Three delivery modes: Woven (73%), Held (18%), Rapid Cluster (9%). Front-loaded: 7 moments in first half, 4 in second. Only 8/24 episodes (33%) get moments. Act 4 has ZERO moments (intentional 21-min drought). 52% of >> segments are anime character voice, 48% are narrator reactions. Each moment serves unique function: character-defining, emotional peak, comedy, plot twist, climax. Selection criteria: memorable/punchy line + turning point + comedy potential. Mean moment duration 10.5s, mean gap 6.6 min. Full analysis at analysis/anime-dialogue-moments.md.
 - narration-style — "Friend-who-just-binged" persona. 96% recap / 4% commentary (430 words). Commentary concentrated at bookends (hook 70%, outro 100%, resolution 10%) and absent in relentless middle (Act 4: 2%). Six tone modes: excited/hype (30%), dark humor (20%), empathetic (20%), sarcastic (15%), conspiratorial (10%), meta (5%). 8 pop culture/meme refs (~1 per 9.4 min). Zero formal register. Character address ("Girl,", "Dude,") 4x. Pronouncement formula: [event] + [2-8 word reaction], withheld at most powerful moments. Full analysis at analysis/narration-style.md.
+
+- music-patterns — Three-phase music energy model: Active hook (LRA 25.3 LU, -36.6 LUFS, swells to -33 dB), Ambient body (LRA 15.1 LU, -36.6 LUFS, pad at -65 to -68 dB), Near-absent finale (LRA 6.9 LU, -61.0 LUFS). Two distinct music tracks needed: cinematic for hook, lo-fi ambient for body. Music swells are EXCLUSIVELY tied to anime dialogue moments (not episode boundaries or narrative content). Sidechain ducking: 10-34 dB gap, 20ms attack, 300ms release. Progressive intimacy: vocal-music gap widens 14.4→9.6→34.0 dB. Zero-silence maintenance via music gap-fill. Full analysis at analysis/music-patterns.md.
 
 ## Discovered Aspects
 (none yet — new aspects discovered during analysis will be added here then moved to Pending)
