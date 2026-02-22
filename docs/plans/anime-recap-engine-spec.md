@@ -151,20 +151,133 @@ Store detected FPS in the episode manifest. Most anime is 23.976fps. The pipelin
 
 #### 3.1.2 Transcription
 
-For each episode, extract dialogue transcriptions:
+For each episode, extract dialogue transcriptions using this decision tree:
 
-```bash
-# If subtitles are embedded:
-ffmpeg -i input/episodes/S01E01.mkv -map 0:s:0 raw/episodes/01/subtitles.srt
+```
+1. Probe for embedded subtitle streams
+   ├─ Found subtitle streams → 2. Select best track
+   └─ No subtitles → 5. Run Whisper
 
-# If no subtitles, run Whisper:
-# GPU available:
-whisper input/episodes/S01E01.mkv --model large-v3 --language ja --output_format json --output_dir raw/episodes/01/ --word_timestamps True
-# CPU only:
-whisper input/episodes/S01E01.mkv --model base --language ja --output_format json --output_dir raw/episodes/01/ --word_timestamps True
+2. Select best subtitle track
+   ├─ ffprobe lists multiple streams → pick by language priority:
+   │   Priority: source language (config.anime.language) > "und" > other
+   │   If tied: prefer SRT over ASS/SSA (simpler parsing)
+   └─ Single stream → use it
+
+3. Extract and normalize format
+   ├─ SRT stream → extract directly
+   ├─ ASS/SSA stream → extract + convert to SRT
+   └─ Other (PGS/VobSub bitmap) → cannot parse text; fall through to Whisper
+
+4. Validate subtitle quality
+   ├─ Pass (≥90% of episode duration covered, ≥100 cues) → use as transcription
+   └─ Fail → fall through to Whisper
+
+5. Run Whisper with language=config.anime.language
 ```
 
+**Step 1 — Probe for subtitle streams**:
+
+```bash
+# List all subtitle streams with language and codec info
+ffprobe -v error -select_streams s -show_entries stream=index,codec_name:stream_tags=language \
+  -of json input/episodes/S01E01.mp4
+# Example output:
+# {"streams": [
+#   {"index": 2, "codec_name": "subrip", "tags": {"language": "jpn"}},
+#   {"index": 3, "codec_name": "ass", "tags": {"language": "eng"}}
+# ]}
+```
+
+**Step 2 — Select and extract the best track**:
+
+```bash
+# SRT stream (codec_name: subrip) — extract directly
+ffmpeg -i input/episodes/S01E01.mp4 -map 0:s:0 raw/episodes/01/subtitles.srt
+
+# ASS/SSA stream (codec_name: ass) — extract and convert to SRT in one step
+ffmpeg -i input/episodes/S01E01.mp4 -map 0:s:0 raw/episodes/01/subtitles.srt
+# ffmpeg auto-converts ASS→SRT when output extension is .srt
+
+# If ASS extraction produces garbled output (rare), extract raw ASS then convert:
+ffmpeg -i input/episodes/S01E01.mp4 -map 0:s:0 -c:s copy raw/episodes/01/subtitles.ass
+ffmpeg -i raw/episodes/01/subtitles.ass raw/episodes/01/subtitles.srt
+```
+
+**Step 3 — Validate subtitle quality**:
+
+```python
+def validate_subtitles(srt_path: str, episode_duration_s: float) -> bool:
+    """Check that extracted subtitles are usable for plot analysis.
+
+    Returns True if subtitles cover enough of the episode to be useful.
+    Rejects files that are mostly empty, corrupt, or only contain signs/songs.
+    """
+    import pysrt
+    subs = pysrt.open(srt_path)
+
+    if len(subs) < 100:
+        return False  # Too few cues — likely signs-only track
+
+    # Calculate temporal coverage
+    total_sub_time = sum(
+        (s.end.ordinal - s.start.ordinal) / 1000.0 for s in subs
+    )
+    coverage = total_sub_time / episode_duration_s
+
+    if coverage < 0.30:
+        return False  # Covers less than 30% of episode — likely incomplete
+
+    # Check for non-dialogue tracks (signs/songs only)
+    # ASS tracks sometimes have "Signs" or "Songs" in their style names
+    text_lengths = [len(s.text.strip()) for s in subs]
+    avg_length = sum(text_lengths) / len(text_lengths)
+    if avg_length < 5:
+        return False  # Average cue is <5 chars — probably signs, not dialogue
+
+    return True
+```
+
+**Step 4 — Whisper fallback** (when no usable subtitles exist):
+
+```bash
+# GPU available:
+whisper input/episodes/S01E01.mp4 --model large-v3 --language ja --output_format json --output_dir raw/episodes/01/ --word_timestamps True
+# CPU only:
+whisper input/episodes/S01E01.mp4 --model base --language ja --output_format json --output_dir raw/episodes/01/ --word_timestamps True
+```
+
+**Whisper quality check**: After generation, validate that Whisper produced coherent output:
+- At least 50 segments per 24-minute episode
+- No single segment longer than 30 seconds (indicates failed alignment)
+- Average segment duration 2-8 seconds
+If validation fails, retry with `--model medium` (intermediate between base and large-v3).
+
 **Output per episode**: JSON with word-level timestamps, speaker segments
+
+#### 3.1.2a Language Mode Handling
+
+The pipeline is calibrated to Japanese-language anime with English narration. For non-Japanese source anime or non-English narration, the following adjustments apply:
+
+| Pipeline Stage | Japanese Source (default) | Non-Japanese Source (EN/KR/ZH/etc.) |
+|---------------|--------------------------|-------------------------------------|
+| **Transcription** | `--language ja` | `--language {config.anime.language}` |
+| **Audio separation** | No change (Demucs is language-agnostic) | No change |
+| **Episode summarization** | LLM reads Japanese dialogue transcripts | LLM reads source-language dialogue transcripts |
+| **Script generation** | Narration in `config.output.narration_language` | Same — narration language is independent of source |
+| **Anime dialogue moments** | Pass through Japanese audio (subtitle overlay optional) | See below |
+| **TTS** | Generate in `config.output.narration_language` | Same |
+
+**Same-language edge case**: When `config.anime.language == config.output.narration_language` (e.g., English dub narrated in English), anime dialogue pass-through moments require special handling because the audience can understand both the narrator and the anime characters without subtitles. This changes the moment selection criteria:
+
+- Lines must be MORE distinctive (the audience hears them directly, not as "foreign flavor")
+- Lines must NOT overlap with what the narrator just said (redundancy is more obvious)
+- The narrator setup/reaction framing becomes even more important to distinguish "narrator voice" from "anime character voice"
+- Consider using a different TTS voice timbre or adding a subtle audio effect (reverb, EQ shift) to the anime dialogue to differentiate it from narration
+
+**Non-Japanese subtitle handling**: The subtitle decision tree (Section 3.1.2) works for any language. The only change is the `--language` flag passed to Whisper. Multi-language anime (e.g., Japanese with English inserts) should use the primary spoken language for Whisper.
+
+**Character name handling**: For non-Japanese anime, character names are already in Latin script. For Japanese anime with English narration, use the official English localization names (from subtitles or MAL/AniList). The LLM prompt (Section 3.2.1) should specify: "Use English names as they appear in the subtitles, not romanized Japanese."
 
 #### 3.1.3 Audio Separation
 
@@ -635,23 +748,8 @@ def generate_act_script(
 ) -> str:
     """Generate one act of the narrator script with retry logic."""
     system_prompt = voice_profile  # Full narrator voice profile from 3.2.3
-
-    user_prompt = f"""Write Act {act_num} of the narrator script.
-
-Episodes in this act:
-{format_episode_summaries(act_episodes)}
-
-Word budget: {word_budget} words (±5%)
-Anime dialogue slots to place: {moment_budget}
-{"Previous act ended with: ..." + prev_act_tail if prev_act_tail else "This is the first act."}
-
-Requirements:
-- Follow the narrator voice profile exactly
-- Place [ANIME_DIALOGUE_SLOT: "line", ep=N, mode=X, function=Y] markers
-- Use episode transition templates (A for eps 1-6, B for eps 7+)
-- Maintain {144 + act_num} WPM pacing feel
-- Output as plain narration text with [EP_N] markers
-"""
+    user_prompt = build_act_prompt(act_num, act_episodes, word_budget,
+                                   moment_budget, prev_act_tail)
 
     for attempt in range(max_retries):
         response = llm_call(
@@ -671,6 +769,102 @@ Requirements:
         return response
 
     raise ScriptGenerationError(f"Act {act_num} failed after {max_retries} retries")
+```
+
+**Complete Phase 4 User Prompt Template** (copy-paste ready — fill `{variables}`):
+
+```
+Write Act {act_num} of a narrator script for a recap video of {anime_title} (Season {season}).
+
+=== EPISODE SUMMARIES FOR THIS ACT ===
+
+{for each episode in this act:}
+--- Episode {ep_num}: "{episode_title}" ---
+{episode_summary (200-400 words from Phase 1)}
+Notable dialogue lines: {list of punchy lines from summary}
+Emotional peaks: {list from summary}
+{end for}
+
+=== WORD BUDGET ===
+
+Target: {word_budget} words for this act (±5% = {int(word_budget*0.95)}-{int(word_budget*1.05)}).
+This is Act {act_num} of {total_acts}, covering episodes {first_ep}-{last_ep}.
+
+=== ANIME DIALOGUE SLOTS ===
+
+Place exactly {moment_budget} anime dialogue slots in this act.
+Mark each as: [ANIME_DIALOGUE_SLOT: "exact line from episode", ep={N}, mode={woven|held|rapid_cluster}, function={character_voice|emotional_peak|comedy|plot_twist|climax}]
+
+Slot placement rules:
+- Narrator MUST set up the moment (1-2 sentences before the slot)
+- Narrator MUST react after the slot (1 emphatic sentence)
+- Minimum 80 seconds between slots
+- {If act_num == 4 for 5-act structure: "Place ZERO slots in this act. This is the 'relentless middle' — no breathing room."}
+- {If act_num == 3 for 5-act structure: "This act gets the most slots (3-5). Peak emotional content."}
+
+=== EPISODE TRANSITION FORMAT ===
+
+{If any episode ≤ 6 in this act:}
+For episodes 1-6, use Template A: "The [ordinal] episode [opens/starts/begins] with [scene description]."
+{end if}
+{If any episode ≥ 7 in this act:}
+For episodes 7+, use Template B: "In the [ordinal] episode, [character] [action]."
+{end if}
+For the season finale: "In the season finale, [summary]."
+For arc-merged episodes (consecutive episodes with continuous plotline): Drop the episode marker entirely. Continue narrating as one continuous story.
+
+=== CONNECTOR FREQUENCY TARGETS (per 5 minutes of this act) ===
+
+"So," as causal connector: 1.7x (most common connector — use liberally)
+"But" adversative: 4.9x total (1 in 7 as sentence-starter "But [subject]...")
+"Unfortunately": 0.9x
+"Fortunately": 0.5x (maintain 2:1 Unfortunately:Fortunately ratio)
+"Obviously" / "Of course": 1.1x combined
+"Meanwhile": 0.6x (ONLY for genuinely simultaneous plotlines)
+"Anyway" / "Anyways": 0.7x (narrator personality reset — use after tangents)
+Narrator interjections ("Man,", "Uh,", "Yeah."): 1.3x
+NEVER USE: However, Nevertheless, Furthermore, Moreover, Consequently, Subsequently, Additionally
+
+=== COMMENTARY DENSITY FOR THIS ACT ===
+
+{Map act_num to density from Section 3.2.3:}
+Act 1: 8% commentary (some personality, mostly setup)
+Act 2: 4% commentary
+Act 3: 4% commentary
+Act 4: 2% commentary (almost pure recap — relentless)
+Act 5: 4% commentary
+
+Commentary placement: AFTER emotional peaks (not before), AT episode transitions (1-2 reaction sentences), NEVER mid-scene.
+Use the Pronouncement Formula: [event sentence] + [2-8 word reaction]. Example: "kills the parasite." + "Cold. As. Ice."
+Withhold commentary at the {1 or 2} most powerful moments in this act — silence is strongest.
+Pop culture references: {1 if act is >15min, else 0} in this act. Mainstream only (movies, games, memes). Never reference other recap channels.
+
+=== SENTENCE LENGTH TARGETS ===
+
+Short (2-5 words): 7% — "Not good." / "Yeah." / "Big mistake."
+Medium (6-12 words): 31% — "He runs straight into the parasite's trap."
+Long (13-20 words): 41% — dominant — "The creature latches onto his right hand and begins burrowing into his arm while he's half asleep."
+Very long (21+ words): 21% — "What makes this even worse is that the parasite has now completely taken over the host body and is walking around pretending to be human."
+Mean: 15 words/sentence. Max: 45. Never 3+ very-long sentences in a row.
+
+=== CONTINUITY ===
+
+{If prev_act_tail:}
+The previous act ended with these words (maintain narrative flow — do NOT repeat information):
+"...{prev_act_tail (last 200 words of previous act)}"
+{Else:}
+This is Act 1. Start immediately after the [HOOK] section. The hook has already introduced the anime and the narrator's personality. Begin with the Episode 1 marker.
+{End if}
+
+=== OUTPUT FORMAT ===
+
+Output ONLY the narrator script text. Use these markers:
+[EP_{N}] before each episode's narration begins (unless arc-merged)
+[/EP_{N}] after each episode's narration ends
+[ANIME_DIALOGUE_SLOT: ...] where anime audio should play
+[COMMENTARY: ...] around narrator commentary sentences (for ratio tracking)
+
+Do NOT include act markers, section headers, or meta-commentary about the writing process.
 ```
 
 **Phase 5 — Stitch + Validate**:
@@ -1028,38 +1222,80 @@ Speed variation comes from PAUSING, not slower speech. The TTS engine maintains 
 
 Generate narration audio per-segment (one `[EP_N]` block or structural section at a time). Each segment is generated separately to allow pause insertion and per-episode WPM control.
 
-**Provider: ElevenLabs** (`eleven_multilingual_v2` model, best prosody control for casual narration):
+TTS generation is provider-agnostic. All provider-specific parameters are read from `config.tts` (Section 5). Both providers below produce equivalent output — choose based on voice quality preference and budget.
+
+**Provider A: ElevenLabs** (recommended — best prosody control for casual narration):
 
 ```python
 from elevenlabs import ElevenLabs
 
-client = ElevenLabs(api_key="...")
+def make_elevenlabs_generator(config: dict):
+    """Create an ElevenLabs TTS generator from config.tts.elevenlabs settings."""
+    tts_cfg = config["tts"]["elevenlabs"]
+    client = ElevenLabs(api_key=tts_cfg["api_key"])
 
-def generate_narration_segment(text: str, target_wpm: float) -> bytes:
-    """Generate a narration segment with WPM control via stability/speed settings."""
-    # ElevenLabs speed parameter: 1.0 = normal. Map WPM to speed multiplier.
-    # Reference: their default is ~150 WPM at speed=1.0
-    speed = target_wpm / 150.0  # e.g., 144 WPM → 0.96, 152 WPM → 1.01
+    def generate_narration_segment(text: str, target_wpm: float) -> bytes:
+        speed = target_wpm / 150.0  # ElevenLabs baseline is ~150 WPM at speed=1.0
+        audio = client.text_to_speech.convert(
+            text=text,
+            voice_id=tts_cfg["voice_id"],
+            model_id=tts_cfg.get("model_id", "eleven_multilingual_v2"),
+            output_format=tts_cfg.get("output_format", "mp3_44100_128"),
+            voice_settings={
+                "stability": tts_cfg.get("stability", 0.35),
+                "similarity_boost": tts_cfg.get("similarity_boost", 0.75),
+                "style": tts_cfg.get("style", 0.4),
+                "speed": speed,
+            },
+        )
+        return b"".join(audio)
 
-    audio = client.text_to_speech.convert(
-        text=text,
-        voice_id="<voice-id>",     # Use a cloned or pre-selected casual male voice
-        model_id="eleven_multilingual_v2",
-        output_format="mp3_44100_128",
-        voice_settings={
-            "stability": 0.35,       # Low = more expressive/casual
-            "similarity_boost": 0.75,
-            "style": 0.4,            # Moderate style exaggeration
-            "speed": speed,
-        },
-    )
-    # audio is a generator of bytes
-    return b"".join(audio)
+    return generate_narration_segment
+```
+
+**Provider B: OpenAI TTS** (simpler setup, fewer voice controls):
+
+```python
+from openai import OpenAI
+
+def make_openai_generator(config: dict):
+    """Create an OpenAI TTS generator from config.tts.openai settings."""
+    tts_cfg = config["tts"]["openai"]
+    client = OpenAI(api_key=tts_cfg["api_key"])
+
+    def generate_narration_segment(text: str, target_wpm: float) -> bytes:
+        speed = target_wpm / 150.0  # OpenAI baseline is ~150 WPM at speed=1.0
+        # OpenAI speed range: 0.25 to 4.0
+        speed = max(0.25, min(4.0, speed))
+        response = client.audio.speech.create(
+            model=tts_cfg.get("model", "tts-1-hd"),
+            voice=tts_cfg.get("voice", "onyx"),
+            input=text,
+            speed=speed,
+            response_format=tts_cfg.get("response_format", "wav"),
+        )
+        return response.content
+
+    return generate_narration_segment
+```
+
+**Provider dispatch**:
+
+```python
+def get_tts_generator(config: dict):
+    provider = config["tts"]["provider"]
+    if provider == "elevenlabs":
+        return make_elevenlabs_generator(config)
+    elif provider == "openai":
+        return make_openai_generator(config)
+    else:
+        raise ValueError(f"Unknown TTS provider: {provider}")
 
 # Usage per segment:
+generate = get_tts_generator(config)
 for segment in script_segments:
     wpm = episode_wpm(segment.episode, total_eps)
-    audio_bytes = generate_narration_segment(segment.text, wpm)
+    audio_bytes = generate(segment.text, wpm)
     with open(f"raw/narration/{segment.id}.mp3", "wb") as f:
         f.write(audio_bytes)
 ```
@@ -1211,6 +1447,43 @@ ffmpeg -i moment_03_final.wav -af loudnorm=I=-27:TP=-3:LRA=4 moment_03_normalize
 | **Body track** | ~3:30 to end | Lo-fi ambient / background texture | Barely audible pad, no melodic hooks, smooth spectral contour |
 
 Crossfade: 60-90s overlap starting at ~3:30
+
+**Hook-to-body crossfade command**:
+
+The hook track fades out while the body track fades in over a 90-second window (3:30 to 5:00). Use `afade` + `amix` to blend:
+
+```bash
+# Step 1: Prepare hook track — fade out starting at 3:30 (210s), duration 90s
+ffmpeg -i hook_track.wav \
+  -af "afade=t=out:st=210:d=90" \
+  hook_faded.wav
+
+# Step 2: Prepare body track — start at 3:30 into the video, fade in over 90s
+# Body track file starts at 0:00 but will be positioned at 3:30 in the timeline.
+# Pad body track with 210s of silence so it aligns with the hook in the mix.
+ffmpeg -i body_track.wav \
+  -af "adelay=210000|210000,afade=t=in:st=210:d=90" \
+  body_padded.wav
+
+# Step 3: Mix both tracks together
+ffmpeg -i hook_faded.wav -i body_padded.wav \
+  -filter_complex "amix=inputs=2:duration=longest:normalize=0" \
+  music_combined.wav
+```
+
+**Alternative** (single-command crossfade for pre-trimmed tracks):
+
+```bash
+# If hook is already trimmed to 5:00 (300s) and body starts at the crossfade point:
+ffmpeg -i hook_300s.wav -i body_track.wav \
+  -filter_complex \
+    "[0]afade=t=out:st=210:d=90[h]; \
+     [1]afade=t=in:st=0:d=90[b]; \
+     [h][b]amix=inputs=2:duration=longest:dropout_transition=0:normalize=0" \
+  music_combined.wav
+```
+
+The combined music file is then passed to Section 3.6.4a for gain automation and sidechain ducking.
 
 #### 3.6.2 Music Energy Envelope
 
@@ -1591,11 +1864,29 @@ narrator:
   character_address_max: integer   # Default: 4
   formal_connectors_max: integer   # Default: 2 ("However" only, never more)
 
+tts:
+  provider: string                   # "elevenlabs" | "openai"
+  # --- ElevenLabs-specific (when provider=elevenlabs) ---
+  elevenlabs:
+    api_key: string                  # Required. Set via env var ELEVENLABS_API_KEY
+    voice_id: string                 # Required. Clone a voice or pick from library
+    model_id: string                 # Default: "eleven_multilingual_v2"
+    stability: float                 # Default: 0.35 (low = more expressive/casual)
+    similarity_boost: float          # Default: 0.75
+    style: float                     # Default: 0.4 (moderate style exaggeration)
+    output_format: string            # Default: "mp3_44100_128" | "pcm_44100"
+  # --- OpenAI-specific (when provider=openai) ---
+  openai:
+    api_key: string                  # Required. Set via env var OPENAI_API_KEY
+    model: string                    # Default: "tts-1-hd"
+    voice: string                    # Default: "onyx" (deep casual male) | "nova" | "alloy" | "echo" | "fable" | "shimmer"
+    speed: float                     # Default: 0.96 (maps from 144 WPM / 150 WPM baseline)
+    response_format: string          # Default: "wav" | "mp3" | "opus"
+
 tools:
   scene_detect_threshold: integer  # Default: 27
   whisper_model: string            # Default: "large-v3" (or "base" for CPU)
   demucs_model: string             # Default: "htdemucs"
-  tts_provider: string             # "elevenlabs"
   llm_provider: string             # "claude" | "openai"
 ```
 

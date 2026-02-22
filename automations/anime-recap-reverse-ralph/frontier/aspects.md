@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 18
-- Analyzed: 17
-- Pending: 1
-- Convergence: 94.4%
+- Analyzed: 18
+- Pending: 0
+- Convergence: 100%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -29,6 +29,11 @@
 - [x] spec-draft — Read ALL analysis/ files and synthesize into complete software spec at docs/plans/anime-recap-engine-spec.md
 - [x] spec-review — Review generated spec for completeness: can a developer build the entire forward engine from this spec alone?
 
+### Wave 4: Spec Fixes (discovered during spec-review)
+- [x] spec-fix-critical — Fix the 5 critical failures that block implementation: scene classification tools, TTS API calls, FPS generalization, spoiler prevention, OP/ED handling
+- [x] spec-fix-high — Fix the 5 high-priority failures: 12-ep scaling, sidechain ffmpeg, music swell code, script validation gate, LLM retry strategy
+- [x] spec-fix-medium — Fix the 5 medium failures: subtitle edge cases, non-Japanese handling, complete LLM prompt, crossfade command, TTS config expansion
+
 ## Recently Analyzed
 - transcription — Parsed SRT with overlap de-duplication into raw/transcription.json. 1,636 segments, 10,759 narration words, 144.1 WPM, 25 anime dialogue moments, 24 episode markers, 8 significant pauses. Full analysis at analysis/narration-transcript.md.
 - scene-detection — PySceneDetect at threshold 27. 2,171 scenes, 28.8 cuts/min, median 1.83s shots, stdev 1.09s. Full analysis at analysis/scene-boundaries.md.
@@ -49,12 +54,9 @@
 
 - spec-fix-high — Fixed all 5 high-priority failures: (1) FAIL-E2: Added Section 3.2.0 Season Length Scaling with `scale_parameters()` function — act count formula (ceil(eps/5), clamped 3-6), moment budget (eps/2.2), breathing events (duration/3.9), fixed vs scaled parameter table, 3-act mapping for 12-ep seasons, validation bounds; (2) FAIL-V4: Added ffmpeg `sidechaincompress` command to Section 3.6.3 with exact parameter mapping (threshold=0.01→-40dB, ratio=20, attack=20ms, release=300ms); (3) FAIL-V5: Added Section 3.6.4a with complete Python gain automation function — phase-based base levels, cosine-interpolated swells at anime dialogue moments (hook: -33dB, body: -50dB), narration-keyed ducking via RMS detection; (4) FAIL-S4: Added Section 3.2.4 Script Validation Gate — `validate_script()` with HARD/SOFT checks for word count, hook structure, forbidden connectors, commentary ratio, dialogue slots, sentence length; (5) FAIL-S5: Added Section 3.2.5 LLM Generation Strategy — 5-phase pipeline (episode summaries → arc detection → hook/outro → per-act script → stitch+validate), per-act retry loop (3 retries, +0.05 temp each), ~32 calls at ~$2-4 total. Full analysis at analysis/spec-fix-high.md.
 
+- spec-fix-medium — Fixed all 5 medium failures: (1) FAIL-E1: Added 5-step subtitle handling decision tree — ffprobe stream detection, language-priority track selection, ASS/SSA→SRT auto-conversion, bitmap fallback to Whisper, `validate_subtitles()` quality gate (≥100 cues, ≥30% coverage, avg cue ≥5 chars), Whisper quality check with medium-model retry; (2) FAIL-E4: Added Section 3.1.2a Language Mode Handling — pipeline impact matrix for non-Japanese anime, same-language edge case (character voice differentiation via audio effects), character name localization rules; (3) FAIL-V3: Added complete ~100-line Phase 4 LLM prompt template combining episode summaries, word budget, dialogue slot rules (including "ZERO in Act 4"), episode transition format, connector frequency targets, commentary density, sentence length targets with examples, continuity context, and output format spec; (4) FAIL-V6: Added hook-to-body crossfade ffmpeg commands — `afade=t=out` on hook + `adelay`+`afade=t=in` on body + `amix=inputs=2:normalize=0`, plus single-command alternative; (5) FAIL-C1: Added `tts:` config section with `elevenlabs:` and `openai:` sub-configs (all voice parameters), refactored TTS code to provider-agnostic dispatch pattern `get_tts_generator(config)`. Full analysis at analysis/spec-fix-medium.md.
+
 ## Discovered Aspects
 - spec-fix-critical: 5 critical fixes — add scene classification tool/code (mediapipe/cv2/vision LLM), add TTS API examples (ElevenLabs/OpenAI), fix FPS hardcoding in clip generator, add spoiler prevention (constrain clips to episode ≤ N+1), add OP/ED detection and removal
 - spec-fix-high: 5 high-priority fixes — add 12-ep scaling rules, add ffmpeg sidechain command, add music swell automation code, add script validation gate between Stage 2→3, add LLM retry/chunking strategy
 - spec-fix-medium: 5 medium fixes — add subtitle edge case handling (ASS/SSA, multi-track), add non-Japanese language modes, add complete LLM prompt template, add crossfade ffmpeg command, expand TTS config
-
-### Wave 4: Spec Fixes (discovered during spec-review)
-- [x] spec-fix-critical — Fix the 5 critical failures that block implementation: scene classification tools, TTS API calls, FPS generalization, spoiler prevention, OP/ED handling
-- [x] spec-fix-high — Fix the 5 high-priority failures: 12-ep scaling, sidechain ffmpeg, music swell code, script validation gate, LLM retry strategy
-- [ ] spec-fix-medium — Fix the 5 medium failures: subtitle edge cases, non-Japanese handling, complete LLM prompt, crossfade command, TTS config expansion
