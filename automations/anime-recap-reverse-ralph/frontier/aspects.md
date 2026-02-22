@@ -1,10 +1,10 @@
 # Analysis Frontier
 
 ## Statistics
-- Total aspects discovered: 15
-- Analyzed: 14
-- Pending: 1
-- Convergence: 93.3%
+- Total aspects discovered: 18
+- Analyzed: 15
+- Pending: 3
+- Convergence: 83.3%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -27,7 +27,7 @@
 
 ### Wave 3: Synthesis
 - [x] spec-draft — Read ALL analysis/ files and synthesize into complete software spec at docs/plans/anime-recap-engine-spec.md
-- [ ] spec-review — Review generated spec for completeness: can a developer build the entire forward engine from this spec alone?
+- [x] spec-review — Review generated spec for completeness: can a developer build the entire forward engine from this spec alone?
 
 ## Recently Analyzed
 - transcription — Parsed SRT with overlap de-duplication into raw/transcription.json. 1,636 segments, 10,759 narration words, 144.1 WPM, 25 anime dialogue moments, 24 episode markers, 8 significant pauses. Full analysis at analysis/narration-transcript.md.
@@ -46,4 +46,11 @@
 - music-patterns — Three-phase music energy model: Active hook (LRA 25.3 LU, -36.6 LUFS, swells to -33 dB), Ambient body (LRA 15.1 LU, -36.6 LUFS, pad at -65 to -68 dB), Near-absent finale (LRA 6.9 LU, -61.0 LUFS). Two distinct music tracks needed: cinematic for hook, lo-fi ambient for body. Music swells are EXCLUSIVELY tied to anime dialogue moments (not episode boundaries or narrative content). Sidechain ducking: 10-34 dB gap, 20ms attack, 300ms release. Progressive intimacy: vocal-music gap widens 14.4→9.6→34.0 dB. Zero-silence maintenance via music gap-fill. Full analysis at analysis/music-patterns.md.
 
 ## Discovered Aspects
-(none yet — new aspects discovered during analysis will be added here then moved to Pending)
+- spec-fix-critical: 5 critical fixes — add scene classification tool/code (mediapipe/cv2/vision LLM), add TTS API examples (ElevenLabs/OpenAI), fix FPS hardcoding in clip generator, add spoiler prevention (constrain clips to episode ≤ N+1), add OP/ED detection and removal
+- spec-fix-high: 5 high-priority fixes — add 12-ep scaling rules, add ffmpeg sidechain command, add music swell automation code, add script validation gate between Stage 2→3, add LLM retry/chunking strategy
+- spec-fix-medium: 5 medium fixes — add subtitle edge case handling (ASS/SSA, multi-track), add non-Japanese language modes, add complete LLM prompt template, add crossfade ffmpeg command, expand TTS config
+
+### Wave 4: Spec Fixes (discovered during spec-review)
+- [ ] spec-fix-critical — Fix the 5 critical failures that block implementation: scene classification tools, TTS API calls, FPS generalization, spoiler prevention, OP/ED handling
+- [ ] spec-fix-high — Fix the 5 high-priority failures: 12-ep scaling, sidechain ffmpeg, music swell code, script validation gate, LLM retry strategy
+- [ ] spec-fix-medium — Fix the 5 medium failures: subtitle edge cases, non-Japanese handling, complete LLM prompt, crossfade command, TTS config expansion
