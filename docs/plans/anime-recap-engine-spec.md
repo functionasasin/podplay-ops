@@ -208,6 +208,91 @@ Combine per-episode outputs into a unified manifest:
 
 This stage uses an LLM (Claude) to analyze the anime's plot and generate the narrator script.
 
+#### 3.2.0 Season Length Scaling
+
+All parameters in this spec are calibrated to the 24-episode reference. For different season lengths, scale using these rules:
+
+```python
+import math
+
+def scale_parameters(total_eps: int) -> dict:
+    """Derive all season-length-dependent parameters.
+
+    Reference: 24 episodes → 75 min, 5 acts, 11 moments, 19 breathing events.
+    """
+    # Target duration scales linearly: ~3.1 min per episode
+    target_min = max(30.0, total_eps * 3.1)
+
+    # Act count: 3 acts minimum (12 eps), 5 for 24, 6 for 36
+    act_count = max(3, min(6, math.ceil(total_eps / 5)))
+
+    # Anime dialogue moment budget
+    moment_count = max(5, round(total_eps / 2.2))
+
+    # Breathing events: 1 per ~3.9 min (19/75 from reference)
+    breathing_events = max(8, round(target_min / 3.9))
+
+    # Word budget (hook and outro are fixed regardless of duration)
+    total_words = round(target_min * 144)  # baseline WPM
+    hook_words = 65   # structural invariant
+    outro_words = 90  # structural invariant
+
+    # Episode duration bounds
+    avg_ep_min = (target_min - 1.1) / total_eps  # subtract hook+outro ~1.1 min
+    min_ep_min = max(1.5, avg_ep_min * 0.5)
+    max_ep_min = min(8.0, avg_ep_min * 2.0)
+
+    return {
+        "target_duration_min": target_min,
+        "act_count": act_count,
+        "moment_count": moment_count,
+        "breathing_events": breathing_events,
+        "total_words": total_words,
+        "hook_words": hook_words,
+        "outro_words": outro_words,
+        "avg_episode_min": round(avg_ep_min, 1),
+        "min_episode_min": round(min_ep_min, 1),
+        "max_episode_min": round(max_ep_min, 1),
+    }
+
+# Examples:
+# 12 eps → 37 min, 3 acts, 5 moments, 9 breathing, 5,328 words
+# 13 eps → 40 min, 3 acts, 6 moments, 10 breathing, 5,760 words
+# 24 eps → 75 min, 5 acts, 11 moments, 19 breathing, 10,800 words
+# 36 eps → 112 min, 6 acts, 16 moments, 29 breathing, 16,128 words
+```
+
+**What scales vs. what stays fixed**:
+
+| Parameter | Scales? | Rule |
+|-----------|---------|------|
+| Target duration | Yes | `total_eps * 3.1` minutes |
+| Act count | Yes | `ceil(total_eps / 5)`, clamped 3-6 |
+| Word budget | Yes | `target_min * 144` |
+| Anime dialogue moments | Yes | `total_eps / 2.2`, min 5 |
+| Breathing events | Yes | `target_min / 3.9` |
+| Hook duration | **No** | Always 30-45s (~65 words) |
+| Outro duration | **No** | Always 25-35s (~90 words) |
+| Baseline WPM | **No** | Always 144 |
+| CPM target | **No** | Always 28.8 |
+| Commentary ratio | **No** | Always 4% (density, not count) |
+| Connector frequencies | **No** | Per-5-min targets already rate-based |
+| Act 4 drought | **Adapted** | For 3-act seasons: Act 2 final third is the drought (no moments, no breathing) |
+
+**Act mapping for short seasons (3 acts)**:
+
+| Act | Episodes | Maps to 5-act equivalent |
+|-----|----------|-------------------------|
+| Act 1: Premise | 1-3 | Acts 1-2 combined |
+| Act 2: Escalation + Crisis | 4-9 | Acts 3-4 combined (drought = final third) |
+| Act 3: Climax + Resolution | 10-12 | Act 5 + Resolution |
+
+**Validation**: After computing scaled parameters, verify:
+- Shortest episode ≥ 1.5 min (enough for meaningful narration)
+- Longest episode ≤ 8.0 min (avoids monotony)
+- Moment gap: mean ≥ 2.5 min (moments don't cluster too tightly)
+- Total words within ±10% of `target_min * 144`
+
 #### 3.2.1 Episode Summarization
 
 For each episode, prompt the LLM with the transcription:
@@ -420,6 +505,183 @@ Commentary density by section:
 [OUTRO]
 {outro text}
 ```
+
+#### 3.2.4 Script Validation Gate
+
+**Hard gate between Stage 2 and Stage 3.** The generated script MUST pass all checks below before proceeding to TTS, scene selection, or rendering. Failing to validate wastes downstream compute and TTS API credits.
+
+```python
+def validate_script(script: str, config: dict) -> tuple[bool, list[str]]:
+    """Validate generated script against all constraints.
+
+    Returns: (passed: bool, issues: list[str])
+    Issues prefixed with "HARD:" block progression. "SOFT:" are warnings only.
+    """
+    issues = []
+    params = scale_parameters(config["anime"]["total_episodes"])
+
+    # --- Word counts ---
+    total_words = count_words(script)
+    target = params["total_words"]
+    if abs(total_words - target) / target > 0.10:
+        issues.append(f"HARD: Total words {total_words} is >{10}% off target {target}")
+    elif abs(total_words - target) / target > 0.05:
+        issues.append(f"SOFT: Total words {total_words} is >{5}% off target {target}")
+
+    hook_words = count_words(extract_section(script, "HOOK"))
+    if not (50 <= hook_words <= 80):
+        issues.append(f"HARD: Hook has {hook_words} words (need 50-80)")
+
+    outro_words = count_words(extract_section(script, "OUTRO"))
+    if not (70 <= outro_words <= 110):
+        issues.append(f"HARD: Outro has {outro_words} words (need 70-110)")
+
+    # --- Per-episode word counts ---
+    avg_ep_words = (total_words - hook_words - outro_words) / config["anime"]["total_episodes"]
+    for ep_num, ep_text in extract_episodes(script):
+        ep_words = count_words(ep_text)
+        if ep_words < avg_ep_words * 0.3 or ep_words > avg_ep_words * 2.0:
+            issues.append(f"HARD: Episode {ep_num} has {ep_words} words "
+                         f"(range: {int(avg_ep_words*0.3)}-{int(avg_ep_words*2.0)})")
+
+    # --- Hook structure ---
+    hook = extract_section(script, "HOOK")
+    if "ANIME_DIALOGUE_SLOT" not in hook:
+        issues.append("HARD: Hook missing Beat 2 anime teaser (no ANIME_DIALOGUE_SLOT)")
+    if hook.count("?") < 1:
+        issues.append("HARD: Hook missing rhetorical question (Beat 1)")
+
+    # --- Forbidden connectors ---
+    for word in ["Nevertheless", "Furthermore", "Moreover", "Consequently", "Subsequently"]:
+        count = script.lower().count(word.lower())
+        if count > 0:
+            issues.append(f"HARD: Found forbidden connector '{word}' {count}x")
+
+    # --- Commentary ratio ---
+    commentary_words = count_commentary_words(script)  # count [COMMENTARY] tagged or "I"/"you" sentences
+    ratio = commentary_words / total_words
+    if ratio < 0.02 or ratio > 0.07:
+        issues.append(f"HARD: Commentary ratio {ratio:.1%} outside 2-7% range")
+    elif ratio < 0.03 or ratio > 0.05:
+        issues.append(f"SOFT: Commentary ratio {ratio:.1%} outside ideal 3-5%")
+
+    # --- Anime dialogue slots ---
+    slot_count = script.count("ANIME_DIALOGUE_SLOT")
+    target_moments = params["moment_count"]
+    if slot_count < target_moments - 2 or slot_count > target_moments + 3:
+        issues.append(f"HARD: {slot_count} dialogue slots (target: {target_moments}±2)")
+
+    # --- Sentence length ---
+    sentences = split_sentences(script)
+    mean_len = np.mean([len(s.split()) for s in sentences])
+    max_len = max(len(s.split()) for s in sentences)
+    if not (13 <= mean_len <= 17):
+        issues.append(f"SOFT: Mean sentence length {mean_len:.1f} words (target: 13-17)")
+    if max_len > 45:
+        issues.append(f"HARD: Sentence with {max_len} words exceeds 45-word max")
+
+    passed = not any(i.startswith("HARD:") for i in issues)
+    return passed, issues
+```
+
+If validation fails, the script is regenerated per Section 3.2.5's retry strategy. Maximum 3 retry cycles before escalating to the user.
+
+#### 3.2.5 LLM Generation Strategy (Per-Act Chunking with Retry)
+
+**Do NOT generate the entire script in a single LLM call.** A 10,800-word script (75 min) exceeds what current LLMs reliably produce in one pass while maintaining consistent voice, connector frequencies, and structural requirements.
+
+**Five-phase generation pipeline**:
+
+```
+Phase 1: Episode Summaries (parallel, 1 call per episode)
+    ↓
+Phase 2: Arc Detection (1 call, all summaries as input)
+    ↓
+Phase 3: Hook + Outro (2 independent calls)
+    ↓
+Phase 4: Per-Act Script (1 call per act, sequential)
+    ↓
+Phase 5: Stitch + Validate (Section 3.2.4 gate)
+```
+
+**Phase 1 — Episode Summaries** (parallelizable):
+- One LLM call per episode, ~300 words output each
+- Input: episode transcription (dialogue + stage directions)
+- Prompt: Section 3.2.1 prompt template
+- Parallelism: all episodes simultaneously (rate-limited to API concurrency)
+
+**Phase 2 — Arc Detection** (single call):
+- Input: all episode summaries concatenated (~7,200 words)
+- Output: act boundaries, episode assignments, arc-merge candidates
+- Prompt: Section 3.2.2 prompt template
+
+**Phase 3 — Hook + Outro** (2 independent calls):
+- Hook: template-constrained (Section 3.2.3 hook template), ~65 words output
+- Outro: template-constrained (Section 3.2.3 outro template), ~90 words output
+- These are small, template-heavy calls — high success rate
+
+**Phase 4 — Per-Act Script** (sequential, one act at a time):
+
+```python
+def generate_act_script(
+    act_num: int,
+    act_episodes: list[dict],      # summaries for this act's episodes
+    voice_profile: str,            # Section 3.2.3 narrator voice prompt
+    word_budget: int,              # words allocated to this act
+    moment_budget: int,            # anime dialogue slots for this act
+    prev_act_tail: str | None,     # last 200 words of previous act (continuity)
+    temperature: float = 0.7,
+    max_retries: int = 3,
+) -> str:
+    """Generate one act of the narrator script with retry logic."""
+    system_prompt = voice_profile  # Full narrator voice profile from 3.2.3
+
+    user_prompt = f"""Write Act {act_num} of the narrator script.
+
+Episodes in this act:
+{format_episode_summaries(act_episodes)}
+
+Word budget: {word_budget} words (±5%)
+Anime dialogue slots to place: {moment_budget}
+{"Previous act ended with: ..." + prev_act_tail if prev_act_tail else "This is the first act."}
+
+Requirements:
+- Follow the narrator voice profile exactly
+- Place [ANIME_DIALOGUE_SLOT: "line", ep=N, mode=X, function=Y] markers
+- Use episode transition templates (A for eps 1-6, B for eps 7+)
+- Maintain {144 + act_num} WPM pacing feel
+- Output as plain narration text with [EP_N] markers
+"""
+
+    for attempt in range(max_retries):
+        response = llm_call(
+            system=system_prompt,
+            user=user_prompt,
+            temperature=temperature + (attempt * 0.05),
+            max_tokens=int(word_budget * 2.0),  # generous buffer
+        )
+
+        # Quick per-act validation
+        act_words = count_words(response)
+        if abs(act_words - word_budget) / word_budget > 0.15:
+            continue  # retry — word count too far off
+        if any(w in response for w in ["Nevertheless", "Furthermore", "Moreover"]):
+            continue  # retry — forbidden connectors
+
+        return response
+
+    raise ScriptGenerationError(f"Act {act_num} failed after {max_retries} retries")
+```
+
+**Phase 5 — Stitch + Validate**:
+1. Concatenate: `[HOOK] + [ACT_1] + ... + [ACT_N] + [RESOLUTION] + [OUTRO]`
+2. Run Section 3.2.4 validation gate
+3. If HARD failures: identify which act(s) caused them, regenerate only those acts (up to 3 global retry cycles)
+4. If still failing after 3 cycles: output the script with SOFT warnings and flag for human review
+
+**Cost estimate**: ~24 Phase 1 calls + 1 Phase 2 + 2 Phase 3 + 5 Phase 4 = ~32 LLM calls. At Claude Sonnet pricing (~$3/M input, $15/M output): ~$2-4 per script generation. Retries add ~$0.50-1 per retry cycle.
+
+**Context window per call**: Phase 4 is the largest — ~4,000 words input (summaries + voice profile + previous tail) + ~2,500 words output. Well within any modern LLM's limits (100K+ tokens).
 
 ---
 
@@ -974,6 +1236,27 @@ Apply to music track, keyed to narration track:
 | Range (body) | -30 dB (music imperceptible) |
 | Range (anime dialogue) | -15 dB (music supports moment) |
 
+**FFmpeg sidechain ducking command**:
+
+```bash
+# Basic sidechain compression: duck music under narration
+# Input 0 = music, Input 1 = narration (sidechain signal)
+ffmpeg -i music.wav -i narration.wav \
+  -filter_complex \
+    "[0:a][1:a]sidechaincompress=threshold=0.01:ratio=20:attack=20:release=300:level_sc=1:mix=1[ducked]" \
+  -map "[ducked]" music_ducked.wav
+
+# Parameter mapping:
+#   threshold=0.01  → -40 dB (duck when narration present)
+#   ratio=20        → near-limiter mode (inf:1 approximation)
+#   attack=20       → 20 ms attack (fast ducking onset)
+#   release=300     → 300 ms release (smooth recovery)
+#   level_sc=1      → sidechain input gain (1.0 = unity)
+#   mix=1           → fully wet (100% compressed signal)
+```
+
+**Important**: ffmpeg's `sidechaincompress` applies a uniform ducking depth. For the variable-depth ducking required by this spec (hook: -20 dB range, body: -30 dB range, anime dialogue: -15 dB range), use the Python gain automation approach in Section 3.6.4a instead. The ffmpeg command above is suitable for a simpler implementation where uniform ducking is acceptable.
+
 #### 3.6.4 Music Swell Triggers
 
 Music swells are ONLY triggered by anime dialogue moments. NOT by:
@@ -982,6 +1265,124 @@ Music swells are ONLY triggered by anime dialogue moments. NOT by:
 - Death scenes (unless accompanied by anime dialogue)
 - Action sequences (unless in hook)
 - Narrator commentary
+
+#### 3.6.4a Music Gain Automation (Swell + Ducking)
+
+For variable-depth ducking and anime-dialogue-triggered swells, use Python gain automation instead of (or in addition to) ffmpeg's static sidechain. This produces the music track with all gain shaping pre-applied.
+
+```python
+import numpy as np
+from scipy.io import wavfile
+
+def apply_music_gain_automation(
+    music_path: str,
+    narration_path: str,
+    anime_moments: list[dict],
+    phase_boundaries: dict,
+    output_path: str,
+    sample_rate: int = 44100,
+):
+    """Apply phase-based gain, swell automation, and narration-keyed ducking.
+
+    Args:
+        music_path: Path to raw music WAV (hook+body already crossfaded).
+        narration_path: Path to narration WAV (for ducking detection).
+        anime_moments: List of {"start_s": float, "end_s": float, "mode": str}.
+        phase_boundaries: {"hook_end_s": float, "body_end_s": float, "outro_start_s": float}.
+        output_path: Where to write the processed music WAV.
+    """
+    _, music = wavfile.read(music_path)
+    _, narration = wavfile.read(narration_path)
+    music = music.astype(np.float64) / 32768.0
+    narration = narration.astype(np.float64) / 32768.0
+    total_samples = len(music)
+
+    # --- Phase 1: Base gain envelope ---
+    gain_db = np.full(total_samples, -68.0)  # default = body level
+
+    hook_end = int(phase_boundaries["hook_end_s"] * sample_rate)
+    body_end = int(phase_boundaries["body_end_s"] * sample_rate)
+    outro_start = int(phase_boundaries["outro_start_s"] * sample_rate)
+
+    gain_db[:hook_end] = -55.0                    # Hook: active music
+    gain_db[hook_end:body_end] = -68.0            # Body: ambient pad
+    gain_db[body_end:outro_start] = -67.0         # Finale: near-absent
+    gain_db[outro_start:] = -55.0                 # Outro: brief swell
+
+    # --- Phase 2: Anime dialogue swells ---
+    for moment in anime_moments:
+        start = int(moment["start_s"] * sample_rate)
+        end = int(moment["end_s"] * sample_rate)
+        ramp_up = int(1.0 * sample_rate)    # 1s ramp before moment
+        ramp_down = int(2.0 * sample_rate)  # 2s fade after moment
+
+        # Determine swell target based on phase
+        if start < hook_end:
+            swell_target = -33.0   # Hook swells are loud
+        else:
+            swell_target = -50.0   # Body swells are subtle
+
+        # Ramp up (cosine interpolation for smooth curve)
+        ramp_start = max(0, start - ramp_up)
+        for i in range(ramp_start, start):
+            t = (i - ramp_start) / ramp_up
+            # Cosine ease-in: 0→1
+            blend = 0.5 * (1 - np.cos(np.pi * t))
+            gain_db[i] = gain_db[ramp_start] + (swell_target - gain_db[ramp_start]) * blend
+
+        # Hold at swell target during moment
+        gain_db[start:end] = swell_target
+
+        # Ramp down (cosine ease-out)
+        ramp_end_sample = min(total_samples, end + ramp_down)
+        base_after = gain_db[min(ramp_end_sample, total_samples - 1)]
+        for i in range(end, ramp_end_sample):
+            t = (i - end) / ramp_down
+            blend = 0.5 * (1 - np.cos(np.pi * t))
+            gain_db[i] = swell_target + (base_after - swell_target) * blend
+
+    # --- Phase 3: Narration-keyed ducking ---
+    # Detect narration presence using RMS in 20ms windows
+    window = int(0.020 * sample_rate)  # 20ms
+    duck_depth_db = -25.0  # Additional attenuation when narrator speaks
+    narration_threshold = 0.005  # RMS threshold for "narrator present"
+
+    for i in range(0, total_samples - window, window):
+        chunk = narration[i:i+window] if i < len(narration) else np.zeros(window)
+        rms = np.sqrt(np.mean(chunk ** 2))
+        if rms > narration_threshold:
+            gain_db[i:i+window] += duck_depth_db  # Duck further under narration
+
+    # --- Apply gain ---
+    gain_linear = 10 ** (gain_db / 20.0)
+    if music.ndim == 2:
+        processed = music * gain_linear[:, np.newaxis]
+    else:
+        processed = music * gain_linear
+
+    # Clip and write
+    processed = np.clip(processed, -1.0, 1.0)
+    wavfile.write(output_path, sample_rate, (processed * 32767).astype(np.int16))
+```
+
+**Usage**:
+```python
+apply_music_gain_automation(
+    music_path="raw/music/combined.wav",
+    narration_path="raw/narration_compressed.wav",
+    anime_moments=[
+        {"start_s": 22.0, "end_s": 33.4, "mode": "woven"},
+        {"start_s": 482.0, "end_s": 493.0, "mode": "held"},
+        # ... all moments from Stage 5
+    ],
+    phase_boundaries={
+        "hook_end_s": 300.0,    # 5:00
+        "body_end_s": 4200.0,   # 70:00
+        "outro_start_s": 4487.0 # 74:47
+    },
+    output_path="raw/music/automated.wav",
+)
+```
 
 #### 3.6.5 Three-Track Mixing Model
 

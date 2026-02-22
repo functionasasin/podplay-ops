@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 18
-- Analyzed: 16
-- Pending: 2
-- Convergence: 88.9%
+- Analyzed: 17
+- Pending: 1
+- Convergence: 94.4%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -47,6 +47,8 @@
 
 - spec-fix-critical — Fixed all 5 critical failures: (1) Added two-pass scene classification — mediapipe+OpenCV heuristic (95% of scenes) + Claude Sonnet vision LLM (5% low-confidence), with full Python code; (2) Added ElevenLabs TTS API example (eleven_multilingual_v2) with WPM control, per-segment generation, verification, and concatenation; (3) Fixed FPS hardcoding — `generate_clip_duration()` now takes `source_fps` param (default 24), floor/ceiling are time-based not frame-based, added ffprobe FPS detection in Stage 1, updated config and render spec; (4) Added spoiler prevention — `get_eligible_scenes()` constrains clips to episodes ≤ current+1, hook exception for eps 1-4, post-build validation as hard failure; (5) Added Section 3.3.0 OP/ED Detection — chromaprint audio fingerprint cross-correlation across episodes, heuristic fallback (89s OP, 90s ED), skip flag in manifest. Updated episode metadata schema with fps, duration, op, ed fields. Full analysis at analysis/spec-fix-critical.md.
 
+- spec-fix-high — Fixed all 5 high-priority failures: (1) FAIL-E2: Added Section 3.2.0 Season Length Scaling with `scale_parameters()` function — act count formula (ceil(eps/5), clamped 3-6), moment budget (eps/2.2), breathing events (duration/3.9), fixed vs scaled parameter table, 3-act mapping for 12-ep seasons, validation bounds; (2) FAIL-V4: Added ffmpeg `sidechaincompress` command to Section 3.6.3 with exact parameter mapping (threshold=0.01→-40dB, ratio=20, attack=20ms, release=300ms); (3) FAIL-V5: Added Section 3.6.4a with complete Python gain automation function — phase-based base levels, cosine-interpolated swells at anime dialogue moments (hook: -33dB, body: -50dB), narration-keyed ducking via RMS detection; (4) FAIL-S4: Added Section 3.2.4 Script Validation Gate — `validate_script()` with HARD/SOFT checks for word count, hook structure, forbidden connectors, commentary ratio, dialogue slots, sentence length; (5) FAIL-S5: Added Section 3.2.5 LLM Generation Strategy — 5-phase pipeline (episode summaries → arc detection → hook/outro → per-act script → stitch+validate), per-act retry loop (3 retries, +0.05 temp each), ~32 calls at ~$2-4 total. Full analysis at analysis/spec-fix-high.md.
+
 ## Discovered Aspects
 - spec-fix-critical: 5 critical fixes — add scene classification tool/code (mediapipe/cv2/vision LLM), add TTS API examples (ElevenLabs/OpenAI), fix FPS hardcoding in clip generator, add spoiler prevention (constrain clips to episode ≤ N+1), add OP/ED detection and removal
 - spec-fix-high: 5 high-priority fixes — add 12-ep scaling rules, add ffmpeg sidechain command, add music swell automation code, add script validation gate between Stage 2→3, add LLM retry/chunking strategy
@@ -54,5 +56,5 @@
 
 ### Wave 4: Spec Fixes (discovered during spec-review)
 - [x] spec-fix-critical — Fix the 5 critical failures that block implementation: scene classification tools, TTS API calls, FPS generalization, spoiler prevention, OP/ED handling
-- [ ] spec-fix-high — Fix the 5 high-priority failures: 12-ep scaling, sidechain ffmpeg, music swell code, script validation gate, LLM retry strategy
+- [x] spec-fix-high — Fix the 5 high-priority failures: 12-ep scaling, sidechain ffmpeg, music swell code, script validation gate, LLM retry strategy
 - [ ] spec-fix-medium — Fix the 5 medium failures: subtitle edge cases, non-Japanese handling, complete LLM prompt, crossfade command, TTS config expansion
