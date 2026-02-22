@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 15
-- Analyzed: 13
-- Pending: 2
-- Convergence: 86.7%
+- Analyzed: 14
+- Pending: 1
+- Convergence: 93.3%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -26,7 +26,7 @@
 - [x] music-patterns — Analyze music energy mapping to content type, ducking curves, genre/mood using audio analysis data
 
 ### Wave 3: Synthesis
-- [ ] spec-draft — Read ALL analysis/ files and synthesize into complete software spec at docs/plans/anime-recap-engine-spec.md
+- [x] spec-draft — Read ALL analysis/ files and synthesize into complete software spec at docs/plans/anime-recap-engine-spec.md
 - [ ] spec-review — Review generated spec for completeness: can a developer build the entire forward engine from this spec alone?
 
 ## Recently Analyzed
