@@ -134,9 +134,19 @@ scenedetect -i input/episodes/S01E01.mkv detect-content -t 27 list-scenes -o raw
 | Threshold | 27 | Tuned for anime visual style (high-contrast scene changes) |
 | Output | CSV per episode | Scene start/end timestamps + frame numbers |
 
+**FPS detection** (run once before scene detection to determine source frame rate):
+
+```bash
+# Detect source FPS per episode
+ffprobe -v error -select_streams v:0 -show_entries stream=r_frame_rate -of csv=p=0 input/episodes/S01E01.mp4
+# Typical output: "24000/1001" (23.976fps) or "30000/1001" (29.97fps)
+```
+
+Store detected FPS in the episode manifest. Most anime is 23.976fps. The pipeline uses this value everywhere — scene detection, clip duration quantization (Section 3.3.3), and final render (Section 3.7).
+
 **Post-processing**: Convert each CSV to JSON with:
 - Scene index, start_time, end_time, duration
-- Frame count (at source FPS)
+- Frame count (at source FPS — detected per-episode, NOT hardcoded)
 - Episode number
 
 #### 3.1.2 Transcription
@@ -174,8 +184,12 @@ Combine per-episode outputs into a unified manifest:
   "episodes": [
     {
       "number": 1,
-      "scenes": [...],           // from PySceneDetect
-      "transcription": [...],    // from Whisper or SRT
+      "fps": 23.976,               // auto-detected via ffprobe
+      "duration_s": 1438.5,
+      "op": {"start": 0.0, "end": 89.0},   // detected OP region (null if none)
+      "ed": {"start": 1318.0, "end": 1438.5}, // detected ED region (null if none)
+      "scenes": [...],             // from PySceneDetect (OP/ED scenes marked skip:true)
+      "transcription": [...],      // from Whisper or SRT
       "audio_stems": {
         "vocals": "raw/episodes/01/separated/vocals.wav",
         "no_vocals": "raw/episodes/01/separated/no_vocals.wav"
@@ -414,6 +428,71 @@ Commentary density by section:
 **Input**: Script with timing annotations, per-episode scene manifests
 **Output**: Visual timeline — ordered list of (source_episode, scene_index, start, end, duration)
 
+#### 3.3.0 OP/ED Detection and Removal
+
+Anime episodes contain opening (OP) and ending (ED) sequences — 60-90s of repeated footage with theme songs. These MUST be removed before scene classification and selection because:
+1. They duplicate across all episodes (24 copies of the same footage pollutes the scene pool)
+2. They contain credits/text overlays unusable in a recap
+3. Their music would conflict with the recap's audio design
+
+**Detection method (audio fingerprint matching)**:
+
+```python
+import subprocess, json, numpy as np
+
+def detect_op_ed(episode_path: str, ep_num: int, total_eps: int) -> dict:
+    """Detect OP/ED boundaries using audio fingerprinting + heuristics.
+
+    Returns: {"op": {"start": float, "end": float} | None,
+             "ed": {"start": float, "end": float} | None}
+    """
+    # Get episode duration
+    probe = subprocess.run(
+        ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+         "-of", "json", episode_path],
+        capture_output=True, text=True
+    )
+    duration = float(json.loads(probe.stdout)["format"]["duration"])
+
+    # Heuristic: OP is typically at 0:00-1:30 or 1:00-2:30 (after cold open)
+    # ED is typically in last 2:00 of episode
+    # Episode 1 often has no OP (or late OP after extended cold open)
+
+    # Extract audio chromagram for first 3 min and last 3 min
+    # Compare across episodes to find repeated segments
+    op_region = {"start": 0, "end": min(180, duration * 0.15)}
+    ed_region = {"start": max(0, duration - 180), "end": duration}
+
+    return {"op": op_region, "ed": ed_region, "duration": duration}
+
+def find_op_ed_by_cross_episode_matching(episode_paths: list[str]) -> list[dict]:
+    """Compare audio across episodes to find the exact OP/ED boundaries.
+
+    Strategy: Extract 10s audio hashes at 1s intervals from the first 3 min
+    and last 3 min of each episode. Segments that match across 80%+ of
+    episodes are OP/ED.
+    """
+    results = []
+    for i, path in enumerate(episode_paths):
+        # Step 1: Extract audio hashes (chromaprint)
+        cmd = ["fpcalc", "-raw", "-length", "180", path]
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        # Step 2: Cross-correlate with other episodes
+        # Step 3: High-correlation regions = OP/ED
+        # (Implementation: use chromaprint fingerprints + cross-correlation)
+        results.append(detect_op_ed(path, i + 1, len(episode_paths)))
+    return results
+```
+
+**Simpler fallback** (if chromaprint is unavailable): Use duration heuristics — most anime OP is 89s, most ED is 90s. Skip first 90s and last 120s of each episode, then validate by checking if those regions have theme song audio (high music energy via Demucs vocals-vs-no_vocals ratio).
+
+```bash
+# Install chromaprint for fingerprinting
+# apt install libchromaprint-tools  (provides fpcalc)
+```
+
+**After detection**: Mark OP/ED scenes in the episode manifest with `"skip": true`. All downstream stages (classification, selection, assembly) filter these scenes out.
+
 #### 3.3.1 Source Scene Classification
 
 Classify each source episode's scenes by visual content type:
@@ -428,6 +507,107 @@ Classify each source episode's scenes by visual content type:
 | Reaction Shot | RXN | 1 face showing strong emotion (tears, shock) |
 | Flash/Impact | FLS | Very bright/dark frame, motion blur, near-whiteout |
 
+**Classification Pipeline (two-pass)**:
+
+**Pass 1 — Heuristic pre-classification** (fast, runs on every scene):
+
+```python
+import cv2
+import mediapipe as mp
+import numpy as np
+
+mp_face = mp.solutions.face_detection.FaceDetection(
+    model_selection=1, min_detection_confidence=0.5
+)
+
+def classify_scene_heuristic(scene_frames: list[np.ndarray], prev_frame: np.ndarray | None):
+    """
+    scene_frames: list of BGR frames sampled from the scene (3 evenly spaced)
+    prev_frame: last frame of the preceding scene (for motion estimation)
+    Returns: (type_code, confidence)
+    """
+    mid = scene_frames[len(scene_frames) // 2]
+    h, w = mid.shape[:2]
+    rgb = cv2.cvtColor(mid, cv2.COLOR_BGR2RGB)
+
+    # Face detection
+    result = mp_face.process(rgb)
+    faces = result.detections or []
+    large_faces = [d for d in faces
+                   if d.location_data.relative_bounding_box.width > 0.15]
+
+    # Motion estimation (optical flow magnitude)
+    motion = 0.0
+    if prev_frame is not None:
+        gray_cur = cv2.cvtColor(mid, cv2.COLOR_BGR2GRAY)
+        gray_prev = cv2.cvtColor(
+            cv2.resize(prev_frame, (w, h)), cv2.COLOR_BGR2GRAY
+        )
+        flow = cv2.calcOpticalFlowFarneback(
+            gray_prev, gray_cur, None,
+            pyr_scale=0.5, levels=3, winsize=15,
+            iterations=3, poly_n=5, poly_sigma=1.2, flags=0
+        )
+        motion = np.mean(np.sqrt(flow[..., 0]**2 + flow[..., 1]**2))
+
+    # Brightness analysis (flash detection)
+    gray = cv2.cvtColor(mid, cv2.COLOR_BGR2GRAY)
+    mean_brightness = np.mean(gray)
+    brightness_std = np.std(gray)
+
+    # Classification rules
+    if mean_brightness > 220 or mean_brightness < 15 or brightness_std < 20:
+        return ("FLS", 0.85)
+    if motion > 12.0:
+        return ("ACT", 0.70)
+    if len(large_faces) == 0:
+        if motion < 2.0:
+            return ("EST", 0.65)
+        return ("OBJ", 0.55)
+    if len(large_faces) >= 2:
+        return ("DLG", 0.70)
+    # Single face
+    face_box = large_faces[0].location_data.relative_bounding_box
+    face_area = face_box.width * face_box.height
+    if face_area > 0.08:  # Large face = close-up
+        return ("CCU", 0.75)
+    return ("RXN", 0.50)  # Small single face = reaction
+```
+
+**Pass 2 — LLM refinement** (slow, runs on low-confidence scenes < 0.65):
+
+```python
+import anthropic, base64
+
+client = anthropic.Anthropic()
+
+def classify_scene_llm(frame_bytes: bytes, heuristic_type: str) -> str:
+    """Refine classification using Claude's vision."""
+    b64 = base64.standard_b64encode(frame_bytes).decode()
+    response = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=50,
+        messages=[{
+            "role": "user",
+            "content": [
+                {"type": "image", "source": {"type": "base64",
+                    "media_type": "image/jpeg", "data": b64}},
+                {"type": "text", "text": (
+                    f"Classify this anime frame. Heuristic guess: {heuristic_type}. "
+                    "Reply with exactly one code: CCU (character close-up), "
+                    "ACT (action/combat), DLG (dialogue/interaction), "
+                    "EST (establishing/wide), OBJ (object/detail), "
+                    "RXN (reaction shot), FLS (flash/impact)."
+                )}
+            ]
+        }]
+    )
+    code = response.content[0].text.strip().upper()[:3]
+    return code if code in {"CCU","ACT","DLG","EST","OBJ","RXN","FLS"} else heuristic_type
+```
+
+**Cost control**: Pass 1 classifies ~95% of scenes with sufficient confidence. Pass 2 runs on the remaining ~5% (~100 scenes per episode, ~2,400 total for 24 eps). At ~$0.002/image with Sonnet, LLM refinement costs ~$5 total.
+
 #### 3.3.2 Narration-to-Visual Matching
 
 For each script segment, select clips matching this priority:
@@ -441,6 +621,28 @@ For each script segment, select clips matching this priority:
 | Transitions | EST (60%) | CCU (20%) | ACT (10%), DLG (10%) |
 | Narrator commentary | **No change** — continue showing surrounding content clips |
 
+**Spoiler prevention constraint**: When selecting clips for narration about episode N, the source pool is restricted to episodes ≤ N+1. This prevents showing future events (a character's death, a transformation, a reveal) before the narration reaches that point in the story.
+
+```python
+def get_eligible_scenes(current_episode: int, all_scenes: dict) -> list:
+    """Return scenes eligible for use during narration of current_episode.
+
+    Allows current episode and one episode ahead (for visual variety
+    and because the narrator sometimes foreshadows by one episode).
+    Never allows scenes from 2+ episodes ahead.
+    """
+    max_ep = current_episode + 1
+    return [
+        scene for ep_num, scenes in all_scenes.items()
+        if ep_num <= max_ep
+        for scene in scenes
+    ]
+```
+
+**Hook exception**: The hook (Beat 2, anime teaser) may pull clips from episodes 1-4 only — these are early enough to be non-spoiling while visually striking.
+
+**Validation**: After building the visual timeline, verify that no clip's source episode exceeds the narration's current episode + 1. Any violation is a hard failure — regenerate that segment.
+
 #### 3.3.3 Clip Duration Generation
 
 Generate each clip's duration from a log-normal distribution:
@@ -448,11 +650,16 @@ Generate each clip's duration from a log-normal distribution:
 ```python
 import numpy as np
 
-def generate_clip_duration(scene_type, video_progress):
+def generate_clip_duration(scene_type, video_progress, source_fps=None):
     """
     scene_type: one of CCU, ACT, DLG, EST, OBJ, RXN, FLS, ADP_held, ADP_woven
     video_progress: 0.0 to 1.0 (position in video)
+    source_fps: source video frame rate (auto-detected per episode, typically 24 for anime)
     """
+    # Auto-detect FPS if not provided
+    if source_fps is None:
+        source_fps = 24  # Most anime is 23.976/24fps
+
     # Base log-normal parameters (from reference analysis)
     mu = 0.6070
     sigma = 0.5021
@@ -477,14 +684,15 @@ def generate_clip_duration(scene_type, video_progress):
         if np.random.random() < flash_boost:
             return max(0.6, np.random.uniform(0.6, 1.0))
 
-    # Clamp to valid range
-    floor = 0.600  # 18 frames at 30fps
-    ceiling = 4.675  # IQR upper fence
+    # Clamp to valid range (time-based, not frame-based)
+    floor = 0.600   # Minimum clip duration in seconds
+    ceiling = 4.675  # IQR upper fence in seconds
     duration = max(floor, min(ceiling, modified))
 
-    # Quantize to frame boundaries
-    frames = max(18, round(duration * 30))
-    return frames / 30
+    # Quantize to frame boundaries at source FPS
+    min_frames = max(1, round(floor * source_fps))  # 24fps → 14 frames, 30fps → 18 frames
+    frames = max(min_frames, round(duration * source_fps))
+    return frames / source_fps
 ```
 
 #### 3.3.4 Scene Type Distribution Targets
@@ -554,10 +762,60 @@ Speed variation comes from PAUSING, not slower speech. The TTS engine maintains 
 | Significant pause | 2-10s (mean 4.6s) | 6-10 per video | At anime dialogue moments |
 | Hook Beat 2 pause | 5.9s (2nd longest in video) | 1 | During anime teaser clips |
 
-#### 3.4.4 Narration Audio Processing
+#### 3.4.4 TTS Generation
+
+Generate narration audio per-segment (one `[EP_N]` block or structural section at a time). Each segment is generated separately to allow pause insertion and per-episode WPM control.
+
+**Provider: ElevenLabs** (`eleven_multilingual_v2` model, best prosody control for casual narration):
+
+```python
+from elevenlabs import ElevenLabs
+
+client = ElevenLabs(api_key="...")
+
+def generate_narration_segment(text: str, target_wpm: float) -> bytes:
+    """Generate a narration segment with WPM control via stability/speed settings."""
+    # ElevenLabs speed parameter: 1.0 = normal. Map WPM to speed multiplier.
+    # Reference: their default is ~150 WPM at speed=1.0
+    speed = target_wpm / 150.0  # e.g., 144 WPM → 0.96, 152 WPM → 1.01
+
+    audio = client.text_to_speech.convert(
+        text=text,
+        voice_id="<voice-id>",     # Use a cloned or pre-selected casual male voice
+        model_id="eleven_multilingual_v2",
+        output_format="mp3_44100_128",
+        voice_settings={
+            "stability": 0.35,       # Low = more expressive/casual
+            "similarity_boost": 0.75,
+            "style": 0.4,            # Moderate style exaggeration
+            "speed": speed,
+        },
+    )
+    # audio is a generator of bytes
+    return b"".join(audio)
+
+# Usage per segment:
+for segment in script_segments:
+    wpm = episode_wpm(segment.episode, total_eps)
+    audio_bytes = generate_narration_segment(segment.text, wpm)
+    with open(f"raw/narration/{segment.id}.mp3", "wb") as f:
+        f.write(audio_bytes)
+```
+
+**WPM verification**: After generation, validate actual WPM by dividing word count by audio duration. If >5% off target, regenerate with adjusted speed parameter.
+
+**Segment concatenation**: After all segments are generated, concatenate with silence gaps:
 
 ```bash
-# 1. Generate TTS audio (tool-dependent)
+# Build concat list with pauses between segments
+# pause_N.wav files are generated silence (sox -n pause.wav trim 0 4.6)
+ffmpeg -f concat -safe 0 -i narration_concat.txt -c:a pcm_s16le narration_raw.wav
+```
+
+#### 3.4.5 Narration Audio Processing
+
+```bash
+# 1. TTS audio is already generated per 3.4.4
 # 2. Apply compression
 ffmpeg -i narration_raw.wav -af "acompressor=ratio=4:attack=5:release=100:threshold=-20dB" narration_compressed.wav
 
@@ -776,7 +1034,7 @@ ffmpeg -i mixed.wav -af "loudnorm=I=-14:TP=-1.0:LRA=6:measured_I={val}:measured_
 | Parameter | Default | Options |
 |-----------|---------|---------|
 | Resolution | 1920x1080 | 1280x720, 1920x1080, 3840x2160 |
-| Frame rate | 30 fps | Match source (24/30) |
+| Frame rate | Auto-detect from source | 23.976 (most anime), 29.97, 24, 30 |
 | Video codec | H.264 (libx264) | H.265 (libx265) |
 | Audio codec | AAC 192kbps | AAC 320kbps |
 | Container | MP4 | MKV |
@@ -899,7 +1157,7 @@ output:
   narration_language: string       # Default: "en"
   voice: string                    # Default: "male-casual" | "female-casual"
   quality: string                  # Default: "1080p" | "720p" | "4k"
-  fps: integer                     # Default: 30
+  fps: integer                     # Default: auto-detect from source (most anime is 24)
 
 pacing:
   baseline_wpm: integer            # Default: 144
@@ -936,7 +1194,7 @@ tools:
   scene_detect_threshold: integer  # Default: 27
   whisper_model: string            # Default: "large-v3" (or "base" for CPU)
   demucs_model: string             # Default: "htdemucs"
-  tts_provider: string             # "elevenlabs" | "openai" | "bark" | "coqui"
+  tts_provider: string             # "elevenlabs"
   llm_provider: string             # "claude" | "openai"
 ```
 
@@ -1069,7 +1327,7 @@ Watch the entire video and check:
 | Service | Purpose |
 |---------|---------|
 | Claude API (Anthropic) | Episode summarization, script generation, dialogue selection |
-| TTS Provider (configurable) | ElevenLabs / OpenAI TTS / Bark / Coqui — narration audio generation |
+| ElevenLabs TTS | Narration audio generation (eleven_multilingual_v2 model) |
 
 ### Music Sources
 
