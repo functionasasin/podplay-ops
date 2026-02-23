@@ -1835,6 +1835,7 @@ REPRESENTATION, DISINHERITANCE, PRETERITION, INOFFICIOUS, UNDERPROVISION, CONDIT
 | Standard | `**{name} ({label})** receives **₱{total}**.` |
 | Collation | `**{name} ({label})** receives **₱{net} from the estate** (plus ₱{donation} previously received as a donation, for a total of ₱{gross}).` |
 | Zero-share | `**{name} ({label})** receives **₱0**.` |
+| Donation return | `**{name} ({label})** must **return ₱{return_amount} to the estate**.` |
 | Reduced | `**{name} ({label})** receives **₱{reduced}** (reduced from ₱{original}).` |
 
 ### 11.3 Formatting Rules
@@ -1858,6 +1859,172 @@ REPRESENTATION, DISINHERITANCE, PRETERITION, INOFFICIOUS, UNDERPROVISION, CONDIT
 
 **Collation imputation**:
 > **Pilar Navarro (legitimate child)** receives **₱3,000,000 from the estate** (plus ₱2,000,000 previously received as a donation, for a total of ₱5,000,000). Under Art. 1061, the ₱2,000,000 donation must be collated. The collation-adjusted estate is ₱20,000,000 (Art. 908). Pilar's legitime is ₱5,000,000 (¼ of the adjusted estate per Art. 888). Since Pilar already received ₱2,000,000, her share from the actual estate is reduced to ₱3,000,000 (Art. 1073).
+
+### 11.5 NarrativeSectionType Enum
+
+Every narrative is composed of ordered sections of the following types. Sections are included only when applicable and assembled in the order listed below into a single paragraph.
+
+```
+enum NarrativeSectionType {
+    HEADER,              // Always first. "{Name} ({label}) receives ₱{amount}."
+    SUCCESSION_TYPE,     // "The decedent died {testate|intestate|partially testate}."
+    CATEGORY,            // "As a {category} (Art. X), {Name} is a compulsory heir."
+    LEGITIME,            // "Under Art. X, {heir}'s legitime is ₱X."
+    CAP_RULE,            // "However, Art. 895 ¶3 cap was applied..."
+    FREE_PORTION,        // "...also receives ₱X from the free portion..."
+    INTESTATE_SHARE,     // "Under Art. X, {heir}'s intestate share is..."
+    COLLATION,           // "Note: ₱X donation imputed against share..."
+    REPRESENTATION,      // "...inherits by right of representation..."
+    DISINHERITANCE,      // "...was validly disinherited..." or "...invalid..."
+    PRETERITION,         // "...was completely omitted (Art. 854)..."
+    INOFFICIOUS,         // "...reduced from ₱X to ₱Y (Art. 911)..."
+    UNDERPROVISION,      // "...recovers ₱X under Art. 855..."
+    CONDITION,           // "...condition stripped from legitime (Art. 872)..."
+    ACCRETION,           // "...receives additional ₱X by accretion..."
+    SUBSTITUTION,        // "...takes {original}'s place as substitute..."
+    RESERVATION,         // "Note: property subject to reserva troncal..."
+    ARTICULO_MORTIS,     // "Note: articulo mortis rule applied..."
+    COMPARISON,          // Optional: "Under intestate, would have received ₱X"
+}
+
+struct NarrativeSection {
+    section_type: NarrativeSectionType,
+    text: String,
+    legal_basis: List<String>,   // Article citations used in this section
+}
+```
+
+Each `HeirNarrative` contains an ordered list of `NarrativeSection` values. The `text` field of all sections is concatenated with spaces to produce the final paragraph.
+
+### 11.6 Helper Functions
+
+Six helper functions required by the narrative generation algorithm:
+
+```
+function category_label(heir: Heir) -> String {
+    // Short display label for the heir's category
+    match heir.effective_category:
+        LEGITIMATE_CHILD_GROUP:
+            match heir.relationship:
+                LEGITIMATE_CHILD      -> "legitimate child"
+                ADOPTED_CHILD         -> "adopted child"
+                LEGITIMATED_CHILD     -> "legitimated child"
+                LEGITIMATE_GRANDCHILD -> "grandchild, by representation"
+        ILLEGITIMATE_CHILD_GROUP  -> "illegitimate child"
+        SURVIVING_SPOUSE_GROUP    -> "surviving spouse"
+        LEGITIMATE_ASCENDANT_GROUP:
+            match heir.relationship:
+                LEGITIMATE_PARENT    -> "legitimate parent"
+                LEGITIMATE_ASCENDANT -> "legitimate ascendant"
+}
+
+function raw_label(heir: Heir) -> String {
+    // Full label with legal basis for CATEGORY section
+    match heir.relationship:
+        LEGITIMATE_CHILD      -> "legitimate child"
+        ADOPTED_CHILD         -> "adopted child (RA 8552 Sec. 17: same rights as legitimate)"
+        LEGITIMATED_CHILD     -> "legitimated child (Art. 179, Family Code: same rights as legitimate)"
+        ILLEGITIMATE_CHILD    -> "illegitimate child (Art. 176, Family Code)"
+        SURVIVING_SPOUSE      -> "surviving spouse"
+        LEGITIMATE_PARENT     -> "legitimate parent"
+        LEGITIMATE_ASCENDANT  -> "legitimate ascendant"
+        LEGITIMATE_GRANDCHILD -> "grandchild by representation"
+}
+
+function filiation_description(proof: FiliationProof) -> String {
+    // Maps filiation proof to readable description with FC article
+    match proof:
+        BIRTH_CERTIFICATE  -> "record of birth in the civil register (Art. 172(1), FC)"
+        COURT_JUDGMENT     -> "final judgment establishing filiation (Art. 172(1), FC)"
+        PUBLIC_DOCUMENT    -> "admission of filiation in a public document (Art. 172(2), FC)"
+        PRIVATE_HANDWRITTEN-> "private handwritten instrument signed by the parent (Art. 172(2), FC)"
+        OPEN_POSSESSION    -> "open and continuous possession of the status of an illegitimate child (Art. 172(3), FC)"
+        OTHER_EVIDENCE     -> "evidence as provided by the Rules of Court (Art. 172(4), FC)"
+}
+
+function format_peso(amount: Money) -> String {
+    // ₱ prefix, comma thousands, centavos only when non-zero
+    if amount.centavos == 0:
+        return "₱{amount.pesos:,}"      // e.g., "₱5,000,000"
+    else:
+        return "₱{amount:,.2f}"         // e.g., "₱1,666,666.67"
+}
+
+function format_fraction(frac: Fraction) -> String {
+    // Unicode symbol for common fractions, slash notation otherwise
+    known = {
+        (1,2): "½", (1,3): "⅓", (2,3): "⅔", (1,4): "¼", (3,4): "¾",
+        (1,5): "⅕", (1,6): "⅙", (1,8): "⅛", (3,8): "⅜",
+    }
+    if (frac.num, frac.den) in known:
+        return known[(frac.num, frac.den)]
+    else:
+        return "{frac.num}/{frac.den}"
+}
+
+function spouse_article(scenario: TestateScenario | IntestateScenario) -> String {
+    // Maps scenario code to the article governing the spouse's share
+    match scenario:
+        T1, T2, T3           -> "Art. 892"
+        T4, T5a, T5b         -> "Art. 892"
+        T7, T8               -> "Art. 893"
+        T9                   -> "Art. 899"
+        T11                  -> "Art. 894"
+        T12, T13             -> "Art. 900"
+        I2, I4               -> "Art. 996/999"
+        I6                   -> "Art. 997"
+        I8                   -> "Art. 998"
+        I10                  -> "Art. 1000"
+        I11                  -> "Art. 995"
+        I12                  -> "Art. 1001"
+}
+```
+
+### 11.7 NarrativeConfig
+
+Runtime configuration for narrative generation:
+
+```
+struct NarrativeConfig {
+    include_comparison: bool,       // Append testate-vs-intestate comparison note
+    include_filiation_proof: bool,  // Include filiation proof details for ICs
+    include_collation_detail: bool, // Include detailed collation math
+    max_sentences: int,             // Maximum sentences before splitting
+    language: String,               // "en" (future: "fil" for Filipino)
+}
+```
+
+**Defaults:**
+```
+NarrativeConfig {
+    include_comparison: false,      // Off by default — enabled by user/executor
+    include_filiation_proof: true,
+    include_collation_detail: true,
+    max_sentences: 15,
+    language: "en",
+}
+```
+
+When `max_sentences` is exceeded, split the narrative into a "Summary" (first 5 sentences) and "Detailed Computation" (remaining). The `include_comparison` flag controls whether the optional COMPARISON section is appended.
+
+### 11.8 Narrative Validation Rules
+
+Every generated narrative must pass all 10 rules. Implement as post-generation assertions in Step 10.
+
+| # | Rule | Check |
+|---|------|-------|
+| 1 | **Amount consistency** | HEADER peso amount = `InheritanceShare.total` (or `net_from_estate` if collation header, or `return_amount` if donation return header) |
+| 2 | **Article citation** | Every legal conclusion cites at least one article |
+| 3 | **Category match** | `category_label` in HEADER matches `heir.effective_category` |
+| 4 | **Computation visibility** | If the share involves a fraction, the multiplication is shown (e.g., "½ × ₱10,000,000 = ₱5,000,000") |
+| 5 | **Special event coverage** | Every `Correction` in `ValidationResult` affecting this heir has a corresponding narrative section |
+| 6 | **Collation coverage** | If `InheritanceShare.donations_imputed > 0`, a COLLATION section is present |
+| 7 | **Representation coverage** | If `Heir.inherits_by == REPRESENTATION`, a REPRESENTATION section is present |
+| 8 | **No orphan references** | No reference to an heir, article, or computation not previously explained in the narrative |
+| 9 | **Peso format consistency** | All peso amounts use ₱ prefix, comma thousands separator, centavos only when non-zero |
+| 10 | **Self-containment** | A reader with no prior context can understand the entire narrative without any other document |
+
+Rules 1-9 are machine-checkable. Rule 10 is a design principle enforced by the template structure (every legal term explained on first use, every computation shown, every article cited).
 
 ---
 

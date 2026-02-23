@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 33
-- Analyzed: 30
-- Pending: 3
-- Convergence: 90.9%
+- Analyzed: 31
+- Pending: 2
+- Convergence: 93.9%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -49,7 +49,7 @@
 - [x] spec-fix-collateral-algorithm — Add collateral distribution sub-algorithm with full/half blood, per stirpes/per capita switching to spec §7.2
 - [x] spec-fix-art911-reduction — Add Art. 911 three-phase reduction pseudocode to spec §9.1
 - [x] spec-fix-fideicommissary — Add Art. 863 fideicommissary validity requirements (one-degree, both-alive, express, no-legitime) to spec §3.3
-- [ ] spec-fix-narrative-rules — Add narrative validation rules (10 rules), helper functions (6 functions), NarrativeConfig, NarrativeSectionType enum to spec §11
+- [x] spec-fix-narrative-rules — Add narrative validation rules (10 rules), helper functions (6 functions), NarrativeConfig, NarrativeSectionType enum to spec §11
 - [ ] spec-fix-pseudocode-gaps — Add FP pipeline order-of-operations, Art. 1064 representation collation algorithm, collatability decision tree to spec §2/§8
 - [ ] spec-fix-test-vectors — Add 10 missing test vectors (mixed succession, collateral, articulo mortis, IC-only, escheat, total renunciation, Iron Curtain, fideicommissary, representation collation, ascendant-only)
 
