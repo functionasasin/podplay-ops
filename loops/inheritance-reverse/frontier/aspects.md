@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 28
-- Analyzed: 8
-- Pending: 20
-- Convergence: 28.6%
+- Analyzed: 9
+- Pending: 19
+- Convergence: 32.1%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -21,7 +21,7 @@
 
 ### Wave 3: Legitime Computation
 - [x] legitime-table — Arts. 888-903: complete legitime fraction table for every possible heir combination
-- [ ] legitime-with-illegitimate — half-share computation when legitimate and illegitimate children concur (Art. 895)
+- [x] legitime-with-illegitimate — half-share computation when legitimate and illegitimate children concur (Art. 895)
 - [ ] legitime-surviving-spouse — Arts. 892, 893, 896-900: spouse's legitime varying by who they concur with (children, parents, alone)
 - [ ] legitime-ascendants — Arts. 889-891: parents/ascendants' legitime when there are no descendants
 - [ ] free-portion-rules — computation of disposable free portion: total estate minus total legitime of all compulsory heirs
@@ -45,6 +45,7 @@
 - [ ] spec-review — self-review: can a developer with no Philippine law knowledge build the engine from this spec?
 
 ## Recently Analyzed
+- **legitime-with-illegitimate** (2026-02-23): Definitive computation reference for legitimate + illegitimate child concurrence. Two computation regimes: Testate (Art. 895 cap rule — fixed ½ to legitimate children, illegitimate shares from FP after spouse) vs Intestate (unit ratio method — 2:1 proportional split, no cap). Complete cap threshold formulas: T4 bites at m>2n, T5a at m>1, T5b at m>2(n-1). Key finding: spouse's presence makes cap trigger much sooner (n=1 with spouse → any m>1 triggers). Systematic testate vs intestate comparison shows cap can reduce IC shares by up to 90% in testate while intestate gives 67%+ more. Representation interaction: line-based counting for both L and IC representation. Unified engine function with rational arithmetic. 29 test cases covering uncapped, capped, boundary, ratio verification, and cross-regime comparisons.
 - **legitime-table** (2026-02-23): Complete legitime fraction table for all 15 testate scenarios (T1-T15). Identified two fundamental regimes: Regime A (descendants present — per-child derived shares with Art. 895 ¶3 cap rule) vs Regime B (ascendants present — flat statutory fractions, no cap needed) vs Regime C (only concurring heirs — flat fractions). Built master computation algorithm with pseudocode for all scenarios. Key findings: (1) Art. 892 creates a discontinuity at n=1 child (spouse=¼) vs n≥2 (spouse=1/2n); (2) Cap rule bites at m>1 for T5a (1 child+spouse), m>2(n-1) for T5b; (3) Regime B uses flat ¼ for illegitimate children (Art. 896) vs Regime A's per-child formula; (4) T9 is most constrained (FP=⅛); (5) Rational arithmetic required to avoid rounding errors. 34 test cases including cap rule boundary tests and ascendant distribution tests.
 - **legal-source-fetch** (2026-02-23): Fetched and cached 4 legal source files covering Civil Code Book III (succession arts. 774-1077), Family Code Title VI (filiation arts. 163-182), RA 8552 (adoption secs. 16-20), and comprehensive commentary with 11 testate scenarios, 15 intestate scenarios, and 7 worked examples.
 - **commentary-fetch** (2026-02-23): Compiled 8 complete test-vector-quality worked examples covering: testate simple, inofficious will, preterition, disinheritance with representation, adopted children, mixed succession, collation, and complex intestate with representation. Also confirmed complete 15-row legitime table. Saved to `input/legal-sources/worked-examples.md`.

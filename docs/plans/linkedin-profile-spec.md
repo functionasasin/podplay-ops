@@ -40,17 +40,13 @@ I build agent infrastructure that runs unattended. Also: running Mama Sita's at 
 Paste this exactly. ~1,730 characters. First 277 characters are the hook — they appear before "See more" on desktop (~300 char cutoff) and are tight enough for mobile (~140-200 char cutoff to still land the core idea).
 
 ```
-I build autonomous agent systems that run unattended in CI pipelines — then I fly to Dubai, Bangkok, Tokyo, Milan, and Paris to run export ops for Mama Sita's at international food trade shows. The architecture is always the same. The domains keep changing.
+I build autonomous agent systems that run unattended in CI pipelines, then I fly to Dubai, Bangkok, Tokyo, Milan, and Paris to run export ops for Mama Sita's at international food trade shows. The architecture is always the same. The domains keep changing.
 
-At PyMC Labs, I'm core engineer on Decision Orchestrator — a Platform-agnostic organizational OS where database-driven workflows route to Claude through a custom MCP tool server I built at the protocol level. At Nuts and Bolts AI, I built Cheerful: a full-stack influencer marketing platform running on Temporal.io durable workflows, React 19, and AI-personalized email drafting at scale. In parallel, I represent Mama Sita's at tier-1 trade exhibitions — Gulfood, THAIFEX, FOODEX, SIAL, Tuttofood — across 6 countries.
+At PyMC Labs, I'm core engineer on Decision Orchestrator, a platform-agnostic organizational OS where database-driven workflows route to Claude through a custom MCP tool server I built at the protocol level. At Nuts and Bolts AI, I built Cheerful: a full-stack influencer marketing platform running on Temporal.io durable workflows with AI-personalized email drafting at scale. In parallel, I represent Mama Sita's at tier-1 trade exhibitions (Gulfood, THAIFEX, FOODEX, SIAL, Tuttofood) across 6 countries.
 
-The pattern across everything I build is the same: detect the input, classify it, route to the right workflow, execute autonomously, persist the result. I've applied this to edge-cloud license plate recognition (IEEE TENCON 2022, co-author), game strategy AI (AlphaZero from scratch, MCTS + neural network value heads), and a personal knowledge graph managed by a Telegram bot that auto-commits entities to git.
+Right now I'm running ralph loops, autonomous CI agents that analyze reference material, generate specs, and build toward convergence in the background. One is building a video engine. Another built this profile. The loop runs without me. When the loop lets me, I snowboard and scuba dive.
 
-Some numbers: 1,000+ commits across two production AI platforms. 36K lines of Python in one codebase. Custom MCP server with scope-based credential gating. ~8 international trade shows across 6 countries. IEEE co-author, TENCON 2022.
-
-Right now I'm running ralph loops — autonomous CI agents that analyze reference material, generate specs, and build toward convergence every 30 minutes. One is building a video engine. Another built this profile. The loop runs without me. When the loop lets me, I snowboard and dive.
-
-If you build agent infrastructure, work in international trade, or think context matters more than fine-tuning — let's talk.
+If you build agent infrastructure, work in international trade, or think context and conversations are the interface of the future, let's talk.
 ```
 
 **Structural breakdown:**
@@ -81,15 +77,15 @@ Ordered most recent first. All entries fit within LinkedIn's 2,000-char descript
 **Description:**
 
 ```
-Representing Mama Sita's — one of the Philippines' most recognized food brands — at tier-1 international trade exhibitions across 6 countries. ~8 shows and counting: Gulfood (Dubai), THAIFEX (Bangkok), FOODEX (Japan), SIAL (Paris), Tuttofood (Milan), IFEX (Manila).
+Representing Mama Sita's, one of the Philippines' most recognized food brands, at tier-1 international trade exhibitions across 6 countries. ~8 shows and counting: Gulfood (Dubai), THAIFEX (Bangkok), FOODEX (Japan), SIAL (Paris), Tuttofood (Milan), IFEX (Manila).
 
-• End-to-end trade show operations across 6 countries: booth setup, product positioning, buyer engagement, and teardown — UAE, Thailand, Japan, Italy, France, Philippines
+• End-to-end trade show operations across 6 countries: booth setup, product positioning, buyer engagement, and teardown. UAE, Thailand, Japan, Italy, France, Philippines.
 
-• B2B meetings with distributors, importers, and retail buyers — representing the brand to new markets across Middle East, Southeast Asia, and Europe
+• B2B meetings with distributors, importers, and retail buyers. Representing the brand to new markets across Middle East, Southeast Asia, and Europe.
 
-• Competitive intelligence at each exhibition: scouting regional product trends, pricing models, distribution strategies, and emerging market opportunities
+• Competitive intelligence at each exhibition: scouting regional product trends, pricing models, distribution strategies, and emerging market opportunities.
 
-• Repeat presence at Gulfood (2x) and THAIFEX (2x) — established relationships and iterative market development across key regions
+• Repeat presence at Gulfood (2x) and THAIFEX (2x). Established relationships and iterative market development across key regions.
 ```
 
 **Why this leads:** Most disorienting entry. A reader who sees the AI headline then reads "Mama Sita's" and "Gulfood, THAIFEX, FOODEX, SIAL, Tuttofood" will stop and re-read the profile. The trade show names are verification bait — anyone in food/CPG instantly knows these are tier-1. Grittier and more grounded than a startup story.
