@@ -1,13 +1,13 @@
 # OpenClaw Bot — Fly.io Deployment
 # Always-on Telegram bot backed by the monorepo as persistent state
 
-FROM node:20-slim
+FROM node:22-slim
 
-# Install git (needed for monorepo sync) and openssh (for git push)
-RUN apt-get update && apt-get install -y git openssh-client && rm -rf /var/lib/apt/lists/*
+# Install git, openssh, and build tools (needed for native npm modules like @discordjs/opus)
+RUN apt-get update && apt-get install -y git openssh-client python3 make g++ && rm -rf /var/lib/apt/lists/*
 
-# Install OpenClaw
-RUN curl -fsSL https://get.openclaw.ai | bash
+# Install OpenClaw globally via npm (requires Node >= 22.12.0)
+RUN npm install -g openclaw && openclaw --version
 
 # Configure git for bot commits
 RUN git config --global user.name "monorepo-bot" && \
@@ -28,6 +28,6 @@ COPY skills/ /app/openclaw/skills/
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
-EXPOSE 8080
+EXPOSE 3000
 
 CMD ["/app/entrypoint.sh"]

@@ -8,27 +8,17 @@ primary_region = "sjc" # San Jose — adjust to your nearest region
 [build]
   dockerfile = "Dockerfile"
 
-# Single always-on machine (not auto-scaled — this is a persistent bot)
+# 2GB recommended by OpenClaw docs
 [[vm]]
-  size = "shared-cpu-1x"
-  memory = "512mb"
+  size = "shared-cpu-2x"
+  memory = "2048mb"
 
-# No HTTP service needed — the bot communicates via Telegram API polling
-# But expose a health check endpoint if OpenClaw provides one
 [http_service]
-  internal_port = 8080
+  internal_port = 3000
   force_https = true
   auto_stop_machines = false   # Keep running — bot must be always-on
   auto_start_machines = true
   min_machines_running = 1     # Never scale to zero
-
-[checks]
-  [checks.health]
-    type = "http"
-    port = 8080
-    path = "/health"
-    interval = "30s"
-    timeout = "5s"
 
 # Persistent volume for the monorepo clone
 # This survives machine restarts so we don't re-clone every time
@@ -40,4 +30,6 @@ primary_region = "sjc" # San Jose — adjust to your nearest region
 [env]
   OPENCLAW_WORKSPACE = "/app/monorepo"
   OPENCLAW_CONFIG = "/app/openclaw/gateway.yaml"
+  OPENCLAW_STATE_DIR = "/app/monorepo/.openclaw"
   NODE_ENV = "production"
+  NODE_OPTIONS = "--max-old-space-size=1536"
