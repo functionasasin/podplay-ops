@@ -1492,80 +1492,767 @@ Every heir receives a **self-contained plain-English explanation** of why they r
 4. Cites specific articles
 5. Notes any special events (cap rule, collation, preterition, etc.)
 
-### 10.2 Standard Narrative Template
+Each narrative is **self-contained** — a reader needs no other document to understand why the heir received that amount.
+
+### 10.2 Data Model
 
 ```
-Header (always first):
-"{Name} ({category_label}) receives {total_amount}."
-[If collation: "(plus {donation} previously received as a donation, for a total of {gross_entitlement})"]
+struct HeirNarrative {
+    heir_id: HeirId,
+    heir_name: String,
+    heir_category_label: String,        // e.g., "illegitimate child", "surviving spouse"
+    text: String,                       // The complete narrative paragraph
+    summary_line: String,               // Bold one-liner: "{Name} ({label}) receives ₱{amount}"
+    sections: List<NarrativeSection>,   // Ordered blocks composing the full text
+}
 
-Succession type (always):
-"The decedent died {intestate/testate/...}."
+struct NarrativeSection {
+    section_type: NarrativeSectionType,
+    text: String,
+    legal_basis: List<String>,          // Article citations used in this section
+}
 
-Category explanation (always for compulsory heirs):
-"As a {category} (Art. {article}), {name} is a compulsory heir."
-
-Legitime computation (testate) OR intestate share explanation:
-"Under Art. {article}, the collective legitime of... = {fraction} × {estate} = {amount}.
- Divided among {n} lines: {amount} per line."
-
-Cap rule (if Art. 895 ¶3 applied):
-"However, Art. 895 ¶3 provides... The uncapped amount (₱{x}) exceeds... Capped to ₱{y}."
-
-Free portion (if applicable):
-"{Name} also receives ₱{amount} from the free portion as directed by the will."
-
-Special events (as applicable):
-- Representation: "...inherits by right of representation (Art. 970) in place of {name}, who {trigger}."
-- Disinheritance: "...was validly disinherited under Art. 919(6)..." or "disinheritance invalid (Art. 918)..."
-- Preterition: "...was completely omitted. Under Art. 854, the institution of heirs is annulled..."
-- Inofficiousness: "...reduced from ₱{x} to ₱{y} under Art. 911..."
-- Collation: "Note: ₱{x} donation previously received, imputed under Art. 1073..."
+enum NarrativeSectionType {
+    HEADER,           // "{Name} ({label}) receives ₱{amount}."
+    SUCCESSION_TYPE,  // "The decedent died {testate|intestate}..."
+    CATEGORY,         // "As a {category} (Art. X)..."
+    LEGITIME,         // "...entitled to a legitime of ₱X..."
+    CAP_RULE,         // "However, Art. 895 ¶3 cap was applied..."
+    FREE_PORTION,     // "...also receives ₱X from the free portion..."
+    INTESTATE_SHARE,  // "Under Art. X, {heir}'s intestate share is..."
+    COLLATION,        // "Note: ₱X donation imputed against share..."
+    REPRESENTATION,   // "...inherits by right of representation..."
+    DISINHERITANCE,   // "...was validly disinherited..." or "...disinheritance invalid..."
+    PRETERITION,      // "...was completely omitted (Art. 854)..."
+    INOFFICIOUS,      // "...reduced from ₱X to ₱Y (Art. 911)..."
+    UNDERPROVISION,   // "...recovers ₱X under Art. 855..."
+    CONDITION,        // "...condition stripped from legitime (Art. 872)..."
+    ACCRETION,        // "...receives additional ₱X by accretion..."
+    SUBSTITUTION,     // "...takes {original}'s place as substitute (Art. 859)..."
+    RESERVATION,      // "Note: property subject to reserva troncal (Art. 891)..."
+    ARTICULO_MORTIS,  // "Note: articulo mortis rule applied (Art. 900 ¶2)..."
+    COMPARISON,       // Optional: "Under intestate, {heir} would have received ₱X"
+}
 ```
 
-### 10.3 Category Labels
+### 10.3 Narrative Composition Order
 
-| effective_category | raw relationship | Label |
-|-------------------|-----------------|-------|
+Every narrative assembles sections in this fixed order. Sections are included only when applicable.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ HEADER (always)                                              │
+│ "{Name} ({category_label}) receives ₱{total}."              │
+├─────────────────────────────────────────────────────────────┤
+│ SUCCESSION_TYPE (always)                                     │
+│ "The decedent died {testate/intestate/partially testate}."  │
+├─────────────────────────────────────────────────────────────┤
+│ CATEGORY (always for compulsory heirs)                       │
+│ "As a {category} (Art. X), {Name} is a compulsory heir."   │
+├─────────────────────────────────────────────────────────────┤
+│ LEGITIME (testate, compulsory heir)     OR                   │
+│ INTESTATE_SHARE (intestate succession)                       │
+├─────────────────────────────────────────────────────────────┤
+│ CAP_RULE (if Art. 895 ¶3 applied to this IC)                │
+├─────────────────────────────────────────────────────────────┤
+│ FREE_PORTION (if heir receives from FP beyond legitime)      │
+├─────────────────────────────────────────────────────────────┤
+│ SPECIAL EVENTS (0 or more, in this order):                   │
+│   REPRESENTATION → DISINHERITANCE → PRETERITION →           │
+│   INOFFICIOUS → UNDERPROVISION → CONDITION →                 │
+│   COLLATION → ACCRETION → SUBSTITUTION →                    │
+│   ARTICULO_MORTIS → RESERVATION                             │
+├─────────────────────────────────────────────────────────────┤
+│ COMPARISON (optional, controlled by NarrativeConfig)         │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 10.4 HEADER Templates
+
+**Always present. First sentence of every narrative.**
+
+#### Standard Header
+```
+**{name} ({category_label})** receives **₱{total}**.
+```
+Example:
+> **Maria Cruz (legitimate child)** receives **₱5,000,000**.
+
+#### Collation Header (heir received a prior donation)
+```
+**{name} ({category_label})** receives **₱{net_from_estate} from the estate** (plus ₱{donations_imputed} previously received as a donation, for a total of ₱{gross_entitlement}).
+```
+Example:
+> **Pilar Navarro (legitimate child)** receives **₱3,000,000 from the estate** (plus ₱2,000,000 previously received as a donation, for a total of ₱5,000,000).
+
+#### Zero-Share Header (validly disinherited, no representatives)
+```
+**{name} ({category_label}, disinherited)** receives **₱0**.
+```
+Example:
+> **Karen Villanueva (legitimate child, disinherited)** receives **₱0**.
+
+#### Donation Return Header (inofficious donation — must return money)
+```
+**{name} ({category_label})** must **return ₱{return_amount} to the estate**.
+```
+Example:
+> **Pedro Garcia (legitimate child)** must **return ₱500,000 to the estate**.
+
+#### Reduced Voluntary Heir Header
+```
+**{name} ({designation})** receives **₱{reduced_amount}** (reduced from ₱{original_amount}).
+```
+Example:
+> **Friend H (legatee, voluntary heir)** receives **₱2,500,000** (reduced from ₱6,000,000).
+
+### 10.5 SUCCESSION_TYPE Templates
+
+**Always present. Sets the legal regime.**
+
+#### Intestate
+```
+The decedent died intestate (without a valid will). The estate distributes under the rules of intestate succession (Arts. 960-1014 of the Civil Code).
+```
+
+#### Testate
+```
+The decedent left a valid will disposing of the estate. The distribution follows the testamentary dispositions, subject to the compulsory heirs' legitimes (Arts. 842-856 of the Civil Code).
+```
+
+#### Mixed (undisposed free portion)
+```
+The decedent left a will that disposes of only part of the estate. The disposed portion follows the will; the undisposed portion distributes under intestate succession (Art. 960(2) of the Civil Code).
+```
+
+#### Preterition-Converted (testate → intestate)
+```
+Although the decedent left a will, {preterited_heir_name} — a compulsory heir in the direct line — was completely omitted. Under Art. 854 of the Civil Code, this preterition annuls the institution of heirs. {If legacies survive: "Legacies and devises survive insofar as they are not inofficious."} The estate distributes under intestate succession rules.
+```
+
+### 10.6 CATEGORY Templates
+
+**Always present for compulsory heirs. Establishes legal standing.**
+
+#### Legitimate Child (biological)
+```
+As a legitimate child (Art. 887(1) of the Civil Code), {name} is a compulsory heir entitled to an equal share of the collective legitime.
+```
+
+#### Adopted Child
+```
+As an adopted child (Art. 887(1) of the Civil Code; RA 8552 Sec. 17: adopted children have the same successional rights as legitimate children), {name} is a compulsory heir entitled to an equal share of the collective legitime.
+```
+
+#### Legitimated Child
+```
+As a legitimated child (Art. 887(1) of the Civil Code; Art. 179, Family Code: legitimated children have the same rights as legitimate children), {name} is a compulsory heir entitled to an equal share of the collective legitime.
+```
+
+#### Illegitimate Child
+```
+As an illegitimate child (Art. 176, Family Code), {name} is a compulsory heir. {Name}'s filiation is established by {filiation_description(proof)} (Art. {filiation_article}, Family Code).
+```
+Example:
+> As an illegitimate child (Art. 176, Family Code), Carlo is a compulsory heir. Carlo's filiation is established by open and continuous possession of the status of an illegitimate child (Art. 172(3), Family Code).
+
+#### Surviving Spouse
+```
+As the surviving spouse (Art. 887(3) of the Civil Code), {name} is a compulsory heir.
+```
+With qualifiers when applicable:
+- Articulo mortis: append " Note: the marriage was contracted in articulo mortis (Art. 900 ¶2)."
+- Legal separation (guilty spouse): "Note: {name} was legally separated from the decedent. Under Art. 1002, the guilty spouse forfeits succession rights." (Only if this heir is the GUILTY spouse.)
+
+#### Legitimate Ascendant
+```
+As a legitimate {ascendant_label} of the decedent (Art. 887(2) of the Civil Code), {name} is a compulsory heir. {Name} inherits because the decedent left no surviving legitimate children or descendants.
+```
+Where `{ascendant_label}` is "parent" / "grandfather" / "grandmother" / "great-grandparent" per degree.
+
+#### Voluntary Heir (testate only)
+```
+{Name} is a voluntary heir, instituted in the testator's will to receive {share_description} of the estate.
+```
+
+#### Legatee / Devisee
+```
+The testator's will provides a {legacy_or_devise} of {description} to {name}.
+```
+Where `{legacy_or_devise}` is "legacy" (personal property) or "devise" (real property).
+
+#### Collateral / State (intestate only)
+```
+{Name} is a {collateral_label} of the decedent who inherits under intestate succession (Art. {article}) in the absence of any surviving compulsory heir.
+```
+State (escheat): no CATEGORY section — the INTESTATE_SHARE section (I15 template below) serves as the sole explanation.
+
+### 10.7 LEGITIME Templates (Testate — Compulsory Heirs)
+
+**Present only for compulsory heirs in testate succession (not intestate).**
+
+#### Legitimate Child (Art. 888)
+```
+Under Art. 888 of the Civil Code, the collective legitime of the legitimate children is one-half (½) of the estate. The estate is ₱{estate_base}{if_collated: " (adjusted to ₱{e_adj} under Art. 908 after adding back ₱{collation_total} in collatable donations)"}. The collective legitime is ₱{lc_collective} (½ × ₱{estate_base}), divided equally among {n} legitimate child line{s}, giving each line ₱{per_line}.
+```
+Example:
+> Under Art. 888 of the Civil Code, the collective legitime of the legitimate children is one-half (½) of the estate. The estate is ₱10,000,000. The collective legitime is ₱5,000,000 (½ × ₱10,000,000), divided equally among 2 legitimate child lines, giving each line ₱2,500,000.
+
+#### Illegitimate Child — Uncapped (Art. 895)
+```
+Under Art. 895 of the Civil Code, an illegitimate child's legitime is one-half (½) of that of a legitimate child. Each legitimate child's legitime is ₱{per_lc}, so {name}'s legitime is ₱{per_lc} × ½ = ₱{ic_legitime}. This share is taken from the free portion (Art. 895 ¶3).
+```
+
+#### Illegitimate Child — Capped (Art. 895 ¶3)
+```
+Under Art. 895 of the Civil Code, an illegitimate child's computed legitime would be ₱{uncapped} (½ × ₱{per_lc}). However, Art. 895 ¶3 provides that the total legitime of all illegitimate children cannot exceed the free portion of the estate. The free portion is ₱{fp_gross} (½ of ₱{estate}). The surviving spouse's legitime of ₱{spouse_share} ({spouse_article}) is satisfied first from this free portion, leaving ₱{fp_remaining}. This remaining amount is divided equally among {m} illegitimate children, giving {name} ₱{capped_amount}.
+```
+Example:
+> Under Art. 895 of the Civil Code, an illegitimate child's computed legitime would be ₱5,000,000 (½ × ₱10,000,000). However, Art. 895 ¶3 provides that the total legitime of all illegitimate children cannot exceed the free portion of the estate. The free portion is ₱10,000,000 (½ of ₱20,000,000). The surviving spouse's legitime of ₱5,000,000 (Art. 892) is satisfied first from this free portion, leaving ₱5,000,000. This remaining amount is divided equally among 3 illegitimate children, giving Carlo ₱1,666,666.67.
+
+#### Surviving Spouse — With Legitimate Children (Regime A, Art. 892)
+```
+Under Art. 892 of the Civil Code, the surviving spouse's legitime when concurring with legitimate children is {fraction_description}. {If n=1: "With one legitimate child, the spouse receives one-fourth (¼) of the estate = ₱{amount}." | If n≥2: "With {n} legitimate children, the spouse receives a share equal to each child's legitime = ₱{amount} (same as one legitimate child's share: ½E ÷ {n})."}
+```
+
+#### Surviving Spouse — With Ascendants (Regime B, Art. 893)
+```
+Under Art. 893 of the Civil Code, when the decedent leaves legitimate ascendants and a surviving spouse, the spouse's legitime is one-fourth (¼) of the estate = ₱{amount}.
+```
+
+#### Surviving Spouse — With Illegitimate Children Only (Regime C, Art. 900)
+```
+Under Art. 900 of the Civil Code, when the surviving spouse concurs only with illegitimate children, the spouse's legitime is one-third (⅓) of the estate = ₱{amount}.
+```
+
+#### Surviving Spouse — Sole Compulsory Heir (Art. 900)
+```
+Under Art. 900 of the Civil Code, when the surviving spouse is the sole compulsory heir, the spouse's legitime is one-half (½) of the estate = ₱{amount}.
+```
+
+#### Surviving Spouse — With Ascendants + Illegitimate Children (Art. 899)
+```
+Under Art. 899 of the Civil Code, when legitimate ascendants, illegitimate children, and the surviving spouse all concur, the spouse receives one-eighth (⅛) of the estate = ₱{amount}.
+```
+
+#### Legitimate Ascendant (Arts. 889-890)
+```
+Under Art. 889 of the Civil Code, in the absence of legitimate descendants, the legitimate ascendants' collective legitime is one-half (½) of the estate = ₱{collective}.
+```
+Division sub-templates (append as applicable):
+- Both parents: "Both parents share equally, receiving ₱{per_parent} each."
+- One surviving parent: "As the sole surviving parent, {name} receives the entire ₱{collective}."
+- Higher ascendants: "Under Art. 890, nearer ascendants exclude more remote ones. At the {degree} degree, the ascendant legitime is divided one-half (½) paternal / one-half (½) maternal, with each line's share split equally among ascendants of the same degree."
+
+### 10.8 INTESTATE_SHARE Templates
+
+**Present only in intestate succession, replaces LEGITIME.**
+
+#### Descendants Only — Equal Shares (I1)
+```
+Under Art. 980 of the Civil Code, children of the deceased inherit in their own right, dividing the inheritance in equal shares. With {n} legitimate child line{s}, the ₱{estate} estate is divided into {n} equal shares of ₱{per_share} each.
+```
+
+#### Descendants + Spouse — Equal Shares (I2)
+```
+Under Art. 996 of the Civil Code, the surviving spouse is entitled to a share equal to that of each legitimate child. With {n} legitimate children and the surviving spouse, there are {n+1} equal shares. The ₱{estate} estate is divided into {n+1} shares of ₱{per_share} each.
+```
+
+#### Descendants + Illegitimate Children — 2:1 Ratio (I3, I4)
+```
+Under Arts. 983 and 895 of the Civil Code, when illegitimate children concur with legitimate children, each illegitimate child receives one-half (½) the share of each legitimate child. {If spouse: "The surviving spouse receives a share equal to one legitimate child (Art. 999)."} Using the proportional unit method: each legitimate child = 2 units{if_spouse: ", surviving spouse = 2 units"}, each illegitimate child = 1 unit. Total units = {total}. Per unit = ₱{estate} ÷ {total} = ₱{per_unit}. {Name} receives {units} unit(s) = ₱{amount}. Note: in intestate succession, the Art. 895 ¶3 cap rule does not apply.
+```
+Example:
+> Under Arts. 983 and 895 of the Civil Code, when illegitimate children concur with legitimate children, each illegitimate child receives one-half (½) the share of each legitimate child. Using the proportional unit method: each legitimate child = 2 units, each illegitimate child = 1 unit. Total units = 5. Per unit = ₱10,000,000 ÷ 5 = ₱2,000,000. Gloria receives 1 unit = ₱2,000,000. Note: in intestate succession, the Art. 895 ¶3 cap rule does not apply.
+
+#### Ascendants Only (I5)
+```
+Under Art. 985 of the Civil Code, in the absence of descendants, the legitimate ascendants inherit the whole estate. {Ascendant division per Arts. 986-987 and Art. 890.}
+```
+
+#### Ascendants + Spouse (I6)
+```
+Under Art. 997 of the Civil Code, when the surviving spouse concurs with legitimate ascendants, the spouse receives one-half (½) of the estate = ₱{spouse_amount}, and the ascendants receive the other half = ₱{asc_amount}. {Ascendant division per Art. 890.}
+```
+
+#### Ascendants + Illegitimate Children (I7)
+```
+Under Art. 991 of the Civil Code, illegitimate children and legitimate parents or ascendants concurring split the estate equally: one-half (½) to the illegitimate children and one-half (½) to the ascendants.
+```
+
+#### Ascendants + Illegitimate Children + Spouse (I8)
+```
+Under Art. 998 of the Civil Code, when legitimate ascendants, illegitimate children, and the surviving spouse all survive, the ascendants receive one-half (½) = ₱{asc}, the illegitimate children one-fourth (¼) = ₱{ic}, and the surviving spouse one-fourth (¼) = ₱{sp}.
+```
+
+#### Illegitimate Children Only (I9)
+```
+Under Art. 988 of the Civil Code, illegitimate children inherit the entire estate when no legitimate descendants or ascendants survive. The estate of ₱{estate} is divided equally among {m} illegitimate children at ₱{per_ic} each.
+```
+
+#### Illegitimate Children + Spouse (I10)
+```
+Under Art. 1000 of the Civil Code, when illegitimate children concur with the surviving spouse, each receives one-half (½) of the estate. The illegitimate children share ₱{ic_total} equally at ₱{per_ic} each; the surviving spouse receives ₱{spouse_amount}.
+```
+
+#### Surviving Spouse Alone (I11)
+```
+Under Art. 995 of the Civil Code, when the surviving spouse is the sole heir (no descendants, ascendants, or illegitimate children), the spouse inherits the entire estate of ₱{estate}.
+```
+
+#### Spouse + Siblings (I12)
+```
+Under Art. 1001 of the Civil Code, when brothers and sisters (or their children) survive with the surviving spouse and no descendants, ascendants, or illegitimate children exist, the spouse receives one-half (½) of the estate (₱{sp_amount}) and the siblings share the other half (₱{sib_total}). {If full/half blood mix: "Under Art. 1006, full-blood siblings receive double the share of half-blood siblings."}
+```
+
+#### Collaterals — Siblings (I13)
+```
+Under Art. 1003 of the Civil Code, in the absence of descendants, ascendants, illegitimate children, and a surviving spouse, brothers and sisters inherit the entire estate. {If full/half blood mix: "Under Art. 1006, full-blood siblings receive double the share of half-blood siblings. Using the unit method: full-blood = 2 units, half-blood = 1 unit. Total units = {total}. Per unit = ₱{per_unit}."} {If nephews per stirpes: "Nephews and nieces inherit by representation under Art. 972, each dividing their parent's share equally."}
+```
+
+#### Collaterals — Other (I14)
+```
+Under Art. 1009 of the Civil Code, other collateral relatives within the fifth degree inherit when no nearer heirs exist. {Name} is a {collateral_degree_label} of the decedent and inherits ₱{amount}.
+```
+
+#### Escheat to State (I15)
+```
+The decedent died intestate with no surviving heirs within the degrees prescribed by law. Under Art. 1011 of the Civil Code, the State inherits the entire estate. Per Art. 1013, personal property is assigned to the municipality or city of the decedent's last residence, and real estate to the municipalities or cities where situated, for the benefit of public schools and charitable institutions.
+```
+
+### 10.9 CAP_RULE Template
+
+**Present only when Art. 895 ¶3 cap rule reduced illegitimate children's shares.**
+
+```
+Note: The Art. 895 ¶3 cap rule was applied. The uncapped total of all illegitimate children's legitimes (₱{uncapped_total}) exceeds the remaining free portion (₱{fp_remaining}) after the surviving spouse's share of ₱{spouse_amount} was fully satisfied first. Each illegitimate child's share is therefore reduced from ₱{uncapped_per_ic} to ₱{capped_per_ic}.
+```
+
+### 10.10 FREE_PORTION Templates
+
+**Present when heir receives amounts from the free portion.**
+
+#### Voluntary Heir / Legatee
+```
+{Name} receives ₱{fp_amount} from the free portion, as directed by the testator's will. The free portion (₱{fp_total}) is the remaining estate after all compulsory heirs' legitimes (totaling ₱{total_legitime}) are satisfied. The testator may freely dispose of the free portion under Art. 842 of the Civil Code.
+```
+
+#### Compulsory Heir Receiving Above Legitime
+```
+In addition to the legitime of ₱{legitime_amount}, {name} receives ₱{fp_excess} from the free portion, as the testator's will grants {name} more than the minimum legitime. The excess comes from the testator's disposable free portion (Art. 842 of the Civil Code).
+```
+
+#### Mixed Succession — Undisposed FP
+```
+The free portion of ₱{fp} was not disposed of in the will. Under Art. 960(2) of the Civil Code, undisposed property passes under intestate succession. {Name}'s intestate share of the free portion is ₱{amount}.
+```
+
+### 10.11 REPRESENTATION Template
+
+**Present when heir inherits by right of representation.**
+
+```
+{Name} inherits by right of representation (Art. 970 of the Civil Code) in place of {represented_name}, who {trigger_description}. Under Art. 974, {represented_name}'s line receives ₱{line_share}, which is divided equally among {count} representative(s) at ₱{per_rep} each.
+```
+Where `{trigger_description}` maps:
+- PREDECEASE → "predeceased the decedent"
+- DISINHERITANCE → "was validly disinherited (Art. 923)"
+- INCAPACITY → "was declared incapable of succeeding (Art. 1032)"
+- UNWORTHINESS → "was declared unworthy to succeed (Art. 1032)"
+
+Additional note for disinheritance representation:
+```
+Note: {represented_name} has no right of usufruct or administration over {name}'s inheritance (Art. 923 ¶2).
+```
+
+Example:
+> Luis inherits by right of representation (Art. 970 of the Civil Code) in place of Karen, who was validly disinherited (Art. 923). Under Art. 974, Karen's line receives ₱2,666,666.67, which is divided equally among 2 representatives at ₱1,333,333.33 each. Note: Karen has no right of usufruct or administration over Luis's inheritance (Art. 923 ¶2).
+
+### 10.12 DISINHERITANCE Templates
+
+**Present for the disinherited heir (₱0 share) and for their representatives.**
+
+#### Valid Disinheritance — Heir Receives ₱0
+```
+{Name} is validly disinherited in the testator's will. The disinheritance is based on Art. {cause_article} of the Civil Code: {cause_description}. Under Art. 915, a compulsory heir may be deprived of their legitime for causes expressly stated by law. {If has_representatives: "{Name}'s descendants ({rep_names}) inherit by representation under Art. 923."} {If no_representatives: "{Name}'s share is redistributed among the remaining heirs."}
+```
+
+#### Invalid Disinheritance — Heir Reinstated (Art. 918)
+```
+The testator's will purported to disinherit {name}. However, the disinheritance is invalid under Art. 918 of the Civil Code because {invalidity_reason}. {Name} is reinstated as a compulsory heir and receives the full legitime of ₱{amount}.
+```
+Where `{invalidity_reason}` maps:
+- NO_CAUSE → "the will does not specify a cause (Art. 916 requires a specified legal cause)"
+- WRONG_CATEGORY → "the stated cause ({cause}) is not among those enumerated in Art. {article} for {heir_category_description}"
+- NOT_PROVEN → "the stated cause was not proven (Art. 917 requires proof or acknowledgment)"
+- RECONCILED → "the offender and testator subsequently reconciled, voiding the disinheritance under Art. 922"
+
+### 10.13 PRETERITION Templates
+
+**Present when Art. 854 applies (total omission of a direct-line compulsory heir).**
+
+#### For the Preterited Heir
+```
+{Name}, a compulsory heir in the direct line, was completely omitted from the testator's will — {name} was neither instituted as an heir, nor given any legacy, devise, or other testamentary provision. Under Art. 854 of the Civil Code, the preterition (total omission) of a compulsory heir in the direct line annuls the institution of heirs. {If legacies_survive: "The testator's legacies and devises survive insofar as they do not impair the compulsory heirs' legitimes (Art. 854)."} {If no_legacies: "Since the will contained no separate legacies or devises, the entire estate distributes under intestate succession rules."} Under Art. {intestate_article}, {intestate_distribution_explanation}.
+```
+
+#### For Other Heirs Affected by Preterition
+```
+Because {preterited_name} was preterited under Art. 854 of the Civil Code, the testator's institutions were annulled. The estate distributes under intestate succession, where {name}'s share is ₱{amount} under Art. {article}.
+```
+
+#### Preterition Through Representation (Art. 854 ¶2)
+```
+{Predeceased_name}, a compulsory heir in the direct line, predeceased the testator and was also omitted from the will. Under Art. 854 ¶2, the institution would ordinarily remain effectual. However, {predeceased_name}'s descendants ({rep_names}) also survive and were completely omitted. Preterition applies through representation, annulling the institution.
+```
+
+#### Spouse Omission — NOT Preterition (Art. 855)
+```
+Although {name} was not mentioned in the testator's will, this does not constitute preterition under Art. 854. Art. 854 applies only to compulsory heirs in the direct line (children, descendants, parents, ascendants). The surviving spouse, while a compulsory heir under Art. 887(3), is not in the direct line. {Name}'s omission is treated as an underprovision, and the legitime of ₱{amount} is recovered under Art. 855.
+```
+
+### 10.14 INOFFICIOUS Reduction Templates (Art. 911)
+
+**Present for voluntary heirs / legatees / devisees whose shares were reduced.**
+
+```
+The testator's will directed ₱{original} to {name}. However, the total testamentary dispositions to voluntary heirs (₱{total_voluntary}) exceed the free portion (₱{fp_disposable}), making this disposition inofficious under Art. 911 of the Civil Code. {Reduction_detail}. {Name} receives ₱{after_reduction}.
+```
+Where `{Reduction_detail}` depends on reduction phase:
+- Phase 1a (non-preferred, pro rata): "As a non-preferred disposition, it is reduced pro rata with other non-preferred dispositions."
+- Phase 1b (preferred): "Although designated as a preferred disposition, the non-preferred reductions were insufficient. This preferred disposition is reduced by ₱{reduction}."
+- Phase 2 (voluntary institutions): "The excess is charged against voluntary institutions pro rata."
+- Phase 3 (donations): "Inter vivos donations are reduced in reverse chronological order."
+
+#### Art. 912 — Indivisible Realty
+```
+The devise of {property_description} (valued at ₱{value}) to {devisee} must be reduced by ₱{reduction} to protect the compulsory heirs' legitime. Under Art. 912 of the Civil Code, since the reduction {comparison} half of the property's value: {outcome}.
+```
+Where `{outcome}`:
+- reduction < ½ value → "{Devisee} retains the property and must reimburse the compulsory heirs ₱{cash} in cash."
+- reduction ≥ ½ value → "The compulsory heirs receive the property and must reimburse {devisee} ₱{cash} in cash."
+
+### 10.15 UNDERPROVISION Recovery Template (Art. 855)
+
+**Present when a compulsory heir receives less than their legitime from the will.**
+
+```
+{Name} is entitled to a legitime of ₱{legitime} under Art. {article} of the Civil Code. The testator's will provided only ₱{will_provision}, leaving a deficit of ₱{deficit}. Under Art. 855 of the Civil Code, this deficit is recovered: {recovery_description}.
+```
+Where `{recovery_description}` follows the 3-source waterfall (include only applicable sources):
+1. "₱{from_undisposed} from the undisposed portion of the estate."
+2. "₱{from_compulsory} pro rata from other compulsory heirs' shares in excess of their own legitimes."
+3. "₱{from_voluntary} pro rata from the voluntary heirs' shares."
+
+### 10.16 COLLATION Templates (Arts. 1061-1077)
+
+**Present when inter vivos donations affect the heir's distribution.**
+
+#### Basic — Donation Within Share
+```
+Note: {Name} previously received ₱{donation_value} as an inter vivos donation during the decedent's lifetime. Under Art. 1061 of the Civil Code, this donation must be collated (fictitiously added back) to compute each heir's share. The collation-adjusted estate is ₱{e_adj} (Art. 908). {Name}'s {share_label} is ₱{gross_entitlement}. Under Art. {imputation_article}, the donation is charged against this share, leaving ₱{net_from_estate} to be received from the actual estate.
+```
+Where `{imputation_article}` is Art. 909 (legitimate children) or Art. 910 (illegitimate children).
+
+#### Exceeds Share — No Return
+```
+Note: {Name} previously received ₱{donation_value} as a donation, which exceeds {name}'s share of ₱{gross_entitlement}. Under Art. 909 of the Civil Code, the excess of ₱{excess} is charged to the free portion. {Name} does not return any amount but receives nothing further from the estate.
+```
+
+#### Inofficious — Must Return
+```
+Note: {Name}'s prior donation of ₱{donation_value} exceeds both {name}'s share (₱{gross_entitlement}) and the available free portion. Under Arts. 909 and 911, the donation is inofficious (impairs co-heirs' legitimes). {Name} must return ₱{return_amount} to the estate.
+```
+
+#### Representation Collation (Art. 1064)
+```
+Note: Under Art. 1064 of the Civil Code, grandchildren inheriting by representation must collate donations their parent ({parent_name}) would have been obliged to bring. {Parent_name} received ₱{parent_donation} during the decedent's lifetime. After collation, {name}'s line receives ₱{net_line_share}, divided among {count} grandchildren at ₱{per_gc} each.
+```
+
+#### Donor-Exempt (Art. 1062)
+```
+Note: The decedent expressly exempted {name}'s donation of ₱{donation_value} from collation under Art. 1062 of the Civil Code. This donation is NOT deducted from {name}'s share. {If inofficious: "However, the donation is still subject to reduction under Art. 911 insofar as it impairs co-heirs' legitimes."}
+```
+
+### 10.17 CONDITION Stripping Template (Art. 872)
+
+**Present when a will imposes a condition on a compulsory heir's legitime.**
+
+```
+The testator's will imposed a condition on {name}'s inheritance: "{condition_description}". Under Art. 872 of the Civil Code, the testator cannot impose any charge, condition, or substitution upon the legitime. The condition is deemed not imposed with respect to {name}'s legitime of ₱{legitime}. {If fp_excess: "The condition applies only to the ₱{fp_excess} received from the free portion."}
+```
+
+### 10.18 ACCRETION Templates
+
+**Present when heir receives additional share from a vacant co-heir's portion.**
+
+#### Art. 1021 — Vacant Legitime (Recomputation, Not True Accretion)
+```
+{Vacant_heir_name} {vacancy_cause_description}. Since {vacant_heir_name} {representation_explanation}, {vacant_heir_name}'s share of the legitime became vacant. Under Art. 1021 of the Civil Code, when a compulsory heir's legitime is repudiated, the remaining compulsory heirs succeed to it in their own right, not by accretion. The inheritance was recomputed as if only {remaining_count} {heir_description} survived, resulting in {name}'s share of ₱{new_amount}.
+```
+
+#### Art. 1015/1019 — Free Portion Accretion (Proportional)
+```
+{Vacant_heir_name}'s share of the free portion (₱{vacant_amount}) became vacant because {vacancy_cause}. Under Art. 1015 of the Civil Code, {vacant_heir_name}'s share accretes to the remaining co-heirs. Per Art. 1019, this accretion is proportional to each co-heir's existing share. {Name} receives an additional ₱{accretion_amount}.
+```
+
+#### Art. 1018 — Intestate Accretion
+```
+{Vacant_heir_name} {vacancy_cause_description}. Under Art. 1018 of the Civil Code, in intestate succession, the share of a person who repudiates the inheritance accretes to the co-heirs. {Name} receives an additional ₱{accretion_amount}, bringing the total to ₱{new_total}.
+```
+
+### 10.19 SUBSTITUTION Template
+
+**Present when heir takes the place of an original heir via testamentary substitution.**
+
+```
+{Name} takes the place of {original_name} as a substitute designated in the testator's will. {Original_name} {trigger_description}. Under Art. 859 of the Civil Code, {name} inherits {original_name}'s share of ₱{amount}. {If obligations_transfer: "Under Art. 862, the charges and conditions imposed on {original_name} apply equally to {name}."}
+```
+
+### 10.20 RESERVATION Template (Art. 891)
+
+**Warning annotation — appears at end of narrative for affected ascendants.**
+
+```
+WARNING — Reserva Troncal: The property "{property_description}" inherited by {ascendant_name} is subject to reserva troncal under Art. 891 of the Civil Code. This property was originally acquired by the decedent through {acquisition_method} from {source_person} ({relationship}). {Ascendant_name} is obligated to reserve this property for qualifying relatives within the third degree of the decedent belonging to the {paternal_or_maternal} line. This obligation does not affect the amount inherited but creates a future encumbrance on the specific property.
+```
+
+### 10.21 ARTICULO_MORTIS Template (Art. 900 ¶2)
+
+**Present only when the articulo mortis rule applies to the surviving spouse.**
+
+```
+Note: Art. 900 ¶2 of the Civil Code applies. The decedent's marriage was contracted in articulo mortis (at the point of death), the decedent died within three months of the marriage, and the illness was known at the time of the ceremony. The surviving spouse's legitime is reduced from one-half (½) to one-third (⅓) of the estate: from ₱{normal_amount} to ₱{reduced_amount}.
+```
+
+### 10.22 COMPARISON Template (Optional)
+
+**Optionally appended when `NarrativeConfig.include_comparison = true`.**
+
+```
+Note: Under {alternative} succession with the same family composition, {name} would have received ₱{alt_amount} — {comparison_description}.
+```
+Examples:
+> Note: Under intestate succession with the same family composition, Carlo would have received ₱2,857,142.86 — 71% more than the testate share of ₱1,666,666.67, because the Art. 895 ¶3 cap rule does not apply in intestate succession.
+
+> Note: Under testate succession, Ana would have received only ₱2,500,000 as her legitime. The intestate distribution of ₱3,000,000 is more favorable.
+
+### 10.23 Narrative Generation Algorithm
+
+```
+function generate_narrative(
+    heir: Heir,
+    share: InheritanceShare,
+    succession: SuccessionResult,
+    legitime_result: LegitimeResult,
+    validation: ValidationResult,
+    collation: CollationResult,
+    vacancy: VacancyResolutionResult,
+    log: ComputationLog,
+    config: NarrativeConfig
+) -> HeirNarrative {
+
+    sections = []
+
+    // ── HEADER ──
+    if share.disposition_type == INOFFICIOUS_DONATION:
+        sections.append(return_header(heir, share))          // Section 10.4 Donation Return
+    elif share.total == 0 and heir.is_disinherited:
+        sections.append(zero_header(heir))                   // Section 10.4 Zero-Share
+    elif share.donations_imputed > 0:
+        sections.append(collation_header(heir, share))       // Section 10.4 Collation
+    elif share.disposition_type in [VOLUNTARY, LEGACY, DEVISE] and share.original_amount != share.total:
+        sections.append(reduced_voluntary_header(heir, share)) // Section 10.4 Reduced Voluntary
+    else:
+        sections.append(standard_header(heir, share))        // Section 10.4 Standard
+
+    // ── SUCCESSION TYPE ──
+    if validation.preterition_applied:
+        sections.append(preterition_converted_succession(validation)) // Section 10.5
+    elif succession.succession_type == INTESTATE:
+        sections.append(intestate_succession_section())
+    elif succession.succession_type == TESTATE:
+        sections.append(testate_succession_section())
+    elif succession.succession_type == MIXED:
+        sections.append(mixed_succession_section())
+
+    // ── CATEGORY ──
+    if heir.is_compulsory:
+        sections.append(category_section(heir))              // Section 10.6
+    elif share.disposition_type in [LEGACY, DEVISE]:
+        sections.append(legatee_section(heir, share))
+    elif heir.effective_category == COLLATERAL_GROUP:
+        sections.append(collateral_section(heir))
+    else:
+        sections.append(voluntary_heir_section(heir, share))
+
+    // ── MAIN SHARE EXPLANATION ──
+    if succession.succession_type == INTESTATE or validation.preterition_applied:
+        sections.append(intestate_share_section(heir, share, succession)) // Section 10.8
+    elif heir.is_compulsory and share.from_legitime > 0:
+        sections.append(legitime_section(heir, share, legitime_result))   // Section 10.7
+
+    // ── CAP RULE ──
+    if heir.effective_category == ILLEGITIMATE_CHILD_GROUP and legitime_result.cap_applied:
+        sections.append(cap_rule_section(heir, legitime_result))          // Section 10.9
+
+    // ── FREE PORTION ──
+    if share.from_free_portion > 0:
+        sections.append(free_portion_section(heir, share, succession))    // Section 10.10
+
+    // ── SPECIAL EVENTS (in pipeline order) ──
+    if heir.inherits_by == REPRESENTATION:
+        sections.append(representation_section(heir))        // Section 10.11
+
+    if heir.is_disinherited or heir.disinheritance_invalid:
+        sections.append(disinheritance_section(heir, validation))         // Section 10.12
+
+    if validation.preterition_applied and heir == validation.preterited_heir:
+        sections.append(preterition_heir_section(heir, validation))       // Section 10.13
+    elif validation.preterition_applied and heir != validation.preterited_heir:
+        sections.append(preterition_effect_section(heir, validation))     // Section 10.13
+
+    for correction in validation.corrections_affecting(heir):
+        match correction.type:
+            INOFFICIOUS → sections.append(inofficious_section(heir, correction))    // 10.14
+            UNDERPROVISION → sections.append(underprovision_section(heir, correction)) // 10.15
+            CONDITION_STRIPPED → sections.append(condition_section(heir, correction)) // 10.17
+
+    if heir in collation.affected_heirs:
+        sections.append(collation_section(heir, collation))              // Section 10.16
+
+    if heir in vacancy.beneficiaries:
+        sections.append(accretion_section(heir, vacancy))                // Section 10.18
+
+    if heir.is_substitute:
+        sections.append(substitution_section(heir))                      // Section 10.19
+
+    if heir.articulo_mortis_applied:
+        sections.append(articulo_mortis_section(heir, share))            // Section 10.21
+
+    // ── RESERVA TRONCAL WARNING (always last if applicable) ──
+    if heir.has_reserva_troncal_flag:
+        sections.append(reserva_troncal_section(heir))                   // Section 10.20
+
+    // ── OPTIONAL COMPARISON ──
+    if config.include_comparison and share.comparison_available:
+        sections.append(comparison_section(heir, share))                 // Section 10.22
+
+    // ── ASSEMBLE ──
+    full_text = join(sections.map(s -> s.text), " ")
+    return HeirNarrative {
+        heir_id: heir.id,
+        heir_name: heir.name,
+        heir_category_label: category_label(heir),
+        text: full_text,
+        summary_line: sections[0].text,
+        sections: sections,
+    }
+}
+```
+
+### 10.24 Helper Functions
+
+```
+function category_label(heir: Heir) -> String {
+    match heir.effective_category:
+        LEGITIMATE_CHILD_GROUP:
+            match heir.relationship:
+                LEGITIMATE_CHILD → "legitimate child"
+                ADOPTED_CHILD → "adopted child"
+                LEGITIMATED_CHILD → "legitimated child"
+                LEGITIMATE_GRANDCHILD → "grandchild, by representation"
+        ILLEGITIMATE_CHILD_GROUP → "illegitimate child"
+        SURVIVING_SPOUSE_GROUP → "surviving spouse"
+        LEGITIMATE_ASCENDANT_GROUP:
+            match heir.relationship:
+                LEGITIMATE_PARENT → "legitimate parent"
+                LEGITIMATE_ASCENDANT → "legitimate {degree_label(heir.degree)}"
+}
+
+function filiation_description(proof: FiliationProof) -> String {
+    match proof:
+        BIRTH_CERTIFICATE → "record of birth in the civil register (Art. 172(1), FC)"
+        COURT_JUDGMENT → "final judgment establishing filiation (Art. 172(1), FC)"
+        PUBLIC_DOCUMENT → "admission of filiation in a public document (Art. 172(2), FC)"
+        PRIVATE_HANDWRITTEN → "private handwritten instrument signed by the parent (Art. 172(2), FC)"
+        OPEN_POSSESSION → "open and continuous possession of the status of an illegitimate child (Art. 172(3), FC)"
+        OTHER_EVIDENCE → "evidence as provided by the Rules of Court (Art. 172(4), FC)"
+}
+
+function format_peso(amount: Money) -> String {
+    if amount.centavos == 0:
+        return "₱{amount.pesos:,}"     // e.g., "₱5,000,000"
+    else:
+        return "₱{amount:,.2f}"        // e.g., "₱1,666,666.67"
+}
+
+function format_fraction(frac: Fraction) -> String {
+    // Map common fractions to Unicode; others use slash notation
+    known = { (1,2): "½", (1,3): "⅓", (2,3): "⅔", (1,4): "¼", (3,4): "¾",
+              (1,5): "⅕", (1,6): "⅙", (1,8): "⅛", (3,8): "⅜" }
+    if (frac.num, frac.den) in known:
+        return known[(frac.num, frac.den)]
+    else:
+        return "{frac.num}/{frac.den}"
+}
+
+function spouse_article(scenario: TestateScenario | IntestateScenario) -> String {
+    // Map scenario to the article governing the spouse's share
+    T1|T2|T3|T4|T5a|T5b → "Art. 892"    // Regime A (with LC)
+    T7|T8 → "Art. 893"                   // Regime B (with ascendants)
+    T9 → "Art. 899"                       // Regime B (ascendants + IC)
+    T11 → "Art. 894"                     // Regime C (IC only)
+    T12|T13 → "Art. 900"                 // Regime C (spouse alone / articulo mortis)
+    I2|I4 → "Art. 996/999"              // Intestate with LC
+    I6 → "Art. 997"                      // Intestate with ascendants
+    I8 → "Art. 998"                      // Intestate with ascendants + IC
+    I10 → "Art. 1000"                    // Intestate IC + spouse
+    I11 → "Art. 995"                     // Intestate spouse alone
+    I12 → "Art. 1001"                    // Intestate spouse + siblings
+}
+```
+
+### 10.25 Category Labels Reference
+
+| `effective_category` | `relationship` | Display Label |
+|---------------------|----------------|---------------|
 | LEGITIMATE_CHILD_GROUP | LEGITIMATE_CHILD | "legitimate child" |
 | LEGITIMATE_CHILD_GROUP | ADOPTED_CHILD | "adopted child" |
 | LEGITIMATE_CHILD_GROUP | LEGITIMATED_CHILD | "legitimated child" |
-| LEGITIMATE_CHILD_GROUP | Grandchild via representation | "grandchild, by representation" |
+| LEGITIMATE_CHILD_GROUP | LEGITIMATE_GRANDCHILD (representing) | "grandchild, by representation" |
 | ILLEGITIMATE_CHILD_GROUP | any | "illegitimate child" |
 | SURVIVING_SPOUSE_GROUP | any | "surviving spouse" |
 | LEGITIMATE_ASCENDANT_GROUP | LEGITIMATE_PARENT | "legitimate parent" |
-| LEGITIMATE_ASCENDANT_GROUP | LEGITIMATE_ASCENDANT | "legitimate [grandparent/great-grandparent/...]" |
+| LEGITIMATE_ASCENDANT_GROUP | LEGITIMATE_ASCENDANT (degree > 1) | "legitimate [grandmother/grandfather/great-grandparent/...]" |
 
-### 10.4 Formatting Rules
+### 10.26 Formatting Rules
 
 | Element | Format |
 |---------|--------|
+| Heir name | **Bold** on first mention |
 | Peso amounts | ₱ prefix, comma thousands separator. Centavos only when non-zero. Example: ₱5,000,000 or ₱1,666,666.67 |
-| Fractions | Words + symbol: "one-half (½)", "one-fourth (¼)", "one-eighth (⅛)" |
-| Article references | "Art. 888 of the Civil Code" (first mention), "Art. 888" (subsequent) |
-| Family Code refs | "Art. 176, Family Code" |
-| RA references | "RA 8552 Sec. 17" |
-| Sentence order | Legal basis BEFORE conclusion: "Under Art. 888... the legitime is ₱X" |
+| Fractions | Words + symbol on first use: "one-half (½)". Symbol only (½) on repeat |
+| Computation | Show multiplication: "½ × ₱10,000,000 = ₱5,000,000" |
+| Article references | "Art. {n} of the Civil Code" (first mention), "Art. {n}" (subsequent) |
+| Family Code refs | "Art. {n}, Family Code" |
+| RA references | "RA {n} Sec. {n}" |
+| Notes/warnings | Prefixed with "Note:" or "WARNING —" |
+| Sentence order | Legal basis BEFORE conclusion: "Under Art. 888... the legitime is ₱X" not "The legitime is ₱X per Art. 888" |
+| Paragraph length | 3-8 sentences for simple cases; up to 12 for complex (collation + cap + representation). Maximum 15 sentences before splitting into Summary + Detail |
 
-### 10.5 Filiation Description Mapping
+### 10.27 Narrative Validation Rules
 
-For illegitimate children, describe their filiation proof:
-- BIRTH_CERTIFICATE → "record of birth in the civil register (Art. 172(1), Family Code)"
-- FINAL_JUDGMENT → "final judgment establishing filiation (Art. 172(1), Family Code)"
-- PUBLIC_DOCUMENT_ADMISSION → "admission in a public document (Art. 172(2), Family Code)"
-- PRIVATE_HANDWRITTEN_ADMISSION → "private handwritten instrument signed by the parent (Art. 172(2), Family Code)"
-- OPEN_CONTINUOUS_POSSESSION → "open and continuous possession of the status of an illegitimate child (Art. 172(3), Family Code)"
-- OTHER_EVIDENCE → "evidence as provided by the Rules of Court (Art. 172(4), Family Code)"
-
-### 10.6 Narrative Validation Rules
-
-1. The peso amount in the first sentence MUST match `InheritanceShare.total`
-2. Every legal conclusion must cite at least one article
-3. If `donations_imputed > 0`, the collation section MUST be present
-4. If `inherits_by == REPRESENTATION`, the representation section MUST be present
-5. Every `Correction` in the validation result affecting this heir must have a narrative section
-6. The computation (fraction × amount = result) must be shown, not just stated
+1. The peso amount in the HEADER MUST match `InheritanceShare.total`
+2. Every legal conclusion must cite at least one article number
+3. If `share.donations_imputed > 0`, the COLLATION section MUST be present
+4. If `heir.inherits_by == REPRESENTATION`, the REPRESENTATION section MUST be present
+5. Every `Correction` in the validation result affecting this heir must have a corresponding narrative section
+6. The computation (fraction × amount = result) must be shown explicitly, not just stated
 7. The narrative is self-contained — a reader needs no other context to understand it
+8. If `validation.preterition_applied`, the SUCCESSION_TYPE section MUST use the preterition-converted template
+9. If `legitime_result.cap_applied` for an IC heir, the CAP_RULE section MUST be present
+10. If `heir.has_reserva_troncal_flag`, the RESERVATION section MUST be present (always last before COMPARISON)
 
 ---
 
@@ -2056,7 +2743,7 @@ The engine must be fully deterministic:
 - Unit test each legitime scenario (T1-T15) with both cap-triggered and non-cap cases
 - Unit test each intestate scenario (I1-I15)
 - Integration test all 13 test vectors above
-- Test all 28 narrative patterns (N-01 through N-28 in `analysis/explainer-format.md`)
+- Test all 19 NarrativeSectionType variants: verify each section type is generated correctly for at least one test vector (see Section 10.3 composition order and Sections 10.4-10.22 templates)
 - Test the 10 invariants against all test vectors
 
 ---
