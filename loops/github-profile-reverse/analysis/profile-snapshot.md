@@ -1,8 +1,8 @@
 # Profile Snapshot — clsandoval
 
 **Source**: GitHub API + profile page scrape
-**Captured**: 2026-02-23
-**Method**: `https://api.github.com/users/clsandoval` + WebFetch of github.com/clsandoval + public events API
+**Captured**: 2026-02-23 (enriched same day)
+**Method**: `https://api.github.com/users/clsandoval` + WebFetch of github.com/clsandoval + public events API + gists API
 
 ---
 
@@ -90,12 +90,20 @@ The public events API shows:
 | **Followers** | 3 |
 | **Following** | 0 |
 | **Public gists** | 42 |
-| **Stars given** | Visible (starred repos include voicetree, pymc-marketing, MIUI-Debloater, detextify, magi) |
+| **Stars given** | 41 repos starred (voicetree, pymc-marketing, MIUI-Debloater, detextify, magi, etc.) |
 | **Achievements** | Pair Extraordinaire ×3, Pull Shark ×3, YOLO ×1, Quickdraw ×1 |
 
-**Gist activity** (recent): PostHog integration notes, media mix modeling guides, OpenClaw decision orchestrator — suggests active technical writing/exploration that's invisible from the main profile.
+**Recent gists** (Feb 2026):
+- `posthog-status-check.md` — PostHog Integration Status Check (2026-02-14)
+- `clarify-setup-guide.md` — Setup guide clarification (2026-02-13)
+- Media Mix Modeling guide — Comprehensive MMM synthesis (2026-02-07, ×2)
+- OpenClaw-style Scheduled Queries for Decision Orchestrator (2026-02-05)
 
-**Starred repos** suggest interests in: multi-agent orchestration (voicetree), Bayesian marketing (pymc-marketing), manga AI (magi), image processing (detextify).
+These gists reveal professional-grade Bayesian/MLOps work (media mix modeling, decision orchestration, PostHog analytics) that is completely invisible from the main profile. 42 gists is an unusually high count and suggests active technical writing.
+
+**Starred repos** (41 total) suggest interests in: multi-agent orchestration (voicetree), Bayesian marketing (pymc-marketing), manga AI (magi), image processing (detextify).
+
+**Activity concentration**: Last 100 public events are 100% `clsandoval/monorepo` — spanning only 4 days (Feb 20-23). This extreme concentration reflects CI-driven ralph loops generating automated commits and PRs.
 
 ---
 
