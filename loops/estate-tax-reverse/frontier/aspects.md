@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 33
-- Analyzed: 2
-- Pending: 31
-- Convergence: 6%
+- Analyzed: 3
+- Pending: 30
+- Convergence: 9%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -13,7 +13,7 @@
 - [x] form-1801-field-mapping — Map every field/schedule in BIR Form 1801 to its data source
 
 ### Wave 2: TRAIN-Era Rule Extraction (deaths on/after Jan 1, 2018)
-- [ ] tax-rate-train — Sec. 84 (as amended by TRAIN): flat 6% on net taxable estate
+- [x] tax-rate-train — Sec. 84 (as amended by TRAIN): flat 6% on net taxable estate
 - [ ] gross-estate-citizens — Sec. 85(A): property included for citizens/residents (worldwide)
 - [ ] gross-estate-nonresident — Sec. 85(B): property included for non-resident aliens (PH situs only)
 - [ ] gross-estate-inclusions — Sec. 85(C-G): transfers in contemplation of death, revocable transfers, life insurance, general powers of appointment
@@ -56,3 +56,4 @@
 ## Recently Analyzed
 - [x] legal-source-fetch — 2026-02-23 — 5 legal source files cached in input/legal-sources/
 - [x] form-1801-field-mapping — 2026-02-23 — Complete field mapping: Part I (17 informational fields), Part III (scope boundary), Part IV (Items 29–44/20, all three columns), Part V (Schedules 1, 1A, 2, 2A, 3, 4, 5, 6, 6A). Engine output contract defined with canonical field list, column A/B split rules, 10 validation constraints, 8 test implications, and 6 edge cases identified.
+- [x] tax-rate-train — 2026-02-23 — Flat 6% (0.06) on net taxable estate (Item 40). No threshold, no brackets. Final step: estate_tax_due = net_taxable_estate × 0.06; net_estate_tax_due = max(0, estate_tax_due − foreign_tax_credit). Maps to Form 1801 Items 41–44/20. 7 edge cases documented (zero estate, NRA, credit exceeds tax, fractional, amended return, installment). 10 test vectors specified.
