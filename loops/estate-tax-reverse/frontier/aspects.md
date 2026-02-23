@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 33
-- Analyzed: 5
-- Pending: 28
-- Convergence: 15%
+- Analyzed: 6
+- Pending: 27
+- Convergence: 18%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -16,7 +16,7 @@
 - [x] tax-rate-train — Sec. 84 (as amended by TRAIN): flat 6% on net taxable estate
 - [x] gross-estate-citizens — Sec. 85(A): property included for citizens/residents (worldwide)
 - [x] gross-estate-nonresident — Sec. 85(B): property included for non-resident aliens (PH situs only)
-- [ ] gross-estate-inclusions — Sec. 85(C-G): transfers in contemplation of death, revocable transfers, life insurance, general powers of appointment
+- [x] gross-estate-inclusions — Sec. 85(C-G): transfers in contemplation of death, revocable transfers, life insurance, general powers of appointment
 - [ ] deduction-elit — Sec. 86(A)(1): expenses, losses, indebtedness, taxes (ELIT)
 - [ ] deduction-vanishing — Sec. 86(A)(2): property previously taxed (full formula + percentage table: 100/80/60/40/20)
 - [ ] deduction-public-transfers — Sec. 86(A)(3): bequests to government for exclusively public use
@@ -59,3 +59,4 @@
 - [x] tax-rate-train — 2026-02-23 — Flat 6% (0.06) on net taxable estate (Item 40). No threshold, no brackets. Final step: estate_tax_due = net_taxable_estate × 0.06; net_estate_tax_due = max(0, estate_tax_due − foreign_tax_credit). Maps to Form 1801 Items 41–44/20. 7 edge cases documented (zero estate, NRA, credit exceeds tax, fractional, amended return, installment). 10 test vectors specified.
 - [x] gross-estate-citizens — 2026-02-23 — Worldwide scope for citizens and resident aliens. Five gross estate categories: real property (Item 29/Schedule 1), family home (Item 30/Schedule 1A), personal property (Item 31/Schedules 2+2A), taxable transfers (Item 32/Schedule 3), business interest (Item 33/Schedule 4). Item 34 = sum of all. A/B/C column structure throughout. FMV rule for real property: max(zonal, assessed). Business interest floored at 0. 10 edge cases, 10 test cases. Key: engine takes pre-valued FMV inputs only; user tags exclusive vs. conjugal ownership.
 - [x] gross-estate-nonresident — 2026-02-23 — PH-situs only scope for non-resident aliens. Same five Form 1801 items (29–34) but only PH-situated assets. Intangible personal property excluded if reciprocity exemption applies (user-declared). Item 30 = 0 (family home deduction not available to NRAs). Key additional input: decedent.totalWorldwideGrossEstateForDeductionPurposes (for Sec. 86B proportional deduction formula). Situs rules by property type documented. Reciprocity rule pseudocode defined. 10 edge cases, 8 test cases.
+- [x] gross-estate-inclusions — 2026-02-23 — Sec. 85(B)–(G): six special inclusion rules for taxable transfers. All map to Item 32/Schedule 3. Rules: (B) contemplation of death (3-year presumption, full FMV at death); (C) revocable transfers (retained power or power relinquished ≤3 years, bona fide sale exception); (D) GPA exercised by will (always) or by deed within 3 years; (E) life insurance on own life — estate or revocably-designated beneficiary included, irrevocably-designated excluded; (F) retroactivity clause only (no computation); (G) insufficient consideration — excess of fmvAtDeath over consideration received. Regime-invariant: same rules for TRAIN, pre-TRAIN, and amnesty. NRA scope: PH-situs only. 12 edge cases, 10 test cases.
