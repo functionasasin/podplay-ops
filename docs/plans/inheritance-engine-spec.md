@@ -138,6 +138,77 @@ The engine tracks two distinct FP values throughout:
 | `FP_gross` | Estate base − collective legitimate children's legitime (before spouse/IC deduction) | Art. 895 ¶3 cap base |
 | `FP_disposable` | FP_gross − spouse legitime − IC legitime (testator's actual freedom) | Testate validation (Step 6), will distribution (Step 7) |
 
+#### FP Pipeline Order of Operations
+
+The FP computation is a 4-step pipeline. The ORDER is critical: spouse is satisfied BEFORE the IC cap is computed (Art. 895 ¶3 priority).
+
+```
+function compute_free_portion_pipeline(
+    estate_base: Fraction,  // collation-adjusted (Art. 908)
+    scenario: ScenarioCode,
+    n: int,              // legitimate child lines
+    m: int,              // illegitimate children
+    is_articulo_mortis: bool
+) -> FreePortionResult {
+
+    // STEP 1: Compute FP_gross
+    //   = estate_base - primary heirs' collective legitime
+    //   = E/2 in Regime A and B (descendants or ascendants present)
+    //   = E   in Regime C (no primary/secondary compulsory heirs)
+    match scenario {
+        T1..T9, T14, T15:   fp_gross = estate_base / 2
+        T10..T13:            fp_gross = estate_base
+    }
+
+    // STEP 2: Satisfy spouse's legitime from FP (Art. 892 ¶3, 893 ¶2)
+    //   Only in scenarios where spouse is charged to FP
+    spouse_from_fp = match scenario {
+        T2:          estate_base / 4                   // Art. 892 ¶1
+        T3, T5b:     estate_base / (2 * n)             // Art. 892 ¶2 (= same as one LC share)
+        T5a:         estate_base / 4                   // Art. 892 ¶1 (n=1)
+        T7:          estate_base / 4                   // Art. 893 ¶2
+        T9:          estate_base / 8                   // Art. 899
+        T10:         estate_base / 3                   // Art. 894
+        T12:         estate_base * (is_articulo_mortis ? 1/3 : 1/2)  // Art. 900
+        T15:         estate_base / 4                   // Art. 903 + Art. 900
+        _:           0                                 // No spouse or spouse not in scenario
+    }
+    fp_after_spouse = fp_gross - spouse_from_fp
+
+    // STEP 3: Cap illegitimate children's legitime (Art. 895 ¶3)
+    //   Only in Regime A scenarios with IC (T4, T5a, T5b)
+    //   Cap = FP remaining AFTER spouse (spouse has priority)
+    if scenario in {T4, T5a, T5b}:
+        per_lc = estate_base / (2 * n)
+        per_ic_uncapped = per_lc / 2     // Art. 895: IC = ½ of LC
+        total_ic_uncapped = per_ic_uncapped * m
+        total_ic = min(total_ic_uncapped, fp_after_spouse)
+        fp_after_ic = fp_after_spouse - total_ic
+    else if scenario in {T8, T9}:
+        // Regime B: IC gets flat E/4 (Art. 896), not capped
+        ic_from_fp = estate_base / 4
+        fp_after_ic = fp_after_spouse - ic_from_fp
+    else if scenario in {T10}:
+        ic_from_fp = estate_base / 3     // Art. 894
+        fp_after_ic = fp_after_spouse - ic_from_fp
+    else if scenario == T11:
+        ic_from_fp = estate_base / 2     // Art. 901
+        fp_after_ic = fp_after_spouse - ic_from_fp
+    else:
+        fp_after_ic = fp_after_spouse
+
+    // STEP 4: FP_disposable = what testator can freely give away
+    fp_disposable = fp_after_ic
+
+    return {
+        fp_gross: fp_gross,
+        spouse_from_fp: spouse_from_fp,
+        ic_from_fp: total_ic or ic_from_fp or 0,
+        fp_disposable: fp_disposable,
+    }
+}
+```
+
 ### 2.4 Mixed Succession Detection
 
 Succession type detection is a **two-pass** process:
@@ -1462,6 +1533,121 @@ This adjusted base is used for ALL legitime computations (Steps 5-6).
 | Wedding gift > 1/10 FP | Excess collatable | Art. 1070 |
 | Joint from both parents | ½ to this estate | Art. 1072 |
 
+#### Collatability Decision Tree
+
+The table above is a reference; the following pseudocode is the implementable decision tree:
+
+```
+function determine_collatability(
+    donation: Donation,
+    heir: Heir,
+    co_heirs: List<Heir>,
+    fp_disposable: Fraction
+) -> CollatabilityResult {
+
+    // Gate: only compulsory heirs collate, and only when co-heirs exist
+    if NOT heir.is_compulsory:
+        return { collatable: false, reason: "non-compulsory heir" }
+    if co_heirs.filter(h => h.is_compulsory AND h.id != heir.id).count == 0:
+        return { collatable: false, reason: "sole compulsory heir (Art. 1061)" }
+    if NOT donation.is_gratuitous:
+        return { collatable: false, reason: "onerous transfer" }
+
+    // Art. 1067: Exempt categories (always non-collatable)
+    if donation.category in {SUPPORT, EDUCATION, MEDICAL, APPRENTICESHIP,
+                              ORDINARY_EQUIPMENT, CUSTOMARY_GIFT}:
+        return { collatable: false, reason: "Art. 1067 exempt" }
+
+    // Art. 1066: Spouse-only donation
+    if donation.recipient_is_child_spouse_only:
+        return { collatable: false, reason: "Art. 1066 spouse-only" }
+
+    // Art. 1066 ¶2: Joint gift to child + spouse → only ½ collatable
+    if donation.is_joint_to_child_and_spouse:
+        return {
+            collatable: true,
+            amount: donation.value_at_time_of_donation / 2,
+            reason: "Art. 1066 ¶2 joint gift (½)"
+        }
+
+    // Art. 1072: Joint from both parents → ½ to this estate
+    if donation.is_joint_from_both_parents:
+        return {
+            collatable: true,
+            amount: donation.value_at_time_of_donation / 2,
+            reason: "Art. 1072 joint-parent (½)"
+        }
+
+    // Art. 1068: Professional/vocational expenses — CONDITIONAL
+    if donation.category == PROFESSIONAL_EDUCATION:
+        if NOT donation.parent_expressly_required AND NOT donation.impairs_legitime:
+            return { collatable: false, reason: "Art. 1068 default exempt" }
+        // If collatable, deduct imputed home-living costs
+        collatable_amount = donation.value_at_time_of_donation
+                          - donation.imputed_home_savings  // user-provided input
+        return {
+            collatable: true,
+            amount: max(collatable_amount, 0),
+            reason: "Art. 1068 conditional (parent required or impairs legitime)"
+        }
+
+    // Art. 1070: Wedding gifts — special 1/10 FP threshold
+    //   Not collatable for estate base computation.
+    //   Only excess over 1/10 FP_disposable is reducible as inofficious.
+    //   Compute FP first ignoring wedding gifts, then check threshold.
+    if donation.is_wedding_gift:
+        threshold = fp_disposable / 10
+        if donation.value_at_time_of_donation <= threshold:
+            return { collatable: false, reason: "Art. 1070 within 1/10 FP" }
+        return {
+            collatable: false,             // NOT added to estate base
+            inofficious_reducible: true,   // but excess IS reducible
+            reducible_amount: donation.value_at_time_of_donation - threshold,
+            reason: "Art. 1070 excess over 1/10 FP"
+        }
+
+    // Art. 1062: Donor express exemption
+    if donation.expressly_exempt_from_collation:
+        return {
+            collatable: false,
+            still_check_inofficiousness: true,  // exemption ≠ license to impair legitimes
+            reason: "Art. 1062 donor exempt (inofficiousness still checked)"
+        }
+
+    // Art. 1062 ¶2: Donee repudiated inheritance
+    if heir.has_repudiated:
+        return {
+            collatable: false,
+            still_check_inofficiousness: true,
+            reason: "Art. 1062 ¶2 repudiation (inofficiousness still checked)"
+        }
+
+    // Art. 1069: Debts, election expenses, fines
+    if donation.category in {DEBT_PAYMENT, ELECTION_EXPENSE, FINE_PAYMENT}:
+        return {
+            collatable: true,
+            amount: donation.value_at_time_of_donation,
+            reason: "Art. 1069"
+        }
+
+    // Default: standard donation → fully collatable
+    //   Art. 909 (to child → charge to legitime)
+    //   Art. 910 (to IC → charge to IC's legitime)
+    //   Art. 909 ¶2 (to stranger → charge to FP)
+    charge_target = match heir.effective_category {
+        LEGITIMATE_CHILD_GROUP: "legitime"    // Art. 909
+        ILLEGITIMATE_CHILD_GROUP: "legitime"  // Art. 910
+        _: "free_portion"                     // Art. 909 ¶2 (stranger)
+    }
+    return {
+        collatable: true,
+        amount: donation.value_at_time_of_donation,
+        charge_target: charge_target,
+        reason: "Art. 909/910 standard"
+    }
+}
+```
+
 ### 8.4 Valuation Rule (Art. 1071)
 
 Donations are **always** valued at their worth when given, not at death. Appreciation, depreciation, or total destruction is at the donee's risk.
@@ -1477,6 +1663,58 @@ After computing gross entitlements on the collation-adjusted estate, reduce each
 ### 8.6 Representation Collation (Art. 1064)
 
 Grandchildren inheriting by representation must collate their predeceased parent's donations, even though they personally never received the property. This can result in a ₱0 distribution.
+
+#### Algorithm
+
+```
+function collation_for_representatives(
+    represented_heir: Heir,         // The predeceased parent
+    representatives: List<Heir>,    // The grandchildren
+    parent_donations: List<Donation>,
+    line_share: Fraction            // The represented line's total entitlement
+) -> RepresentativeCollation {
+
+    parent_donation_total = sum(d.value_at_time_of_donation for d in parent_donations)
+
+    net_line_share = line_share - parent_donation_total
+
+    if net_line_share >= 0:
+        // Grandchildren divide the net line share per stirpes (equal)
+        per_representative = net_line_share / representatives.count
+        return {
+            line_entitlement: line_share,
+            parent_donation_collated: parent_donation_total,
+            net_from_estate: net_line_share,
+            per_representative: per_representative,
+            owes_estate: false,
+        }
+    else:
+        // Parent's donation exceeded the line's entitlement
+        // Grandchildren receive ₱0 AND the excess is charged to FP
+        return {
+            line_entitlement: line_share,
+            parent_donation_collated: parent_donation_total,
+            net_from_estate: 0,
+            per_representative: 0,
+            owes_estate: true,
+            excess: abs(net_line_share),
+            // excess is charged to FP; if it exceeds FP → inofficious
+        }
+}
+```
+
+#### Integration with Pipeline
+
+This function is called during Step 8 (collation adjustment) for every representation line where the predeceased ancestor received donations from the decedent. Steps:
+
+1. Identify all representation lines (from Step 2)
+2. For each line, gather the represented heir's donations
+3. Call `collation_for_representatives()` to compute each grandchild's adjusted share
+4. If `owes_estate = true`, the excess is added to the FP consumption total for inofficiousness checking
+
+#### Key Rule
+
+Art. 1064 explicitly states "even though such grandchildren have not inherited the property." The predeceased parent may have spent or sold the donated property — the grandchildren must still collate it at its donation-time value (Art. 1071).
 
 ---
 
