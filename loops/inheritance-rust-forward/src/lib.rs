@@ -4,4 +4,5 @@
 //! for Philippine estates using exact rational arithmetic.
 
 pub mod fraction;
+pub mod step1_classify;
 pub mod types;

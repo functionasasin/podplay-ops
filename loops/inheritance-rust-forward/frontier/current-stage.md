@@ -7,8 +7,7 @@
 
 ## Test Results (updated by loop — iteration 1)
 ```
-   Compiling inheritance-engine v0.1.0 (/home/clsandoval/cs/monorepo/loops/inheritance-rust-forward)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.47s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.01s
      Running unittests src/lib.rs (target/debug/deps/inheritance_engine-8b461b4b5a77e766)
 
 running 0 tests
