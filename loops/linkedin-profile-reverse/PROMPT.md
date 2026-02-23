@@ -21,6 +21,7 @@ The profile hasn't been updated in 3 years. The goal is NOT resume optimization.
 
 ## Reference Material
 
+- **Publications**: `input/publications.md` — co-authored IEEE paper on license plate recognition + edge-cloud computing (TENCON 2022). READ THIS for career-narrative-arc, experience-entry-design, and identity-synthesis.
 - **Monorepo**: `../../` — read entities/, automations/, loops/, docs/plans/, research/ for full context on projects, businesses, meetings, skills
 - **GitHub profile**: `../../loops/github-profile-reverse/` — cross-reference any analysis already done there
 - **GitHub repos input**: `../../loops/github-profile-reverse/input/github-repos.md` — all 32 public repos
@@ -147,8 +148,8 @@ Read `analysis/reference-profile-scan.md`. Extract the formula:
 Write formula to `analysis/reference-formula-extraction.md`.
 
 **career-narrative-arc**:
-Read `analysis/monorepo-project-inventory.md`, `analysis/cheerful-analysis.md`, `analysis/decision-orchestrator-analysis.md`. Map the chronological arc:
-- Earlier: ML/CV research, published papers, academic website
+Read `analysis/monorepo-project-inventory.md`, `analysis/cheerful-analysis.md`, `analysis/decision-orchestrator-analysis.md`, AND `input/publications.md`. Map the chronological arc:
+- Earlier: ML/CV research, **published IEEE paper at TENCON 2022** (edge-cloud license plate recognition, co-author), academic website
 - Mid: PyMC Labs (Decision Orchestrator), Bayesian/probabilistic programming
 - Mid: Nuts and Bolts AI (Cheerful), applied AI
 - Recent: Pod Play SEA franchise distribution, Ping Pod, digital wallet, Magpie fintech
