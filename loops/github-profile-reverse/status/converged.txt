@@ -1,0 +1,54 @@
+CONVERGED
+
+Loop: github-profile-reverse
+Date: 2026-02-23
+Iterations: 11 (10 analysis + 1 spec-review)
+Final aspect: spec-review
+
+## Convergence Summary
+
+The reverse ralph loop for github.com/clsandoval has converged. All 12 aspects analyzed, spec reviewed and passed.
+
+## What Was Produced
+
+**Primary output**: docs/plans/github-profile-spec.md
+A complete, actionable specification for transforming the GitHub profile from "student who forks stuff" to "autonomous systems builder — this person is dangerous."
+
+## Spec Contents
+
+1. Profile README — complete final markdown content, ready to commit to clsandoval/clsandoval repo
+2. Pin List — 6 repos in order: monorepo, LPRnet-keras, alpha-zero-c4, slipstream, coral_tpu, yolos-lph
+3. Archive List — 24 repos to archive (8 originals + 16 forks)
+4. Description Updates — punchy, specific descriptions for all 8 surviving repos
+5. Topic Tags — GitHub search topics for all 8 surviving repos
+6. Bio Update — "builds autonomous AI systems — production infra @ pymc-labs + nuts-and-bolts-ai | CV, game AI, life-as-OS in the monorepo"
+7. README Work Queue — 4 repos needing new/updated READMEs (P1: monorepo, P2: alpha-zero-c4, P3: yolos-lph, P4: slipstream tone fix)
+8. Execution Script — complete bash script using gh CLI to execute all mechanical changes
+
+## Profile Transformation
+
+Before: 32 repos visible, 59% noise, coursework auto-pinned by GitHub, empty bio, no profile README
+After: 9 repos visible (8 + profile README), 100% signal, 6 curated pins, company-named bio, personality-first README
+
+## Key Findings
+
+- Gap between reality and profile is "not a gap — it's a canyon"
+- 1,000+ commits on 2 production AI systems (pymc-labs, nuts-and-bolts-ai) — completely invisible
+- Ralph loop framework, 1,034-entity knowledge graph, OpenClaw Telegram bot — completely invisible
+- All 16 forks confirmed 0 original commits — archive all
+- Single biggest ROI: archive cs_21_project + ocaml-probset (currently auto-pinned by GitHub's algorithm)
+- Second biggest ROI: write monorepo README (transforms the primary identity anchor)
+
+## Spec Review Result
+
+PASS — "This person automates everything they touch, including their own profile. Builder confidence, tinkerer energy, ships to production. Dangerous."
+
+Minor forward ralph additions (not blocking):
+- Add anime recap engine mention to README "current rabbit holes"
+- Consider linking top gist (Media Mix Modeling guide) in README footer
+- Optionally update website/blog field to monorepo URL
+
+## Next Step
+
+Forward ralph: execute docs/plans/github-profile-spec.md
+Start with: execution script (mechanical changes) → monorepo README → alpha-zero-c4 README → yolos-lph README → slipstream README tone fix
