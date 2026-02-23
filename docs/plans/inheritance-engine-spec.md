@@ -280,8 +280,8 @@ enum FiliationProof {
     FINAL_JUDGMENT,                     // FC Art. 172(1)
     PUBLIC_DOCUMENT_ADMISSION,          // FC Art. 172(2)
     PRIVATE_HANDWRITTEN_ADMISSION,      // FC Art. 172(2)
-    OPEN_CONTINUOUS_POSSESSION,         // FC Art. 172 ¶2(1)
-    OTHER_EVIDENCE,                     // FC Art. 172 ¶2(2)
+    OPEN_CONTINUOUS_POSSESSION,         // FC Art. 172(3)
+    OTHER_EVIDENCE,                     // FC Art. 172(4)
 }
 
 struct Adoption {
@@ -315,8 +315,10 @@ struct Will {
     devises: List<Devise>,
     disinheritances: List<Disinheritance>,
     date_executed: Date,
-    is_valid: bool,                     // Form validity (probated — outside engine scope)
+    is_valid: bool,                     // Form validity (probated — outside engine scope). MUST be true on input.
 }
+
+**Input boundary rule for `Will.is_valid`**: If `will.is_valid == false`, the engine MUST reject the input with an error before executing any pipeline step. It does NOT silently fall back to intestate succession — that decision requires a court ruling outside the engine's scope. Will formal validity (notarial requirements, probate) is determined by courts prior to calling this engine. Submit only wills where probate has confirmed formal validity.
 
 struct InstitutionOfHeir {
     id: DispositionId,
@@ -453,7 +455,8 @@ struct Donation {
     value_at_time_of_donation: Money,           // ALWAYS use this value (Art. 1071)
     date: Date,                                 // For reverse-chrono reduction (Art. 911)
     description: String,
-    is_gratuitous: bool,
+    is_gratuitous: bool,                // true = gratuitous gift; false = fair-consideration transfer (sale/exchange).
+                                        // If false, the engine does NOT collate this item — it is not a donation in the legal sense.
 
     // Collatability flags (Arts. 1061-1070)
     is_expressly_exempt: bool,                  // Art. 1062: donor stated exemption
@@ -562,7 +565,12 @@ enum RepresentationTrigger {
     // RENUNCIATION is NOT a valid trigger (Art. 977)
 }
 
-enum BloodType { FULL, HALF }
+enum BloodType {
+    FULL,   // Heir's parent and the decedent share BOTH the same father AND the same mother
+    HALF,   // Heir's parent and the decedent share only ONE common parent (same father OR same mother, not both)
+}
+// BloodType is used only for collateral heirs (siblings, nephews/nieces, cousins).
+// Art. 1006: A full-blood sibling receives double the share of a half-blood sibling in I13.
 ```
 
 **Category derivation rule**:
@@ -690,6 +698,10 @@ enum ManualFlagCode {
     COLLATION_DISPUTE,              // Art. 1077: contested collation item
     RA_11642_RETROACTIVITY,         // Pre-2022 adoption + Sec. 41 extended filiation
     ARTICULO_MORTIS,                // Art. 900 ¶2: verify all 3 conditions
+    USUFRUCT_ANNUITY_OPTION,        // Art. 911 ¶3: testator or compulsory heir may elect usufruct/annuity instead of cash reduction; computation depends on election made outside the engine
+    DUAL_LINE_ASCENDANT,            // Art. 890: consanguineous union places one ascendant in both paternal and maternal lines; by-line split algorithm is ambiguous
+    POSTHUMOUS_DISINHERITANCE,      // Will disinherits a child conceived but not yet born at time of execution; disinheritance validity for posthumous children is legally uncertain
+    CONTRADICTORY_DISPOSITIONS,     // Will contains internally contradictory clauses (e.g., heir X is given ½ in one institution and ⅓ in another); testator intent cannot be mechanically resolved
 }
 ```
 
@@ -3116,6 +3128,10 @@ The engine is fully deterministic, but certain legal gray areas require human ju
 | `COLLATION_DISPUTE` | Disputed collatability of a specific donation (Art. 1077) | Output dual computations (with/without collation) | Art. 1077: disputes don't block partition with adequate security |
 | `RA_11642_RETROACTIVITY` | Pre-2022 adoption + Sec. 41 extended filiation claimed | Use `config.retroactive_ra_11642` setting | Transitional ambiguity |
 | `ARTICULO_MORTIS` | Art. 900 ¶2 conditions detected | Apply ⅓ reduction; require verification of all 3 conditions | Art. 900 ¶2 |
+| `USUFRUCT_ANNUITY_OPTION` | Art. 911 ¶3: reduction of an inofficious disposition affects a compulsory heir whose legitime may alternatively be satisfied by usufruct or annuity | Default: apply monetary cash reduction (Art. 911 ¶1-¶2); flag for human election of usufruct/annuity alternative | Art. 911 ¶3 |
+| `DUAL_LINE_ASCENDANT` | Family tree contains an ascendant who appears in both the paternal and maternal lines due to a consanguineous (within-family) union | Default: count ascendant in the line from which they are nearer in degree; flag for legal review | Art. 890 (by-line split ambiguous when one person occupies both lines) |
+| `POSTHUMOUS_DISINHERITANCE` | Will contains a disinheritance clause naming a person who was conceived but not yet born at the date the will was executed | Default: treat as valid disinheritance if all formal requirements are met and the child is born alive (Art. 1025); flag for legal review of cause timing | Arts. 915-917, 1025 |
+| `CONTRADICTORY_DISPOSITIONS` | Will contains two or more clauses that assign incompatible shares to the same heir (e.g., heir A is given ½ in one clause and ⅓ in a separate clause) | Default: use the larger share (most favorable to the heir); flag for legal review of testator intent | Arts. 788-789, 847 (testamentary intent interpretation rules do not resolve arithmetic contradictions) |
 
 ---
 
