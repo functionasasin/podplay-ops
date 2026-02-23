@@ -1,247 +1,262 @@
-# Analysis: spec-review
+# Spec Review — Can a Developer Build the Engine From the Spec Alone?
 
-**Date**: 2026-02-23
+**Aspect**: spec-review
 **Wave**: 5 (Synthesis)
-**Verdict**: FAILS — 3 targeted fix-it aspects added to frontier
+**Date**: 2026-02-23
+**Verdict**: **FAIL** — 4 critical gaps and 5 high-severity gaps prevent standalone implementation
 
----
+## Review Question
 
-## Task
+> "Could a developer with no knowledge of Philippine succession law build the engine from this spec alone?"
 
-Self-review: "Could a developer with zero knowledge of Philippine succession law build the engine from this spec alone?"
+## Review Methodology
 
-Review methodology: read every section of `inheritance-engine-spec.md` (2066 lines) against 5 criteria:
-1. Missing heir combination scenarios — every scenario must have exact fractions
-2. Vague legitime fractions — every fraction must be exact, not "see analysis file"
-3. Missing test vectors for important scenarios
-4. Narrative template completeness — standard + all special events
-5. Pipeline step completeness — can a developer implement all 10 steps from the spec?
+Cross-referenced all 15 spec sections against the 24 analysis files, checking:
+1. Every algorithm described in analysis files has corresponding pseudocode in spec
+2. Every scenario has exact fractions (no "see analysis" references)
+3. Test vectors cover the key computational paths
+4. Narrative system is implementable without external reference
+5. Pipeline steps are complete with pseudocode
 
----
+## PASS Items (Spec Is Adequate)
 
-## Verdict: FAILS (3 targeted fix-its required)
+| # | Area | Assessment |
+|---|------|-----------|
+| 1 | **Testate legitime fractions** | All 17 scenarios (T1-T15 + T5a/T5b) have exact fraction formulas |
+| 2 | **Intestate distribution formulas** | All 15 scenarios (I1-I15) have explicit per-heir formulas |
+| 3 | **Heir classification** | 4 effective categories, 7 raw sub-categories, eligibility gate with pseudocode |
+| 4 | **Representation rules** | 4 triggers, per stirpes, build-lines algorithm with pseudocode |
+| 5 | **Cap rule algorithm** | Complete `apply_cap_rule()` pseudocode with spouse priority |
+| 6 | **Data model** | Comprehensive — all essential types defined (EngineInput, Heir, Will, etc.) |
+| 7 | **Test invariants** | 10 invariants clearly defined and verifiable |
+| 8 | **Manual review flags** | 10 flags with trigger conditions and legal basis |
+| 9 | **Rounding** | Algorithm present with sum invariant guarantee |
+| 10 | **Ascendant division** | `divide_among_ascendants()` with 3-tier priority |
+| 11 | **Glossary + article reference** | Appendix A (30 articles) and Appendix B (15 terms) |
+| 12 | **Disinheritance** | 22 causes enumerated, validity gate described, Art. 918 vs 854 distinguished |
+| 13 | **Preterition** | Detection, scope, annulment effect, Art. 854 ¶2 all described |
+| 14 | **Collation matrix** | 14-row collatability table with legal basis |
+| 15 | **Testate validation pipeline** | 5-check ordered pipeline described |
+| 16 | **Vacancy resolution priority** | 4-step chain with Art. 1021 distinction stated |
+| 17 | **Edge case catalog** | 82 cases across 21 categories referenced |
+| 18 | **Test vectors** | 13 vectors with worked TV-13 example |
+| 19 | **Scenario codes** | Complete T1-T15 and I1-I15 tables with surviving heirs and articles |
+| 20 | **Accretion** | Key rules stated (pro indiviso, Art. 977, Art. 1020) |
 
-The spec is **85% complete**. It would let a developer build the core engine correctly but would leave them guessing on narrative generation for many cases, and unable to validate their implementation for ~20 of 30 scenarios. Three fix-it aspects are added to the frontier; the spec does NOT converge until they are resolved.
+## FAIL Items — Critical (Blocks Implementation)
 
----
+### C1: Mixed Succession Algorithm — NO PSEUDOCODE
 
-## What Passes
+**Location**: Spec §1.2 lists "Mixed succession (partial will)" as in scope. §3.6 defines `SuccessionType.MIXED`. But **no pseudocode** exists for:
+- How to detect that a will disposes of only part of the estate
+- How to compute the undisposed free portion
+- How to distribute the undisposed remainder intestate
+- How to combine testate and intestate shares for heirs who appear in both
 
-### Section 1-3: Overview, Scope, Legal Background ✅
-
-Clear, well-structured orientation for a developer with zero law knowledge. The 8-concept legal background (compulsory heirs, legitime, free portion, intestate vs testate, Art. 895 ¶3 cap rule, representation, preterition, collation) is complete and accurate. A developer finishing Section 3 would have sufficient conceptual grounding.
-
-### Section 4: Data Model ✅ (with minor gaps — see below)
-
-All structs and enums are present. The 30+-field `Heir` struct, the `Will` model with all 6 `ShareSpec` variants, the 18-field `Donation` struct, and the `EngineOutput` types are comprehensive. The `Fraction` and `Money` primitive types correctly enforce the rational arithmetic mandate.
-
-Category derivation rule is explicit:
+**Source**: `analysis/computation-pipeline.md` (Step 7c) and `analysis/free-portion-rules.md` both contain complete `compute_mixed_succession()` pseudocode showing:
 ```
-LEGITIMATE_CHILD | LEGITIMATED_CHILD | ADOPTED_CHILD → LEGITIMATE_CHILD_GROUP
-ILLEGITIMATE_CHILD → ILLEGITIMATE_CHILD_GROUP
-SURVIVING_SPOUSE → SURVIVING_SPOUSE_GROUP
-LEGITIMATE_PARENT | LEGITIMATE_ASCENDANT → LEGITIMATE_ASCENDANT_GROUP
-```
-
-### Section 5: Computation Pipeline ✅
-
-All 10 steps have pseudocode. The two restart conditions are documented with their guards. The rational arithmetic mandate is enforced throughout. The collatability table in Step 4 covers all 12 donation categories. The critical note "Step 7 uses net estate at death, NOT collation-adjusted base" is explicit.
-
-### Section 6: Legitime Fraction Table ✅
-
-All 15 testate scenarios with exact fractions. Cap rule formulas are correct and verified:
-- T4 cap triggers when m > 2n (verified: m/(4n) > ½ ↔ m > 2n)
-- T5a cap triggers when m > 1 (verified: FP_after_spouse = ¼, uncapped total = m/4 > ¼ ↔ m > 1)
-- T5b cap triggers when m > 2(n-1) (verified: FP_after_spouse = (n-1)/(2n), uncapped total = m/(4n) > (n-1)/(2n) ↔ m > 2(n-1))
-
-Ascendant division sub-algorithm is complete: 3-tier (parents → nearest degree → by-line split). Art. 972 "no representation in ascending line" is explicitly noted.
-
-### Sections 7-9: Intestate Rules, Validation, Special Modules ✅
-
-All 15 intestate scenarios with exact distribution formulas. The "NO cap rule in intestate" point is prominently stated and repeated. The 5-check testate validation pipeline is correct and ordered. The Art. 1021 legitime vs free-portion accretion distinction ("in own right" → restart vs proportional → no restart) is correct and critical — the spec gets this right.
-
-The Art. 911 three-phase reduction algorithm is complete pseudocode. The 4-priority vacancy resolution chain is correct.
-
-### Section 12: Manual Review Flags ✅ (minor gap — see below)
-
-All 6 flags present with triggers, defaults, and legal basis.
-
----
-
-## What Fails
-
-### CRITICAL FAIL 1: Narrative Templates Incomplete (Sections 10 + 14.6)
-
-**The problem**: Section 10 provides the standard template and 7 validation rules. It covers:
-- Standard header
-- Succession type sentence
-- Category explanation
-- Legitime computation block
-- Free portion sentence
-
-What it does NOT provide as templates:
-1. **Collateral heir narratives** (scenarios I12-I14): No template for how to explain to a sibling, nephew/niece, or cousin why they are inheriting. What articles are cited? What's the structure?
-2. **State/escheat narrative** (I15): No template.
-3. **Special event templates**: The following events have NO template in the spec (they are in explainer-format.md only, which the spec shouldn't require developers to read):
-   - Representation section — when an heir inherits "by representation"
-   - Disinheritance (valid) section — explaining to representatives why their ancestor was excluded
-   - Disinheritance (invalid/Art. 918) section — explaining reinstatement
-   - Preterition section — explaining the Art. 854 annulment effect to ALL heirs
-   - Inofficiousness reduction section — explaining why a legacy was reduced from ₱X to ₱Y
-   - Underprovision recovery section (Art. 855) — explaining the 3-source waterfall
-   - Condition stripping section (Art. 872) — noting that a condition was removed
-   - Accretion section — for Art. 1021 and Art. 1015-1019 cases
-   - Collation section — showing donation imputation arithmetic
-   - Articulo mortis reduction section — explaining ½ → ⅓ reduction
-   - Reserva troncal warning section
-
-The test vectors partially fill this gap — TV-07 shows a preterition narrative, TV-08 shows representation+disinheritance, TV-13 shows the cap rule. But TV-08 shows representation in the context of disinheritance, not standalone predecease representation. A developer cannot reliably derive all 19 NarrativeSection types from 13 test vectors.
-
-**Impact**: The narrative is a stated core output of the engine ("this is a USER-TARGETED engine"). A developer who builds the computation correctly but generates incorrect narratives has failed the spec's requirement.
-
-**Section 14.6** makes this worse: "Test all 28 narrative patterns (N-01 through N-28) in `analysis/explainer-format.md`" — this explicitly tells developers to read an analysis file the spec is supposed to replace. This violates the standalone requirement.
-
-**Fix-it**: `spec-patch-narratives` — add all 19 NarrativeSection templates directly to Section 10 of the spec, replacing the reference to explainer-format.md with inline content.
-
----
-
-### CRITICAL FAIL 2: Missing Test Vectors for 20+ Scenarios (Section 11 + 14.6)
-
-**The problem**: The spec provides 13 test vectors covering 10 scenarios (I1, I2, I3, I6, I11, T1, T2, T3, T5a, T5b). But the spec's own implementation requirements say:
-- "Unit test each legitime scenario (T1-T15) with both cap-triggered and non-cap cases"
-- "Unit test each intestate scenario (I1-I15)"
-- "Integration test all 13 test vectors above"
-
-The following scenarios have **zero test vectors**:
-
-| Missing Testate | Missing Intestate |
-|----------------|------------------|
-| T4 (LC + IC, no spouse) | I4 (n LC + m IC + spouse) |
-| T6 (ascendants only) | I7 (IC only) |
-| T7 (ascendants + spouse) | I8 (IC + spouse) |
-| T8 (ascendants + IC) | I9 (ascendants + IC) |
-| T9 (ascendants + IC + spouse) | I10 (ascendants + IC + spouse) |
-| T10 (IC + spouse) | I12 (spouse + siblings) |
-| T11 (IC only) | I13 (sibling/nephew collaterals) |
-| T12 (spouse only, testate) | I14 (other collaterals) |
-| T14 (illegitimate decedent, parents) | I15 (State) |
-| T15 (illegitimate decedent, parents + spouse) | |
-
-That is 10 missing testate scenarios + 9 missing intestate scenarios = **19 of 30 scenarios have no test vector**.
-
-A developer implementing Regime B (T6-T9), Regime C (T10-T12), illegitimate decedent (T14-T15), or intestate collateral succession (I12-I15) has no reference computation to validate against.
-
-**Impact**: The developer would implement these scenarios from the fraction table alone, with no validation checkpoint. Bugs in ascendant division, the collateral blood-type algorithm, or the IC-only scenario would go undetected.
-
-**Fix-it**: `spec-patch-test-vectors` — add minimal test vectors for T4, T6-T9, T10-T12, T14-T15, I4, I7-I10, I12-I15 (simplified: exact peso amounts + fraction computation + invariant verification). Does not need full narratives for all, just enough to validate the fraction computation.
-
----
-
-### MINOR FAIL 3: Data Model Gaps (Section 4)
-
-These do not block implementation but would cause developer confusion:
-
-**3a. Will validity contract undefined**
-
-`Will.is_valid` is described as "Form validity (probated — outside engine scope)". But what should the engine do when `is_valid = false`?
-
-The spec is silent. A developer could reasonably either: (a) treat invalid will = intestate, (b) throw an error, or (c) still process the substantive dispositions. Answer should be stated explicitly. The correct answer (implied by "outside engine scope") is: the engine should **reject invalid wills at the input boundary** and only accept wills where probate has confirmed formal validity. If `is_valid = false`, the engine should throw an input validation error.
-
-**3b. `is_gratuitous` field unexplained**
-
-`Donation.is_gratuitous: bool` has no explanation of when false or what effect that has on collatability. A donation with `is_gratuitous = false` would not be a "donation" in the legal sense (it would be a sale). Either remove this field, or define what it means for computation.
-
-**3c. `BloodType` undefined**
-
-`BloodType { FULL, HALF }` is defined but never explained. A developer in most jurisdictions would guess correctly, but the spec should state: FULL = both parents of the heir are siblings (same mother AND father) of the decedent; HALF = only one parent (same father OR same mother, but not both). This is needed for I13 full/half blood weighting.
-
-**3d. `FiliationProof` article numbering inconsistency**
-
-Section 4.2 uses:
-```
-OPEN_CONTINUOUS_POSSESSION,  // FC Art. 172 ¶2(1)
-OTHER_EVIDENCE,              // FC Art. 172 ¶2(2)
+if will disposes of only part of FP:
+    testate_share for each disposition
+    undisposed_fp = FP_disposable - sum(will_dispositions)
+    intestate_shares = compute_intestate_distribution(undisposed_fp, heirs)
+    merge shares per heir
 ```
 
-Section 10.5 uses:
-```
-OPEN_CONTINUOUS_POSSESSION → "...Art. 172(3), Family Code..."
-OTHER_EVIDENCE → "...Art. 172(4), Family Code..."
-```
+**Impact**: Developer cannot implement mixed succession without the analysis files.
 
-Both refer to the same provisions but use different citation formats. A developer generating narratives would use Section 10.5 citations (correct for narrative output), but the enum comment in Section 4.2 would confuse them. Unify to one format.
+### C2: Collateral Distribution Sub-Algorithm — NO PSEUDOCODE
 
-**3e. Four manual flag codes missing from Section 12**
+**Location**: Spec §7.2 (I13-I14) describes collateral rules in prose but provides no algorithm.
 
-The spec-draft analysis log notes 10 manual review flags (6 from computation-pipeline + 4 from edge-cases). But Section 12 of the spec only lists 6. The 4 missing flags from edge-cases.md:
-- `USUFRUCT_ANNUITY_OPTION` — Art. 911 ¶3: testator or compulsory heir may elect usufruct/annuity instead of reduction; computation depends on election
-- `DUAL_LINE_ASCENDANT` — when a consanguineous union means an ascendant appears in both paternal and maternal lines; Art. 890 by-line split is ambiguous
-- `POSTHUMOUS_DISINHERITANCE` — will disinherits an heir conceived but not yet born; disinheritance validity for posthumous children
-- `CONTRADICTORY_DISPOSITIONS` — will has internally contradictory clauses (e.g., heir X gets ½ and heir X gets ⅓)
+**Missing**: The 4-branch decision tree:
+1. Siblings + nephews/nieces → per stirpes with blood weighting per line
+2. Siblings only → 3-branch logic (all full / all half / mixed with 2:1 ratio)
+3. Nephews/nieces only → per capita switch (Art. 975)
+4. Other collaterals → nearest-degree exclusion + 5th-degree limit
 
-Without these flags, a developer would compute a deterministic result in gray-area situations that should trigger a warning. The `ManualFlagCode` enum in Section 4.7 only lists 6 values and should list 10.
+**Source**: `analysis/intestate-order.md` has complete `distribute_collaterals()`, `distribute_siblings_with_representation()`, `distribute_siblings()`, `distribute_nephews_only()`, and `distribute_other_collaterals()` functions.
 
-**Fix-it**: `spec-patch-minor-gaps` — address all items in 3a through 3e above with targeted edits to the spec. Estimated: add ~50 lines to Section 4, Section 10, Section 12.
+**Impact**: A developer would not know how to handle the full/half blood doubling (Art. 1006) applied per-line vs per-individual, or the per-capita switch when only nephews survive.
 
----
+### C3: Art. 911 Three-Phase Reduction — NO PSEUDOCODE
 
-## Complete Gap Table
+**Location**: Spec §9.1 Check 4 lists the phases but doesn't show the algorithm.
 
-| # | Section | Gap | Severity |
-|---|---------|-----|---------|
-| 1 | 10, 14.6 | Narrative templates missing for all special events and collateral/escheat scenarios | CRITICAL |
-| 2 | 11, 14.6 | Test vectors missing for 19 of 30 scenarios (T4, T6-T15, I4, I7-I15) | CRITICAL |
-| 3a | 4.3 | `Will.is_valid = false` behavior undefined | MINOR |
-| 3b | 4.4 | `is_gratuitous` field unexplained | MINOR |
-| 3c | 4.5 | `BloodType` FULL/HALF not defined | MINOR |
-| 3d | 4.2, 10.5 | `FiliationProof` article numbering inconsistent (¶2(1) vs (3)) | MINOR |
-| 3e | 4.7, 12 | 4 manual flag codes missing (USUFRUCT_ANNUITY_OPTION, DUAL_LINE_ASCENDANT, POSTHUMOUS_DISINHERITANCE, CONTRADICTORY_DISPOSITIONS) | MINOR |
+**Missing**: The actual reduction pseudocode showing:
+- How to separate preferred from non-preferred legacies
+- Pro rata calculation within each phase
+- When to cascade to the next phase (only when current phase is fully consumed)
+- Phase 3 donation reduction in reverse chronological order
+- How to handle the case where a single reduction zeroes out multiple dispositions
 
----
+**Source**: `analysis/computation-pipeline.md` (Step 6) and `analysis/free-portion-rules.md` both contain `reduce_inofficious()` with complete phase logic.
 
-## What Does NOT Need Fixing
+**Impact**: The three-phase reduction is the core of testate validation. Without pseudocode, a developer cannot implement it.
 
-The following aspects were carefully reviewed and are CORRECT:
+### C4: Fideicommissary Substitution Validity Requirements — NOT SPECIFIED
 
-1. **Legitime fractions**: All 15 testate scenarios have exact fractions. Cap trigger thresholds mathematically verified. ✅
-2. **Pipeline step order**: The 10-step pipeline is correct. Restart conditions are properly guarded. ✅
-3. **Art. 854 vs Art. 918 distinction**: Preterition (total annulment) vs invalid disinheritance (partial annulment) is clearly differentiated. ✅
-4. **Art. 1021 accretion distinction**: Vacant legitime → restart (not proportional) vs vacant FP → proportional accretion. Correct. ✅
-5. **Cause-category matching**: Implicitly defined by enum naming (CHILD_, PARENT_, SPOUSE_) + explicit IMPORTANT note in Section 4.3. Inferable by developer. ✅
-6. **Art. 977 renunciation non-trigger**: Correctly noted in Step 2 pseudocode ("Art. 977: NO line created"). ✅
-7. **Iron Curtain Rule**: Correct in I13 for collateral succession. ✅
-8. **Rational arithmetic mandate**: Explicitly enforced throughout. ✅
-9. **FP_gross vs FP_disposable**: Two-value tracking is correct and critical. ✅
-10. **Testate vs intestate cap rule difference**: Prominently stated and repeated. ✅
+**Location**: Spec §3.3 defines `SubstitutionType.FIDEICOMMISSARY` but does not specify validity requirements.
 
----
+**Missing**: Art. 863's 4 validity conditions:
+1. **One-degree limit**: Fideicommissary must be one generation from fiduciary
+2. **Both-alive requirement**: Both fiduciary and fideicommissary alive at testator's death
+3. **Express-only**: Cannot be implied from will language
+4. **Cannot burden legitime**: Only applies to free portion
 
-## Fix-it Aspects Added to Frontier
+**Source**: `analysis/testate-institution.md` §4.4 has complete validity check.
 
-Three aspects are added to the frontier for targeted spec patches:
+**Impact**: Without these, an engine might accept an invalid fideicommissary substitution and distribute incorrectly.
 
-1. **`spec-patch-narratives`** (Wave 5): Add all 19 NarrativeSection templates to Section 10 of the spec; add collateral, State, and special-event narrative templates; remove reference to explainer-format.md from Section 14.6. Sources: `analysis/explainer-format.md`.
+## FAIL Items — High Severity (Significantly Affects Implementation)
 
-2. **`spec-patch-test-vectors`** (Wave 5): Add minimal test vectors for T4, T6-T9, T10-T12, T14-T15, I4, I7-I10, I12-I15 to Section 11 of the spec (exact amounts + fraction computation + key invariants; no narrative required except for one scenario per wave). Sources: `analysis/test-vectors.md`, `analysis/legitime-table.md`, `analysis/intestate-order.md`.
+### H1: FP Pipeline Order of Operations — NOT SHOWN
 
-3. **`spec-patch-minor-gaps`** (Wave 5): Targeted edits to address items 3a-3e: (a) will validity contract, (b) is_gratuitous removal/clarification, (c) BloodType definition, (d) FiliationProof citation unification, (e) add 4 missing ManualFlagCode values to Section 4.7 and Section 12. Sources: `analysis/edge-cases.md`, `analysis/data-model.md`.
+**Location**: Spec §2.3 states two FP values exist but doesn't show the computation order.
 
-Once all three patch aspects are completed, re-run `spec-review`.
+**Missing**: The step-by-step pipeline:
+1. Compute FP_gross = estate_base - LC_collective_legitime
+2. Deduct spouse's legitime from FP_gross
+3. Apply Art. 895 ¶3 cap rule to IC shares using FP_remaining
+4. FP_disposable = FP_remaining - total_IC_legitime (capped)
 
----
+The ORDER matters: spouse is satisfied BEFORE the IC cap is computed. This is stated in the cap rule pseudocode (§6.6) but not in a unified FP pipeline showing all four steps.
 
-## Test Implications
+**Source**: `analysis/free-portion-rules.md` has `compute_free_portion_pipeline()`.
 
-This review generates the following test implications for the eventual implementation:
+### H2: Art. 1064 Representation Collation — NO ALGORITHM
 
-- The 28 narrative test cases in explainer-format.md must be made part of the spec (not just analysis files) — they constitute the spec's acceptance test for narrative generation
-- After spec-patch-test-vectors: the engine has ~30 test vectors covering all T and I scenarios, plus special cases = complete regression suite
-- The 10 invariants in Section 11 should be run against all 30+ vectors automatically
+**Location**: Spec §8.6 states the rule ("grandchildren must collate parent's donations") but provides no computation.
 
----
+**Missing**: How to:
+- Identify which donations to assign to each representation line
+- Compute each grandchild's pro-rata share of the parent's donation
+- Handle the ₱0 distribution edge case
+- Integrate with Step 8 (collation adjustment)
 
-## Summary
+**Source**: `analysis/computation-pipeline.md` Step 8 has pseudocode.
 
-The spec is structurally sound and legally accurate. Its computation logic is complete and correct. The gaps are in the **user-facing output** (narrative templates), **validation scaffolding** (test vectors for most scenarios), and **minor data model clarifications**. These are the final mile, not a fundamental flaw. The fix-it aspects are targeted and scoped: each should require 1-2 loop iterations to complete.
+### H3: Collatability Determination — Decision Tree Missing
 
-**Convergence status**: NOT CONVERGED. No `status/converged.txt` written.
+**Location**: Spec §8.3 has a reference table but not the conditional logic.
+
+**Missing**: The `determine_collatability()` decision tree, especially:
+- Art. 1068 professional expenses: conditional on (parent required OR impairs legitime), minus imputed home savings
+- Art. 1070 wedding gifts: threshold = 1/10 of FP, only EXCESS is collatable
+- Art. 1062 express exemption: still check for inofficiousness (override)
+- Art. 1072 joint-parent: computation of ½ assignment
+
+**Source**: `analysis/computation-pipeline.md` Step 4 and `analysis/collation.md` both have full logic.
+
+### H4: Narrative Validation Rules — ABSENT
+
+**Location**: Spec §11 has templates and examples but NO validation rules.
+
+**Missing**: 10 validation rules from `analysis/explainer-format.md` §9:
+1. Amount consistency (HEADER total = InheritanceShare.total)
+2. Article citation (every legal conclusion cites an article)
+3. Category match (label matches effective_category)
+4. Computation visibility (show multiplication for fractions)
+5. Special event coverage (every Correction has narrative section)
+6. Collation coverage (if donations_imputed > 0, COLLATION section present)
+7. Representation coverage (if REPRESENTATION mode, section present)
+8. No orphan references (no unexplained items)
+9. Peso format consistency (₱ prefix, commas, centavo rules)
+10. Self-containment (no external context needed)
+
+**Impact**: Without these, narrative output cannot be programmatically verified.
+
+### H5: Narrative Helper Functions — NOT SPECIFIED
+
+**Location**: Spec §11.3 states formatting rules but doesn't define the 6 helper functions.
+
+**Missing**:
+- `category_label(effective_category) → String` — maps to display text with legal basis
+- `raw_label(heir) → String` — full label with sub-category citations
+- `filiation_description(proof_type) → String` — maps FiliationProof enum to explanatory text
+- `format_peso(amount) → String` — ₱ formatting with comma/centavo rules
+- `format_fraction(fraction) → String` — Unicode symbol + slash notation
+- `spouse_article(scenario) → String` — maps scenario to governing article
+
+**Source**: `analysis/explainer-format.md` §4.2 has all 6 with signatures and logic.
+
+## FAIL Items — Medium (Aids Implementation)
+
+### M1: Vacancy Resolution Pseudocode
+
+Spec §10 describes the priority chain but doesn't show the algorithm that distinguishes vacant-legitime (→ scenario re-evaluation, restart from Step 3) from vacant-FP (→ proportional accretion, no restart). The decision tree is in `analysis/computation-pipeline.md` Step 9.
+
+### M2: NarrativeConfig Struct
+
+Spec doesn't define runtime configuration for narrative generation (include_comparison, include_filiation_proof, include_collation_detail, max_sentences). Defined in `analysis/explainer-format.md` §8.
+
+### M3: NarrativeSectionType Formal Enum
+
+19 section types only implicitly referenced in spec §11.1. A formal enum would make implementation cleaner. Defined in `analysis/explainer-format.md` §1.
+
+### M4: Nephews-Only Full/Half Blood Debate
+
+Scholarly debate on whether Art. 1006 doubling applies to nephews/nieces in per-capita mode (Art. 975). Should have a configuration flag. Noted in `analysis/intestate-order.md`.
+
+### M5: Will-Execution Master Algorithm
+
+The spec describes testate steps separately (Steps 3, 5, 6, 7) but doesn't show a unified 5-phase will-execution function. The `execute_will()` master function in `analysis/testate-institution.md` coordinates all phases.
+
+## Test Vector Coverage Assessment
+
+### Covered Scenarios
+- Simple intestate (I1, I2, I3, I6, I11) ✓
+- Testate basic (T1, T2, T3) ✓
+- Cap rule (T5a, T5b) ✓
+- Preterition, disinheritance, representation ✓
+- Adopted child equality ✓
+- Collation + inofficiousness ✓
+
+### Missing Test Vectors
+- **Mixed succession** (partial will + intestate remainder) — no test vector
+- **Collateral distribution** (I12, I13, I14) — no test vector for siblings/nephews with full/half blood
+- **Ascendant-only intestate** (I5) — no direct test vector
+- **IC-only intestate** (I7, I8) — no test vector
+- **Articulo mortis** (T12 with reduced spouse share) — no test vector
+- **Art. 969 total renunciation** (next degree) — no test vector
+- **Art. 1064 representation collation** — no test vector showing grandchild getting ₱0
+- **Escheat** (I15) — no test vector
+- **Iron Curtain** (Art. 992) in collateral context — no test vector
+- **Fideicommissary substitution** — no test vector
+
+## Verdict
+
+The spec is **not yet sufficient** for a developer with zero Philippine law knowledge to build the engine. The PASS items demonstrate strong coverage of the core computation (legitime fractions, intestate formulas, heir classification, cap rule). However, the 4 critical gaps (mixed succession, collateral distribution, Art. 911 reduction, fideicommissary validity) and 5 high-severity gaps (FP pipeline, Art. 1064 collation, collatability decision tree, narrative validation, narrative helpers) would force the developer to consult the analysis files.
+
+## Recommended Fix-It Aspects
+
+To reach convergence, the spec needs these additions:
+
+| Aspect | Wave | Priority | Description |
+|--------|------|----------|-------------|
+| spec-fix-mixed-succession | 5 | Critical | Add mixed succession detection + distribution algorithm |
+| spec-fix-collateral-algorithm | 5 | Critical | Add collateral distribution sub-algorithm with full/half blood |
+| spec-fix-art911-reduction | 5 | Critical | Add Art. 911 three-phase reduction pseudocode |
+| spec-fix-fideicommissary | 5 | Critical | Add Art. 863 validity requirements |
+| spec-fix-fp-pipeline | 5 | High | Add FP computation order-of-operations pseudocode |
+| spec-fix-narrative-rules | 5 | High | Add narrative validation rules + helper functions |
+| spec-fix-test-vectors | 5 | High | Add 10 missing test vectors (mixed, collateral, articulo mortis, etc.) |
+
+## Cross-Reference
+
+| Spec Section | Status | Gaps |
+|-------------|--------|------|
+| §1 Overview | ✓ PASS | — |
+| §2 Architecture | ~ PARTIAL | FP pipeline order (H1) |
+| §3 Data Model | ~ PARTIAL | Fideicommissary validity (C4) |
+| §4 Heir Classification | ✓ PASS | — |
+| §5 Representation | ✓ PASS | — |
+| §6 Legitime Table | ✓ PASS | — |
+| §7 Intestate Distribution | ~ PARTIAL | Collateral sub-algorithm (C2), mixed succession (C1) |
+| §8 Collation | ~ PARTIAL | Art. 1064 algorithm (H2), decision tree (H3) |
+| §9 Testate Validation | ~ PARTIAL | Art. 911 pseudocode (C3) |
+| §10 Vacancy Resolution | ~ PARTIAL | Pseudocode detail (M1) |
+| §11 Narrative System | ~ PARTIAL | Validation rules (H4), helpers (H5), config (M2) |
+| §12 Rounding | ✓ PASS | — |
+| §13 Edge Cases | ✓ PASS | — |
+| §14 Test Vectors | ~ PARTIAL | 10 missing scenarios |
+| §15 Implementation Notes | ✓ PASS | — |

@@ -1,10 +1,10 @@
 # Analysis Frontier — Inheritance Distribution Engine
 
 ## Statistics
-- Total aspects discovered: 28
-- Analyzed: 25
-- Pending: 3
-- Convergence: 89.3%
+- Total aspects discovered: 33
+- Analyzed: 26
+- Pending: 7
+- Convergence: 78.8%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -42,7 +42,16 @@
 - [x] explainer-format — template for per-heir plain-English narrative explanations with peso amounts and article citations
 - [x] edge-cases — catalog of all edge cases: renunciation, commorientes, unworthiness, reserva troncal, collation
 - [x] spec-draft — synthesize all analysis into complete software spec at `../../docs/plans/inheritance-engine-spec.md`
-- [ ] spec-review — self-review: can a developer with no Philippine law knowledge build the engine from this spec?
+- [x] spec-review — self-review: can a developer with no Philippine law knowledge build the engine from this spec?
+
+### Wave 6: Spec Fixes (Added by spec-review)
+- [ ] spec-fix-mixed-succession — Add mixed succession detection + distribution algorithm pseudocode to spec §7
+- [ ] spec-fix-collateral-algorithm — Add collateral distribution sub-algorithm with full/half blood, per stirpes/per capita switching to spec §7.2
+- [ ] spec-fix-art911-reduction — Add Art. 911 three-phase reduction pseudocode to spec §9.1
+- [ ] spec-fix-fideicommissary — Add Art. 863 fideicommissary validity requirements (one-degree, both-alive, express, no-legitime) to spec §3.3
+- [ ] spec-fix-narrative-rules — Add narrative validation rules (10 rules), helper functions (6 functions), NarrativeConfig, NarrativeSectionType enum to spec §11
+- [ ] spec-fix-pseudocode-gaps — Add FP pipeline order-of-operations, Art. 1064 representation collation algorithm, collatability decision tree to spec §2/§8
+- [ ] spec-fix-test-vectors — Add 10 missing test vectors (mixed succession, collateral, articulo mortis, IC-only, escheat, total renunciation, Iron Curtain, fideicommissary, representation collation, ascendant-only)
 
 ## Recently Analyzed
 - **spec-draft** (2026-02-23): Synthesized all 24 analysis files into a complete software specification at `../../docs/plans/inheritance-engine-spec.md` (~1,200 lines). 15 sections + 2 appendices covering: (1) Overview with scope, legal basis, and design decisions; (2) 10-step pipeline architecture with restart conditions and dual FP values; (3) Complete data model (essential types from the 42 structs/34 enums); (4) Heir classification rules with 4 effective categories, eligibility gate, and filiation proof; (5) Representation rules with 4 triggers, build-lines algorithm, per stirpes, collateral limit; (6) Complete legitime fraction table for all 17 testate scenarios (T1-T15 + T5a/T5b) across 3 regimes, with cap rule algorithm pseudocode and ascendant division sub-algorithm; (7) Intestate distribution formulas for all 15 scenarios (I1-I15), critical no-cap-in-intestate note, and Iron Curtain Rule; (8) Collation system: Art. 908 estate base, 14-category collatability matrix, imputation rules, Art. 1064 representation collation; (9) 5-check testate validation pipeline (preterition→disinheritance→underprovision→inofficiousness→condition stripping) with Art. 911 three-phase reduction and Art. 912 indivisible realty; (10) Vacancy resolution with 4-priority chain and Art. 1021 critical legitime-vs-FP distinction; (11) Narrative template system with header variants, formatting rules, and 4 complete worked examples; (12) Rounding: rational arithmetic mandate, centavo allocation, sum invariant; (13) Edge cases: 10 manual review flags + 82 edge cases across 21 categories; (14) Test vectors: 13 vectors with 10 invariants and 1 fully worked example (TV-13 cap rule); (15) Implementation notes: language-agnostic, determinism guarantee, testing strategy. Appendix A: 30-article quick reference. Appendix B: 15-term glossary. Identified 5 potential gaps for spec-review: fideicommissary substitution detail, Art. 1064+cap interaction, mixed succession pseudocode, collateral distribution sub-algorithm, narrative validation rules.
