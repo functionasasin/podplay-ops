@@ -21,3 +21,12 @@ loops:
     timeout_minutes: 30
     status: active
     created: 2026-02-22
+
+  github-profile-reverse:
+    description: "Audit GitHub profile → profile spec for dangerous builder persona"
+    type: reverse
+    schedule: "*/30 * * * *"
+    max_iterations: 25
+    timeout_minutes: 10
+    status: active
+    created: 2026-02-23
