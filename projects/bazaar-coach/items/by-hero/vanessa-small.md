@@ -13,6 +13,7 @@ Rating key:
 
 ## Ambergris
 - **Size**: Small | **Types**: Aquatic, Economy, Heal, Value, Relic
+- **Starting Tier**: Bronze
 - **Cooldown**: 7.0s
 - **Effect**: Heal equal to x1/x2/x3/x4 Value. Gains +1/2/3/4 Value when buying Aquatic items.
 - **Rating**: **A** -- Scales well in Aquatic-heavy builds. Self-funding heal source.
@@ -20,6 +21,7 @@ Rating key:
 
 ## Bayonet
 - **Size**: Small | **Types**: Weapon, Damage
+- **Starting Tier**: Bronze
 - **Cooldown**: Passive
 - **Effect**: Deal 10/15/20/25 Special Damage when using left Weapon.
 - **Rating**: **B** -- Decent passive damage boost for weapon builds.
@@ -27,6 +29,7 @@ Rating key:
 
 ## Blowgun
 - **Size**: Small | **Types**: Weapon, Damage, Poison, Relic
+- **Starting Tier**: Gold
 - **Cooldown**: 9.0s (Bronze-Gold) / 7.0s (Diamond)
 - **Effect**: Deal 2 Special Damage. Poison equal to damage dealt.
 - **Rating**: **B** -- Niche Poison weapon. Slow cooldown limits value.
@@ -34,6 +37,7 @@ Rating key:
 
 ## Bolas
 - **Size**: Small | **Types**: Weapon, Ammo, Damage, Slow
+- **Starting Tier**: Bronze
 - **Cooldown**: 5.0s | **Ammo**: 2
 - **Effect**: Deal 40/60/80/100 Damage. Slow 1 item 2/3/4/5 seconds.
 - **Rating**: **B** -- Good early weapon with Slow utility. Limited by Ammo.
@@ -41,6 +45,7 @@ Rating key:
 
 ## Butterfly Swords
 - **Size**: Small | **Types**: Weapon, Damage
+- **Starting Tier**: Silver
 - **Cooldown**: 8.0s
 - **Effect**: Deal 5 Damage. Multicast: 2/3/4.
 - **Rating**: **B** -- Scaling Multicast makes it decent filler.
@@ -48,6 +53,7 @@ Rating key:
 
 ## Calico
 - **Size**: Small | **Types**: Friend, Weapon, Damage, Crit
+- **Starting Tier**: Bronze
 - **Cooldown**: 7.0s
 - **Effect**: Deal 10/20/30/40 Damage. Gains +5/10/15/20% Crit when using Weapons. Double Crit Damage.
 - **Rating**: **A** -- Strong in weapon-heavy builds with double Crit damage.
@@ -55,6 +61,7 @@ Rating key:
 
 ## Cannonball
 - **Size**: Small | **Types**: AmmoReference
+- **Starting Tier**: Bronze
 - **Cooldown**: Passive
 - **Effect**: Adjacent items gain +1/2/3/4 Ammo.
 - **Rating**: **B** -- Good Ammo support for adjacent items.
@@ -62,6 +69,7 @@ Rating key:
 
 ## Catfish
 - **Size**: Small | **Types**: Aquatic, Friend, Haste, Poison
+- **Starting Tier**: Bronze
 - **Cooldown**: 5.0s
 - **Effect**: Poison 3. Gains +2/4/6/8 Poison when gaining Haste.
 - **Rating**: **A** -- Scales to 350+ Poison per cast late game. Core Poison engine for Day 13+.
@@ -69,6 +77,7 @@ Rating key:
 
 ## Chum
 - **Size**: Small | **Types**: Aquatic, Crit
+- **Starting Tier**: Bronze
 - **Cooldown**: 5.0s
 - **Effect**: Aquatic items gain 4/6/8/10% Crit. Grants Piranha on purchase.
 - **Rating**: **B** -- Free Piranha is nice. Crit buff for Aquatic builds.
@@ -76,6 +85,7 @@ Rating key:
 
 ## Clamera
 - **Size**: Small | **Types**: Aquatic, Slow
+- **Starting Tier**: Bronze
 - **Cooldown**: 7.0s (Bronze) / 6.0s (Silver) / 5.0s (Gold) / 4.0s (Diamond)
 - **Effect**: Slow 1 item 3 seconds. Uses at fight start.
 - **Rating**: **S** -- Universally strong. Disrupts enemy board from turn 1. Optimizes startup.
@@ -83,6 +93,7 @@ Rating key:
 
 ## Concealed Dagger
 - **Size**: Small | **Types**: Weapon, Gold, Damage
+- **Starting Tier**: Silver
 - **Cooldown**: 9.0s
 - **Effect**: Deal 30/40/50 Damage. Gain 1/2/3 Gold.
 - **Rating**: **C** -- Economy weapon, but slow. Better options exist.
@@ -90,6 +101,7 @@ Rating key:
 
 ## Coral
 - **Size**: Small | **Types**: Aquatic, Heal
+- **Starting Tier**: Bronze
 - **Cooldown**: 5.0s
 - **Effect**: Heal 20. Gains +3/6/9/12 Heal when buying Aquatic items.
 - **Rating**: **B** -- Scaling heal for Aquatic builds.
@@ -97,6 +109,7 @@ Rating key:
 
 ## Custom Scope
 - **Size**: Small | **Types**: Crit
+- **Starting Tier**: Silver
 - **Cooldown**: Passive
 - **Effect**: Right Weapon gains +15/20/25% Crit. Charges non-Weapon item 1/1.5/2s when Critting with single Weapon.
 - **Rating**: **B** -- Strong in single-weapon builds (Sniper Rifle, Flagship).
@@ -112,6 +125,7 @@ Rating key:
 
 ## Dive Weights
 - **Size**: Small | **Types**: Ammo, Aquatic, Cooldown, Haste, Tool, Apparel
+- **Starting Tier**: Silver
 - **Cooldown**: 8.0s | **Ammo**: 4
 - **Effect**: Haste 1 item 1/2/3s. Cooldown reduced 1s per adjacent Aquatic. Multicast equal to Ammo.
 - **Rating**: **S** -- Insane Multicast potential. Core combo piece for multiple archetypes.
@@ -119,6 +133,7 @@ Rating key:
 
 ## Grapeshot
 - **Size**: Small | **Types**: Weapon, Ammo, Damage
+- **Starting Tier**: Silver
 - **Cooldown**: 4.0s | **Ammo**: 2
 - **Effect**: Deal 15/30/60 Damage. Reloads 1 Ammo when using Ammo items.
 - **Rating**: **B** -- Self-sustaining Ammo weapon. Good early.
@@ -126,6 +141,7 @@ Rating key:
 
 ## Grappling Hook
 - **Size**: Small | **Types**: Weapon, Tool, Damage, Slow
+- **Starting Tier**: Bronze
 - **Cooldown**: 7.0s
 - **Cost**: 2/4/8/16
 - **Effect**: Deal 12/18/24/32 Damage. Slow 1/2/3/4 items 1 second.
@@ -134,6 +150,7 @@ Rating key:
 
 ## Grenade
 - **Size**: Small | **Types**: Weapon, Ammo, Damage
+- **Starting Tier**: Bronze
 - **Cooldown**: 5.0s | **Ammo**: 1
 - **Effect**: Deal 50/100/150/200 Damage. 25% Crit Chance.
 - **Rating**: **B** -- High burst but limited by 1 Ammo. Needs reload support.
@@ -141,6 +158,7 @@ Rating key:
 
 ## Handaxe
 - **Size**: Small | **Types**: Weapon, Damage, DamageReference
+- **Starting Tier**: Bronze
 - **Cooldown**: 8.0s
 - **Effect**: Deal 10/15/20/25 Damage. Weapons gain +6/9/12/15 Damage.
 - **Rating**: **B** -- Board-wide weapon buff. Good early Gunslinger piece.
@@ -148,6 +166,7 @@ Rating key:
 
 ## Holsters
 - **Size**: Small | **Types**: Haste, Apparel
+- **Starting Tier**: Gold
 - **Cooldown**: Passive
 - **Effect**: Small items gain Haste 1/2/3 seconds at fight start.
 - **Rating**: **A** -- Excellent startup enabler. Core in Slumbering Primordial builds. Combines with Heated Shells.
@@ -155,6 +174,7 @@ Rating key:
 
 ## Honing Steel
 - **Size**: Small | **Types**: Tool, DamageReference
+- **Starting Tier**: Bronze
 - **Cooldown**: 5.0s
 - **Effect**: Right Weapon gains +8/12/16/20 Damage for fight.
 - **Rating**: **B** -- Scaling damage buff for adjacent weapon.
@@ -162,6 +182,7 @@ Rating key:
 
 ## Ice Pick
 - **Size**: Small | **Types**: Weapon, Freeze, Damage, Tool
+- **Starting Tier**: Silver
 - **Cooldown**: 6.0s
 - **Effect**: Deal 25 Damage. Freeze 1 item 1s. Gains +15/20/25 Damage when Freezing.
 - **Rating**: **B** -- Self-scaling Freeze weapon.
@@ -169,6 +190,7 @@ Rating key:
 
 ## IllusoRay
 - **Size**: Small | **Types**: Aquatic, Friend, Ray, Slow
+- **Starting Tier**: Bronze
 - **Cooldown**: 8.0s
 - **Effect**: Slow 1 item 1/2/3/4 seconds. Gains +1 Multicast per adjacent Friend/Ray.
 - **Rating**: **A** -- Multi-target Slow that scales with Friends. Charges Tortuga 3x per activation.
@@ -176,6 +198,7 @@ Rating key:
 
 ## Integrated HUD
 - **Size**: Small | **Types**: Apparel, Tech
+- **Starting Tier**: Bronze
 - **Cooldown**: Passive
 - **Effect**: Right item gains +10/20/30/40% Crit Chance. When you Crit with right item, Slow 1 item 1s.
 - **Rating**: **A** -- Passive Crit + Slow-on-Crit for any item type. Not restricted to Weapons.
@@ -183,6 +206,7 @@ Rating key:
 
 ## Incendiary Rounds
 - **Size**: Small | **Types**: AmmoReference, Burn
+- **Starting Tier**: Silver
 - **Cooldown**: Passive
 - **Effect**: Burn 1/2/3 when using adjacent items. Adjacent items gain +1 Ammo.
 - **Rating**: **A** -- Creates highest quantity of charge triggers. Essential for Slumbering Primordial. Scales with Fiery enchant.
@@ -190,6 +214,7 @@ Rating key:
 
 ## Jellyfish
 - **Size**: Small | **Types**: Aquatic, Friend, Haste, Poison
+- **Starting Tier**: Bronze
 - **Cooldown**: 7.0s
 - **Effect**: Poison 3/6/9/12. Gains Haste 1/2/3/4s when using adjacent Aquatic items.
 - **Rating**: **A** -- Core Poison piece. Jellyfish + Pufferfish is lethal from Day 1.
@@ -197,6 +222,7 @@ Rating key:
 
 ## Jitte
 - **Size**: Small | **Types**: Weapon, Damage, Slow, SlowReference
+- **Starting Tier**: Silver
 - **Cooldown**: 6.0s
 - **Effect**: Deal 10/20/30 Damage. Slow 1 item 1/2/3s. Gains +10/20/30 Damage when Slowing.
 - **Rating**: **B** -- Self-scaling weapon with Slow. Good in Slow-heavy builds.
@@ -204,6 +230,7 @@ Rating key:
 
 ## Korxena Crest
 - **Size**: Small | **Types**: Apparel, Relic
+- **Starting Tier**: Bronze
 - **Cooldown**: Passive
 - **Effect**: Items gain +10/20/30/40% Crit Chance.
 - **Rating**: **A** -- Board-wide Crit buff. Excellent Fiery enchant target.
@@ -219,6 +246,7 @@ Rating key:
 
 ## Lighter
 - **Size**: Small | **Types**: Tool, Burn
+- **Starting Tier**: Bronze
 - **Cooldown**: 3.0s
 - **Effect**: Burn 2/4/6/8.
 - **Rating**: **S** -- Fastest Burn applicator in the game. 3s cooldown is insane.
@@ -226,6 +254,7 @@ Rating key:
 
 ## Mantis Shrimp
 - **Size**: Small | **Types**: Aquatic, Burn, Damage, Friend, SlowReference, Weapon, Ammo
+- **Starting Tier**: Bronze
 - **Cooldown**: 9.0s | **Ammo**: 2
 - **Effect**: Deal 20 Damage. Burn 2. Gains +10/15/20/25 Damage and +2/4/6/8 Burn when Slowing.
 - **Rating**: **A** -- Multi-type item that scales with Slow. Great in Slow/Burn builds.
@@ -233,6 +262,7 @@ Rating key:
 
 ## Mr. Richardson
 - **Size**: Small | **Types**: Friend, Shield, Haste, Slow, Aquatic
+- **Starting Tier**: Silver
 - **Cooldown**: 6.0s
 - **Effect**: Shield 10. Gains +5/10/15 Shield when Hasting or Slowing.
 - **Rating**: **B** -- Defensive Friend. Scales in Haste/Slow heavy boards.
@@ -240,6 +270,7 @@ Rating key:
 
 ## Narwhal
 - **Size**: Small | **Types**: Aquatic, Weapon, Friend, Damage
+- **Starting Tier**: Bronze
 - **Cooldown**: 3.0s
 - **Effect**: Deal 10/20/30/40 Damage.
 - **Rating**: **C** -- Fast but low damage. Filler Aquatic weapon.
@@ -247,6 +278,7 @@ Rating key:
 
 ## Nesting Doll
 - **Size**: Small | **Types**: Toy, Ammo, Shield
+- **Starting Tier**: Silver
 - **Cooldown**: 2.0s | **Ammo**: 8
 - **Effect**: Shield equal to Ammo. Gains +1/2/3 Max Ammo at day start.
 - **Rating**: **A** -- 2s cooldown is the fastest in the game. Scales shield over the run. Charges Zoarcid quickly.
@@ -254,6 +286,7 @@ Rating key:
 
 ## Old Saltclaw
 - **Size**: Small | **Types**: Aquatic, Friend, Weapon, Damage, Haste, Slow
+- **Starting Tier**: Silver
 - **Cooldown**: 6.0s
 - **Effect**: Deal 10 Damage. Gains +5/10/15 Damage when Hasting or Slowing.
 - **Rating**: **B** -- Scales in Haste/Slow boards. Friend type helps Tortuga.
@@ -261,6 +294,7 @@ Rating key:
 
 ## Pearl
 - **Size**: Small | **Types**: Aquatic, Shield
+- **Starting Tier**: Bronze
 - **Cooldown**: 5.0s
 - **Effect**: Shield 10/20/30/40. Charges 1 second when using Aquatic items.
 - **Rating**: **A** -- Fastest-looping Aquatic item. Provides substantial trigger count for Haste engines.
@@ -268,6 +302,7 @@ Rating key:
 
 ## Pesky Pete
 - **Size**: Small | **Types**: Friend, Burn
+- **Starting Tier**: Gold
 - **Cooldown**: 7.0s
 - **Effect**: Burn 4/6. Gains +1 Multicast per adjacent Friend/Property.
 - **Rating**: **B** -- Scaling Burn with Friend adjacency.
@@ -275,6 +310,7 @@ Rating key:
 
 ## Pet Rock
 - **Size**: Small | **Types**: Weapon, Friend, Toy, Crit, Damage
+- **Starting Tier**: Bronze
 - **Cooldown**: 6.0s
 - **Effect**: Deal 8/16/24/32 Damage. Grants 10/15/20/25% Crit if only Friend.
 - **Rating**: **C** -- Conditional Crit bonus. Weak if you have other Friends.
@@ -282,6 +318,7 @@ Rating key:
 
 ## Piranha
 - **Size**: Small | **Types**: Aquatic, Weapon, Crit, Damage, Friend
+- **Starting Tier**: Bronze
 - **Cooldown**: 6.0s
 - **Cost**: 2/4/8/16
 - **Effect**: Deal 6/12/18/24 Damage. Double Crit Damage. 20% Crit Chance.
@@ -290,6 +327,7 @@ Rating key:
 
 ## Pop Snappers
 - **Size**: Small | **Types**: Ammo, Burn, Toy
+- **Starting Tier**: Bronze
 - **Cooldown**: 3.0s | **Ammo**: 3
 - **Effect**: Burn 4/6/8/10.
 - **Rating**: **B** -- Fast Burn source with Ammo. Good early Burn starter.
@@ -297,6 +335,7 @@ Rating key:
 
 ## Powder Flask
 - **Size**: Small | **Types**: Tool, AmmoReference
+- **Starting Tier**: Bronze
 - **Cooldown**: 5.0s
 - **Effect**: Reload right item 1/2/3/4 Ammo.
 - **Rating**: **B** -- Essential Ammo support for adjacent Ammo weapon.
@@ -304,6 +343,7 @@ Rating key:
 
 ## Revolver
 - **Size**: Small | **Types**: Weapon, Ammo, Crit, Damage
+- **Starting Tier**: Bronze
 - **Cooldown**: 4.0s | **Ammo**: 6
 - **Effect**: Deal 8/16/24/32 Damage. Reload 2 Ammo when Critting. 20% Crit Chance.
 - **Rating**: **B** -- Self-sustaining with Crit. Good early weapon.
@@ -311,6 +351,7 @@ Rating key:
 
 ## Sea Shell
 - **Size**: Small | **Types**: Aquatic, Shield
+- **Starting Tier**: Bronze
 - **Cooldown**: 6.0s
 - **Effect**: Shield 10/15/20/25 per Aquatic item.
 - **Rating**: **B** -- Scales with Aquatic count. Good defensive option.
@@ -318,6 +359,7 @@ Rating key:
 
 ## Seaweed
 - **Size**: Small | **Types**: Aquatic, Heal
+- **Starting Tier**: Bronze
 - **Cooldown**: 7.0s
 - **Effect**: Heal 20. Gains +5/10/15/20 Heal when using Aquatic items.
 - **Rating**: **B** -- Scaling heal in Aquatic builds.
@@ -325,6 +367,7 @@ Rating key:
 
 ## Shoe Blade
 - **Size**: Small | **Types**: Weapon, Apparel, Damage
+- **Starting Tier**: Bronze
 - **Cooldown**: 7.0s
 - **Effect**: Deal 20/40/60/80 Damage. 15/30/50/100% Crit Chance.
 - **Rating**: **B** -- Scaling Crit to guaranteed at Diamond. Decent damage.
@@ -332,6 +375,7 @@ Rating key:
 
 ## Shot Glasses
 - **Size**: Small | **Types**: Ammo, Haste, Slow
+- **Starting Tier**: Silver
 - **Cooldown**: 4.0s | **Ammo**: 2/3/4
 - **Effect**: Haste items 1s. Slow items 1s.
 - **Rating**: **S** -- Dual Haste + Slow triggers in one item. Enables both sides of the speed game.
@@ -339,6 +383,7 @@ Rating key:
 
 ## Shuriken
 - **Size**: Small | **Types**: Weapon, Tech
+- **Starting Tier**: Bronze
 - **Cooldown**: 8.0s | **Ammo**: 3/4/5/6
 - **Effect**: Deal 5/10/15/20 Damage. Multicast equal to current Ammo. Spends all Ammo on use.
 - **Rating**: **S** -- #1 combo piece for late-game Gunslinger. ALWAYS BUY when offered. With Ammo support, fires 6x Multicast nuke. Devastating with Bladed Hoverboard passive triggers.
@@ -346,6 +391,7 @@ Rating key:
 
 ## Silencer
 - **Size**: Small | **Types**: DamageReference, Cooldown
+- **Starting Tier**: Bronze
 - **Cooldown**: Passive
 - **Effect**: Left Weapon gains +10/20/30/50 Damage. Reduces Cooldown 5/10/15/20% with single Weapon.
 - **Rating**: **A** -- Core in single-weapon builds. Major damage + speed buff.
@@ -353,6 +399,7 @@ Rating key:
 
 ## Switchblade
 - **Size**: Small | **Types**: Weapon, Damage
+- **Starting Tier**: Bronze
 - **Cooldown**: 9.0s
 - **Effect**: Deal 30/45/60/75 Damage. Adjacent Weapons gain +3/6/9/12 Damage for fight.
 - **Rating**: **A** -- Board-wide weapon scaling. Good early Gunslinger piece.
@@ -360,6 +407,7 @@ Rating key:
 
 ## Throwing Knives
 - **Size**: Small | **Types**: Weapon, Ammo, Crit, Damage
+- **Starting Tier**: Silver
 - **Cooldown**: 4.0s | **Ammo**: 3
 - **Effect**: Deal 33 Damage. Charges 1/2/3s when Critting with another item.
 - **Rating**: **B** -- Self-charging weapon in Crit-heavy boards.
@@ -367,6 +415,7 @@ Rating key:
 
 ## Yeti Crab
 - **Size**: Small | **Types**: Aquatic, Freeze, Friend, PoisonReference
+- **Starting Tier**: Bronze
 - **Cooldown**: 7.0s
 - **Effect**: Freeze 1 item 1s. Adjacent Poison items gain +2/4/6/8 Poison when Freezing.
 - **Rating**: **A** -- Amplifies Poison items while providing Freeze control.
@@ -374,6 +423,7 @@ Rating key:
 
 ## Zoarcid
 - **Size**: Small | **Types**: Aquatic, Burn, Damage, Friend, Haste, Weapon
+- **Starting Tier**: Bronze
 - **Cooldown**: 6.0s
 - **Effect**: Deal 20/30/40/50 Damage. Haste adjacent items 1/2/3/4s. Charges 1s when Burning.
 - **Rating**: **A** -- Multi-role item: damage, Haste, charges from Burn. Reliable targetable Haste.
