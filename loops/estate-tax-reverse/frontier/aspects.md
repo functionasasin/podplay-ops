@@ -2,15 +2,15 @@
 
 ## Statistics
 - Total aspects discovered: 33
-- Analyzed: 1
-- Pending: 32
-- Convergence: 3%
+- Analyzed: 2
+- Pending: 31
+- Convergence: 6%
 
 ## Pending Aspects (ordered by dependency)
 
 ### Wave 1: Legal Source Acquisition
 - [x] legal-source-fetch — Fetch and cache all primary legal sources (NIRC, pre-TRAIN rates, amnesty provisions, Form 1801, commentaries) as markdown
-- [ ] form-1801-field-mapping — Map every field/schedule in BIR Form 1801 to its data source
+- [x] form-1801-field-mapping — Map every field/schedule in BIR Form 1801 to its data source
 
 ### Wave 2: TRAIN-Era Rule Extraction (deaths on/after Jan 1, 2018)
 - [ ] tax-rate-train — Sec. 84 (as amended by TRAIN): flat 6% on net taxable estate
@@ -55,3 +55,4 @@
 
 ## Recently Analyzed
 - [x] legal-source-fetch — 2026-02-23 — 5 legal source files cached in input/legal-sources/
+- [x] form-1801-field-mapping — 2026-02-23 — Complete field mapping: Part I (17 informational fields), Part III (scope boundary), Part IV (Items 29–44/20, all three columns), Part V (Schedules 1, 1A, 2, 2A, 3, 4, 5, 6, 6A). Engine output contract defined with canonical field list, column A/B split rules, 10 validation constraints, 8 test implications, and 6 edge cases identified.

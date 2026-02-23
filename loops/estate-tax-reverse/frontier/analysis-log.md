@@ -3,3 +3,4 @@
 | Iteration | Aspect | Discovered | Notes |
 |-----------|--------|------------|-------|
 | 1 | legal-source-fetch | 2026-02-23 | Fetched and cached 5 legal source files: nirc-title-iii.md, pre-train-rates.md, amnesty-provisions.md, form-1801-fields.md, commentary-samples.md. Key gaps noted: vanishing deduction formula, pre-TRAIN medical cap confirmation, amnesty deduction scope ambiguity, surviving spouse share interaction order. |
+| 2 | form-1801-field-mapping | 2026-02-23 | Complete engine output contract defined. Part I: 17 informational input fields. Part IV: Items 29–44 with A/B/C column structure. Part V: 9 schedules (1, 1A, 2, 2A, 3, 4, 5, 6, 6A) with per-field engine input mapping. 10 validation constraints. Column A/B split rules table. Regime differences noted (Form 1801 = TRAIN only; pre-TRAIN and amnesty use different forms). 8 test implications and 6 edge cases identified. |
