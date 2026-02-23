@@ -129,8 +129,10 @@ tests_pass() {
     local test_output="$1"
     echo "$test_output" | grep -qE "^error" && return 1
     echo "$test_output" | grep -q "FAILED" && return 1
-    echo "$test_output" | grep -q "test result: ok" && return 0
-    return 1  # No "ok" found
+    # Must have "test result: ok" AND at least 1 test that actually passed
+    echo "$test_output" | grep -q "test result: ok" || return 1
+    echo "$test_output" | grep -qE "[1-9][0-9]* passed" || return 1
+    return 0
 }
 
 update_frontier() {
@@ -277,13 +279,15 @@ if [ "$MODE" = "all" ]; then
     echo ""
     echo "=== All stages complete ==="
 elif [ "$MODE" = "auto" ]; then
-    STAGE=$(auto_detect_stage)
-    if [ "$STAGE" = "-1" ]; then
-        echo "All stages are already complete."
-        exit 0
-    fi
-    echo "Auto-detected: Stage $STAGE (${STAGE_NAMES[$STAGE]})"
-    run_stage "$STAGE"
+    while true; do
+        STAGE=$(auto_detect_stage)
+        if [ "$STAGE" = "-1" ]; then
+            echo "All stages are already complete."
+            exit 0
+        fi
+        echo "Auto-detected: Stage $STAGE (${STAGE_NAMES[$STAGE]})"
+        run_stage "$STAGE" || exit 1
+    done
 else
     STAGE="$MODE"
     if [ -z "${STAGE_NAMES[$STAGE]+x}" ]; then

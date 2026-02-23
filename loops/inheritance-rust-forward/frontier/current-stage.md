@@ -2,18 +2,25 @@
 
 ## Spec Sections
 - Heir Classification: §4
-- Data Model: §3.5 (Heir struct, HeirCategory, EffectiveCategory)
+- Eligibility Gate: §4.3
+- Filiation Proof: §4.4
 
-## Test Results (updated by loop — iteration 2)
+## Test Results (updated by loop — iteration 1)
 ```
-NO_TESTS
+   Compiling inheritance-engine v0.1.0 (/home/clsandoval/cs/monorepo/loops/inheritance-rust-forward)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.47s
+     Running unittests src/lib.rs (target/debug/deps/inheritance_engine-8b461b4b5a77e766)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 29 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/debug/deps/inheritance_engine-00f75bddf55cb074)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 ```
 
 ## Work Log
-### Iteration 1 — Stage 0: Scaffold
-- Created Cargo.toml with deps: num-rational, num-bigint (serde), num-traits, num-integer, serde, serde_json, thiserror
-- Created src/types.rs: all §3 data model types (Money, EngineInput, Decedent, Person, Heir, Will, InstitutionOfHeir, Legacy, Devise, Donation, Disinheritance, EngineOutput, InheritanceShare, HeirNarrative, ScenarioCode, all enums)
-- Created src/fraction.rs: Frac wrapper around BigRational with helpers (frac(), money_to_frac(), frac_to_centavos()), banker's rounding, serde, Display, arithmetic ops
-- Created src/lib.rs and src/main.rs (placeholder CLI)
-- 29 fraction tests: creation, reduction, negative handling, arithmetic (add/sub/mul/div), comparison, GCD, money conversion, banker's rounding (half-to-even, non-half, negative), serde roundtrip, estate division scenario
-- All 29 tests passing, cargo build clean
+(no iterations yet)
