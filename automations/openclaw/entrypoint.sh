@@ -46,8 +46,8 @@ cat > "$OPENCLAW_DIR/openclaw.json" << 'OCEOF'
   "channels": {
     "telegram": {
       "enabled": true,
-      "dmPolicy": "open",
-      "allowFrom": ["*"],
+      "dmPolicy": "allowlist",
+      "allowFrom": ["1405224455"],
       "groups": {"*": {"requireMention": true}}
     }
   },
