@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 31
-- Analyzed: 27
-- Pending: 4
-- Convergence: 87.1%
+- Analyzed: 28
+- Pending: 3
+- Convergence: 90.3%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -46,7 +46,7 @@
 
 ### Wave 5: Synthesis (Spec Patches — from spec-review)
 - [x] spec-patch-narratives — Add all 19 NarrativeSection templates to Section 10 of the spec; add collateral/State narrative templates and all 13 special-event templates (representation, disinheritance, preterition, inofficiousness, underprovision, condition-stripping, accretion, collation, articulo-mortis, reserva-troncal); remove the reference to explainer-format.md from Section 14.6 (violates standalone requirement). Source: analysis/explainer-format.md.
-- [ ] spec-patch-test-vectors — Add minimal test vectors for 19 untested scenarios: T4, T6-T9, T10-T12, T14-T15 (testate) and I4, I7-I10, I12-I15 (intestate). Each vector needs: EngineInput, scenario classification, exact peso amounts, key fractions, and verification of relevant invariants. Full narrative not required except 1 per wave. Source: analysis/test-vectors.md, analysis/legitime-table.md, analysis/intestate-order.md.
+- [x] spec-patch-test-vectors — Add minimal test vectors for 19 untested scenarios: T4, T6-T9, T10-T12, T14-T15 (testate) and I4, I7-I10, I12-I15 (intestate). Each vector needs: EngineInput, scenario classification, exact peso amounts, key fractions, and verification of relevant invariants. Full narrative not required except 1 per wave. Source: analysis/test-vectors.md, analysis/legitime-table.md, analysis/intestate-order.md.
 - [ ] spec-patch-minor-gaps — Targeted edits to the spec addressing 5 items: (a) add input-boundary rule for will.is_valid = false → engine rejects with error; (b) remove or clarify is_gratuitous field in Donation struct; (c) add BloodType definition (FULL = same mother AND father, HALF = one parent shared); (d) unify FiliationProof article citations between Section 4.2 and Section 10.5 to use "(3)" and "(4)" format; (e) add 4 missing ManualFlagCode values (USUFRUCT_ANNUITY_OPTION, DUAL_LINE_ASCENDANT, POSTHUMOUS_DISINHERITANCE, CONTRADICTORY_DISPOSITIONS) to Section 4.7 enum and Section 12 table. Source: analysis/edge-cases.md, analysis/data-model.md.
 - [ ] spec-review-2 — Re-run spec-review after all three patch aspects are complete. If spec passes: write status/converged.txt. If fails: add more targeted fix-its.
 

@@ -2605,6 +2605,483 @@ These 13 test cases verify every major pathway. Each includes inputs, expected o
 **Narrative (Carlo)**:
 > **Carlo Bautista (illegitimate child)** receives **₱1,666,666.67**. The decedent left a valid will disposing of the estate. As an illegitimate child (Art. 176, Family Code), Carlo is a compulsory heir. Carlo's filiation is established by open and continuous possession of the status of an illegitimate child (Art. 172(3), Family Code). Under Art. 895 of the Civil Code, an illegitimate child's computed legitime would be ₱5,000,000 (½ × ₱10,000,000, the sole legitimate child's share). However, Art. 895 ¶3 provides that the total legitime of all illegitimate children cannot exceed the free portion of the estate. The free portion is ₱10,000,000 (½ of ₱20,000,000). The surviving spouse's legitime of ₱5,000,000 (Art. 892) is satisfied first from this free portion, leaving ₱5,000,000. This remaining amount is divided equally among 3 illegitimate children, giving Carlo ₱1,666,666.67. Note: under intestate succession with the same family composition, Carlo would have received ₱2,857,142.86 — 71% more, because the Art. 895 ¶3 cap rule does not apply in intestate succession.
 
+---
+
+### TV-14: T4 — Legitimate Children + Illegitimate Child (No Spouse, Uncapped)
+
+| Field | Value |
+|-------|-------|
+| Estate | ₱12,000,000 |
+| Heirs | Alma, Bruno (LC); Cita (IC, filiation by judgment); Friend F (voluntary) |
+| Will | FP to Friend F |
+| Scenario | T4 (n=2, m=1; cap threshold m > 2n=4 → NOT CAPPED) |
+
+**Legitimes** (Art. 888, Art. 895):
+- Each LC = E × ½ / 2 = **₱3,000,000** (fraction: ¼)
+- IC uncapped = ½ × LC share = **₱1,500,000** (fraction: ⅛)
+- FP_disposable = E − ₱3M − ₱3M − ₱1.5M = **₱4,500,000** (fraction: 3/8)
+
+| Heir | Legitime | FP | Total | Fraction |
+|------|---------|-----|-------|---------|
+| Alma (LC) | ₱3,000,000 | — | ₱3,000,000 | ¼ |
+| Bruno (LC) | ₱3,000,000 | — | ₱3,000,000 | ¼ |
+| Cita (IC) | ₱1,500,000 | — | ₱1,500,000 | ⅛ |
+| Friend F | — | ₱4,500,000 | ₱4,500,000 | 3/8 |
+
+**Invariant checks**: Sum = ₱12M ✓; IC = ½ × LC ✓; Σ(IC) ≤ FP_gross (₱1.5M ≤ ₱6M) ✓; no cap ✓
+
+---
+
+### TV-15: T6 — Legitimate Ascendants Only (Testate)
+
+| Field | Value |
+|-------|-------|
+| Estate | ₱8,000,000 |
+| Heirs | Ernesto (father), Felisa (mother); Charity C (voluntary) |
+| Will | FP to Charity C |
+| Scenario | T6 (Regime B) |
+
+**Legitimes** (Art. 889, Art. 986):
+- Ascendants collective = E × ½ = **₱4,000,000**
+- Both parents alive → equal shares: each **₱2,000,000**
+- FP = ½ = **₱4,000,000**
+
+| Heir | Legitime | FP | Total | Fraction |
+|------|---------|-----|-------|---------|
+| Ernesto (father) | ₱2,000,000 | — | ₱2,000,000 | ¼ |
+| Felisa (mother) | ₱2,000,000 | — | ₱2,000,000 | ¼ |
+| Charity C | — | ₱4,000,000 | ₱4,000,000 | ½ |
+
+**Invariant checks**: Sum = ₱8M ✓; Parents equal shares ✓ (Art. 986); Ascendants = ½ ✓
+
+---
+
+### TV-16: T7 — Legitimate Ascendants + Surviving Spouse (Testate)
+
+| Field | Value |
+|-------|-------|
+| Estate | ₱10,000,000 |
+| Heirs | Gilberto (father, mother predeceased); Herminia (spouse); Foundation F (voluntary) |
+| Will | FP to Foundation F |
+| Scenario | T7 (Regime B) |
+
+**Legitimes** (Art. 889, Art. 893):
+- Ascendants (½) = **₱5,000,000** — all to Gilberto (sole surviving parent, Art. 986 ¶2)
+- Spouse (¼, from FP per Art. 893) = **₱2,500,000**
+- FP_disposable = ¼ = **₱2,500,000**
+
+| Heir | Legitime | FP Source | Total | Fraction |
+|------|---------|----------|-------|---------|
+| Gilberto (father) | ₱5,000,000 | — | ₱5,000,000 | ½ |
+| Herminia (spouse) | ₱2,500,000 | Art. 893 | ₱2,500,000 | ¼ |
+| Foundation F | — | FP_disposable | ₱2,500,000 | ¼ |
+
+**Invariant checks**: Sum = ₱10M ✓; ½ + ¼ + ¼ = 1 ✓
+**Testate vs intestate**: In intestate I6 with same heirs, Herminia would receive ½ = ₱5M (double the testate share).
+
+---
+
+### TV-17: T8 — Legitimate Ascendants + Illegitimate Children (Testate)
+
+| Field | Value |
+|-------|-------|
+| Estate | ₱12,000,000 |
+| Heirs | Ignacio (father), Juliana (mother); Katrina, Leon (IC, filiation by birth certificate); Friend G (voluntary) |
+| Will | FP to Friend G |
+| Scenario | T8 (Regime B — flat ¼ for IC group, no cap rule) |
+
+**Legitimes** (Art. 889, Art. 896):
+- Ascendants (½) = **₱6,000,000** → each parent **₱3,000,000**
+- IC group (¼ flat per Art. 896) = **₱3,000,000** → each IC **₱1,500,000**
+- FP = ¼ = **₱3,000,000**
+
+| Heir | Legitime | FP | Total | Fraction |
+|------|---------|-----|-------|---------|
+| Ignacio (father) | ₱3,000,000 | — | ₱3,000,000 | ¼ |
+| Juliana (mother) | ₱3,000,000 | — | ₱3,000,000 | ¼ |
+| Katrina (IC) | ₱1,500,000 | — | ₱1,500,000 | ⅛ |
+| Leon (IC) | ₱1,500,000 | — | ₱1,500,000 | ⅛ |
+| Friend G | — | ₱3,000,000 | ₱3,000,000 | ¼ |
+
+**Invariant checks**: Sum = ₱12M ✓; ½ + ¼ + ¼ = 1 ✓
+**Key Regime B distinction**: Art. 896 gives IC a FLAT ¼ as a group — not derived from Art. 888 per-LC shares. No cap rule applies; the ¼ is fixed regardless of IC count.
+
+---
+
+### TV-18: T9 — Ascendants + Illegitimate Children + Surviving Spouse (Testate)
+
+| Field | Value |
+|-------|-------|
+| Estate | ₱16,000,000 |
+| Heirs | Marcos (father, mother predeceased); Nina, Otto (IC, filiation by public document); Perla (spouse); NGO N (voluntary) |
+| Will | FP to NGO N |
+| Scenario | T9 (most constrained — FP = ⅛) |
+
+**Legitimes** (Art. 899):
+- Ascendants (½) = **₱8,000,000** — all to Marcos
+- IC group (¼) = **₱4,000,000** → each IC **₱2,000,000**
+- Spouse (⅛) = **₱2,000,000**
+- FP = ⅛ = **₱2,000,000**
+
+| Heir | Legitime | FP | Total | Fraction |
+|------|---------|-----|-------|---------|
+| Marcos (father) | ₱8,000,000 | — | ₱8,000,000 | ½ |
+| Nina (IC) | ₱2,000,000 | — | ₱2,000,000 | ⅛ |
+| Otto (IC) | ₱2,000,000 | — | ₱2,000,000 | ⅛ |
+| Perla (spouse) | ₱2,000,000 | — | ₱2,000,000 | ⅛ |
+| NGO N | — | ₱2,000,000 | ₱2,000,000 | ⅛ |
+
+**Invariant checks**: Sum = ₱16M ✓; ½ + ¼ + ⅛ + ⅛ = 1 ✓; FP = ⅛ ✓ (most constrained testate scenario)
+
+**Narrative (Perla — spouse in T9)**:
+> **Perla Garces (surviving spouse)** receives **₱2,000,000**. The decedent left a valid will. As the surviving spouse (Art. 887(3) of the Civil Code), Perla is a compulsory heir. Under Art. 899 of the Civil Code, when the surviving spouse concurs with legitimate ascendants and illegitimate children — and no legitimate descendants survive — the spouse is entitled to one-eighth (⅛) of the estate as legitime. The net distributable estate is ₱16,000,000, so Perla's legitime is ₱16,000,000 × ⅛ = ₱2,000,000. Scenario T9 is the most constrained testate scenario: the ascendants claim one-half (½), illegitimate children claim one-quarter (¼), the spouse receives one-eighth (⅛), and the testator's free portion is only one-eighth (⅛) — the least freedom available to any testator under Philippine succession law.
+
+---
+
+### TV-19: T10 — Illegitimate Children + Surviving Spouse (Testate, Regime C)
+
+| Field | Value |
+|-------|-------|
+| Estate | ₱9,000,000 |
+| Heirs | Queenie, Renato (IC, filiation by open continuous possession); Sonia (spouse); Friend H (voluntary) |
+| Will | FP to Friend H |
+| Scenario | T10 (Regime C — no LC, no ascendants) |
+
+**Legitimes** (Art. 894):
+- IC group (⅓) = **₱3,000,000** → each IC **₱1,500,000**
+- Spouse (⅓) = **₱3,000,000**
+- FP = ⅓ = **₱3,000,000**
+
+| Heir | Legitime | FP | Total | Fraction |
+|------|---------|-----|-------|---------|
+| Queenie (IC) | ₱1,500,000 | — | ₱1,500,000 | ⅙ |
+| Renato (IC) | ₱1,500,000 | — | ₱1,500,000 | ⅙ |
+| Sonia (spouse) | ₱3,000,000 | — | ₱3,000,000 | ⅓ |
+| Friend H | — | ₱3,000,000 | ₱3,000,000 | ⅓ |
+
+**Invariant checks**: Sum = ₱9M ✓; ⅓ + ⅓ + ⅓ = 1 ✓ (Art. 894)
+
+---
+
+### TV-20: T11 — Illegitimate Children Only (Testate, Regime C)
+
+| Field | Value |
+|-------|-------|
+| Estate | ₱6,000,000 |
+| Heirs | Tomas, Ursula, Vicente (IC, recognized in will); Foundation F (voluntary) |
+| Will | FP to Foundation F |
+| Scenario | T11 (Regime C — IC alone, no LC, no ascendants, no spouse) |
+
+**Legitimes** (Art. 901):
+- IC group (½) = **₱3,000,000** → each IC **₱1,000,000**
+- FP = ½ = **₱3,000,000**
+
+| Heir | Legitime | FP | Total | Fraction |
+|------|---------|-----|-------|---------|
+| Tomas (IC) | ₱1,000,000 | — | ₱1,000,000 | ⅙ |
+| Ursula (IC) | ₱1,000,000 | — | ₱1,000,000 | ⅙ |
+| Vicente (IC) | ₱1,000,000 | — | ₱1,000,000 | ⅙ |
+| Foundation F | — | ₱3,000,000 | ₱3,000,000 | ½ |
+
+**Invariant checks**: Sum = ₱6M ✓; IC collective = ½ ✓ (Art. 901); FP = ½ ✓
+
+---
+
+### TV-21: T12 — Surviving Spouse Only (Testate, Regime C)
+
+| Field | Value |
+|-------|-------|
+| Estate | ₱10,000,000 |
+| Heirs | Wilma (spouse, normal marriage); Orphanage O (voluntary) |
+| Will | FP to Orphanage O |
+| Scenario | T12 (normal case — no articulo mortis) |
+
+**Legitimes** (Art. 900):
+- Spouse (½ normal) = **₱5,000,000**
+- FP = ½ = **₱5,000,000**
+
+| Heir | Legitime | FP | Total | Fraction |
+|------|---------|-----|-------|---------|
+| Wilma (spouse) | ₱5,000,000 | — | ₱5,000,000 | ½ |
+| Orphanage O | — | ₱5,000,000 | ₱5,000,000 | ½ |
+
+**Articulo mortis sub-case** (Art. 900 ¶2): If `decedent.marriage_in_articulo_mortis = true` AND died within 3 months of marriage AND cohabitation < 5 years, spouse legitime = ⅓ = ₱3,333,333.33 and FP = ⅔ = ₱6,666,666.67.
+
+**Invariant checks**: Sum = ₱10M ✓; Spouse = ½ ✓ (Art. 900); FP = ½ ✓
+
+---
+
+### TV-22: T14 — Parents of Illegitimate Decedent (No Descendants or Spouse, Testate)
+
+| Field | Value |
+|-------|-------|
+| Estate | ₱8,000,000 |
+| Decedent | Xavier (is_illegitimate = true; no children, no spouse) |
+| Heirs | Yolanda (mother), Zandro (father); Church C (voluntary) |
+| Will | FP to Church C |
+| Scenario | T14 |
+
+**Prerequisite**: Decedent is illegitimate. If Xavier had any children (LC or IC), parents would receive nothing (Art. 903 ¶2 — "if only legitimate or illegitimate children are left, the parents are not entitled to any legitime whatsoever").
+
+**Legitimes** (Art. 903 ¶1):
+- Parents collective (½) = **₱4,000,000** → each parent **₱2,000,000**
+- FP = ½ = **₱4,000,000**
+
+| Heir | Legitime | FP | Total | Fraction |
+|------|---------|-----|-------|---------|
+| Yolanda (mother) | ₱2,000,000 | — | ₱2,000,000 | ¼ |
+| Zandro (father) | ₱2,000,000 | — | ₱2,000,000 | ¼ |
+| Church C | — | ₱4,000,000 | ₱4,000,000 | ½ |
+
+**Invariant checks**: Sum = ₱8M ✓; Parents collective = ½ ✓; `decedent.is_illegitimate = true` required ✓
+
+---
+
+### TV-23: T15 — Parents of Illegitimate Decedent + Surviving Spouse (Testate)
+
+| Field | Value |
+|-------|-------|
+| Estate | ₱8,000,000 |
+| Decedent | Aling Ana (is_illegitimate = true; no children) |
+| Heirs | Benedicto (father, mother predeceased); Carmen (spouse); University U (voluntary) |
+| Will | FP to University U |
+| Scenario | T15 |
+
+**Legitimes** (Art. 903 ¶2):
+- Parents collective (¼) = **₱2,000,000** — all to Benedicto (sole surviving parent)
+- Spouse (¼) = **₱2,000,000**
+- FP = ½ = **₱4,000,000**
+
+| Heir | Legitime | FP | Total | Fraction |
+|------|---------|-----|-------|---------|
+| Benedicto (father) | ₱2,000,000 | — | ₱2,000,000 | ¼ |
+| Carmen (spouse) | ₱2,000,000 | — | ₱2,000,000 | ¼ |
+| University U | — | ₱4,000,000 | ₱4,000,000 | ½ |
+
+**Invariant checks**: Sum = ₱8M ✓; Parents ¼ + Spouse ¼ + FP ½ = 1 ✓ (Art. 903 ¶2)
+
+---
+
+### TV-24: I4 — Legitimate Children + Illegitimate Child + Surviving Spouse (Intestate)
+
+| Field | Value |
+|-------|-------|
+| Estate | ₱14,000,000 |
+| Heirs | Ana, Berto (LC); Cora (IC, filiation by birth certificate); Delia (spouse) |
+| Will | null |
+| Scenario | I4 |
+
+**Distribution** (Art. 999 — spouse = one LC share; 2:1 ratio for LC/IC):
+- Units: (2 LC × 2) + (1 IC × 1) + (spouse × 2) = 7
+- Per unit: ₱14M / 7 = **₱2,000,000**
+
+| Heir | Units | Amount | Fraction |
+|------|-------|--------|---------|
+| Ana (LC) | 2 | ₱4,000,000 | 2/7 |
+| Berto (LC) | 2 | ₱4,000,000 | 2/7 |
+| Cora (IC) | 1 | ₱2,000,000 | 1/7 |
+| Delia (spouse) | 2 | ₱4,000,000 | 2/7 |
+
+**Invariant checks**: Sum = ₱14M ✓; IC = ½ × LC: ₱2M = ½ × ₱4M ✓; Spouse = LC ✓ (Art. 999); No cap (intestate) ✓
+
+---
+
+### TV-25: I7 — Illegitimate Children Only (Intestate)
+
+| Field | Value |
+|-------|-------|
+| Estate | ₱9,000,000 |
+| Heirs | Erna, Fely, Gino (IC, filiation proven) |
+| Will | null |
+| Scenario | I7 |
+
+**Distribution** (Art. 988 — IC take entire estate equally):
+- Per IC: ₱9M / 3 = **₱3,000,000**
+
+| Heir | Amount | Fraction |
+|------|--------|---------|
+| Erna (IC) | ₱3,000,000 | ⅓ |
+| Fely (IC) | ₱3,000,000 | ⅓ |
+| Gino (IC) | ₱3,000,000 | ⅓ |
+
+**Invariant checks**: Sum = ₱9M ✓; Equal shares ✓ (Art. 988); Prerequisite: no legitimate descendants or ascendants ✓
+
+---
+
+### TV-26: I8 — Illegitimate Children + Surviving Spouse (Intestate)
+
+| Field | Value |
+|-------|-------|
+| Estate | ₱10,000,000 |
+| Heirs | Hugo, Iris (IC, filiation proven); Jun (spouse) |
+| Will | null |
+| Scenario | I8 |
+
+**Distribution** (Art. 998 — ½ to spouse, ½ to IC):
+- Spouse: ½ = **₱5,000,000**
+- IC collective: ½ = ₱5M → each IC **₱2,500,000**
+
+| Heir | Amount | Fraction |
+|------|--------|---------|
+| Hugo (IC) | ₱2,500,000 | ¼ |
+| Iris (IC) | ₱2,500,000 | ¼ |
+| Jun (spouse) | ₱5,000,000 | ½ |
+
+**Invariant checks**: Sum = ₱10M ✓; Spouse = ½ ✓; IC collective = ½ ✓ (Art. 998)
+**Testate comparison**: In T10, each heir gets ⅓. Spouse gets 50% more intestate (½ vs ⅓).
+
+---
+
+### TV-27: I9 — Legitimate Ascendants + Illegitimate Child (Intestate)
+
+| Field | Value |
+|-------|-------|
+| Estate | ₱10,000,000 |
+| Heirs | Karen (father), Luz (mother); Marco (IC, filiation proven) |
+| Will | null |
+| Scenario | I9 |
+
+**Distribution** (Art. 991 — ½ to ascendants, ½ to IC, fixed regardless of counts):
+- Ascendants (½ total): ₱5M → each parent **₱2,500,000**
+- IC (½ total): **₱5,000,000** (all to Marco, sole IC)
+
+| Heir | Amount | Fraction |
+|------|--------|---------|
+| Karen (father) | ₱2,500,000 | ¼ |
+| Luz (mother) | ₱2,500,000 | ¼ |
+| Marco (IC) | ₱5,000,000 | ½ |
+
+**Invariant checks**: Sum = ₱10M ✓; Ascendants = ½ ✓; IC = ½ ✓; "whatever be the number" = fixed split ✓
+**Testate comparison**: In T8 with 1 IC, IC gets ¼ = ₱2.5M. Intestate gives IC 100% more (₱5M).
+
+---
+
+### TV-28: I10 — Legitimate Ascendants + Illegitimate Children + Surviving Spouse (Intestate)
+
+| Field | Value |
+|-------|-------|
+| Estate | ₱12,000,000 |
+| Heirs | Noel (father, mother predeceased); Ofelia, Pedro (IC, filiation proven); Queenie (spouse) |
+| Will | null |
+| Scenario | I10 |
+
+**Distribution** (Art. 1000 — ascendants ½, IC ¼, spouse ¼):
+- Ascendants (½) = **₱6,000,000** — all to Noel
+- IC (¼ total) = ₱3M → each IC **₱1,500,000**
+- Spouse (¼) = **₱3,000,000**
+
+| Heir | Amount | Fraction | Legal Basis |
+|------|--------|---------|------------|
+| Noel (father) | ₱6,000,000 | ½ | Art. 1000 |
+| Ofelia (IC) | ₱1,500,000 | ⅛ | Art. 1000 |
+| Pedro (IC) | ₱1,500,000 | ⅛ | Art. 1000 |
+| Queenie (spouse) | ₱3,000,000 | ¼ | Art. 1000 |
+
+**Invariant checks**: Sum = ₱12M ✓; ½ + ¼ + ¼ = 1 ✓ (Art. 1000)
+
+**Narrative (Queenie — spouse in I10)**:
+> **Queenie Navarro (surviving spouse)** receives **₱3,000,000**. The decedent died intestate (without a valid will). As the surviving spouse (Art. 887(3) of the Civil Code), Queenie is a compulsory heir. Under Art. 1000 of the Civil Code, when the surviving spouse concurs with legitimate ascendants and illegitimate children, the estate is divided as follows: one-half (½) to the legitimate ascendants, one-fourth (¼) to the illegitimate children, and one-fourth (¼) to the surviving spouse. With the net distributable estate at ₱12,000,000, Queenie's share is ₱12,000,000 × ¼ = ₱3,000,000. Note: under testate succession with the same family composition (Scenario T9), Queenie would receive only one-eighth (⅛) = ₱1,500,000 — half the intestate amount — because in testate succession the free portion is preserved for the testator's testamentary dispositions, leaving the spouse with a reduced statutory fraction.
+
+**Testate comparison**: Queenie gets 100% more intestate (₱3M vs ₱1.5M in T9).
+
+---
+
+### TV-29: I12 — Surviving Spouse + Siblings (Intestate, Art. 1001)
+
+| Field | Value |
+|-------|-------|
+| Estate | ₱8,000,000 |
+| Heirs | Romy (spouse); Stella, Tino, Uma (full-blood siblings of decedent) |
+| Will | null |
+| Scenario | I12 |
+
+**Distribution** (Art. 1001 — ½ to spouse, ½ to siblings):
+- Spouse (½) = **₱4,000,000**
+- Siblings (½ total) = ₱4M / 3 = **₱1,333,333.33** each
+
+| Heir | Amount | Fraction |
+|------|--------|---------|
+| Romy (spouse) | ₱4,000,000 | ½ |
+| Stella (sibling) | ₱1,333,333.33 | 1/6 |
+| Tino (sibling) | ₱1,333,333.33 | 1/6 |
+| Uma (sibling) | ₱1,333,333.34 | 1/6 |
+
+**Rounding**: ₱4M / 3 = ₱1,333,333.333... Largest-remainder: two heirs get ₱1,333,333.33, one gets ₱1,333,333.34. Total siblings = ₱4,000,000 ✓
+
+**Invariant checks**: Sum = ₱8M ✓; Spouse = ½ ✓; Siblings = ½ ✓ (Art. 1001)
+**Scope check**: Art. 1001 scope is siblings and their children only. Remote collaterals (cousins) do not concur — spouse would take all under Art. 995.
+
+---
+
+### TV-30: I13 — Siblings Only (Full + Half Blood)
+
+| Field | Value |
+|-------|-------|
+| Estate | ₱10,000,000 |
+| Heirs | Victor, Willa (full-blood siblings); Ximena (half-blood sibling) |
+| Will | null |
+| Scenario | I13 |
+
+**Distribution** (Art. 1006 — full blood = 2 × half blood):
+- Units: (2 full × 2) + (1 half × 1) = 5
+- Per unit: ₱10M / 5 = **₱2,000,000**
+
+| Heir | Blood | Units | Amount | Fraction |
+|------|-------|-------|--------|---------|
+| Victor (sibling) | Full | 2 | ₱4,000,000 | 2/5 |
+| Willa (sibling) | Full | 2 | ₱4,000,000 | 2/5 |
+| Ximena (sibling) | Half | 1 | ₱2,000,000 | 1/5 |
+
+**Invariant checks**: Sum = ₱10M ✓; Full blood = 2 × half blood: ₱4M = 2 × ₱2M ✓ (Art. 1006)
+**Engine requirement**: `blood_type: BloodType` field (FULL or HALF) required on each collateral heir. See BloodType definition in Section 4.
+
+---
+
+### TV-31: I14 — Other Collateral Relatives (First Cousins)
+
+| Field | Value |
+|-------|-------|
+| Estate | ₱6,000,000 |
+| Heirs | Yvonne, Zack (first cousins — 4th degree collateral; no nearer collaterals survive) |
+| Will | null |
+| Scenario | I14 |
+
+**Distribution** (Art. 1009 — nearest degree, equal shares, no line or blood distinction):
+- Both at 4th degree → equal shares
+- Per cousin: ₱6M / 2 = **₱3,000,000**
+
+| Heir | Collateral Degree | Amount | Fraction |
+|------|-----------------|--------|---------|
+| Yvonne (first cousin) | 4th | ₱3,000,000 | ½ |
+| Zack (first cousin) | 4th | ₱3,000,000 | ½ |
+
+**Invariant checks**: Sum = ₱6M ✓; Degree ≤ 5th ✓ (Art. 1010); No line/blood distinction ✓ (Art. 1009 — unlike sibling rules in Art. 1006)
+
+---
+
+### TV-32: I15 — No Heirs (Escheat to State)
+
+| Field | Value |
+|-------|-------|
+| Estate | ₱5,000,000 |
+| Heirs | None within the legal hierarchy |
+| Will | null |
+| Scenario | I15 |
+
+**Distribution** (Arts. 1011-1013):
+- Entire estate to the State
+- Art. 1013 split: personal property → municipality/city of decedent's last residence; real property → municipality/city where situated; for benefit of public schools and charitable institutions
+- Art. 1014 reclaim window: legitimate heir may appear within 5 years of date of death
+
+| Heir | Amount | Note |
+|------|--------|------|
+| State (Republic of the Philippines) | ₱5,000,000 | Art. 1011 |
+
+**Invariant checks**: Sum = ₱5M ✓; No eligible heir within 5th collateral degree ✓ (Art. 1010)
+**Engine output requirements**: `HeirCategory = STATE`; `escheat_deadline = decedent.date_of_death + 5 years`; narrative explains Art. 1014 reclaim right.
+
+---
+
 ### Test Invariants
 
 Every engine implementation must satisfy these invariants for all test vectors and all inputs:
@@ -2616,9 +3093,14 @@ Every engine implementation must satisfy these invariants for all test vectors a
 5. **Representation invariant**: Σ(representative amounts in a line) = line_ancestor's share
 6. **Adoption invariant**: adopted_child.amount == biological_legitimate_child.amount (same family)
 7. **Preterition invariant**: If preterition detected, all institutions annulled, all heirs inherit intestate
-8. **Disinheritance invariant**: Valid disinheritance → heir gets ₱0 (representatives may get their line share)
+8. **Disinheritance invariant**: Valid disinheritance → heir gets ₱0ero (representatives may get their line share)
 9. **Collation invariant**: estate_base = net_estate + Σ(collatable_donations); from_estate_sum = net_estate
 10. **Scenario consistency**: The scenario code matches the actual surviving heir combination
+11. **Regime B no-cap invariant**: In T6–T9, Art. 895 ¶3 cap does NOT apply. IC share = Art. 896 flat ¼/m (not derived from ½ × per-LC share). Engine must detect Regime B before applying cap logic.
+12. **Art. 1001 scope invariant**: In I12, only siblings and nephews/nieces of the decedent concur with spouse — not remote collaterals. Engine must filter using sibling/niece/nephew relationship check.
+13. **Illegitimate decedent prerequisite**: T14 and T15 activate ONLY when `decedent.is_illegitimate = true`. If decedent has any children (LC or IC), parents receive nothing (Art. 903 ¶2). Engine must apply this gate before computing T14/T15 legitimes.
+14. **BloodType invariant**: In I13/I13a, full-blood siblings receive double the share of half-blood siblings. Engine must store and use the `blood_type` field (BloodType enum) on each collateral heir.
+15. **Escheat output invariant**: In I15, engine output must include: `total = E`, `HeirCategory = STATE`, and `escheat_deadline = decedent.date_of_death + 5 years`.
 
 ---
 
