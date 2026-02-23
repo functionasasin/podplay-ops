@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 28
-- Analyzed: 3
-- Pending: 25
-- Convergence: 10.7%
+- Analyzed: 4
+- Pending: 24
+- Convergence: 14.3%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -14,7 +14,7 @@
 
 ### Wave 2: Heir Classification Rules
 - [x] compulsory-heirs-categories — Art. 887: enumerate all compulsory heir categories (legitimate children/descendants, illegitimate children, surviving spouse, legitimate parents/ascendants)
-- [ ] heir-concurrence-rules — Arts. 888-903: which heirs inherit together, who excludes whom from succession
+- [x] heir-concurrence-rules — Arts. 888-903: which heirs inherit together, who excludes whom from succession
 - [ ] representation-rights — Arts. 970-977: when descendants step into the shoes of a predeceased parent
 - [ ] adopted-children-rights — RA 8552 Sec. 17-18 + Family Code: adopted children's legal equivalence to legitimate children
 - [ ] illegitimate-children-rights — Art. 176 Family Code, Art. 895 Civil Code: recognition, half-share rule, proof of filiation
@@ -48,3 +48,4 @@
 - **legal-source-fetch** (2026-02-23): Fetched and cached 4 legal source files covering Civil Code Book III (succession arts. 774-1077), Family Code Title VI (filiation arts. 163-182), RA 8552 (adoption secs. 16-20), and comprehensive commentary with 11 testate scenarios, 15 intestate scenarios, and 7 worked examples.
 - **commentary-fetch** (2026-02-23): Compiled 8 complete test-vector-quality worked examples covering: testate simple, inofficious will, preterition, disinheritance with representation, adopted children, mixed succession, collation, and complex intestate with representation. Also confirmed complete 15-row legitime table. Saved to `input/legal-sources/worked-examples.md`.
 - **compulsory-heirs-categories** (2026-02-23): Analyzed Art. 887 compulsory heir enumeration. Defined 4 effective categories (LEGITIMATE_CHILD_GROUP, LEGITIMATE_ASCENDANT_GROUP, SURVIVING_SPOUSE_GROUP, ILLEGITIMATE_CHILD_GROUP) with 7 raw sub-categories. Key: adopted (RA 8552) and legitimated (FC 179) children map to legitimate child group. Groups 1 & 2 mutually exclusive; Groups 3 & 4 always concur. Documented 8 edge cases (rescinded adoption, posthumous child, guilty spouse, unproved filiation, unworthiness, articulo mortis, stepparent adoption, parents of illegitimate decedent). Proposed data model for Heir struct. 16 test case scenarios identified.
+- **heir-concurrence-rules** (2026-02-23): Complete concurrence and exclusion analysis. Defined 4 exclusion rules (primary vs secondary, concurring heirs never excluded, nearer excludes more remote, intestate-only hierarchy). Mapped 13 testate scenarios (T1-T13) + 2 special (T14-T15 for illegitimate decedent) and 15 intestate scenarios (I1-I15). Key insights: testate vs intestate produce DIFFERENT shares for same heir combo; Art. 895 ¶3 cap rule limits illegitimate children when many concur; Art. 892 branches on count=1 vs count≥2 legitimate children; collateral relatives only in intestate when all 4 compulsory groups absent (except spouse+siblings per Art. 1001). Pseudocode for concurrence determination algorithm, eligibility filter, and cap rule. 21 test scenarios identified.
