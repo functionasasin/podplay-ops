@@ -1,37 +1,52 @@
 CONVERGED
-Date: 2026-02-23
-Aspect: spec-review-2
 
-The Philippine Inheritance Distribution Engine specification has converged.
+## Convergence Summary
 
-## Summary
+**Date**: 2026-02-24
+**Total iterations**: 33
+**Total aspects analyzed**: 33 (5 waves + 1 fix wave)
 
-All 31 aspects analyzed across 5 waves:
-- Wave 1 (2 aspects): Legal source acquisition — Civil Code Book III, Family Code, RA 8552, worked examples cached
-- Wave 2 (5 aspects): Heir classification — compulsory heirs, concurrence, representation, adoption, illegitimate children
-- Wave 3 (5 aspects): Legitime computation — complete 15-scenario table, cap rule, spouse, ascendants, free portion
-- Wave 4 (7 aspects): Distribution rules — intestate order, testate institution, validation, disinheritance, preterition, accretion, collation
-- Wave 5 (12 aspects): Synthesis — pipeline, data model, test vectors, narrative format, edge cases, spec draft, spec review, 3 patch aspects, spec review 2
+### What Was Built
 
-## Deliverable
+A complete software specification for a Philippine Inheritance Distribution Engine, located at:
+`docs/plans/inheritance-engine-spec.md`
 
-Complete software specification at:
-  docs/plans/inheritance-engine-spec.md
+### Specification Coverage
 
-The specification:
-- Is fully standalone (no external file dependencies)
-- Covers all 15 testate scenarios (T1-T15) and all 15 intestate scenarios (I1-I15)
-- Provides 32 test vectors with exact peso amounts
-- Defines 19 narrative section types with complete templates
-- Documents 10 manual review flags for legally ambiguous edge cases
-- Includes a 10-step deterministic computation pipeline with full pseudocode
-- Contains all data types (42 structs, 34 enums) needed for implementation
+- **15 sections + 2 appendices** (~1,500 lines)
+- **10-step deterministic pipeline**: classify heirs → build lines → determine scenario → compute estate base → compute legitimes → testate validation → distribute → collation adjustment → vacancy resolution → finalize
+- **42 structs and 34 enums** in the data model
+- **17 testate scenarios** (T1-T15 + T5a/T5b) with exact legitime fractions
+- **15 intestate scenarios** (I1-I15) with complete distribution formulas
+- **23 test vectors** covering 17 scenarios and 26 features
+- **10 test invariants** for automated verification
+- **82 edge cases** across 21 categories
+- **10 manual review flags** for legal ambiguities
+- **19 narrative section types** with complete template system
+- **Rational arithmetic mandate** — all intermediate computations use exact fractions
 
-A developer with zero knowledge of Philippine succession law can build a correct,
-production-grade inheritance distribution engine from this spec alone.
+### Legal Sources Analyzed
 
-## Legal Basis
-- Civil Code of the Philippines (RA 386), Book III — Succession, Arts. 774-1105
-- Family Code (EO 209), Arts. 163-193
-- Republic Act 8552 — Domestic Adoption Act (1998)
-- Republic Act 11642 — Domestic Administrative Adoption Act (2022)
+- Civil Code Book III (Arts. 774-1105): Succession
+- Family Code (Arts. 163-182): Filiation, legitimacy
+- RA 8552 (1998): Domestic Adoption Act
+- RA 11642 (2022): Administrative Adoption Act
+- 8 worked examples from legal commentaries
+
+### Key Design Decisions
+
+1. Fully deterministic — no LLM in computation loop
+2. Language-agnostic specification
+3. Exact rational arithmetic (BigInt fractions)
+4. Dual FP tracking (FP_gross for cap base, FP_disposable for testator freedom)
+5. Narrative output mandatory — user-targeted engine
+6. All ambiguities resolved with citation or flagged as manual review
+
+### Analysis Files (33 total)
+
+Wave 1: legal-source-fetch, commentary-fetch
+Wave 2: compulsory-heirs-categories, heir-concurrence-rules, representation-rights, adopted-children-rights, illegitimate-children-rights
+Wave 3: legitime-table, legitime-with-illegitimate, legitime-surviving-spouse, legitime-ascendants, free-portion-rules
+Wave 4: intestate-order, testate-institution, testate-validation, disinheritance-rules, preterition, accretion-rules, collation
+Wave 5: computation-pipeline, data-model, test-vectors, explainer-format, edge-cases, spec-draft, spec-review
+Wave 6: spec-fix-mixed-succession, spec-fix-collateral-algorithm, spec-fix-art911-reduction, spec-fix-fideicommissary, spec-fix-narrative-rules, spec-fix-pseudocode-gaps, spec-fix-test-vectors

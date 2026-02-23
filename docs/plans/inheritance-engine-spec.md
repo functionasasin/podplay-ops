@@ -2364,7 +2364,7 @@ See the full edge case catalog (82 cases across 21 categories) in `loops/inherit
 
 ### 14.1 Summary
 
-13 complete test vectors covering 10 scenarios, 16 features, and 10 invariants.
+23 complete test vectors covering 17 scenarios, 26 features, and 10 invariants.
 
 | # | Scenario | Key Features |
 |---|----------|-------------|
@@ -2381,6 +2381,16 @@ See the full edge case catalog (82 cases across 21 categories) in `loops/inherit
 | TV-11 | T5b | Complex: collation + cap check + inofficiousness |
 | TV-12 | T2 | Inofficious legacy reduced, spouse underprovision recovery |
 | TV-13 | T5a | Cap rule triggered: n=1, m=3, spouse priority (ICs reduced 66.7%) |
+| TV-14 | MIXED | Mixed succession: will covers part of FP, ₱1.5M undisposed → intestate (Art. 960(2)) |
+| TV-15 | I13 | Collateral siblings: 2 full + 1 half blood, Art. 1006 2:1 ratio (₱4M/₱4M/₱2M) |
+| TV-16 | T12-AM | Articulo mortis: spouse ½→⅓ (Art. 900 ¶2), 3-condition check, FP increases |
+| TV-17 | I7 | IC-only: 3 illegitimate children equal shares (Art. 988), filiation gate |
+| TV-18 | I15 | Escheat: no heirs, entire estate to State (Art. 1011) |
+| TV-19 | I2→I5 | Total renunciation: all children renounce → Art. 969 → parents inherit |
+| TV-20 | I-ID | Iron Curtain: Art. 992 blocks legitimate half-sibling, Art. 903 parent inherits |
+| TV-21 | T1 | Fideicommissary: Art. 863 + Art. 872 strips obligation from legitime (partial validity) |
+| TV-22 | I1 | Representation collation: Art. 1064 grandchildren collate parent's ₱3M donation |
+| TV-23 | I5 | Ascendant-only: parents equal shares (Arts. 985-987), E=₱8M → ₱4M each |
 
 ### 14.2 Test Invariants
 
@@ -2426,6 +2436,51 @@ Every test case must satisfy:
 
 **Intestate comparison** (I4): Per unit = ₱20M / 7 = ₱2,857,142.86 per IC — **71% more** than testate.
 
+### 14.4 Worked Example — TV-14 (Mixed Succession)
+
+**Input**: E = ₱10,000,000. 2 LC (Belen, Cesar) + Spouse (Diana). Testate will gives ₱1M to Charity A from FP.
+
+**Step 3**: Scenario T3, detected as **MIXED** (will disposes ₱1M < FP_disposable ₱2.5M)
+
+**Step 5** (legitime computation on T3):
+- Children's collective legitime = ₱10M × ½ = ₱5,000,000 (₱2.5M each)
+- Spouse's legitime = ₱10M / 4 = ₱2,500,000 (Art. 892 ¶2, from FP)
+- FP_disposable = ₱10M − ₱5M − ₱2.5M = ₱2,500,000
+- Will disposes ₱1M → undisposed FP = ₱1,500,000
+
+**3-Phase distribution**:
+- Phase 1 (legitimes): LC1 ₱2.5M, LC2 ₱2.5M, S ₱2.5M
+- Phase 2 (will): Charity A ₱1M
+- Phase 3 (undisposed ₱1.5M intestate per I2): ₱500K each to LC1, LC2, S
+
+| Heir | Legitime | Will (FP) | Intestate | Total |
+|------|----------|-----------|-----------|-------|
+| Belen (LC) | ₱2,500,000 | — | ₱500,000 | ₱3,000,000 |
+| Cesar (LC) | ₱2,500,000 | — | ₱500,000 | ₱3,000,000 |
+| Diana (Spouse) | ₱2,500,000 | — | ₱500,000 | ₱3,000,000 |
+| Charity A | — | ₱1,000,000 | — | ₱1,000,000 |
+| **Total** | | | | **₱10,000,000** ✓ |
+
+### 14.5 Worked Example — TV-22 (Representation Collation, Art. 1064)
+
+**Input**: E = ₱9,000,000. 1 LC (David) + 1 predeceased LC (Elena, ₱3M donation) with 2 grandchildren (Faye, Gabriel). Intestate.
+
+**Step 4** (estate base): E_adj = ₱9M + ₱3M = ₱12,000,000
+
+**Step 7** (distribution on collated estate):
+- Per line = ₱12M / 2 = ₱6M
+- LC1 (David): ₱6M from estate
+- LC2 line (Elena's): ₱6M − ₱3M donation = ₱3M from estate → ₱1.5M each grandchild
+
+| Heir | Entitlement | Donation | From Estate |
+|------|-------------|----------|-------------|
+| David (LC) | ₱6,000,000 | — | ₱6,000,000 |
+| Faye (GC, rep.) | ₱3,000,000 | ₱0 (parent's) | ₱1,500,000 |
+| Gabriel (GC, rep.) | ₱3,000,000 | ₱0 (parent's) | ₱1,500,000 |
+| **Total** | **₱12,000,000** | **₱3,000,000** | **₱9,000,000** ✓ |
+
+**Key**: Under Art. 1064, grandchildren collate their parent's donation even though they never received it.
+
 ---
 
 ## 15. Implementation Notes
@@ -2447,7 +2502,7 @@ Same inputs → same scenario code → same fractions → same peso amounts → 
 ### 15.4 Testing Strategy
 
 - Unit test each of the 10 pipeline steps independently
-- Integration test all 13 test vectors end-to-end
+- Integration test all 23 test vectors end-to-end
 - Property test the 10 invariants across randomized family trees
 - Narrative test: verify 28 narrative section compositions (see explainer-format analysis)
 
