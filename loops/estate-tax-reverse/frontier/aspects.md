@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 33
-- Analyzed: 8
-- Pending: 25
-- Convergence: 24%
+- Analyzed: 9
+- Pending: 24
+- Convergence: 27%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -19,7 +19,7 @@
 - [x] gross-estate-inclusions — Sec. 85(C-G): transfers in contemplation of death, revocable transfers, life insurance, general powers of appointment
 - [x] deduction-elit — Sec. 86(A)(1): expenses, losses, indebtedness, taxes (ELIT)
 - [x] deduction-vanishing — Sec. 86(A)(2): property previously taxed (full formula + percentage table: 100/80/60/40/20)
-- [ ] deduction-public-transfers — Sec. 86(A)(3): bequests to government for exclusively public use
+- [x] deduction-public-transfers — Sec. 86(A)(3): bequests to government for exclusively public use
 - [ ] deduction-standard — Sec. 86(A)(4): ₱5M citizens/residents, ₱500K non-resident aliens
 - [ ] deduction-family-home — Sec. 86(A)(5): up to ₱10M, barangay certification, residents only
 - [ ] deduction-medical — Sec. 86(A)(7): up to ₱500K, within 1 year before death
