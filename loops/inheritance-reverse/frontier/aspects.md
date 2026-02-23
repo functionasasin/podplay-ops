@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 28
-- Analyzed: 10
-- Pending: 18
-- Convergence: 35.7%
+- Analyzed: 11
+- Pending: 17
+- Convergence: 39.3%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -23,7 +23,7 @@
 - [x] legitime-table — Arts. 888-903: complete legitime fraction table for every possible heir combination
 - [x] legitime-with-illegitimate — half-share computation when legitimate and illegitimate children concur (Art. 895)
 - [x] legitime-surviving-spouse — Arts. 892, 893, 896-900: spouse's legitime varying by who they concur with (children, parents, alone)
-- [ ] legitime-ascendants — Arts. 889-891: parents/ascendants' legitime when there are no descendants
+- [x] legitime-ascendants — Arts. 889-891: parents/ascendants' legitime when there are no descendants
 - [ ] free-portion-rules — computation of disposable free portion: total estate minus total legitime of all compulsory heirs
 
 ### Wave 4: Distribution Rules
@@ -45,6 +45,7 @@
 - [ ] spec-review — self-review: can a developer with no Philippine law knowledge build the engine from this spec?
 
 ## Recently Analyzed
+- **legitime-ascendants** (2026-02-23): Complete ascendant legitime analysis covering all testate (T6-T9) and intestate (I5-I6, I9-I10) scenarios plus Art. 903 illegitimate decedent regime. Key contributions: (1) Full division algorithm for Art. 890/Arts. 986-987 — 3-tier priority: parents first (equal/survivor-takes-all), then nearest degree among higher ascendants, then by-line split (½ paternal/½ maternal with per capita within line); (2) Activation gate: ascendants excluded by ANY surviving legitimate descendant including adopted/legitimated children and grandchildren by representation; (3) Art. 972: NO representation in ascending line — flat hierarchy replaces it; (4) Reserva troncal (Art. 891): post-distribution encumbrance requiring asset-level metadata (acquisition type + source person) — engine must flag but doesn't change fraction computation; (5) Art. 903 specificity: only says "parents" not "ascendants" — grandparents of illegitimate decedent is a legal gray area, engine should flag; (6) Disinheritance of ascendants (Art. 920, 8 grounds): no representation effect, share redistributes to remaining ascendants or scenario re-evaluates; (7) Testate vs intestate comparison: ascendants always get ½ in both (except intestate-alone = entire estate), but spouse/IC get 33-100% more intestate. 9 edge cases (asymmetric grandparents, mixed-degree, dual-line ancestor from consanguinity, disinherited parent with surviving grandparents, reserva troncal overlap). 37 test cases across division, concurrence, Art. 903, disinheritance, activation gate, and reserva troncal categories.
 - **legitime-surviving-spouse** (2026-02-23): Complete surviving spouse legitime analysis across all 15 testate and 12 intestate scenarios. Two key insights: (1) spouse's share source differs by regime — "from the free portion" in Regime A/B (Arts. 892 ¶3, 893 ¶2) vs direct statutory fraction in Regime C (Arts. 894, 899, 900); (2) Art. 892 discontinuity at n=1 (¼) vs n≥2 (1/2n), coincidental match at n=2 but different formula paths. Spouse ranges from ⅛ (T9: ascendants+IC+spouse) to ½ (T12: spouse alone). Testate vs intestate comparison: spouse gets 33-100% more intestate in every scenario. Three special rules: (a) articulo mortis (Art. 900 ¶2: ½→⅓, ONLY when spouse is sole heir, 3 conditions must all hold); (b) legal separation (Art. 1002: guilty spouse forfeits everything, removes from heir pool, changes scenario); (c) disinheritance (Art. 921: 6 valid causes, no representation unlike children). Art. 895 ¶3 priority rule: spouse satisfied FIRST from FP before IC cap computed — spouse never reduced by illegitimate children. 9 edge cases (de facto vs legal separation, annulled marriage, remarriage, Art. 872 no conditions on legitime, collation of donations to spouse, usufruct option, Art. 1001 siblings concurrence, spouse of illegitimate decedent, multiple marriages). Master computation algorithm with disqualification checks → scenario-based fraction → FP priority pipeline. 41 test cases across fraction, disqualification, articulo mortis, testate-vs-intestate comparison, and FP priority categories.
 - **legitime-with-illegitimate** (2026-02-23): Definitive computation reference for legitimate + illegitimate child concurrence. Two computation regimes: Testate (Art. 895 cap rule — fixed ½ to legitimate children, illegitimate shares from FP after spouse) vs Intestate (unit ratio method — 2:1 proportional split, no cap). Complete cap threshold formulas: T4 bites at m>2n, T5a at m>1, T5b at m>2(n-1). Key finding: spouse's presence makes cap trigger much sooner (n=1 with spouse → any m>1 triggers). Systematic testate vs intestate comparison shows cap can reduce IC shares by up to 90% in testate while intestate gives 67%+ more. Representation interaction: line-based counting for both L and IC representation. Unified engine function with rational arithmetic. 29 test cases covering uncapped, capped, boundary, ratio verification, and cross-regime comparisons.
 - **legitime-table** (2026-02-23): Complete legitime fraction table for all 15 testate scenarios (T1-T15). Identified two fundamental regimes: Regime A (descendants present — per-child derived shares with Art. 895 ¶3 cap rule) vs Regime B (ascendants present — flat statutory fractions, no cap needed) vs Regime C (only concurring heirs — flat fractions). Built master computation algorithm with pseudocode for all scenarios. Key findings: (1) Art. 892 creates a discontinuity at n=1 child (spouse=¼) vs n≥2 (spouse=1/2n); (2) Cap rule bites at m>1 for T5a (1 child+spouse), m>2(n-1) for T5b; (3) Regime B uses flat ¼ for illegitimate children (Art. 896) vs Regime A's per-child formula; (4) T9 is most constrained (FP=⅛); (5) Rational arithmetic required to avoid rounding errors. 34 test cases including cap rule boundary tests and ascendant distribution tests.
