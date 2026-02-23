@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 12
-- Analyzed: 9
-- Pending: 3
-- Convergence: 75%
+- Analyzed: 10
+- Pending: 2
+- Convergence: 83%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -22,7 +22,7 @@
 - [x] identity-synthesis — Synthesize cohesive identity: bio, archetype, narrative bullets, tone
 
 ### Wave 3: Synthesis (depends on all Wave 2)
-- [ ] profile-spec — Complete actionable spec: README content, pin list, archive list, descriptions, topics, execution script → docs/plans/github-profile-spec.md
+- [x] profile-spec — Complete actionable spec: README content, pin list, archive list, descriptions, topics, execution script → docs/plans/github-profile-spec.md
 - [ ] spec-review — Review spec against "dangerous builder/tinkerer" bar; check for personality, signal clarity, completeness
 
 ### Wave 4: Spec Fixes (populated during spec-review if needed)
@@ -38,6 +38,7 @@
 - [x] fork-audit — 2026-02-23
 - [x] narrative-gaps — 2026-02-23
 - [x] identity-synthesis — 2026-02-23
+- [x] profile-spec — 2026-02-23
 
 ## Discovered Aspects
 (Empty — no new aspects discovered yet)
