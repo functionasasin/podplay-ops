@@ -2,15 +2,15 @@
 
 ## Statistics
 - Total aspects discovered: 28
-- Analyzed: 1
-- Pending: 27
-- Convergence: 3.6%
+- Analyzed: 2
+- Pending: 26
+- Convergence: 7.1%
 
 ## Pending Aspects (ordered by dependency)
 
 ### Wave 1: Legal Source Acquisition
 - [x] legal-source-fetch — Fetch and cache Civil Code Book III (Succession), Family Code (filiation), RA 8552 (adoption), legal commentaries
-- [ ] commentary-fetch — Find and cache 5-8 worked examples of Philippine inheritance distribution computations
+- [x] commentary-fetch — Find and cache 5-8 worked examples of Philippine inheritance distribution computations
 
 ### Wave 2: Heir Classification Rules
 - [ ] compulsory-heirs-categories — Art. 887: enumerate all compulsory heir categories (legitimate children/descendants, illegitimate children, surviving spouse, legitimate parents/ascendants)
@@ -46,3 +46,4 @@
 
 ## Recently Analyzed
 - **legal-source-fetch** (2026-02-23): Fetched and cached 4 legal source files covering Civil Code Book III (succession arts. 774-1077), Family Code Title VI (filiation arts. 163-182), RA 8552 (adoption secs. 16-20), and comprehensive commentary with 11 testate scenarios, 15 intestate scenarios, and 7 worked examples.
+- **commentary-fetch** (2026-02-23): Compiled 8 complete test-vector-quality worked examples covering: testate simple, inofficious will, preterition, disinheritance with representation, adopted children, mixed succession, collation, and complex intestate with representation. Also confirmed complete 15-row legitime table. Saved to `input/legal-sources/worked-examples.md`.

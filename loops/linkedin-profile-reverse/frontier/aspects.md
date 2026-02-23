@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 13
-- Analyzed: 10
-- Pending: 3
-- Convergence: 77%
+- Analyzed: 11
+- Pending: 2
+- Convergence: 85%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -23,13 +23,14 @@
 - [x] identity-synthesis — Synthesize headline drafts, about section draft, featured recommendations, skills list, tone calibration
 
 ### Wave 3: Synthesis (depends on all Wave 2)
-- [ ] linkedin-profile-spec — Complete actionable spec: headline, about, all experience entries, featured, skills, execution checklist → docs/plans/linkedin-profile-spec.md
+- [x] linkedin-profile-spec — Complete actionable spec: headline, about, all experience entries, featured, skills, execution checklist → docs/plans/linkedin-profile-spec.md
 - [ ] spec-review — Review spec against "dangerous polymath builder" bar; check for personality, range, signal clarity, completeness
 
 ### Wave 4: Spec Fixes (populated during spec-review if needed)
 (Empty — spec-review hasn't run yet)
 
 ## Recently Analyzed
+- [x] linkedin-profile-spec (2026-02-23)
 - [x] identity-synthesis (2026-02-23)
 - [x] experience-entry-design (2026-02-23)
 - [x] career-narrative-arc (2026-02-23)
