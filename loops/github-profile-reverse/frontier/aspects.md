@@ -32,6 +32,7 @@
 - [x] repo-inventory — 2026-02-23
 - [x] profile-snapshot — 2026-02-23
 - [x] monorepo-deep-scan — 2026-02-23
+- [x] repo-readme-scan — 2026-02-23
 
 ## Discovered Aspects
 (Empty — no new aspects discovered yet)
