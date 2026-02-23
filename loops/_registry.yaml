@@ -12,7 +12,6 @@ loops:
     status: converged
     created: 2026-02-20
     converged_at: 2026-02-22
-
   anime-recap-forward:
     description: "Build anime recap engine from spec, stage by stage"
     type: forward
@@ -21,16 +20,15 @@ loops:
     timeout_minutes: 30
     status: active
     created: 2026-02-22
-
   github-profile-reverse:
     description: "Audit GitHub profile → profile spec for dangerous builder persona"
     type: reverse
     schedule: "*/30 * * * *"
     max_iterations: 25
     timeout_minutes: 10
-    status: active
+    status: converged
     created: 2026-02-23
-
+    converged_at: "2026-02-23"
   linkedin-profile-reverse:
     description: "Mine monorepo + work projects → full LinkedIn profile spec for polymath builder persona"
     type: reverse
@@ -39,7 +37,6 @@ loops:
     timeout_minutes: 15
     status: active
     created: 2026-02-23
-
   estate-tax-reverse:
     description: "Extract PH estate tax rules (TRAIN + pre-TRAIN + amnesty) → deterministic computation engine spec with explainer"
     type: reverse
@@ -48,7 +45,6 @@ loops:
     timeout_minutes: 15
     status: active
     created: 2026-02-23
-
   inheritance-reverse:
     description: "Extract PH succession/inheritance rules → per-heir distribution engine spec with numbers + narrative explanations"
     type: reverse
