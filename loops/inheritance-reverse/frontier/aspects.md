@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 28
-- Analyzed: 15
-- Pending: 13
-- Convergence: 53.6%
+- Analyzed: 16
+- Pending: 12
+- Convergence: 57.1%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -30,7 +30,7 @@
 - [x] intestate-order — Arts. 960-1014: complete priority order for intestate succession (descendants → ascendants → spouse → collaterals → state)
 - [x] testate-institution — Arts. 840-856: institution of heirs in a will, conditions, modal institutions
 - [x] testate-validation — algorithm for checking if a will respects all compulsory heirs' legitime (inofficious disposition reduction)
-- [ ] disinheritance-rules — Arts. 915-923: valid grounds for disinheritance, effect on disinherited heir's descendants
+- [x] disinheritance-rules — Arts. 915-923: valid grounds for disinheritance, effect on disinherited heir's descendants
 - [ ] preterition — Art. 854: effect of totally omitting a compulsory heir from a will (annuls institution, preserves legacies/devises if within free portion)
 - [ ] accretion-rules — Arts. 1015-1023: how a vacant share distributes to co-heirs
 - [ ] collation — Arts. 1061-1077: accounting for inter vivos donations/advances when computing legitime and free portion
