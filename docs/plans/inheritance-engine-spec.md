@@ -138,6 +138,12 @@ The engine tracks two distinct FP values throughout:
 | `FP_gross` | Estate base − collective legitimate children's legitime (before spouse/IC deduction) | Art. 895 ¶3 cap base |
 | `FP_disposable` | FP_gross − spouse legitime − IC legitime (testator's actual freedom) | Testate validation (Step 6), will distribution (Step 7) |
 
+### 2.4 Mixed Succession Detection
+
+Succession type detection is a **two-pass** process:
+- **Step 3 (preliminary)**: If a will exists → TESTATE (tentative). If no will → INTESTATE.
+- **After Step 5 (definitive)**: Once `FP_disposable` is known, the engine evaluates will coverage. If testamentary dispositions consume less than `FP_disposable` and no residuary clause exists, the succession type is refined to MIXED. See §7.5 for the detection algorithm and distribution pseudocode.
+
 ---
 
 ## 3. Data Model
@@ -935,6 +941,175 @@ In intestate succession, the Art. 895 ¶3 cap rule does **not** apply. The 2:1 r
 ### 7.4 Iron Curtain Rule (Art. 992)
 
 For illegitimate decedents: bilateral barrier between the illegitimate child and their parent's legitimate relatives. The parent's legitimate relatives cannot inherit from the illegitimate decedent, and vice versa. **Exception**: The decedent's own parents CAN inherit (Art. 903).
+
+### 7.5 Mixed Succession (Art. 960(2))
+
+Mixed succession occurs when a valid will exists but does **not** dispose of the entire estate. The undisposed portion passes intestate.
+
+**Legal basis**: Art. 960(2): "Legal succession takes place... when the will does not institute an heir to, or dispose of all the property belonging to the testator. In such case, legal succession shall take place only with respect to the property of which the testator has not disposed."
+
+#### Detection: Will Coverage
+
+```
+function determine_will_coverage(
+    will: Will,
+    estate_base: Money,
+    legitime_result: LegitimeResult
+) -> WillCoverage {
+
+    fp_disposable = legitime_result.fp_disposable
+
+    // Sum all testamentary dispositions that draw from the FP
+    total_will_dispositions = Money(0)
+
+    for inst in will.institutions:
+        heir = resolve_heir(inst.heir)
+        if heir.is_compulsory:
+            // Only the EXCESS above legitime comes from FP
+            institution_value = compute_institution_value(inst, estate_base)
+            heir_legitime = get_heir_legitime(heir, legitime_result)
+            fp_portion = max(institution_value - heir_legitime, 0)
+            total_will_dispositions += fp_portion
+        else:
+            // Voluntary heir: entire share comes from FP
+            total_will_dispositions += compute_institution_value(inst, estate_base)
+
+    for legacy in will.legacies:
+        total_will_dispositions += compute_legacy_value(legacy)
+
+    for devise in will.devises:
+        total_will_dispositions += compute_devise_value(devise)
+
+    // A residuary clause ("the rest to X") captures any undisposed portion
+    has_residuary = any(inst.is_residuary for inst in will.institutions)
+    if has_residuary:
+        return WillCoverage {
+            disposes_of_entire_estate: true,
+            total_will_from_fp: fp_disposable,
+            undisposed_fp: Money(0),
+        }
+
+    undisposed_fp = max(fp_disposable - total_will_dispositions, Money(0))
+    return WillCoverage {
+        disposes_of_entire_estate: undisposed_fp == Money(0),
+        total_will_from_fp: total_will_dispositions,
+        undisposed_fp: undisposed_fp,
+    }
+}
+
+struct WillCoverage {
+    disposes_of_entire_estate: bool,
+    total_will_from_fp: Money,
+    undisposed_fp: Money,          // Passes intestate if > 0
+}
+```
+
+**Important**: Definitive MIXED detection requires `fp_disposable` from Step 5. Step 3 makes a preliminary classification (`will != null → TESTATE tentative`), which is refined to MIXED after Step 5 if the will does not cover the full FP.
+
+#### 3-Phase Distribution Algorithm
+
+```
+function distribute_mixed_succession(
+    net_estate: Money,
+    estate_base: Money,
+    will: Will,
+    heirs: List<Heir>,
+    lines: LineResult,
+    legitime_result: LegitimeResult,
+    validation: ValidationResult,
+    will_coverage: WillCoverage,
+    testate_scenario: String,       // T1-T15
+    intestate_scenario: String      // I1-I15
+) -> DistributionResult {
+
+    shares = Map<Heir, HeirShare>()
+
+    // PHASE 1: Allocate compulsory heirs' legitimes (identical to testate Step 7a)
+    for heir in compulsory_heirs(heirs):
+        legitime = get_heir_legitime(heir, legitime_result, lines)
+        shares[heir] = HeirShare {
+            from_legitime: legitime,
+            from_free_portion: Money(0),
+            from_intestate: Money(0),
+            basis: get_legitime_basis(heir, testate_scenario),
+        }
+
+    // PHASE 2: Distribute testamentary FP dispositions
+    will_dispositions = get_effective_dispositions(will, validation)
+    for disp in will_dispositions:
+        recipient = resolve_heir(disp.heir)
+        amount = compute_disposition_value(disp, estate_base, validation)
+        if recipient in shares:
+            shares[recipient].from_free_portion += amount
+        else:
+            shares[recipient] = HeirShare {
+                from_legitime: Money(0),
+                from_free_portion: amount,
+                from_intestate: Money(0),
+            }
+
+    // PHASE 3: Distribute undisposed FP intestate (Art. 960(2))
+    undisposed_fp = will_coverage.undisposed_fp
+    if undisposed_fp > Money(0):
+        // Same intestate rules apply — same heirs participate
+        // Non-compulsory heirs (collaterals) may also inherit here
+        intestate_shares = compute_intestate_distribution(
+            undisposed_fp, heirs, lines
+        )
+        for (heir, intestate_amount) in intestate_shares:
+            if heir in shares:
+                shares[heir].from_intestate += intestate_amount
+            else:
+                shares[heir] = HeirShare {
+                    from_legitime: Money(0),
+                    from_free_portion: Money(0),
+                    from_intestate: intestate_amount,
+                }
+
+    return DistributionResult { shares: shares }
+}
+```
+
+#### Share Merging
+
+When a compulsory heir appears in both testate and intestate portions, their final share is:
+
+```
+total = from_legitime + from_free_portion + from_intestate
+```
+
+- `from_legitime`: Fixed by Step 5 (testate fraction table)
+- `from_free_portion`: Will dispositions
+- `from_intestate`: Undisposed FP distributed using intestate rules on just the undisposed amount
+
+The intestate scenario for the undisposed FP uses the **same heir pool** as the testate scenario. Non-compulsory heirs (collaterals) may participate if the intestate rules permit (e.g., I12: spouse + siblings).
+
+#### Worked Example
+
+Estate: ₱10,000,000 | 2 LC + Spouse (T3/I2) | Will gives ₱1,000,000 to charity
+
+| Step | Computation | Result |
+|------|------------|--------|
+| Legitime (T3, n=2) | LC collective = ₱5M, per LC = ₱2.5M, spouse = ₱2.5M | FP_disposable = ₱2.5M |
+| Will coverage | ₱1M disposed of ₱2.5M FP | Undisposed = ₱1.5M → **MIXED** |
+| Phase 1 | LC1=₱2.5M, LC2=₱2.5M, Spouse=₱2.5M | Legitimes allocated |
+| Phase 2 | Charity=₱1M | Testamentary FP |
+| Phase 3 (I2, ₱1.5M) | ₱1.5M ÷ 3 = ₱500K each | LC1, LC2, Spouse each get ₱500K intestate |
+
+| Heir | Legitime | Testamentary FP | Intestate | Total |
+|------|----------|----------------|-----------|-------|
+| LC1 | ₱2,500,000 | — | ₱500,000 | ₱3,000,000 |
+| LC2 | ₱2,500,000 | — | ₱500,000 | ₱3,000,000 |
+| Spouse | ₱2,500,000 | — | ₱500,000 | ₱3,000,000 |
+| Charity | — | ₱1,000,000 | — | ₱1,000,000 |
+| **Total** | | | | **₱10,000,000** ✓ |
+
+#### Key Interactions
+
+- **Preterition** (Art. 854) converts MIXED → INTESTATE_BY_PRETERITION (all institutions annulled)
+- **Inofficiousness** (Art. 911) reduces will dispositions before computing undisposed FP
+- A **residuary clause** in the will captures undisposed FP → TESTATE, not MIXED
+- An **empty will** (all dispositions invalid/lapsed) → INTESTATE, not MIXED
 
 ---
 
