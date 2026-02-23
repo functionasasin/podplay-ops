@@ -919,17 +919,14 @@ Ascendants = ½, ICs = ¼, spouse = ¼
 Spouse inherits entire estate
 
 #### I12: Spouse + Siblings/Nephews/Nieces (Art. 1001)
-Spouse = ½, siblings/nephews/nieces = ½
-**Scope**: Art. 1001 ONLY applies to siblings/nephews/nieces — remote collaterals are excluded.
+Spouse = ½, siblings/nephews/nieces = ½. Collateral half distributed via `distribute_collaterals()` (§7.6).
+**Scope**: Art. 1001 ONLY applies to siblings/nephews/nieces — remote collaterals are excluded (Art. 995).
 
 #### I13: Siblings/Nephews/Nieces Only (Arts. 1003-1008)
-- Siblings per capita (Art. 1004)
-- Full-blood siblings get double the share of half-blood siblings (Art. 1006): unit ratio 2:1
-- Nephews/nieces represent their parent (Art. 1005, per stirpes)
-- If only nephews/nieces remain (all siblings predeceased): per capita switch (Art. 975)
+Entire estate distributed via `distribute_collaterals()` (§7.6).
 
 #### I14: Other Collateral Relatives (Arts. 1009-1010)
-5th-degree limit. Equal shares among nearest-degree collaterals.
+Entire estate distributed via `distribute_other_collaterals()` (§7.6).
 
 #### I15: State (Arts. 1011-1014)
 No heirs → estate escheats to the State. Personal property to municipality of last residence; real property to municipalities where situated.
@@ -1110,6 +1107,246 @@ Estate: ₱10,000,000 | 2 LC + Spouse (T3/I2) | Will gives ₱1,000,000 to chari
 - **Inofficiousness** (Art. 911) reduces will dispositions before computing undisposed FP
 - A **residuary clause** in the will captures undisposed FP → TESTATE, not MIXED
 - An **empty will** (all dispositions invalid/lapsed) → INTESTATE, not MIXED
+
+### 7.6 Collateral Distribution Sub-Algorithm (Arts. 1003-1010)
+
+Collateral relatives require a dedicated sub-algorithm because of the interplay between full/half blood rules (Art. 1006), representation by nephews/nieces (Art. 1005), the per capita switch (Art. 975), and the 5th-degree limit (Art. 1010).
+
+#### Master Function
+
+```
+function distribute_collaterals(amount: Fraction, collaterals: List<Heir>) -> Map<Heir, Fraction> {
+  siblings = filter(c where c.is_sibling_of_decedent, collaterals)
+  nephews_nieces = filter(c where c.is_child_of_sibling_of_decedent, collaterals)
+
+  // Branch 1: Siblings + nephews/nieces (per stirpes with blood weighting)
+  if count(siblings) > 0 AND count(nephews_nieces) > 0:
+    return distribute_siblings_with_representation(amount,
+      build_sibling_lines(siblings, nephews_nieces))
+
+  // Branch 2: Siblings only (3-way blood logic)
+  if count(siblings) > 0:
+    return distribute_siblings(amount, siblings)
+
+  // Branch 3: Nephews/nieces only (per capita switch, Art. 975)
+  if count(nephews_nieces) > 0:
+    return distribute_nephews_only(amount, nephews_nieces)
+
+  // Branch 4: Other collaterals (nearest-degree + 5th-degree limit)
+  return distribute_other_collaterals(amount, collaterals)
+}
+```
+
+#### Branch 2: Siblings Only — Full/Half Blood Logic (Arts. 1004, 1006, 1007)
+
+```
+function distribute_siblings(amount: Fraction, siblings: List<Heir>) -> Map<Heir, Fraction> {
+  full_blood = filter(s where s.blood_type == FULL, siblings)
+  half_blood = filter(s where s.blood_type == HALF, siblings)
+
+  // Case A: All full blood → equal shares (Art. 1004)
+  if count(half_blood) == 0:
+    per_sibling = amount / count(siblings)
+    return { s: per_sibling for s in siblings }
+
+  // Case B: All half blood → equal shares, no line distinction (Art. 1007)
+  //   "...shall inherit in equal shares without distinction as to the origin of the property"
+  if count(full_blood) == 0:
+    per_sibling = amount / count(siblings)
+    return { s: per_sibling for s in siblings }
+
+  // Case C: Mixed full + half blood → 2:1 unit ratio (Art. 1006)
+  //   Full blood = 2 units, half blood = 1 unit
+  total_units = (count(full_blood) * 2) + (count(half_blood) * 1)
+  per_unit = amount / total_units
+
+  result = {}
+  for s in full_blood:
+    result[s] = per_unit * 2
+  for s in half_blood:
+    result[s] = per_unit * 1
+  return result
+}
+```
+
+**Example** (Case C): ₱10,000,000 among 2 full-blood + 1 half-blood sibling
+- Total units: `(2 × 2) + (1 × 1) = 5`
+- Per unit: `₱10M / 5 = ₱2,000,000`
+- Each full-blood: ₱4,000,000; half-blood: ₱2,000,000
+
+#### Branch 1: Siblings + Nephews/Nieces — Per Stirpes with Blood Weighting (Arts. 1005, 1006, 1008)
+
+Surviving siblings inherit per capita (in their own right); nephews/nieces of predeceased siblings inherit per stirpes (by representation). Blood weighting applies per **line**, not per individual.
+
+```
+struct SiblingLine {
+  original_sibling: Heir,         // The sibling (alive or predeceased)
+  blood_type: BloodType,          // FULL or HALF
+  mode: InheritanceMode,          // OWN_RIGHT (alive) or REPRESENTATION (predeceased)
+  representatives: List<Heir>,    // Nephews/nieces if predeceased
+}
+
+function build_sibling_lines(siblings: List<Heir>,
+    nephews_nieces: List<Heir>) -> List<SiblingLine> {
+  lines = []
+  // Living siblings: each is a line in OWN_RIGHT
+  for s in siblings:
+    lines.append(SiblingLine {
+      original_sibling: s,
+      blood_type: s.blood_type,
+      mode: OWN_RIGHT,
+      representatives: [],
+    })
+  // Predeceased siblings whose children survive: each is a REPRESENTATION line
+  predeceased_parents = unique(n.parent for n in nephews_nieces)
+  for parent in predeceased_parents:
+    children = filter(n where n.parent == parent, nephews_nieces)
+    lines.append(SiblingLine {
+      original_sibling: parent,
+      blood_type: parent.blood_type,
+      mode: REPRESENTATION,
+      representatives: children,
+    })
+  return lines
+}
+
+function distribute_siblings_with_representation(amount: Fraction,
+    sibling_lines: List<SiblingLine>) -> Map<Heir, Fraction> {
+
+  // Step 1: Compute per-line units (Art. 1006 + Art. 1008)
+  //   Each line gets 2 units if FULL blood, 1 unit if HALF blood
+  total_units = 0
+  for line in sibling_lines:
+    total_units += (2 if line.blood_type == FULL else 1)
+
+  per_unit = amount / total_units
+  result = {}
+
+  // Step 2: Distribute per line
+  for line in sibling_lines:
+    line_units = (2 if line.blood_type == FULL else 1)
+    line_share = per_unit * line_units
+
+    if line.mode == OWN_RIGHT:
+      // Living sibling: takes full line share
+      result[line.original_sibling] = line_share
+    else:
+      // REPRESENTATION: nephews/nieces split line share equally (per stirpes)
+      per_rep = line_share / count(line.representatives)
+      for nephew in line.representatives:
+        result[nephew] = per_rep
+
+  return result
+}
+```
+
+**Example**: ₱12,000,000 among: Sib-A (full, alive), Sib-B (full, predeceased → N1, N2), Sib-C (half, alive)
+- Lines: A=FULL(2u), B=FULL(2u), C=HALF(1u) → total 5 units
+- Per unit: `₱12M / 5 = ₱2,400,000`
+- Sib-A: `₱4,800,000` (2 units, own right)
+- N1: `₱2,400,000`, N2: `₱2,400,000` (Sib-B's 2-unit share ÷ 2, per stirpes)
+- Sib-C: `₱2,400,000` (1 unit, own right)
+
+#### Branch 3: Nephews/Nieces Only — Per Capita Switch (Art. 975)
+
+When ALL siblings have predeceased and only nephews/nieces survive, the per stirpes rule is **overridden** by Art. 975's per capita rule. All nephews/nieces inherit in equal portions regardless of which sibling they descend from.
+
+```
+function distribute_nephews_only(amount: Fraction, nephews: List<Heir>) -> Map<Heir, Fraction> {
+  // Art. 975: "But if they alone survive, they shall inherit in equal portions."
+
+  // NOTE: Scholarly debate exists on whether Art. 1006 full/half blood doubling
+  // applies to nephews/nieces inheriting per capita under Art. 975. Art. 1008
+  // says they succeed "in accordance with the rules laid down for the brothers
+  // and sisters of the full blood" — suggesting the double-share rule MAY apply.
+  //
+  // Default: Apply Art. 1006 doubling for consistency with Art. 1008.
+  // Config flag: nephews_per_capita_ignore_blood (if true → pure equal shares)
+
+  if config.nephews_per_capita_ignore_blood:
+    per_nephew = amount / count(nephews)
+    return { n: per_nephew for n in nephews }
+
+  // Default: apply blood weighting even in per capita mode (Art. 1008)
+  full_blood = filter(n where n.parent_blood_type == FULL, nephews)
+  half_blood = filter(n where n.parent_blood_type == HALF, nephews)
+
+  if count(full_blood) == 0 OR count(half_blood) == 0:
+    // All same blood type → equal shares
+    per_nephew = amount / count(nephews)
+    return { n: per_nephew for n in nephews }
+
+  // Mixed: full-blood nephews = 2 units, half-blood nephews = 1 unit
+  total_units = (count(full_blood) * 2) + (count(half_blood) * 1)
+  per_unit = amount / total_units
+
+  result = {}
+  for n in full_blood:
+    result[n] = per_unit * 2
+  for n in half_blood:
+    result[n] = per_unit * 1
+  return result
+}
+```
+
+**Example** (default mode): ₱6,000,000 among 3 nephews from 2 predeceased siblings (Sib-A full → N1, N2; Sib-B half → N3)
+- All siblings predeceased → per capita (Art. 975)
+- Blood weighting (Art. 1008): N1=2u, N2=2u (parent full), N3=1u (parent half)
+- Total: 5 units. Per unit: `₱1,200,000`
+- N1: ₱2,400,000; N2: ₱2,400,000; N3: ₱1,200,000
+
+#### Branch 4: Other Collateral Relatives (Arts. 1009-1010)
+
+When no siblings or nephews/nieces survive, more remote collaterals inherit. Art. 1009 eliminates blood and line distinctions. Art. 1010 imposes a hard 5th-degree limit.
+
+```
+function distribute_other_collaterals(amount: Fraction,
+    collaterals: List<Heir>) -> Map<Heir, Fraction> {
+  // Art. 1009: "without distinction of lines or preference among them
+  //   by reason of relationship by the whole blood"
+  // Art. 1010: "shall not extend beyond the fifth degree"
+  // Art. 962: nearest degree excludes more remote
+
+  // Step 1: Filter to ≤5th degree
+  eligible = filter(c where c.collateral_degree <= 5, collaterals)
+  if count(eligible) == 0:
+    return {}  // No eligible collaterals → estate escheats (I15)
+
+  // Step 2: Nearest degree excludes more remote (Art. 962)
+  min_degree = min(c.collateral_degree for c in eligible)
+  nearest = filter(c where c.collateral_degree == min_degree, eligible)
+
+  // Step 3: Equal shares — no blood or line distinction (Art. 1009)
+  per_heir = amount / count(nearest)
+  return { c: per_heir for c in nearest }
+}
+```
+
+**Degree reference** (Art. 966, collateral line): Siblings = 2nd degree, nephews/nieces = 3rd degree, first cousins = 4th degree, children of first cousins = 5th degree. Beyond 5th degree → no inheritance (Art. 1010), estate escheats to State (I15).
+
+**Example**: ₱8,000,000, 2 first cousins (4th degree) + 1 child of first cousin (5th degree)
+- Nearest degree = 4 → 2 first cousins only
+- Each: ₱4,000,000 (child of first cousin at 5th degree is excluded by proximity rule)
+
+#### I12 Integration
+
+For I12 (spouse + siblings/nephews/nieces), the spouse takes ½ and the collateral half is distributed via `distribute_collaterals()`:
+
+```
+function distribute_I12(estate: Fraction, spouse: Heir,
+    collaterals: List<Heir>) -> Map<Heir, Fraction> {
+  result = { spouse: estate / 2 }
+  collateral_total = estate / 2
+  collateral_shares = distribute_collaterals(collateral_total, collaterals)
+  result.merge(collateral_shares)
+  return result
+}
+```
+
+**Example**: ₱10,000,000, spouse + 1 full-blood sibling + 1 half-blood sibling
+- Spouse: ₱5,000,000
+- Collateral ½: ₱5,000,000 → `distribute_siblings(₱5M, [full, half])`
+- Full sibling: `₱5M × 2/3 = ₱3,333,333`; Half sibling: `₱5M × 1/3 = ₱1,666,667`
 
 ---
 
