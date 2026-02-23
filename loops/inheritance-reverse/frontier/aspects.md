@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 33
-- Analyzed: 28
-- Pending: 5
-- Convergence: 84.8%
+- Analyzed: 29
+- Pending: 4
+- Convergence: 87.9%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -47,7 +47,7 @@
 ### Wave 6: Spec Fixes (Added by spec-review)
 - [x] spec-fix-mixed-succession — Add mixed succession detection + distribution algorithm pseudocode to spec §7
 - [x] spec-fix-collateral-algorithm — Add collateral distribution sub-algorithm with full/half blood, per stirpes/per capita switching to spec §7.2
-- [ ] spec-fix-art911-reduction — Add Art. 911 three-phase reduction pseudocode to spec §9.1
+- [x] spec-fix-art911-reduction — Add Art. 911 three-phase reduction pseudocode to spec §9.1
 - [ ] spec-fix-fideicommissary — Add Art. 863 fideicommissary validity requirements (one-degree, both-alive, express, no-legitime) to spec §3.3
 - [ ] spec-fix-narrative-rules — Add narrative validation rules (10 rules), helper functions (6 functions), NarrativeConfig, NarrativeSectionType enum to spec §11
 - [ ] spec-fix-pseudocode-gaps — Add FP pipeline order-of-operations, Art. 1064 representation collation algorithm, collatability decision tree to spec §2/§8

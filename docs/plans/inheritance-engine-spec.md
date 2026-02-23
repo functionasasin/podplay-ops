@@ -1448,17 +1448,256 @@ A compulsory heir receives less than their legitime from the will.
 
 #### Check 4: Inofficiousness (Arts. 908-912)
 
-Testamentary dispositions exceed the free portion.
+Testamentary dispositions and inter vivos donations exceed the free portion, impairing compulsory heirs' legitimes.
 
-**Art. 911 three-phase reduction**:
-- Phase 1a: Non-preferred legacies/devises (pro rata)
-- Phase 1b: Preferred legacies/devises (testator-designated)
-- Phase 2: Voluntary institutions (pro rata)
-- Phase 3: Donations (reverse chronological, most recent first)
+**Detection**: After computing all legitimes (Step 5) and evaluating the will:
 
-**Art. 912 indivisible realty**: When a devise must be partially reduced:
-- If reduction < ½ of property value → devisee keeps property, reimburses compulsory heirs in cash
-- If reduction ≥ ½ → compulsory heirs take property, reimburse devisee in cash
+```
+excess = total_testamentary_dispositions + total_collatable_donations - FP_disposable
+if excess > 0:
+    reductions = reduce_inofficious(excess, will, donations)
+```
+
+Where `total_testamentary_dispositions` = sum of all legacies + devises + voluntary institutions from the will, and `total_collatable_donations` = sum of collatable inter vivos donations (valued at time of donation per Art. 1071). `FP_disposable` is the free portion after all compulsory heirs' legitimes (see §6).
+
+#### 9.1 Art. 911 Three-Phase Reduction Algorithm
+
+The reduction algorithm implements Art. 911's strict priority: testamentary dispositions are reduced before donations, and within testamentary dispositions the testator's preferences are respected. The algorithm stops as soon as the excess is fully absorbed.
+
+```pseudocode
+function reduce_inofficious(
+    excess: Fraction,          // amount by which dispositions exceed FP_disposable
+    will: Will,
+    donations: List<Donation>  // collatable donations only
+) -> ReductionResult {
+
+    remaining = excess          // tracks how much still needs to be reduced
+    reductions = []             // accumulates all reduction actions
+
+    // ═══════════════════════════════════════════════════════════════
+    // PHASE 1: Reduce testamentary devises and legacies (Art. 911 ¶1)
+    // "Donations shall be respected as long as the legitime can be
+    //  covered, reducing or annulling, if necessary, the devises or
+    //  legacies made in the will."
+    // ═══════════════════════════════════════════════════════════════
+
+    // Step 1a: Separate preferred vs non-preferred dispositions
+    // Art. 911 ¶2: "The reduction of the devises or legacies shall be
+    //  pro rata, without any distinction whatever. If the testator has
+    //  directed that a certain devise or legacy be paid in preference
+    //  to others, it shall not be reduced until the latter have been
+    //  applied in full to the payment of the legitime."
+    all_legacies_devises = will.legacies + will.devises
+    non_preferred = filter(all_legacies_devises, d => NOT d.is_preferred)
+    preferred = filter(all_legacies_devises, d => d.is_preferred)
+
+    // Step 1b: Reduce NON-PREFERRED pro rata (exhausted first)
+    non_pref_total = sum(d.effective_amount for d in non_preferred)
+    if remaining > 0 AND non_pref_total > 0:
+        // Pro rata ratio: each non-preferred disposition loses the
+        // same proportion. If excess > total, all are fully consumed.
+        ratio = min(remaining / non_pref_total, Fraction(1, 1))
+        for d in non_preferred:
+            cut = d.effective_amount * ratio
+            reductions.append(Reduction {
+                target: d,
+                phase: PHASE_1A,
+                original_amount: d.effective_amount,
+                reduction_amount: cut,
+                remaining_amount: d.effective_amount - cut,
+                legal_basis: "Art. 911 ¶2: non-preferred legacy/devise reduced pro rata"
+            })
+            remaining = remaining - cut
+
+    // Step 1c: Reduce PREFERRED pro rata (only if non-preferred fully consumed)
+    if remaining > 0:
+        pref_total = sum(d.effective_amount for d in preferred)
+        if pref_total > 0:
+            ratio = min(remaining / pref_total, Fraction(1, 1))
+            for d in preferred:
+                cut = d.effective_amount * ratio
+                reductions.append(Reduction {
+                    target: d,
+                    phase: PHASE_1B,
+                    original_amount: d.effective_amount,
+                    reduction_amount: cut,
+                    remaining_amount: d.effective_amount - cut,
+                    legal_basis: "Art. 911 ¶2: preferred legacy/devise reduced (non-preferred exhausted)"
+                })
+                remaining = remaining - cut
+
+    // ═══════════════════════════════════════════════════════════════
+    // PHASE 2: Reduce voluntary institutions (Art. 911 ¶1, implied)
+    // Voluntary heirs instituted as universal heirs receive from the
+    // FP. They are reduced before donations but after legacies/devises.
+    // ═══════════════════════════════════════════════════════════════
+
+    if remaining > 0:
+        voluntary = filter(will.institutions, i => NOT i.heir_ref.is_compulsory)
+        vol_total = sum(i.effective_share_amount for i in voluntary)
+        if vol_total > 0:
+            ratio = min(remaining / vol_total, Fraction(1, 1))
+            for i in voluntary:
+                cut = i.effective_share_amount * ratio
+                reductions.append(Reduction {
+                    target: i,
+                    phase: PHASE_2,
+                    original_amount: i.effective_share_amount,
+                    reduction_amount: cut,
+                    remaining_amount: i.effective_share_amount - cut,
+                    legal_basis: "Art. 911 ¶1: voluntary institution reduced"
+                })
+                remaining = remaining - cut
+
+    // ═══════════════════════════════════════════════════════════════
+    // PHASE 3: Reduce inter vivos donations (Art. 911 ¶1)
+    // "Should the legacies or devises not be sufficient to cover the
+    //  legitimate portion, the donations shall be suppressed or
+    //  reduced as to the excess."
+    // Donations are reduced in REVERSE CHRONOLOGICAL order (most
+    // recent first). This protects older donees' reliance interests.
+    // ═══════════════════════════════════════════════════════════════
+
+    if remaining > 0:
+        // Sort collatable donations by date DESCENDING (most recent first)
+        sorted_donations = sort(donations, by: d.date, order: DESCENDING)
+        for d in sorted_donations:
+            if remaining <= 0:
+                break
+            // Each donation reduced individually (NOT pro rata) —
+            // the most recent is fully consumed before moving to the next.
+            // Value at time of donation per Art. 1071.
+            cut = min(d.value_at_donation, remaining)
+            reductions.append(Reduction {
+                target: d,
+                phase: PHASE_3,
+                original_amount: d.value_at_donation,
+                reduction_amount: cut,
+                remaining_amount: d.value_at_donation - cut,
+                legal_basis: "Art. 911 ¶1: donation reduced reverse-chronologically"
+            })
+            remaining = remaining - cut
+
+    // ═══════════════════════════════════════════════════════════════
+    // RESULT
+    // ═══════════════════════════════════════════════════════════════
+
+    return ReductionResult {
+        reductions: reductions,
+        total_reduced: excess - remaining,
+        unresolved_excess: remaining,    // should be Fraction(0) if estate is solvent
+        phases_used: unique(r.phase for r in reductions)
+    }
+}
+```
+
+**Phase summary**:
+
+| Phase | What is reduced | Method | Legal basis |
+|-------|----------------|--------|-------------|
+| 1a | Non-preferred legacies/devises | Pro rata (proportional) | Art. 911 ¶2 |
+| 1b | Preferred legacies/devises | Pro rata (only after 1a exhausted) | Art. 911 ¶2 |
+| 2 | Voluntary institutions | Pro rata | Art. 911 ¶1 (implied) |
+| 3 | Inter vivos donations | Reverse chronological (one at a time) | Art. 911 ¶1 |
+
+**Critical distinctions**:
+- Phases 1-2 use **pro rata** reduction (proportional across all items in the phase)
+- Phase 3 uses **sequential** reduction (most recent donation fully consumed before next)
+- A `Reduction` where `remaining_amount = 0` means the disposition is fully annulled
+- The algorithm stops (`remaining = 0`) as soon as the excess is covered — later phases are not reached
+- If `unresolved_excess > 0` after all phases, the estate cannot satisfy all legitimes (insolvency edge case — flag `MANUAL_REVIEW`)
+
+**Preferred vs non-preferred**: A legacy or devise is "preferred" if the testator expressly designated it for priority payment (Art. 911 ¶2: "the testator has directed that a certain devise or legacy be paid in preference to others"). This is a boolean flag on each `Legacy`/`Devise` parsed from the will.
+
+**Art. 911 ¶3 — Usufruct/annuity option**: When the reduction would result in a compulsory heir receiving a usufruct or life annuity (rather than full ownership), the heir and the voluntary heir/donee may agree to convert the usufruct into full ownership of a smaller portion. The engine flags this as `USUFRUCT_ANNUITY_OPTION` for manual review — it requires party agreement and cannot be computed deterministically.
+
+#### 9.2 Art. 912 Indivisible Realty Algorithm
+
+When a devise of **indivisible real property** must be partially reduced, Art. 912 provides a special rule based on a ½-value threshold:
+
+```pseudocode
+function resolve_indivisible_realty(
+    property_value: Fraction,      // appraised value of the real property
+    reduction_amount: Fraction,    // how much must be reduced from this devise
+    devisee: Heir,
+    compulsory_heirs: List<Heir>
+) -> IndivisibleRealtyResult {
+
+    half_value = property_value * Fraction(1, 2)
+
+    if reduction_amount < half_value:
+        // Reduction is LESS than ½ of the property value
+        // → Devisee KEEPS the entire property
+        // → Devisee reimburses compulsory heirs in cash for the reduction amount
+        return IndivisibleRealtyResult {
+            property_awarded_to: DEVISEE,
+            devisee: devisee,
+            cash_reimbursement: CashReimbursement {
+                payer: devisee,
+                payees: compulsory_heirs,   // distributed pro rata by legitime share
+                amount: reduction_amount,
+            },
+            legal_basis: "Art. 912: reduction < ½ value, devisee keeps property"
+        }
+
+    else:
+        // Reduction is ≥ ½ of the property value (includes exactly ½)
+        // → Compulsory heirs TAKE the entire property
+        // → Compulsory heirs reimburse devisee in cash for the unreduced portion
+        devisee_reimbursement = property_value - reduction_amount
+        return IndivisibleRealtyResult {
+            property_awarded_to: COMPULSORY_HEIRS,
+            devisee: devisee,
+            cash_reimbursement: CashReimbursement {
+                payer: compulsory_heirs,
+                payees: [devisee],
+                amount: devisee_reimbursement,
+            },
+            legal_basis: "Art. 912: reduction ≥ ½ value, compulsory heirs take property"
+        }
+}
+```
+
+**Key rules**:
+- The ½ threshold is **inclusive** on the compulsory heirs' side: if reduction = exactly ½, compulsory heirs take the property
+- Cash reimbursement among multiple compulsory heirs is distributed pro rata by their respective legitime shares
+- This function is called **per devise** when `reduce_inofficious()` produces a reduction against a `Devise` of indivisible real property
+- If multiple indivisible devises are reduced in the same will, each is resolved independently
+
+**Data structures**:
+
+```pseudocode
+struct Reduction {
+    target: Disposition | Donation   // what was reduced
+    phase: ReductionPhase            // PHASE_1A | PHASE_1B | PHASE_2 | PHASE_3
+    original_amount: Fraction        // amount before reduction
+    reduction_amount: Fraction       // how much was cut
+    remaining_amount: Fraction       // amount after reduction (original - cut)
+    legal_basis: String              // article citation for narrative
+}
+
+enum ReductionPhase { PHASE_1A, PHASE_1B, PHASE_2, PHASE_3 }
+
+struct ReductionResult {
+    reductions: List<Reduction>      // all reductions applied
+    total_reduced: Fraction          // sum of all reduction amounts
+    unresolved_excess: Fraction      // 0 if fully resolved
+    phases_used: List<ReductionPhase>
+}
+
+struct IndivisibleRealtyResult {
+    property_awarded_to: DEVISEE | COMPULSORY_HEIRS
+    devisee: Heir
+    cash_reimbursement: CashReimbursement
+    legal_basis: String
+}
+
+struct CashReimbursement {
+    payer: Heir | List<Heir>
+    payees: List<Heir>
+    amount: Fraction
+}
+```
 
 #### Check 5: Condition Stripping (Art. 872)
 
