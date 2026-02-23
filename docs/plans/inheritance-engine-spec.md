@@ -332,6 +332,83 @@ struct Substitute {
 enum SubstitutionType { SIMPLE, RECIPROCAL, FIDEICOMMISSARY }
 enum SubstitutionTrigger { PREDECEASE, RENUNCIATION, INCAPACITY }
 
+struct FideicommissarySubstitution {
+    fiduciary: HeirReference,           // First heir — obligated to preserve
+    fideicommissary: HeirReference,     // Second heir — ultimate beneficiary
+    property_scope: ShareSpec,          // What must be preserved and transmitted
+    is_express: bool,                   // Art. 863: must be expressly stated in will
+    is_valid: bool,                     // Engine-computed (output of validate_fideicommissary)
+    invalidity_reason: String?,         // If invalid, why
+}
+```
+
+#### Fideicommissary Substitution — Art. 863 Validity Requirements
+
+A fideicommissary substitution obliges the fiduciary (first heir) to **preserve and transmit** property to the fideicommissary (second heir). It is valid only if ALL four conditions are met:
+
+| # | Condition | Legal Basis | Check |
+|---|-----------|-------------|-------|
+| 1 | **One-degree limit** | Art. 863 | Fideicommissary must be one generation from fiduciary (parent-child). Majority interpretation: "one degree" = one generation, not one transfer. |
+| 2 | **Both alive at testator's death** | Art. 863 | Both fiduciary and fideicommissary must be living when the testator dies. Predecease of either voids the substitution. |
+| 3 | **Express only** | Art. 863 | Must be expressly stated in the will. Cannot be implied from ambiguous language (e.g., "I hope A will give to B" is NOT fideicommissary). |
+| 4 | **Cannot burden legitime** | Art. 863 + Art. 872 | The fideicommissary obligation can only apply to the free portion. If scope overlaps with fiduciary's legitime, Art. 872 strips the obligation from the legitime portion. |
+
+```
+function validate_fideicommissary(
+    sub: FideicommissarySubstitution,
+    persons: Map<PersonId, Person>,
+    date_of_death: Date,
+    fiduciary_heir: Heir,
+    legitimes: Map<HeirId, Fraction>
+) -> FideicommissaryValidationResult {
+
+    fiduciary = persons[sub.fiduciary.person_id]
+    fideicommissary_person = persons[sub.fideicommissary.person_id]
+
+    // Check 1: Express requirement
+    if NOT sub.is_express:
+        return INVALID("Art. 863: Fideicommissary substitution must be express")
+
+    // Check 2: Both alive at testator's death
+    if NOT fiduciary.is_alive_at(date_of_death):
+        return INVALID("Art. 863: Fiduciary not alive at testator's death")
+    if NOT fideicommissary_person.is_alive_at(date_of_death):
+        return INVALID("Art. 863: Fideicommissary not alive at testator's death")
+
+    // Check 3: One-degree limit (one generation = parent-child)
+    if NOT is_parent_child(fiduciary, fideicommissary_person):
+        return INVALID("Art. 863: Fideicommissary exceeds one-degree limit")
+
+    // Check 4: Cannot burden legitime (Art. 863 + Art. 872)
+    if fiduciary_heir.is_compulsory:
+        fiduciary_legitime = legitimes[fiduciary_heir.id]
+        fiduciary_fp_share = fiduciary_heir.total_share - fiduciary_legitime
+        if sub.property_scope.as_fraction() > fiduciary_fp_share:
+            // Art. 872: strip obligation from legitime, apply only to FP share
+            return PARTIAL_VALID(
+                "Art. 872: Fideicommissary obligation narrowed to FP share only"
+            )
+
+    return VALID
+}
+
+enum FideicommissaryValidationResult {
+    VALID,
+    INVALID(reason: String),
+    PARTIAL_VALID(reason: String),
+        // Scope narrowed: obligation applies only to fiduciary's FP share
+}
+```
+
+**Engine behavior**:
+- **Valid**: Distribute to fiduciary normally. Attach obligation as metadata on `HeirShare.fideicommissary`. Narrative explains preservation-and-transmission duty.
+- **Invalid**: Substitution void (treated as not written). Fiduciary keeps property free of obligation. No redistribution.
+- **Partial valid** (legitime burden): Split fiduciary's share — legitime portion unconditional, FP portion carries fideicommissary obligation.
+
+**Important**: Fideicommissary substitution is NOT a vacancy resolution mechanism. It does not trigger when the fiduciary dies or refuses. It creates a post-distribution obligation. Vacancy of the fiduciary's share follows the normal priority chain (simple substitution → representation → accretion → intestate).
+
+```
+
 struct Disinheritance {
     heir_reference: HeirReference,
     cause_code: DisinheritanceCause,
