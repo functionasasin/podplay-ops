@@ -13,6 +13,7 @@ Rating key:
 
 ## Ballista
 - **Size**: Large | **Types**: Weapon, Ammo, Damage
+- **Starting Tier**: Gold
 - **Cooldown**: 11.0s | **Ammo**: 2
 - **Effect**: Deal 150/200 Damage. Gains +1 Multicast when using Ammo items.
 - **Rating**: **A** -- Scaling Multicast from Ammo use. Strong Gunslinger capstone.
@@ -20,6 +21,7 @@ Rating key:
 
 ## Cannonade
 - **Size**: Large | **Types**: Weapon, Damage
+- **Starting Tier**: Silver
 - **Cooldown**: 7.0s
 - **Effect**: Deal 100/200/300 Damage. Charges 2s when using Weapons.
 - **Rating**: **A** -- Self-charging from weapon use. Up to 300 damage at Diamond.
@@ -27,6 +29,7 @@ Rating key:
 
 ## Captain's Quarters
 - **Size**: Large | **Types**: Aquatic, Property, AmmoReference, Charge, DamageReference, Haste
+- **Starting Tier**: Silver
 - **Cooldown**: 4.0s
 - **Effect**: Haste 1 Vehicle 2/3/4s. Charges 1 Tool 1/2/3s. Reloads 1 Ammo 1/2/3. Weapon gains +20/30/40 Damage.
 - **Rating**: **A** -- Does everything: Haste, Charge, Reload, Damage buff. 4s cooldown is fast.
@@ -34,6 +37,7 @@ Rating key:
 
 ## Cove
 - **Size**: Large | **Types**: Aquatic, Property, Economy, Shield, Value
+- **Starting Tier**: Bronze
 - **Cooldown**: 4.0s
 - **Effect**: Shield equal to 1/2/3/4x Value. Gains +1/1/1/2 Value when selling items.
 - **Rating**: **B** -- Defensive economy item. Scales Shield through selling.
@@ -41,6 +45,7 @@ Rating key:
 
 ## Crow's Nest
 - **Size**: Large | **Types**: Property, Aquatic, Crit
+- **Starting Tier**: Bronze
 - **Cooldown**: Passive
 - **Effect**: Weapons gain +20/40/60/80% Crit. Single Weapon gains Lifesteal.
 - **Rating**: **A** -- Board-wide Crit + Lifesteal for solo weapon. Defines single-weapon builds.
@@ -48,6 +53,7 @@ Rating key:
 
 ## Dam
 - **Size**: Large | **Types**: Aquatic, Property
+- **Starting Tier**: Gold
 - **Cooldown**: 25.0s
 - **Effect**: Destroys self and smaller items for fight. Charges 1/2s when using Aquatic items.
 - **Rating**: **B** -- Board-clearing effect. Niche but devastating when it fires.
@@ -55,6 +61,7 @@ Rating key:
 
 ## Electric Eels
 - **Size**: Large | **Types**: Aquatic, Weapon, Friend, Damage, Slow
+- **Starting Tier**: Silver
 - **Cooldown**: 7.0s (Gold) / 6.0s (Diamond)
 - **Cost**: 24/48
 - **Effect**: Deal 100 Damage. Slow 1 item 1s. Charges 2s when enemy uses items.
@@ -63,6 +70,7 @@ Rating key:
 
 ## Flagship
 - **Size**: Large | **Types**: Aquatic, Vehicle, Weapon, AmmoReference, Damage
+- **Starting Tier**: Silver
 - **Cooldown**: 7.0s
 - **Effect**: Deal 50/75/100 Damage. +1 Multicast per Tool/Property/Friend/Ammo item.
 - **Rating**: **A** -- Vehicle version of Weather Glass. Multicast scales with board diversity.
@@ -70,6 +78,7 @@ Rating key:
 
 ## Iceberg
 - **Size**: Large | **Types**: Aquatic, Property, Freeze
+- **Starting Tier**: Gold
 - **Cooldown**: Passive
 - **Effect**: Freezes enemy items 0.5/1s when used.
 - **Rating**: **S** -- Passive enemy Freeze on every use. Shuts down opponent's board.
@@ -77,6 +86,7 @@ Rating key:
 
 ## Lighthouse
 - **Size**: Large | **Types**: Property, Aquatic, Burn, SlowReference
+- **Starting Tier**: Silver
 - **Cooldown**: 10.0s (Bronze) / 8.0s (Silver-Gold) / 6.0s (Diamond)
 - **Effect**: Burn 20. Charges 2s when Slowing.
 - **Rating**: **S** -- Massive Burn source that self-charges from Slow. Core Burn/Slow engine.
@@ -84,6 +94,7 @@ Rating key:
 
 ## Port
 - **Size**: Large | **Types**: Property, Aquatic, AmmoReference
+- **Starting Tier**: Silver
 - **Cooldown**: 7.0s
 - **Effect**: Reloads all items 1/2/3 Ammo and charges 1s. Grants Silver/Gold/Diamond Small Ammo from any Hero at day start.
 - **Rating**: **A** -- Board-wide Ammo reload + daily free item. Ammo build capstone.
@@ -91,6 +102,7 @@ Rating key:
 
 ## Seadog's Saloon
 - **Size**: Large | **Types**: Aquatic, Property, Haste, Slow
+- **Starting Tier**: Silver
 - **Cooldown**: 6.0s (Bronze) / 5.0s (Silver-Gold) / 4.0s (Diamond)
 - **Effect**: Haste 1 item 2s. Slow 1 item 2s. +1 Multicast per Friend.
 - **Rating**: **A** -- Haste + Slow + scaling Multicast from Friends. Build-around.
@@ -98,6 +110,7 @@ Rating key:
 
 ## Shipwreck
 - **Size**: Large | **Types**: Aquatic, Vehicle, Crit
+- **Starting Tier**: Diamond
 - **Cooldown**: Passive
 - **Effect**: Aquatic items gain +1 Multicast.
 - **Rating**: **S** -- THE Aquatic capstone. Every Aquatic item gets +1 Multicast. Game-changing.
@@ -113,6 +126,7 @@ Rating key:
 
 ## Slumbering Primordial
 - **Size**: Large | **Types**: Aquatic, Burn, Charge, Damage, Freeze, Friend, Poison, Weapon
+- **Starting Tier**: Gold
 - **Cooldown**: 30.0s
 - **Effect**: Deal 75/100 Damage. Charges 1/2s and gains +75/100 Damage when Poisoning/Freezing/Burning.
 - **Rating**: **S** -- Sole win condition item. Converts spammy triggers into absurdly fast scaling. Must upgrade to Diamond.
@@ -120,6 +134,7 @@ Rating key:
 
 ## Submarine
 - **Size**: Large | **Types**: Aquatic, Weapon, Vehicle, Damage, Shield, Tech
+- **Starting Tier**: Silver
 - **Cooldown**: 4.0s
 - **Effect**: Deal 50/75/100 Damage. Shield equal to Damage.
 - **Rating**: **A** -- Fast 4s cooldown. Damage + Shield. Enables secondary weapon inclusion.
@@ -127,6 +142,7 @@ Rating key:
 
 ## The Boulder
 - **Size**: Large | **Types**: Weapon, Ammo, Damage, Relic
+- **Starting Tier**: Gold
 - **Cooldown**: 20.0s (Gold) / 16.0s (Diamond) | **Ammo**: 1
 - **Cost**: 24/48
 - **Effect**: Deal Damage equal to opponent's Max Health.
@@ -135,6 +151,7 @@ Rating key:
 
 ## Tortuga
 - **Size**: Large | **Types**: Aquatic, Friend, Vehicle, Weapon, Damage, Haste
+- **Starting Tier**: Silver
 - **Cooldown**: 14.0s (Bronze) / 12.0s (Silver-Gold) / 10.0s (Diamond)
 - **Effect**: Deal 200/400/800 Damage. Haste other items 1s. Charges 2s when using Friends.
 - **Rating**: **A** -- Build-defining. 800 Damage at Diamond with board-wide Haste. Self-charging from Friends.
@@ -142,6 +159,7 @@ Rating key:
 
 ## Trebuchet
 - **Size**: Large | **Types**: Weapon, Burn, Damage, Haste
+- **Starting Tier**: Bronze
 - **Cooldown**: 10.0s
 - **Effect**: Deal 40/60/80/100 Damage. Burn 4/6/8/10. Charges 2s when using Weapons/Hasting.
 - **Rating**: **A** -- Damage + Burn with dual charge conditions. Deceptively fast true activation rate.
@@ -149,6 +167,7 @@ Rating key:
 
 ## Tropical Island
 - **Size**: Large | **Types**: Property, Aquatic, Slow, Regen
+- **Starting Tier**: Gold
 - **Cooldown**: Passive
 - **Effect**: Gain 5/10 Regen when Slowing. Grants Coconut or Citrus at hour start.
 - **Rating**: **B** -- Passive Regen scaling from Slow. Free items each hour.
@@ -156,6 +175,7 @@ Rating key:
 
 ## Water Wheel
 - **Size**: Large | **Types**: Aquatic, Property, Haste
+- **Starting Tier**: Silver
 - **Cooldown**: 8.0s (Bronze) / 7.0s (Silver-Gold) / 6.0s (Diamond)
 - **Effect**: Haste other items 2s. Charges 2s when using adjacent items.
 - **Rating**: **A** -- Board-wide Haste with self-charging. Late-game Haste engine.
