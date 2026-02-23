@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 13
-- Analyzed: 7
-- Pending: 6
-- Convergence: 54%
+- Analyzed: 8
+- Pending: 5
+- Convergence: 62%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -18,7 +18,7 @@
 
 ### Wave 2: Pattern Analysis (depends on Wave 1)
 - [x] reference-formula-extraction — Extract the formula: what makes reference profiles compelling? How do polymaths avoid looking scattered?
-- [ ] career-narrative-arc — Map chronological arc from ML research → PyMC Labs → Nuts and Bolts AI → Pod Play SEA → autonomous agent infrastructure; find the through-line
+- [x] career-narrative-arc — Map chronological arc from ML research → PyMC Labs → Nuts and Bolts AI → Pod Play SEA → autonomous agent infrastructure; find the through-line
 - [ ] experience-entry-design — Design each LinkedIn experience entry: title, company, date range, bullet points, what to emphasize
 - [ ] identity-synthesis — Synthesize headline drafts, about section draft, featured recommendations, skills list, tone calibration
 
@@ -30,6 +30,7 @@
 (Empty — spec-review hasn't run yet)
 
 ## Recently Analyzed
+- [x] career-narrative-arc (2026-02-23)
 - [x] reference-formula-extraction (2026-02-23)
 - [x] reference-profile-scan (2026-02-23)
 - [x] monorepo-project-inventory (2026-02-23)
