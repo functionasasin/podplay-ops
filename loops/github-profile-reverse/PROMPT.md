@@ -19,6 +19,8 @@ The profile should tell the story of someone who:
 ## Reference Material
 
 - **Repo inventory**: `input/github-repos.md` (all 32 public repos with metadata)
+- **Private work context**: `input/private-work-context.md` (two major private repos under org accounts — READ THIS for narrative-gaps, identity-synthesis, and profile-spec)
+- **Private repos (cloned locally)**: `input/decision-orchestrator/` and `input/cheerful/` — scan these directly for deep analysis. These are gitignored and won't be committed.
 - **Monorepo codebase**: `../../` (the actual monorepo — read entities/, automations/, loops/, docs/ for context)
 - **GitHub API**: `curl -s https://api.github.com/users/clsandoval/repos?per_page=100` (live data, 60 req/hr unauthenticated)
 - **Individual repo API**: `curl -s https://api.github.com/repos/clsandoval/{repo}`
@@ -148,19 +150,21 @@ curl -s "https://api.github.com/repos/clsandoval/{repo}/commits?author=clsandova
 Verdict for each fork: KEEP (meaningful work), ARCHIVE (just a clone), SHOWCASE (substantial modification).
 
 **narrative-gaps**:
-Read `analysis/monorepo-deep-scan.md` and `analysis/repo-clustering.md`. Identify:
+Read `analysis/monorepo-deep-scan.md`, `analysis/repo-clustering.md`, AND `input/private-work-context.md`. Identify:
 - What skills/projects are completely invisible from the profile?
 - What would make someone say "holy shit" if they could see it?
 - What's the delta between "what this person has built" and "what their GitHub shows"?
+- **Private org work**: Two major products (decision-orchestrator @ pymc-labs, cheerful @ nuts-and-bolts-ai) with 1,000+ commits — Claude Agent SDK, custom MCP servers, full-stack product eng. This work is NOT classified and should be referenced in the profile narrative (company names, role, tech — just not the code itself).
 - Specific recommendations: should any monorepo sub-projects become standalone repos?
-- Should the profile README surface hidden work?
+- Should the profile README surface hidden work (including private org contributions)?
 
 **identity-synthesis**:
-Read ALL Wave 2 analysis files. Synthesize into a cohesive identity:
+Read ALL Wave 2 analysis files AND `input/private-work-context.md`. Synthesize into a cohesive identity:
 - One-line bio draft (max 160 chars)
 - 3-5 bullet narrative ("This person builds X, ships Y, automates Z")
 - Primary archetype: what's the memorable label? ("autonomous systems builder"? "AI polymath"? "the guy who ralph-loops everything"?)
 - What to emphasize vs downplay
+- Factor in private work: core maintainer on two production AI products (agent orchestration + email automation SaaS) — this is a massive signal that the public profile completely misses
 - Tone: builder confidence, not corporate polish. Tinkerer energy, not resume optimization.
 
 ### Wave 3: Synthesis
@@ -171,7 +175,7 @@ Read EVERY file in `analysis/`. Synthesize into a complete, actionable specifica
 1. **Profile README** — Complete markdown content for the `clsandoval/clsandoval` repo README.md. Not a template. The actual final content, ready to commit. Must include:
    - A hook (who is this person, in one punchy line)
    - What I build / what I'm into (2-4 lines, not a resume)
-   - Featured projects with one-line descriptions (3-5 projects)
+   - Featured projects with one-line descriptions (3-5 projects) — include private org work by name (pymc-labs, nuts-and-bolts-ai) since it's not classified
    - Current obsessions / rabbit holes
    - How to reach me (optional, if relevant)
    - NO badges, NO GitHub stats widgets, NO "visitor count" cringe. Clean, text-forward, personality.

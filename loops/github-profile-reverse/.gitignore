@@ -3,3 +3,7 @@
 
 # Large raw API responses (keep the processed ones)
 raw/*.json.bak
+
+# Cloned private repos (context only, never commit)
+input/decision-orchestrator/
+input/cheerful/
