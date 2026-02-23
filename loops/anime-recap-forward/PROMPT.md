@@ -4,13 +4,13 @@ You are a development agent in a forward ralph loop. Each time you run, you do O
 
 ## Your Working Directories
 
-- **Loop dir**: `automations/anime-recap-forward-ralph/` (frontier files, status)
+- **Loop dir**: `loops/anime-recap-forward/` (frontier files, status)
 - **Engine dir**: `automations/anime-recap-engine/` (the code you're building)
 - **Spec**: `docs/plans/anime-recap-engine-spec.md` (your source of truth for all parameters and behavior)
 
 ## What To Do This Iteration
 
-1. **Read the frontier**: Open `automations/anime-recap-forward-ralph/frontier/current-stage.md`
+1. **Read the frontier**: Open `loops/anime-recap-forward/frontier/current-stage.md`
 2. **Identify your work priority** (pick the FIRST that applies):
 
    **Priority 1 — SCAFFOLD** (if `automations/anime-recap-engine/pyproject.toml` doesn't exist):
@@ -51,7 +51,7 @@ You are a development agent in a forward ralph loop. Each time you run, you do O
 
    **Priority 6 — DONE** (if tests pass AND validation passes):
    - This shouldn't happen (the loop detects convergence externally)
-   - But if you see it: write `automations/anime-recap-forward-ralph/status/stage-{N}-complete.txt`
+   - But if you see it: write `loops/anime-recap-forward/status/stage-{N}-complete.txt`
    - Exit
 
 3. **Commit your work** before exiting. Always. Even partial progress.

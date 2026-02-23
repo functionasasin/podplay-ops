@@ -112,7 +112,7 @@ run_validation() {
     local output
     output=$(cd "$ENGINE_DIR" && python3 -m anime_recap_engine validate \
         --stage "$stage" \
-        --config "$REPO_ROOT/automations/anime-recap-forward-ralph/test-config.yaml" \
+        --config "$REPO_ROOT/loops/anime-recap-forward/test-config.yaml" \
         --work-dir "$ENGINE_DIR/test-work/" 2>&1) || true
     echo "$output"
 }
