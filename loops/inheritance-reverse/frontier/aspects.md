@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 28
-- Analyzed: 12
-- Pending: 16
-- Convergence: 42.9%
+- Analyzed: 13
+- Pending: 15
+- Convergence: 46.4%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -27,7 +27,7 @@
 - [x] free-portion-rules — computation of disposable free portion: total estate minus total legitime of all compulsory heirs
 
 ### Wave 4: Distribution Rules
-- [ ] intestate-order — Arts. 960-1014: complete priority order for intestate succession (descendants → ascendants → spouse → collaterals → state)
+- [x] intestate-order — Arts. 960-1014: complete priority order for intestate succession (descendants → ascendants → spouse → collaterals → state)
 - [ ] testate-institution — Arts. 840-856: institution of heirs in a will, conditions, modal institutions
 - [ ] testate-validation — algorithm for checking if a will respects all compulsory heirs' legitime (inofficious disposition reduction)
 - [ ] disinheritance-rules — Arts. 915-923: valid grounds for disinheritance, effect on disinherited heir's descendants
