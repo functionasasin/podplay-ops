@@ -30,8 +30,8 @@ jobs:
           FILTER="${{ github.event.inputs.loop || 'all' }}"
 
           if [ "$FILTER" = "all" ]; then
-            # Get all loops with status 'active'
-            LOOPS=$(yq -o=json '.loops | to_entries | map(select(.value.status == "active")) | map(.key)' loops/_registry.yaml)
+            # Get all reverse loops with status 'active' (forward loops run elsewhere)
+            LOOPS=$(yq -o=json '.loops | to_entries | map(select(.value.status == "active" and .value.type == "reverse")) | map(.key)' loops/_registry.yaml)
           else
             # Run a specific loop (regardless of status, for manual override)
             LOOPS=$(echo "[\"$FILTER\"]" | yq -o=json)
@@ -59,7 +59,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GH_PAT }}
 
       - name: Configure git
         run: |
@@ -114,7 +114,7 @@ jobs:
       - name: Check convergence and notify
         if: steps.check.outputs.skip != 'true'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           LOOP_DIR="loops/${{ matrix.loop }}"
           if [ -f "$LOOP_DIR/status/converged.txt" ]; then
