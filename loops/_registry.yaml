@@ -1,0 +1,23 @@
+# Ralph Loop Registry
+# CI reads this to discover which loops to run.
+# Status: active | paused | converged
+
+loops:
+  anime-recap-reverse:
+    description: "Analyze JarAnime Parasyte recap → software spec"
+    type: reverse
+    schedule: "*/30 * * * *"
+    max_iterations: 40
+    timeout_minutes: 30
+    status: converged
+    created: 2026-02-20
+    converged_at: 2026-02-22
+
+  anime-recap-forward:
+    description: "Build anime recap engine from spec, stage by stage"
+    type: forward
+    schedule: "*/30 * * * *"
+    max_iterations: 50
+    timeout_minutes: 30
+    status: active
+    created: 2026-02-22

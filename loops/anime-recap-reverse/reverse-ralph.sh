@@ -2,7 +2,7 @@
 # Reverse Ralph Loop — Anime Recap Video Analysis
 # Runs Claude Code repeatedly until analysis converges into a software spec.
 #
-# Usage: cd automations/anime-recap-reverse-ralph && ./reverse-ralph.sh [max_iterations]
+# Usage: cd loops/anime-recap-reverse && ./reverse-ralph.sh [max_iterations]
 
 # Don't use set -e — we want the loop to continue even if an iteration fails
 set -uo pipefail

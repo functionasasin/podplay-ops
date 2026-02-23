@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "anime-recap-engine"
+version = "0.1.0"
+description = "Converts an anime season into a single long-form recap video"
+requires-python = ">=3.10"
+dependencies = [
+    "click>=8.0",
+    "pyyaml>=6.0",
+    "pysrt>=1.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-mock>=3.0",
+]
+
+[project.scripts]
+anime-recap-engine = "anime_recap_engine.__main__:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/anime_recap_engine"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

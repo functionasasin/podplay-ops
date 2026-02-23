@@ -1,10 +1,10 @@
 # Analysis Frontier
 
 ## Statistics
-- Total aspects discovered: 15
-- Analyzed: 11
-- Pending: 4
-- Convergence: 73.3%
+- Total aspects discovered: 18
+- Analyzed: 18
+- Pending: 0
+- Convergence: 100%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -22,12 +22,17 @@
 - [x] scene-type-distribution — Classify scenes by type (action/dialogue/reaction/emotional/establishing) using scenes.json + transcript
 - [x] clip-duration-stats — Calculate statistical distribution of visual clip durations from scenes.json
 - [x] anime-dialogue-moments — Identify all moments where anime audio plays through (>> markers in transcript), analyze criteria for selection
-- [ ] narration-style — Analyze narrator tone, personality, pop culture references, commentary-vs-recap ratio, viewer address patterns
-- [ ] music-patterns — Analyze music energy mapping to content type, ducking curves, genre/mood using audio analysis data
+- [x] narration-style — Analyze narrator tone, personality, pop culture references, commentary-vs-recap ratio, viewer address patterns
+- [x] music-patterns — Analyze music energy mapping to content type, ducking curves, genre/mood using audio analysis data
 
 ### Wave 3: Synthesis
-- [ ] spec-draft — Read ALL analysis/ files and synthesize into complete software spec at docs/plans/anime-recap-engine-spec.md
-- [ ] spec-review — Review generated spec for completeness: can a developer build the entire forward engine from this spec alone?
+- [x] spec-draft — Read ALL analysis/ files and synthesize into complete software spec at docs/plans/anime-recap-engine-spec.md
+- [x] spec-review — Review generated spec for completeness: can a developer build the entire forward engine from this spec alone?
+
+### Wave 4: Spec Fixes (discovered during spec-review)
+- [x] spec-fix-critical — Fix the 5 critical failures that block implementation: scene classification tools, TTS API calls, FPS generalization, spoiler prevention, OP/ED handling
+- [x] spec-fix-high — Fix the 5 high-priority failures: 12-ep scaling, sidechain ffmpeg, music swell code, script validation gate, LLM retry strategy
+- [x] spec-fix-medium — Fix the 5 medium failures: subtitle edge cases, non-Japanese handling, complete LLM prompt, crossfade command, TTS config expansion
 
 ## Recently Analyzed
 - transcription — Parsed SRT with overlap de-duplication into raw/transcription.json. 1,636 segments, 10,759 narration words, 144.1 WPM, 25 anime dialogue moments, 24 episode markers, 8 significant pauses. Full analysis at analysis/narration-transcript.md.
@@ -41,6 +46,17 @@
 - scene-type-distribution — 7-type visual taxonomy: CCU 31%, ACT 24%, DLG 15%, EST 13%, OBJ 7%, RXN 7%, FLS 3%. Duration is strongest type signal (sub-1s=action flash, 1-3s=standard, 5s+=anime dialogue holds). 85/8/4/1 functional rule: 85% narration illustration, 8% visual punctuation, 4% structural transitions, 1% anime dialogue pass-throughs. Anime dialogue has two modes: Held (30%, single 5-10s clip) and Woven (70%, standard editing continues). Flash cuts cluster in 2nd half. Narrator commentary has zero visual impact. Full analysis at analysis/scene-type-distribution.md.
 - clip-duration-stats — Log-normal distribution fit (mu=0.607, sigma=0.502) matches actual percentiles within 0.1-7.7%. Median 1.83s, mean 2.08s. IQR 1.30-2.65s, 58 outliers (2.7%) above 4.675s — all intentional (anime dialogue, dramatic holds, transitions). Near-zero autocorrelation (0.131 lag-1, ~0 lag-10) — independent sampling valid. Flash cuts (<1s) increase from 10.1% (Q1) to 15.0% (Q4). CPM remarkably stable: mean 28.8, CV 12.9%. 156 unique frame counts — content-driven editing, not rhythmic. Full analysis at analysis/clip-duration-stats.md.
 - anime-dialogue-moments — 25 >> segments cluster into 11 distinct moments (2.6% of video time). Three-beat micro-structure: narrator sets up (73%) → anime speaks → narrator reacts. Three delivery modes: Woven (73%), Held (18%), Rapid Cluster (9%). Front-loaded: 7 moments in first half, 4 in second. Only 8/24 episodes (33%) get moments. Act 4 has ZERO moments (intentional 21-min drought). 52% of >> segments are anime character voice, 48% are narrator reactions. Each moment serves unique function: character-defining, emotional peak, comedy, plot twist, climax. Selection criteria: memorable/punchy line + turning point + comedy potential. Mean moment duration 10.5s, mean gap 6.6 min. Full analysis at analysis/anime-dialogue-moments.md.
+- narration-style — "Friend-who-just-binged" persona. 96% recap / 4% commentary (430 words). Commentary concentrated at bookends (hook 70%, outro 100%, resolution 10%) and absent in relentless middle (Act 4: 2%). Six tone modes: excited/hype (30%), dark humor (20%), empathetic (20%), sarcastic (15%), conspiratorial (10%), meta (5%). 8 pop culture/meme refs (~1 per 9.4 min). Zero formal register. Character address ("Girl,", "Dude,") 4x. Pronouncement formula: [event] + [2-8 word reaction], withheld at most powerful moments. Full analysis at analysis/narration-style.md.
+
+- music-patterns — Three-phase music energy model: Active hook (LRA 25.3 LU, -36.6 LUFS, swells to -33 dB), Ambient body (LRA 15.1 LU, -36.6 LUFS, pad at -65 to -68 dB), Near-absent finale (LRA 6.9 LU, -61.0 LUFS). Two distinct music tracks needed: cinematic for hook, lo-fi ambient for body. Music swells are EXCLUSIVELY tied to anime dialogue moments (not episode boundaries or narrative content). Sidechain ducking: 10-34 dB gap, 20ms attack, 300ms release. Progressive intimacy: vocal-music gap widens 14.4→9.6→34.0 dB. Zero-silence maintenance via music gap-fill. Full analysis at analysis/music-patterns.md.
+
+- spec-fix-critical — Fixed all 5 critical failures: (1) Added two-pass scene classification — mediapipe+OpenCV heuristic (95% of scenes) + Claude Sonnet vision LLM (5% low-confidence), with full Python code; (2) Added ElevenLabs TTS API example (eleven_multilingual_v2) with WPM control, per-segment generation, verification, and concatenation; (3) Fixed FPS hardcoding — `generate_clip_duration()` now takes `source_fps` param (default 24), floor/ceiling are time-based not frame-based, added ffprobe FPS detection in Stage 1, updated config and render spec; (4) Added spoiler prevention — `get_eligible_scenes()` constrains clips to episodes ≤ current+1, hook exception for eps 1-4, post-build validation as hard failure; (5) Added Section 3.3.0 OP/ED Detection — chromaprint audio fingerprint cross-correlation across episodes, heuristic fallback (89s OP, 90s ED), skip flag in manifest. Updated episode metadata schema with fps, duration, op, ed fields. Full analysis at analysis/spec-fix-critical.md.
+
+- spec-fix-high — Fixed all 5 high-priority failures: (1) FAIL-E2: Added Section 3.2.0 Season Length Scaling with `scale_parameters()` function — act count formula (ceil(eps/5), clamped 3-6), moment budget (eps/2.2), breathing events (duration/3.9), fixed vs scaled parameter table, 3-act mapping for 12-ep seasons, validation bounds; (2) FAIL-V4: Added ffmpeg `sidechaincompress` command to Section 3.6.3 with exact parameter mapping (threshold=0.01→-40dB, ratio=20, attack=20ms, release=300ms); (3) FAIL-V5: Added Section 3.6.4a with complete Python gain automation function — phase-based base levels, cosine-interpolated swells at anime dialogue moments (hook: -33dB, body: -50dB), narration-keyed ducking via RMS detection; (4) FAIL-S4: Added Section 3.2.4 Script Validation Gate — `validate_script()` with HARD/SOFT checks for word count, hook structure, forbidden connectors, commentary ratio, dialogue slots, sentence length; (5) FAIL-S5: Added Section 3.2.5 LLM Generation Strategy — 5-phase pipeline (episode summaries → arc detection → hook/outro → per-act script → stitch+validate), per-act retry loop (3 retries, +0.05 temp each), ~32 calls at ~$2-4 total. Full analysis at analysis/spec-fix-high.md.
+
+- spec-fix-medium — Fixed all 5 medium failures: (1) FAIL-E1: Added 5-step subtitle handling decision tree — ffprobe stream detection, language-priority track selection, ASS/SSA→SRT auto-conversion, bitmap fallback to Whisper, `validate_subtitles()` quality gate (≥100 cues, ≥30% coverage, avg cue ≥5 chars), Whisper quality check with medium-model retry; (2) FAIL-E4: Added Section 3.1.2a Language Mode Handling — pipeline impact matrix for non-Japanese anime, same-language edge case (character voice differentiation via audio effects), character name localization rules; (3) FAIL-V3: Added complete ~100-line Phase 4 LLM prompt template combining episode summaries, word budget, dialogue slot rules (including "ZERO in Act 4"), episode transition format, connector frequency targets, commentary density, sentence length targets with examples, continuity context, and output format spec; (4) FAIL-V6: Added hook-to-body crossfade ffmpeg commands — `afade=t=out` on hook + `adelay`+`afade=t=in` on body + `amix=inputs=2:normalize=0`, plus single-command alternative; (5) FAIL-C1: Added `tts:` config section with `elevenlabs:` and `openai:` sub-configs (all voice parameters), refactored TTS code to provider-agnostic dispatch pattern `get_tts_generator(config)`. Full analysis at analysis/spec-fix-medium.md.
 
 ## Discovered Aspects
-(none yet — new aspects discovered during analysis will be added here then moved to Pending)
+- spec-fix-critical: 5 critical fixes — add scene classification tool/code (mediapipe/cv2/vision LLM), add TTS API examples (ElevenLabs/OpenAI), fix FPS hardcoding in clip generator, add spoiler prevention (constrain clips to episode ≤ N+1), add OP/ED detection and removal
+- spec-fix-high: 5 high-priority fixes — add 12-ep scaling rules, add ffmpeg sidechain command, add music swell automation code, add script validation gate between Stage 2→3, add LLM retry/chunking strategy
+- spec-fix-medium: 5 medium fixes — add subtitle edge case handling (ASS/SSA, multi-track), add non-Japanese language modes, add complete LLM prompt template, add crossfade ffmpeg command, expand TTS config

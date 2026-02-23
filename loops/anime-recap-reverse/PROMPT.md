@@ -4,7 +4,7 @@ You are an analysis agent in a ralph loop. Each time you run, you do ONE unit of
 
 ## Your Working Directory
 
-You are running from `automations/anime-recap-reverse-ralph/`. All paths below are relative to this directory.
+You are running from `loops/anime-recap-reverse/`. All paths below are relative to this directory.
 
 ## Your Goal
 
