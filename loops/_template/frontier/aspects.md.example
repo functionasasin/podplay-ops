@@ -1,0 +1,25 @@
+# Frontier — [Idea Name]
+
+## Statistics
+- Total aspects discovered: N
+- Analyzed: 0
+- Pending: N
+- Convergence: 0%
+
+## Pending Aspects (ordered by dependency)
+
+### Wave 1: [Initial Exploration]
+- [ ] aspect-1 — Description of what to explore
+- [ ] aspect-2 — Description of what to explore
+
+### Wave 2: [Pattern Analysis]
+Depends on Wave 1 raw data.
+- [ ] aspect-3 — Description of pattern to analyze
+- [ ] aspect-4 — Description of pattern to analyze
+
+### Wave 3: [Synthesis]
+Depends on all Wave 2 analysis.
+- [ ] synthesis — Combine all findings into final output
+
+## Recently Analyzed
+(Empty — loop hasn't started yet)

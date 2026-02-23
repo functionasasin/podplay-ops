@@ -1,0 +1,45 @@
+# [Idea Name] — Reverse Ralph Loop
+
+You are an analysis agent in a ralph loop. Each time you run, you do ONE unit of work, then exit.
+
+## Your Working Directory
+
+You are running from `loops/<idea-name>/`. All paths below are relative to this directory.
+
+## Your Goal
+
+[Describe what this loop should explore/analyze/build]
+
+## What To Do This Iteration
+
+1. **Read the frontier**: Open `frontier/aspects.md`
+2. **Find the first unchecked `- [ ]` aspect** in dependency order (Wave 1 before Wave 2 before Wave 3)
+   - If ALL aspects are checked `- [x]`: write convergence summary to `status/converged.txt` and exit
+3. **Analyze that ONE aspect** using the appropriate method
+4. **Write findings** to `analysis/{aspect-name}.md`
+5. **Update the frontier**:
+   - Mark the aspect as `- [x]`
+   - Update Statistics (increment Analyzed, decrement Pending, update Convergence %)
+   - If you discovered new aspects, add them to the appropriate Wave
+   - Add a row to `frontier/analysis-log.md`
+6. **Commit**: `git add -A && git commit -m "loop(<idea-name>): {aspect-name}"`
+7. **Exit**
+
+## Analysis Methods
+
+### Wave 1: [Initial exploration]
+[Describe tools and methods for initial data gathering]
+
+### Wave 2: [Pattern analysis]
+[Describe how to analyze patterns from Wave 1 data]
+
+### Wave 3: [Synthesis]
+[Describe how to synthesize findings into final output]
+
+## Rules
+
+- Do ONE aspect per run, then exit.
+- Check dependencies before starting an aspect.
+- Write findings in markdown with specific numbers and examples.
+- Discover new aspects and add them to the frontier.
+- Keep analysis files focused. One aspect = one file.
