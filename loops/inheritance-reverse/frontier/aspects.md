@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 28
-- Analyzed: 7
-- Pending: 21
-- Convergence: 25.0%
+- Analyzed: 8
+- Pending: 20
+- Convergence: 28.6%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -20,7 +20,7 @@
 - [x] illegitimate-children-rights — Art. 176 Family Code, Art. 895 Civil Code: recognition, half-share rule, proof of filiation
 
 ### Wave 3: Legitime Computation
-- [ ] legitime-table — Arts. 888-903: complete legitime fraction table for every possible heir combination
+- [x] legitime-table — Arts. 888-903: complete legitime fraction table for every possible heir combination
 - [ ] legitime-with-illegitimate — half-share computation when legitimate and illegitimate children concur (Art. 895)
 - [ ] legitime-surviving-spouse — Arts. 892, 893, 896-900: spouse's legitime varying by who they concur with (children, parents, alone)
 - [ ] legitime-ascendants — Arts. 889-891: parents/ascendants' legitime when there are no descendants
@@ -45,6 +45,7 @@
 - [ ] spec-review — self-review: can a developer with no Philippine law knowledge build the engine from this spec?
 
 ## Recently Analyzed
+- **legitime-table** (2026-02-23): Complete legitime fraction table for all 15 testate scenarios (T1-T15). Identified two fundamental regimes: Regime A (descendants present — per-child derived shares with Art. 895 ¶3 cap rule) vs Regime B (ascendants present — flat statutory fractions, no cap needed) vs Regime C (only concurring heirs — flat fractions). Built master computation algorithm with pseudocode for all scenarios. Key findings: (1) Art. 892 creates a discontinuity at n=1 child (spouse=¼) vs n≥2 (spouse=1/2n); (2) Cap rule bites at m>1 for T5a (1 child+spouse), m>2(n-1) for T5b; (3) Regime B uses flat ¼ for illegitimate children (Art. 896) vs Regime A's per-child formula; (4) T9 is most constrained (FP=⅛); (5) Rational arithmetic required to avoid rounding errors. 34 test cases including cap rule boundary tests and ascendant distribution tests.
 - **legal-source-fetch** (2026-02-23): Fetched and cached 4 legal source files covering Civil Code Book III (succession arts. 774-1077), Family Code Title VI (filiation arts. 163-182), RA 8552 (adoption secs. 16-20), and comprehensive commentary with 11 testate scenarios, 15 intestate scenarios, and 7 worked examples.
 - **commentary-fetch** (2026-02-23): Compiled 8 complete test-vector-quality worked examples covering: testate simple, inofficious will, preterition, disinheritance with representation, adopted children, mixed succession, collation, and complex intestate with representation. Also confirmed complete 15-row legitime table. Saved to `input/legal-sources/worked-examples.md`.
 - **compulsory-heirs-categories** (2026-02-23): Analyzed Art. 887 compulsory heir enumeration. Defined 4 effective categories (LEGITIMATE_CHILD_GROUP, LEGITIMATE_ASCENDANT_GROUP, SURVIVING_SPOUSE_GROUP, ILLEGITIMATE_CHILD_GROUP) with 7 raw sub-categories. Key: adopted (RA 8552) and legitimated (FC 179) children map to legitimate child group. Groups 1 & 2 mutually exclusive; Groups 3 & 4 always concur. Documented 8 edge cases (rescinded adoption, posthumous child, guilty spouse, unproved filiation, unworthiness, articulo mortis, stepparent adoption, parents of illegitimate decedent). Proposed data model for Heir struct. 16 test case scenarios identified.
