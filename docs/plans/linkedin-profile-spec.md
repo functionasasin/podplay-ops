@@ -104,17 +104,17 @@ Representing Mama Sita's, one of the Philippines' most recognized food brands, a
 **Description:**
 
 ```
-Core engineer on Decision Orchestrator — a Discord-based organizational OS that coordinates AI agents and workflows for teams through intelligent message routing, dynamic tool assembly, and a custom MCP tool server built at the protocol level.
+Core engineer on Decision Orchestrator, a Discord-based organizational OS that coordinates AI agents and workflows for teams through intelligent message routing, dynamic tool assembly, and a custom MCP tool server built at the protocol level.
 
-• Architected custom MCP tool server with context injection and scope-based credential gating — protocol-level implementation, not a FastMCP wrapper
+• Architected custom MCP tool server with context injection and scope-based credential gating. Protocol-level implementation, not a FastMCP wrapper.
 
-• Built workflow-as-data orchestration engine: database-driven workflows scoped per Discord server/channel with intelligent classifier-based routing
+• Built workflow-as-data orchestration engine: database-driven workflows scoped per Discord server/channel with intelligent classifier-based routing.
 
-• Implemented thread session persistence across Claude Agent SDK, Langfuse observability, and Supabase — sessions survive crashes, enable full audit trails
+• Implemented thread session persistence across Claude Agent SDK, Langfuse observability, and Supabase. Sessions survive crashes, enable full audit trails.
 
-• Integrated 50+ external services (Toggl, Xero, Google Workspace, GitHub, Fly.io) via Composio for end-to-end team operations
+• Integrated 50+ external services (Toggl, Xero, Google Workspace, GitHub, Fly.io) via Composio for end-to-end team operations.
 
-• 420+ commits as core maintainer; ~36K LOC across 285 Python files; FCIS (Functional Core, Imperative Shell) architecture
+• 420+ commits as core maintainer; ~36K LOC across 285 Python files; FCIS (Functional Core, Imperative Shell) architecture.
 ```
 
 **Why it works:** "Custom MCP tool server at the protocol level" is verification bait — anyone in the agent infrastructure space will immediately understand what this means. PyMC Labs brand signals credibility in statistical computing.
@@ -133,17 +133,17 @@ Core engineer on Decision Orchestrator — a Discord-based organizational OS tha
 **Description:**
 
 ```
-Core engineer on Cheerful — an AI-native influencer marketing platform that finds creators, drafts personalized outreach via Claude, and executes campaigns through Gmail at scale. Three distinct applications: FastAPI backend, Next.js/React 19 webapp, and Slack-based Context Engine.
+Core engineer on Cheerful, an AI-native influencer marketing platform that finds creators, drafts personalized outreach via Claude, and executes campaigns through Gmail at scale. Three distinct applications: FastAPI backend, Next.js/React 19 webapp, and Slack-based Context Engine.
 
-• Built 3-app product architecture (backend API, campaign webapp, Slack Context Engine) with 4 other engineers; 580+ commits as 2nd largest contributor
+• Built 3-app product architecture (backend API, campaign webapp, Slack Context Engine) with 4 other engineers; 580+ commits as 2nd largest contributor.
 
-• Architected campaign execution on Temporal.io durable workflows — crash-resilient pipelines with intelligent retry, saga patterns, and state persistence
+• Architected campaign execution on Temporal.io durable workflows. Crash-resilient pipelines with intelligent retry, saga patterns, and state persistence.
 
-• Implemented AI-personalized email drafting via Claude Agent SDK — each email individually crafted per creator profile, not template-filled
+• Implemented AI-personalized email drafting via Claude Agent SDK. Each email individually crafted per creator profile, not template-filled.
 
-• Built Slack Context Engine with custom MCP tool orchestration and Onyx RAG for team operations and knowledge retrieval
+• Built Slack Context Engine with custom MCP tool orchestration and Onyx RAG for team operations and knowledge retrieval.
 
-• Frontend on React 19 + Next.js 16 with TanStack Query, Zustand, shadcn/ui — bleeding-edge stack shipped to production
+• Frontend on React 19 + Next.js 16 with TanStack Query, Zustand, shadcn/ui. Bleeding-edge stack shipped to production.
 ```
 
 **Why it works:** Shows full-stack range (backend + frontend + bot). Temporal.io is a serious production signal (Stripe/Netflix tier). Combined with Entry 2, the pattern is clear: this person builds production AI orchestration systems across different domains with consistent architectural DNA.
@@ -164,15 +164,15 @@ Core engineer on Cheerful — an AI-native influencer marketing platform that fi
 ```
 Computer vision research and applied ML, from university through independent work. Built end-to-end license plate recognition pipeline: detection (YOLO fine-tuned on Philippine plates), recognition (custom CNN in Keras), and edge deployment (Google Coral TPU). Co-authored IEEE paper at TENCON 2022.
 
-• Co-authored "Enhancing Real-Time License Plate Recognition Through Edge-Cloud Computing" — presented at IEEE TENCON 2022 (Hong Kong)
+• Co-authored "Enhancing Real-Time License Plate Recognition Through Edge-Cloud Computing", presented at IEEE TENCON 2022 (Hong Kong).
 
-• Built LPRnet-keras: Keras implementation of license plate recognition — most-starred public repo; filled a gap in available CV implementations
+• Built LPRnet-keras: Keras implementation of license plate recognition. Most-starred public repo; filled a gap in available CV implementations.
 
-• Fine-tuned YOLO on Philippine license plate dataset (yolos-lph) — real-world domain-specific model adaptation, not tutorial work
+• Fine-tuned YOLO on Philippine license plate dataset (yolos-lph). Real-world domain-specific model adaptation, not tutorial work.
 
-• Deployed inference on Google Coral TPU: model quantization, hardware-constrained execution, edge-cloud pipeline architecture
+• Deployed inference on Google Coral TPU: model quantization, hardware-constrained execution, edge-cloud pipeline architecture.
 
-• Implemented AlphaZero for Connect 4 from scratch in PureBasic — full MCTS + neural network policy/value heads at a level below Python abstractions
+• Implemented AlphaZero for Connect 4 from scratch in PureBasic. Full MCTS + neural network policy/value heads at a level below Python abstractions.
 ```
 
 **Why it works:** Origin story. IEEE publication provides institutional credibility. "AlphaZero from scratch in PureBasic" is the kind of detail that makes engineers pause — it signals someone who goes below the abstraction layer for fun.
