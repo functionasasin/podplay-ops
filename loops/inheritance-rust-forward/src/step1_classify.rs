@@ -35,47 +35,188 @@ pub struct Step1Output {
 ///
 /// This is the main entry point for Step 1.
 pub fn step1_classify(input: &Step1Input) -> Step1Output {
-    todo!("Step 1: classify heirs")
+    let mut heirs = Vec::new();
+    let warnings = Vec::new();
+
+    // First pass: classify each person into an Heir
+    for person in &input.family_tree {
+        let raw_cat = match raw_category_from_relationship(person.relationship_to_decedent) {
+            Some(cat) => cat,
+            None => continue, // Not a compulsory heir (sibling, stranger, etc.)
+        };
+
+        let eff_cat = effective_category(raw_cat);
+        let compulsory = is_compulsory_heir(raw_cat);
+        let eligible = check_eligibility(person, raw_cat);
+
+        // Check disinheritance status
+        let disinheritance = input.disinheritances.iter().find(|d| {
+            d.heir_reference.person_id.as_deref() == Some(person.id.as_str())
+        });
+        let is_disinherited = disinheritance.is_some();
+        let disinheritance_valid_flag =
+            disinheritance.map_or(false, |d| is_disinheritance_valid(d));
+
+        // Check adoption validity
+        let has_valid_adoption = is_adoption_valid(person);
+
+        // Check articulo mortis (only relevant for surviving spouse)
+        let am = if raw_cat == HeirCategory::SurvivingSpouse {
+            is_articulo_mortis(&input.decedent)
+        } else {
+            false
+        };
+
+        heirs.push(Heir {
+            id: person.id.clone(),
+            name: person.name.clone(),
+            raw_category: raw_cat,
+            effective_category: eff_cat,
+            is_compulsory: compulsory,
+            is_alive: person.is_alive_at_succession,
+            is_eligible: eligible,
+            filiation_proved: person.filiation_proved,
+            filiation_proof_type: person.filiation_proof_type,
+            is_unworthy: person.is_unworthy,
+            unworthiness_condoned: person.unworthiness_condoned,
+            is_disinherited,
+            disinheritance_valid: disinheritance_valid_flag,
+            has_renounced: person.has_renounced,
+            adoption: person.adoption.clone(),
+            has_valid_adoption,
+            is_stepparent_adoptee: person
+                .adoption
+                .as_ref()
+                .map_or(false, |a| a.is_stepparent_adoption),
+            legal_separation_guilty: person.is_guilty_party_in_legal_separation,
+            articulo_mortis_marriage: am,
+            degree_from_decedent: person.degree,
+            line: person.line,
+            blood_type: None,                  // Determined in Step 2
+            representation_trigger: None,      // Determined in Step 2
+            represented_by: vec![],
+            represents: None,
+            inherits_by: InheritanceMode::OwnRight,
+            line_ancestor: None,
+            children: person.children.clone(),
+        });
+    }
+
+    // §4.2 Mutual Exclusion: If any alive LC-group heir exists,
+    // all ascendants are excluded from compulsory succession.
+    let has_lc_descendants = heirs.iter().any(|h| {
+        h.effective_category == EffectiveCategory::LegitimateChildGroup && h.is_alive
+    });
+
+    if has_lc_descendants {
+        for heir in &mut heirs {
+            if heir.effective_category == EffectiveCategory::LegitimateAscendantGroup {
+                heir.is_eligible = false;
+            }
+        }
+    }
+
+    Step1Output { heirs, warnings }
 }
 
 // ── Internal helpers ────────────────────────────────────────────────
 
 /// Map a `Relationship` to a `HeirCategory` (raw classification).
+/// Only compulsory heir relationships (Art. 887) produce a category.
+/// Non-compulsory relationships (Sibling, Stranger, etc.) return None.
 pub fn raw_category_from_relationship(rel: Relationship) -> Option<HeirCategory> {
-    todo!()
+    match rel {
+        Relationship::LegitimateChild => Some(HeirCategory::LegitimateChild),
+        Relationship::LegitimatedChild => Some(HeirCategory::LegitimatedChild),
+        Relationship::AdoptedChild => Some(HeirCategory::AdoptedChild),
+        Relationship::IllegitimateChild => Some(HeirCategory::IllegitimateChild),
+        Relationship::SurvivingSpouse => Some(HeirCategory::SurvivingSpouse),
+        Relationship::LegitimateParent => Some(HeirCategory::LegitimateParent),
+        Relationship::LegitimateAscendant => Some(HeirCategory::LegitimateAscendant),
+        Relationship::Sibling
+        | Relationship::NephewNiece
+        | Relationship::OtherCollateral
+        | Relationship::Stranger => None,
+    }
 }
 
 /// Map a `HeirCategory` to its `EffectiveCategory` per §4.1.
+/// Legitimate, legitimated, and adopted children all map to LegitimateChildGroup.
 pub fn effective_category(raw: HeirCategory) -> EffectiveCategory {
-    todo!()
+    match raw {
+        HeirCategory::LegitimateChild
+        | HeirCategory::LegitimatedChild
+        | HeirCategory::AdoptedChild => EffectiveCategory::LegitimateChildGroup,
+        HeirCategory::IllegitimateChild => EffectiveCategory::IllegitimateChildGroup,
+        HeirCategory::SurvivingSpouse => EffectiveCategory::SurvivingSpouseGroup,
+        HeirCategory::LegitimateParent
+        | HeirCategory::LegitimateAscendant => EffectiveCategory::LegitimateAscendantGroup,
+    }
 }
 
 /// Determine whether a raw category is a compulsory heir per Art. 887.
-pub fn is_compulsory_heir(raw: HeirCategory) -> bool {
-    todo!()
+/// All 7 HeirCategory values are compulsory heirs.
+pub fn is_compulsory_heir(_raw: HeirCategory) -> bool {
+    true
 }
 
 /// Check eligibility of an heir per §4.3 eligibility gate.
 /// Returns `true` if the heir is eligible to participate.
 pub fn check_eligibility(person: &Person, category: HeirCategory) -> bool {
-    todo!()
+    // Art. 887 ¶3: illegitimate child must have filiation duly proved
+    if category == HeirCategory::IllegitimateChild && !person.filiation_proved {
+        return false;
+    }
+
+    // RA 8552 Sec. 20: rescinded adoption removes succession rights
+    if category == HeirCategory::AdoptedChild {
+        if let Some(ref adoption) = person.adoption {
+            if adoption.is_rescinded {
+                return false;
+            }
+        } else {
+            // No adoption record for an adopted child — ineligible
+            return false;
+        }
+    }
+
+    // Art. 1002: guilty party in legal separation is excluded
+    if category == HeirCategory::SurvivingSpouse && person.is_guilty_party_in_legal_separation {
+        return false;
+    }
+
+    // Art. 1032: unworthy heir excluded, unless condoned (Art. 1033)
+    if person.is_unworthy && !person.unworthiness_condoned {
+        return false;
+    }
+
+    true
 }
 
 /// Check if a disinheritance is valid (cause specified + proved + no reconciliation).
 pub fn is_disinheritance_valid(d: &Disinheritance) -> bool {
-    todo!()
+    d.cause_specified_in_will && d.cause_proven && !d.reconciliation_occurred
 }
 
 /// Determine whether an adopted child's adoption is valid (not rescinded).
 pub fn is_adoption_valid(person: &Person) -> bool {
-    todo!()
+    match &person.adoption {
+        Some(adoption) => !adoption.is_rescinded,
+        None => false,
+    }
 }
 
 /// Determine whether the articulo mortis reduction applies to the surviving spouse.
-/// Art. 900 ¶2: marriage in articulo mortis, ill at time, illness caused death,
-/// AND cohabitation < 5 years.
+/// Art. 900 ¶2: ALL four conditions must be met:
+///   1. Marriage solemnized in articulo mortis
+///   2. Decedent was ill at time of marriage
+///   3. Illness caused the death
+///   4. Cohabitation < 5 years
 pub fn is_articulo_mortis(decedent: &Decedent) -> bool {
-    todo!()
+    decedent.marriage_solemnized_in_articulo_mortis
+        && decedent.was_ill_at_marriage
+        && decedent.illness_caused_death
+        && decedent.years_of_cohabitation < 5
 }
 
 // ═══════════════════════════════════════════════════════════════════
