@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 13
-- Analyzed: 11
-- Pending: 2
-- Convergence: 85%
+- Analyzed: 13
+- Pending: 0
+- Convergence: 100%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -24,12 +24,13 @@
 
 ### Wave 3: Synthesis (depends on all Wave 2)
 - [x] linkedin-profile-spec — Complete actionable spec: headline, about, all experience entries, featured, skills, execution checklist → docs/plans/linkedin-profile-spec.md
-- [ ] spec-review — Review spec against "dangerous polymath builder" bar; check for personality, range, signal clarity, completeness
+- [x] spec-review — Review spec against "dangerous polymath builder" bar; check for personality, range, signal clarity, completeness
 
 ### Wave 4: Spec Fixes (populated during spec-review if needed)
 (Empty — spec-review hasn't run yet)
 
 ## Recently Analyzed
+- [x] spec-review (2026-02-23)
 - [x] linkedin-profile-spec (2026-02-23)
 - [x] identity-synthesis (2026-02-23)
 - [x] experience-entry-design (2026-02-23)
