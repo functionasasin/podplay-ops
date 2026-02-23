@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 33
-- Analyzed: 10
-- Pending: 23
-- Convergence: 30%
+- Analyzed: 11
+- Pending: 22
+- Convergence: 33%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -21,7 +21,7 @@
 - [x] deduction-vanishing — Sec. 86(A)(2): property previously taxed (full formula + percentage table: 100/80/60/40/20)
 - [x] deduction-public-transfers — Sec. 86(A)(3): bequests to government for exclusively public use
 - [x] deduction-standard — Sec. 86(A)(4): ₱5M citizens/residents, ₱500K non-resident aliens
-- [ ] deduction-family-home — Sec. 86(A)(5): up to ₱10M, barangay certification, residents only
+- [x] deduction-family-home — Sec. 86(A)(5): up to ₱10M, barangay certification, residents only
 - [ ] deduction-medical — Sec. 86(A)(7): up to ₱500K, within 1 year before death
 - [ ] deduction-ra4917 — Sec. 86(A)(8): employer death benefits under RA 4917
 - [ ] surviving-spouse-share — Sec. 86(A)(9): net share in conjugal/community property
@@ -54,6 +54,7 @@
 - [ ] spec-review — Self-review: can a developer with no context build the engine?
 
 ## Recently Analyzed
+- [x] deduction-family-home — 2026-02-23 — Sec. 86(A)(5): TRAIN cap ₱10M; pre-TRAIN/amnesty cap ₱1M. Exclusive: min(FMV, cap). Conjugal/communal: min(FMV×0.5, cap) — decedent's share only; spouse's ½ handled at Item 39. Requires: barangay certification, actual residence at death, citizen/resident only, one property max. Gross estate (Item 30/Sched 1A) shows full FMV; deduction (Item 37B) shows capped/halved amount. Legal ambiguity flagged: sample computations show full FMV for conjugal but NIRC text says ½ — engine implements ½ (recommend verify against BIR RR 12-2018). Correction to form-1801-fields.md Validation Rule 8 documented. 12 test implications. Amnesty path: available with ₱1M cap.
 - [x] deduction-vanishing — 2026-02-23 — Sec. 86(A)(2): 5-step formula (IV=min(prior,current FMV); NV=IV−mortgage; ratio=(GE−ELIT)/GE; pct from 5-year table; VD=pct×NV×ratio). Percentage table: 100%/80%/60%/40%/20% for each 1-year band; 0% after 5 years. Eligibility: within 5 years, prior tax paid, property identifiable, still in gross estate. Formula identical across TRAIN and pre-TRAIN regimes (different ELIT composition). VD NOT available under amnesty path. 12 edge cases (depreciation, appreciation, prior tax unpaid, property sold, mortgage > IV, ELIT > GE, multiple properties, conjugal VD, NRA situs). 12 test implications. Form 1801: Schedule 5E, Columns A+B, feeds Item 35.
 - [x] legal-source-fetch — 2026-02-23 — 5 legal source files cached in input/legal-sources/
 - [x] form-1801-field-mapping — 2026-02-23 — Complete field mapping: Part I (17 informational fields), Part III (scope boundary), Part IV (Items 29–44/20, all three columns), Part V (Schedules 1, 1A, 2, 2A, 3, 4, 5, 6, 6A). Engine output contract defined with canonical field list, column A/B split rules, 10 validation constraints, 8 test implications, and 6 edge cases identified.
