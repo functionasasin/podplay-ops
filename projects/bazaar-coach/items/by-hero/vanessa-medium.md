@@ -13,6 +13,7 @@ Rating key:
 
 ## Anchor
 - **Size**: Medium | **Types**: Aquatic, Weapon, Damage, Haste
+- **Starting Tier**: Gold
 - **Cooldown**: 13.0s
 - **Effect**: Deal 20/30% enemy Max Health Damage. Gains Haste 2/4s when using adjacent items.
 - **Rating**: **S** -- % Max Health damage scales infinitely. Self-hasting with adjacent items.
@@ -20,6 +21,7 @@ Rating key:
 
 ## Arbalest
 - **Size**: Medium | **Types**: Weapon, Ammo, Damage, Haste
+- **Starting Tier**: Silver
 - **Cooldown**: 9.0s | **Ammo**: 1
 - **Effect**: Deal 100 Damage. Gains +60/80/100 Damage when Hasting.
 - **Rating**: **B** -- High burst but limited by 1 Ammo. Needs Haste + reload support.
@@ -27,6 +29,7 @@ Rating key:
 
 ## Astrolabe
 - **Size**: Medium | **Types**: Tool, Haste
+- **Starting Tier**: Silver
 - **Cooldown**: 7.0s (Bronze) / 6.0s (Silver-Gold) / 5.0s (Diamond)
 - **Effect**: Haste non-Weapon 2s. Charges 1s when using another non-Weapon.
 - **Rating**: **A** -- Self-charging Haste engine. With Diamond Shipwreck, Silver Astrolabe permanently haste most items (6s CD or less).
@@ -34,6 +37,7 @@ Rating key:
 
 ## Barrel
 - **Size**: Medium | **Types**: Shield
+- **Starting Tier**: Bronze
 - **Cooldown**: 5.0s
 - **Effect**: Shield 20. Gains +10/15/20/25 Shield when using adjacent non-Weapons.
 - **Rating**: **B** -- Solid defensive item. Scales in non-Weapon builds.
@@ -41,6 +45,7 @@ Rating key:
 
 ## Beach Ball
 - **Size**: Medium | **Types**: Aquatic, Toy, Haste
+- **Starting Tier**: Bronze
 - **Cooldown**: 5.0s
 - **Cost**: 4/8/16/32
 - **Effect**: Haste 2/3/4/5 Aquatic/Toy items 2s.
@@ -49,6 +54,7 @@ Rating key:
 
 ## Bladed Hoverboard
 - **Size**: Medium | **Types**: Weapon, Tech, Aquatic, Vehicle
+- **Starting Tier**: Silver
 - **Cooldown**: Passive
 - **Effect**: Deals 30/40/60/80 Damage when using adjacent items.
 - **Rating**: **S** -- Unlocks massive damage paired with Multicast ammo items. Passive = no cooldown.
@@ -56,6 +62,7 @@ Rating key:
 
 ## Blunderbuss
 - **Size**: Medium | **Types**: Weapon, Ammo, Burn, Damage
+- **Starting Tier**: Gold
 - **Cooldown**: 5.0s | **Ammo**: 6
 - **Effect**: Deal 100 Damage. Charges 1/2s when Burning.
 - **Rating**: **B** -- Self-charging from Burn. Good in Burn-heavy setups.
@@ -63,6 +70,7 @@ Rating key:
 
 ## Cannon
 - **Size**: Medium | **Types**: Weapon, Ammo, Burn, Damage
+- **Starting Tier**: Bronze
 - **Cooldown**: 5.0s | **Ammo**: 2
 - **Effect**: Deal 40/60/80/100 Damage. Burn 4/6/8/10.
 - **Rating**: **B** -- Damage + Burn in one item. Filler for Burn builds.
@@ -78,6 +86,7 @@ Rating key:
 
 ## Captain's Wheel
 - **Size**: Medium | **Types**: Aquatic, Tool, Haste
+- **Starting Tier**: Silver
 - **Cooldown**: 5.0s
 - **Effect**: Haste adjacent items 1/2/3s. Cooldown reduced 2.5s with Vehicle/Large item.
 - **Rating**: **A** -- 2.5s effective cooldown with Vehicle/Large. Accelerates everything.
@@ -85,6 +94,7 @@ Rating key:
 
 ## Card Table
 - **Size**: Medium | **Types**: --
+- **Starting Tier**: Silver
 - **Cooldown**: 4.0s
 - **Effect**: Friend gains +1 Multicast for fight. Cooldown increased 1s per non-Friend item.
 - **Rating**: **B** -- Permanent Multicast buff on Friends. Best in Friend-heavy boards where the CD penalty is minimal.
@@ -92,6 +102,7 @@ Rating key:
 
 ## Coral Armor
 - **Size**: Medium | **Types**: Aquatic, Apparel, Shield
+- **Starting Tier**: Bronze
 - **Cooldown**: 6.0s
 - **Effect**: Shield 50. Gains +5/10/15/20 Shield when buying Aquatic items.
 - **Rating**: **A** -- Permanent scaling shield. Gets tankier every shop.
@@ -99,6 +110,7 @@ Rating key:
 
 ## Cyber-Sai
 - **Size**: Medium | **Types**: Weapon, Tech
+- **Starting Tier**: Bronze
 - **Cooldown**: 3.0s
 - **Effect**: Deal 10/20/30/40 Damage. First 2/3/4/5 Crits each fight: take no Damage for 1s.
 - **Rating**: **A** -- Fastest medium weapon (3s CD). Damage immunity on Crit removes need for sustain, enabling full aggro builds. Needs reliable Crit Chance to activate.
@@ -106,6 +118,7 @@ Rating key:
 
 ## Cutlass
 - **Size**: Medium | **Types**: Weapon, Crit, Damage
+- **Starting Tier**: Bronze
 - **Cooldown**: 6.0s
 - **Effect**: Deal 10/20/30/40 Damage. Double Crit Damage. Multicast: 2.
 - **Rating**: **A** -- Multicast 2 with double Crit. Strong mid-game weapon.
@@ -113,6 +126,7 @@ Rating key:
 
 ## Darkwater Anglerfish
 - **Size**: Medium | **Types**: Aquatic, Burn, Friend, SlowReference
+- **Starting Tier**: Silver
 - **Cooldown**: 8.0s
 - **Effect**: Burn 10/20/30. Charges 2s when Slowing.
 - **Rating**: **S** -- Core Burn engine that self-charges from Slow. Build-defining item.
@@ -120,6 +134,7 @@ Rating key:
 
 ## Disguise
 - **Size**: Medium | **Types**: Apparel, Crit
+- **Starting Tier**: Silver
 - **Cooldown**: Passive
 - **Effect**: Grants non-Vanessa item on purchase. Other Heroes' items gain 15/30/50% Crit.
 - **Rating**: **B** -- Wildcard item. Can find powerful cross-hero synergies.
@@ -127,6 +142,7 @@ Rating key:
 
 ## Diving Helmet
 - **Size**: Medium | **Types**: Aquatic, Shield, Tool, Apparel
+- **Starting Tier**: Silver
 - **Cooldown**: 6.0s
 - **Effect**: Shield 25. Gains +10/20/30 Shield when using Aquatic. Adjacent items become Aquatic.
 - **Rating**: **A** -- Converts adjacent items to Aquatic type. Enables Shipwreck/Figurehead on non-Aquatic items.
@@ -134,6 +150,7 @@ Rating key:
 
 ## Dock Lines
 - **Size**: Medium | **Types**: Tool, Aquatic, Slow
+- **Starting Tier**: Silver
 - **Cooldown**: 5.0s
 - **Effect**: Slow 2/3/4 items 3s.
 - **Rating**: **S** -- Multi-target Slow on short cooldown. Feeds every Slow trigger on board.
@@ -141,6 +158,7 @@ Rating key:
 
 ## Double Barrel
 - **Size**: Medium | **Types**: Weapon, Ammo, Damage
+- **Starting Tier**: Bronze
 - **Cooldown**: 4.0s | **Ammo**: 2
 - **Effect**: Deal 20/40/60/80 Damage. Multicast: 2.
 - **Rating**: **A** -- Staple Ammo Weapon. 4s cooldown with Multicast 2 = fastest weapon in the game.
@@ -148,6 +166,7 @@ Rating key:
 
 ## Elemental Depth Charge
 - **Size**: Medium | **Types**: Aquatic, Burn, Ammo, Freeze, Poison, Tech
+- **Starting Tier**: Silver
 - **Cooldown**: 12.0s (Bronze) / 10.0s (Silver-Gold) / 8.0s (Diamond) | **Ammo**: 1
 - **Effect**: Poison 4, Burn 4, Freeze 1 Medium/Small 0.5s. +1 Multicast per Aquatic item.
 - **Rating**: **S** -- Triple debuff in one item. Multicast scales with Aquatic count.
@@ -155,6 +174,7 @@ Rating key:
 
 ## Figurehead
 - **Size**: Medium | **Types**: Aquatic, Cooldown, Relic, DamageReference
+- **Starting Tier**: Silver
 - **Cooldown**: Passive
 - **Effect**: Aquatic items' Cooldowns reduced 10/15/20%. Right Weapons gain +25/50/100 Damage.
 - **Rating**: **A** -- Board-wide Aquatic speed boost + weapon damage buff. Incredible enabler.
@@ -162,6 +182,7 @@ Rating key:
 
 ## Fishing Net
 - **Size**: Medium | **Types**: Aquatic, Tool, Slow
+- **Starting Tier**: Bronze
 - **Cooldown**: 9.0s
 - **Effect**: Slow 1/2/3/4 items 3s. Grants Piranha at day start.
 - **Rating**: **B** -- Slow + free Piranha daily. Decent value engine.
@@ -169,6 +190,7 @@ Rating key:
 
 ## Fishing Rod
 - **Size**: Medium | **Types**: Aquatic, Tool, Haste
+- **Starting Tier**: Bronze
 - **Cooldown**: 5.0s
 - **Cost**: 4/8/16/32
 - **Effect**: Haste right Aquatic item 2s. Grants Small Aquatic at day start.
@@ -177,6 +199,7 @@ Rating key:
 
 ## Harpoon
 - **Size**: Medium | **Types**: Aquatic, Ammo
+- **Starting Tier**: Bronze
 - **Cooldown**: 9.0s (Bronze) / 8.0s (Silver) / 7.0s (Gold) / 6.0s (Diamond) | **Ammo**: 1
 - **Effect**: Destroy Small item.
 - **Rating**: **B** -- Disruption tool. Removes enemy key small items.
@@ -184,6 +207,7 @@ Rating key:
 
 ## Javelin
 - **Size**: Medium | **Types**: Weapon, Ammo, Damage, Haste
+- **Starting Tier**: Silver
 - **Cooldown**: 5.0s | **Ammo**: 2
 - **Effect**: Deal 120/180/240 Damage. Reloads 1 Ammo when Hasting.
 - **Rating**: **A** -- High damage with self-reload from Haste. Excellent mid-game weapon.
@@ -191,6 +215,7 @@ Rating key:
 
 ## Katana
 - **Size**: Medium | **Types**: Weapon, Damage
+- **Starting Tier**: Bronze
 - **Cooldown**: 2.0s
 - **Effect**: Deal 5/10/15/20 Damage.
 - **Rating**: **A** -- Fastest cooldown weapon. Low damage but insane trigger rate.
@@ -198,6 +223,7 @@ Rating key:
 
 ## Langxian
 - **Size**: Medium | **Types**: Weapon, Damage
+- **Starting Tier**: Bronze
 - **Cooldown**: 10.0s
 - **Effect**: Deal 40 Damage. Gains +40/60/80/100 Damage when winning fights.
 - **Rating**: **B** -- Snowballs if you're winning. Useless from behind.
@@ -205,6 +231,7 @@ Rating key:
 
 ## Life Preserver
 - **Size**: Medium | **Types**: Aquatic, Heal, Shield
+- **Starting Tier**: Bronze
 - **Cooldown**: 7.0s
 - **Effect**: Shield 10/20/40/80. Heals 200/600/1200/2000 first death per fight.
 - **Rating**: **S** -- Death prevention is unique and incredibly powerful. 2000 heal at Diamond.
@@ -212,6 +239,7 @@ Rating key:
 
 ## Lockbox
 - **Size**: Medium | **Types**: DamageReference, Economy, Value
+- **Starting Tier**: Silver
 - **Cooldown**: Passive
 - **Effect**: Gains +3/6/9 Value when winning fights. Weapons gain Damage equal to Value.
 - **Rating**: **A** -- Economy + damage scaling. Alternative to Orange Julian.
@@ -219,6 +247,7 @@ Rating key:
 
 ## Musket
 - **Size**: Medium | **Types**: Weapon, Ammo, Burn, Damage
+- **Starting Tier**: Silver
 - **Cooldown**: 6.0s | **Ammo**: 1
 - **Effect**: Deal 100/150/200 Damage. Gains +25 Damage on reload. Reloads 1 Ammo when adjacent item Burns.
 - **Rating**: **A** -- Self-scaling damage with infinite reload from adjacent Burn. Position next to Lighter for permanent uptime.
@@ -234,6 +263,7 @@ Rating key:
 
 ## Orange Julian
 - **Size**: Medium | **Types**: Friend, Economy, DamageReference
+- **Starting Tier**: Bronze
 - **Cooldown**: 11.0s (Bronze) / 10.0s (Silver) / 9.0s (Gold) / 8.0s (Diamond)
 - **Effect**: Weapons gain +10 Damage for fight. Damage bonus increases by Gold gained.
 - **Rating**: **A** -- Highest early-game priority for Gunslinger. Absurdly high ceiling with economy scaling.
@@ -241,6 +271,7 @@ Rating key:
 
 ## Piano
 - **Size**: Medium | **Types**: Haste
+- **Starting Tier**: Gold
 - **Cooldown**: Passive
 - **Effect**: Haste Friends 1/2s when using them. Adjacent items become Friends.
 - **Rating**: **B** -- Converts adjacent items to Friends. Niche but powerful in Friend builds.
@@ -248,6 +279,7 @@ Rating key:
 
 ## Pistol Sword
 - **Size**: Medium | **Types**: Weapon, Ammo, Damage
+- **Starting Tier**: Gold
 - **Cooldown**: 4.0s | **Ammo**: 3
 - **Effect**: Deal 24/32 Damage. Deals 24/32 Damage when using Ammo items.
 - **Rating**: **S** -- Effectively another Bladed Hoverboard. Triggers damage on every Ammo use.
@@ -255,6 +287,7 @@ Rating key:
 
 ## Powder Keg
 - **Size**: Medium | **Types**: Weapon, Burn, Damage
+- **Starting Tier**: Silver
 - **Cooldown**: 20.0s
 - **Effect**: Deal 30/40/50% enemy Max Health Damage and destroy self. Charges 2s when Burning.
 - **Rating**: **B** -- Nuclear option. One-shot potential but destroys self.
@@ -262,6 +295,7 @@ Rating key:
 
 ## Pufferfish
 - **Size**: Medium | **Types**: Aquatic, Friend, Haste, Poison
+- **Starting Tier**: Silver
 - **Cooldown**: 8.0s
 - **Effect**: Poison 10/20/30. Charges 2s when Hasting.
 - **Rating**: **A** -- THE Poison item. Activates whenever ANY item on board is Hasted. Core of Poison builds. Incredible enchant target -- Toxic doubles its Poison.
@@ -269,6 +303,7 @@ Rating key:
 
 ## Ramrod
 - **Size**: Medium | **Types**: Tool, AmmoReference
+- **Starting Tier**: Silver
 - **Cooldown**: 5.0s
 - **Effect**: Reloads adjacent Ammo 1. Ammo items gain +20/30/40% Crit. Charges 1s when Ammo depletes.
 - **Rating**: **A** -- Ammo support + Crit buff. Self-charging from Ammo depletion.
@@ -276,6 +311,7 @@ Rating key:
 
 ## Repeater
 - **Size**: Medium | **Types**: Weapon, Ammo, Damage
+- **Starting Tier**: Silver
 - **Cooldown**: 7.0s | **Ammo**: 6
 - **Effect**: Deal 60/90/120 Damage. Charges 1/2/3s when using Ammo items.
 - **Rating**: **B** -- Self-charging from Ammo use. Good in Ammo-heavy boards.
@@ -283,6 +319,7 @@ Rating key:
 
 ## Rifle
 - **Size**: Medium | **Types**: Weapon, Ammo, Damage
+- **Starting Tier**: Bronze
 - **Cooldown**: 3.0s | **Ammo**: 1
 - **Effect**: Deal 8/16/30/48 Damage. Reloads 1 Ammo if only Weapon with cooldown.
 - **Rating**: **B** -- Infinite reload as solo weapon. Fast 3s cooldown.
@@ -290,6 +327,7 @@ Rating key:
 
 ## Rowboat
 - **Size**: Medium | **Types**: Aquatic, Vehicle
+- **Starting Tier**: Silver
 - **Cooldown**: 9.0s
 - **Effect**: Charges adjacent items 1/2/3s. Cooldown reduced 4.5s with 5+ unique Types.
 - **Rating**: **S** -- Charges adjacent items. 4.5s effective cooldown with type diversity. Extremely flexible.
@@ -297,6 +335,7 @@ Rating key:
 
 ## Seashadow
 - **Size**: Medium | **Types**: Friend, Vehicle, Cooldown
+- **Starting Tier**: Silver
 - **Cooldown**: 2.0s
 - **Effect**: Reduces other items' Cooldowns 10% for fight. Increases own Cooldown 4/3/2s.
 - **Rating**: **A** -- Board-wide speed buff. 2s base cooldown means it triggers fast.
@@ -304,6 +343,7 @@ Rating key:
 
 ## Sextant
 - **Size**: Medium | **Types**: Aquatic, Tool, Crit, Haste
+- **Starting Tier**: Silver
 - **Cooldown**: Passive
 - **Effect**: Haste 1 item 1/2/3s when Critting. Adjacent items gain +15/30/50% Crit.
 - **Rating**: **A** -- Passive Crit buff + Haste on Crit. Strong passive support.
@@ -311,6 +351,7 @@ Rating key:
 
 ## Sharkclaws
 - **Size**: Medium | **Types**: Aquatic, Weapon, Damage
+- **Starting Tier**: Bronze
 - **Cooldown**: 5.0s
 - **Cost**: 4/8/16/32
 - **Effect**: Deal 10/20/30/40 Damage. Other Weapons gain +10/20/30/40 Damage **for the fight** (stacks each trigger).
@@ -319,6 +360,7 @@ Rating key:
 
 ## Sharkray
 - **Size**: Medium | **Types**: Aquatic, Weapon, Friend, Ray, Damage, Haste
+- **Starting Tier**: Silver
 - **Cooldown**: 7.0s
 - **Effect**: Deal 40 Damage. Gains +20/40/60 Damage when Hasting.
 - **Rating**: **A** -- Scales with Haste. Multi-type (Aquatic, Friend, Ray).
@@ -326,6 +368,7 @@ Rating key:
 
 ## Shovel
 - **Size**: Medium | **Types**: Weapon, Tool, Damage
+- **Starting Tier**: Bronze
 - **Cooldown**: 10.0s
 - **Effect**: Deal 50/75/100/125 Damage. Grants Small item from any Hero at day start.
 - **Rating**: **A** -- Economy: free item every day. Can find cross-hero gems like RED-F1R3FLY.
@@ -333,6 +376,7 @@ Rating key:
 
 ## Sniper Rifle
 - **Size**: Medium | **Types**: Weapon, Damage
+- **Starting Tier**: Silver
 - **Cooldown**: 11.0s
 - **Effect**: Deal 100 Damage. Deals 3/5/10x more if only Weapon.
 - **Rating**: **A** -- 1000 Damage at Diamond as solo weapon. Devastating with Silencer.
@@ -340,6 +384,7 @@ Rating key:
 
 ## Spyglass
 - **Size**: Medium | **Types**: Tool, Crit, Cooldown
+- **Starting Tier**: Gold
 - **Cooldown**: Passive
 - **Effect**: Adjacent items gain +25/50% Crit. Random enemy item's Cooldown increased 3/6s at fight start.
 - **Rating**: **A** -- High Crit buff + enemy disruption. Strong passive.
@@ -347,6 +392,7 @@ Rating key:
 
 ## Star Chart
 - **Size**: Medium | **Types**: Tool, Cooldown, Crit, Relic
+- **Starting Tier**: Bronze
 - **Cooldown**: Passive
 - **Effect**: Adjacent items gain +10/15/20/25% Crit. Cooldown reduced 10/15/20/25%.
 - **Rating**: **S** -- Crit + Cooldown reduction in one passive slot. Universally excellent. Unlocks 5 Gold + 1 XP Docks event at Bronze.
@@ -354,6 +400,7 @@ Rating key:
 
 ## Submersible
 - **Size**: Medium | **Types**: Aquatic, Damage, Shield, Tech, Vehicle, Weapon
+- **Starting Tier**: Silver
 - **Cooldown**: 6.0s
 - **Effect**: Deal 24/36/48 Damage. Shield equal to Damage. Cooldown reduced 3s with Vehicle/Large item.
 - **Rating**: **B** -- Damage + Shield in one. 3s effective cooldown with Vehicle/Large.
@@ -361,6 +408,7 @@ Rating key:
 
 ## Swash Buckle
 - **Size**: Medium | **Types**: Apparel, Crit, DamageReference, HealReference, ShieldReference
+- **Starting Tier**: Gold
 - **Cooldown**: Passive
 - **Effect**: Adjacent items gain +25/50% Crit. Bonus Damage/Heal/Shield equal to Crit Chance.
 - **Rating**: **A** -- Crit buff + bonus scaling on all actions based on Crit Chance.
@@ -368,6 +416,7 @@ Rating key:
 
 ## Torpedo
 - **Size**: Medium | **Types**: Aquatic, Weapon, Tech, Ammo, Damage
+- **Starting Tier**: Silver
 - **Cooldown**: 8.0s | **Ammo**: 1
 - **Effect**: Deal 100 Damage. Gains +30/60/90 Damage when using Aquatic/Ammo. Reloads 1 if Large.
 - **Rating**: **A** -- Self-scaling with Aquatic/Ammo use. Free reload with Large item.
@@ -375,6 +424,7 @@ Rating key:
 
 ## Tripwire
 - **Size**: Medium | **Types**: Slow
+- **Starting Tier**: Gold
 - **Cooldown**: Passive
 - **Effect**: Slows enemy items 1/2s when used.
 - **Rating**: **S** -- Passive enemy disruption on every use. Excellent Fiery enchant target.
@@ -382,6 +432,7 @@ Rating key:
 
 ## Turtle Shell
 - **Size**: Medium | **Types**: Aquatic, Shield
+- **Starting Tier**: Gold
 - **Cooldown**: 7.0s
 - **Effect**: Shield 25. Shield items gain +10/15 Shield. Charges 1s when using non-Weapons.
 - **Rating**: **B** -- Shield scaling for shield-heavy boards. Self-charging.
@@ -389,6 +440,7 @@ Rating key:
 
 ## Volcanic Vents
 - **Size**: Medium | **Types**: Aquatic, Burn
+- **Starting Tier**: Bronze
 - **Cooldown**: 7.0s
 - **Effect**: Burn 3/6/9/12. Multicast: 3.
 - **Rating**: **A** -- Built-in Multicast 3 Burn. Massive Burn output.
@@ -396,6 +448,7 @@ Rating key:
 
 ## Wanted Poster
 - **Size**: Medium | **Types**: Crit, Experience
+- **Starting Tier**: Silver
 - **Cooldown**: Passive
 - **Effect**: Gain 1 XP per Hero win (+1 if had item on board). Items gain 10/20/30% Crit.
 - **Rating**: **S** -- XP generation + Crit buff. Accelerates progression and damage.
@@ -403,6 +456,7 @@ Rating key:
 
 ## Wetware
 - **Size**: Medium | **Types**: Aquatic, Apparel, Tech
+- **Starting Tier**: Bronze
 - **Cooldown**: 8.0s
 - **Effect**: Shield. When you use a Weapon, gains +15/+25/+35/+45 Shield for fight. Cooldown reduced 2s with another Tech item.
 - **Rating**: **B** -- Weapon-triggered shield scaling. The old Barrel concept but for Weapon builds. Needs Tech adjacency for 6s effective CD.
@@ -410,6 +464,7 @@ Rating key:
 
 ## Weather Glass
 - **Size**: Medium | **Types**: Tool, Poison, Burn, Freeze, Slow
+- **Starting Tier**: Silver
 - **Cooldown**: 7.0s
 - **Effect**: Burn 4/6/8. Poison 2/3/4. +1 Multicast per Burn/Poison/Slow/Freeze item.
 - **Rating**: **S** -- Dual debuff with scaling Multicast. At 4x+ Multicast, stacks insane Burn and Poison. Build-defining.
