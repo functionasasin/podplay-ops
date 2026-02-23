@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 12
-- Analyzed: 7
-- Pending: 5
-- Convergence: 58%
+- Analyzed: 8
+- Pending: 4
+- Convergence: 67%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -18,7 +18,7 @@
 - [x] repo-clustering — Cluster repos into thematic groups; assess signal strength per cluster
 - [x] signal-vs-noise — Score every repo (originality, activity, story value, README quality) → SHOWCASE / KEEP / ARCHIVE verdict
 - [x] fork-audit — Evaluate each fork for meaningful contributions vs empty clones
-- [ ] narrative-gaps — Identify invisible work, delta between "what's built" vs "what GitHub shows"
+- [x] narrative-gaps — Identify invisible work, delta between "what's built" vs "what GitHub shows"
 - [ ] identity-synthesis — Synthesize cohesive identity: bio, archetype, narrative bullets, tone
 
 ### Wave 3: Synthesis (depends on all Wave 2)
@@ -36,6 +36,7 @@
 - [x] repo-clustering — 2026-02-23
 - [x] signal-vs-noise — 2026-02-23
 - [x] fork-audit — 2026-02-23
+- [x] narrative-gaps — 2026-02-23
 
 ## Discovered Aspects
 (Empty — no new aspects discovered yet)
