@@ -39,3 +39,12 @@ loops:
     timeout_minutes: 15
     status: active
     created: 2026-02-23
+
+  estate-tax-reverse:
+    description: "Extract PH estate tax rules (NIRC/TRAIN) → deterministic computation engine spec"
+    type: reverse
+    schedule: "*/30 * * * *"
+    max_iterations: 40
+    timeout_minutes: 15
+    status: paused
+    created: 2026-02-23
