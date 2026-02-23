@@ -1,0 +1,5 @@
+# Temporary logs
+/tmp/ralph-github-profile-reverse-iter-*.log
+
+# Large raw API responses (keep the processed ones)
+raw/*.json.bak
