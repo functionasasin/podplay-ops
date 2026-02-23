@@ -2,14 +2,14 @@
 
 ## Statistics
 - Total aspects discovered: 33
-- Analyzed: 0
-- Pending: 33
-- Convergence: 0%
+- Analyzed: 1
+- Pending: 32
+- Convergence: 3%
 
 ## Pending Aspects (ordered by dependency)
 
 ### Wave 1: Legal Source Acquisition
-- [ ] legal-source-fetch — Fetch and cache all primary legal sources (NIRC, pre-TRAIN rates, amnesty provisions, Form 1801, commentaries) as markdown
+- [x] legal-source-fetch — Fetch and cache all primary legal sources (NIRC, pre-TRAIN rates, amnesty provisions, Form 1801, commentaries) as markdown
 - [ ] form-1801-field-mapping — Map every field/schedule in BIR Form 1801 to its data source
 
 ### Wave 2: TRAIN-Era Rule Extraction (deaths on/after Jan 1, 2018)
@@ -54,4 +54,4 @@
 - [ ] spec-review — Self-review: can a developer with no context build the engine?
 
 ## Recently Analyzed
-(empty)
+- [x] legal-source-fetch — 2026-02-23 — 5 legal source files cached in input/legal-sources/
