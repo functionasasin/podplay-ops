@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 33
-- Analyzed: 11
-- Pending: 22
-- Convergence: 33%
+- Analyzed: 12
+- Pending: 21
+- Convergence: 36%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -22,7 +22,7 @@
 - [x] deduction-public-transfers — Sec. 86(A)(3): bequests to government for exclusively public use
 - [x] deduction-standard — Sec. 86(A)(4): ₱5M citizens/residents, ₱500K non-resident aliens
 - [x] deduction-family-home — Sec. 86(A)(5): up to ₱10M, barangay certification, residents only
-- [ ] deduction-medical — Sec. 86(A)(7): up to ₱500K, within 1 year before death
+- [x] deduction-medical — Sec. 86(A)(7): up to ₱500K, within 1 year before death
 - [ ] deduction-ra4917 — Sec. 86(A)(8): employer death benefits under RA 4917
 - [ ] surviving-spouse-share — Sec. 86(A)(9): net share in conjugal/community property
 - [ ] property-regime-acp — Family Code: Absolute Community of Property (default post-Aug 3, 1988)
