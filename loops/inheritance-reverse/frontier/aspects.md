@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 28
-- Analyzed: 5
-- Pending: 23
-- Convergence: 17.9%
+- Analyzed: 6
+- Pending: 22
+- Convergence: 21.4%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -16,7 +16,7 @@
 - [x] compulsory-heirs-categories — Art. 887: enumerate all compulsory heir categories (legitimate children/descendants, illegitimate children, surviving spouse, legitimate parents/ascendants)
 - [x] heir-concurrence-rules — Arts. 888-903: which heirs inherit together, who excludes whom from succession
 - [x] representation-rights — Arts. 970-977: when descendants step into the shoes of a predeceased parent
-- [ ] adopted-children-rights — RA 8552 Sec. 17-18 + Family Code: adopted children's legal equivalence to legitimate children
+- [x] adopted-children-rights — RA 8552 Sec. 17-18 + Family Code: adopted children's legal equivalence to legitimate children
 - [ ] illegitimate-children-rights — Art. 176 Family Code, Art. 895 Civil Code: recognition, half-share rule, proof of filiation
 
 ### Wave 3: Legitime Computation
@@ -50,3 +50,4 @@
 - **compulsory-heirs-categories** (2026-02-23): Analyzed Art. 887 compulsory heir enumeration. Defined 4 effective categories (LEGITIMATE_CHILD_GROUP, LEGITIMATE_ASCENDANT_GROUP, SURVIVING_SPOUSE_GROUP, ILLEGITIMATE_CHILD_GROUP) with 7 raw sub-categories. Key: adopted (RA 8552) and legitimated (FC 179) children map to legitimate child group. Groups 1 & 2 mutually exclusive; Groups 3 & 4 always concur. Documented 8 edge cases (rescinded adoption, posthumous child, guilty spouse, unproved filiation, unworthiness, articulo mortis, stepparent adoption, parents of illegitimate decedent). Proposed data model for Heir struct. 16 test case scenarios identified.
 - **heir-concurrence-rules** (2026-02-23): Complete concurrence and exclusion analysis. Defined 4 exclusion rules (primary vs secondary, concurring heirs never excluded, nearer excludes more remote, intestate-only hierarchy). Mapped 13 testate scenarios (T1-T13) + 2 special (T14-T15 for illegitimate decedent) and 15 intestate scenarios (I1-I15). Key insights: testate vs intestate produce DIFFERENT shares for same heir combo; Art. 895 ¶3 cap rule limits illegitimate children when many concur; Art. 892 branches on count=1 vs count≥2 legitimate children; collateral relatives only in intestate when all 4 compulsory groups absent (except spouse+siblings per Art. 1001). Pseudocode for concurrence determination algorithm, eligibility filter, and cap rule. 21 test scenarios identified.
 - **representation-rights** (2026-02-23): Complete analysis of Arts. 970-977 right of representation. Defined 4 triggers (predecease, disinheritance, incapacity/unworthiness) and 1 non-trigger (renunciation per Art. 977). Key rules: per stirpes distribution (Art. 974), lines-not-heads counting for concurrence, recursive multi-level representation in descending line with no depth limit, collateral representation limited to children of siblings only (Art. 972) with per-capita switch when alone (Art. 975), renunciation asymmetry (Arts. 976 vs 977), illegitimate children can be represented (Art. 902). Introduced Step 1.5 "Build Lines" to pipeline between heir classification and concurrence. 9 edge cases, 22 test scenarios.
+- **adopted-children-rights** (2026-02-23): Deep analysis of adopted children's succession rights under dual legal regimes: RA 8552 (1998) and RA 11642 (2022). Core rule: adopted child = legitimate child for ALL computation purposes (no distinction allowed). Key discovery: RA 11642 Sec. 41 breaks the old "exclusivity rule" — filiation now extends to adopter's parents, siblings, and descendants, enabling inheritance from/to adopter's relatives. Analyzed stepparent adoption (biological ties preserved for spouse-parent), rescission timing effects, Art. 984 supersession, preterition applicability, and transitional regime handling. Added Adoption struct to data model with regime tracking. 18 test scenarios, 8 edge cases including the RA 8552/11642 transitional ambiguity for pre-2022 adoptions.
