@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 28
-- Analyzed: 24
-- Pending: 4
-- Convergence: 85.7%
+- Analyzed: 25
+- Pending: 3
+- Convergence: 89.3%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -41,7 +41,7 @@
 - [x] test-vectors — 10+ complete test cases across intestate, testate, mixed, with illegitimate children, adopted children, representation, preterition
 - [x] explainer-format — template for per-heir plain-English narrative explanations with peso amounts and article citations
 - [x] edge-cases — catalog of all edge cases: renunciation, commorientes, unworthiness, reserva troncal, collation
-- [ ] spec-draft — synthesize all analysis into complete software spec at `../../docs/plans/inheritance-engine-spec.md`
+- [x] spec-draft — synthesize all analysis into complete software spec at `../../docs/plans/inheritance-engine-spec.md`
 - [ ] spec-review — self-review: can a developer with no Philippine law knowledge build the engine from this spec?
 
 ## Recently Analyzed
