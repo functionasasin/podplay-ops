@@ -1,1093 +1,1225 @@
-# Intestate Succession Order — Complete Priority and Distribution Rules
+# Intestate Order — Complete Priority Order for Intestate Succession
 
-**Aspect**: `intestate-order`
+**Aspect**: intestate-order
 **Wave**: 4 (Distribution Rules)
-**Date**: 2026-02-23
-**Legal Basis**: Arts. 960-1014 (Civil Code Book III, Chapter 3)
+**Primary Legal Basis**: Arts. 960-1014 (Civil Code — Legal or Intestate Succession)
+**Depends On**: compulsory-heirs-categories, heir-concurrence-rules, representation-rights, legitime-table, legitime-with-illegitimate, legitime-surviving-spouse, legitime-ascendants, free-portion-rules
 
 ---
 
-## 1. Legal Basis
+## Overview
+
+This analysis formalizes the **complete intestate distribution algorithm** — the rules that govern how the entire net distributable estate is allocated when there is no valid will (or for the undisposed portion in mixed succession). Unlike testate succession where the estate is split into legitime + free portion, intestate succession distributes the **entire estate** according to a strict statutory hierarchy.
+
+This analysis covers:
+1. When intestate succession applies (Art. 960)
+2. The 6-class priority hierarchy (Arts. 961, 978-1014)
+3. Complete distribution formulas for all 15 intestate scenarios (I1-I15)
+4. Within-class distribution rules (equal shares, ratio method, per stirpes, full/half blood)
+5. The complete intestate distribution algorithm in pseudocode
+6. Interaction with representation, accretion, and special rules
+7. Key differences between intestate and testate shares for the same heir combination
+
+---
+
+## Legal Basis
 
 ### When Intestate Succession Applies (Art. 960)
 
-Intestate succession takes place when:
-1. The decedent dies **without a will**, or with a void will, or a will that lost validity
-2. The will **does not dispose of all the property** — intestate rules apply to the undisposed remainder
-3. The **suspensive condition** attached to an institution of heir does not occur, or the heir predeceases, or the heir repudiates with no substitution and no accretion
-4. The **heir instituted is incapacitated** to succeed
+> Legal or intestate succession takes place:
+> (1) If a person dies without a will, or with a void will, or one which has subsequently lost its validity;
+> (2) When the will does not institute an heir to, or dispose of all the property belonging to the testator. In such case, legal succession shall take place only with respect to the property of which the testator has not disposed;
+> (3) If the suspensive condition attached to the institution of heir does not happen or is not fulfilled, or if the heir dies before the testator, or repudiates the inheritance, there being no substitution, and no right of accretion takes place;
+> (4) When the heir instituted is incapable of succeeding, except in cases provided in this Code.
 
-> **Engine implication**: Case (2) is the "mixed succession" scenario — the engine applies intestate rules only to the undisposed portion of the estate. Cases (3) and (4) require re-running intestate rules on the affected portion after testate validation fails.
-
-### General Intestate Rules
-
-| Article | Rule |
-|---------|------|
-| Art. 961 | Default heirs: legitimate and illegitimate relatives, surviving spouse, and the State |
-| Art. 962 | Nearest degree excludes more distant; same degree inherits equally; subject to representation |
-| Art. 963 | Proximity measured by generations (each generation = one degree) |
-| Art. 967 | Full blood = same father AND mother; half blood = same father OR mother, not both |
-| Art. 968 | If one of several same-degree relatives is unwilling or incapacitated, their portion accrues to the others (NOT next degree) |
-| Art. 969 | If ALL nearest relatives repudiate, the NEXT degree inherits in their own right (not by representation) |
-| Art. 1018 | In intestate, a repudiating heir's share always accrues to co-heirs |
-
----
-
-## 2. Priority Order (Complete Hierarchy)
-
-The intestate hierarchy consists of **four priority classes** plus a **spouse layer** that crosses classes, plus **collaterals** and **the State** as fallbacks.
+**Engine triggers for intestate succession**:
 
 ```
-PRIORITY CLASS 1: Legitimate descendants (including adopted, legitimated, and represented)
-PRIORITY CLASS 2: Legitimate ascendants
-PRIORITY CLASS 3: Illegitimate children (and their descendants via representation)
-PRIORITY CLASS 4: Surviving spouse (CONCURRING — never excluded, never excludes)
-PRIORITY CLASS 5: Collateral relatives (siblings, nephews/nieces, others up to 5th degree)
-PRIORITY CLASS 6: The State
+function is_intestate(decedent: Decedent) -> IntestateTrigger {
+  if decedent.will == null:
+    return FULL_INTESTATE           // Art. 960(1): no will
+  if decedent.will.is_void:
+    return FULL_INTESTATE           // Art. 960(1): void will
+  if decedent.will.lost_validity:
+    return FULL_INTESTATE           // Art. 960(1): lost validity
+
+  // Art. 854: preterition annuls institution → converts to intestate
+  if has_preterition(decedent.will, decedent):
+    return FULL_INTESTATE_BY_PRETERITION
+
+  // Art. 960(2): partial will → mixed succession
+  if NOT decedent.will.disposes_entire_estate:
+    return PARTIAL_INTESTATE        // Only undisposed portion
+
+  // Art. 960(3): conditional institution failed
+  if any(d for d in decedent.will.dispositions where d.condition_failed):
+    return PARTIAL_INTESTATE        // Failed portion
+
+  // Art. 960(4): instituted heir incapable
+  if any(d for d in decedent.will.dispositions where d.heir.is_incapable AND NOT has_substitute(d)):
+    return PARTIAL_INTESTATE        // Incapable heir's portion
+
+  return NOT_INTESTATE
+}
+
+enum IntestateTrigger {
+  NOT_INTESTATE,
+  FULL_INTESTATE,                   // Entire estate distributes intestate
+  FULL_INTESTATE_BY_PRETERITION,    // Art. 854 annulment
+  PARTIAL_INTESTATE,                // Art. 960(2)-(4): only undisposed portion
+}
 ```
 
-### Exclusion Rules
+### The General Principle (Art. 961)
 
-| Rule | Description | Articles |
-|------|-------------|---------|
-| **E1** | Legitimate descendants exclude legitimate ascendants | Art. 985 |
-| **E2** | Legitimate descendants do NOT exclude illegitimate children | Art. 983 |
-| **E3** | Legitimate descendants do NOT exclude surviving spouse | Art. 996 |
-| **E4** | Legitimate ascendants exclude collateral relatives | Art. 985 |
-| **E5** | Illegitimate children do NOT exclude surviving spouse | Arts. 998, 1000 |
-| **E6** | Any of the top 3 classes (LD, LA, IC) excludes pure collaterals from inheriting (except through Art. 1001 spouse exception) | Art. 1003 |
-| **E7** | Surviving spouse alone does NOT exclude siblings/nephews-nieces (Art. 1001 exception) | Art. 995 |
-| **E8** | **Iron Curtain Rule**: illegitimate child cannot inherit from parent's legitimate relatives; legitimate relatives cannot inherit from illegitimate person | Art. 992 |
-| **E9** | Nearer-degree collaterals exclude more-remote collaterals (Art. 1009: beyond siblings/nieces-nephews, nearest degree wins) | Arts. 962, 1009, 1010 |
-| **E10** | Collateral inheritance does not extend beyond 5th degree | Art. 1010 |
+> "In default of testamentary heirs, the law vests the inheritance, in accordance with the rules hereinafter set forth, in the legitimate and illegitimate relatives of the deceased, in the surviving spouse, and in the State."
 
-### Concurrence Rules
+### Proximity Rule (Art. 962)
 
-| Class | Can Concur With |
-|-------|----------------|
-| Legitimate descendants | Illegitimate children, surviving spouse |
-| Legitimate ascendants | Illegitimate children, surviving spouse |
-| Illegitimate children | Legitimate descendants (with 2:1 ratio), legitimate ascendants (flat ½/½), surviving spouse |
-| Surviving spouse | EVERYONE — never excluded by any class |
-| Siblings (collateral) | Surviving spouse only (Art. 1001) — excluded by all other classes |
+> "In every inheritance, the relative nearest in degree excludes the more distant ones, saving the right of representation when it properly takes place."
 
 ---
 
-## 3. Per-Scenario Distribution Rules
+## The 6-Class Priority Hierarchy
 
-### 3.1 Scenarios with Legitimate Descendants (I1–I4)
+The intestate hierarchy consists of 6 classes. Classes 1-4 can **concur** with each other per specific articles. Classes 5-6 are **residual** — they only inherit when all of classes 1-4 are absent (with one exception: Art. 1001 spouse+siblings).
 
-**Governing articles**: Arts. 978-984, 983, 994, 996, 999
+| Priority | Class | Articles | Who | Excludes |
+|----------|-------|----------|-----|----------|
+| 1 | Legitimate descendants | Arts. 978-984 | Children, grandchildren (by representation), adopted children | Excludes Class 2 (ascendants). Never excluded by any other class. |
+| 2 | Legitimate ascendants | Arts. 985-987 | Parents, grandparents | Excluded by Class 1. Excludes Class 5 (collaterals). |
+| 3 | Illegitimate children | Arts. 988-993 | Illegitimate children and their descendants | Never excluded by Class 1 or 2 (Art. 887 ¶2). Excluded as sole heir only by absence. |
+| 4 | Surviving spouse | Arts. 994-1002 | Widow or widower | Never excluded by Class 1, 2, or 3 (Art. 887 ¶2). Guilty spouse excluded (Art. 1002). |
+| 5 | Collateral relatives | Arts. 1003-1010 | Siblings, nephews/nieces, cousins (within 5th degree) | Excluded by Classes 1-4, EXCEPT Art. 1001 (concur with spouse). |
+| 6 | The State | Arts. 1011-1014 | Republic of the Philippines | Excluded by Classes 1-5. Last resort. |
 
-These scenarios apply whenever **any legitimate descendant survives** (or is represented). Adopted children and legitimated children count as legitimate descendants.
+### Critical Concurrence Rules
 
----
-
-#### Scenario I1 — Legitimate Children/Descendants Only
-
-**Heirs**: n legitimate descendant lines (LD), no spouse, no IC
-
-| Heir | Share | Article |
-|------|-------|---------|
-| Each LD line | E / n | Art. 980 |
-
-**Notes**:
-- n = number of LD "lines" (each surviving child = 1 line; each set of grandchildren representing a dead child = 1 line)
-- Within a line: representatives split the line's share equally (per stirpes, Art. 974)
-- All surviving children of the decedent inherit in their own right (Art. 980: "The children of the deceased shall always inherit from him in their own right, dividing the inheritance in equal shares")
-
-**Example** (E = ₱9,000,000; 3 surviving children):
-- Each child: ₱9,000,000 / 3 = ₱3,000,000
-
----
-
-#### Scenario I2 — Legitimate Descendants + Surviving Spouse
-
-**Heirs**: n LD lines + spouse, no IC
-
-| Heir | Share | Article |
-|------|-------|---------|
-| Each LD line | E / (n + 1) | Art. 996 |
-| Surviving spouse | E / (n + 1) | Art. 996 |
-
-**Rule**: Spouse receives a share EQUAL to each legitimate child (Art. 996: "the surviving spouse has in the succession the same share as that of each of the children").
-
-**Example** (E = ₱8,000,000; 3 children + spouse):
-- Each child: ₱8,000,000 / 4 = ₱2,000,000
-- Spouse: ₱2,000,000
-
-**Note**: This is DIFFERENT from testate succession where the spouse's share depends on the count of children (Art. 892 discontinuity at n=1). In intestate, the formula is always uniform: equal to one child's share.
-
----
-
-#### Scenario I3 — Legitimate Descendants + Illegitimate Children (No Spouse)
-
-**Heirs**: n LD lines + m IC lines, no spouse
-
-| Heir | Units | Share | Article |
-|------|-------|-------|---------|
-| Each LD line | 2 | 2E / (2n + m) | Arts. 983, 895 |
-| Each IC line | 1 | E / (2n + m) | Arts. 983, 895 |
-
-**Rule**: Art. 983 says IC shares are "in the proportions prescribed by Article 895." In the intestate context, this means the 2:1 unit ratio — each IC receives half of what each LC receives. There is **NO CAP** in intestate (unlike testate where Art. 895 ¶3 caps IC at the free portion). The entire estate is distributed in the 2:1 ratio.
-
-**Example** (E = ₱6,000,000; n=2 LC, m=1 IC):
-- Total units = (2×2) + (1×1) = 5
-- Per unit = ₱6,000,000 / 5 = ₱1,200,000
-- Each LC: 2 × ₱1,200,000 = ₱2,400,000
-- Each IC: 1 × ₱1,200,000 = ₱1,200,000
-- Check: 2×₱2,400,000 + ₱1,200,000 = ₱6,000,000 ✓
-
----
-
-#### Scenario I4 — Legitimate Descendants + Illegitimate Children + Surviving Spouse
-
-**Heirs**: n LD lines + m IC lines + spouse
-
-| Heir | Units | Share | Article |
-|------|-------|-------|---------|
-| Each LD line | 2 | 2E / (2n + m + 2) | Arts. 999, 983, 895 |
-| Each IC line | 1 | E / (2n + m + 2) | Arts. 983, 895 |
-| Surviving spouse | 2 | 2E / (2n + m + 2) | Art. 999 |
-
-**Rule**: Art. 999 says spouse is entitled to "the same share as that of a legitimate child." So spouse = LC = 2 units in the formula, and IC = 1 unit.
-
-**Example** (E = ₱10,000,000; n=2 LC, m=2 IC, spouse):
-- Total units = (2×2) + (2×1) + 2 = 8
-- Per unit = ₱10,000,000 / 8 = ₱1,250,000
-- Each LC: 2 × ₱1,250,000 = ₱2,500,000
-- Each IC: 1 × ₱1,250,000 = ₱1,250,000
-- Spouse: 2 × ₱1,250,000 = ₱2,500,000
-- Check: 2×₱2,500,000 + 2×₱1,250,000 + ₱2,500,000 = ₱10,000,000 ✓
-
----
-
-### 3.2 Scenarios with Legitimate Ascendants (No Descendants) (I5–I8)
-
-**Governing articles**: Arts. 985-987, 991, 997, 1000
-
-These scenarios apply when **no legitimate descendants** survive or are represented, but **legitimate ascendants** do survive.
-
----
-
-#### Scenario I5 — Legitimate Ascendants Only
-
-**Heirs**: legitimate ascendants only (no IC, no spouse, no LD)
-
-| Heir | Share | Article |
-|------|-------|---------|
-| All ascendants collectively | E | Art. 985 |
-
-**Internal distribution among ascendants** (Art. 986/987):
+Unlike a simple waterfall where each class fully excludes the next, Classes 1-4 have specific **concurrence articles** that define how they share the estate when multiple classes survive:
 
 ```
-1. If both PARENTS (father and mother) alive:
-      Father = E/2, Mother = E/2 (Art. 986: equal shares)
-
-2. If only ONE parent alive:
-      Survivor = E (Art. 986: whole to survivor)
-
-3. If NO parents (but grandparents or higher survive):
-      - All same degree, same line: equal per capita within that line
-      - Same degree, DIFFERENT lines (paternal vs maternal):
-           Paternal group = E/2, Maternal group = E/2 (Art. 987)
-           Within each line: divide equally per capita
-      - DIFFERENT degrees in DIFFERENT lines:
-           Nearest degree (in their line) takes ENTIRE estate for their line
-           (Art. 987: "if the ascendants should be of different degrees, it shall pertain entirely to the ones nearest in degree of either line")
+// Concurrence matrix (true = can inherit together)
+//              Class 1   Class 2   Class 3   Class 4   Class 5
+// Class 1        -       EXCLUDES    YES       YES       NO
+// Class 2      excluded    -         YES       YES       NO
+// Class 3       YES       YES         -        YES       NO
+// Class 4       YES       YES        YES        -      Art.1001
+// Class 5       NO        NO         NO      Art.1001    -
 ```
 
-> **Critical**: There is NO right of representation in the ascending line (Art. 972). If a parent predeceases the decedent, that parent's share does NOT pass to the parent's own parents (the grandparents). Instead, the surviving parent takes the whole (Art. 986), or the nearest-degree ascendant rule (Art. 987) applies.
-
-**Example** (E = ₱6,000,000; surviving: maternal grandmother + paternal grandfather + paternal grandmother):
-- Maternal line has 1 person (1 grandparent), paternal line has 2 people (2 grandparents)
-- All are grandparents = same degree (2nd degree ascendants)
-- Different lines: maternal ½ = ₱3,000,000, paternal ½ = ₱3,000,000
-- Within maternal: grandmother alone = ₱3,000,000
-- Within paternal: grandfather + grandmother split equally = ₱1,500,000 each
+**The Art. 1001 Exception**: When the surviving spouse concurs with siblings/their children (and no one from Classes 1-3 survives), the collateral relatives are NOT excluded. Instead: ½ to spouse, ½ to siblings/their children.
 
 ---
 
-#### Scenario I6 — Legitimate Ascendants + Surviving Spouse
+## Complete Distribution Table: All 15 Intestate Scenarios
 
-**Heirs**: legitimate ascendants + spouse (no LD, no IC)
+### Class 1 Present: Legitimate Descendants Survive
 
-| Heir | Share | Article |
-|------|-------|---------|
-| All ascendants collectively | E/2 | Art. 997 |
-| Surviving spouse | E/2 | Art. 997 |
+When ANY legitimate descendant survives (including by representation), legitimate ascendants (Class 2) are excluded. Classes 3 and 4 may concur.
 
-**Rule**: Art. 997: "the surviving spouse shall be entitled to one-half (½) of the estate, and the legitimate parents or ascendants to the other half."
+#### I1 — Legitimate Children Only
 
-The ascendants' ½ is then internally divided per Arts. 986/987 rules above.
+**Surviving heirs**: Legitimate children (no spouse, no illegitimate children, no ascendants)
+**Legal basis**: Art. 980
+**Rule**: Equal shares among all legitimate children.
 
-**Example** (E = ₱4,000,000; both parents alive + spouse):
-- Spouse: ₱2,000,000
-- Father: ₱1,000,000, Mother: ₱1,000,000
+> "The children of the deceased shall always inherit from him in their own right, dividing the inheritance in equal shares." — Art. 980
 
-**CRITICAL CONTRAST with testate** (T7 — ascendants + spouse): In testate, spouse gets ¼ and ascendants get ½ (with ¼ FP). In intestate I6, both get ½. Spouse gets 100% more in intestate than testate.
-
----
-
-#### Scenario I7 — Legitimate Ascendants + Illegitimate Children (No Spouse)
-
-**Heirs**: legitimate ascendants + m IC lines (no LD, no spouse)
-
-| Heir | Share | Article |
-|------|-------|---------|
-| All ascendants collectively | E/2 | Art. 991 |
-| All IC collectively | E/2 | Art. 991 |
-| Each IC | (E/2) / m | Art. 991 |
-
-**Rule**: Art. 991: "the illegitimate children shall divide the inheritance with them, taking one-half of the estate, whatever be the number of the ascendants or of the illegitimate children."
-
-**Important**: The IC get a flat ½ collectively, NOT the 2:1 unit ratio used in I3/I4. Art. 991 gives a fixed ½ to IC regardless of ascendant count. This is DIFFERENT from scenarios with legitimate descendants.
-
-**Example** (E = ₱6,000,000; mother alive + 3 IC):
-- Mother: ₱3,000,000
-- Each IC: ₱3,000,000 / 3 = ₱1,000,000
-
----
-
-#### Scenario I8 — Legitimate Ascendants + Illegitimate Children + Surviving Spouse
-
-**Heirs**: legitimate ascendants + m IC lines + spouse (no LD)
-
-| Heir | Share | Article |
-|------|-------|---------|
-| All ascendants collectively | E/2 | Art. 1000 |
-| All IC collectively | E/4 | Art. 1000 |
-| Each IC | (E/4) / m | Art. 1000 |
-| Surviving spouse | E/4 | Art. 1000 |
-
-**Rule**: Art. 1000: "the surviving spouse shall be entitled to one-fourth (¼) of the estate; and the illegitimate children, one-fourth (¼) of the estate; and the remaining one-half (½) shall belong to the legitimate ascendants."
-
-**Note**: IC get ¼ collectively regardless of how many there are. With many IC, each individual IC may get a very small fraction.
-
-**Example** (E = ₱8,000,000; both parents alive + 2 IC + spouse):
-- Father: ₱2,000,000, Mother: ₱2,000,000 (split ½ equally)
-- Spouse: ₱2,000,000
-- Each IC: ₱2,000,000 / 2 = ₱1,000,000
-
----
-
-### 3.3 Scenarios with Illegitimate Children (No Legitimate Descendants, No Legitimate Ascendants) (I9–I10)
-
-**Governing articles**: Arts. 988-990, 998
-
----
-
-#### Scenario I9 — Illegitimate Children Only
-
-**Heirs**: m IC lines (no LD, no LA, no spouse)
-
-| Heir | Share | Article |
-|------|-------|---------|
-| Each IC line | E / m | Art. 988 |
-
-**Rule**: Art. 988: "In the absence of legitimate descendants and ascendants, the illegitimate children shall succeed to the entire estate of the deceased."
-
-**Representation within IC group** (Art. 989): If an IC predeceased, their own children (the decedent's grandchildren) represent them by right and inherit the IC's share per stirpes.
-
-**Example** (E = ₱6,000,000; 2 surviving IC + 1 dead IC represented by 2 grandchildren):
-- 3 IC lines total
-- Each IC line: ₱6,000,000 / 3 = ₱2,000,000
-- IC1: ₱2,000,000
-- IC2: ₱2,000,000
-- Dead IC's children (2): ₱2,000,000 / 2 = ₱1,000,000 each
-
----
-
-#### Scenario I10 — Illegitimate Children + Surviving Spouse
-
-**Heirs**: m IC lines + spouse (no LD, no LA)
-
-| Heir | Share | Article |
-|------|-------|---------|
-| All IC collectively | E/2 | Art. 998 |
-| Each IC | (E/2) / m | Art. 998 |
-| Surviving spouse | E/2 | Art. 998 |
-
-**Rule**: Art. 998: "such widow or widower shall be entitled to one-half (½) of the inheritance, and the illegitimate children or their descendants, whether legitimate or illegitimate, to the other half."
-
-**Example** (E = ₱4,000,000; 2 IC + spouse):
-- Spouse: ₱2,000,000
-- Each IC: ₱2,000,000 / 2 = ₱1,000,000
-
----
-
-### 3.4 Surviving Spouse Scenarios (No Descendants, No Ascendants, No IC) (I11–I12)
-
-**Governing articles**: Arts. 995, 1001, 1002
-
----
-
-#### Scenario I11 — Surviving Spouse Only
-
-**Heirs**: spouse only (no LD, no LA, no IC, no siblings/nephews-nieces)
-
-| Heir | Share | Article |
-|------|-------|---------|
-| Surviving spouse | E | Art. 995 |
-
-**Rule**: Art. 995: "the surviving spouse shall inherit the entire estate, without prejudice to the rights of brothers and sisters, nephews and nieces, should there be any, under Article 1001."
-
-The caveat about Art. 1001 is significant: even with a spouse as the only "primary" heir, siblings and nephews/nieces of the DECEDENT get ½ if they exist (see I12 below).
-
----
-
-#### Scenario I12 — Surviving Spouse + Brothers/Sisters/Nephews/Nieces of Decedent
-
-**Heirs**: spouse + collateral kin of decedent (siblings and/or their children)
-
-| Heir | Share | Article |
-|------|-------|---------|
-| Surviving spouse | E/2 | Art. 1001 |
-| Brothers/sisters + nephews/nieces collectively | E/2 | Art. 1001 |
-
-**Rule**: Art. 1001: "Should brothers and sisters or their children survive with the widow or widower, the latter shall be entitled to one-half (½) of the inheritance and the brothers and sisters or their children to the other half."
-
-**Internal distribution of collateral ½** per Arts. 1004-1008:
-- All full-blood siblings alive: equal shares among them
-- Mix of full and half blood: 2:1 ratio (full:half)
-- Surviving siblings + children of dead siblings: siblings per capita, nieces/nephews per stirpes
-- Only children of dead siblings: equal per capita (Art. 975)
-
-**Trigger condition**: Art. 1001 applies ONLY when the spouse concurs with siblings/nephews-nieces AND there are no LD, LA, or IC. If any of LD, LA, or IC are present, Art. 1001 does NOT apply — the spouse takes their share per Arts. 996-1000.
-
-**Example** (E = ₱6,000,000; spouse + 2 full-blood siblings + 2 children of a dead full-blood sibling):
-- Spouse: ₱3,000,000
-- Collateral ½ = ₱3,000,000:
-  - 2 living siblings + 1 dead sibling (represented by 2 children) = 3 sibling lines
-  - Each sibling line: ₱3,000,000 / 3 = ₱1,000,000
-  - Each living sibling: ₱1,000,000
-  - Each niece/nephew (of dead sibling): ₱1,000,000 / 2 = ₱500,000
-
----
-
-### 3.5 Collateral Relative Scenarios (I13–I15)
-
-**Governing articles**: Arts. 1003-1010
-
-**Trigger**: No legitimate descendants, no legitimate ascendants, no illegitimate children, no surviving spouse (or surviving spouse is disqualified under Art. 1002 AND no other eligible heirs).
-
----
-
-#### Scenario I13 — Siblings and/or Nephews/Nieces (No Spouse)
-
-**Heirs**: brothers/sisters (and/or their children) of decedent
-
-| Sub-case | Distribution | Article |
-|----------|-------------|---------|
-| Only full-blood siblings | Equal shares per capita | Art. 1004 |
-| Only half-blood siblings | Equal shares per capita | Art. 1007 |
-| Full + half blood siblings | 2:1 ratio (full gets double half) | Art. 1006 |
-| Living siblings + children of dead siblings | Siblings per capita; nieces/nephews per stirpes within their parent's share | Art. 1005 |
-| Children of half-blood siblings (applying sibling rules) | Per Art. 1008 rules (same 2:1 principle for full vs half) | Art. 1008 |
-| Only nieces/nephews (all siblings dead) | Equal per capita (Art. 975: "if they alone survive, they shall inherit in equal portions") | Art. 975 |
-
-**Full-blood vs half-blood 2:1 computation**:
 ```
-Let f = number of full-blood siblings
-Let h = number of half-blood siblings
-Total units = (2 × f) + (1 × h)
-Each full-blood sibling: 2E / (2f + h)
-Each half-blood sibling: E / (2f + h)
+function distribute_I1(estate: Money, legitimate_children: List<Heir>) -> Map<Heir, Money> {
+  n = count(legitimate_children)
+  per_child = estate / n
+  return { child: per_child for child in legitimate_children }
+}
 ```
 
-**Example** (E = ₱6,000,000; 2 full-blood siblings + 2 half-blood siblings):
-- Total units = (2×2) + (1×2) = 6
-- Per unit = ₱1,000,000
-- Each full-blood sibling: ₱2,000,000
-- Each half-blood sibling: ₱1,000,000
+**With representation** (Art. 981): If any child predeceased, their descendants represent them per stirpes. The number of **lines** determines the per-line share; within each line, representatives split equally.
+
+```
+function distribute_I1_with_representation(estate: Money, lines: List<LineInfo>) -> Map<Heir, Money> {
+  n_lines = count(lines)
+  per_line = estate / n_lines
+  result = {}
+  for line in lines:
+    if line.mode == OWN_RIGHT:
+      result[line.original_heir] = per_line
+    else:  // REPRESENTATION
+      per_rep = per_line / count(line.representatives)
+      for rep in line.representatives:
+        result[rep] = per_rep
+  return result
+}
+```
+
+**Example**: Estate = ₱9,000,000; 3 legitimate children (C1 alive, C2 predeceased with 2 grandchildren GC1/GC2, C3 alive)
+- 3 lines → ₱3,000,000 each
+- C1: ₱3,000,000; GC1: ₱1,500,000; GC2: ₱1,500,000; C3: ₱3,000,000
 
 ---
 
-#### Scenario I14 — Other Collateral Relatives (No Siblings or Sibling Children)
+#### I2 — Legitimate Children + Surviving Spouse
 
-**Heirs**: uncles/aunts, cousins, or other collaterals within 5th degree
+**Surviving heirs**: Legitimate children + surviving spouse
+**Legal basis**: Arts. 994, 996
+**Rule**: Spouse receives a share equal to one legitimate child's share. All shares are equal.
 
-| Heir | Share | Article |
-|------|-------|---------|
-| Each surviving nearest-degree collateral | Equal shares | Arts. 1009, 962 |
+> "If a widow or widower and legitimate children or descendants are left, the surviving spouse has in the succession the same share as that of each of the children." — Art. 996
 
-**Rules** (Art. 1009):
-- No distinction between lines (paternal vs maternal) among non-sibling collaterals
-- No 2:1 full blood/half blood distinction
-- Nearest degree excludes more remote
-- Maximum: 5th degree (Art. 1010)
+```
+function distribute_I2(estate: Money, legit_lines: List<LineInfo>, spouse: Heir) -> Map<Heir, Money> {
+  n_lines = count(legit_lines)
+  // Spouse counts as one additional "share"
+  total_shares = n_lines + 1
+  per_share = estate / total_shares
 
-**Degree reference** (for collateral line computation):
-- Uncle/aunt = 3rd degree (sibling + 2)
-- First cousin = 4th degree (uncle + 1)
-- Second cousin = 6th degree → EXCLUDED by Art. 1010
+  result = { spouse: per_share }
+  for line in legit_lines:
+    distribute_line_share(per_share, line, result)
+  return result
+}
+```
 
-**Example** (E = ₱3,000,000; 3 first cousins survive, no closer collaterals):
-- First cousins = 4th degree; within the 5th-degree limit
-- Each: ₱3,000,000 / 3 = ₱1,000,000
+**Key difference from testate**: In testate T2 (1 child + spouse), spouse gets ¼ and child gets ½ (spouse is smaller). In intestate I2, spouse gets EQUAL to each child: if 1 child + spouse, each gets ½.
 
----
-
-### 3.6 The State (I16)
-
-**Heirs**: no one qualifies in any class
-
-| Heir | Share | Article |
-|------|-------|---------|
-| The State | E | Art. 1011 |
-
-**Distribution** (Art. 1013): personal property → municipality/city of last residence; real property → municipality/city where located. Estate benefits public schools and charitable institutions.
-
-**5-year claim period** (Art. 1014): if a qualified heir later appears and files within 5 years, they recover the estate or its proceeds.
+**Example**: Estate = ₱12,000,000; 3 children + spouse
+- 4 equal shares: ₱3,000,000 each
 
 ---
 
-### 3.7 Special: Illegitimate Decedent (Art. 993)
+#### I3 — Legitimate + Illegitimate Children (No Spouse)
 
-When the **decedent is illegitimate**, intestate succession follows different rules for the decedent's parents:
+**Surviving heirs**: Legitimate children + illegitimate children (no spouse)
+**Legal basis**: Arts. 983, 895
+**Rule**: Unit ratio method — each legitimate child = 2 units, each illegitimate child = 1 unit (½ of legitimate per Art. 895).
 
-| Heirs of Illegitimate Decedent | Distribution | Article |
-|--------------------------------|-------------|---------|
-| Children (legitimate or illegitimate) of decedent | Children inherit → Art. 992 Iron Curtain applies for IC's relationships | Art. 992 |
-| If no children: both parents alive | Equal shares (½ each) | Art. 993 |
-| If no children: one parent alive | Entire estate to surviving parent | Art. 993 (implied) |
-| Surviving spouse + parents (no children) | Spouse ¼, Parents ¼ | Art. 903 ¶3 (testate context, applied by analogy to intestate) |
+> "If illegitimate children survive with legitimate children, the shares of the former shall be in the proportions prescribed by Article 895." — Art. 983
 
-**Iron Curtain Rule in illegitimate decedent's estate**: The decedent's legitimate relatives (on the father's or mother's side) CANNOT inherit from the illegitimate decedent intestate (Art. 992, second clause). Only the parents themselves (direct ascendants) can inherit under Art. 993 — they are not barred by Art. 992.
+```
+function distribute_I3(estate: Money, legit_lines: List<LineInfo>,
+                        illegit_lines: List<LineInfo>) -> Map<Heir, Money> {
+  n_legit = count(legit_lines)
+  n_illegit = count(illegit_lines)
+
+  // 2:1 ratio (Art. 895: illegitimate = ½ of legitimate)
+  total_units = (n_legit * 2) + (n_illegit * 1)
+  per_unit = estate / total_units
+
+  result = {}
+  for line in legit_lines:
+    distribute_line_share(per_unit * 2, line, result)
+  for line in illegit_lines:
+    distribute_line_share(per_unit * 1, line, result)
+  return result
+}
+```
+
+**No cap rule in intestate**: Unlike testate succession (Art. 895 ¶3), intestate succession has NO cap on illegitimate children's shares. The entire estate is distributed proportionally using the 2:1 ratio.
+
+**Example**: Estate = ₱10,000,000; 2 legitimate + 3 illegitimate children
+- Total units: (2 × 2) + (3 × 1) = 7
+- Per unit: ₱10M / 7 = ₱1,428,571
+- Each LC: ₱2,857,143; Each IC: ₱1,428,571
 
 ---
 
-## 4. Master Pseudocode Algorithm
+#### I4 — Legitimate + Illegitimate Children + Surviving Spouse
 
-```pseudocode
-function compute_intestate_shares(
-    estate: Decimal,        // net distributable estate (post-tax)
-    heirs: List[Heir]       // all potential heirs with classifications
-) -> List[InheritanceShare]:
+**Surviving heirs**: Legitimate children + illegitimate children + surviving spouse
+**Legal basis**: Arts. 999, 983, 895
+**Rule**: Spouse = one legitimate child's share (2 units). Unit ratio method for all.
 
-    // STEP 0: Filter eligible heirs
-    // Remove: deceased (unless eligible for representation), incapacitated (Art. 1027),
-    //         unworthy (Art. 1032), legally separated guilty spouse (Art. 1002),
-    //         and any blocked by Iron Curtain Rule (Art. 992)
-    eligible = []
-    for h in heirs:
-        if not h.is_alive and not has_eligible_representatives(h, heirs):
-            continue  // Dead with no reps: remove from pool
-        if is_incapacitated(h) and not has_eligible_representatives(h, heirs):
-            continue
-        if is_unworthy(h) and not has_eligible_representatives(h, heirs):
-            continue
-        if is_guilty_spouse_legal_separation(h):
-            continue  // Art. 1002: no rights whatsoever
-        if blocked_by_iron_curtain(h, decedent):
-            continue  // Art. 992: illegitimate cannot inherit from parent's legit relatives
-        eligible.append(h)
+> "When the widow or widower survives with legitimate children or descendants and illegitimate children or their descendants, whether legitimate or illegitimate, such widow or widower shall be entitled to the same share as that of a legitimate child." — Art. 999
 
-    // STEP 1: Classify eligible heirs
-    ld_lines = build_representation_lines(
-        survivors = [h for h in eligible if is_legitimate_descendant(h) and h.is_alive],
-        represented = [h for h in heirs if is_legitimate_descendant(h)
-                       and not h.is_alive and has_eligible_representatives(h, heirs)]
-    )
-    // is_legitimate_descendant: includes biological legitimate children, adopted children (RA 8552/RA 11642), legitimated children (FC Art. 179)
+```
+function distribute_I4(estate: Money, legit_lines: List<LineInfo>,
+                        illegit_lines: List<LineInfo>, spouse: Heir) -> Map<Heir, Money> {
+  n_legit = count(legit_lines)
+  n_illegit = count(illegit_lines)
 
-    la = [h for h in eligible if is_legitimate_ascendant(h) and h.is_alive]
-    // Activated only if len(ld_lines) == 0
+  // Spouse = 2 units (same as legitimate child), per Art. 999
+  // Legitimate child = 2 units, Illegitimate child = 1 unit
+  total_units = (n_legit * 2) + (n_illegit * 1) + 2  // +2 for spouse
+  per_unit = estate / total_units
 
-    ic_lines = build_representation_lines(
-        survivors = [h for h in eligible if is_illegitimate_child(h) and h.is_alive],
-        represented = [h for h in heirs if is_illegitimate_child(h)
-                       and not h.is_alive and has_eligible_representatives(h, heirs)]
-    )
+  result = { spouse: per_unit * 2 }
+  for line in legit_lines:
+    distribute_line_share(per_unit * 2, line, result)
+  for line in illegit_lines:
+    distribute_line_share(per_unit * 1, line, result)
+  return result
+}
+```
 
-    sp = find_eligible_spouse(eligible)  // null if no spouse or disqualified
+**Example**: Estate = ₱14,000,000; 2 LC + 1 IC + spouse
+- Units: (2×2) + (1×1) + 2 = 7
+- Per unit: ₱2,000,000
+- Each LC: ₱4,000,000; IC: ₱2,000,000; Spouse: ₱4,000,000
 
-    collaterals = [h for h in eligible if is_collateral(h)]
-    // Includes siblings, nephews/nieces, uncles/aunts, cousins (up to 5th degree)
+---
 
-    // STEP 2: Determine scenario and compute shares
-    n = len(ld_lines)
-    m = len(ic_lines)
-    has_ld = n > 0
-    has_la = len(la) > 0
-    has_ic = m > 0
-    has_sp = sp != null
-    has_siblings_or_nieces = has_siblings_or_sibling_children(collaterals)
-    has_coll = len(collaterals) > 0
+### Class 2 Present: Legitimate Ascendants Survive (No Descendants)
 
-    // STEP 3: Branch on scenario
-    if has_ld:
-        return distribute_with_descendants(estate, ld_lines, ic_lines, sp, n, m)
-    elif has_la:
-        return distribute_with_ascendants(estate, la, ic_lines, sp, m)
-    elif has_ic:
-        return distribute_ic_only(estate, ic_lines, sp, m)
-    elif has_sp:
-        if has_siblings_or_nieces:
-            // I12: Art. 1001
-            return distribute_spouse_with_siblings(estate, sp, collaterals)
-        else:
-            // I11: Spouse alone
-            return [InheritanceShare(sp, estate,
-                "Art. 995: surviving spouse inherits entire estate in default of all other heirs")]
-    elif has_coll:
-        return distribute_collaterals(estate, collaterals)
-    else:
-        return [InheritanceShare(STATE, estate,
-                "Art. 1011: State inherits entire estate in default of all private heirs")]
+Only when NO legitimate descendant survives (including no represented lines). Ascendants may concur with Classes 3 and 4.
 
+#### I5 — Legitimate Parents/Ascendants Only
 
-// ----------------------------------------------------------------
-function distribute_with_descendants(estate, ld_lines, ic_lines, sp, n, m):
-    results = []
-    has_sp = sp != null
+**Surviving heirs**: Legitimate parents or ascendants (no descendants, no illegitimate children, no spouse)
+**Legal basis**: Arts. 985, 986, 987
+**Rule**: Entire estate to ascendants. Division per 3-tier algorithm (parents → nearest degree → by-line split).
 
-    if not has_sp and m == 0:
-        // Scenario I1
-        per_line = estate / n
-        for line in ld_lines:
-            distribute_line(line, per_line, results,
-                f"Art. 980: inherits equal share ({n} legitimate descendant lines)")
+> "In default of legitimate children and descendants of the deceased, his parents and ascendants shall inherit from him, to the exclusion of collateral relatives." — Art. 985
 
-    elif has_sp and m == 0:
-        // Scenario I2
-        per_unit = estate / (n + 1)  // n LC lines + 1 spouse
-        for line in ld_lines:
-            distribute_line(line, per_unit, results,
-                f"Art. 996: inherits equal share with surviving spouse ({n+1} total units)")
-        results.append(share(sp, per_unit, "Art. 996: spouse receives share equal to one legitimate child"))
+```
+function distribute_I5(estate: Money, ascendants: List<Heir>) -> Map<Heir, Money> {
+  return distribute_ascendants(estate, ascendants)
+}
 
-    elif not has_sp and m > 0:
-        // Scenario I3
-        total_units = (2 * n) + (1 * m)
-        per_unit = estate / total_units
-        for line in ld_lines:
-            distribute_line(line, 2 * per_unit, results,
-                f"Art. 983/895: legitimate descendant receives 2 units in 2:1 ratio with illegitimate children")
-        for line in ic_lines:
-            distribute_line(line, 1 * per_unit, results,
-                f"Art. 983/895: illegitimate child receives 1 unit (½ of legitimate child's share)")
+function distribute_ascendants(amount: Money, ascendants: List<Heir>) -> Map<Heir, Money> {
+  // Tier 1: Both parents alive → equal shares (Art. 986 ¶1)
+  // Tier 2: One parent alive → all to survivor (Art. 986 ¶2)
+  // Tier 3: No parents → nearest degree, by-line split (Art. 987)
 
-    else:
-        // Scenario I4 (has_sp and m > 0)
-        total_units = (2 * n) + (1 * m) + 2  // spouse gets 2 units = same as LC
-        per_unit = estate / total_units
-        for line in ld_lines:
-            distribute_line(line, 2 * per_unit, results,
-                f"Art. 999/983/895: legitimate descendant receives 2 units (n={n}, m={m}, spouse concurring)")
-        for line in ic_lines:
-            distribute_line(line, 1 * per_unit, results,
-                f"Art. 983/895: illegitimate child receives 1 unit (½ of LC share)")
-        results.append(share(sp, 2 * per_unit, "Art. 999: spouse receives same share as one legitimate child"))
+  parents = filter(a where a.degree == 1, ascendants)
 
-    return results
+  if count(parents) == 2:
+    return { parents[0]: amount / 2, parents[1]: amount / 2 }
+  if count(parents) == 1:
+    return { parents[0]: amount }
 
+  // No parents → Art. 987: nearest degree, by-line split
+  // (a) Find the minimum degree among surviving ascendants
+  min_degree = min(a.degree for a in ascendants)
+  nearest = filter(a where a.degree == min_degree, ascendants)
 
-// ----------------------------------------------------------------
-function distribute_with_ascendants(estate, la, ic_lines, sp, m):
-    results = []
-    has_sp = sp != null
-    has_ic = m > 0
+  // (b) Split by paternal/maternal line
+  paternal = filter(a where a.line == PATERNAL, nearest)
+  maternal = filter(a where a.line == MATERNAL, nearest)
 
-    // Determine ascendant collective share
-    if not has_sp and not has_ic:
-        // Scenario I5: Ascendants alone
-        asc_share = estate
-    elif has_sp and not has_ic:
-        // Scenario I6: Ascendants + spouse
-        asc_share = estate / 2
-        results.append(share(sp, estate / 2, "Art. 997: surviving spouse receives ½ in concurrence with legitimate ascendants"))
-    elif not has_sp and has_ic:
-        // Scenario I7: Ascendants + IC
-        asc_share = estate / 2
-        ic_collective = estate / 2
-        ic_per_line = ic_collective / m
-        for line in ic_lines:
-            distribute_line(line, ic_per_line, results,
-                f"Art. 991: illegitimate children collectively receive ½ (split among {m} lines)")
-    else:
-        // Scenario I8: Ascendants + IC + spouse
-        asc_share = estate / 2
-        ic_collective = estate / 4
-        ic_per_line = ic_collective / m
-        for line in ic_lines:
-            distribute_line(line, ic_per_line, results,
-                f"Art. 1000: illegitimate children collectively receive ¼ (split among {m} lines)")
-        results.append(share(sp, estate / 4, "Art. 1000: surviving spouse receives ¼ in concurrence with ascendants and illegitimate children"))
+  result = {}
+  if count(paternal) > 0 AND count(maternal) > 0:
+    // Art. 987: "one-half shall go to the paternal and the other half to the maternal"
+    pat_share = amount / 2
+    mat_share = amount / 2
+    // "In each line the division shall be made per capita"
+    for a in paternal:
+      result[a] = pat_share / count(paternal)
+    for a in maternal:
+      result[a] = mat_share / count(maternal)
+  elif count(paternal) > 0:
+    // Only paternal line
+    for a in paternal:
+      result[a] = amount / count(paternal)
+  else:
+    // Only maternal line
+    for a in maternal:
+      result[a] = amount / count(maternal)
 
-    // Distribute ascendant share per Arts. 986/987
-    distribute_ascendants(asc_share, la, results)
-    return results
+  return result
+}
+```
 
+**Example**: Estate = ₱10,000,000; both parents survive
+- Father: ₱5,000,000; Mother: ₱5,000,000
 
-function distribute_ascendants(asc_share, la, results):
-    // Filter: only alive, eligible ascendants already pre-selected
-    parents = [a for a in la if a.degree == 1]  // direct parents
-    higher = [a for a in la if a.degree > 1]    // grandparents and above
+**Example (grandparents)**: Estate = ₱10,000,000; no parents; paternal grandfather + both maternal grandparents survive
+- Paternal line: ₱5,000,000 (all to paternal grandfather)
+- Maternal line: ₱5,000,000 (₱2,500,000 to each maternal grandparent)
 
-    if len(parents) > 0:
-        // Art. 986: Parents take precedence over higher ascendants
-        if len(parents) == 2:
-            // Both parents alive: equal shares
-            results.append(share(parents[0], asc_share / 2, "Art. 986: father and mother share equally"))
-            results.append(share(parents[1], asc_share / 2, "Art. 986: father and mother share equally"))
-        else:
-            // One parent alive: takes all
-            results.append(share(parents[0], asc_share,
-                "Art. 986: sole surviving parent takes entire ascendant share"))
-    elif len(higher) > 0:
-        // No parents: nearest degree among higher ascendants
-        min_degree = min(a.degree for a in higher)
-        nearest = [a for a in higher if a.degree == min_degree]
+---
 
-        paternal = [a for a in nearest if a.line == PATERNAL]
-        maternal = [a for a in nearest if a.line == MATERNAL]
+#### I6 — Legitimate Parents/Ascendants + Surviving Spouse
 
-        if len(paternal) == 0 or len(maternal) == 0:
-            // Only one line: divide equally per capita within that line
-            per_capita = asc_share / len(nearest)
-            for a in nearest:
-                results.append(share(a, per_capita,
-                    f"Art. 987: nearest ascendants ({min_degree}° degree) divide equally per capita"))
-        else:
-            // Both lines present: ½ to paternal line, ½ to maternal line
-            paternal_share = asc_share / 2
-            maternal_share = asc_share / 2
-            for a in paternal:
-                results.append(share(a, paternal_share / len(paternal),
-                    "Art. 987: paternal line receives ½; divided equally within line"))
-            for a in maternal:
-                results.append(share(a, maternal_share / len(maternal),
-                    "Art. 987: maternal line receives ½; divided equally within line"))
+**Surviving heirs**: Legitimate parents/ascendants + surviving spouse
+**Legal basis**: Art. 997
+**Rule**: ½ to ascendants, ½ to spouse. Flat split.
 
+> "When the widow or widower survives with legitimate parents or ascendants, the surviving spouse shall be entitled to one-half (½) of the estate, and the legitimate parents or ascendants to the other half." — Art. 997
 
-// ----------------------------------------------------------------
-function distribute_ic_only(estate, ic_lines, sp, m):
-    results = []
-    has_sp = sp != null
+```
+function distribute_I6(estate: Money, ascendants: List<Heir>, spouse: Heir) -> Map<Heir, Money> {
+  result = { spouse: estate / 2 }
+  ascendant_shares = distribute_ascendants(estate / 2, ascendants)
+  result.merge(ascendant_shares)
+  return result
+}
+```
 
-    if not has_sp:
-        // Scenario I9
-        per_line = estate / m
-        for line in ic_lines:
-            distribute_line(line, per_line, results,
-                f"Art. 988: illegitimate children inherit entire estate in absence of legitimate descendants and ascendants ({m} lines)")
-    else:
-        // Scenario I10
-        ic_collective = estate / 2
-        per_line = ic_collective / m
-        for line in ic_lines:
-            distribute_line(line, per_line, results,
-                f"Art. 998: illegitimate children collectively receive ½ (split among {m} lines)")
-        results.append(share(sp, estate / 2, "Art. 998: surviving spouse receives ½ in concurrence with illegitimate children"))
+**Key difference from testate**: In testate T7, ascendants get ½ and spouse gets ¼ (free portion = ¼). In intestate I6, spouse gets a **full ½** — double the testate share.
 
-    return results
+**Example**: Estate = ₱8,000,000; both parents + spouse
+- Father: ₱2,000,000; Mother: ₱2,000,000; Spouse: ₱4,000,000
 
+---
 
-// ----------------------------------------------------------------
-function distribute_spouse_with_siblings(estate, sp, collaterals):
-    results = []
-    sp_share = estate / 2
-    coll_share = estate / 2
+### Class 3 Present: Illegitimate Children (No Descendants or Ascendants)
 
-    results.append(share(sp, sp_share, "Art. 1001: surviving spouse receives ½ in concurrence with brothers, sisters, or their children of the decedent"))
+When no legitimate descendants AND no legitimate ascendants survive.
 
-    // Distribute collateral ½ per Arts. 1004-1008
-    distribute_siblings_and_nieces(coll_share, collaterals, results)
-    return results
+#### I7 — Illegitimate Children Only
 
+**Surviving heirs**: Illegitimate children (no legitimate descendants, no ascendants, no spouse)
+**Legal basis**: Art. 988
+**Rule**: Entire estate equally to illegitimate children.
 
-// ----------------------------------------------------------------
-function distribute_siblings_and_nieces(coll_share, collaterals, results):
-    siblings = [c for c in collaterals if c.type == SIBLING]
-    nieces_nephews = [c for c in collaterals if c.type == SIBLING_CHILD]
+> "In the absence of legitimate descendants and ascendants, the illegitimate children shall succeed to the entire estate of the deceased." — Art. 988
 
-    // Build sibling lines (living siblings = 1 line; dead sibling's children = 1 line)
-    lines = {}
-    for s in siblings:
-        if s.is_alive:
-            lines[s.id] = {sibling: s, children: [], is_alive: true}
-    for nn in nieces_nephews:
-        parent_id = nn.parent_id
-        if parent_id not in lines:
-            lines[parent_id] = {sibling: None, children: [], is_alive: false}
-        lines[parent_id].children.append(nn)
+```
+function distribute_I7(estate: Money, illegit_lines: List<LineInfo>) -> Map<Heir, Money> {
+  n = count(illegit_lines)
+  per_line = estate / n
+  result = {}
+  for line in illegit_lines:
+    distribute_line_share(per_line, line, result)
+  return result
+}
+```
 
-    // Count full-blood vs half-blood lines
-    full_lines = [l for l in lines.values() if is_full_blood(l)]
-    half_lines = [l for l in lines.values() if not is_full_blood(l)]
+Art. 989 provides for representation: descendants of a predeceased illegitimate child inherit by representation per stirpes.
 
-    f = len(full_lines)
-    h = len(half_lines)
-    total_units = (2 * f) + (1 * h)  // Art. 1006: 2:1 ratio
+---
 
-    if total_units == 0:
-        return  // No collaterals
+#### I8 — Illegitimate Children + Surviving Spouse
 
-    per_unit = coll_share / total_units
+**Surviving heirs**: Illegitimate children + surviving spouse (no legitimate descendants or ascendants)
+**Legal basis**: Art. 998
+**Rule**: ½ to spouse, ½ to illegitimate children (shared equally).
 
-    for line in full_lines:
-        line_share = 2 * per_unit
-        if line.is_alive:
-            results.append(share(line.sibling, line_share,
-                "Art. 1004/1006: full-blood sibling receives 2 units (double half-blood)"))
-        else:
-            per_child = line_share / len(line.children)
-            for child in line.children:
-                results.append(share(child, per_child,
-                    "Art. 1005: niece/nephew inherits by representation (per stirpes) from deceased full-blood sibling's share"))
+> "If a widow or widower survives with illegitimate children, such widow or widower shall be entitled to one-half (½) of the inheritance, and the illegitimate children or their descendants, whether legitimate or illegitimate, to the other half." — Art. 998
 
-    for line in half_lines:
-        line_share = 1 * per_unit
-        if line.is_alive:
-            results.append(share(line.sibling, line_share,
-                "Art. 1006/1007: half-blood sibling receives 1 unit (half of full-blood sibling)"))
-        else:
-            per_child = line_share / len(line.children)
-            for child in line.children:
-                results.append(share(child, per_child,
-                    "Art. 1005/1008: niece/nephew inherits by representation from deceased half-blood sibling's share"))
+```
+function distribute_I8(estate: Money, illegit_lines: List<LineInfo>,
+                        spouse: Heir) -> Map<Heir, Money> {
+  result = { spouse: estate / 2 }
+  ic_total = estate / 2
+  n = count(illegit_lines)
+  per_line = ic_total / n
+  for line in illegit_lines:
+    distribute_line_share(per_line, line, result)
+  return result
+}
+```
 
+**Key difference from testate**: In testate T10, each gets ⅓ (with ⅓ free portion). In intestate I8, each gets ½ — the "free portion" effectively goes to spouse and ICs proportionally (½ each instead of ⅓ each).
 
-// ----------------------------------------------------------------
-function distribute_collaterals(estate, collaterals):
-    results = []
+---
 
-    siblings = [c for c in collaterals if c.type == SIBLING]
-    sibling_children = [c for c in collaterals if c.type == SIBLING_CHILD]
-    others = [c for c in collaterals if c.type not in (SIBLING, SIBLING_CHILD)]
+### Cross-Class Concurrence (Ascendants + Illegitimate Children)
 
-    if len(siblings) > 0 or len(sibling_children) > 0:
-        // Scenarios I13-I14: Art. 1003-1008
-        distribute_siblings_and_nieces(estate, siblings + sibling_children, results)
-    elif len(others) > 0:
-        // Scenario I15: Art. 1009 — other collaterals, no line/blood preference
-        min_degree = min(c.degree for c in others)
-        nearest = [c for c in others if c.degree == min_degree]
-        per_capita = estate / len(nearest)
-        for c in nearest:
-            results.append(share(c, per_capita,
-                f"Art. 1009: nearest collateral relatives ({min_degree}° degree) divide equally in default of siblings and their children; Art. 1010 limits to 5th degree"))
+#### I9 — Legitimate Ascendants + Illegitimate Children
 
-    return results
+**Surviving heirs**: Legitimate ascendants + illegitimate children (no descendants, no spouse)
+**Legal basis**: Art. 991
+**Rule**: ½ to ascendants, ½ to illegitimate children. Flat split.
 
+> "If legitimate ascendants are left, the illegitimate children shall divide the inheritance with them, taking one-half of the estate, whatever be the number of the ascendants or of the illegitimate children." — Art. 991
 
-// ----------------------------------------------------------------
-function build_representation_lines(survivors, represented):
-    lines = []
-    for s in survivors:
-        lines.append(Line(representatives=[s], is_own_right=true))
-    for h in represented:
-        reps = get_eligible_representatives(h)
-        if len(reps) > 0:
-            lines.append(Line(representatives=reps, is_own_right=false,
-                              trigger=h.representation_trigger))
-    return lines
+```
+function distribute_I9(estate: Money, ascendants: List<Heir>,
+                        illegit_lines: List<LineInfo>) -> Map<Heir, Money> {
+  result = {}
+  ascendant_shares = distribute_ascendants(estate / 2, ascendants)
+  result.merge(ascendant_shares)
 
+  ic_total = estate / 2
+  n = count(illegit_lines)
+  per_line = ic_total / n
+  for line in illegit_lines:
+    distribute_line_share(per_line, line, result)
+  return result
+}
+```
 
-function distribute_line(line, line_share, results, article_citation):
-    if line.is_own_right:
-        heir = line.representatives[0]
-        results.append(InheritanceShare(heir, line_share, article_citation))
-    else:
-        // Representation: per stirpes — split equally among representatives
-        per_rep = line_share / len(line.representatives)
-        for rep in line.representatives:
-            results.append(InheritanceShare(rep, per_rep,
-                f"Art. 974: inherits by representation (per stirpes); {article_citation}; trigger: {line.trigger}"))
+**Note**: "Whatever be the number" means the ½/½ split is FIXED regardless of whether there is 1 ascendant and 5 illegitimate children or vice versa. The shares are divided equally WITHIN each half.
+
+---
+
+#### I10 — Legitimate Ascendants + Illegitimate Children + Surviving Spouse
+
+**Surviving heirs**: Legitimate ascendants + illegitimate children + surviving spouse
+**Legal basis**: Art. 1000
+**Rule**: ½ to ascendants, ¼ to illegitimate children, ¼ to spouse. Fixed fractions.
+
+> "If legitimate ascendants, the surviving spouse, and illegitimate children are left, the surviving spouse shall be entitled to one-fourth (¼) of the estate; and the illegitimate children, one-fourth (¼) of the estate; and the remaining one-half (½) shall belong to the legitimate ascendants." — Art. 1000
+
+```
+function distribute_I10(estate: Money, ascendants: List<Heir>,
+                         illegit_lines: List<LineInfo>, spouse: Heir) -> Map<Heir, Money> {
+  result = { spouse: estate / 4 }  // ¼
+
+  ascendant_shares = distribute_ascendants(estate / 2, ascendants)  // ½
+  result.merge(ascendant_shares)
+
+  ic_total = estate / 4  // ¼
+  n = count(illegit_lines)
+  per_line = ic_total / n
+  for line in illegit_lines:
+    distribute_line_share(per_line, line, result)
+  return result
+}
+```
+
+**Key difference from testate**: In testate T9, ascendants get ½, IC get ¼, spouse gets ⅛ (FP = ⅛). In intestate I10, spouse gets ¼ — double the testate share. The "extra" comes from no free portion.
+
+---
+
+### Class 4 Only: Surviving Spouse (No Descendants, No Ascendants, No Illegitimate Children)
+
+#### I11 — Surviving Spouse Only
+
+**Surviving heirs**: Surviving spouse (no descendants, no ascendants, no illegitimate children, no collateral relatives)
+**Legal basis**: Art. 995
+**Rule**: Entire estate to surviving spouse.
+
+> "In the absence of legitimate descendants and ascendants, and illegitimate children and their descendants, whether legitimate or illegitimate, the surviving spouse shall inherit the entire estate, without prejudice to the rights of brothers and sisters, nephews and nieces, should there be any, under Article 1001." — Art. 995
+
+```
+function distribute_I11(estate: Money, spouse: Heir) -> Map<Heir, Money> {
+  return { spouse: estate }
+}
+```
+
+**Art. 1002 disqualification**: If the surviving spouse gave cause for legal separation, they get NOTHING (entire estate falls to next class).
+
+**Articulo mortis**: Art. 900 ¶2's ⅓ reduction applies to the **testate legitime** only. In intestate I11, there is no explicit parallel provision — the surviving spouse inherits the entire estate. However, there is academic debate on whether the articulo mortis rule applies by analogy in intestate succession. Engine recommendation: **do not apply** the ⅓ reduction in intestate — Art. 900 ¶2 is in the Legitime section (testate), not in the Intestate Succession chapter.
+
+---
+
+#### I12 — Surviving Spouse + Siblings/Nephews/Nieces
+
+**Surviving heirs**: Surviving spouse + brothers/sisters or their children (no descendants, no ascendants, no illegitimate children)
+**Legal basis**: Art. 1001
+**Rule**: ½ to spouse, ½ to siblings/their children.
+
+> "Should brothers and sisters or their children survive with the widow or widower, the latter shall be entitled to one-half (½) of the inheritance and the brothers and sisters or their children to the other half." — Art. 1001
+
+This is the **only scenario** where collateral relatives (Class 5) concur with a higher class (Class 4). Art. 995 expressly carves out this exception ("without prejudice to the rights of brothers and sisters, nephews and nieces... under Article 1001").
+
+```
+function distribute_I12(estate: Money, spouse: Heir,
+                         collaterals: List<Heir>) -> Map<Heir, Money> {
+  result = { spouse: estate / 2 }
+  collateral_total = estate / 2
+  collateral_shares = distribute_collaterals(collateral_total, collaterals)
+  result.merge(collateral_shares)
+  return result
+}
+```
+
+**Scope of Art. 1001**: The article says "brothers and sisters or their children" — this limits the concurrence to siblings and nephews/nieces. More remote collaterals (cousins, etc.) do NOT concur with the spouse. If only remote collaterals survive with the spouse, the spouse takes the entire estate per Art. 995 (and the remote collaterals are excluded).
+
+---
+
+### Class 5: Collateral Relatives (No Descendants, No Ascendants, No Illegitimate Children, No Spouse — or Art. 1001 Concurrence)
+
+#### I13 — Siblings Only
+
+**Surviving heirs**: Brothers and sisters of the decedent
+**Legal basis**: Arts. 1003, 1004, 1006, 1007
+**Rules**:
+- Full blood siblings: equal shares (Art. 1004)
+- Full + half blood: full blood gets **double** the share of half blood (Art. 1006)
+- Half blood only (both sides): equal shares regardless of which parent (Art. 1007)
+
+```
+function distribute_siblings(amount: Money, siblings: List<Sibling>) -> Map<Heir, Money> {
+  full_blood = filter(s where s.blood_type == FULL, siblings)
+  half_blood = filter(s where s.blood_type == HALF, siblings)
+
+  if count(half_blood) == 0:
+    // Art. 1004: all full blood → equal shares
+    per_sibling = amount / count(siblings)
+    return { s: per_sibling for s in siblings }
+
+  if count(full_blood) == 0:
+    // Art. 1007: all half blood → equal shares (no line distinction)
+    per_sibling = amount / count(siblings)
+    return { s: per_sibling for s in siblings }
+
+  // Art. 1006: mixed → full blood = 2 units, half blood = 1 unit
+  total_units = (count(full_blood) * 2) + (count(half_blood) * 1)
+  per_unit = amount / total_units
+
+  result = {}
+  for s in full_blood:
+    result[s] = per_unit * 2
+  for s in half_blood:
+    result[s] = per_unit * 1
+  return result
+}
+```
+
+**Example**: Estate = ₱10,000,000; 2 full-blood siblings + 1 half-blood sibling
+- Total units: (2 × 2) + (1 × 1) = 5
+- Per unit: ₱2,000,000
+- Each full-blood: ₱4,000,000; Half-blood: ₱2,000,000
+
+---
+
+#### I13a — Siblings + Nephews/Nieces (No Spouse)
+
+**Surviving heirs**: Some siblings alive + children of predeceased siblings
+**Legal basis**: Arts. 1005, 1008
+**Rule**: Surviving siblings inherit per capita; nephews/nieces of predeceased siblings inherit per stirpes.
+
+> "Should brothers and sisters survive together with nephews and nieces, who are the children of the decedent's brothers and sisters who are dead, the former shall inherit per capita, and the latter per stirpes." — Art. 1005
+
+The full/half blood rule (Art. 1006) applies here too — a half-blood sibling's share (or their represented line) is half that of a full-blood sibling (Art. 1008).
+
+```
+function distribute_siblings_with_representation(amount: Money,
+    sibling_lines: List<SiblingLine>) -> Map<Heir, Money> {
+
+  // Each surviving sibling = 1 line; each predeceased sibling with children = 1 line
+  // Apply full/half blood weighting per line
+  total_units = 0
+  for line in sibling_lines:
+    units = 2 if line.blood_type == FULL else 1
+    total_units += units
+
+  per_unit = amount / total_units
+  result = {}
+
+  for line in sibling_lines:
+    units = 2 if line.blood_type == FULL else 1
+    line_share = per_unit * units
+
+    if line.mode == OWN_RIGHT:
+      result[line.original_sibling] = line_share
+    else:  // REPRESENTATION (predeceased sibling → nephews/nieces)
+      per_nephew = line_share / count(line.representatives)
+      for nephew in line.representatives:
+        result[nephew] = per_nephew
+
+  return result
+}
 ```
 
 ---
 
-## 5. Representation Within Intestate Succession
+#### I13b — Nephews/Nieces Only (All Siblings Predeceased)
 
-### Triggers (applicable in intestate)
+**Surviving heirs**: Only nephews/nieces (all siblings predeceased)
+**Legal basis**: Art. 975
+**Rule**: Per capita (equal shares among all nephews/nieces) — NOT per stirpes.
 
-| Trigger | Effect | Article |
-|---------|--------|---------|
-| Predecease | Deceased heir's line represented by descendants | Arts. 970, 981, 982 |
-| Incapacity / Unworthiness | Same as predecease — descendants step in | Art. 1035 |
-| Disinheritance | Descendants represent disinherited heir | Art. 923 |
-| Renunciation | NO representation (Art. 977); instead, Art. 1018 accretion or Art. 969 next-degree succession | Arts. 977, 1018, 969 |
+> "But if they alone survive, they shall inherit in equal portions." — Art. 975
 
-### Per-Stirpes vs Per-Capita
+```
+function distribute_nephews_only(amount: Money, nephews: List<Heir>) -> Map<Heir, Money> {
+  // Art. 975: per capita when no surviving siblings
+  // Art. 1008: half-blood nephews' children have same rules as half-blood siblings
+  // But Art. 975 says "equal portions" — this overrides per-stirpes
 
-| Situation | Rule |
-|-----------|------|
-| All children of decedent alive (I1-I4) | Per capita: equal shares to each child |
-| Some children alive, some dead with descendants | Alive children per capita; dead children's descendants per stirpes |
-| ALL children dead, grandchildren survive | Grandchildren take as nearest degree (per capita), NOT per stirpes |
-| Nieces/nephews with living siblings (I13) | Siblings per capita; nieces/nephews per stirpes within their parent's share |
-| Nieces/nephews alone, all siblings dead | Equal per capita (Art. 975: "they alone survive") |
+  per_nephew = amount / count(nephews)
+  return { n: per_nephew for n in nephews }
+}
+```
 
-### Key Rule: Renunciation Does NOT Trigger Representation
-
-- **Art. 977**: "Heirs who repudiate their share may not be represented."
-- **Art. 1018**: Instead, in intestate succession, the repudiating heir's share **accrues** to co-heirs.
-- **Art. 969**: If ALL nearest-degree relatives repudiate, the NEXT DEGREE inherits in their own right (not by representation).
-
-### Per-Stirpes Calculation Example
-
-Decedent has 3 children. Child A survives. Child B predeceased — left 2 children. Child C predeceased — left 1 child.
-- 3 lines: A (1 person), B-line (2 reps), C-line (1 rep)
-- Each line: E/3
-- Child A: E/3
-- Each of B's children: (E/3)/2 = E/6
-- C's child: E/3
+**Note**: There is scholarly debate on whether Art. 1006's full/half blood doubling rule applies to nephews/nieces inheriting per capita under Art. 975. Art. 1008 says they succeed "in accordance with the rules laid down for the brothers and sisters of the full blood" — suggesting the double-share rule may apply even in per capita mode. The engine should apply the Art. 1006 doubling rule by default for consistency, with a configuration flag for the alternative interpretation (pure equal shares).
 
 ---
 
-## 6. Special Rules
+#### I14 — Other Collateral Relatives (Within 5th Degree)
 
-### 6.1 Iron Curtain Rule (Art. 992)
+**Surviving heirs**: No siblings, no nephews/nieces, but other collateral relatives within the 5th degree
+**Legal basis**: Arts. 1009, 1010
+**Rule**: Nearest degree inherits. No line or blood distinction.
 
-**Bilateral barrier**: Illegitimate children cannot inherit intestate from the legitimate relatives of their parent; and those legitimate relatives cannot inherit from the illegitimate child.
+> "Should there be neither brothers nor sisters, nor children of brothers or sisters, the other collateral relatives shall succeed to the estate. The latter shall succeed without distinction of lines or preference among them by reason of relationship by the whole blood." — Art. 1009
 
-**Engine implementation**:
-1. When building `eligible` heirs for a LEGITIMATE decedent: check if any heir is an illegitimate child of the decedent's sibling — if so, that person is blocked by Art. 992 and cannot represent their parent in collateral succession.
-2. When building `eligible` heirs for an ILLEGITIMATE decedent: check if any heir is a legitimate relative of the decedent's parent — if so, those relatives are blocked.
+> "The right to inherit ab intestato shall not extend beyond the fifth degree of relationship in the collateral line." — Art. 1010
 
-**What Art. 992 does NOT block**:
-- Illegitimate children of the decedent themselves inheriting FROM the decedent (they ARE the decedent's own IC)
-- The decedent's own parents inheriting from the decedent (Art. 993 governs directly)
+```
+function distribute_other_collaterals(amount: Money,
+    collaterals: List<Heir>) -> Map<Heir, Money> {
+  // Art. 1009: no line or blood distinction
+  // Art. 962: nearest degree excludes more remote
+  // Art. 1010: max 5th degree
 
-### 6.2 Art. 1001 — Spouse with Siblings (Special Concurrence)
+  // Filter to within 5th degree
+  eligible = filter(c where c.collateral_degree <= 5, collaterals)
+  if count(eligible) == 0:
+    return {}  // Falls to State (I15)
 
-Art. 1001 is an EXCEPTION that allows collateral relatives (siblings/nephews-nieces) to "penetrate" the normal rule that spouse alone takes everything. This exception ONLY applies when:
-- The spouse concurs with siblings or their children
-- There are NO legitimate descendants, legitimate ascendants, or illegitimate children
+  // Nearest degree excludes more remote
+  min_degree = min(c.collateral_degree for c in eligible)
+  nearest = filter(c where c.collateral_degree == min_degree, eligible)
 
-If any of LD, LA, or IC are present: the spouse's share is governed by Arts. 996/997/998/999/1000, and siblings get nothing.
+  // Equal shares, no blood/line distinction
+  per_heir = amount / count(nearest)
+  return { c: per_heir for c in nearest }
+}
+```
 
-### 6.3 Accretion in Intestate (Art. 1018)
-
-When one heir in intestate repudiates:
-- Their share **accrues to co-heirs** (Art. 1018)
-- Not to the next class (that only happens under Art. 969 when ALL nearest relatives repudiate)
-
-**Implementation**: After initial share computation, if an heir repudiates:
-1. Remove the repudiating heir
-2. Recalculate shares from scratch using the remaining eligible heirs
-3. (Do not trigger representation — Art. 977 forbids it for renunciants)
-
-Exception: If all heirs of the current class repudiate, apply Art. 969 — invoke the NEXT class in its own right.
-
-### 6.4 Legal Separation (Art. 1002)
-
-The **guilty** spouse in a legal separation proceeding forfeits all intestate inheritance rights. The innocent spouse retains full rights.
-
-**Engine check**: At Step 0, if `heir.is_spouse AND heir.legal_separation_status == GUILTY`, remove from eligible pool. The scenario then re-evaluates with spouse absent.
+**Degree counting** (Art. 966): In the collateral line, count up to the common ancestor, then down. Siblings = 2nd degree, nephews/nieces = 3rd degree, first cousins = 4th degree, children of first cousins = 5th degree.
 
 ---
 
-## 7. Complete Intestate Scenario Table
+#### I15 — No Heirs (Estate to the State)
 
-| Code | Heirs Present | Distribution | Governing Articles |
-|------|---------------|-------------|-------------------|
-| **I1** | n LD lines (no sp, no IC) | Each LD line: E/n | Arts. 978, 980 |
-| **I2** | n LD lines + spouse | Each LD line and spouse: E/(n+1) | Arts. 980, 996 |
-| **I3** | n LD lines + m IC lines (no sp) | LD line: 2E/(2n+m); IC line: E/(2n+m) | Arts. 983, 895 |
-| **I4** | n LD lines + m IC lines + spouse | LD=2u, IC=u, Sp=2u; u=E/(2n+m+2) | Arts. 983, 895, 999 |
-| **I5** | LA only | LA: entire estate per Art. 986/987 division | Arts. 985, 986, 987 |
-| **I6** | LA + spouse | LA: E/2 (internal per 986/987); Sp: E/2 | Art. 997 |
-| **I7** | LA + m IC (no sp) | LA: E/2 per 986/987; each IC: E/(2m) | Art. 991 |
-| **I8** | LA + m IC + spouse | LA: E/2; each IC: E/(4m); Sp: E/4 | Art. 1000 |
-| **I9** | m IC only | Each IC line: E/m | Art. 988 |
-| **I10** | m IC + spouse | Each IC: E/(2m); Sp: E/2 | Art. 998 |
-| **I11** | Spouse only (no siblings) | Sp: E | Art. 995 |
-| **I12** | Spouse + siblings/nieces-nephews | Sp: E/2; collateral kin: E/2 per Arts. 1004-1008 | Arts. 995, 1001 |
-| **I13** | Siblings/nieces-nephews only | Per Arts. 1004-1008 (2:1 full/half) | Arts. 1003-1008 |
-| **I14** | Other collaterals only (no siblings) | Equal shares, nearest degree, up to 5th | Arts. 1009, 1010 |
-| **I15** | None | State takes all | Arts. 1011-1013 |
+**Surviving heirs**: None within the legal hierarchy
+**Legal basis**: Arts. 1011-1014
+**Rule**: Entire estate to the State.
 
-**Special (illegitimate decedent)**:
-| Code | Heirs Present | Distribution | Articles |
-|------|---------------|-------------|---------|
-| **Iill-1** | Children of illegitimate decedent | Per I1-I4 with IC of decedent counted as LC (they are legitimate children of the illegitimate person) | Arts. 988-990 |
-| **Iill-2** | No children; both parents alive | ½ to father, ½ to mother | Art. 993 |
-| **Iill-3** | No children; one parent alive | Entire to surviving parent | Art. 993 |
-| **Iill-4** | No children; parents + spouse | Parents ¼, Spouse ¼ | Art. 903 ¶3 (analogous) |
+> "In default of persons entitled to succeed in accordance with the provisions of the preceding Sections, the State shall inherit the whole estate." — Art. 1011
+
+```
+function distribute_I15(estate: Money) -> EscheatedEstate {
+  return EscheatedEstate {
+    total: estate,
+    // Art. 1013: personal property → municipality/city of last residence
+    // Art. 1013: real property → municipality/city where situated
+    // Art. 1013: for benefit of public schools and charitable institutions
+    // Art. 1014: legitimate heir can reclaim within 5 years
+    escheat_deadline: decedent.date_of_death + 5_years,
+  }
+}
+```
 
 ---
 
-## 8. Interactions with Other Engine Components
+### Special Scenarios: Illegitimate Decedent
 
-### 8.1 Mixed Succession (Art. 960(2))
+When the decedent is themselves an illegitimate child, the Iron Curtain Rule (Art. 992) applies, and Art. 993 governs the parents' inheritance.
 
-When a will disposes of ONLY PART of the estate:
-1. Testate engine computes testamentary dispositions for the disposed portion
-2. **Intestate engine** receives the undisposed remainder as its `estate` parameter
-3. The undisposed remainder is distributed per the intestate scenarios above
-4. The same heir may receive from BOTH testate (testamentary share) and intestate (undisposed portion)
+#### I-ID1 — Illegitimate Decedent: Parents Only (No Descendants, No Spouse, No Children)
 
-**Example**: Decedent has 2 LC + spouse. Will gives ₱2,000,000 to a charity (from free portion). Undisposed remainder = free portion minus charity bequest. This remainder passes intestate under I2 rules.
+**Legal basis**: Art. 993
+**Rule**: Parents inherit the entire estate (equal shares if both surviving).
 
-### 8.2 Testate Validation Failure (Art. 918 / Art. 854)
+> "If an illegitimate child should die without issue, either legitimate or illegitimate, his father or mother shall succeed to his entire estate; and if the child's filiation is duly proved as to both parents, who are both living, they shall inherit from him share and share alike." — Art. 993
 
-When a will fails validation (preterition under Art. 854, or invalid disinheritance under Art. 918):
-- Art. 854: Institution of heirs annulled; devises/legacies preserved within free portion
-- After annulment: the entire estate (minus valid legacies/devises) passes INTESTATE
-- The intestate engine receives the residue as `estate`
+#### I-ID2 — Illegitimate Decedent: Iron Curtain Rule
 
-### 8.3 Intestate Share vs Legitime
+**Legal basis**: Art. 992
+**Rule**: Illegitimate child has NO right to inherit ab intestato from the legitimate children and relatives of their father/mother; nor do such children/relatives inherit from the illegitimate child.
 
-In intestate succession, there is NO separate "legitime" computation — the entire estate is distributed per the scenarios above. The legitime concept applies ONLY in testate succession to protect compulsory heirs. In intestate, the statutory shares ARE the heirs' shares.
-
-**Critical**: For the same heir combination, intestate shares are always ≥ testate legitime (the law is more generous to heirs when there is no will). This is by design — the decedent's testamentary freedom is zero in intestate.
-
-### 8.4 Representation Pipeline Integration
-
-The `build_representation_lines` function from Step 1.5 of the overall pipeline (analyzed in `representation-rights.md`) is called within the intestate engine to resolve:
-- Which heirs are represented (predecease, disinheritance, incapacity/unworthiness)
-- Per-stirpes vs per-capita within each line
-- Recursive multi-level representation (grandchildren, great-grandchildren, etc.)
+**Engine impact**: When filtering intestate heirs for an illegitimate decedent:
+- Exclude the decedent's parents' legitimate children (the decedent's half-siblings from the legitimate side)
+- Exclude the decedent's parents' other legitimate relatives
+- Only allow: decedent's own descendants, decedent's parents, decedent's spouse, decedent's own illegitimate children
 
 ---
 
-## 9. Edge Cases
+## The Collateral Distribution Algorithm
 
-### EC1 — All Nearest-Degree Relatives Repudiate (Art. 969)
+Collateral relatives require their own distribution sub-algorithm due to the interplay of full/half blood rules, representation, and the per capita switch:
 
-All 3 legitimate children renounce. No substitution. No grandchildren.
-→ Grandchildren (next degree) inherit in their **own right** per capita (not by representation)
-→ Engine: when all members of the current class repudiate, advance to next class
-→ Do NOT apply per-stirpes — the next class inherits directly, not as representatives
+```
+function distribute_collaterals(amount: Money, collaterals: List<Heir>) -> Map<Heir, Money> {
+  // Step 1: Check for siblings (Arts. 1004-1008)
+  siblings = filter(c where c.is_sibling_of_decedent, collaterals)
+  nephews_nieces = filter(c where c.is_child_of_sibling_of_decedent, collaterals)
 
-### EC2 — Partial Repudiation (Art. 1018 Accretion)
+  if count(siblings) > 0 AND count(nephews_nieces) > 0:
+    // Art. 1005: siblings per capita + nephews per stirpes
+    return distribute_siblings_with_representation(amount,
+      build_sibling_lines(siblings, nephews_nieces))
 
-2 of 3 legitimate children survive; 1 renounces. No IC, no spouse.
-→ Renouncing child's 1/3 accrues to the 2 co-heirs
-→ Each surviving child: (1/3) + (1/6) = 1/2
-→ Engine: after initial computation, reallocate renounced shares equally to co-heirs
+  if count(siblings) > 0:
+    // Art. 1004/1006: siblings only
+    return distribute_siblings(amount, siblings)
 
-### EC3 — Adopted Child Under RA 11642 Inheriting from Adopter's Parents
+  if count(nephews_nieces) > 0:
+    // Art. 975: nephews/nieces alone → per capita (equal shares)
+    return distribute_nephews_only(amount, nephews_nieces)
 
-Under RA 11642 Sec. 41, the adoptee's filiation extends to the adopter's parents (grandparents of adoptee). If adoptee survives grandparents in intestate:
-→ Adoptee participates as a grandchild (legitimate grandchild) in the grandparent's estate
-→ Engine: `AdoptionConfig.ra11642_extended_filiation = true` flag enables this
-
-### EC4 — Illegitimate Child Representing Deceased Illegitimate Sibling (Art. 902)
-
-Parent (decedent) has 1 LC and 1 dead IC (IC's children are grandchildren). IC's 2 grandchildren (legitimate) represent the IC by Art. 902 (IC rights transmit to descendants).
-→ Scenario I3 with representation: n=1 (1 LC), m=1 (IC-line with 2 representatives)
-→ Per unit = E/(2+1) = E/3
-→ LC: 2E/3; each grandchild representing IC: (E/3)/2 = E/6
-→ Grandchildren inherit as IC-share representatives, NOT as legitimate grandchildren
-
-### EC5 — Iron Curtain in Collateral Succession
-
-Decedent (legitimate) has 1 full-blood sibling. That sibling has 1 legitimate child and 1 illegitimate child (both are nephews/nieces of decedent).
-→ Legitimate nephew: can represent sibling (Art. 972: nieces/nephews by collateral representation)
-→ Illegitimate nephew: BLOCKED by Art. 992 — cannot inherit from decedent (a legitimate relative of the illegitimate nephew's parent)
-→ Engine: apply Iron Curtain filter before building sibling-line representatives
-
-### EC6 — Legal Separation Changes Scenario
-
-Decedent has 2 LC + guilty spouse.
-→ Art. 1002: guilty spouse gets nothing
-→ Scenario changes from I2 to I1
-→ Each LC: E/2 (instead of E/3 if spouse were eligible)
-→ Engine: remove guilty spouse at Step 0 filter, then recalculate scenario
-
-### EC7 — No Representation in Ascending Line (Art. 972)
-
-Both parents of decedent are dead. Father's parents (paternal grandparents) are alive. Mother's parents (maternal grandparents) are also alive.
-→ Scenario I5: ascendants only (parents both dead = no parents to take precedence)
-→ All four grandparents are 2nd degree: same degree, different lines
-→ Paternal grandparents: E/2 (split equally, E/4 each)
-→ Maternal grandparents: E/2 (split equally, E/4 each)
-→ The parents' shares do NOT go to their surviving siblings (uncle/aunt) — only their parents inherit
-
-### EC8 — Simultaneous Death (Commorientes)
-
-Decedent and a potential heir die in the same accident. Art. 43 (Family Code) and Art. 1025 (Civil Code) require the heir to be alive at the moment of succession opening.
-→ If timing cannot be established: presume both predeceased the other (neither inherits from the other)
-→ Engine: `Heir.survival_status = COMMORIENTE` → treated as predeceased
-→ Representatives of the commoriente heir (if any) may still inherit by representation (unless the trigger is renunciation)
-
-### EC9 — Art. 1001 Blocked by Presence of IC
-
-Decedent has: spouse + 2 IC + 1 brother.
-→ IC are present → Art. 1001 does NOT apply
-→ Scenario I10 applies: IC collectively ½, spouse ½
-→ Brother gets NOTHING (Art. 1003 excludes collaterals when any of LD/LA/IC/spouse present)
-
-### EC10 — Beyond 5th Degree Collateral
-
-Decedent's closest surviving relatives are second cousins (6th degree collateral).
-→ Art. 1010: right of inheritance does NOT extend beyond 5th degree in collateral line
-→ Second cousins are excluded
-→ State inherits the entire estate (Art. 1011)
-
-### EC11 — Half-Blood Nephews/Nieces Alongside Full-Blood Nephews/Nieces (Art. 1008)
-
-Decedent's full-blood sibling has 2 children; decedent's half-blood sibling (now dead) has 2 children. Both siblings dead.
-→ Full-blood sibling's children = full-blood nieces/nephews (full-blood relative of decedent)
-→ Half-blood sibling's children = half-blood nieces/nephews
-→ Art. 1006 + Art. 1008: full-blood line gets 2 units; half-blood line gets 1 unit
-→ But within each line, children of the same sibling split their parent's share equally
+  // Step 2: Other collateral relatives (Arts. 1009-1010)
+  return distribute_other_collaterals(amount, collaterals)
+}
+```
 
 ---
 
-## 10. Test Implications
+## Complete Intestate Distribution Algorithm (Master Function)
 
-### Required Test Vectors for `intestate-order`
+```
+function distribute_intestate(estate: Money, heirs: List<Heir>,
+                               decedent: Decedent) -> Map<Heir, DistributionResult> {
+  // ====================================================================
+  // Step 1: Build lines and classify heirs
+  // ====================================================================
+  legit_lines = build_legitimate_lines(decedent, heirs)
+  illegit_lines = build_illegitimate_lines(decedent, heirs)
+  ascendants = get_eligible_ascendants(decedent, heirs)
+  spouse = get_eligible_spouse(heirs)
+  collaterals = get_eligible_collaterals(decedent, heirs)
 
-| Test | Scenario | Key Verification |
-|------|---------|-----------------|
-| T-I1a | 3 LC, no will | Each gets E/3 |
-| T-I1b | 1 LC + 2 dead LC (each with 2 grandchildren) | Survivor gets E/3; each grandchild gets E/6 (per stirpes) |
-| T-I2a | 2 LC + spouse, no will | Each gets E/3 (spouse = child share) |
-| T-I2b | n=1 LC + spouse | Each gets E/2 (not ¼ as in testate T1) |
-| T-I3a | 2 LC + 1 IC, no will | LC: 2E/5 each; IC: E/5 |
-| T-I3b | 1 LC + 3 IC, no will | LC: 2E/5; each IC: E/15 |
-| T-I4a | 2 LC + 2 IC + spouse | u=E/8; LC=2u=E/4; IC=u=E/8; Sp=2u=E/4 |
-| T-I5a | Both parents alive | Each parent: E/2 |
-| T-I5b | Only father alive | Father: E |
-| T-I5c | No parents; 3 paternal grandparents + 1 maternal grandmother | Paternal: E/6 each; maternal: E/2 |
-| T-I6 | Father alive + spouse | Father: E/2; Spouse: E/2 |
-| T-I7 | Mother alive + 2 IC | Mother: E/2; each IC: E/4 |
-| T-I8 | Both parents + 3 IC + spouse | Parents: E/4 each; each IC: E/12; Spouse: E/4 |
-| T-I9a | 2 IC only | Each IC: E/2 |
-| T-I9b | 1 IC + 2 grandchildren (IC's children, IC dead) | 2 IC lines: surviving IC=E/2; grandchild line=E/2 (each grandchild E/4) |
-| T-I10 | 2 IC + spouse | Each IC: E/4; Spouse: E/2 |
-| T-I11 | Spouse only, no siblings | Spouse: E |
-| T-I12a | Spouse + 2 full-blood siblings | Spouse: E/2; each sibling: E/4 |
-| T-I12b | Spouse + 1 full-blood sibling + 1 dead full-blood sibling (2 nieces/nephews) | Spouse: E/2; sibling: E/4; each niece/nephew: E/8 |
-| T-I13a | 2 full + 2 half blood siblings | full each: 2E/6=E/3; half each: E/6 |
-| T-I13b | 1 alive sibling + 3 nieces/nephews of dead sibling | Sibling: E/2; each niece/nephew: E/6 |
-| T-I14 | 3 first cousins (4th degree, no siblings) | Each: E/3 |
-| T-I15 | Second cousins only | State takes E (Art. 1010: 6th degree excluded) |
-| T-EC1 | All 3 children renounce, grandchildren present | Grandchildren inherit per capita in own right (Art. 969) |
-| T-EC2 | 2 children: 1 accepts, 1 renounces | Accepting child: E (full accretion per Art. 1018) |
-| T-EC5 | Sibling's illegitimate child vs legitimate child | Legitimate niece/nephew inherits; illegitimate niece/nephew blocked by Art. 992 |
-| T-EC6 | 2 LC + guilty spouse | 2 LC split E equally (I1); spouse removed per Art. 1002 |
-| T-EC9 | Spouse + IC + brother | Brother excluded; I10 applies (Sp=E/2, IC=E/2) |
+  has_legit = count(legit_lines) > 0
+  has_ascendants = count(ascendants) > 0
+  has_illegit = count(illegit_lines) > 0
+  has_spouse = spouse != null
+  has_siblings = any(c where c.is_sibling_of_decedent OR c.is_child_of_sibling_of_decedent, collaterals)
+  has_any_collateral = count(collaterals) > 0
+
+  // ====================================================================
+  // Step 2: Apply Iron Curtain Rule for illegitimate decedent (Art. 992)
+  // ====================================================================
+  if decedent.is_illegitimate:
+    collaterals = filter_iron_curtain(collaterals, decedent)
+
+  // ====================================================================
+  // Step 3: Mutual exclusion — Group 1 excludes Group 2
+  // ====================================================================
+  if has_legit:
+    has_ascendants = false
+    ascendants = []
+
+  // ====================================================================
+  // Step 4: Determine intestate scenario and distribute
+  // ====================================================================
+  scenario = determine_intestate_scenario(has_legit, has_ascendants,
+                                           has_illegit, has_spouse,
+                                           has_siblings, has_any_collateral)
+
+  raw_shares = match scenario {
+    I1  => distribute_I1(estate, legit_lines)
+    I2  => distribute_I2(estate, legit_lines, spouse)
+    I3  => distribute_I3(estate, legit_lines, illegit_lines)
+    I4  => distribute_I4(estate, legit_lines, illegit_lines, spouse)
+    I5  => distribute_I5(estate, ascendants)
+    I6  => distribute_I6(estate, ascendants, spouse)
+    I7  => distribute_I7(estate, illegit_lines)
+    I8  => distribute_I8(estate, illegit_lines, spouse)
+    I9  => distribute_I9(estate, ascendants, illegit_lines)
+    I10 => distribute_I10(estate, ascendants, illegit_lines, spouse)
+    I11 => distribute_I11(estate, spouse)
+    I12 => distribute_I12(estate, spouse, collaterals)
+    I13 => distribute_collaterals(estate, collaterals)
+    I14 => distribute_other_collaterals(estate, collaterals)
+    I15 => distribute_I15(estate)
+  }
+
+  // ====================================================================
+  // Step 5: Handle accretion for renouncing heirs (Art. 1018)
+  // ====================================================================
+  final_shares = apply_intestate_accretion(raw_shares, heirs, scenario)
+
+  // ====================================================================
+  // Step 6: Generate per-heir DistributionResult with narrative
+  // ====================================================================
+  return generate_results(final_shares, scenario, estate, decedent)
+}
+
+function determine_intestate_scenario(
+    has_legit: bool, has_ascendants: bool, has_illegit: bool,
+    has_spouse: bool, has_siblings: bool, has_any_collateral: bool
+) -> IntestateScenario {
+  match (has_legit, has_ascendants, has_illegit, has_spouse) {
+    (true,  false, false, false) => I1
+    (true,  false, false, true)  => I2
+    (true,  false, true,  false) => I3
+    (true,  false, true,  true)  => I4
+    (false, true,  false, false) => I5
+    (false, true,  false, true)  => I6
+    (false, false, true,  false) => I7
+    (false, false, true,  true)  => I8
+    (false, true,  true,  false) => I9
+    (false, true,  true,  true)  => I10
+    (false, false, false, true)  =>
+      if has_siblings: I12    // Art. 1001: spouse + siblings
+      else: I11               // Spouse alone (remote collaterals excluded by Art. 995)
+    (false, false, false, false) =>
+      if has_any_collateral:
+        if has_siblings: I13  // Siblings/nephews/nieces
+        else: I14             // Other collaterals within 5th degree
+      else: I15               // No heirs → State
+  }
+}
+```
 
 ---
 
-## Key Findings for Engine Builder
+## Intestate Accretion Rules (Art. 1018)
 
-1. **No cap rule in intestate**: The testate Art. 895 ¶3 cap on illegitimate children does NOT apply in intestate. All distributions use the 2:1 unit ratio (I3/I4) or fixed statutory fractions (I7/I8).
+> "In legal succession the share of the person who repudiates the inheritance shall always accrue to his co-heirs." — Art. 1018
 
-2. **Spouse always concurs**: The surviving spouse is NEVER excluded from intestate succession when they are eligible. The spouse concurs with every class.
+When an intestate heir renounces:
 
-3. **Unit ratio formula** for I3/I4 (the most common complex scenario):
-   - `per_unit = estate / (2n + m + (2 if spouse else 0))`
-   - LD line = 2 × per_unit
-   - IC line = 1 × per_unit
-   - Spouse = 2 × per_unit (if present)
+```
+function apply_intestate_accretion(shares: Map<Heir, Money>, heirs: List<Heir>,
+                                    scenario: IntestateScenario) -> Map<Heir, Money> {
+  renouncing = filter(h where h.has_renounced, keys(shares))
 
-4. **Art. 991 vs Art. 983**: IC with ascendants → flat ½ (Art. 991). IC with descendants → 2:1 unit ratio (Art. 983). The formula changes based on which class they concur with.
+  if count(renouncing) == 0:
+    return shares  // No renunciation → no change
 
-5. **Art. 1001 is a narrow exception**: Siblings only participate when there are NO descendants, ascendants, or IC — and even then, only ½ (not the whole estate).
+  for heir in renouncing:
+    vacant_share = shares.remove(heir)
 
-6. **Renunciation → accretion (Art. 1018), not next-degree succession** — unless all nearest relatives repudiate (Art. 969).
+    // Art. 977: renouncing heir CANNOT be represented
+    // Art. 1018: share accrues to co-heirs of the same degree
+    co_heirs = get_co_heirs(heir, shares, scenario)
 
-7. **No representation ascending line** (Art. 972): critical for ascendant distribution algorithm.
+    if count(co_heirs) == 0:
+      // Art. 969: if ALL of same degree renounce → next degree inherits in own right
+      // Must re-evaluate the entire scenario
+      return re_evaluate_scenario(shares, heirs, scenario)
 
-8. **Iron Curtain (Art. 992)** applies in intestate collateral succession: illegitimate nieces/nephews cannot represent their parent to inherit from the parent's legitimate relatives (the decedent).
+    // Accrue proportionally to co-heirs
+    total_co_heir_shares = sum(shares[h] for h in co_heirs)
+    for co_heir in co_heirs:
+      proportion = shares[co_heir] / total_co_heir_shares
+      shares[co_heir] += vacant_share * proportion
 
-9. **Per-stirpes division**: when all children of a class predecease, the grandchildren inherit per capita (not per stirpes) as the nearest surviving degree in their own right.
+  return shares
+}
+```
 
-10. **5th degree limit** (Art. 1010): second cousins (6th degree) and beyond are excluded. State takes the estate if no closer collateral relative exists.
+**Key interaction**: Accretion interacts differently depending on the scenario:
+- **Within same class** (e.g., 3 legitimate children, 1 renounces): share accrues to the other 2 children
+- **Cross-class** (e.g., I4: 2 LC + 1 IC + spouse, IC renounces): whether the IC's share goes only to other ICs, or to ALL co-heirs, is debated. Art. 1018 says "co-heirs" without qualification → the share accrues to ALL remaining heirs in the scenario proportionally. Engine default: accrue to all co-heirs proportionally.
+
+---
+
+## Testate vs Intestate Comparison Table
+
+This table highlights the **economic difference** for each heir combination between testate (minimum: just the legitime) and intestate (full intestate share). The difference represents what the testator could redirect via the free portion if a will existed.
+
+| Scenario | Heirs | Testate Total Compulsory | Intestate Total | Spouse Testate | Spouse Intestate | Spouse Gain (Intestate) |
+|----------|-------|-------------------------|----------------|----------------|-----------------|----------------------|
+| I1/T1 | LC only | ½ (legitime) | 1 (entire) | — | — | — |
+| I2/T2 | 1 LC + S | ¾ (½+¼) | 1 | ¼ | ½ | +100% |
+| I2/T3 | 2 LC + S | ⅚ (½+⅙+⅙) → ⅔ for 2LC+S | 1 | 1/(2n) | 1/(n+1) | +33-100% |
+| I3/T4 | LC + IC | > ½ (depends) | 1 | — | — | — |
+| I6/T7 | Parents + S | ¾ (½+¼) | 1 | ¼ | ½ | +100% |
+| I8/T10 | IC + S | ⅔ (⅓+⅓) | 1 | ⅓ | ½ | +50% |
+| I10/T9 | Asc+IC+S | ⅞ (½+¼+⅛) | 1 | ⅛ | ¼ | +100% |
+
+**Key insight**: In intestate succession, the surviving spouse ALWAYS receives more than their testate legitime. This is because the free portion (which the testator controls in testate) gets absorbed into the intestate shares — and the spouse consistently benefits from this absorption.
+
+---
+
+## Interaction with Representation
+
+Representation integrates seamlessly with the intestate distribution:
+
+1. **Before scenario determination**: Build lines (Step 1.5). Each represented line counts as ONE heir for scenario purposes.
+2. **During distribution**: Each line receives its computed share. Within a represented line, per stirpes division applies.
+3. **Line counting**: The number of legitimate lines determines per-share value in I1, I2, I3, I4. Represented lines are counted just like living children.
+
+```
+// Helper used by all I1-I4 scenarios
+function distribute_line_share(line_share: Money, line: LineInfo,
+                                result: Map<Heir, Money>) {
+  if line.mode == OWN_RIGHT:
+    result[line.original_heir] = line_share
+  else:  // REPRESENTATION
+    per_rep = line_share / count(line.representatives)
+    for rep in line.representatives:
+      result[rep] = per_rep
+}
+```
+
+---
+
+## Interaction with Mixed Succession (Art. 960(2))
+
+When a will partially disposes of the estate, the undisposed remainder distributes per intestate rules:
+
+```
+function distribute_mixed(estate: Money, will: Will, heirs: List<Heir>,
+                           decedent: Decedent) -> Map<Heir, DistributionResult> {
+  // Step 1: Compute total legitime and validate will
+  legitime_total = compute_total_legitime(estate, heirs)
+  free_portion = estate - legitime_total
+
+  // Step 2: Satisfy will dispositions (within free portion)
+  will_distributed = satisfy_will(will, free_portion, heirs)
+
+  // Step 3: Compute undisposed remainder
+  will_total = sum(will_distributed.values())
+  remainder = estate - legitime_total - will_total
+
+  // Step 4: Distribute remainder per intestate rules
+  if remainder > 0:
+    intestate_shares = distribute_intestate(remainder, heirs, decedent)
+    // Combine with legitime and will distributions
+    return combine_distributions(legitime_total, will_distributed, intestate_shares, heirs)
+
+  // Step 5: If will disposes of everything within free portion
+  return generate_testate_results(legitime_total, will_distributed, heirs)
+}
+```
+
+---
+
+## Edge Cases
+
+### 1. Legal Separation — Guilty Spouse (Art. 1002)
+
+> "In case of a legal separation, if the surviving spouse gave cause for the separation, he or she shall not have any of the rights granted in the preceding articles."
+
+The guilty spouse is **completely excluded** from intestate succession. The engine must:
+- Remove the spouse from the heir pool before scenario determination
+- Re-evaluate which scenario applies (e.g., I4 without spouse becomes I3)
+
+### 2. All Nearest Relatives Renounce (Art. 969)
+
+> "If the inheritance should be repudiated by the nearest relative, should there be one only, or by all the nearest relatives called by law to succeed, should there be several, those of the following degree shall inherit in their own right and cannot represent the person or persons repudiating the inheritance."
+
+When ALL heirs of the nearest degree renounce:
+- Next degree inherits **in their own right** (NOT by representation)
+- The engine must re-run scenario determination with the renouncing heirs removed
+- Art. 977 confirms: children of renouncing heirs cannot represent them
+
+### 3. Simultaneous Death (Commorientes)
+
+If the decedent and an heir die simultaneously (and it cannot be determined who died first), Art. 43 of the Civil Code provides:
+> "If there is a doubt, as between two or more persons who are called to succeed each other, as to which of them died first, whoever alleges the death of one prior to the other, shall prove the same; in the absence of proof, it is presumed that they died at the same time and there shall be no transmission of rights from one to the other."
+
+**Engine logic**: If simultaneous death with an heir → that heir is treated as predeceased → representation applies (if eligible).
+
+### 4. Unworthiness to Succeed (Art. 1032)
+
+An unworthy heir is excluded from intestate succession. If the unworthy heir is a child/descendant:
+- Art. 1035: their children/descendants acquire the right to the legitime
+- Engine: treat like predecease for representation purposes (their descendants step in)
+
+### 5. Art. 992 Iron Curtain in Intestate
+
+The Iron Curtain Rule is specific to intestate succession. In the engine's heir filtering:
+
+```
+function filter_iron_curtain(heirs: List<Heir>, decedent: Decedent) -> List<Heir> {
+  if NOT decedent.is_illegitimate:
+    return heirs  // Rule only applies when DECEDENT is illegitimate
+
+  // Filter out legitimate relatives of decedent's parents
+  // who are NOT the decedent's own descendants or parents
+  return filter(h where NOT is_blocked_by_iron_curtain(h, decedent), heirs)
+}
+
+function is_blocked_by_iron_curtain(heir: Heir, decedent: Decedent) -> bool {
+  // Art. 992: An illegitimate child has no right to inherit ab intestato
+  // from the legitimate children and relatives of his father or mother
+  // (nor vice versa)
+  if heir.is_legitimate_relative_of(decedent.father) AND
+     heir != decedent.father:
+    return true
+  if heir.is_legitimate_relative_of(decedent.mother) AND
+     heir != decedent.mother:
+    return true
+  return false
+}
+```
+
+### 6. Spouse Concurring with Siblings vs Remote Collaterals
+
+Art. 1001 only allows **siblings and their children** to concur with the spouse. If the only surviving collaterals are more remote (e.g., first cousins), the spouse takes the entire estate per Art. 995. The engine must distinguish:
+
+```
+function spouse_collateral_concurrence(spouse: Heir, collaterals: List<Heir>) -> IntestateScenario {
+  siblings_or_nephews = filter(c where c.is_sibling_of_decedent
+    OR c.is_child_of_sibling_of_decedent, collaterals)
+
+  if count(siblings_or_nephews) > 0:
+    return I12  // Art. 1001: ½ spouse, ½ siblings
+  else:
+    return I11  // Art. 995: entire estate to spouse (remote collaterals excluded)
+}
+```
+
+### 7. Half-Blood Siblings from Different Parents
+
+Art. 1007: Half-blood siblings "on the father's and some on the mother's side" inherit in equal shares "without distinction as to the origin of the property."
+
+```
+// Art. 1007: all half-blood from different parents → equal shares
+// This overrides any line-based logic when only half-blood siblings survive
+// Example: Decedent has half-sibling A (same father) and half-sibling B (same mother)
+// A and B inherit equally
+```
+
+### 8. The 5th Degree Limit (Art. 1010)
+
+Collateral relatives beyond the 5th degree CANNOT inherit intestate. If the nearest surviving collateral is at the 6th degree or beyond, the estate escheats to the State.
+
+### 9. Art. 984 — Death of an Adopted Child
+
+> "In case of the death of an adopted child, leaving no children or descendants, his parents and relatives by consanguinity and not by adoption, shall be his legal heirs."
+
+**Note**: This article has been superseded by RA 8552 and RA 11642. Under RA 8552, the adopter's family inherits (not biological relatives). Under RA 11642, the scope is further expanded. The engine should apply the statute in effect at the time of the decedent's death (see adopted-children-rights analysis for full regime handling).
+
+---
+
+## Test Implications
+
+### Scenario Determination Tests
+
+| # | Surviving Heirs | Expected Scenario |
+|---|----------------|------------------|
+| 1 | 3 legitimate children | I1 |
+| 2 | 2 legitimate children + spouse | I2 |
+| 3 | 2 legitimate + 1 illegitimate | I3 |
+| 4 | 2 legitimate + 1 illegitimate + spouse | I4 |
+| 5 | Both parents (no descendants) | I5 |
+| 6 | Both parents + spouse | I6 |
+| 7 | 3 illegitimate children | I7 |
+| 8 | 2 illegitimate + spouse | I8 |
+| 9 | Both parents + 2 illegitimate | I9 |
+| 10 | Both parents + 1 illegitimate + spouse | I10 |
+| 11 | Spouse only | I11 |
+| 12 | Spouse + 2 siblings | I12 |
+| 13 | 3 siblings (full blood) | I13 |
+| 14 | No heirs at all | I15 |
+
+### Distribution Amount Tests (Estate = ₱12,000,000)
+
+| # | Scenario | Heirs | Expected Distribution |
+|---|----------|-------|----------------------|
+| 15 | I1 | 3 LC | LC1: ₱4M, LC2: ₱4M, LC3: ₱4M |
+| 16 | I2 | 3 LC + S | Each: ₱3M (4 equal shares) |
+| 17 | I3 | 2 LC + 2 IC | LC each: ₱4M (2 units), IC each: ₱2M (1 unit); total 6 units |
+| 18 | I4 | 2 LC + 1 IC + S | Units: 2+2+1+2=7; per unit: ₱12M/7=₱1,714,286; LC: ₱3,428,571; IC: ₱1,714,286; S: ₱3,428,571 |
+| 19 | I5 | Both parents | F: ₱6M, M: ₱6M |
+| 20 | I6 | Both parents + S | F: ₱3M, M: ₱3M, S: ₱6M |
+| 21 | I7 | 3 IC | Each: ₱4M |
+| 22 | I8 | 2 IC + S | S: ₱6M, IC1: ₱3M, IC2: ₱3M |
+| 23 | I9 | Both parents + 2 IC | F: ₱3M, M: ₱3M, IC1: ₱3M, IC2: ₱3M |
+| 24 | I10 | Both parents + 2 IC + S | F: ₱3M, M: ₱3M, IC1: ₱1.5M, IC2: ₱1.5M, S: ₱3M |
+| 25 | I11 | S only | S: ₱12M |
+| 26 | I12 | S + 2 full-blood siblings | S: ₱6M, Sib1: ₱3M, Sib2: ₱3M |
+| 27 | I13 | 2 full + 1 half-blood siblings | Full: ₱4.8M each (2 units), Half: ₱2.4M (1 unit); total 5 units |
+
+### Representation Integration Tests
+
+| # | Scenario | Heirs | Expected Distribution |
+|---|----------|-------|----------------------|
+| 28 | I1 + rep | 2 LC alive + 1 predeceased LC with 3 GC | 3 lines: LC1 ₱4M, LC2 ₱4M, GC1 ₱1.33M, GC2 ₱1.33M, GC3 ₱1.33M |
+| 29 | I2 + rep | 1 LC alive + 1 predeceased LC with 2 GC + S | 3 shares (2 lines + S): LC ₱4M, GC1 ₱2M, GC2 ₱2M, S ₱4M |
+| 30 | I4 + rep | 1 LC alive + 1 predeceased LC with 1 GC + 1 IC + S | Units: 2+2+1+2=7; per unit ₱12M/7; LC ₱3.43M, GC ₱3.43M, IC ₱1.71M, S ₱3.43M |
+
+### Collateral Distribution Tests
+
+| # | Scenario | Heirs | Expected Distribution |
+|---|----------|-------|----------------------|
+| 31 | I13 full+half | 2 full-blood + 2 half-blood siblings | Full: ₱4M each (2u), Half: ₱2M each (1u); 6 units total |
+| 32 | I13a sib+nephew | 1 sibling + 2 nephews (of predeceased sibling), all full blood | Sibling: ₱6M; N1: ₱3M, N2: ₱3M (per stirpes) |
+| 33 | I13b nephews only | 3 nephews from 2 predeceased siblings | Per capita (Art. 975): ₱4M each |
+| 34 | I12 + half blood | S + 1 full-blood sib + 1 half-blood sib | S: ₱6M; Full sib: ₱4M (2u of ₱6M/3u); Half sib: ₱2M (1u of ₱6M/3u) |
+
+### Edge Case Tests
+
+| # | Scenario | Expected Result |
+|---|----------|----------------|
+| 35 | I2 with guilty spouse (Art. 1002) | Spouse excluded → falls to I1 |
+| 36 | I1 with 1 child renouncing (of 3) | Renouncing child's share accrues to 2 remaining (Art. 1018) |
+| 37 | I1 with ALL children renouncing, parents survive | Re-evaluate: falls to I5 (Art. 969) |
+| 38 | Spouse + first cousins (no siblings) | I11 (cousins excluded; Art. 1001 only applies to siblings) |
+| 39 | Collateral at 6th degree, no one else | I15 (Art. 1010 bars beyond 5th degree → State) |
+| 40 | I4 with IC renouncing | IC's share accrues to all co-heirs proportionally |
+| 41 | Illegitimate decedent with half-siblings | Art. 992 Iron Curtain → half-siblings excluded |
+
+### Testate vs Intestate Comparison Tests (Estate = ₱12,000,000)
+
+| # | Heirs | Spouse Testate Legitime | Spouse Intestate Share | Difference |
+|---|-------|------------------------|-----------------------|-----------|
+| 42 | 1 LC + S | ₱3M (¼) | ₱6M (½) | +₱3M (+100%) |
+| 43 | 3 LC + S | ₱1.5M (⅛) | ₱3M (¼) | +₱1.5M (+100%) |
+| 44 | Parents + S | ₱3M (¼) | ₱6M (½) | +₱3M (+100%) |
+| 45 | 2 IC + S | ₱4M (⅓) | ₱6M (½) | +₱2M (+50%) |
+| 46 | Parents + 1 IC + S | ₱1.5M (⅛) | ₱3M (¼) | +₱1.5M (+100%) |
+
+---
+
+## Narrative Template for Intestate Distribution
+
+The narrative for each intestate heir must explain:
+1. The succession type (intestate) and why (no will / void will / undisposed portion)
+2. The applicable scenario and legal basis
+3. The computation method (equal shares / ratio method / fixed fractions)
+4. The specific articles that determine their share
+
+### Template Examples
+
+**For I2 (Legitimate Children + Spouse)**:
+> **{heir_name} ({relationship})** receives **₱{amount}**.
+> The decedent died intestate (without a valid will). Under Art. 996 of the Civil Code, when legitimate children or descendants and a surviving spouse survive the decedent, the surviving spouse receives a share equal to that of each legitimate child. With {n} legitimate children and the surviving spouse, the ₱{estate} estate is divided into {n+1} equal shares of ₱{per_share} each.
+
+**For I4 (Legitimate + Illegitimate + Spouse, ratio method)**:
+> **{heir_name} (illegitimate child)** receives **₱{amount}**.
+> The decedent died intestate. Under Art. 999, the surviving spouse receives the same share as a legitimate child. Under Arts. 983 and 895, each illegitimate child receives one-half (½) the share of a legitimate child. Using the ratio method: each legitimate child = 2 units, each illegitimate child = 1 unit, surviving spouse = 2 units. Total units = {total}. Per unit = ₱{estate}/{total} = ₱{per_unit}. As an illegitimate child (1 unit), {heir_name} receives ₱{amount}.
+
+**For I12 (Spouse + Siblings)**:
+> **{heir_name} (surviving spouse)** receives **₱{amount}**.
+> The decedent died intestate with no descendants, ascendants, or illegitimate children. Under Art. 1001 of the Civil Code, when brothers and sisters or their children survive with the surviving spouse, the spouse receives one-half (½) of the estate and the siblings receive the other half. The surviving spouse therefore receives ₱{estate/2}.
+
+**For I13 (Siblings with full/half blood)**:
+> **{heir_name} (half-blood sibling)** receives **₱{amount}**.
+> The decedent died intestate with no descendants, ascendants, illegitimate children, or surviving spouse. Under Art. 1006 of the Civil Code, when siblings of the full blood and half blood survive together, full-blood siblings receive double the share of half-blood siblings. Using the unit method: each full-blood sibling = 2 units, each half-blood sibling = 1 unit. Total units = {total}. {heir_name}, as a half-blood sibling (1 unit), receives ₱{amount}.
+
+**For I15 (Escheat to State)**:
+> The decedent died intestate with no surviving heirs within the degrees prescribed by law. Under Art. 1011 of the Civil Code, the State inherits the entire estate. Per Art. 1013, personal property is assigned to the municipality/city of the decedent's last residence, and real estate to the municipalities/cities where situated, for the benefit of public schools and charitable institutions. Under Art. 1014, a legitimate heir may reclaim the estate within five (5) years from delivery to the State.
+
+---
+
+## Data Model Additions
+
+### IntestateScenario Enum
+
+```
+enum IntestateScenario {
+  I1,   // Legitimate children only (Art. 980)
+  I2,   // Legitimate children + spouse (Arts. 994, 996)
+  I3,   // Legitimate + illegitimate children (Arts. 983, 895)
+  I4,   // Legitimate + illegitimate + spouse (Arts. 999, 983, 895)
+  I5,   // Legitimate ascendants only (Arts. 985, 986, 987)
+  I6,   // Legitimate ascendants + spouse (Art. 997)
+  I7,   // Illegitimate children only (Art. 988)
+  I8,   // Illegitimate children + spouse (Art. 998)
+  I9,   // Legitimate ascendants + illegitimate children (Art. 991)
+  I10,  // Legitimate ascendants + illegitimate + spouse (Art. 1000)
+  I11,  // Surviving spouse only (Art. 995)
+  I12,  // Surviving spouse + siblings (Art. 1001)
+  I13,  // Collateral relatives — siblings/nephews/nieces (Arts. 1003-1008)
+  I14,  // Collateral relatives — other within 5th degree (Arts. 1009-1010)
+  I15,  // No heirs — State (Arts. 1011-1014)
+}
+```
+
+### CollateralHeir Struct
+
+```
+struct CollateralHeir {
+  heir: Heir,
+  collateral_degree: int,         // degree of collateral relationship (2=sibling, 3=nephew, etc.)
+  is_sibling_of_decedent: bool,
+  is_child_of_sibling: bool,      // nephew/niece
+  blood_type: BloodType,          // FULL or HALF (Art. 967)
+  sibling_parent_side: ParentSide | null,  // PATERNAL or MATERNAL (for half-blood)
+}
+
+enum BloodType { FULL, HALF }
+enum ParentSide { PATERNAL, MATERNAL }
+```
+
+### SiblingLine Struct (for collateral representation)
+
+```
+struct SiblingLine {
+  original_sibling: Heir,
+  blood_type: BloodType,
+  mode: InheritanceMode,         // OWN_RIGHT or REPRESENTATION
+  representatives: List<Heir>,   // nephews/nieces if represented
+}
+```
+
+---
+
+## Summary: Key Rules for the Engine
+
+1. **No free portion in intestate**: The ENTIRE estate distributes to intestate heirs. There is no testator-controlled portion.
+2. **No cap rule in intestate**: Art. 895 ¶3 cap does NOT apply. The 2:1 ratio (LC:IC) distributes the full estate proportionally.
+3. **Spouse always gets more intestate**: In every scenario where a spouse concurs with other heirs, the intestate share exceeds the testate legitime.
+4. **Art. 1001 is the only cross-class concurrence**: Collaterals only concur with spouse, and only if siblings/nephews/nieces.
+5. **Art. 995 scope limitation**: Spouse takes entire estate UNLESS siblings/nephews/nieces survive (Art. 1001). More remote collaterals are excluded.
+6. **Full/half blood rule**: Applies to siblings (Art. 1006) and their children (Art. 1008). Does NOT apply to other collaterals (Art. 1009: "without distinction of lines or preference among them by reason of relationship by the whole blood").
+7. **5th degree limit**: Art. 1010 — intestate inheritance through collateral line stops at 5th degree. Beyond that → State.
+8. **Art. 969 re-evaluation**: When ALL nearest relatives renounce, re-run scenario determination with them removed. Next degree inherits in own right, not by representation.
+9. **Illegitimate decedent**: Art. 992 Iron Curtain applies in intestate only. Filter out parent's legitimate relatives before scenario determination.
+10. **Guilty spouse exclusion**: Art. 1002 removes guilty spouse from ALL intestate scenarios. The scenario shifts as if no spouse existed.
+
+---
+
+*Analysis based on Civil Code Arts. 960-1014, 1015-1023, 1025, 1032-1035, 1041-1057; Family Code Art. 176; RA 8552 Sec. 17.*
