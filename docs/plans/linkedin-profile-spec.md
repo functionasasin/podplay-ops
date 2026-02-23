@@ -16,22 +16,22 @@ Do this first — URL changes propagate slowly.
 ## 2. Headline
 
 ```
-AI Agent Infrastructure Engineer | PyMC Labs · Nuts and Bolts AI | Deploying sports-tech franchise across Southeast Asia
+AI Agent Infrastructure Engineer | PyMC Labs · Nuts and Bolts AI | Mama Sita's across Gulfood, THAIFEX, SIAL, Tuttofood
 ```
 
-**120 characters.** Under the 220-char limit with room to spare.
+**119 characters.** Under the 220-char limit with room to spare.
 
 Why this works:
 - First 40 chars ("AI Agent Infrastructure Engineer") are the SEO payload — this is what LinkedIn search indexes hardest
 - Two named orgs (PyMC Labs, Nuts and Bolts AI) provide institutional anchors a reader can verify
-- "Deploying sports-tech franchise across Southeast Asia" is the disorienting detail — cognitive dissonance that makes someone click the profile
+- "Mama Sita's across Gulfood, THAIFEX, SIAL, Tuttofood" is the disorienting detail — an AI engineer who also works international food trade shows. The show names are verification bait for anyone in food/CPG
 - Pipes (`|`) separate cleanly on mobile and desktop
 
 **Alternate if you want more personality:**
 ```
-I build agent infrastructure that runs unattended. Also: franchise distribution across Southeast Asia. | PyMC Labs · Nuts and Bolts AI
+I build agent infrastructure that runs unattended. Also: running Mama Sita's at food trade shows across 6 countries. | PyMC Labs · Nuts and Bolts AI
 ```
-(133 chars. More voice, slightly less SEO-optimized.)
+(148 chars. More voice, slightly less SEO-optimized.)
 
 ---
 
@@ -40,25 +40,25 @@ I build agent infrastructure that runs unattended. Also: franchise distribution 
 Paste this exactly. ~1,730 characters. First 277 characters are the hook — they appear before "See more" on desktop (~300 char cutoff) and are tight enough for mobile (~140-200 char cutoff to still land the core idea).
 
 ```
-I build autonomous agent systems that run unattended in CI pipelines — then apply the same pipeline thinking to deploying a sports-tech franchise across the Philippines, Singapore, Thailand, and Indonesia. The architecture is always the same. The domains keep changing.
+I build autonomous agent systems that run unattended in CI pipelines — then I fly to Dubai, Bangkok, Tokyo, Milan, and Paris to run export ops for Mama Sita's at international food trade shows. The architecture is always the same. The domains keep changing.
 
-At PyMC Labs, I'm core engineer on Decision Orchestrator — a Discord-based organizational OS where database-driven workflows route to Claude agents through a custom MCP tool server I built at the protocol level. At Nuts and Bolts AI, I built Cheerful: a full-stack influencer marketing platform running on Temporal.io durable workflows, React 19, and AI-personalized email drafting at scale. In parallel, I hold master distribution rights for Pod Play and Ping Pod across Southeast Asia — structuring franchise deals with partners including Central Group Thailand.
+At PyMC Labs, I'm core engineer on Decision Orchestrator — a Discord-based organizational OS where database-driven workflows route to Claude agents through a custom MCP tool server I built at the protocol level. At Nuts and Bolts AI, I built Cheerful: a full-stack influencer marketing platform running on Temporal.io durable workflows, React 19, and AI-personalized email drafting at scale. In parallel, I represent Mama Sita's at tier-1 trade exhibitions — Gulfood, THAIFEX, FOODEX, SIAL, Tuttofood — across 6 countries.
 
 The pattern across everything I build is the same: detect the input, classify it, route to the right workflow, execute autonomously, persist the result. I've applied this to edge-cloud license plate recognition (IEEE TENCON 2022, co-author), game strategy AI (AlphaZero from scratch, MCTS + neural network value heads), and a personal knowledge graph managed by a Telegram bot that auto-commits entities to git.
 
-Some numbers: 1,000+ commits across two production AI platforms. 36K lines of Python in one codebase. Custom MCP server with scope-based credential gating. Digital wallet on Stripe + Magpie fintech. IEEE co-author, TENCON 2022.
+Some numbers: 1,000+ commits across two production AI platforms. 36K lines of Python in one codebase. Custom MCP server with scope-based credential gating. ~8 international trade shows across 6 countries. IEEE co-author, TENCON 2022.
 
-Right now I'm running ralph loops — autonomous CI agents that analyze reference material, generate specs, and build toward convergence every 30 minutes. One is building a video engine. Another built this profile. The loop runs without me.
+Right now I'm running ralph loops — autonomous CI agents that analyze reference material, generate specs, and build toward convergence every 30 minutes. One is building a video engine. Another built this profile. The loop runs without me. When the loop lets me, I snowboard and dive.
 
-If you build agent infrastructure, operate in Southeast Asia, or think Bayesian reasoning matters more than fine-tuning — let's talk.
+If you build agent infrastructure, work in international trade, or think context matters more than fine-tuning — let's talk.
 ```
 
 **Structural breakdown:**
-- **Hook (277 chars):** Cognitive dissonance — agent systems + SEA franchise. Lands before "See more."
-- **What I'm building now:** Names both orgs, both products, and the franchise. Present tense. Specific.
+- **Hook (~250 chars):** Cognitive dissonance — agent systems + Mama Sita's trade shows across 6 countries. Lands before "See more."
+- **What I'm building now:** Names both orgs, both products, and the trade show circuit. Present tense. Specific.
 - **The thread:** The pipeline pattern that connects everything. Shows coherence, not scatter.
-- **Receipts:** Verifiable numbers. Every named thing (PyMC Labs, IEEE TENCON, Central Group, Temporal.io) rewards the reader who checks.
-- **Forward motion:** Ralph loops. "The loop runs without me." Signals still building, not resting.
+- **Receipts:** Verifiable numbers. Every named thing (PyMC Labs, IEEE TENCON, Gulfood, THAIFEX, Temporal.io) rewards the reader who checks.
+- **Forward motion:** Ralph loops. "The loop runs without me." Snowboarding + diving as lifestyle texture. Signals still building, not resting.
 - **CTA:** Peer-level. Not "hire me." Three specific interest filters.
 
 ---
@@ -69,32 +69,30 @@ Ordered most recent first. All entries fit within LinkedIn's 2,000-char descript
 
 ---
 
-### Entry 1: Pod Play SEA / Ping Pod
+### Entry 1: Mama Sita's — International Trade
 
 | Field | Value |
 |-------|-------|
-| **Title** | Head of Southeast Asia Distribution |
-| **Company** | Pod Play / Ping Pod |
-| **Date** | 2025 – Present |
-| **Location** | Philippines · Southeast Asia |
+| **Title** | International Trade & Market Development |
+| **Company** | Mama Sita's |
+| **Date** | 2023 – Present |
+| **Location** | Philippines · UAE · Thailand · Japan · Italy · France |
 
 **Description:**
 
 ```
-Master distributor for Pod Play (venue booking platform) and Ping Pod (table tennis franchise) across Southeast Asia — Philippines, Singapore, Thailand, Indonesia. Building the technical infrastructure, payment systems, and franchise deals simultaneously.
+Representing Mama Sita's — one of the Philippines' most recognized food brands — at tier-1 international trade exhibitions across 6 countries. ~8 shows and counting: Gulfood (Dubai), THAIFEX (Bangkok), FOODEX (Japan), SIAL (Paris), Tuttofood (Milan), IFEX (Manila).
 
-• Secured master distribution rights across 4 countries; structuring franchise deals including Central Group (Thailand) — one of Asia's largest conglomerates
+• End-to-end trade show operations across 6 countries: booth setup, product positioning, buyer engagement, and teardown — UAE, Thailand, Japan, Italy, France, Philippines
 
-• Architected digital wallet / stored-value payment platform with Magpie (Philippine fintech partner): GCash + credit card support, Stripe Payment Elements, float economics at scale
+• B2B meetings with distributors, importers, and retail buyers — representing the brand to new markets across Middle East, Southeast Asia, and Europe
 
-• Deploying hybrid cloud + on-premises venue infrastructure: cloud admin APIs + local Mac Mini relay nodes with cameras and iPads per venue
+• Competitive intelligence at each exhibition: scouting regional product trends, pricing models, distribution strategies, and emerging market opportunities
 
-• Designed revenue model architecture: 70/30 upcharge split, cross-venue credit ecosystem, per-country regulatory compliance (withholding tax, fintech licensing)
-
-• First venue (Tela Park, Las Piñas) in active deployment; hardware/integration training at Ping Pod HQ (Jersey City, NJ) scheduled March 2026
+• Repeat presence at Gulfood (2x) and THAIFEX (2x) — established relationships and iterative market development across key regions
 ```
 
-**Why this leads:** Most disorienting entry. A reader who sees the AI headline then reads "Central Group Thailand" and "4-country franchise" will stop and re-read the profile. This is the cognitive dissonance engine.
+**Why this leads:** Most disorienting entry. A reader who sees the AI headline then reads "Mama Sita's" and "Gulfood, THAIFEX, FOODEX, SIAL, Tuttofood" will stop and re-read the profile. The trade show names are verification bait — anyone in food/CPG instantly knows these are tier-1. Grittier and more grounded than a startup story.
 
 ---
 
@@ -189,14 +187,14 @@ Computer vision research and applied ML, from university through independent wor
 
 The four entries are ordered for maximum cognitive dissonance:
 
-1. **Pod Play SEA** → "Wait, this AI engineer is a franchise operator dealing with Central Group?"
+1. **Mama Sita's** → "Wait, this AI engineer works international food trade shows across 6 countries?"
 2. **PyMC Labs** → "Oh, and they built a custom MCP server for a respected stats org..."
 3. **Nuts and Bolts AI** → "And a full-stack SaaS with Temporal.io and React 19..."
 4. **Independent Research** → "And they published at IEEE and built AlphaZero from scratch."
 
-Each entry deepens the "this person is dangerous" impression. The range is disorienting but the through-line (pipeline architecture, spec-first, agent-native) makes it coherent.
+Each entry deepens the "this person is dangerous" impression. The range is disorienting but the through-line (pipeline architecture, spec-first, agent-native) makes it coherent. The Mama Sita's entry is grittier than a startup story — it signals real-world operator experience, not pitch-deck credibility.
 
-Note: Entries 1, 2, and 3 overlap (all 2024/2025–present). This is intentional and signals high output.
+Note: Entries 1, 2, and 3 overlap (all 2023/2024–present). This is intentional and signals high output.
 
 ---
 
@@ -246,9 +244,9 @@ LinkedIn allows up to 50 skills. Top 3 are most visible (shown on profile card).
 20. FFmpeg / Video Processing
 
 ### Tier 4: Domain Skills (positions 21-30)
-21. Franchise Operations
-22. Fintech / Payment Systems
-23. Southeast Asia Market
+21. International Trade Shows
+22. Food & Beverage Industry
+23. Market Development
 24. Reinforcement Learning
 25. YOLO / Object Detection
 26. Keras / TensorFlow
@@ -306,11 +304,11 @@ Update in this exact order. Each step is independent — you can paste and move 
 - [ ] **Headline** → Click pencil icon on profile card → paste headline
 - [ ] **About** → Click pencil on About section → paste full about text
 - [ ] **Featured** → Add Featured → Link → paste URLs in order (IEEE paper first)
-- [ ] **Experience Entry 1** → Add Experience → Pod Play / Ping Pod → paste all fields
+- [ ] **Experience Entry 1** → Add Experience → Mama Sita's → paste all fields
 - [ ] **Experience Entry 2** → Add Experience → PyMC Labs → paste all fields
 - [ ] **Experience Entry 3** → Add Experience → Nuts and Bolts AI → paste all fields
 - [ ] **Experience Entry 4** → Add Experience → Independent → paste all fields
-- [ ] **Reorder Experience** → Drag entries into the order shown (Pod Play first)
+- [ ] **Reorder Experience** → Drag entries into the order shown (Mama Sita's first)
 - [ ] **Publications** → Add Publications → paste IEEE paper details
 - [ ] **Skills** → Add skills in tier order → pin top 3 (AI Agent Infrastructure, Python, Machine Learning)
 - [ ] **Profile Photo** → Upload current headshot
@@ -327,7 +325,7 @@ Update in this exact order. Each step is independent — you can paste and move 
 - No "About" section that starts with "I am passionate about..." or "With over X years of experience..."
 - No buzzword skills without shipped proof (e.g., don't add "Blockchain" unless there's a shipped project)
 - No endorsement-farming. Let skills accrue naturally.
-- No posts that are LinkedIn influencer content. If posting, post about what you're building — the ralph loops, the franchise deployment, the technical decisions. Show the work.
+- No posts that are LinkedIn influencer content. If posting, post about what you're building — the ralph loops, the trade show circuit, the technical decisions. Show the work.
 
 ---
 
@@ -338,7 +336,7 @@ Update in this exact order. Each step is independent — you can paste and move 
 **YES:**
 - "I built a custom MCP tool server at the protocol level — not a FastMCP wrapper."
 - "The loop runs without me."
-- "Master distribution rights across 4 countries."
+- "~8 trade shows across 6 countries. Gulfood, THAIFEX, FOODEX, SIAL, Tuttofood."
 
 **NO:**
 - "I am passionate about leveraging AI to drive impact..."
