@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 34
-- Analyzed: 22
-- Pending: 12
-- Convergence: 65%
+- Analyzed: 23
+- Pending: 11
+- Convergence: 68%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -35,7 +35,7 @@
 
 ### Wave 3: Pre-TRAIN Rule Extraction (deaths before Jan 1, 2018)
 - [x] tax-rate-pre-train — Original NIRC Sec. 84: graduated rate schedule (5%-20%) with brackets
-- [ ] deductions-pre-train-diffs — Deduction amounts/rules that differ from TRAIN-era (old standard deduction, old family home cap, etc.)
+- [x] deductions-pre-train-diffs — Deduction amounts/rules that differ from TRAIN-era (old standard deduction, old family home cap, etc.)
 - [ ] pre-train-computation-flow — End-to-end computation differences from TRAIN-era (graduated rate application, different thresholds)
 
 ### Wave 4: Estate Tax Amnesty (RA 11213/11569)
@@ -57,6 +57,7 @@
 - [ ] spec-review — Self-review: can a developer with no context build the engine?
 
 ## Recently Analyzed
+- [x] deductions-pre-train-diffs — 2026-02-24 — Two pre-TRAIN-only deductions: (1) Funeral expenses: min(actual, 5% × gross estate) — REMOVED by TRAIN; (2) Judicial/admin expenses: actual, no cap — REMOVED by TRAIN. Two deductions with different amounts: standard deduction ₱1M vs. ₱5M (TRAIN); family home cap ₱1M vs. ₱10M (TRAIN). All other deductions (medical ₱500K, ELIT items, vanishing, public transfers, RA4917, spouse share) are IDENTICAL across regimes. Engine branching: regime == "pre_TRAIN" enables funeralExpenses + judicialAdminExpenses inputs and applies lower standard/family home amounts. Funeral 5% limit uses gross estate TOTAL (Item 34) — must finalize gross estate before computing funeral deduction limit. NRA: proportional formula (Sec. 86B) applies to pre-TRAIN-only items. Amnesty: does NOT include funeral/judicial expenses — amnesty restricts deductions further. 12 edge cases, 12 test implications. Commentary Sample 5 confirmed: ₱8M CPG estate (2015) → tax ₱91,000.
 - [x] exemptions — 2026-02-24 — Sec. 87: four exempt transfers — (a) personal usufruct merger (excluded from gross estate; Sec. 87(a) does NOT apply to naked owner or fixed-term usufruct); (b)/(c) fiduciary/fideicommissary transmission (excluded from pass-through estate); (d) charitable bequests to qualifying PRIVATE institutions (excluded from gross estate — critical: this is NOT the same as Sec. 86(A)(3) government transfers which are deducted via Schedule 5F). Sec. 87 not amended by TRAIN — applies identically across TRAIN, pre-TRAIN, and amnesty regimes. No Form 1801 schedule for Sec. 87 exemptions: they are pre-computation exclusions. Engine runs Sec. 87 filter before populating gross estate schedules. 87(d) conditions: no income inures to individual + admin ≤ 30%. Partial bequest (fraction of asset) supported. Foreign charities excluded. Fixed-term usufruct IS includable at Sec. 88(A) actuarial value. 10 edge cases, 10 test implications.
 - [x] deduction-family-home — 2026-02-23 — Sec. 86(A)(5): TRAIN cap ₱10M; pre-TRAIN/amnesty cap ₱1M. Exclusive: min(FMV, cap). Conjugal/communal: min(FMV×0.5, cap) — decedent's share only; spouse's ½ handled at Item 39. Requires: barangay certification, actual residence at death, citizen/resident only, one property max. Gross estate (Item 30/Sched 1A) shows full FMV; deduction (Item 37B) shows capped/halved amount. Legal ambiguity flagged: sample computations show full FMV for conjugal but NIRC text says ½ — engine implements ½ (recommend verify against BIR RR 12-2018). Correction to form-1801-fields.md Validation Rule 8 documented. 12 test implications. Amnesty path: available with ₱1M cap.
 - [x] deduction-vanishing — 2026-02-23 — Sec. 86(A)(2): 5-step formula (IV=min(prior,current FMV); NV=IV−mortgage; ratio=(GE−ELIT)/GE; pct from 5-year table; VD=pct×NV×ratio). Percentage table: 100%/80%/60%/40%/20% for each 1-year band; 0% after 5 years. Eligibility: within 5 years, prior tax paid, property identifiable, still in gross estate. Formula identical across TRAIN and pre-TRAIN regimes (different ELIT composition). VD NOT available under amnesty path. 12 edge cases (depreciation, appreciation, prior tax unpaid, property sold, mortgage > IV, ELIT > GE, multiple properties, conjugal VD, NRA situs). 12 test implications. Form 1801: Schedule 5E, Columns A+B, feeds Item 35.
