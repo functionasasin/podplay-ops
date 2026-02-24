@@ -1,8 +1,8 @@
 # Analysis Frontier
 
 ## Statistics
-- Total aspects discovered: 34
-- Analyzed: 25
+- Total aspects discovered: 35
+- Analyzed: 26
 - Pending: 9
 - Convergence: 74%
 
@@ -40,11 +40,12 @@
 
 ### Wave 4: Estate Tax Amnesty (RA 11213/11569)
 - [x] amnesty-eligibility — Who qualifies: estates of decedents who died before Jan 1, 2018, with unpaid/unsettled estate tax
-- [ ] amnesty-computation — Amnesty tax: 6% of net estate, limited deductions (standard deduction + surviving spouse share only)
+- [x] amnesty-computation — Amnesty tax: 6% of net estate. Deductions = full set at time of death (pre-TRAIN rules for pre-2018 deaths, TRAIN rules for 2018–2022 deaths). Two tracks: Track A (full net taxable, no prior return) vs Track B (undeclared portion only). Minimum ₱5,000. Narrow interpretation (standard + spouse only) available as toggle with disclaimer. ETAR form, not Form 1801.
 - [ ] amnesty-vs-regular — Decision logic: when to use amnesty path vs. regular pre-TRAIN computation
 
 ### Wave 2 (continued): Corrections
 - [ ] correction-nra-public-transfers — Correct deduction-public-transfers.md: NRA public transfers are PROPORTIONAL per Sec. 86(B)(2), not full-value. Sec. 86(B)(2) explicitly includes paragraph (3) (transfers for public use) in the proportional formula alongside paragraph (1) (ELIT).
+- [ ] correction-amnesty-deductions — Correct deductions-pre-train-diffs.md: The `getOrdinaryDeductionItems` function incorrectly excludes funeral and judicial/admin expenses from the amnesty path for pre-2018 deaths. RA 11213 Sec. 3 defines net estate using "allowable deductions under the NIRC at time of death," which includes funeral and judicial expenses for pre-2018 deaths. The function should return `common + ["funeralExpenses", "judicialAdminExpenses"]` when `(regime == "pre_TRAIN") OR (regime == "amnesty" AND deductionRules == "PRE_TRAIN")`. Also update the `getSpecialDeductionAmounts` function to correctly handle amnesty + pre-2018 deaths separately from amnesty + TRAIN deaths.
 
 ### Wave 5: Synthesis
 - [ ] regime-detection — Decision tree for auto-selecting regime from date of death and estate status
@@ -57,6 +58,7 @@
 - [ ] spec-review — Self-review: can a developer with no context build the engine?
 
 ## Recently Analyzed
+- [x] amnesty-computation — 2026-02-24 — RA 11213 Sec. 5: flat 6% on amnesty tax base. Track A (no prior return) = 6% × full net taxable estate; Track B (prior return filed) = 6% × net undeclared estate = max(0, net taxable − previously declared). Minimum ₱5,000 always applies. Primary deduction interpretation: full set at time of death (RA 11213 Sec. 3 plain text) — pre-2018 deaths use pre-TRAIN rules (funeral ✓, judicial ✓, standard ₱1M, family home ₱1M); 2018–2022 deaths use TRAIN rules (standard ₱5M, family home ₱10M, no funeral/judicial). Narrow interpretation (standard + spouse only) available as engine toggle with disclaimer. Deduction conflict documented: deductions-pre-train-diffs.md incorrectly excludes funeral/judicial from amnesty pre-2018 path; new correction-amnesty-deductions aspect added. TRAIN-era amnesty produces identical base tax to regular TRAIN — engine displays equivalence notice. No foreign tax credit under amnesty. Filing form = ETAR (not Form 1801), window closed June 14, 2025. NRA: proportional Sec. 86(B) formula applies. 3 worked examples, 10 edge cases, 12 test implications.
 - [x] deductions-pre-train-diffs — 2026-02-24 — Two pre-TRAIN-only deductions: (1) Funeral expenses: min(actual, 5% × gross estate) — REMOVED by TRAIN; (2) Judicial/admin expenses: actual, no cap — REMOVED by TRAIN. Two deductions with different amounts: standard deduction ₱1M vs. ₱5M (TRAIN); family home cap ₱1M vs. ₱10M (TRAIN). All other deductions (medical ₱500K, ELIT items, vanishing, public transfers, RA4917, spouse share) are IDENTICAL across regimes. Engine branching: regime == "pre_TRAIN" enables funeralExpenses + judicialAdminExpenses inputs and applies lower standard/family home amounts. Funeral 5% limit uses gross estate TOTAL (Item 34) — must finalize gross estate before computing funeral deduction limit. NRA: proportional formula (Sec. 86B) applies to pre-TRAIN-only items. Amnesty: does NOT include funeral/judicial expenses — amnesty restricts deductions further. 12 edge cases, 12 test implications. Commentary Sample 5 confirmed: ₱8M CPG estate (2015) → tax ₱91,000.
 - [x] exemptions — 2026-02-24 — Sec. 87: four exempt transfers — (a) personal usufruct merger (excluded from gross estate; Sec. 87(a) does NOT apply to naked owner or fixed-term usufruct); (b)/(c) fiduciary/fideicommissary transmission (excluded from pass-through estate); (d) charitable bequests to qualifying PRIVATE institutions (excluded from gross estate — critical: this is NOT the same as Sec. 86(A)(3) government transfers which are deducted via Schedule 5F). Sec. 87 not amended by TRAIN — applies identically across TRAIN, pre-TRAIN, and amnesty regimes. No Form 1801 schedule for Sec. 87 exemptions: they are pre-computation exclusions. Engine runs Sec. 87 filter before populating gross estate schedules. 87(d) conditions: no income inures to individual + admin ≤ 30%. Partial bequest (fraction of asset) supported. Foreign charities excluded. Fixed-term usufruct IS includable at Sec. 88(A) actuarial value. 10 edge cases, 10 test implications.
 - [x] deduction-family-home — 2026-02-23 — Sec. 86(A)(5): TRAIN cap ₱10M; pre-TRAIN/amnesty cap ₱1M. Exclusive: min(FMV, cap). Conjugal/communal: min(FMV×0.5, cap) — decedent's share only; spouse's ½ handled at Item 39. Requires: barangay certification, actual residence at death, citizen/resident only, one property max. Gross estate (Item 30/Sched 1A) shows full FMV; deduction (Item 37B) shows capped/halved amount. Legal ambiguity flagged: sample computations show full FMV for conjugal but NIRC text says ½ — engine implements ½ (recommend verify against BIR RR 12-2018). Correction to form-1801-fields.md Validation Rule 8 documented. 12 test implications. Amnesty path: available with ₱1M cap.
