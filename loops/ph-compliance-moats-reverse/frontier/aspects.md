@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 16
-- Analyzed: 5
-- Pending: 11
-- Convergence: 31%
+- Analyzed: 6
+- Pending: 10
+- Convergence: 38%
 
 ## Wave 1: Source Scanning
 
@@ -13,7 +13,7 @@
 - [x] **labor-code-wages** — Labor Code Book III (Art. 82-134): minimum wage (regional), overtime (25%/30%), night differential (10%), holiday pay (regular/special/double), 13th month pay (RA 10653), service incentive leave, meal/rest periods. DOLE Wage Orders.
 - [x] **labor-code-termination** — Labor Code Book VI (Art. 278-302): separation pay (authorized causes: 1/2 month or 1 month per year of service), retirement pay (RA 7641: 1/2 month per year, expanded definition), back wages, final pay computation, illegal dismissal remedies. DOLE Department Orders.
 - [x] **corporation-code** — RA 11232 (Revised Corporation Code): incorporation requirements and fees, annual compliance (GIS, AFS, SEC-MC-19 beneficial ownership), stock issuance/transfer computations, dissolution timeline, corporate governance compliance, SEC penalty computations.
-- [ ] **family-code** — EO 209 (Family Code): property regime computations (ACP vs CPG vs complete separation), support computation (proportional to means/needs), liquidation of conjugal/community property, annulment property division. Titles IV and VIII.
+- [x] **family-code** — EO 209 (Family Code): property regime computations (ACP vs CPG vs complete separation), support computation (proportional to means/needs), liquidation of conjugal/community property, annulment property division. Titles IV and VIII.
 - [ ] **civil-code-obligations** — Civil Code Book IV (Art. 1156-2270): legal interest computation (6% p.a. per BSP Circ. 799), damages taxonomy (actual, moral, exemplary, nominal, temperate, liquidated), prescriptive period calculations, penalty/liquidated damages.
 - [ ] **insurance-code** — RA 10607 (Amended Insurance Code): premium computations, policy valuation, claims computation rules, compulsory insurance requirements (motor vehicle, fire), HMO coverage computations. Insurance Commission circulars.
 - [ ] **bir-forms-catalog** — bir.gov.ph forms catalog: comprehensive survey of every BIR form requiring computation — income tax (1700-series), estate/donor (1800-series), VAT/percentage (2550/2551), withholding (1601/1602/1603-series), DST (2000-series), registration (0605/1901-1903). Cross-reference with other Wave 1 tax aspects.
