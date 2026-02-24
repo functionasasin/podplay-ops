@@ -3,16 +3,16 @@
 ## Statistics
 
 - **Total aspects**: 25
-- **Analyzed**: 3
-- **Pending**: 22
-- **Convergence**: 12%
+- **Analyzed**: 4
+- **Pending**: 21
+- **Convergence**: 16%
 
 ## Wave 1: Rust Type → Frontend Spec (17 aspects)
 
 - [x] engine-input-root — EngineInput struct, top-level shape and required fields
 - [x] money — Money struct, centavos representation, pesos display conversion
 - [x] engine-config — EngineConfig struct, boolean flags and defaults
-- [ ] decedent — Decedent struct, all fields including marriage and death-bed flags
+- [x] decedent — Decedent struct, all fields including marriage and death-bed flags
 - [ ] person — Person struct, core fields (id, name, alive, degree, line)
 - [ ] relationship-enum — Relationship enum, all 11 variants and their implications
 - [ ] filiation-proof — FiliationProof enum, when required, valid options
