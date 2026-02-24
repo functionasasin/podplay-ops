@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 33
-- Analyzed: 16
-- Pending: 17
-- Convergence: 48%
+- Analyzed: 17
+- Pending: 16
+- Convergence: 52%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -27,7 +27,7 @@
 - [x] surviving-spouse-share — Sec. 86(A)(9): net share in conjugal/community property
 - [x] property-regime-acp — Family Code: Absolute Community of Property (default post-Aug 3, 1988)
 - [x] property-regime-cpg — Civil Code: Conjugal Partnership of Gains (default pre-Family Code)
-- [ ] property-regime-separation — Complete Separation of Property (by prenuptial agreement)
+- [x] property-regime-separation — Complete Separation of Property (by prenuptial agreement)
 - [ ] nonresident-deductions — Sec. 86(B)-(D): proportional deductions for non-resident aliens
 - [ ] exemptions — Sec. 87: exempt transfers (usufruct merger, fiduciary, charitable ≤30% admin)
 - [ ] tax-credits — Foreign estate tax paid, prior return payments
