@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total aspects**: 25
-- **Analyzed**: 7
-- **Pending**: 18
-- **Convergence**: 28%
+- **Analyzed**: 8
+- **Pending**: 17
+- **Convergence**: 32%
 
 ## Wave 1: Rust Type → Frontend Spec (17 aspects)
 
@@ -16,7 +16,7 @@
 - [x] person — Person struct, core fields (id, name, alive, degree, line)
 - [x] relationship-enum — Relationship enum, all 11 variants and their implications
 - [x] filiation-proof — FiliationProof enum, when required, valid options
-- [ ] blood-type — BloodType enum (Full/Half), sibling-only field
+- [x] blood-type — BloodType enum (Full/Half), sibling-only field
 - [ ] adoption — Adoption struct, regimes (RA 8552 vs RA 11642), rescission
 - [ ] will — Will struct, top-level shape, date_executed
 - [ ] institution-of-heir — InstitutionOfHeir struct, HeirReference, ShareSpec enum
