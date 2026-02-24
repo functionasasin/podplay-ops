@@ -1,0 +1,184 @@
+{
+  "net_distributable_estate": {
+    "centavos": 3890550000
+  },
+  "decedent": {
+    "id": "d",
+    "name": "Ben Aquino",
+    "date_of_death": "2026-01-15",
+    "is_married": true,
+    "date_of_marriage": "2000-01-01",
+    "marriage_solemnized_in_articulo_mortis": false,
+    "was_ill_at_marriage": false,
+    "illness_caused_death": false,
+    "years_of_cohabitation": 0,
+    "has_legal_separation": false,
+    "is_illegitimate": false
+  },
+  "family_tree": [
+    {
+      "id": "lc1",
+      "name": "Fatima Lopez",
+      "is_alive_at_succession": true,
+      "relationship_to_decedent": "LegitimateChild",
+      "degree": 1,
+      "line": null,
+      "children": [],
+      "filiation_proved": true,
+      "filiation_proof_type": null,
+      "is_guilty_party_in_legal_separation": false,
+      "adoption": null,
+      "is_unworthy": false,
+      "unworthiness_condoned": false,
+      "has_renounced": false,
+      "blood_type": null
+    },
+    {
+      "id": "lc2",
+      "name": "Ben Aquino",
+      "is_alive_at_succession": true,
+      "relationship_to_decedent": "LegitimateChild",
+      "degree": 1,
+      "line": null,
+      "children": [],
+      "filiation_proved": true,
+      "filiation_proof_type": null,
+      "is_guilty_party_in_legal_separation": false,
+      "adoption": null,
+      "is_unworthy": false,
+      "unworthiness_condoned": false,
+      "has_renounced": false,
+      "blood_type": null
+    },
+    {
+      "id": "lc3",
+      "name": "Miguel Gonzales",
+      "is_alive_at_succession": true,
+      "relationship_to_decedent": "LegitimateChild",
+      "degree": 1,
+      "line": null,
+      "children": [],
+      "filiation_proved": true,
+      "filiation_proof_type": null,
+      "is_guilty_party_in_legal_separation": false,
+      "adoption": null,
+      "is_unworthy": false,
+      "unworthiness_condoned": false,
+      "has_renounced": false,
+      "blood_type": null
+    },
+    {
+      "id": "sp",
+      "name": "Ursela Santos",
+      "is_alive_at_succession": true,
+      "relationship_to_decedent": "SurvivingSpouse",
+      "degree": 1,
+      "line": null,
+      "children": [],
+      "filiation_proved": true,
+      "filiation_proof_type": null,
+      "is_guilty_party_in_legal_separation": false,
+      "adoption": null,
+      "is_unworthy": false,
+      "unworthiness_condoned": false,
+      "has_renounced": false,
+      "blood_type": null
+    }
+  ],
+  "will": {
+    "institutions": [
+      {
+        "id": "i1",
+        "heir": {
+          "person_id": null,
+          "name": "Bruno Mendoza",
+          "is_collective": false,
+          "class_designation": null
+        },
+        "share": "EntireFreePort",
+        "conditions": [],
+        "substitutes": [],
+        "is_residuary": false
+      }
+    ],
+    "legacies": [],
+    "devises": [],
+    "disinheritances": [],
+    "date_executed": "2025-06-01"
+  },
+  "donations": [
+    {
+      "id": "don1",
+      "recipient_heir_id": "lc2",
+      "recipient_is_stranger": false,
+      "value_at_time_of_donation": {
+        "centavos": 341313200
+      },
+      "date": "2020-01-01",
+      "description": "advance on inheritance",
+      "is_expressly_exempt": false,
+      "is_support_education_medical": false,
+      "is_customary_gift": false,
+      "is_professional_expense": false,
+      "professional_expense_parent_required": false,
+      "professional_expense_imputed_savings": null,
+      "is_joint_from_both_parents": false,
+      "is_to_child_spouse_only": false,
+      "is_joint_to_child_and_spouse": false,
+      "is_wedding_gift": false,
+      "is_debt_payment_for_child": false,
+      "is_election_expense": false,
+      "is_fine_payment": false
+    },
+    {
+      "id": "don2",
+      "recipient_heir_id": "lc2",
+      "recipient_is_stranger": false,
+      "value_at_time_of_donation": {
+        "centavos": 845547400
+      },
+      "date": "2020-01-01",
+      "description": "advance on inheritance",
+      "is_expressly_exempt": false,
+      "is_support_education_medical": false,
+      "is_customary_gift": false,
+      "is_professional_expense": false,
+      "professional_expense_parent_required": false,
+      "professional_expense_imputed_savings": null,
+      "is_joint_from_both_parents": false,
+      "is_to_child_spouse_only": false,
+      "is_joint_to_child_and_spouse": false,
+      "is_wedding_gift": false,
+      "is_debt_payment_for_child": false,
+      "is_election_expense": false,
+      "is_fine_payment": false
+    },
+    {
+      "id": "don3",
+      "recipient_heir_id": "lc3",
+      "recipient_is_stranger": false,
+      "value_at_time_of_donation": {
+        "centavos": 299928500
+      },
+      "date": "2020-01-01",
+      "description": "advance on inheritance",
+      "is_expressly_exempt": false,
+      "is_support_education_medical": false,
+      "is_customary_gift": false,
+      "is_professional_expense": false,
+      "professional_expense_parent_required": false,
+      "professional_expense_imputed_savings": null,
+      "is_joint_from_both_parents": false,
+      "is_to_child_spouse_only": false,
+      "is_joint_to_child_and_spouse": false,
+      "is_wedding_gift": false,
+      "is_debt_payment_for_child": false,
+      "is_election_expense": false,
+      "is_fine_payment": false
+    }
+  ],
+  "config": {
+    "retroactive_ra_11642": false,
+    "max_pipeline_restarts": 10
+  }
+}

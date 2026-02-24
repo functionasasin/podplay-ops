@@ -1,0 +1,114 @@
+{
+  "net_distributable_estate": {
+    "centavos": 741890000
+  },
+  "decedent": {
+    "id": "d",
+    "name": "Victor Santos",
+    "date_of_death": "2026-01-15",
+    "is_married": false,
+    "date_of_marriage": null,
+    "marriage_solemnized_in_articulo_mortis": false,
+    "was_ill_at_marriage": false,
+    "illness_caused_death": false,
+    "years_of_cohabitation": 0,
+    "has_legal_separation": false,
+    "is_illegitimate": false
+  },
+  "family_tree": [
+    {
+      "id": "lc1",
+      "name": "Amara Lopez",
+      "is_alive_at_succession": true,
+      "relationship_to_decedent": "LegitimateChild",
+      "degree": 1,
+      "line": null,
+      "children": [],
+      "filiation_proved": true,
+      "filiation_proof_type": null,
+      "is_guilty_party_in_legal_separation": false,
+      "adoption": null,
+      "is_unworthy": false,
+      "unworthiness_condoned": false,
+      "has_renounced": false,
+      "blood_type": null
+    },
+    {
+      "id": "lc2",
+      "name": "Wendy Reyes",
+      "is_alive_at_succession": true,
+      "relationship_to_decedent": "LegitimateChild",
+      "degree": 1,
+      "line": null,
+      "children": [],
+      "filiation_proved": true,
+      "filiation_proof_type": null,
+      "is_guilty_party_in_legal_separation": false,
+      "adoption": null,
+      "is_unworthy": false,
+      "unworthiness_condoned": false,
+      "has_renounced": false,
+      "blood_type": null
+    },
+    {
+      "id": "lc3",
+      "name": "Oscar Aquino",
+      "is_alive_at_succession": true,
+      "relationship_to_decedent": "LegitimateChild",
+      "degree": 1,
+      "line": null,
+      "children": [],
+      "filiation_proved": true,
+      "filiation_proof_type": null,
+      "is_guilty_party_in_legal_separation": false,
+      "adoption": null,
+      "is_unworthy": false,
+      "unworthiness_condoned": false,
+      "has_renounced": false,
+      "blood_type": null
+    }
+  ],
+  "will": {
+    "institutions": [
+      {
+        "id": "i1",
+        "heir": {
+          "person_id": "lc1",
+          "name": "Amara Lopez",
+          "is_collective": false,
+          "class_designation": null
+        },
+        "share": {
+          "Fraction": "1/2"
+        },
+        "conditions": [],
+        "substitutes": [],
+        "is_residuary": false
+      },
+      {
+        "id": "i2",
+        "heir": {
+          "person_id": "lc2",
+          "name": "Wendy Reyes",
+          "is_collective": false,
+          "class_designation": null
+        },
+        "share": {
+          "Fraction": "1/2"
+        },
+        "conditions": [],
+        "substitutes": [],
+        "is_residuary": false
+      }
+    ],
+    "legacies": [],
+    "devises": [],
+    "disinheritances": [],
+    "date_executed": "2025-06-01"
+  },
+  "donations": [],
+  "config": {
+    "retroactive_ra_11642": false,
+    "max_pipeline_restarts": 10
+  }
+}

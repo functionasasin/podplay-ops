@@ -1,0 +1,152 @@
+{
+  "net_distributable_estate": {
+    "centavos": 17700000
+  },
+  "decedent": {
+    "id": "d",
+    "name": "Ben Garcia",
+    "date_of_death": "2026-01-15",
+    "is_married": false,
+    "date_of_marriage": null,
+    "marriage_solemnized_in_articulo_mortis": false,
+    "was_ill_at_marriage": false,
+    "illness_caused_death": false,
+    "years_of_cohabitation": 0,
+    "has_legal_separation": false,
+    "is_illegitimate": false
+  },
+  "family_tree": [
+    {
+      "id": "lc1",
+      "name": "Oscar Reyes",
+      "is_alive_at_succession": true,
+      "relationship_to_decedent": "LegitimateChild",
+      "degree": 1,
+      "line": null,
+      "children": [],
+      "filiation_proved": true,
+      "filiation_proof_type": null,
+      "is_guilty_party_in_legal_separation": false,
+      "adoption": null,
+      "is_unworthy": false,
+      "unworthiness_condoned": false,
+      "has_renounced": false,
+      "blood_type": null
+    },
+    {
+      "id": "lc2",
+      "name": "Xavier Garcia",
+      "is_alive_at_succession": true,
+      "relationship_to_decedent": "LegitimateChild",
+      "degree": 1,
+      "line": null,
+      "children": [],
+      "filiation_proved": true,
+      "filiation_proof_type": null,
+      "is_guilty_party_in_legal_separation": false,
+      "adoption": null,
+      "is_unworthy": false,
+      "unworthiness_condoned": false,
+      "has_renounced": false,
+      "blood_type": null
+    },
+    {
+      "id": "lc3",
+      "name": "Sandra Lopez",
+      "is_alive_at_succession": true,
+      "relationship_to_decedent": "LegitimateChild",
+      "degree": 1,
+      "line": null,
+      "children": [],
+      "filiation_proved": true,
+      "filiation_proof_type": null,
+      "is_guilty_party_in_legal_separation": false,
+      "adoption": null,
+      "is_unworthy": false,
+      "unworthiness_condoned": false,
+      "has_renounced": false,
+      "blood_type": null
+    },
+    {
+      "id": "lc4",
+      "name": "Patricia Torres",
+      "is_alive_at_succession": true,
+      "relationship_to_decedent": "LegitimateChild",
+      "degree": 1,
+      "line": null,
+      "children": [],
+      "filiation_proved": true,
+      "filiation_proof_type": null,
+      "is_guilty_party_in_legal_separation": false,
+      "adoption": null,
+      "is_unworthy": false,
+      "unworthiness_condoned": false,
+      "has_renounced": false,
+      "blood_type": null
+    }
+  ],
+  "will": {
+    "institutions": [],
+    "legacies": [
+      {
+        "id": "leg1",
+        "legatee": {
+          "person_id": null,
+          "name": "Eduardo Gonzales",
+          "is_collective": false,
+          "class_designation": null
+        },
+        "property": {
+          "FixedAmount": {
+            "centavos": 1204600
+          }
+        },
+        "conditions": [],
+        "substitutes": [],
+        "is_preferred": false
+      },
+      {
+        "id": "leg2",
+        "legatee": {
+          "person_id": null,
+          "name": "Lorna Gonzales",
+          "is_collective": false,
+          "class_designation": null
+        },
+        "property": {
+          "FixedAmount": {
+            "centavos": 529600
+          }
+        },
+        "conditions": [],
+        "substitutes": [],
+        "is_preferred": false
+      },
+      {
+        "id": "leg3",
+        "legatee": {
+          "person_id": null,
+          "name": "Tomas Garcia",
+          "is_collective": false,
+          "class_designation": null
+        },
+        "property": {
+          "FixedAmount": {
+            "centavos": 2720900
+          }
+        },
+        "conditions": [],
+        "substitutes": [],
+        "is_preferred": false
+      }
+    ],
+    "devises": [],
+    "disinheritances": [],
+    "date_executed": "2025-06-01"
+  },
+  "donations": [],
+  "config": {
+    "retroactive_ra_11642": false,
+    "max_pipeline_restarts": 10
+  }
+}

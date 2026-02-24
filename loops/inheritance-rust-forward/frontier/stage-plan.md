@@ -1,6 +1,6 @@
 # Forward Ralph — Stage Plan
 
-Dev order: 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11
+Dev order: 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11 → 12
 
 | Stage | Name                          | Spec Sections    | Depends On | Status  |
 |-------|-------------------------------|------------------|------------|---------|
@@ -16,5 +16,6 @@ Dev order: 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11
 | 9     | Vacancy Resolution            | §10              | 7          | blocked |
 | 10    | Finalize + Narrate            | §11, §12         | 7, 8, 9    | blocked |
 | 11    | Integration (End-to-End)      | §14              | 0-10       | blocked |
+| 12    | Fuzz Invariants (100 random)  | §14.2, all inv.  | 11         | blocked |
 
 Status values: blocked | pending | active | complete

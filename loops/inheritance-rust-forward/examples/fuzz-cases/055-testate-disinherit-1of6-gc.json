@@ -1,0 +1,216 @@
+{
+  "net_distributable_estate": {
+    "centavos": 569040000
+  },
+  "decedent": {
+    "id": "d",
+    "name": "Xavier Gonzales",
+    "date_of_death": "2026-01-15",
+    "is_married": false,
+    "date_of_marriage": null,
+    "marriage_solemnized_in_articulo_mortis": false,
+    "was_ill_at_marriage": false,
+    "illness_caused_death": false,
+    "years_of_cohabitation": 0,
+    "has_legal_separation": false,
+    "is_illegitimate": false
+  },
+  "family_tree": [
+    {
+      "id": "gc1_1",
+      "name": "Wendy Cruz",
+      "is_alive_at_succession": true,
+      "relationship_to_decedent": "LegitimateChild",
+      "degree": 2,
+      "line": null,
+      "children": [],
+      "filiation_proved": true,
+      "filiation_proof_type": null,
+      "is_guilty_party_in_legal_separation": false,
+      "adoption": null,
+      "is_unworthy": false,
+      "unworthiness_condoned": false,
+      "has_renounced": false,
+      "blood_type": null
+    },
+    {
+      "id": "gc1_2",
+      "name": "Kevin Aquino",
+      "is_alive_at_succession": true,
+      "relationship_to_decedent": "LegitimateChild",
+      "degree": 2,
+      "line": null,
+      "children": [],
+      "filiation_proved": true,
+      "filiation_proof_type": null,
+      "is_guilty_party_in_legal_separation": false,
+      "adoption": null,
+      "is_unworthy": false,
+      "unworthiness_condoned": false,
+      "has_renounced": false,
+      "blood_type": null
+    },
+    {
+      "id": "gc1_3",
+      "name": "Patricia Lopez",
+      "is_alive_at_succession": true,
+      "relationship_to_decedent": "LegitimateChild",
+      "degree": 2,
+      "line": null,
+      "children": [],
+      "filiation_proved": true,
+      "filiation_proof_type": null,
+      "is_guilty_party_in_legal_separation": false,
+      "adoption": null,
+      "is_unworthy": false,
+      "unworthiness_condoned": false,
+      "has_renounced": false,
+      "blood_type": null
+    },
+    {
+      "id": "lc1",
+      "name": "Nora Ramos",
+      "is_alive_at_succession": true,
+      "relationship_to_decedent": "LegitimateChild",
+      "degree": 1,
+      "line": null,
+      "children": [
+        "gc1_1",
+        "gc1_2",
+        "gc1_3"
+      ],
+      "filiation_proved": true,
+      "filiation_proof_type": null,
+      "is_guilty_party_in_legal_separation": false,
+      "adoption": null,
+      "is_unworthy": false,
+      "unworthiness_condoned": false,
+      "has_renounced": false,
+      "blood_type": null
+    },
+    {
+      "id": "lc2",
+      "name": "Miguel Santos",
+      "is_alive_at_succession": true,
+      "relationship_to_decedent": "LegitimateChild",
+      "degree": 1,
+      "line": null,
+      "children": [],
+      "filiation_proved": true,
+      "filiation_proof_type": null,
+      "is_guilty_party_in_legal_separation": false,
+      "adoption": null,
+      "is_unworthy": false,
+      "unworthiness_condoned": false,
+      "has_renounced": false,
+      "blood_type": null
+    },
+    {
+      "id": "lc3",
+      "name": "Zenaida Aquino",
+      "is_alive_at_succession": true,
+      "relationship_to_decedent": "LegitimateChild",
+      "degree": 1,
+      "line": null,
+      "children": [],
+      "filiation_proved": true,
+      "filiation_proof_type": null,
+      "is_guilty_party_in_legal_separation": false,
+      "adoption": null,
+      "is_unworthy": false,
+      "unworthiness_condoned": false,
+      "has_renounced": false,
+      "blood_type": null
+    },
+    {
+      "id": "lc4",
+      "name": "Gabriel Gonzales",
+      "is_alive_at_succession": true,
+      "relationship_to_decedent": "LegitimateChild",
+      "degree": 1,
+      "line": null,
+      "children": [],
+      "filiation_proved": true,
+      "filiation_proof_type": null,
+      "is_guilty_party_in_legal_separation": false,
+      "adoption": null,
+      "is_unworthy": false,
+      "unworthiness_condoned": false,
+      "has_renounced": false,
+      "blood_type": null
+    },
+    {
+      "id": "lc5",
+      "name": "Oscar Lopez",
+      "is_alive_at_succession": true,
+      "relationship_to_decedent": "LegitimateChild",
+      "degree": 1,
+      "line": null,
+      "children": [],
+      "filiation_proved": true,
+      "filiation_proof_type": null,
+      "is_guilty_party_in_legal_separation": false,
+      "adoption": null,
+      "is_unworthy": false,
+      "unworthiness_condoned": false,
+      "has_renounced": false,
+      "blood_type": null
+    },
+    {
+      "id": "lc6",
+      "name": "Dante Gonzales",
+      "is_alive_at_succession": true,
+      "relationship_to_decedent": "LegitimateChild",
+      "degree": 1,
+      "line": null,
+      "children": [],
+      "filiation_proved": true,
+      "filiation_proof_type": null,
+      "is_guilty_party_in_legal_separation": false,
+      "adoption": null,
+      "is_unworthy": false,
+      "unworthiness_condoned": false,
+      "has_renounced": false,
+      "blood_type": null
+    }
+  ],
+  "will": {
+    "institutions": [
+      {
+        "id": "i1",
+        "heir": {
+          "person_id": "lc5",
+          "name": "Oscar Lopez",
+          "is_collective": false,
+          "class_designation": null
+        },
+        "share": "EntireFreePort",
+        "conditions": [],
+        "substitutes": [],
+        "is_residuary": false
+      }
+    ],
+    "legacies": [],
+    "devises": [],
+    "disinheritances": [
+      {
+        "heir_reference": {
+          "person_id": "lc1",
+          "name": "Nora Ramos",
+          "is_collective": false,
+          "class_designation": null
+        },
+        "cause_code": "ChildMaltreatment",
+        "cause_specified_in_will": true,
+        "cause_proven": true,
+        "reconciliation_occurred": false
+      }
+    ],
+    "date_executed": "2025-06-01"
+  },
+  "donations": [],
+  "config": {
+    "retroactive_ra_11642": false,
+    "max_pipeline_restarts": 10
+  }
+}

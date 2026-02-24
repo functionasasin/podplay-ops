@@ -1,0 +1,111 @@
+{
+  "net_distributable_estate": {
+    "centavos": 2229880000
+  },
+  "decedent": {
+    "id": "d",
+    "name": "Ivan Cruz",
+    "date_of_death": "2026-01-15",
+    "is_married": false,
+    "date_of_marriage": null,
+    "marriage_solemnized_in_articulo_mortis": false,
+    "was_ill_at_marriage": false,
+    "illness_caused_death": false,
+    "years_of_cohabitation": 0,
+    "has_legal_separation": false,
+    "is_illegitimate": false
+  },
+  "family_tree": [
+    {
+      "id": "p1",
+      "name": "Ana Reyes",
+      "is_alive_at_succession": true,
+      "relationship_to_decedent": "LegitimateParent",
+      "degree": 1,
+      "line": "Paternal",
+      "children": [],
+      "filiation_proved": true,
+      "filiation_proof_type": null,
+      "is_guilty_party_in_legal_separation": false,
+      "adoption": null,
+      "is_unworthy": false,
+      "unworthiness_condoned": false,
+      "has_renounced": false,
+      "blood_type": null
+    },
+    {
+      "id": "p2",
+      "name": "Ana Garcia",
+      "is_alive_at_succession": true,
+      "relationship_to_decedent": "LegitimateParent",
+      "degree": 1,
+      "line": "Maternal",
+      "children": [],
+      "filiation_proved": true,
+      "filiation_proof_type": null,
+      "is_guilty_party_in_legal_separation": false,
+      "adoption": null,
+      "is_unworthy": false,
+      "unworthiness_condoned": false,
+      "has_renounced": false,
+      "blood_type": null
+    },
+    {
+      "id": "sib1",
+      "name": "Lorna Mendoza",
+      "is_alive_at_succession": true,
+      "relationship_to_decedent": "Sibling",
+      "degree": 2,
+      "line": null,
+      "children": [],
+      "filiation_proved": true,
+      "filiation_proof_type": null,
+      "is_guilty_party_in_legal_separation": false,
+      "adoption": null,
+      "is_unworthy": false,
+      "unworthiness_condoned": false,
+      "has_renounced": false,
+      "blood_type": "Half"
+    },
+    {
+      "id": "sib2",
+      "name": "Helena Garcia",
+      "is_alive_at_succession": true,
+      "relationship_to_decedent": "Sibling",
+      "degree": 2,
+      "line": null,
+      "children": [],
+      "filiation_proved": true,
+      "filiation_proof_type": null,
+      "is_guilty_party_in_legal_separation": false,
+      "adoption": null,
+      "is_unworthy": false,
+      "unworthiness_condoned": false,
+      "has_renounced": false,
+      "blood_type": "Half"
+    },
+    {
+      "id": "sib3",
+      "name": "Rosa Cruz",
+      "is_alive_at_succession": true,
+      "relationship_to_decedent": "Sibling",
+      "degree": 2,
+      "line": null,
+      "children": [],
+      "filiation_proved": true,
+      "filiation_proof_type": null,
+      "is_guilty_party_in_legal_separation": false,
+      "adoption": null,
+      "is_unworthy": false,
+      "unworthiness_condoned": false,
+      "has_renounced": false,
+      "blood_type": "Full"
+    }
+  ],
+  "will": null,
+  "donations": [],
+  "config": {
+    "retroactive_ra_11642": false,
+    "max_pipeline_restarts": 10
+  }
+}

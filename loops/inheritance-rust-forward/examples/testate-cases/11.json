@@ -1,0 +1,76 @@
+{
+  "net_distributable_estate": {
+    "centavos": 900000000
+  },
+  "decedent": {
+    "id": "d",
+    "name": "Ignacio Bello",
+    "date_of_death": "2026-01-15",
+    "is_married": true,
+    "date_of_marriage": "2000-01-01",
+    "marriage_solemnized_in_articulo_mortis": true,
+    "was_ill_at_marriage": true,
+    "illness_caused_death": true,
+    "years_of_cohabitation": 1,
+    "has_legal_separation": false,
+    "is_illegitimate": false
+  },
+  "family_tree": [
+    {
+      "id": "sp",
+      "name": "Julia Bello",
+      "is_alive_at_succession": true,
+      "relationship_to_decedent": "SurvivingSpouse",
+      "degree": 1,
+      "line": null,
+      "children": [],
+      "filiation_proved": true,
+      "filiation_proof_type": null,
+      "is_guilty_party_in_legal_separation": false,
+      "adoption": null,
+      "is_unworthy": false,
+      "unworthiness_condoned": false,
+      "has_renounced": false,
+      "blood_type": null
+    }
+  ],
+  "will": {
+    "institutions": [
+      {
+        "id": "i1",
+        "heir": {
+          "person_id": "sp",
+          "name": "Julia Bello",
+          "is_collective": false,
+          "class_designation": null
+        },
+        "share": "EqualWithOthers",
+        "conditions": [],
+        "substitutes": [],
+        "is_residuary": false
+      },
+      {
+        "id": "i2",
+        "heir": {
+          "person_id": null,
+          "name": "Nephew",
+          "is_collective": false,
+          "class_designation": null
+        },
+        "share": "Residuary",
+        "conditions": [],
+        "substitutes": [],
+        "is_residuary": true
+      }
+    ],
+    "legacies": [],
+    "devises": [],
+    "disinheritances": [],
+    "date_executed": "2025-06-01"
+  },
+  "donations": [],
+  "config": {
+    "retroactive_ra_11642": false,
+    "max_pipeline_restarts": 10
+  }
+}

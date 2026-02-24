@@ -5,16 +5,16 @@
 - All 10 invariants from §14.2
 - Safety checks: sum conservation, no negatives, disinheritance validity
 
-## Test Results (updated by loop — iteration 3)
+## Test Results (updated by loop — iteration 6)
 ```
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.01s
+     Running tests/fuzz_invariants.rs (target/debug/deps/fuzz_invariants-d9d7cdb13b9fc557)
+
 running 1 test
 test test_fuzz_invariants ... ok
 
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
 ```
-
-Integration tests: 30 passed, 0 failed.
-Unit tests: 411 passed, 0 failed.
 
 ## Work Log
 - iteration 3: Fixed IntestateByPreterition scenario dispatch (step7) + false preterition from representatives (step6). 14→17 passed, 16→13 failed.

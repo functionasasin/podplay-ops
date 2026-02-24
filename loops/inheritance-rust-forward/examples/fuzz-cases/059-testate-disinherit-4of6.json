@@ -1,0 +1,183 @@
+{
+  "net_distributable_estate": {
+    "centavos": 938630000
+  },
+  "decedent": {
+    "id": "d",
+    "name": "Sandra Ramos",
+    "date_of_death": "2026-01-15",
+    "is_married": false,
+    "date_of_marriage": null,
+    "marriage_solemnized_in_articulo_mortis": false,
+    "was_ill_at_marriage": false,
+    "illness_caused_death": false,
+    "years_of_cohabitation": 0,
+    "has_legal_separation": false,
+    "is_illegitimate": false
+  },
+  "family_tree": [
+    {
+      "id": "lc1",
+      "name": "Ivan Reyes",
+      "is_alive_at_succession": true,
+      "relationship_to_decedent": "LegitimateChild",
+      "degree": 1,
+      "line": null,
+      "children": [],
+      "filiation_proved": true,
+      "filiation_proof_type": null,
+      "is_guilty_party_in_legal_separation": false,
+      "adoption": null,
+      "is_unworthy": false,
+      "unworthiness_condoned": false,
+      "has_renounced": false,
+      "blood_type": null
+    },
+    {
+      "id": "lc2",
+      "name": "Carlos Torres",
+      "is_alive_at_succession": true,
+      "relationship_to_decedent": "LegitimateChild",
+      "degree": 1,
+      "line": null,
+      "children": [],
+      "filiation_proved": true,
+      "filiation_proof_type": null,
+      "is_guilty_party_in_legal_separation": false,
+      "adoption": null,
+      "is_unworthy": false,
+      "unworthiness_condoned": false,
+      "has_renounced": false,
+      "blood_type": null
+    },
+    {
+      "id": "lc3",
+      "name": "Ivan Gonzales",
+      "is_alive_at_succession": true,
+      "relationship_to_decedent": "LegitimateChild",
+      "degree": 1,
+      "line": null,
+      "children": [],
+      "filiation_proved": true,
+      "filiation_proof_type": null,
+      "is_guilty_party_in_legal_separation": false,
+      "adoption": null,
+      "is_unworthy": false,
+      "unworthiness_condoned": false,
+      "has_renounced": false,
+      "blood_type": null
+    },
+    {
+      "id": "lc4",
+      "name": "Tomas Torres",
+      "is_alive_at_succession": true,
+      "relationship_to_decedent": "LegitimateChild",
+      "degree": 1,
+      "line": null,
+      "children": [],
+      "filiation_proved": true,
+      "filiation_proof_type": null,
+      "is_guilty_party_in_legal_separation": false,
+      "adoption": null,
+      "is_unworthy": false,
+      "unworthiness_condoned": false,
+      "has_renounced": false,
+      "blood_type": null
+    },
+    {
+      "id": "lc5",
+      "name": "Oscar Gonzales",
+      "is_alive_at_succession": true,
+      "relationship_to_decedent": "LegitimateChild",
+      "degree": 1,
+      "line": null,
+      "children": [],
+      "filiation_proved": true,
+      "filiation_proof_type": null,
+      "is_guilty_party_in_legal_separation": false,
+      "adoption": null,
+      "is_unworthy": false,
+      "unworthiness_condoned": false,
+      "has_renounced": false,
+      "blood_type": null
+    },
+    {
+      "id": "lc6",
+      "name": "Bruno Lopez",
+      "is_alive_at_succession": true,
+      "relationship_to_decedent": "LegitimateChild",
+      "degree": 1,
+      "line": null,
+      "children": [],
+      "filiation_proved": true,
+      "filiation_proof_type": null,
+      "is_guilty_party_in_legal_separation": false,
+      "adoption": null,
+      "is_unworthy": false,
+      "unworthiness_condoned": false,
+      "has_renounced": false,
+      "blood_type": null
+    }
+  ],
+  "will": {
+    "institutions": [],
+    "legacies": [],
+    "devises": [],
+    "disinheritances": [
+      {
+        "heir_reference": {
+          "person_id": "lc1",
+          "name": "Ivan Reyes",
+          "is_collective": false,
+          "class_designation": null
+        },
+        "cause_code": "ChildDishonorableLife",
+        "cause_specified_in_will": true,
+        "cause_proven": true,
+        "reconciliation_occurred": false
+      },
+      {
+        "heir_reference": {
+          "person_id": "lc3",
+          "name": "Ivan Gonzales",
+          "is_collective": false,
+          "class_designation": null
+        },
+        "cause_code": "ChildAdulteryWithSpouse",
+        "cause_specified_in_will": true,
+        "cause_proven": true,
+        "reconciliation_occurred": false
+      },
+      {
+        "heir_reference": {
+          "person_id": "lc4",
+          "name": "Tomas Torres",
+          "is_collective": false,
+          "class_designation": null
+        },
+        "cause_code": "ChildRefusalToSupport",
+        "cause_specified_in_will": true,
+        "cause_proven": true,
+        "reconciliation_occurred": false
+      },
+      {
+        "heir_reference": {
+          "person_id": "lc5",
+          "name": "Oscar Gonzales",
+          "is_collective": false,
+          "class_designation": null
+        },
+        "cause_code": "ChildDishonorableLife",
+        "cause_specified_in_will": true,
+        "cause_proven": true,
+        "reconciliation_occurred": false
+      }
+    ],
+    "date_executed": "2025-06-01"
+  },
+  "donations": [],
+  "config": {
+    "retroactive_ra_11642": false,
+    "max_pipeline_restarts": 10
+  }
+}

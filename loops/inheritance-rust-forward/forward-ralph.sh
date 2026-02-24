@@ -3,7 +3,7 @@
 # Runs Claude Code repeatedly to build one pipeline stage at a time.
 #
 # Usage:
-#   ./forward-ralph.sh [stage_number]   # Build a specific stage (0-11)
+#   ./forward-ralph.sh [stage_number]   # Build a specific stage (0-12)
 #   ./forward-ralph.sh                  # Auto-detect lowest incomplete stage
 #   ./forward-ralph.sh all              # Build all stages sequentially
 
@@ -19,7 +19,7 @@ MAX_ITERATIONS=${2:-40}
 SLEEP_BETWEEN=5
 
 # Dev order (sequential pipeline)
-DEV_ORDER=(0 1 2 3 4 5 6 7 8 9 10 11)
+DEV_ORDER=(0 1 2 3 4 5 6 7 8 9 10 11 12)
 
 # Stage names for display
 declare -A STAGE_NAMES=(
@@ -35,6 +35,7 @@ declare -A STAGE_NAMES=(
     [9]="Vacancy Resolution"
     [10]="Finalize + Narrate"
     [11]="Integration (End-to-End)"
+    [12]="Fuzz Invariants (100 random cases)"
 )
 
 # Stage dependencies (space-separated upstream stage numbers)
@@ -51,6 +52,7 @@ declare -A STAGE_DEPS=(
     [9]="7"
     [10]="7 8 9"
     [11]="0 1 2 3 4 5 6 7 8 9 10"
+    [12]="11"
 )
 
 # Test filter patterns for cargo test
@@ -67,6 +69,7 @@ declare -A STAGE_TEST_FILTERS=(
     [9]="step9"
     [10]="step10"
     [11]="integration"
+    [12]="fuzz_invariants"
 )
 
 cd "$WORK_DIR"
@@ -119,6 +122,9 @@ run_tests() {
     if [ "$stage" -eq 11 ]; then
         # Integration tests are in tests/ directory
         output=$(cd "$WORK_DIR" && cargo test --test integration 2>&1) || true
+    elif [ "$stage" -eq 12 ]; then
+        # Fuzz invariant tests are in tests/ directory
+        output=$(cd "$WORK_DIR" && cargo test --test fuzz_invariants 2>&1) || true
     else
         output=$(cd "$WORK_DIR" && cargo test "$filter" 2>&1) || true
     fi
@@ -158,6 +164,7 @@ update_frontier() {
         9)  spec_sections="- Vacancy Resolution: §10 (substitution, representation, accretion, intestate fallback)" ;;
         10) spec_sections="- Narrative Templates: §11\n- Rounding: §12" ;;
         11) spec_sections="- Test Vectors: §14 (23 vectors)\n- Invariants: §14.2 (10 invariants)\n- Edge Cases: §13" ;;
+        12) spec_sections="- Fuzz Invariants: 100 randomized cases\n- All 10 invariants from §14.2\n- Safety checks: sum conservation, no negatives, disinheritance validity" ;;
     esac
 
     cat > "$CURRENT_STAGE_FILE" << FRONTIER_EOF
@@ -217,6 +224,12 @@ run_stage() {
 
     local iteration=0
     local failures=0
+    local consecutive_passes=0
+    # Stage 12 requires 4 consecutive passes to confirm stability
+    local required_passes=1
+    if [ "$stage" -eq 12 ]; then
+        required_passes=4
+    fi
 
     while [ "$iteration" -lt "$MAX_ITERATIONS" ]; do
         iteration=$((iteration + 1))
@@ -232,8 +245,16 @@ run_stage() {
 
         # Check convergence
         if [ "$test_output" != "NO_TESTS" ] && tests_pass "$test_output"; then
-            write_completion "$stage" "$test_output" "$iteration"
-            return 0
+            consecutive_passes=$((consecutive_passes + 1))
+            echo "Tests pass ($consecutive_passes/$required_passes consecutive passes)"
+            if [ "$consecutive_passes" -ge "$required_passes" ]; then
+                write_completion "$stage" "$test_output" "$iteration"
+                return 0
+            fi
+            # For multi-pass stages, sleep and re-test without invoking Claude
+            continue
+        else
+            consecutive_passes=0
         fi
 
         # Run Claude
@@ -291,7 +312,7 @@ elif [ "$MODE" = "auto" ]; then
 else
     STAGE="$MODE"
     if [ -z "${STAGE_NAMES[$STAGE]+x}" ]; then
-        echo "ERROR: Unknown stage '$STAGE'. Valid: 0 1 2 3 4 5 6 7 8 9 10 11 all"
+        echo "ERROR: Unknown stage '$STAGE'. Valid: 0 1 2 3 4 5 6 7 8 9 10 11 12 all"
         exit 1
     fi
     run_stage "$STAGE"
