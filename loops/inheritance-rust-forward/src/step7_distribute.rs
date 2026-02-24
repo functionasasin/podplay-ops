@@ -182,8 +182,11 @@ pub fn step7_distribute(input: &Step7Input) -> Step7Output {
             } else {
                 input.scenario_code
             };
+            // Distribute on estate_base (collation-adjusted) so that Step 8 can
+            // impute donations against gross entitlements. When there are no
+            // donations, estate_base == net_estate and this is a no-op change.
             let distributions = compute_intestate_distribution(
-                &input.net_estate,
+                &input.estate_base,
                 &input.heirs,
                 &input.line_counts,
                 &scenario,
@@ -419,71 +422,162 @@ pub fn compute_intestate_distribution(
     }
 }
 
-// ── Intestate Formulas I1-I15 ───────────────────────────────────────
+// ── Line-Aware Helpers ──────────────────────────────────────────────
 
-/// I1: n LC Only (Art. 980) — equal shares.
-fn distribute_i1(amount: &Frac, heirs: &[Heir]) -> Vec<HeirDistribution> {
-    let lcs: Vec<&Heir> = heirs
-        .iter()
-        .filter(|h| h.effective_category == EffectiveCategory::LegitimateChildGroup)
-        .collect();
-    let n = frac(lcs.len() as i64, 1);
-    let per_lc = amount / &n;
-    lcs.iter()
-        .map(|h| make_intestate_dist(&h.id, h.effective_category, per_lc.clone(), vec!["Art. 980".into()]))
-        .collect()
+/// A distribution unit representing one LC line in intestate succession.
+/// Lines are counted at degree-1 (direct children of decedent), with
+/// represented lines (predeceased/disinherited) splitting per stirpes
+/// among living descendants (Art. 970-982).
+enum LcLine<'a> {
+    /// Living heir inheriting in their own right.
+    OwnRight(&'a Heir),
+    /// Represented line: ancestor (dead/disinherited/unworthy) with living representatives.
+    Represented {
+        ancestor: &'a Heir,
+        representatives: Vec<&'a Heir>,
+    },
 }
 
-/// I2: n LC + Spouse (Art. 996) — spouse = one child's share.
+/// Collect LC distribution lines from the heir list.
+/// Only degree-1 anchors count as lines. Representatives (degree >= 2)
+/// are grouped under their ancestor's line, not counted separately.
+fn get_lc_lines<'a>(heirs: &'a [Heir]) -> Vec<LcLine<'a>> {
+    let mut lines = Vec::new();
+    for h in heirs {
+        if h.effective_category != EffectiveCategory::LegitimateChildGroup {
+            continue;
+        }
+        // Only process degree-1 anchors
+        if h.degree_from_decedent != 1 {
+            continue;
+        }
+        if !h.represented_by.is_empty() {
+            // Represented line: ancestor gets 0, reps split the line share
+            let reps: Vec<&Heir> = h
+                .represented_by
+                .iter()
+                .filter_map(|rep_id| heirs.iter().find(|h2| h2.id == *rep_id))
+                .collect();
+            if !reps.is_empty() {
+                lines.push(LcLine::Represented {
+                    ancestor: h,
+                    representatives: reps,
+                });
+            }
+        } else if h.is_alive && h.is_eligible && !h.has_renounced {
+            lines.push(LcLine::OwnRight(h));
+        }
+    }
+    lines
+}
+
+/// Distribute a per-line share across LC lines, handling representation per stirpes.
+/// Returns distributions for each line (own-right heirs get the full line share;
+/// represented lines produce a zero entry for the ancestor and equal splits for reps).
+fn distribute_lc_lines(
+    lines: &[LcLine],
+    per_line: &Frac,
+    basis: Vec<String>,
+) -> Vec<HeirDistribution> {
+    let mut result = Vec::new();
+    for line in lines {
+        match line {
+            LcLine::OwnRight(h) => {
+                result.push(make_intestate_dist(
+                    &h.id,
+                    h.effective_category,
+                    per_line.clone(),
+                    basis.clone(),
+                ));
+            }
+            LcLine::Represented {
+                ancestor,
+                representatives,
+            } => {
+                // Ancestor gets 0
+                result.push(make_intestate_dist(
+                    &ancestor.id,
+                    ancestor.effective_category,
+                    Frac::zero(),
+                    basis.clone(),
+                ));
+                // Representatives split per stirpes (Art. 970)
+                let per_rep = per_line / &frac(representatives.len() as i64, 1);
+                let mut rep_basis = vec!["Art. 970".into()];
+                rep_basis.extend(basis.iter().cloned());
+                for rep in representatives {
+                    result.push(make_intestate_dist(
+                        &rep.id,
+                        rep.effective_category,
+                        per_rep.clone(),
+                        rep_basis.clone(),
+                    ));
+                }
+            }
+        }
+    }
+    result
+}
+
+// ── Intestate Formulas I1-I15 ───────────────────────────────────────
+
+/// I1: n LC Only (Art. 980) — equal shares per line.
+fn distribute_i1(amount: &Frac, heirs: &[Heir]) -> Vec<HeirDistribution> {
+    let lines = get_lc_lines(heirs);
+    let n = frac(lines.len() as i64, 1);
+    let per_line = amount / &n;
+    distribute_lc_lines(&lines, &per_line, vec!["Art. 980".into()])
+}
+
+/// I2: n LC + Spouse (Art. 996) — spouse = one child-line's share.
 fn distribute_i2(amount: &Frac, heirs: &[Heir]) -> Vec<HeirDistribution> {
-    let lcs: Vec<&Heir> = heirs
-        .iter()
-        .filter(|h| h.effective_category == EffectiveCategory::LegitimateChildGroup)
-        .collect();
+    let lines = get_lc_lines(heirs);
     let spouse = heirs
         .iter()
         .find(|h| h.effective_category == EffectiveCategory::SurvivingSpouseGroup);
-    let divisor = frac((lcs.len() + 1) as i64, 1);
+    let divisor = frac((lines.len() + 1) as i64, 1);
     let per_share = amount / &divisor;
-    let mut result: Vec<HeirDistribution> = lcs
-        .iter()
-        .map(|h| make_intestate_dist(&h.id, h.effective_category, per_share.clone(), vec!["Art. 996".into()]))
-        .collect();
+    let mut result = distribute_lc_lines(&lines, &per_share, vec!["Art. 996".into()]);
     if let Some(s) = spouse {
-        result.push(make_intestate_dist(&s.id, s.effective_category, per_share, vec!["Art. 996".into()]));
+        result.push(make_intestate_dist(
+            &s.id,
+            s.effective_category,
+            per_share,
+            vec!["Art. 996".into()],
+        ));
     }
     result
 }
 
 /// I3: n LC + m IC (Arts. 983, 895) — 2:1 ratio, no cap in intestate.
 fn distribute_i3(amount: &Frac, heirs: &[Heir]) -> Vec<HeirDistribution> {
-    let lcs: Vec<&Heir> = heirs
-        .iter()
-        .filter(|h| h.effective_category == EffectiveCategory::LegitimateChildGroup)
-        .collect();
+    let lc_lines = get_lc_lines(heirs);
     let ics: Vec<&Heir> = heirs
         .iter()
         .filter(|h| h.effective_category == EffectiveCategory::IllegitimateChildGroup)
         .collect();
-    let total_units = frac(2 * lcs.len() as i64 + ics.len() as i64, 1);
+    let total_units = frac(2 * lc_lines.len() as i64 + ics.len() as i64, 1);
     let per_unit = amount / &total_units;
     let lc_share = &per_unit * &frac(2, 1);
-    let mut result = Vec::new();
-    for h in &lcs {
-        result.push(make_intestate_dist(&h.id, h.effective_category, lc_share.clone(), vec!["Art. 983".into(), "Art. 895".into()]));
-    }
+    let mut result = distribute_lc_lines(
+        &lc_lines,
+        &lc_share,
+        vec!["Art. 983".into(), "Art. 895".into()],
+    );
     for h in &ics {
-        result.push(make_intestate_dist(&h.id, h.effective_category, per_unit.clone(), vec!["Art. 983".into(), "Art. 895".into()]));
+        result.push(make_intestate_dist(
+            &h.id,
+            h.effective_category,
+            per_unit.clone(),
+            vec!["Art. 983".into(), "Art. 895".into()],
+        ));
     }
     result
 }
 
 /// I4: n LC + m IC + Spouse (Arts. 999, 983, 895) — spouse = 2 units.
 fn distribute_i4(amount: &Frac, heirs: &[Heir]) -> Vec<HeirDistribution> {
-    let lcs: Vec<&Heir> = heirs
-        .iter()
-        .filter(|h| h.effective_category == EffectiveCategory::LegitimateChildGroup)
-        .collect();
+    let lc_lines = get_lc_lines(heirs);
     let ics: Vec<&Heir> = heirs
         .iter()
         .filter(|h| h.effective_category == EffectiveCategory::IllegitimateChildGroup)
@@ -491,19 +585,27 @@ fn distribute_i4(amount: &Frac, heirs: &[Heir]) -> Vec<HeirDistribution> {
     let spouse = heirs
         .iter()
         .find(|h| h.effective_category == EffectiveCategory::SurvivingSpouseGroup);
-    let total_units = frac(2 * lcs.len() as i64 + ics.len() as i64 + 2, 1);
+    let total_units = frac(2 * lc_lines.len() as i64 + ics.len() as i64 + 2, 1);
     let per_unit = amount / &total_units;
     let lc_share = &per_unit * &frac(2, 1);
     let spouse_share = &per_unit * &frac(2, 1);
-    let mut result = Vec::new();
-    for h in &lcs {
-        result.push(make_intestate_dist(&h.id, h.effective_category, lc_share.clone(), vec!["Art. 999".into()]));
-    }
+    let mut result =
+        distribute_lc_lines(&lc_lines, &lc_share, vec!["Art. 999".into()]);
     for h in &ics {
-        result.push(make_intestate_dist(&h.id, h.effective_category, per_unit.clone(), vec!["Art. 999".into()]));
+        result.push(make_intestate_dist(
+            &h.id,
+            h.effective_category,
+            per_unit.clone(),
+            vec!["Art. 999".into()],
+        ));
     }
     if let Some(s) = spouse {
-        result.push(make_intestate_dist(&s.id, s.effective_category, spouse_share, vec!["Art. 999".into()]));
+        result.push(make_intestate_dist(
+            &s.id,
+            s.effective_category,
+            spouse_share,
+            vec!["Art. 999".into()],
+        ));
     }
     result
 }

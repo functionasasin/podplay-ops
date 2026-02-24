@@ -317,32 +317,32 @@ pub fn allocate_with_rounding(
         return vec![];
     }
 
-    // Build (index, heir_id, frac) sorted by share descending
-    let mut indexed: Vec<(usize, &HeirId, &Frac)> = shares
-        .iter()
-        .enumerate()
-        .map(|(i, (id, f))| (i, id, f))
-        .collect();
-    indexed.sort_by(|a, b| b.2.cmp(a.2));
-
-    // 1. Floor each share to centavos
+    // 1. Floor each share to centavos, tracking fractional remainders
     let mut result: Vec<(HeirId, BigInt)> = Vec::with_capacity(shares.len());
+    let mut remainders: Vec<(usize, Frac)> = Vec::with_capacity(shares.len());
     let mut total_allocated = BigInt::zero();
-    for (_, id, share) in &indexed {
-        // For non-negative fractions, numer/denom with integer division = floor
+
+    for (i, (id, share)) in shares.iter().enumerate() {
         let centavos = share.numer().div_floor(share.denom());
+        // Fractional part = share - floor(share)
+        let frac_part = share - &Frac::from_bigint(centavos.clone(), BigInt::one());
         total_allocated += &centavos;
-        result.push(((*id).clone(), centavos));
+        result.push((id.clone(), centavos));
+        remainders.push((i, frac_part));
     }
 
-    // 2. Distribute remainder (1 centavo at a time, largest share first)
+    // 2. Distribute remainder using largest-remainder method (Hare-Niemeyer):
+    //    give 1 centavo to each share with the largest fractional part, until
+    //    the total matches total_estate. This ensures rounding corrections stay
+    //    with the shares that lost the most from flooring.
+    remainders.sort_by(|a, b| b.1.cmp(&a.1));
     let mut remainder = &total_estate.centavos - &total_allocated;
     let one = BigInt::one();
-    for (_, centavos) in result.iter_mut() {
+    for (idx, _) in &remainders {
         if remainder <= BigInt::zero() {
             break;
         }
-        *centavos += &one;
+        result[*idx].1 += &one;
         remainder -= &one;
     }
 
@@ -454,13 +454,34 @@ pub fn assemble_narrative(sections: &[NarrativeSection]) -> String {
 /// 2. Generate per-heir narratives using §11 templates
 /// 3. Build EngineOutput with computation log and warnings
 pub fn step10_finalize(input: &Step10Input) -> Step10Output {
-    // 1. Build share fractions for rounding
-    let shares: Vec<(HeirId, Frac)> = input
+    // 1. Apply collation adjustments to get net shares, then round to net_estate.
+    //    Step 7 distributes on estate_base (gross entitlements including collated
+    //    donations). We subtract each heir's imputed donations to get net shares,
+    //    which represent what each heir actually receives from the physical estate.
+    //    The sum of net shares = net_estate (invariant 9).
+    let net_shares: Vec<(HeirId, Frac)> = input
         .final_distributions
         .iter()
-        .map(|d| (d.heir_id.clone(), d.total.clone()))
+        .map(|d| {
+            let donation = input
+                .collation_output
+                .adjustments
+                .iter()
+                .find(|a| a.heir_id == d.heir_id)
+                .map(|a| a.donations_imputed.clone())
+                .unwrap_or_else(Frac::zero);
+            let net = {
+                let diff = d.total.clone() - donation;
+                if diff.is_negative() {
+                    Frac::zero()
+                } else {
+                    diff
+                }
+            };
+            (d.heir_id.clone(), net)
+        })
         .collect();
-    let rounded = allocate_with_rounding(&shares, &input.net_estate);
+    let rounded = allocate_with_rounding(&net_shares, &input.net_estate);
 
     // Build a map from heir_id to rounded Money for quick lookup
     let rounded_map: std::collections::HashMap<&str, &Money> = rounded
@@ -472,7 +493,7 @@ pub fn step10_finalize(input: &Step10Input) -> Step10Output {
     let mut per_heir_shares = Vec::new();
     for dist in &input.final_distributions {
         let heir = input.heirs.iter().find(|h| h.id == dist.heir_id);
-        let total_money = rounded_map
+        let net_money = rounded_map
             .get(dist.heir_id.as_str())
             .cloned()
             .cloned()
@@ -494,9 +515,10 @@ pub fn step10_finalize(input: &Step10Input) -> Step10Output {
             .unwrap_or_else(|| Money::new(0));
 
         let gross = Money {
-            centavos: &total_money.centavos + &donations_imputed.centavos,
+            centavos: &net_money.centavos + &donations_imputed.centavos,
         };
-        let net = total_money.clone();
+        let total_money = gross.clone();
+        let net = net_money;
 
         let heir_name = heir
             .map(|h| h.name.clone())
