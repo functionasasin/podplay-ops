@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 33
-- Analyzed: 14
-- Pending: 19
-- Convergence: 42%
+- Analyzed: 15
+- Pending: 18
+- Convergence: 45%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -25,7 +25,7 @@
 - [x] deduction-medical — Sec. 86(A)(7): up to ₱500K, within 1 year before death
 - [x] deduction-ra4917 — Sec. 86(A)(7): employer death benefits under RA 4917
 - [x] surviving-spouse-share — Sec. 86(A)(9): net share in conjugal/community property
-- [ ] property-regime-acp — Family Code: Absolute Community of Property (default post-Aug 3, 1988)
+- [x] property-regime-acp — Family Code: Absolute Community of Property (default post-Aug 3, 1988)
 - [ ] property-regime-cpg — Civil Code: Conjugal Partnership of Gains (default pre-Family Code)
 - [ ] property-regime-separation — Complete Separation of Property (by prenuptial agreement)
 - [ ] nonresident-deductions — Sec. 86(B)-(D): proportional deductions for non-resident aliens
