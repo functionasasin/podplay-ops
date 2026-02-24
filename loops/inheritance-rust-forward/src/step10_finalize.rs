@@ -15,14 +15,15 @@
 //!   - §12.1-12.3 Rounding
 
 use num_bigint::BigInt;
+use num_integer::Integer;
 use num_traits::{One, Zero};
 
-use crate::fraction::{frac, frac_to_centavos, money_to_frac, Frac};
+use crate::fraction::Frac;
 use crate::step5_legitimes::{FreePortion, HeirLegitime};
 use crate::step6_validation::Step6Output;
 use crate::step7_distribute::HeirDistribution;
-use crate::step8_collation::{HeirCollationAdjustment, Step8Output};
-use crate::step9_vacancy::{Step9Output, VacancyRecord};
+use crate::step8_collation::Step8Output;
+use crate::step9_vacancy::VacancyRecord;
 use crate::types::*;
 
 // ── Narrative Section Types (§11.5) ─────────────────────────────────
@@ -138,33 +139,158 @@ pub type Step10Output = EngineOutput;
 
 /// Short display label for the heir's category (§11.6).
 pub fn category_label(heir: &Heir) -> String {
-    unimplemented!("step10: category_label")
+    match heir.effective_category {
+        EffectiveCategory::LegitimateChildGroup => {
+            if heir.inherits_by == InheritanceMode::Representation {
+                "grandchild, by representation".to_string()
+            } else {
+                match heir.raw_category {
+                    HeirCategory::AdoptedChild => "adopted child".to_string(),
+                    HeirCategory::LegitimatedChild => "legitimated child".to_string(),
+                    _ => "legitimate child".to_string(),
+                }
+            }
+        }
+        EffectiveCategory::IllegitimateChildGroup => "illegitimate child".to_string(),
+        EffectiveCategory::SurvivingSpouseGroup => "surviving spouse".to_string(),
+        EffectiveCategory::LegitimateAscendantGroup => match heir.raw_category {
+            HeirCategory::LegitimateParent => "legitimate parent".to_string(),
+            _ => "legitimate ascendant".to_string(),
+        },
+    }
 }
 
 /// Full label with legal basis for CATEGORY section (§11.6).
 pub fn raw_label(heir: &Heir) -> String {
-    unimplemented!("step10: raw_label")
+    match heir.raw_category {
+        HeirCategory::LegitimateChild => "legitimate child".to_string(),
+        HeirCategory::AdoptedChild => {
+            "adopted child (RA 8552 Sec. 17: same rights as legitimate)".to_string()
+        }
+        HeirCategory::LegitimatedChild => {
+            "legitimated child (Art. 179, Family Code: same rights as legitimate)".to_string()
+        }
+        HeirCategory::IllegitimateChild => {
+            "illegitimate child (Art. 176, Family Code)".to_string()
+        }
+        HeirCategory::SurvivingSpouse => "surviving spouse".to_string(),
+        HeirCategory::LegitimateParent => "legitimate parent".to_string(),
+        HeirCategory::LegitimateAscendant => "legitimate ascendant".to_string(),
+    }
 }
 
 /// Maps filiation proof to readable description with FC article (§11.6).
 pub fn filiation_description(proof: FiliationProof) -> String {
-    unimplemented!("step10: filiation_description")
+    match proof {
+        FiliationProof::BirthCertificate => {
+            "record of birth in the civil register (Art. 172(1), FC)".to_string()
+        }
+        FiliationProof::FinalJudgment => {
+            "final judgment establishing filiation (Art. 172(1), FC)".to_string()
+        }
+        FiliationProof::PublicDocumentAdmission => {
+            "admission of filiation in a public document (Art. 172(2), FC)".to_string()
+        }
+        FiliationProof::PrivateHandwrittenAdmission => {
+            "private handwritten instrument signed by the parent (Art. 172(2), FC)".to_string()
+        }
+        FiliationProof::OpenContinuousPossession => {
+            "open and continuous possession of the status of an illegitimate child (Art. 172(3), FC)"
+                .to_string()
+        }
+        FiliationProof::OtherEvidence => {
+            "evidence as provided by the Rules of Court (Art. 172(4), FC)".to_string()
+        }
+    }
 }
 
 /// Format a Money value as a peso string (§11.3).
 /// ₱ prefix, comma thousands, centavos only when non-zero.
 pub fn format_peso(amount: &Money) -> String {
-    unimplemented!("step10: format_peso")
+    let hundred = BigInt::from(100);
+    let (pesos, cents) = amount.centavos.div_rem(&hundred);
+    let pesos_str = format_with_commas(&pesos);
+    if cents.is_zero() {
+        format!("₱{}", pesos_str)
+    } else {
+        format!("₱{}.{:0>2}", pesos_str, cents)
+    }
+}
+
+/// Format a BigInt with comma thousands separators.
+fn format_with_commas(n: &BigInt) -> String {
+    let s = n.to_string();
+    let len = s.len();
+    if len <= 3 {
+        return s;
+    }
+    let first_group = len % 3;
+    let mut result = String::with_capacity(len + len / 3);
+    if first_group > 0 {
+        result.push_str(&s[..first_group]);
+    }
+    for chunk in s[first_group..].as_bytes().chunks(3) {
+        if !result.is_empty() {
+            result.push(',');
+        }
+        result.push_str(std::str::from_utf8(chunk).unwrap());
+    }
+    result
 }
 
 /// Format a fraction as Unicode symbol or slash notation (§11.6).
 pub fn format_fraction(f: &Frac) -> String {
-    unimplemented!("step10: format_fraction")
+    // Frac is always GCD-reduced, so numer/denom are in lowest terms
+    let n = f.numer();
+    let d = f.denom();
+    // Check known Unicode fraction symbols
+    let n_i64 = n.to_string().parse::<i64>().ok();
+    let d_i64 = d.to_string().parse::<i64>().ok();
+    if let (Some(num), Some(den)) = (n_i64, d_i64) {
+        if let Some(symbol) = unicode_fraction(num, den) {
+            return symbol.to_string();
+        }
+    }
+    format!("{}/{}", n, d)
+}
+
+/// Lookup table for Unicode fraction characters.
+fn unicode_fraction(num: i64, den: i64) -> Option<&'static str> {
+    match (num, den) {
+        (1, 2) => Some("½"),
+        (1, 3) => Some("⅓"),
+        (2, 3) => Some("⅔"),
+        (1, 4) => Some("¼"),
+        (3, 4) => Some("¾"),
+        (1, 5) => Some("⅕"),
+        (1, 6) => Some("⅙"),
+        (1, 8) => Some("⅛"),
+        (3, 8) => Some("⅜"),
+        _ => None,
+    }
 }
 
 /// Maps scenario code to the article governing the spouse's share (§11.6).
 pub fn spouse_article(scenario: ScenarioCode) -> Option<&'static str> {
-    unimplemented!("step10: spouse_article")
+    match scenario {
+        ScenarioCode::T1
+        | ScenarioCode::T2
+        | ScenarioCode::T3
+        | ScenarioCode::T4
+        | ScenarioCode::T5a
+        | ScenarioCode::T5b => Some("Art. 892"),
+        ScenarioCode::T7 | ScenarioCode::T8 => Some("Art. 893"),
+        ScenarioCode::T9 => Some("Art. 899"),
+        ScenarioCode::T11 => Some("Art. 894"),
+        ScenarioCode::T12 | ScenarioCode::T13 => Some("Art. 900"),
+        ScenarioCode::I2 | ScenarioCode::I4 => Some("Art. 996/999"),
+        ScenarioCode::I6 => Some("Art. 997"),
+        ScenarioCode::I8 => Some("Art. 998"),
+        ScenarioCode::I10 => Some("Art. 1000"),
+        ScenarioCode::I11 => Some("Art. 995"),
+        ScenarioCode::I12 => Some("Art. 1001"),
+        _ => None,
+    }
 }
 
 // ── Rounding (§12) ──────────────────────────────────────────────────
@@ -179,7 +305,43 @@ pub fn allocate_with_rounding(
     shares: &[(HeirId, Frac)],
     total_estate: &Money,
 ) -> Vec<(HeirId, Money)> {
-    unimplemented!("step10: allocate_with_rounding")
+    if shares.is_empty() {
+        return vec![];
+    }
+
+    // Build (index, heir_id, frac) sorted by share descending
+    let mut indexed: Vec<(usize, &HeirId, &Frac)> = shares
+        .iter()
+        .enumerate()
+        .map(|(i, (id, f))| (i, id, f))
+        .collect();
+    indexed.sort_by(|a, b| b.2.cmp(a.2));
+
+    // 1. Floor each share to centavos
+    let mut result: Vec<(HeirId, BigInt)> = Vec::with_capacity(shares.len());
+    let mut total_allocated = BigInt::zero();
+    for (_, id, share) in &indexed {
+        // For non-negative fractions, numer/denom with integer division = floor
+        let centavos = share.numer().div_floor(share.denom());
+        total_allocated += &centavos;
+        result.push(((*id).clone(), centavos));
+    }
+
+    // 2. Distribute remainder (1 centavo at a time, largest share first)
+    let mut remainder = &total_estate.centavos - &total_allocated;
+    let one = BigInt::one();
+    for (_, centavos) in result.iter_mut() {
+        if remainder <= BigInt::zero() {
+            break;
+        }
+        *centavos += &one;
+        remainder -= &one;
+    }
+
+    result
+        .into_iter()
+        .map(|(id, c)| (id, Money { centavos: c }))
+        .collect()
 }
 
 // ── Narrative Generation (§11) ──────────────────────────────────────
@@ -190,7 +352,82 @@ pub fn generate_heir_narrative(
     share: &InheritanceShare,
     input: &Step10Input,
 ) -> Vec<NarrativeSection> {
-    unimplemented!("step10: generate_heir_narrative")
+    let mut sections = Vec::new();
+    let label = category_label(heir);
+
+    // HEADER section (§11.2)
+    let header_text = if share.donations_imputed.centavos > BigInt::zero() {
+        format!(
+            "**{} ({})** receives **{} from the estate** (plus {} previously received as a donation, for a total of {}).",
+            heir.name,
+            label,
+            format_peso(&share.net_from_estate),
+            format_peso(&share.donations_imputed),
+            format_peso(&share.gross_entitlement),
+        )
+    } else if share.total.centavos == BigInt::zero() {
+        format!("**{} ({})** receives **₱0**.", heir.name, label)
+    } else {
+        format!(
+            "**{} ({})** receives **{}**.",
+            heir.name,
+            label,
+            format_peso(&share.total),
+        )
+    };
+    sections.push(NarrativeSection {
+        section_type: NarrativeSectionType::Header,
+        text: header_text,
+        legal_basis: vec![],
+    });
+
+    // SUCCESSION TYPE section
+    let succession_text = match input.succession_type {
+        SuccessionType::Intestate | SuccessionType::IntestateByPreterition => {
+            "The decedent died intestate (without a valid will).".to_string()
+        }
+        SuccessionType::Testate => "The decedent left a valid will.".to_string(),
+        SuccessionType::Mixed => {
+            "The decedent left a will that does not dispose of the entire estate.".to_string()
+        }
+    };
+    sections.push(NarrativeSection {
+        section_type: NarrativeSectionType::SuccessionType,
+        text: succession_text,
+        legal_basis: vec![],
+    });
+
+    // CATEGORY section
+    let rl = raw_label(heir);
+    let category_text = if heir.is_compulsory {
+        format!(
+            "As a {} (Art. 887 of the Civil Code), {} is a compulsory heir.",
+            rl, heir.name,
+        )
+    } else {
+        format!("{} is classified as a {}.", heir.name, rl)
+    };
+    sections.push(NarrativeSection {
+        section_type: NarrativeSectionType::Category,
+        text: category_text,
+        legal_basis: share.legal_basis.clone(),
+    });
+
+    // REPRESENTATION section (if applicable)
+    if heir.inherits_by == InheritanceMode::Representation {
+        if let Some(ref ancestor) = heir.represents {
+            sections.push(NarrativeSection {
+                section_type: NarrativeSectionType::Representation,
+                text: format!(
+                    "{} inherits by right of representation (Art. 970 of the Civil Code) in place of {}.",
+                    heir.name, ancestor,
+                ),
+                legal_basis: vec!["Art. 970".to_string()],
+            });
+        }
+    }
+
+    sections
 }
 
 /// Assemble narrative sections into a single paragraph string.
@@ -209,7 +446,111 @@ pub fn assemble_narrative(sections: &[NarrativeSection]) -> String {
 /// 2. Generate per-heir narratives using §11 templates
 /// 3. Build EngineOutput with computation log and warnings
 pub fn step10_finalize(input: &Step10Input) -> Step10Output {
-    unimplemented!("step10: step10_finalize")
+    // 1. Build share fractions for rounding
+    let shares: Vec<(HeirId, Frac)> = input
+        .final_distributions
+        .iter()
+        .map(|d| (d.heir_id.clone(), d.total.clone()))
+        .collect();
+    let rounded = allocate_with_rounding(&shares, &input.net_estate);
+
+    // Build a map from heir_id to rounded Money for quick lookup
+    let rounded_map: std::collections::HashMap<&str, &Money> = rounded
+        .iter()
+        .map(|(id, m)| (id.as_str(), m))
+        .collect();
+
+    // 2. Build per-heir InheritanceShares
+    let mut per_heir_shares = Vec::new();
+    for dist in &input.final_distributions {
+        let heir = input.heirs.iter().find(|h| h.id == dist.heir_id);
+        let total_money = rounded_map
+            .get(dist.heir_id.as_str())
+            .cloned()
+            .cloned()
+            .unwrap_or_else(|| Money::new(0));
+
+        // Find collation adjustments for this heir
+        let donations_imputed = input
+            .collation_output
+            .adjustments
+            .iter()
+            .find(|a| a.heir_id == dist.heir_id)
+            .map(|a| {
+                let centavos = a
+                    .donations_imputed
+                    .numer()
+                    .div_floor(a.donations_imputed.denom());
+                Money { centavos }
+            })
+            .unwrap_or_else(|| Money::new(0));
+
+        let gross = Money {
+            centavos: &total_money.centavos + &donations_imputed.centavos,
+        };
+        let net = total_money.clone();
+
+        let heir_name = heir.map(|h| h.name.clone()).unwrap_or_default();
+        let heir_cat = dist.effective_category;
+        let inherits_by = heir
+            .map(|h| h.inherits_by)
+            .unwrap_or(InheritanceMode::OwnRight);
+        let represents = heir.and_then(|h| h.represents.clone());
+
+        per_heir_shares.push(InheritanceShare {
+            heir_id: dist.heir_id.clone(),
+            heir_name,
+            heir_category: heir_cat,
+            inherits_by,
+            represents,
+            from_legitime: Money::new(0), // TODO: round sub-components
+            from_free_portion: Money::new(0),
+            from_intestate: Money::new(0),
+            total: total_money,
+            legitime_fraction: String::new(),
+            legal_basis: dist.legal_basis.clone(),
+            donations_imputed,
+            gross_entitlement: gross,
+            net_from_estate: net,
+        });
+    }
+
+    // 3. Generate per-heir narratives
+    let mut narratives = Vec::new();
+    for share in &per_heir_shares {
+        let heir = input.heirs.iter().find(|h| h.id == share.heir_id);
+        if let Some(heir) = heir {
+            let sections = generate_heir_narrative(heir, share, input);
+            let text = assemble_narrative(&sections);
+            narratives.push(HeirNarrative {
+                heir_id: share.heir_id.clone(),
+                heir_name: share.heir_name.clone(),
+                heir_category_label: category_label(heir),
+                text,
+            });
+        }
+    }
+
+    // 4. Build computation log
+    let computation_log = ComputationLog {
+        steps: vec![StepLog {
+            step_number: 10,
+            step_name: "Finalize + Narrate".to_string(),
+            description: "Converted fractional shares to peso amounts and generated narratives"
+                .to_string(),
+        }],
+        total_restarts: input.total_restarts,
+        final_scenario: format!("{:?}", input.scenario_code),
+    };
+
+    EngineOutput {
+        per_heir_shares,
+        narratives,
+        computation_log,
+        warnings: vec![],
+        succession_type: input.succession_type,
+        scenario_code: input.scenario_code,
+    }
 }
 
 // ── Tests ───────────────────────────────────────────────────────────
