@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 35
-- Analyzed: 29
-- Pending: 6
-- Convergence: 83%
+- Analyzed: 30
+- Pending: 5
+- Convergence: 86%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -48,7 +48,7 @@
 - [x] correction-amnesty-deductions — Correct deductions-pre-train-diffs.md: The `getOrdinaryDeductionItems` function incorrectly excludes funeral and judicial/admin expenses from the amnesty path for pre-2018 deaths. RA 11213 Sec. 3 defines net estate using "allowable deductions under the NIRC at time of death," which includes funeral and judicial expenses for pre-2018 deaths. The function should return `common + ["funeralExpenses", "judicialAdminExpenses"]` when `(regime == "pre_TRAIN") OR (regime == "amnesty" AND deductionRules == "PRE_TRAIN")`. Also update the `getSpecialDeductionAmounts` function to correctly handle amnesty + pre-2018 deaths separately from amnesty + TRAIN deaths.
 
 ### Wave 5: Synthesis
-- [ ] regime-detection — Decision tree for auto-selecting regime from date of death and estate status
+- [x] regime-detection — Decision tree for auto-selecting regime from date of death and estate status
 - [ ] computation-pipeline — End-to-end computation flow for all three regimes: inputs → gross estate → deductions → net estate → tax due
 - [ ] data-model — Complete entity/type definitions with all fields and validations (supporting all regimes)
 - [ ] test-vectors — 8-10 complete test cases across all three regimes with intermediate values
