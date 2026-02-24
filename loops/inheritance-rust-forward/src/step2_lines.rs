@@ -61,7 +61,82 @@ pub struct Step2Output {
 /// Updates heir fields: `representation_trigger`, `represented_by`, `represents`,
 /// `inherits_by`, `line_ancestor`.
 pub fn step2_build_lines(input: &Step2Input) -> Step2Output {
-    todo!()
+    let mut heirs = input.heirs.clone();
+    let warnings = Vec::new();
+
+    // Phase 1: Identify degree-1 anchors and build lines (immutable pass)
+    let anchor_ids: Vec<HeirId> = heirs
+        .iter()
+        .filter(|h| h.degree_from_decedent == 1)
+        .map(|h| h.id.clone())
+        .collect();
+
+    // Build each line and collect results: (anchor_id, line, trigger)
+    let line_results: Vec<(HeirId, Line, Option<RepresentationTrigger>)> = anchor_ids
+        .iter()
+        .filter_map(|anchor_id| {
+            let anchor = heirs.iter().find(|h| h.id == *anchor_id).unwrap();
+            let trigger = get_representation_trigger(anchor);
+            build_single_line(anchor, &heirs)
+                .map(|line| (anchor_id.clone(), line, trigger))
+        })
+        .collect();
+
+    // Phase 2: Update heir fields based on computed lines (mutable pass)
+    let mut lines = Vec::new();
+
+    for (anchor_id, line, trigger) in &line_results {
+        match line.mode {
+            InheritanceMode::OwnRight => {
+                if let Some(heir) = heirs.iter_mut().find(|h| h.id == *anchor_id) {
+                    heir.inherits_by = InheritanceMode::OwnRight;
+                }
+            }
+            InheritanceMode::Representation => {
+                // Update ancestor heir
+                if let Some(ancestor) = heirs.iter_mut().find(|h| h.id == *anchor_id) {
+                    ancestor.representation_trigger = *trigger;
+                    ancestor.represented_by = line.participants.clone();
+                }
+                // Update each representative
+                for rep_id in &line.participants {
+                    if let Some(rep) = heirs.iter_mut().find(|h| h.id == *rep_id) {
+                        rep.inherits_by = InheritanceMode::Representation;
+                        rep.line_ancestor = Some(anchor_id.clone());
+                        rep.represents = Some(anchor_id.clone());
+                    }
+                }
+            }
+        }
+        lines.push(line.clone());
+    }
+
+    // Phase 3: Compute per-category line counts
+    let line_counts = LineCounts {
+        legitimate_child: lines
+            .iter()
+            .filter(|l| l.effective_category == EffectiveCategory::LegitimateChildGroup)
+            .count(),
+        illegitimate_child: lines
+            .iter()
+            .filter(|l| l.effective_category == EffectiveCategory::IllegitimateChildGroup)
+            .count(),
+        surviving_spouse: lines
+            .iter()
+            .filter(|l| l.effective_category == EffectiveCategory::SurvivingSpouseGroup)
+            .count(),
+        legitimate_ascendant: lines
+            .iter()
+            .filter(|l| l.effective_category == EffectiveCategory::LegitimateAscendantGroup)
+            .count(),
+    };
+
+    Step2Output {
+        lines,
+        heirs,
+        line_counts,
+        warnings,
+    }
 }
 
 // ── Internal helpers ────────────────────────────────────────────────
@@ -75,7 +150,21 @@ pub fn step2_build_lines(input: &Step2Input) -> Step2Output {
 /// 4. Renounced → None (Art. 977: renunciation is NOT a representation trigger)
 /// 5. Otherwise → None
 pub fn get_representation_trigger(heir: &Heir) -> Option<RepresentationTrigger> {
-    todo!()
+    // Priority 1: Not alive → Predecease
+    if !heir.is_alive {
+        return Some(RepresentationTrigger::Predecease);
+    }
+    // Priority 2: Alive, validly disinherited → Disinheritance
+    if heir.is_disinherited && heir.disinheritance_valid {
+        return Some(RepresentationTrigger::Disinheritance);
+    }
+    // Priority 3: Alive, unworthy (not condoned) → Unworthiness
+    if heir.is_unworthy && !heir.unworthiness_condoned {
+        return Some(RepresentationTrigger::Unworthiness);
+    }
+    // Priority 4: Renounced → None (Art. 977: renunciation is NOT a trigger)
+    // Priority 5: Otherwise → None
+    None
 }
 
 /// Build a single inheritance line for the given anchor heir.
@@ -84,7 +173,35 @@ pub fn get_representation_trigger(heir: &Heir) -> Option<RepresentationTrigger> 
 /// - If anchor has a representation trigger → find representatives recursively
 /// - If renounced or no trigger → None (extinct line)
 fn build_single_line(anchor: &Heir, all_heirs: &[Heir]) -> Option<Line> {
-    todo!()
+    // Check representation trigger FIRST — a disinherited heir is alive/eligible
+    // but should not get OwnRight; their descendants represent them.
+    let trigger = get_representation_trigger(anchor);
+
+    if let Some(_trigger) = trigger {
+        // Heir has a representation trigger — find living descendants
+        let reps = find_representatives_recursive(anchor, all_heirs);
+        if reps.is_empty() {
+            return None; // Line extinct — no living representatives
+        }
+        return Some(Line {
+            ancestor_heir_id: anchor.id.clone(),
+            effective_category: anchor.effective_category,
+            mode: InheritanceMode::Representation,
+            participants: reps,
+        });
+    }
+
+    // No trigger — check if heir can inherit in own right
+    if anchor.is_alive && anchor.is_eligible && !anchor.has_renounced {
+        return Some(Line {
+            ancestor_heir_id: anchor.id.clone(),
+            effective_category: anchor.effective_category,
+            mode: InheritanceMode::OwnRight,
+            participants: vec![anchor.id.clone()],
+        });
+    }
+
+    None // Line extinct (e.g., renounced with no trigger, or ineligible)
 }
 
 /// Recursively find living, eligible representatives for a triggered heir.
@@ -94,7 +211,35 @@ fn build_single_line(anchor: &Heir, all_heirs: &[Heir]) -> Option<Line> {
 /// - Has a representation trigger → recurse into their children
 /// - Renounced → excluded (Art. 977), no representation for them
 fn find_representatives_recursive(heir: &Heir, all_heirs: &[Heir]) -> Vec<HeirId> {
-    todo!()
+    let mut reps = Vec::new();
+
+    for child_id in &heir.children {
+        let child = match all_heirs.iter().find(|h| h.id == *child_id) {
+            Some(c) => c,
+            None => continue, // child not in heir list
+        };
+
+        // Art. 977: Renounced children are excluded entirely — no representation
+        if child.has_renounced {
+            continue;
+        }
+
+        let trigger = get_representation_trigger(child);
+
+        if trigger.is_none() {
+            // No trigger: child is alive, not disinherited, not unworthy
+            // They can serve as a representative if eligible
+            if child.is_alive && child.is_eligible {
+                reps.push(child.id.clone());
+            }
+        } else {
+            // Child has a trigger (dead, disinherited, unworthy) → recurse deeper
+            let child_reps = find_representatives_recursive(child, all_heirs);
+            reps.extend(child_reps);
+        }
+    }
+
+    reps
 }
 
 // ═══════════════════════════════════════════════════════════════════
