@@ -490,7 +490,9 @@ pub fn step10_finalize(input: &Step10Input) -> Step10Output {
         };
         let net = total_money.clone();
 
-        let heir_name = heir.map(|h| h.name.clone()).unwrap_or_default();
+        let heir_name = heir
+            .map(|h| h.name.clone())
+            .unwrap_or_else(|| dist.heir_id.clone());
         let heir_cat = dist.effective_category;
         let inherits_by = heir
             .map(|h| h.inherits_by)
@@ -526,6 +528,19 @@ pub fn step10_finalize(input: &Step10Input) -> Step10Output {
                 heir_id: share.heir_id.clone(),
                 heir_name: share.heir_name.clone(),
                 heir_category_label: category_label(heir),
+                text,
+            });
+        } else {
+            // Non-heir beneficiary (stranger, charity, etc.) — generate basic narrative
+            let text = format!(
+                "**{} (beneficiary)** receives **{}**.",
+                share.heir_name,
+                format_peso(&share.total),
+            );
+            narratives.push(HeirNarrative {
+                heir_id: share.heir_id.clone(),
+                heir_name: share.heir_name.clone(),
+                heir_category_label: "beneficiary".to_string(),
                 text,
             });
         }
