@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 35
-- Analyzed: 26
-- Pending: 9
-- Convergence: 74%
+- Analyzed: 27
+- Pending: 8
+- Convergence: 77%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -41,7 +41,7 @@
 ### Wave 4: Estate Tax Amnesty (RA 11213/11569)
 - [x] amnesty-eligibility — Who qualifies: estates of decedents who died before Jan 1, 2018, with unpaid/unsettled estate tax
 - [x] amnesty-computation — Amnesty tax: 6% of net estate. Deductions = full set at time of death (pre-TRAIN rules for pre-2018 deaths, TRAIN rules for 2018–2022 deaths). Two tracks: Track A (full net taxable, no prior return) vs Track B (undeclared portion only). Minimum ₱5,000. Narrow interpretation (standard + spouse only) available as toggle with disclaimer. ETAR form, not Form 1801.
-- [ ] amnesty-vs-regular — Decision logic: when to use amnesty path vs. regular pre-TRAIN computation
+- [x] amnesty-vs-regular — Decision logic: when to use amnesty path vs. regular pre-TRAIN computation
 
 ### Wave 2 (continued): Corrections
 - [ ] correction-nra-public-transfers — Correct deduction-public-transfers.md: NRA public transfers are PROPORTIONAL per Sec. 86(B)(2), not full-value. Sec. 86(B)(2) explicitly includes paragraph (3) (transfers for public use) in the proportional formula alongside paragraph (1) (ELIT).
