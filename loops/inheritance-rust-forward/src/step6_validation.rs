@@ -445,7 +445,7 @@ pub fn check_underprovision(
     will: &Will,
     heirs: &[Heir],
     heir_legitimes: &[HeirLegitime],
-    free_portion: &FreePortion,
+    _free_portion: &FreePortion,
     estate_base: &Frac,
 ) -> Vec<UnderprovisionResult> {
     let mut results = Vec::new();

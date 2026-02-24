@@ -1,0 +1,13 @@
+{
+  "net_distributable_estate": {"centavos": 800000000},
+  "decedent": {"id":"d","name":"Santiago","date_of_death":"2026-01-15","is_married":false,"date_of_marriage":null,"marriage_solemnized_in_articulo_mortis":false,"was_ill_at_marriage":false,"illness_caused_death":false,"years_of_cohabitation":0,"has_legal_separation":false,"is_illegitimate":false},
+  "family_tree": [
+    {"id":"c1","name":"Teresa","is_alive_at_succession":true,"relationship_to_decedent":"LegitimateChild","degree":1,"line":null,"children":[],"filiation_proved":true,"filiation_proof_type":null,"is_guilty_party_in_legal_separation":false,"adoption":null,"is_unworthy":false,"unworthiness_condoned":false,"has_renounced":false,"blood_type":null},
+    {"id":"c2","name":"Ulises","is_alive_at_succession":true,"relationship_to_decedent":"LegitimateChild","degree":1,"line":null,"children":[],"filiation_proved":true,"filiation_proof_type":null,"is_guilty_party_in_legal_separation":false,"adoption":null,"is_unworthy":false,"unworthiness_condoned":false,"has_renounced":false,"blood_type":null}
+  ],
+  "will": null,
+  "donations": [
+    {"id":"don1","recipient_heir_id":"c1","recipient_is_stranger":false,"value_at_time_of_donation":{"centavos":200000000},"date":"2020-01-01","description":"advance on inheritance","is_expressly_exempt":false,"is_support_education_medical":false,"is_customary_gift":false,"is_professional_expense":false,"professional_expense_parent_required":false,"professional_expense_imputed_savings":null,"is_joint_from_both_parents":false,"is_to_child_spouse_only":false,"is_joint_to_child_and_spouse":false,"is_wedding_gift":false,"is_debt_payment_for_child":false,"is_election_expense":false,"is_fine_payment":false}
+  ],
+  "config": {"retroactive_ra_11642":false,"max_pipeline_restarts":10}
+}

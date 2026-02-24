@@ -750,8 +750,6 @@ mod tests {
     use crate::fraction::frac;
     use crate::step7_distribute::HeirDistribution;
     use crate::step8_collation::{HeirCollationAdjustment, Step8Output};
-    use num_bigint::BigInt;
-    use num_rational::BigRational;
 
     // ── Test Helpers ────────────────────────────────────────────────
 

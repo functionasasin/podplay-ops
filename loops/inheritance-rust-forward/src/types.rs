@@ -21,9 +21,52 @@ pub type Date = String;
 
 /// Monetary value in centavos (₱1.00 = 100 centavos).
 /// Only used for input and final output — all intermediate computation uses Frac.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+///
+/// JSON format: `{"centavos": 100000000}` (plain integer or string for large values).
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Money {
     pub centavos: BigInt,
+}
+
+impl Serialize for Money {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        use serde::ser::SerializeStruct;
+        let mut s = serializer.serialize_struct("Money", 1)?;
+        // Serialize centavos as a numeric string to handle arbitrarily large values.
+        // Small values will still look like numbers in the JSON.
+        let val: i64 = (&self.centavos).try_into().unwrap_or(0);
+        if BigInt::from(val) == self.centavos {
+            s.serialize_field("centavos", &val)?;
+        } else {
+            s.serialize_field("centavos", &self.centavos.to_string())?;
+        }
+        s.end()
+    }
+}
+
+impl<'de> Deserialize<'de> for Money {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        #[derive(Deserialize)]
+        struct MoneyHelper {
+            centavos: CentavosValue,
+        }
+
+        #[derive(Deserialize)]
+        #[serde(untagged)]
+        enum CentavosValue {
+            Int(i64),
+            Str(String),
+        }
+
+        let helper = MoneyHelper::deserialize(deserializer)?;
+        let centavos = match helper.centavos {
+            CentavosValue::Int(v) => BigInt::from(v),
+            CentavosValue::Str(s) => s
+                .parse::<BigInt>()
+                .map_err(|_| serde::de::Error::custom("invalid centavos value"))?,
+        };
+        Ok(Money { centavos })
+    }
 }
 
 impl Money {

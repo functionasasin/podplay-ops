@@ -237,7 +237,6 @@ pub fn is_articulo_mortis(decedent: &Decedent) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::*;
 
     // ── Helpers ─────────────────────────────────────────────────────
 

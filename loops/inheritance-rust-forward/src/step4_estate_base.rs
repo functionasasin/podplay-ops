@@ -305,7 +305,6 @@ pub fn determine_collatability(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::fraction::frac;
     use num_bigint::BigInt;
 
     // ── Test Helpers ─────────────────────────────────────────────────

@@ -357,6 +357,7 @@ mod tests {
         heir
     }
 
+    #[allow(dead_code)]
     fn ineligible(mut heir: Heir) -> Heir {
         heir.is_eligible = false;
         heir

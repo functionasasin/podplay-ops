@@ -447,6 +447,7 @@ fn check_sum_invariant(output: &EngineOutput, estate: &Money) {
 }
 
 /// Invariant 6: Adopted child share == legitimate child share
+#[allow(dead_code)]
 fn check_adoption_equality(output: &EngineOutput) {
     let lc_shares: Vec<&InheritanceShare> = output
         .per_heir_shares
@@ -466,6 +467,7 @@ fn check_adoption_equality(output: &EngineOutput) {
 }
 
 /// Invariant 10: Scenario code matches surviving heir combination
+#[allow(dead_code)]
 fn check_scenario_consistency(output: &EngineOutput, expected: ScenarioCode) {
     assert_eq!(
         output.scenario_code, expected,
@@ -487,6 +489,7 @@ fn find_share<'a>(output: &'a EngineOutput, heir_id: &str) -> &'a InheritanceSha
         .unwrap_or_else(|| panic!("No share found for heir '{}'", heir_id))
 }
 
+#[allow(dead_code)]
 fn find_share_by_name<'a>(output: &'a EngineOutput, name: &str) -> &'a InheritanceShare {
     output
         .per_heir_shares

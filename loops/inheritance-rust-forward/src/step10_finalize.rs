@@ -627,7 +627,7 @@ pub fn step10_finalize(input: &Step10Input) -> Step10Output {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::fraction::{frac, money_to_frac};
+    use crate::fraction::frac;
     use num_bigint::BigInt;
 
     // ── format_peso tests ────────────────────────────────────────────

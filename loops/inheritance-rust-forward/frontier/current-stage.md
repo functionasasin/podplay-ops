@@ -7,10 +7,73 @@
 
 ## Test Results (updated by loop — iteration 8)
 ```
+warning: unused variable: `free_portion`
+   --> src/step6_validation.rs:448:5
+    |
+448 |     free_portion: &FreePortion,
+    |     ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_free_portion`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+warning: `inheritance-engine` (lib) generated 1 warning
+warning: function `check_adoption_equality` is never used
+   --> tests/integration.rs:450:4
+    |
+450 | fn check_adoption_equality(output: &EngineOutput) {
+    |    ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+
+warning: function `check_scenario_consistency` is never used
+   --> tests/integration.rs:469:4
+    |
+469 | fn check_scenario_consistency(output: &EngineOutput, expected: ScenarioCode) {
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `find_share_by_name` is never used
+   --> tests/integration.rs:490:4
+    |
+490 | fn find_share_by_name<'a>(output: &'a EngineOutput, name: &str) -> &'a InheritanceShare {
+    |    ^^^^^^^^^^^^^^^^^^
+
+warning: `inheritance-engine` (test "integration") generated 3 warnings
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.07s
+     Running tests/integration.rs (target/debug/deps/integration-9b993f1b26d0031f)
+
+running 30 tests
+test test_invariant7_preterition_annuls_all ... ok
+test test_computation_log_populated ... ok
+test test_invariant2_legitime_floor ... ok
+test test_all_heirs_have_narratives ... ok
+test test_tv01_single_lc_entire_estate ... ok
+test test_tv03_2lc_1ic_ratio ... ok
+test test_tv02_married_3lc_spouse_equal ... ok
+test test_tv04_spouse_only ... ok
+test test_invariant8_disinheritance_zero ... ok
+test test_tv05_parents_and_spouse ... ok
+test test_invariant9_collation ... ok
+test test_tv06_testate_fp_to_charity ... ok
+test test_tv18_escheat_to_state ... ok
+test test_tv07_preterition_annuls_will ... ok
+test test_tv17_ic_only_equal_shares ... ok
+test test_tv09_adopted_equals_legitimate ... ok
+test test_invariant1_sum_all_vectors ... ok
+test test_tv10_representation_per_stirpes ... ok
+test test_tv16_articulo_mortis ... ok
+test test_tv15_collateral_siblings ... ok
+test test_tv14_mixed_succession ... ok
+test test_tv11_collation_cap_inofficious ... ok
+test test_tv13_cap_rule_triggered ... ok
+test test_tv12_inofficious_legacy_spouse_recovery ... ok
+test test_tv08_disinheritance_representation ... ok
+test test_tv21_fideicommissary ... ok
+test test_tv23_ascendant_only ... ok
+test test_tv20_iron_curtain ... ok
+test test_tv19_total_renunciation_restart ... ok
+test test_tv22_representation_collation ... ok
+
 test result: ok. 30 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 ```
-
-ALL 30 INTEGRATION TESTS PASS. ALL 411 UNIT TESTS PASS.
 
 ## Work Log
 - iteration 3: Fixed IntestateByPreterition scenario dispatch (step7) + false preterition from representatives (step6). 14→17 passed, 16→13 failed.

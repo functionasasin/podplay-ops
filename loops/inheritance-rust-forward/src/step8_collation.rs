@@ -333,7 +333,6 @@ mod tests {
     use crate::fraction::frac;
     use crate::step4_estate_base::{ChargeTarget, CollatabilityResult};
     use crate::step7_distribute::HeirDistribution;
-    use crate::types::*;
 
     // ── Test helpers ────────────────────────────────────────────────
 
@@ -383,6 +382,7 @@ mod tests {
         heir
     }
 
+    #[allow(dead_code)]
     fn make_distribution(heir_id: &str, category: EffectiveCategory, total: Frac) -> HeirDistribution {
         HeirDistribution {
             heir_id: heir_id.to_string(),

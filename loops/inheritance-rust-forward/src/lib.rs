@@ -4,6 +4,7 @@
 //! for Philippine estates using exact rational arithmetic.
 
 pub mod fraction;
+pub mod pipeline;
 pub mod step1_classify;
 pub mod step2_lines;
 pub mod step3_scenario;

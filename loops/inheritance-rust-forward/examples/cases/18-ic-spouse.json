@@ -1,0 +1,10 @@
+{
+  "net_distributable_estate": {"centavos": 400000000},
+  "decedent": {"id":"d","name":"Jaime","date_of_death":"2026-01-15","is_married":true,"date_of_marriage":"2000-01-01","marriage_solemnized_in_articulo_mortis":false,"was_ill_at_marriage":false,"illness_caused_death":false,"years_of_cohabitation":0,"has_legal_separation":false,"is_illegitimate":false},
+  "family_tree": [
+    {"id":"s","name":"Karen","is_alive_at_succession":true,"relationship_to_decedent":"SurvivingSpouse","degree":1,"line":null,"children":[],"filiation_proved":true,"filiation_proof_type":null,"is_guilty_party_in_legal_separation":false,"adoption":null,"is_unworthy":false,"unworthiness_condoned":false,"has_renounced":false,"blood_type":null},
+    {"id":"ic1","name":"Luis","is_alive_at_succession":true,"relationship_to_decedent":"IllegitimateChild","degree":1,"line":null,"children":[],"filiation_proved":true,"filiation_proof_type":"BirthCertificate","is_guilty_party_in_legal_separation":false,"adoption":null,"is_unworthy":false,"unworthiness_condoned":false,"has_renounced":false,"blood_type":null}
+  ],
+  "will": null, "donations": [],
+  "config": {"retroactive_ra_11642":false,"max_pipeline_restarts":10}
+}
