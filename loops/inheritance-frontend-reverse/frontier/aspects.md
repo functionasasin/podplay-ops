@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total aspects**: 25
-- **Analyzed**: 16
-- **Pending**: 9
-- **Convergence**: 64%
+- **Analyzed**: 17
+- **Pending**: 8
+- **Convergence**: 68%
 
 ## Wave 1: Rust Type → Frontend Spec (17 aspects)
 
@@ -25,7 +25,7 @@
 - [x] condition-substitute — Condition and Substitute structs, enums for types/triggers
 - [x] disinheritance — Disinheritance struct, 23 cause codes grouped by article
 - [x] donation — Donation struct, 11+ exemption flags, collation rules
-- [ ] engine-output — EngineOutput, InheritanceShare, HeirNarrative, ComputationLog, ManualFlag
+- [x] engine-output — EngineOutput, InheritanceShare, HeirNarrative, ComputationLog, ManualFlag
 
 ## Wave 2: Cross-Cutting Analysis (5 aspects)
 
