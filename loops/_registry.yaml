@@ -62,3 +62,11 @@ loops:
     timeout_minutes: 30
     status: active
     created: 2026-02-24
+  inheritance-frontend-reverse:
+    description: "Analyze Rust inheritance engine → implementation-ready React + TypeScript frontend spec"
+    type: reverse
+    schedule: "*/30 * * * *"
+    max_iterations: 40
+    timeout_minutes: 30
+    status: active
+    created: 2026-02-24
