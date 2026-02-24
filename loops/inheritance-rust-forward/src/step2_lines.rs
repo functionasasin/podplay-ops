@@ -258,6 +258,7 @@ mod tests {
             EffectiveCategory::IllegitimateChildGroup => HeirCategory::IllegitimateChild,
             EffectiveCategory::SurvivingSpouseGroup => HeirCategory::SurvivingSpouse,
             EffectiveCategory::LegitimateAscendantGroup => HeirCategory::LegitimateParent,
+            EffectiveCategory::CollateralGroup => HeirCategory::Sibling,
         };
         Heir {
             id: id.to_string(),

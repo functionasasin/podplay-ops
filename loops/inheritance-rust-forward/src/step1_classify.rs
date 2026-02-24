@@ -42,7 +42,7 @@ pub fn step1_classify(input: &Step1Input) -> Step1Output {
     for person in &input.family_tree {
         let raw_cat = match raw_category_from_relationship(person.relationship_to_decedent) {
             Some(cat) => cat,
-            None => continue, // Not a compulsory heir (sibling, stranger, etc.)
+            None => continue, // Stranger — not classifiable
         };
 
         let eff_cat = effective_category(raw_cat);
@@ -92,7 +92,7 @@ pub fn step1_classify(input: &Step1Input) -> Step1Output {
             articulo_mortis_marriage: am,
             degree_from_decedent: person.degree,
             line: person.line,
-            blood_type: None,                  // Determined in Step 2
+            blood_type: person.blood_type,     // From Person for collaterals; may also be set in Step 2
             representation_trigger: None,      // Determined in Step 2
             represented_by: vec![],
             represents: None,
@@ -102,10 +102,13 @@ pub fn step1_classify(input: &Step1Input) -> Step1Output {
         });
     }
 
-    // §4.2 Mutual Exclusion: If any alive LC-group heir exists,
+    // §4.2 Mutual Exclusion: If any alive, non-renounced LC-group heir exists,
     // all ascendants are excluded from compulsory succession.
+    // Renounced heirs do not count (Art. 969: total renunciation → next degree inherits).
     let has_lc_descendants = heirs.iter().any(|h| {
-        h.effective_category == EffectiveCategory::LegitimateChildGroup && h.is_alive
+        h.effective_category == EffectiveCategory::LegitimateChildGroup
+            && h.is_alive
+            && !h.has_renounced
     });
 
     if has_lc_descendants {
@@ -122,8 +125,8 @@ pub fn step1_classify(input: &Step1Input) -> Step1Output {
 // ── Internal helpers ────────────────────────────────────────────────
 
 /// Map a `Relationship` to a `HeirCategory` (raw classification).
-/// Only compulsory heir relationships (Art. 887) produce a category.
-/// Non-compulsory relationships (Sibling, Stranger, etc.) return None.
+/// Compulsory heir relationships (Art. 887) and intestate collateral heir
+/// relationships produce a category. Only Strangers return None.
 pub fn raw_category_from_relationship(rel: Relationship) -> Option<HeirCategory> {
     match rel {
         Relationship::LegitimateChild => Some(HeirCategory::LegitimateChild),
@@ -133,15 +136,16 @@ pub fn raw_category_from_relationship(rel: Relationship) -> Option<HeirCategory>
         Relationship::SurvivingSpouse => Some(HeirCategory::SurvivingSpouse),
         Relationship::LegitimateParent => Some(HeirCategory::LegitimateParent),
         Relationship::LegitimateAscendant => Some(HeirCategory::LegitimateAscendant),
-        Relationship::Sibling
-        | Relationship::NephewNiece
-        | Relationship::OtherCollateral
-        | Relationship::Stranger => None,
+        Relationship::Sibling => Some(HeirCategory::Sibling),
+        Relationship::NephewNiece => Some(HeirCategory::NephewNiece),
+        Relationship::OtherCollateral => Some(HeirCategory::OtherCollateral),
+        Relationship::Stranger => None,
     }
 }
 
 /// Map a `HeirCategory` to its `EffectiveCategory` per §4.1.
 /// Legitimate, legitimated, and adopted children all map to LegitimateChildGroup.
+/// Collateral relatives map to CollateralGroup (non-compulsory intestate heirs).
 pub fn effective_category(raw: HeirCategory) -> EffectiveCategory {
     match raw {
         HeirCategory::LegitimateChild
@@ -151,13 +155,20 @@ pub fn effective_category(raw: HeirCategory) -> EffectiveCategory {
         HeirCategory::SurvivingSpouse => EffectiveCategory::SurvivingSpouseGroup,
         HeirCategory::LegitimateParent
         | HeirCategory::LegitimateAscendant => EffectiveCategory::LegitimateAscendantGroup,
+        HeirCategory::Sibling
+        | HeirCategory::NephewNiece
+        | HeirCategory::OtherCollateral => EffectiveCategory::CollateralGroup,
     }
 }
 
 /// Determine whether a raw category is a compulsory heir per Art. 887.
-/// All 7 HeirCategory values are compulsory heirs.
-pub fn is_compulsory_heir(_raw: HeirCategory) -> bool {
-    true
+/// The 7 original HeirCategory values are compulsory heirs.
+/// Collateral relatives (siblings, nephews/nieces, other collaterals) are NOT compulsory.
+pub fn is_compulsory_heir(raw: HeirCategory) -> bool {
+    !matches!(
+        raw,
+        HeirCategory::Sibling | HeirCategory::NephewNiece | HeirCategory::OtherCollateral
+    )
 }
 
 /// Check eligibility of an heir per §4.3 eligibility gate.
@@ -246,6 +257,7 @@ mod tests {
             is_unworthy: false,
             unworthiness_condoned: false,
             has_renounced: false,
+            blood_type: None,
         }
     }
 
@@ -390,19 +402,20 @@ mod tests {
     }
 
     #[test]
-    fn test_relationship_sibling_not_compulsory() {
+    fn test_relationship_sibling_classified_not_compulsory() {
         // Siblings are intestate heirs but NOT compulsory heirs
         assert_eq!(
             raw_category_from_relationship(Relationship::Sibling),
-            None
+            Some(HeirCategory::Sibling)
         );
+        assert!(!is_compulsory_heir(HeirCategory::Sibling));
     }
 
     // ── §4.1: Compulsory heir check ────────────────────────────────
 
     #[test]
-    fn test_all_heir_categories_are_compulsory() {
-        // ALL 7 HeirCategory values are compulsory (Art. 887)
+    fn test_compulsory_heir_categories() {
+        // Art. 887: 7 compulsory heir categories
         assert!(is_compulsory_heir(HeirCategory::LegitimateChild));
         assert!(is_compulsory_heir(HeirCategory::LegitimatedChild));
         assert!(is_compulsory_heir(HeirCategory::AdoptedChild));
@@ -410,6 +423,10 @@ mod tests {
         assert!(is_compulsory_heir(HeirCategory::SurvivingSpouse));
         assert!(is_compulsory_heir(HeirCategory::LegitimateParent));
         assert!(is_compulsory_heir(HeirCategory::LegitimateAscendant));
+        // Collateral relatives are NOT compulsory
+        assert!(!is_compulsory_heir(HeirCategory::Sibling));
+        assert!(!is_compulsory_heir(HeirCategory::NephewNiece));
+        assert!(!is_compulsory_heir(HeirCategory::OtherCollateral));
     }
 
     // ── §4.3: Eligibility gate ─────────────────────────────────────

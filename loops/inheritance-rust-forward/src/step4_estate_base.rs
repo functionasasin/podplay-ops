@@ -319,6 +319,7 @@ mod tests {
                 EffectiveCategory::IllegitimateChildGroup => HeirCategory::IllegitimateChild,
                 EffectiveCategory::SurvivingSpouseGroup => HeirCategory::SurvivingSpouse,
                 EffectiveCategory::LegitimateAscendantGroup => HeirCategory::LegitimateParent,
+                EffectiveCategory::CollateralGroup => HeirCategory::Sibling,
             },
             effective_category: eff_cat,
             is_compulsory,

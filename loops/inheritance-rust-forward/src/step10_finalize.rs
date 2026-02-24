@@ -157,6 +157,11 @@ pub fn category_label(heir: &Heir) -> String {
             HeirCategory::LegitimateParent => "legitimate parent".to_string(),
             _ => "legitimate ascendant".to_string(),
         },
+        EffectiveCategory::CollateralGroup => match heir.raw_category {
+            HeirCategory::Sibling => "sibling".to_string(),
+            HeirCategory::NephewNiece => "nephew/niece".to_string(),
+            _ => "collateral relative".to_string(),
+        },
     }
 }
 
@@ -176,6 +181,9 @@ pub fn raw_label(heir: &Heir) -> String {
         HeirCategory::SurvivingSpouse => "surviving spouse".to_string(),
         HeirCategory::LegitimateParent => "legitimate parent".to_string(),
         HeirCategory::LegitimateAscendant => "legitimate ascendant".to_string(),
+        HeirCategory::Sibling => "sibling (Arts. 1003-1008)".to_string(),
+        HeirCategory::NephewNiece => "nephew/niece (Art. 972)".to_string(),
+        HeirCategory::OtherCollateral => "collateral relative (Arts. 1009-1010)".to_string(),
     }
 }
 
@@ -515,6 +523,30 @@ pub fn step10_finalize(input: &Step10Input) -> Step10Output {
             gross_entitlement: gross,
             net_from_estate: net,
         });
+    }
+
+    // 2b. Add zero-share entries for classified heirs without distributions
+    // (e.g., renounced, disinherited, or ineligible heirs).
+    for heir in &input.heirs {
+        let already_has_share = per_heir_shares.iter().any(|s| s.heir_id == heir.id);
+        if !already_has_share && (heir.has_renounced || (heir.is_disinherited && heir.disinheritance_valid) || !heir.is_eligible) {
+            per_heir_shares.push(InheritanceShare {
+                heir_id: heir.id.clone(),
+                heir_name: heir.name.clone(),
+                heir_category: heir.effective_category,
+                inherits_by: heir.inherits_by,
+                represents: heir.represents.clone(),
+                from_legitime: Money::new(0),
+                from_free_portion: Money::new(0),
+                from_intestate: Money::new(0),
+                total: Money::new(0),
+                legitime_fraction: String::new(),
+                legal_basis: vec![],
+                donations_imputed: Money::new(0),
+                gross_entitlement: Money::new(0),
+                net_from_estate: Money::new(0),
+            });
+        }
     }
 
     // 3. Generate per-heir narratives

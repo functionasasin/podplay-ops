@@ -89,6 +89,10 @@ pub enum HeirCategory {
     SurvivingSpouse,
     LegitimateParent,
     LegitimateAscendant,
+    // Non-compulsory intestate heir categories
+    Sibling,
+    NephewNiece,
+    OtherCollateral,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -97,6 +101,8 @@ pub enum EffectiveCategory {
     IllegitimateChildGroup,
     SurvivingSpouseGroup,
     LegitimateAscendantGroup,
+    /// Non-compulsory collateral heirs (siblings, nephews/nieces, other collaterals).
+    CollateralGroup,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -276,6 +282,8 @@ pub struct Person {
     pub is_unworthy: bool,
     pub unworthiness_condoned: bool,
     pub has_renounced: bool,
+    /// Blood type for collateral heirs (siblings): Full or Half.
+    pub blood_type: Option<BloodType>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

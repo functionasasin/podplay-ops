@@ -322,6 +322,7 @@ fn person(id: &str, name: &str, rel: Relationship) -> Person {
         is_unworthy: false,
         unworthiness_condoned: false,
         has_renounced: false,
+        blood_type: None,
     }
 }
 
@@ -347,8 +348,7 @@ fn grandchild(id: &str, name: &str, parent_id: &str) -> Person {
 
 fn sibling(id: &str, name: &str, blood: BloodType) -> Person {
     let mut p = person(id, name, Relationship::Sibling);
-    p.line = None;
-    let _ = blood; // BloodType doesn't go in Person, it's inferred by classify
+    p.blood_type = Some(blood);
     p
 }
 
@@ -1148,21 +1148,15 @@ fn test_tv14_mixed_succession() {
 
 #[test]
 fn test_tv15_collateral_siblings() {
-    let mut sib1 = person("sib1", "Flora", Relationship::Sibling);
-    sib1.degree = 2;
-    let mut sib2 = person("sib2", "Gino", Relationship::Sibling);
-    sib2.degree = 2;
-    let mut sib3 = person("sib3", "Hilda", Relationship::Sibling);
-    sib3.degree = 2;
-    // Note: BloodType (full vs half) is determined during classification
-    // based on shared parents. For integration tests we'll need to see
-    // if the engine handles this via the Person's parent data.
-    // For now, we construct with the assumption the engine can classify them.
-
+    // 2 full-blood siblings + 1 half-blood sibling
     let input = EngineInput {
         net_distributable_estate: Money::from_pesos(10_000_000),
         decedent: default_decedent("Eduardo Tan", false),
-        family_tree: vec![sib1, sib2, sib3],
+        family_tree: vec![
+            sibling("sib1", "Flora", BloodType::Full),
+            sibling("sib2", "Gino", BloodType::Full),
+            sibling("sib3", "Hilda", BloodType::Half),
+        ],
         will: None,
         donations: vec![],
         config: default_config(),
@@ -1173,10 +1167,12 @@ fn test_tv15_collateral_siblings() {
     assert_eq!(output.succession_type, SuccessionType::Intestate);
     check_sum_invariant(&output, &input.net_distributable_estate);
 
-    // Art. 1006: full=2, full=2, half=1. Total units=5.
+    // Art. 1006: full=2units, full=2units, half=1unit. Total units=5.
+    // Per unit = P10M/5 = P2M
     // Full siblings get 2/5 = P4M each, half sibling gets 1/5 = P2M
-    // Note: exact distribution depends on how the engine classifies blood type.
-    // The sum invariant is verified above.
+    assert_total_pesos(find_share(&output, "sib1"), 4_000_000, "Flora");
+    assert_total_pesos(find_share(&output, "sib2"), 4_000_000, "Gino");
+    assert_total_pesos(find_share(&output, "sib3"), 2_000_000, "Hilda");
 }
 
 // ══════════════════════════════════════════════════════════════════════
