@@ -74,6 +74,14 @@ pub struct Step5Output {
 
 // ── Internal helpers ────────────────────────────────────────────────
 
+/// Returns true if the heir's line is extinct: they have a representation trigger
+/// (disinherited, predeceased, or unworthy) but no living representatives.
+/// Step 2 already excludes these from line_counts, so Step 5 must also exclude
+/// them from per-line legitime distribution to keep sums consistent.
+fn has_extinct_line(heir: &Heir) -> bool {
+    heir.representation_trigger.is_some() && heir.represented_by.is_empty()
+}
+
 fn add_lc_legitimes(
     out: &mut Vec<HeirLegitime>,
     heirs: &[Heir],
@@ -82,11 +90,15 @@ fn add_lc_legitimes(
     cap_applied: bool,
     legal_basis: Vec<String>,
 ) {
-    // Only degree-1 heirs (line anchors) get per-line legitimes.
+    // Only degree-1 heirs (line anchors) with active lines get per-line legitimes.
     // Representatives (degree >= 2) inherit through their line ancestor in Step 7.
+    // Heirs with extinct lines (disinherited/dead/unworthy with no representatives)
+    // are excluded — their line was already excluded from line_counts by Step 2.
     for heir in heirs
         .iter()
-        .filter(|h| h.effective_category == EffectiveCategory::LegitimateChildGroup && h.degree_from_decedent == 1)
+        .filter(|h| h.effective_category == EffectiveCategory::LegitimateChildGroup
+            && h.degree_from_decedent == 1
+            && !has_extinct_line(h))
     {
         out.push(HeirLegitime {
             heir_id: heir.id.clone(),
@@ -107,11 +119,15 @@ fn add_ic_legitimes(
     cap_applied: bool,
     legal_basis: Vec<String>,
 ) {
-    // Only degree-1 heirs (line anchors) get per-line legitimes.
+    // Only degree-1 heirs (line anchors) with active lines get per-line legitimes.
     // Representatives (degree >= 2) inherit through their line ancestor in Step 7.
+    // Heirs with extinct lines (disinherited/dead/unworthy with no representatives)
+    // are excluded — their line was already excluded from line_counts by Step 2.
     for heir in heirs
         .iter()
-        .filter(|h| h.effective_category == EffectiveCategory::IllegitimateChildGroup && h.degree_from_decedent == 1)
+        .filter(|h| h.effective_category == EffectiveCategory::IllegitimateChildGroup
+            && h.degree_from_decedent == 1
+            && !has_extinct_line(h))
     {
         out.push(HeirLegitime {
             heir_id: heir.id.clone(),
