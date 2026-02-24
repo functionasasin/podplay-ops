@@ -3,21 +3,20 @@
 ## Spec Sections
 - Testate Validation: §9 (preterition, disinheritance, underprovision, inofficiousness)
 
-## Test Results (updated by loop — iteration 2)
-```
-229 passed; 34 failed (all step6 stubs — todo!() panics as expected)
+## Status: IMPLEMENTATION COMPLETE
 
-Step 6 test coverage (34 tests):
-- Check 1 Preterition: 8 tests (detection, annulment, spouse exclusion, token legacy, invalid disinheritance, IC, ascendant, no omission)
-- Check 2 Disinheritance: 6 tests (valid 4-gate, TV-08, unproven, unspecified, reconciliation, no spouse representation)
-- Check 3 Underprovision: 3 tests (shortfall detection, no shortfall, TV-12 spouse recovery)
-- Check 4 Inofficiousness: 3 tests (excess detected, within FP, donations increase excess)
-- Art. 911 Reduction: 5 tests (phase 1a pro rata, preferred after non-preferred, phase 2 voluntary, phase 3 reverse-chrono, stops when absorbed)
-- Check 5 Condition Stripping: 3 tests (compulsory heir, no conditions, voluntary heir keeps)
-- Pipeline: 2 tests (preterition terminates, no preterition runs all)
-- Helper: 4 tests (heir_addressed_in_will by institution/legacy/devise/disinheritance)
-```
+All 34 step6 tests pass. All 263 total tests pass.
+
+## Implemented Functions
+1. `heir_addressed_in_will` — checks if heir appears in any institution, legacy, devise, or disinheritance
+2. `check_preterition` — Art. 854: detects omitted direct-line compulsory heirs, annuls all institutions
+3. `check_disinheritance_validity` — Arts. 915-922: 4-check validity gate (in will, cause specified, cause proven, no reconciliation)
+4. `will_provision_for_heir` — sums institutions + legacies addressed to a specific heir
+5. `check_underprovision` — Art. 855: detects compulsory heirs receiving less than legitime
+6. `check_inofficiousness` — Arts. 908-912: detects dispositions exceeding free portion
+7. `reduce_inofficious` — Art. 911 three-phase reduction (1a: non-preferred pro rata, 1b: preferred pro rata, 2: voluntary institutions, 3: donations reverse-chronological)
+8. `strip_conditions` — Art. 872: strips conditions from compulsory heirs' legitime portions
+9. `step6_validate_will` — five-check ordered pipeline with preterition termination
 
 ## Work Log
-- Iteration 1: loop detected stage 6 with no tests → wrote tests
-- Iteration 2: Created step6_validation.rs with types, stubs, 34 comprehensive tests covering all 5 checks
+- Iteration 1: Implemented all 9 functions. Fixed descendants_represent logic (Art. 923 legal right, not dependent on known children). 34/34 tests pass.
