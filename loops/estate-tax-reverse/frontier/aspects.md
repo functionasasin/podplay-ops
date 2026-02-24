@@ -1,10 +1,10 @@
 # Analysis Frontier
 
 ## Statistics
-- Total aspects discovered: 33
-- Analyzed: 17
+- Total aspects discovered: 34
+- Analyzed: 18
 - Pending: 16
-- Convergence: 52%
+- Convergence: 53%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -28,7 +28,7 @@
 - [x] property-regime-acp — Family Code: Absolute Community of Property (default post-Aug 3, 1988)
 - [x] property-regime-cpg — Civil Code: Conjugal Partnership of Gains (default pre-Family Code)
 - [x] property-regime-separation — Complete Separation of Property (by prenuptial agreement)
-- [ ] nonresident-deductions — Sec. 86(B)-(D): proportional deductions for non-resident aliens
+- [x] nonresident-deductions — Sec. 86(B)-(D): proportional deductions for non-resident aliens
 - [ ] exemptions — Sec. 87: exempt transfers (usufruct merger, fiduciary, charitable ≤30% admin)
 - [ ] tax-credits — Foreign estate tax paid, prior return payments
 - [ ] filing-rules — Sec. 90: 1-year deadline, CPA requirement for >₱5M, extensions
@@ -42,6 +42,9 @@
 - [ ] amnesty-eligibility — Who qualifies: estates of decedents who died before Jan 1, 2018, with unpaid/unsettled estate tax
 - [ ] amnesty-computation — Amnesty tax: 6% of net estate, limited deductions (standard deduction + surviving spouse share only)
 - [ ] amnesty-vs-regular — Decision logic: when to use amnesty path vs. regular pre-TRAIN computation
+
+### Wave 2 (continued): Corrections
+- [ ] correction-nra-public-transfers — Correct deduction-public-transfers.md: NRA public transfers are PROPORTIONAL per Sec. 86(B)(2), not full-value. Sec. 86(B)(2) explicitly includes paragraph (3) (transfers for public use) in the proportional formula alongside paragraph (1) (ELIT).
 
 ### Wave 5: Synthesis
 - [ ] regime-detection — Decision tree for auto-selecting regime from date of death and estate status
