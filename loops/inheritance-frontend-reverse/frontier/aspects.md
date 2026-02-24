@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total aspects**: 25
-- **Analyzed**: 19
-- **Pending**: 6
-- **Convergence**: 76%
+- **Analyzed**: 20
+- **Pending**: 5
+- **Convergence**: 80%
 
 ## Wave 1: Rust Type → Frontend Spec (17 aspects)
 
@@ -31,7 +31,7 @@
 
 - [x] conditional-visibility — Which fields appear/hide based on other field values (e.g. will step gated on testate, adoption sub-form on relationship type)
 - [x] invalid-combinations — Combinations the engine rejects or that produce warnings (mine pipeline validation logic and test case failures)
-- [ ] scenario-field-mapping — Which scenario codes (T1-T15, I1-I15) are reachable from which input configurations, and how the results view adapts
+- [x] scenario-field-mapping — Which scenario codes (T1-T15, I1-I15) are reachable from which input configurations, and how the results view adapts
 - [ ] test-case-field-coverage — Analyze all 20+ test case JSONs to verify Wave 1 specs cover every field value that appears in practice
 - [ ] shared-components — Identify reusable form components (MoneyInput, PersonPicker, DateInput, FractionInput) from Wave 1 field metadata
 
