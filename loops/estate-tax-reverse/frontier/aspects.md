@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 34
-- Analyzed: 23
-- Pending: 11
-- Convergence: 68%
+- Analyzed: 24
+- Pending: 10
+- Convergence: 71%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -36,7 +36,7 @@
 ### Wave 3: Pre-TRAIN Rule Extraction (deaths before Jan 1, 2018)
 - [x] tax-rate-pre-train — Original NIRC Sec. 84: graduated rate schedule (5%-20%) with brackets
 - [x] deductions-pre-train-diffs — Deduction amounts/rules that differ from TRAIN-era (old standard deduction, old family home cap, etc.)
-- [ ] pre-train-computation-flow — End-to-end computation differences from TRAIN-era (graduated rate application, different thresholds)
+- [x] pre-train-computation-flow — End-to-end computation differences from TRAIN-era (graduated rate application, different thresholds)
 
 ### Wave 4: Estate Tax Amnesty (RA 11213/11569)
 - [ ] amnesty-eligibility — Who qualifies: estates of decedents who died before Jan 1, 2018, with unpaid/unsettled estate tax
