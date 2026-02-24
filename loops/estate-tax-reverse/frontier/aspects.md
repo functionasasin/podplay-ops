@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 33
-- Analyzed: 15
-- Pending: 18
-- Convergence: 45%
+- Analyzed: 16
+- Pending: 17
+- Convergence: 48%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -26,7 +26,7 @@
 - [x] deduction-ra4917 — Sec. 86(A)(7): employer death benefits under RA 4917
 - [x] surviving-spouse-share — Sec. 86(A)(9): net share in conjugal/community property
 - [x] property-regime-acp — Family Code: Absolute Community of Property (default post-Aug 3, 1988)
-- [ ] property-regime-cpg — Civil Code: Conjugal Partnership of Gains (default pre-Family Code)
+- [x] property-regime-cpg — Civil Code: Conjugal Partnership of Gains (default pre-Family Code)
 - [ ] property-regime-separation — Complete Separation of Property (by prenuptial agreement)
 - [ ] nonresident-deductions — Sec. 86(B)-(D): proportional deductions for non-resident aliens
 - [ ] exemptions — Sec. 87: exempt transfers (usufruct merger, fiduciary, charitable ≤30% admin)
@@ -63,3 +63,4 @@
 - [x] gross-estate-nonresident — 2026-02-23 — PH-situs only scope for non-resident aliens. Same five Form 1801 items (29–34) but only PH-situated assets. Intangible personal property excluded if reciprocity exemption applies (user-declared). Item 30 = 0 (family home deduction not available to NRAs). Key additional input: decedent.totalWorldwideGrossEstateForDeductionPurposes (for Sec. 86B proportional deduction formula). Situs rules by property type documented. Reciprocity rule pseudocode defined. 10 edge cases, 8 test cases.
 - [x] gross-estate-inclusions — 2026-02-23 — Sec. 85(B)–(G): six special inclusion rules for taxable transfers. All map to Item 32/Schedule 3. Rules: (B) contemplation of death (3-year presumption, full FMV at death); (C) revocable transfers (retained power or power relinquished ≤3 years, bona fide sale exception); (D) GPA exercised by will (always) or by deed within 3 years; (E) life insurance on own life — estate or revocably-designated beneficiary included, irrevocably-designated excluded; (F) retroactivity clause only (no computation); (G) insufficient consideration — excess of fmvAtDeath over consideration received. Regime-invariant: same rules for TRAIN, pre-TRAIN, and amnesty. NRA scope: PH-situs only. 12 edge cases, 10 test cases.
 - [x] deduction-elit — 2026-02-23 — Sec. 86(A)(1): five ELIT sub-items (5A claims against estate, 5B claims vs. insolvent, 5C unpaid mortgages + taxes, 5D casualty losses). TRAIN removes funeral and judicial/admin expenses. Key rules: claims must be notarized and pre-existing; insolvent claims must first appear in gross estate; conjugal mortgage enters full balance in Column B (split handled by Schedule 6A); casualty losses are net of insurance recovery. Item 35 = sum of all ordinary deductions. Item 36 = max(0, Item 34 − Item 35). 12 edge cases, 10 test cases.
+- [x] property-regime-cpg — 2026-02-24 — Civil Code Arts. 142–185: CPG is the default regime for marriages contracted before August 3, 1988. Two critical differences from ACP: (1) pre-marital property is ALWAYS Column A (exclusive) — no prior-marriage-children exception needed; (2) fruits/income of exclusive (capital/paraphernal) property are CONJUGAL (Column B) — opposite of ACP. Art. 148 exclusive list: pre-marital, lucrative-title during marriage, exchange of exclusive, purchased with exclusive funds. Art. 153 conjugal list: work/industry during marriage, conjugal fund acquisitions, ALL fruits during marriage (even from exclusive property). Art. 160 presumption: acquired during marriage = conjugal unless proved exclusive. Engine contract: user tags per asset; full FMV in Column B (never halved); spouse's 50% via Item 39. Verified against Sample 5 (₱8M CPG + pre-TRAIN → tax ₱91,000). 12 edge cases, 12 test implications. Key UI note: fruits-of-exclusive = conjugal rule must be prominently displayed.
