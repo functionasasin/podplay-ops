@@ -73,7 +73,72 @@ pub struct Step4Output {
 ///
 /// This adjusted base is used for ALL legitime computations (Steps 5-6).
 pub fn step4_compute_estate_base(input: &Step4Input) -> Step4Output {
-    todo!("Step 4: compute estate base with collation")
+    let mut donation_results = Vec::new();
+    let mut total_collatable = Frac::zero();
+    let mut warnings = Vec::new();
+
+    for donation in &input.donations {
+        let result = if donation.recipient_is_stranger {
+            // Stranger donations always collatable, charged to FP (Art. 909 ¶2)
+            let amount = money_to_frac(&donation.value_at_time_of_donation.centavos);
+            CollatabilityResult {
+                donation_id: donation.id.clone(),
+                recipient_heir_id: None,
+                collatable: true,
+                collatable_amount: amount,
+                charge_target: ChargeTarget::FreePortion,
+                reason: "Art. 909 ¶2 stranger donation".to_string(),
+                still_check_inofficiousness: false,
+            }
+        } else if let Some(ref heir_id) = donation.recipient_heir_id {
+            match input.heirs.iter().find(|h| &h.id == heir_id) {
+                Some(heir) => determine_collatability(donation, heir, &input.heirs),
+                None => {
+                    warnings.push(ManualFlag {
+                        category: "unknown_donee".to_string(),
+                        description: format!(
+                            "Donation {} references unknown heir '{}'",
+                            donation.id, heir_id
+                        ),
+                        related_heir_id: Some(heir_id.clone()),
+                    });
+                    CollatabilityResult {
+                        donation_id: donation.id.clone(),
+                        recipient_heir_id: Some(heir_id.clone()),
+                        collatable: false,
+                        collatable_amount: Frac::zero(),
+                        charge_target: ChargeTarget::None,
+                        reason: "Donee not found in heirs list".to_string(),
+                        still_check_inofficiousness: false,
+                    }
+                }
+            }
+        } else {
+            CollatabilityResult {
+                donation_id: donation.id.clone(),
+                recipient_heir_id: None,
+                collatable: false,
+                collatable_amount: Frac::zero(),
+                charge_target: ChargeTarget::None,
+                reason: "No recipient identified".to_string(),
+                still_check_inofficiousness: false,
+            }
+        };
+
+        if result.collatable {
+            total_collatable = &total_collatable + &result.collatable_amount;
+        }
+        donation_results.push(result);
+    }
+
+    let estate_base = &input.net_estate + &total_collatable;
+
+    Step4Output {
+        estate_base,
+        donation_results,
+        total_collatable,
+        warnings,
+    }
 }
 
 /// Determine whether a single donation is collatable under the §8.3 decision tree.
@@ -93,7 +158,146 @@ pub fn determine_collatability(
     heir: &Heir,
     all_heirs: &[Heir],
 ) -> CollatabilityResult {
-    todo!("Determine collatability for a single donation")
+    let donation_value = money_to_frac(&donation.value_at_time_of_donation.centavos);
+
+    // Helper: non-collatable result
+    let not_collatable = |reason: &str, still_check: bool| CollatabilityResult {
+        donation_id: donation.id.clone(),
+        recipient_heir_id: Some(heir.id.clone()),
+        collatable: false,
+        collatable_amount: Frac::zero(),
+        charge_target: ChargeTarget::None,
+        reason: reason.to_string(),
+        still_check_inofficiousness: still_check,
+    };
+
+    // Charge target based on heir category (Art. 909/910)
+    let charge_target = match heir.effective_category {
+        EffectiveCategory::LegitimateChildGroup
+        | EffectiveCategory::IllegitimateChildGroup => ChargeTarget::Legitime,
+        _ => ChargeTarget::FreePortion,
+    };
+
+    // Gate: non-compulsory heirs don't collate (Art. 1061)
+    if !heir.is_compulsory {
+        return not_collatable("Non-compulsory heir", false);
+    }
+
+    // Gate: sole compulsory heir exempt — no equalization needed (Art. 1061)
+    let other_compulsory_count = all_heirs
+        .iter()
+        .filter(|h| h.is_compulsory && h.id != heir.id)
+        .count();
+    if other_compulsory_count == 0 {
+        return not_collatable("Sole compulsory heir (Art. 1061)", false);
+    }
+
+    // Art. 1067: Exempt categories (support, education, medical, customary)
+    if donation.is_support_education_medical || donation.is_customary_gift {
+        return not_collatable("Art. 1067 exempt", false);
+    }
+
+    // Art. 1066: Gift to child's spouse only → not collatable
+    if donation.is_to_child_spouse_only {
+        return not_collatable("Art. 1066 spouse-only", false);
+    }
+
+    // Art. 1066 ¶2: Joint gift to child + spouse → only ½ collatable
+    if donation.is_joint_to_child_and_spouse {
+        let half = &donation_value / &Frac::new(2, 1);
+        return CollatabilityResult {
+            donation_id: donation.id.clone(),
+            recipient_heir_id: Some(heir.id.clone()),
+            collatable: true,
+            collatable_amount: half,
+            charge_target,
+            reason: "Art. 1066 ¶2 joint gift (½)".to_string(),
+            still_check_inofficiousness: false,
+        };
+    }
+
+    // Art. 1072: Joint from both parents → ½ to this estate
+    if donation.is_joint_from_both_parents {
+        let half = &donation_value / &Frac::new(2, 1);
+        return CollatabilityResult {
+            donation_id: donation.id.clone(),
+            recipient_heir_id: Some(heir.id.clone()),
+            collatable: true,
+            collatable_amount: half,
+            charge_target,
+            reason: "Art. 1072 joint-parent (½)".to_string(),
+            still_check_inofficiousness: false,
+        };
+    }
+
+    // Art. 1068: Professional/vocational expenses — conditional
+    if donation.is_professional_expense {
+        if !donation.professional_expense_parent_required {
+            return not_collatable("Art. 1068 default exempt", false);
+        }
+        // Parent required → collatable, minus imputed home-living savings
+        let savings = match &donation.professional_expense_imputed_savings {
+            Some(money) => money_to_frac(&money.centavos),
+            None => Frac::zero(),
+        };
+        let collatable_amount = &donation_value - &savings;
+        // max(amount, 0): if savings >= donation, nothing to collate
+        if collatable_amount.is_negative() || collatable_amount.is_zero() {
+            return not_collatable("Art. 1068 imputed savings >= donation value", false);
+        }
+        return CollatabilityResult {
+            donation_id: donation.id.clone(),
+            recipient_heir_id: Some(heir.id.clone()),
+            collatable: true,
+            collatable_amount,
+            charge_target,
+            reason: "Art. 1068 conditional (parent required)".to_string(),
+            still_check_inofficiousness: false,
+        };
+    }
+
+    // Art. 1070: Wedding gifts — NOT added to estate base
+    // (inofficiousness check deferred to Step 6)
+    if donation.is_wedding_gift {
+        return not_collatable("Art. 1070 wedding gift", true);
+    }
+
+    // Art. 1062: Donor express exemption → not collatable but still check inofficiousness
+    if donation.is_expressly_exempt {
+        return not_collatable("Art. 1062 donor exempt", true);
+    }
+
+    // Art. 1062 ¶2: Donee repudiated inheritance → not collatable but still check
+    if heir.has_renounced {
+        return not_collatable("Art. 1062 ¶2 repudiation", true);
+    }
+
+    // Art. 1069: Debt, election expense, fine payment → always collatable
+    if donation.is_debt_payment_for_child
+        || donation.is_election_expense
+        || donation.is_fine_payment
+    {
+        return CollatabilityResult {
+            donation_id: donation.id.clone(),
+            recipient_heir_id: Some(heir.id.clone()),
+            collatable: true,
+            collatable_amount: donation_value,
+            charge_target,
+            reason: "Art. 1069".to_string(),
+            still_check_inofficiousness: false,
+        };
+    }
+
+    // Default: standard donation → fully collatable (Art. 909/910)
+    CollatabilityResult {
+        donation_id: donation.id.clone(),
+        recipient_heir_id: Some(heir.id.clone()),
+        collatable: true,
+        collatable_amount: donation_value,
+        charge_target,
+        reason: "Art. 909/910 standard".to_string(),
+        still_check_inofficiousness: false,
+    }
 }
 
 // ── Tests ────────────────────────────────────────────────────────────
