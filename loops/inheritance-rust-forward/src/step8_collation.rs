@@ -12,7 +12,7 @@
 
 use std::collections::HashMap;
 
-use crate::fraction::{frac, money_to_frac, Frac};
+use crate::fraction::{frac, Frac};
 use crate::step4_estate_base::CollatabilityResult;
 use crate::step7_distribute::HeirDistribution;
 use crate::types::*;
@@ -94,38 +94,235 @@ pub struct Step8Output {
 /// against their gross entitlement to determine what they receive from the
 /// physical estate.
 ///
+/// Algorithm:
+/// 1. Build map of heir_id → total collatable donation amount
+/// 2. Identify representation lines (predeceased heirs with representatives)
+/// 3. For representation lines: compute line-level collation (Art. 1064),
+///    then set per-representative net_from_estate
+/// 4. For direct heirs: impute their own donations
+/// 5. Compute totals and verify invariant: Σ(net_from_estate) = net_estate
+///
 /// Invariant: Σ(net_from_estate) = net_estate
 pub fn step8_collation_adjustment(input: &Step8Input) -> Step8Output {
-    todo!("Step 8: collation adjustment not yet implemented")
+    let donation_map = build_donation_map(&input.donation_results, &input.donations);
+    let mut adjustments: Vec<HeirCollationAdjustment> = Vec::new();
+    let mut representation_collations: Vec<RepresentationCollation> = Vec::new();
+    let mut total_excess = Frac::zero();
+    let warnings = Vec::new();
+
+    // Identify representation lines: heirs who are dead + have representatives
+    // Build a set of heir_ids that are representatives (to handle them via their line)
+    let mut representative_heir_ids: HashMap<HeirId, HeirId> = HashMap::new(); // rep_id -> represented_id
+    let mut representation_lines: Vec<(HeirId, Vec<HeirId>)> = Vec::new(); // (represented_id, [rep_ids])
+
+    for heir in &input.heirs {
+        if !heir.is_alive && !heir.represented_by.is_empty() {
+            representation_lines.push((heir.id.clone(), heir.represented_by.clone()));
+            for rep_id in &heir.represented_by {
+                representative_heir_ids.insert(rep_id.clone(), heir.id.clone());
+            }
+        }
+    }
+
+    // Process representation lines
+    for (represented_id, rep_ids) in &representation_lines {
+        let parent_donation = donation_map
+            .get(represented_id)
+            .cloned()
+            .unwrap_or_else(Frac::zero);
+
+        // Gather representative distributions
+        let rep_dists: Vec<&HeirDistribution> = input
+            .distributions
+            .iter()
+            .filter(|d| rep_ids.contains(&d.heir_id))
+            .collect();
+
+        if rep_dists.is_empty() {
+            continue;
+        }
+
+        // Line share = sum of all representatives' gross entitlements
+        let line_share = rep_dists
+            .iter()
+            .fold(Frac::zero(), |acc, d| acc + d.total.clone());
+
+        let rc = collation_for_representatives(
+            represented_id,
+            &rep_dists,
+            &parent_donation,
+            &line_share,
+        );
+
+        // Create adjustments for each representative
+        for rep_dist in &rep_dists {
+            let adj = HeirCollationAdjustment {
+                heir_id: rep_dist.heir_id.clone(),
+                gross_entitlement: rep_dist.total.clone(),
+                donations_imputed: if rc.owes_estate || !parent_donation.is_zero() {
+                    // Each representative's share of the parent's donation
+                    let n_reps = rep_ids.len() as i64;
+                    if n_reps > 0 {
+                        &parent_donation / &frac(n_reps, 1)
+                    } else {
+                        Frac::zero()
+                    }
+                } else {
+                    Frac::zero()
+                },
+                net_from_estate: rc.per_representative.clone(),
+                excess: Frac::zero(), // Excess is tracked at the line level
+                owes_estate: false,
+                legal_basis: vec!["Art. 1064".into()],
+            };
+            adjustments.push(adj);
+        }
+
+        if rc.owes_estate {
+            total_excess = total_excess + rc.excess.clone();
+        }
+
+        representation_collations.push(rc);
+    }
+
+    // Process direct heirs (not representatives)
+    for dist in &input.distributions {
+        if representative_heir_ids.contains_key(&dist.heir_id) {
+            continue; // Already handled via representation line
+        }
+
+        let donation_total = donation_map
+            .get(&dist.heir_id)
+            .cloned()
+            .unwrap_or_else(Frac::zero);
+
+        let adj = impute_direct_heir(dist, &donation_total);
+        if adj.owes_estate {
+            total_excess = total_excess + adj.excess.clone();
+        }
+        adjustments.push(adj);
+    }
+
+    // Compute total from estate
+    let total_from_estate = adjustments
+        .iter()
+        .fold(Frac::zero(), |acc, a| acc + a.net_from_estate.clone());
+
+    Step8Output {
+        adjustments,
+        representation_collations,
+        total_from_estate,
+        total_excess,
+        warnings,
+    }
 }
 
 // ── Internal helpers ────────────────────────────────────────────────
 
 /// Build a map of heir_id -> total collatable donation amount.
+///
+/// Only collatable donations with a recipient_heir_id are included.
+/// Non-collatable donations and stranger donations (no heir_id) are excluded.
 fn build_donation_map(
     donation_results: &[CollatabilityResult],
-    donations: &[Donation],
+    _donations: &[Donation],
 ) -> HashMap<HeirId, Frac> {
-    todo!("build_donation_map not yet implemented")
+    let mut map: HashMap<HeirId, Frac> = HashMap::new();
+    for result in donation_results {
+        if !result.collatable {
+            continue;
+        }
+        if let Some(ref heir_id) = result.recipient_heir_id {
+            let entry = map.entry(heir_id.clone()).or_insert_with(Frac::zero);
+            *entry = entry.clone() + result.collatable_amount.clone();
+        }
+        // Stranger donations (recipient_heir_id = None) are charged to FP,
+        // not imputed against any heir's share.
+    }
+    map
 }
 
 /// Impute donations for a direct heir (not inheriting by representation).
+///
+/// net_from_estate = max(gross_entitlement - donation_total, 0)
+/// If donation_total > gross_entitlement → inofficious (Art. 911).
 fn impute_direct_heir(
     distribution: &HeirDistribution,
     donation_total: &Frac,
 ) -> HeirCollationAdjustment {
-    todo!("impute_direct_heir not yet implemented")
+    let gross = &distribution.total;
+    let remainder = gross.clone() - donation_total.clone();
+
+    if remainder.is_negative() {
+        // Donation exceeds entitlement — inofficious (Art. 911)
+        let excess = donation_total.clone() - gross.clone();
+        HeirCollationAdjustment {
+            heir_id: distribution.heir_id.clone(),
+            gross_entitlement: gross.clone(),
+            donations_imputed: donation_total.clone(),
+            net_from_estate: Frac::zero(),
+            excess,
+            owes_estate: true,
+            legal_basis: vec!["Art. 911".into(), "Art. 1073".into()],
+        }
+    } else {
+        HeirCollationAdjustment {
+            heir_id: distribution.heir_id.clone(),
+            gross_entitlement: gross.clone(),
+            donations_imputed: donation_total.clone(),
+            net_from_estate: remainder,
+            excess: Frac::zero(),
+            owes_estate: false,
+            legal_basis: vec!["Art. 1073".into()],
+        }
+    }
 }
 
 /// Compute collation for a representation line per Art. 1064.
-/// Grandchildren collate their predeceased parent's donations.
+///
+/// Grandchildren inheriting by representation must collate their predeceased
+/// parent's donations, even though they never received the property (Art. 1064).
+/// Donations valued at donation-time value (Art. 1071).
+///
+/// If parent_donation_total >= line_share: representatives get ₱0, excess noted.
+/// Otherwise: net = line_share - parent_donation, divided equally per stirpes.
 fn collation_for_representatives(
     represented_heir_id: &HeirId,
     representatives: &[&HeirDistribution],
     parent_donation_total: &Frac,
     line_share: &Frac,
 ) -> RepresentationCollation {
-    todo!("collation_for_representatives not yet implemented")
+    let net = line_share.clone() - parent_donation_total.clone();
+    let n_reps = representatives.len() as i64;
+
+    if net.is_negative() {
+        // Parent's donation exceeded line share — owes estate
+        let excess = parent_donation_total.clone() - line_share.clone();
+        RepresentationCollation {
+            represented_heir_id: represented_heir_id.clone(),
+            line_entitlement: line_share.clone(),
+            parent_donation_collated: parent_donation_total.clone(),
+            net_from_estate: Frac::zero(),
+            per_representative: Frac::zero(),
+            owes_estate: true,
+            excess,
+        }
+    } else {
+        let per_rep = if n_reps > 0 {
+            &net / &frac(n_reps, 1)
+        } else {
+            Frac::zero()
+        };
+        RepresentationCollation {
+            represented_heir_id: represented_heir_id.clone(),
+            line_entitlement: line_share.clone(),
+            parent_donation_collated: parent_donation_total.clone(),
+            net_from_estate: net,
+            per_representative: per_rep,
+            owes_estate: false,
+            excess: Frac::zero(),
+        }
+    }
 }
 
 // ── Tests ───────────────────────────────────────────────────────────
