@@ -6,4 +6,5 @@
 pub mod fraction;
 pub mod step1_classify;
 pub mod step2_lines;
+pub mod step3_scenario;
 pub mod types;
