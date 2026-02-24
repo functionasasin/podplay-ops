@@ -17,6 +17,8 @@
 //!   - §7.5 Mixed Succession (Art. 960(2))
 //!   - §7.6 Collateral Distribution Sub-Algorithm (Arts. 1003-1010)
 
+use std::collections::HashMap;
+
 use crate::fraction::{frac, Frac};
 use crate::step2_lines::LineCounts;
 use crate::step5_legitimes::{FreePortion, HeirLegitime};
@@ -94,11 +96,252 @@ pub struct Step7Output {
     pub warnings: Vec<ManualFlag>,
 }
 
+// ── Helpers ─────────────────────────────────────────────────────────
+
+/// Create an intestate distribution record for a single heir.
+fn make_intestate_dist(
+    heir_id: &str,
+    category: EffectiveCategory,
+    amount: Frac,
+    basis: Vec<String>,
+) -> HeirDistribution {
+    HeirDistribution {
+        heir_id: heir_id.into(),
+        effective_category: category,
+        from_legitime: Frac::zero(),
+        from_free_portion: Frac::zero(),
+        from_intestate: amount.clone(),
+        total: amount,
+        legal_basis: basis,
+    }
+}
+
+/// Derive the intestate scenario code from line counts.
+fn derive_intestate_scenario(lc: &LineCounts) -> ScenarioCode {
+    let has_lc = lc.legitimate_child > 0;
+    let has_ic = lc.illegitimate_child > 0;
+    let has_spouse = lc.surviving_spouse > 0;
+    let has_asc = lc.legitimate_ascendant > 0;
+
+    match (has_lc, has_ic, has_spouse, has_asc) {
+        (true, false, false, false) => ScenarioCode::I1,
+        (true, false, true, false) => ScenarioCode::I2,
+        (true, true, false, false) => ScenarioCode::I3,
+        (true, true, true, false) => ScenarioCode::I4,
+        (false, false, false, true) => ScenarioCode::I5,
+        (false, false, true, true) => ScenarioCode::I6,
+        (false, true, false, false) => ScenarioCode::I7,
+        (false, true, true, false) => ScenarioCode::I8,
+        (false, true, false, true) => ScenarioCode::I9,
+        (false, true, true, true) => ScenarioCode::I10,
+        (false, false, true, false) => ScenarioCode::I11,
+        _ => ScenarioCode::I15, // I12-I14 need collateral detection beyond LineCounts
+    }
+}
+
+/// Compute the value of a testamentary institution.
+fn compute_institution_value(inst: &InstitutionOfHeir, estate_base: &Frac, fp_disposable: &Frac) -> Frac {
+    match &inst.share {
+        ShareSpec::Fraction(f) => estate_base * f,
+        ShareSpec::EntireEstate => estate_base.clone(),
+        ShareSpec::EntireFreePort => fp_disposable.clone(),
+        ShareSpec::EqualWithOthers => Frac::zero(),
+        ShareSpec::Unspecified => Frac::zero(),
+        ShareSpec::Residuary => Frac::zero(), // handled by has_residuary check
+    }
+}
+
+/// Compute the value of a legacy.
+fn compute_legacy_value(legacy: &Legacy) -> Frac {
+    match &legacy.property {
+        LegacySpec::FixedAmount(money) => Frac::from_money_centavos(&money.centavos),
+        LegacySpec::SpecificAsset(_) => Frac::zero(),
+        LegacySpec::GenericClass(_, money) => Frac::from_money_centavos(&money.centavos),
+    }
+}
+
+/// Compute the value of a devise.
+fn compute_devise_value(devise: &Devise) -> Frac {
+    match &devise.property {
+        DeviseSpec::SpecificProperty(_) => Frac::zero(),
+        DeviseSpec::FractionalInterest(_, _) => Frac::zero(),
+    }
+}
+
 // ── Public API ──────────────────────────────────────────────────────
 
 /// Main entry point: distribute the estate based on succession type.
 pub fn step7_distribute(input: &Step7Input) -> Step7Output {
-    todo!("Step 7: distribute estate")
+    match input.succession_type {
+        SuccessionType::Intestate | SuccessionType::IntestateByPreterition => {
+            let distributions = compute_intestate_distribution(
+                &input.net_estate,
+                &input.heirs,
+                &input.line_counts,
+                &input.scenario_code,
+            );
+            Step7Output {
+                distributions,
+                will_coverage: None,
+                final_succession_type: input.succession_type,
+                intestate_scenario: Some(input.scenario_code),
+                warnings: vec![],
+            }
+        }
+        SuccessionType::Testate | SuccessionType::Mixed => {
+            let will = input.will.as_ref().expect("Testate/Mixed requires a will");
+
+            // Determine will coverage to detect Mixed vs Testate
+            let coverage = determine_will_coverage(
+                will,
+                &input.estate_base,
+                &input.heir_legitimes,
+                &input.free_portion,
+                &input.heirs,
+            );
+
+            let final_succession_type = if coverage.disposes_of_entire_estate {
+                SuccessionType::Testate
+            } else {
+                SuccessionType::Mixed
+            };
+
+            // Phase 1: Compulsory heirs get their legitimes
+            let mut distributions: Vec<HeirDistribution> = input
+                .heir_legitimes
+                .iter()
+                .map(|hl| HeirDistribution {
+                    heir_id: hl.heir_id.clone(),
+                    effective_category: hl.effective_category,
+                    from_legitime: hl.legitime_amount.clone(),
+                    from_free_portion: Frac::zero(),
+                    from_intestate: Frac::zero(),
+                    total: hl.legitime_amount.clone(),
+                    legal_basis: hl.legal_basis.clone(),
+                })
+                .collect();
+
+            // Phase 2: Distribute will dispositions from FP
+            for inst in &will.institutions {
+                let heir_id = inst
+                    .heir
+                    .person_id
+                    .as_deref()
+                    .unwrap_or(&inst.heir.name);
+
+                if inst.is_residuary {
+                    // Residuary captures remaining FP
+                    let used_fp: Frac = distributions
+                        .iter()
+                        .map(|d| &d.from_free_portion)
+                        .fold(Frac::zero(), |acc, f| &acc + f);
+                    let remaining_fp = &input.free_portion.fp_disposable - &used_fp;
+                    let remaining_fp = if remaining_fp.is_negative() {
+                        Frac::zero()
+                    } else {
+                        remaining_fp
+                    };
+                    add_fp_to_distributions(&mut distributions, heir_id, remaining_fp);
+                    continue;
+                }
+
+                let inst_value = compute_institution_value(
+                    inst,
+                    &input.estate_base,
+                    &input.free_portion.fp_disposable,
+                );
+                let is_compulsory = input
+                    .heir_legitimes
+                    .iter()
+                    .any(|hl| hl.heir_id == heir_id);
+
+                if is_compulsory {
+                    let heir_legitime = input
+                        .heir_legitimes
+                        .iter()
+                        .find(|hl| hl.heir_id == heir_id)
+                        .map(|hl| &hl.legitime_amount)
+                        .cloned()
+                        .unwrap_or_else(Frac::zero);
+                    let excess = &inst_value - &heir_legitime;
+                    if excess.is_positive() {
+                        add_fp_to_distributions(&mut distributions, heir_id, excess);
+                    }
+                } else {
+                    add_fp_to_distributions(&mut distributions, heir_id, inst_value);
+                }
+            }
+
+            // Legacies
+            for legacy in &will.legacies {
+                let legacy_value = compute_legacy_value(legacy);
+                let heir_id = legacy
+                    .legatee
+                    .person_id
+                    .as_deref()
+                    .unwrap_or(&legacy.legatee.name);
+                add_fp_to_distributions(&mut distributions, heir_id, legacy_value);
+            }
+
+            // Phase 3: If mixed, distribute undisposed FP intestate
+            let intestate_scenario = if !coverage.disposes_of_entire_estate {
+                let intestate_sc = derive_intestate_scenario(&input.line_counts);
+                let undisposed = &coverage.undisposed_fp;
+
+                if undisposed.is_positive() {
+                    let intestate_dists = compute_intestate_distribution(
+                        undisposed,
+                        &input.heirs,
+                        &input.line_counts,
+                        &intestate_sc,
+                    );
+                    for id in intestate_dists {
+                        if let Some(existing) =
+                            distributions.iter_mut().find(|d| d.heir_id == id.heir_id)
+                        {
+                            existing.from_intestate = &existing.from_intestate + &id.from_intestate;
+                            existing.total = &existing.total + &id.from_intestate;
+                        } else {
+                            distributions.push(id);
+                        }
+                    }
+                }
+                Some(intestate_sc)
+            } else {
+                None
+            };
+
+            Step7Output {
+                distributions,
+                will_coverage: Some(coverage),
+                final_succession_type,
+                intestate_scenario,
+                warnings: vec![],
+            }
+        }
+    }
+}
+
+/// Helper: add a free-portion amount to existing distributions or create a new entry.
+fn add_fp_to_distributions(
+    distributions: &mut Vec<HeirDistribution>,
+    heir_id: &str,
+    amount: Frac,
+) {
+    if let Some(existing) = distributions.iter_mut().find(|d| d.heir_id == heir_id) {
+        existing.from_free_portion = &existing.from_free_portion + &amount;
+        existing.total = &existing.total + &amount;
+    } else {
+        distributions.push(HeirDistribution {
+            heir_id: heir_id.into(),
+            effective_category: EffectiveCategory::LegitimateChildGroup,
+            from_legitime: Frac::zero(),
+            from_free_portion: amount.clone(),
+            from_intestate: Frac::zero(),
+            total: amount,
+            legal_basis: vec![],
+        });
+    }
 }
 
 /// Compute intestate distribution of a given amount among heirs using
@@ -108,34 +351,528 @@ pub fn step7_distribute(input: &Step7Input) -> Step7Output {
 pub fn compute_intestate_distribution(
     amount: &Frac,
     heirs: &[Heir],
-    line_counts: &LineCounts,
+    _line_counts: &LineCounts,
     scenario: &ScenarioCode,
 ) -> Vec<HeirDistribution> {
-    todo!("Intestate distribution for scenario {:?}", scenario)
+    match scenario {
+        ScenarioCode::I1 => distribute_i1(amount, heirs),
+        ScenarioCode::I2 => distribute_i2(amount, heirs),
+        ScenarioCode::I3 => distribute_i3(amount, heirs),
+        ScenarioCode::I4 => distribute_i4(amount, heirs),
+        ScenarioCode::I5 => distribute_i5(amount, heirs),
+        ScenarioCode::I6 => distribute_i6(amount, heirs),
+        ScenarioCode::I7 => distribute_i7(amount, heirs),
+        ScenarioCode::I8 => distribute_i8(amount, heirs),
+        ScenarioCode::I9 => distribute_i9(amount, heirs),
+        ScenarioCode::I10 => distribute_i10(amount, heirs),
+        ScenarioCode::I11 => distribute_i11(amount, heirs),
+        ScenarioCode::I12 => distribute_i12(amount, heirs),
+        ScenarioCode::I13 => distribute_i13(amount, heirs),
+        ScenarioCode::I14 => distribute_i14(amount, heirs),
+        ScenarioCode::I15 => distribute_i15(amount),
+        _ => panic!(
+            "compute_intestate_distribution called with testate scenario {:?}",
+            scenario
+        ),
+    }
 }
 
+// ── Intestate Formulas I1-I15 ───────────────────────────────────────
+
+/// I1: n LC Only (Art. 980) — equal shares.
+fn distribute_i1(amount: &Frac, heirs: &[Heir]) -> Vec<HeirDistribution> {
+    let lcs: Vec<&Heir> = heirs
+        .iter()
+        .filter(|h| h.effective_category == EffectiveCategory::LegitimateChildGroup)
+        .collect();
+    let n = frac(lcs.len() as i64, 1);
+    let per_lc = amount / &n;
+    lcs.iter()
+        .map(|h| make_intestate_dist(&h.id, h.effective_category, per_lc.clone(), vec!["Art. 980".into()]))
+        .collect()
+}
+
+/// I2: n LC + Spouse (Art. 996) — spouse = one child's share.
+fn distribute_i2(amount: &Frac, heirs: &[Heir]) -> Vec<HeirDistribution> {
+    let lcs: Vec<&Heir> = heirs
+        .iter()
+        .filter(|h| h.effective_category == EffectiveCategory::LegitimateChildGroup)
+        .collect();
+    let spouse = heirs
+        .iter()
+        .find(|h| h.effective_category == EffectiveCategory::SurvivingSpouseGroup);
+    let divisor = frac((lcs.len() + 1) as i64, 1);
+    let per_share = amount / &divisor;
+    let mut result: Vec<HeirDistribution> = lcs
+        .iter()
+        .map(|h| make_intestate_dist(&h.id, h.effective_category, per_share.clone(), vec!["Art. 996".into()]))
+        .collect();
+    if let Some(s) = spouse {
+        result.push(make_intestate_dist(&s.id, s.effective_category, per_share, vec!["Art. 996".into()]));
+    }
+    result
+}
+
+/// I3: n LC + m IC (Arts. 983, 895) — 2:1 ratio, no cap in intestate.
+fn distribute_i3(amount: &Frac, heirs: &[Heir]) -> Vec<HeirDistribution> {
+    let lcs: Vec<&Heir> = heirs
+        .iter()
+        .filter(|h| h.effective_category == EffectiveCategory::LegitimateChildGroup)
+        .collect();
+    let ics: Vec<&Heir> = heirs
+        .iter()
+        .filter(|h| h.effective_category == EffectiveCategory::IllegitimateChildGroup)
+        .collect();
+    let total_units = frac(2 * lcs.len() as i64 + ics.len() as i64, 1);
+    let per_unit = amount / &total_units;
+    let lc_share = &per_unit * &frac(2, 1);
+    let mut result = Vec::new();
+    for h in &lcs {
+        result.push(make_intestate_dist(&h.id, h.effective_category, lc_share.clone(), vec!["Art. 983".into(), "Art. 895".into()]));
+    }
+    for h in &ics {
+        result.push(make_intestate_dist(&h.id, h.effective_category, per_unit.clone(), vec!["Art. 983".into(), "Art. 895".into()]));
+    }
+    result
+}
+
+/// I4: n LC + m IC + Spouse (Arts. 999, 983, 895) — spouse = 2 units.
+fn distribute_i4(amount: &Frac, heirs: &[Heir]) -> Vec<HeirDistribution> {
+    let lcs: Vec<&Heir> = heirs
+        .iter()
+        .filter(|h| h.effective_category == EffectiveCategory::LegitimateChildGroup)
+        .collect();
+    let ics: Vec<&Heir> = heirs
+        .iter()
+        .filter(|h| h.effective_category == EffectiveCategory::IllegitimateChildGroup)
+        .collect();
+    let spouse = heirs
+        .iter()
+        .find(|h| h.effective_category == EffectiveCategory::SurvivingSpouseGroup);
+    let total_units = frac(2 * lcs.len() as i64 + ics.len() as i64 + 2, 1);
+    let per_unit = amount / &total_units;
+    let lc_share = &per_unit * &frac(2, 1);
+    let spouse_share = &per_unit * &frac(2, 1);
+    let mut result = Vec::new();
+    for h in &lcs {
+        result.push(make_intestate_dist(&h.id, h.effective_category, lc_share.clone(), vec!["Art. 999".into()]));
+    }
+    for h in &ics {
+        result.push(make_intestate_dist(&h.id, h.effective_category, per_unit.clone(), vec!["Art. 999".into()]));
+    }
+    if let Some(s) = spouse {
+        result.push(make_intestate_dist(&s.id, s.effective_category, spouse_share, vec!["Art. 999".into()]));
+    }
+    result
+}
+
+/// I5: Ascendants Only (Arts. 985-987) — equal shares.
+fn distribute_i5(amount: &Frac, heirs: &[Heir]) -> Vec<HeirDistribution> {
+    let ascendants: Vec<&Heir> = heirs
+        .iter()
+        .filter(|h| h.effective_category == EffectiveCategory::LegitimateAscendantGroup)
+        .collect();
+    let n = frac(ascendants.len() as i64, 1);
+    let per_asc = amount / &n;
+    ascendants
+        .iter()
+        .map(|h| make_intestate_dist(&h.id, h.effective_category, per_asc.clone(), vec!["Art. 985".into()]))
+        .collect()
+}
+
+/// I6: Ascendants + Spouse (Art. 997) — spouse 1/2, ascendants split 1/2.
+fn distribute_i6(amount: &Frac, heirs: &[Heir]) -> Vec<HeirDistribution> {
+    let ascendants: Vec<&Heir> = heirs
+        .iter()
+        .filter(|h| h.effective_category == EffectiveCategory::LegitimateAscendantGroup)
+        .collect();
+    let spouse = heirs
+        .iter()
+        .find(|h| h.effective_category == EffectiveCategory::SurvivingSpouseGroup);
+    let half = amount / &frac(2, 1);
+    let per_asc = &half / &frac(ascendants.len() as i64, 1);
+    let mut result = Vec::new();
+    for h in &ascendants {
+        result.push(make_intestate_dist(&h.id, h.effective_category, per_asc.clone(), vec!["Art. 997".into()]));
+    }
+    if let Some(s) = spouse {
+        result.push(make_intestate_dist(&s.id, s.effective_category, half, vec!["Art. 997".into()]));
+    }
+    result
+}
+
+/// I7: m IC Only (Art. 988) — equal shares.
+fn distribute_i7(amount: &Frac, heirs: &[Heir]) -> Vec<HeirDistribution> {
+    let ics: Vec<&Heir> = heirs
+        .iter()
+        .filter(|h| h.effective_category == EffectiveCategory::IllegitimateChildGroup)
+        .collect();
+    let n = frac(ics.len() as i64, 1);
+    let per_ic = amount / &n;
+    ics.iter()
+        .map(|h| make_intestate_dist(&h.id, h.effective_category, per_ic.clone(), vec!["Art. 988".into()]))
+        .collect()
+}
+
+/// I8: m IC + Spouse (Art. 998) — spouse 1/2, ICs split 1/2.
+fn distribute_i8(amount: &Frac, heirs: &[Heir]) -> Vec<HeirDistribution> {
+    let ics: Vec<&Heir> = heirs
+        .iter()
+        .filter(|h| h.effective_category == EffectiveCategory::IllegitimateChildGroup)
+        .collect();
+    let spouse = heirs
+        .iter()
+        .find(|h| h.effective_category == EffectiveCategory::SurvivingSpouseGroup);
+    let half = amount / &frac(2, 1);
+    let per_ic = &half / &frac(ics.len() as i64, 1);
+    let mut result = Vec::new();
+    if let Some(s) = spouse {
+        result.push(make_intestate_dist(&s.id, s.effective_category, half, vec!["Art. 998".into()]));
+    }
+    for h in &ics {
+        result.push(make_intestate_dist(&h.id, h.effective_category, per_ic.clone(), vec!["Art. 998".into()]));
+    }
+    result
+}
+
+/// I9: Ascendants + m IC (Art. 991) — ascendants 1/2, ICs 1/2.
+fn distribute_i9(amount: &Frac, heirs: &[Heir]) -> Vec<HeirDistribution> {
+    let ascendants: Vec<&Heir> = heirs
+        .iter()
+        .filter(|h| h.effective_category == EffectiveCategory::LegitimateAscendantGroup)
+        .collect();
+    let ics: Vec<&Heir> = heirs
+        .iter()
+        .filter(|h| h.effective_category == EffectiveCategory::IllegitimateChildGroup)
+        .collect();
+    let half = amount / &frac(2, 1);
+    let per_asc = &half / &frac(ascendants.len() as i64, 1);
+    let per_ic = &half / &frac(ics.len() as i64, 1);
+    let mut result = Vec::new();
+    for h in &ascendants {
+        result.push(make_intestate_dist(&h.id, h.effective_category, per_asc.clone(), vec!["Art. 991".into()]));
+    }
+    for h in &ics {
+        result.push(make_intestate_dist(&h.id, h.effective_category, per_ic.clone(), vec!["Art. 991".into()]));
+    }
+    result
+}
+
+/// I10: Ascendants + m IC + Spouse (Art. 1000) — asc 1/2, IC 1/4, spouse 1/4.
+fn distribute_i10(amount: &Frac, heirs: &[Heir]) -> Vec<HeirDistribution> {
+    let ascendants: Vec<&Heir> = heirs
+        .iter()
+        .filter(|h| h.effective_category == EffectiveCategory::LegitimateAscendantGroup)
+        .collect();
+    let ics: Vec<&Heir> = heirs
+        .iter()
+        .filter(|h| h.effective_category == EffectiveCategory::IllegitimateChildGroup)
+        .collect();
+    let spouse = heirs
+        .iter()
+        .find(|h| h.effective_category == EffectiveCategory::SurvivingSpouseGroup);
+    let asc_total = amount / &frac(2, 1);
+    let ic_total = amount / &frac(4, 1);
+    let spouse_share = amount / &frac(4, 1);
+    let per_asc = &asc_total / &frac(ascendants.len() as i64, 1);
+    let per_ic = &ic_total / &frac(ics.len() as i64, 1);
+    let mut result = Vec::new();
+    for h in &ascendants {
+        result.push(make_intestate_dist(&h.id, h.effective_category, per_asc.clone(), vec!["Art. 1000".into()]));
+    }
+    for h in &ics {
+        result.push(make_intestate_dist(&h.id, h.effective_category, per_ic.clone(), vec!["Art. 1000".into()]));
+    }
+    if let Some(s) = spouse {
+        result.push(make_intestate_dist(&s.id, s.effective_category, spouse_share, vec!["Art. 1000".into()]));
+    }
+    result
+}
+
+/// I11: Spouse Only (Art. 995) — entire estate.
+fn distribute_i11(amount: &Frac, heirs: &[Heir]) -> Vec<HeirDistribution> {
+    let spouse = heirs
+        .iter()
+        .find(|h| h.effective_category == EffectiveCategory::SurvivingSpouseGroup)
+        .expect("I11 requires a surviving spouse");
+    vec![make_intestate_dist(&spouse.id, spouse.effective_category, amount.clone(), vec!["Art. 995".into()])]
+}
+
+/// I12: Spouse + Siblings/Nephews (Art. 1001) — spouse 1/2, collaterals 1/2.
+fn distribute_i12(amount: &Frac, heirs: &[Heir]) -> Vec<HeirDistribution> {
+    let spouse = heirs
+        .iter()
+        .find(|h| h.effective_category == EffectiveCategory::SurvivingSpouseGroup)
+        .expect("I12 requires a surviving spouse");
+    let spouse_share = amount / &frac(2, 1);
+    let collateral_total = amount / &frac(2, 1);
+    let collateral_heirs: Vec<Heir> = heirs
+        .iter()
+        .filter(|h| h.effective_category != EffectiveCategory::SurvivingSpouseGroup)
+        .cloned()
+        .collect();
+    let mut result = vec![make_intestate_dist(
+        &spouse.id,
+        spouse.effective_category,
+        spouse_share,
+        vec!["Art. 1001".into()],
+    )];
+    result.extend(distribute_collaterals(&collateral_total, &collateral_heirs));
+    result
+}
+
+/// I13: Siblings/Nephews Only (Arts. 1003-1008) — via collateral sub-algorithm.
+fn distribute_i13(amount: &Frac, heirs: &[Heir]) -> Vec<HeirDistribution> {
+    distribute_collaterals(amount, heirs)
+}
+
+/// I14: Other Collateral Relatives (Arts. 1009-1010).
+fn distribute_i14(amount: &Frac, heirs: &[Heir]) -> Vec<HeirDistribution> {
+    distribute_other_collaterals(amount, heirs)
+}
+
+/// I15: State Escheat (Arts. 1011-1014).
+fn distribute_i15(amount: &Frac) -> Vec<HeirDistribution> {
+    vec![HeirDistribution {
+        heir_id: "STATE".into(),
+        effective_category: EffectiveCategory::LegitimateChildGroup,
+        from_legitime: Frac::zero(),
+        from_free_portion: Frac::zero(),
+        from_intestate: amount.clone(),
+        total: amount.clone(),
+        legal_basis: vec!["Art. 1011".into()],
+    }]
+}
+
+// ── Collateral Distribution Sub-Algorithm (§7.6) ────────────────────
+
+/// Distribute among collateral relatives using the sub-algorithm from §7.6.
+pub fn distribute_collaterals(amount: &Frac, heirs: &[Heir]) -> Vec<HeirDistribution> {
+    let siblings: Vec<&Heir> = heirs
+        .iter()
+        .filter(|h| h.inherits_by == InheritanceMode::OwnRight && h.blood_type.is_some())
+        .collect();
+    let nephews: Vec<&Heir> = heirs
+        .iter()
+        .filter(|h| h.inherits_by == InheritanceMode::Representation && h.represents.is_some())
+        .collect();
+
+    // Branch 1: Siblings + nephews/nieces (per stirpes with blood weighting)
+    if !siblings.is_empty() && !nephews.is_empty() {
+        return distribute_siblings_with_representation(amount, &siblings, &nephews);
+    }
+    // Branch 2: Siblings only
+    if !siblings.is_empty() {
+        return distribute_siblings(amount, &siblings);
+    }
+    // Branch 3: Nephews/nieces only (per capita, Art. 975)
+    if !nephews.is_empty() {
+        return distribute_nephews_only(amount, &nephews);
+    }
+    // Branch 4: Other collaterals
+    distribute_other_collaterals(amount, heirs)
+}
+
+/// Branch 2: Siblings only — full/half blood logic (Arts. 1004, 1006, 1007).
+fn distribute_siblings(amount: &Frac, siblings: &[&Heir]) -> Vec<HeirDistribution> {
+    let full_blood: Vec<&&Heir> = siblings
+        .iter()
+        .filter(|h| h.blood_type == Some(BloodType::Full))
+        .collect();
+    let half_blood: Vec<&&Heir> = siblings
+        .iter()
+        .filter(|h| h.blood_type == Some(BloodType::Half))
+        .collect();
+
+    // Case A/B: all same blood type → equal shares
+    if full_blood.is_empty() || half_blood.is_empty() {
+        let per_sib = amount / &frac(siblings.len() as i64, 1);
+        return siblings
+            .iter()
+            .map(|h| make_intestate_dist(&h.id, h.effective_category, per_sib.clone(), vec!["Art. 1004".into()]))
+            .collect();
+    }
+
+    // Case C: mixed full + half blood → 2:1 ratio (Art. 1006)
+    let total_units = frac((full_blood.len() * 2 + half_blood.len()) as i64, 1);
+    let per_unit = amount / &total_units;
+    let mut result = Vec::new();
+    for h in &full_blood {
+        result.push(make_intestate_dist(&h.id, h.effective_category, &per_unit * &frac(2, 1), vec!["Art. 1006".into()]));
+    }
+    for h in &half_blood {
+        result.push(make_intestate_dist(&h.id, h.effective_category, per_unit.clone(), vec!["Art. 1006".into()]));
+    }
+    result
+}
+
+/// Branch 1: Siblings + nephews — per stirpes with blood weighting (Arts. 1005, 1006, 1008).
+fn distribute_siblings_with_representation(
+    amount: &Frac,
+    siblings: &[&Heir],
+    nephews: &[&Heir],
+) -> Vec<HeirDistribution> {
+    // Each living sibling forms a line; each group of nephews (by line_ancestor) forms a line.
+    struct SiblingLine<'a> {
+        blood_type: BloodType,
+        living_sibling: Option<&'a Heir>,
+        representatives: Vec<&'a Heir>,
+    }
+
+    let mut lines: Vec<SiblingLine> = Vec::new();
+
+    // Living siblings
+    for s in siblings {
+        lines.push(SiblingLine {
+            blood_type: s.blood_type.unwrap_or(BloodType::Full),
+            living_sibling: Some(s),
+            representatives: vec![],
+        });
+    }
+
+    // Group nephews by line_ancestor (the predeceased sibling they represent)
+    let mut nephew_groups: HashMap<String, Vec<&Heir>> = HashMap::new();
+    let mut nephew_blood: HashMap<String, BloodType> = HashMap::new();
+    for n in nephews {
+        let ancestor = n.line_ancestor.clone().unwrap_or_default();
+        nephew_groups.entry(ancestor.clone()).or_default().push(n);
+        if let Some(bt) = n.blood_type {
+            nephew_blood.entry(ancestor).or_insert(bt);
+        }
+    }
+    for (ancestor, group) in &nephew_groups {
+        let bt = nephew_blood.get(ancestor).copied().unwrap_or(BloodType::Full);
+        lines.push(SiblingLine {
+            blood_type: bt,
+            living_sibling: None,
+            representatives: group.clone(),
+        });
+    }
+
+    // Compute per-line units (Art. 1006 + Art. 1008)
+    let total_units: i64 = lines
+        .iter()
+        .map(|l| if l.blood_type == BloodType::Full { 2 } else { 1 })
+        .sum();
+    let per_unit = amount / &frac(total_units, 1);
+
+    let mut result = Vec::new();
+    for line in &lines {
+        let line_units: i64 = if line.blood_type == BloodType::Full { 2 } else { 1 };
+        let line_share = &per_unit * &frac(line_units, 1);
+
+        if let Some(s) = line.living_sibling {
+            result.push(make_intestate_dist(&s.id, s.effective_category, line_share, vec!["Art. 1005".into()]));
+        } else {
+            let n_reps = frac(line.representatives.len() as i64, 1);
+            let per_rep = &line_share / &n_reps;
+            for n in &line.representatives {
+                result.push(make_intestate_dist(&n.id, n.effective_category, per_rep.clone(), vec!["Art. 1005".into(), "Art. 1008".into()]));
+            }
+        }
+    }
+    result
+}
+
+/// Branch 3: Nephews/nieces only — per capita (Art. 975).
+fn distribute_nephews_only(amount: &Frac, nephews: &[&Heir]) -> Vec<HeirDistribution> {
+    let per_nephew = amount / &frac(nephews.len() as i64, 1);
+    nephews
+        .iter()
+        .map(|h| make_intestate_dist(&h.id, h.effective_category, per_nephew.clone(), vec!["Art. 975".into()]))
+        .collect()
+}
+
+/// Branch 4: Other collateral relatives (Arts. 1009-1010).
+fn distribute_other_collaterals(amount: &Frac, heirs: &[Heir]) -> Vec<HeirDistribution> {
+    let eligible: Vec<&Heir> = heirs
+        .iter()
+        .filter(|h| h.degree_from_decedent <= 5)
+        .collect();
+    if eligible.is_empty() {
+        return vec![];
+    }
+    let min_degree = eligible.iter().map(|h| h.degree_from_decedent).min().unwrap();
+    let nearest: Vec<&&Heir> = eligible
+        .iter()
+        .filter(|h| h.degree_from_decedent == min_degree)
+        .collect();
+    let per_heir = amount / &frac(nearest.len() as i64, 1);
+    nearest
+        .iter()
+        .map(|h| make_intestate_dist(&h.id, h.effective_category, per_heir.clone(), vec!["Art. 1009".into()]))
+        .collect()
+}
+
+// ── Will Coverage Analysis (§7.5) ───────────────────────────────────
+
 /// Analyze will coverage to determine if succession is truly TESTATE or MIXED.
-///
-/// Must be called after Step 5 (needs FP_disposable) for definitive detection.
 pub fn determine_will_coverage(
     will: &Will,
     estate_base: &Frac,
     heir_legitimes: &[HeirLegitime],
     free_portion: &FreePortion,
-    heirs: &[Heir],
+    _heirs: &[Heir],
 ) -> WillCoverage {
-    todo!("Will coverage analysis")
-}
+    let fp_disposable = &free_portion.fp_disposable;
 
-/// Distribute among collateral relatives using the sub-algorithm from §7.6.
-///
-/// Handles: siblings (full/half blood), nephews/nieces (per stirpes/per capita),
-/// and other collaterals (nearest-degree, 5th-degree limit).
-pub fn distribute_collaterals(
-    amount: &Frac,
-    heirs: &[Heir],
-) -> Vec<HeirDistribution> {
-    todo!("Collateral distribution sub-algorithm")
+    // Residuary clause captures all undisposed FP
+    let has_residuary = will.institutions.iter().any(|inst| inst.is_residuary);
+    if has_residuary {
+        return WillCoverage {
+            disposes_of_entire_estate: true,
+            total_will_from_fp: fp_disposable.clone(),
+            undisposed_fp: Frac::zero(),
+        };
+    }
+
+    let mut total_will_dispositions = Frac::zero();
+
+    // Institutions
+    for inst in &will.institutions {
+        let inst_value = compute_institution_value(inst, estate_base, fp_disposable);
+        let heir_id = inst.heir.person_id.as_deref().unwrap_or("");
+        let is_compulsory = heir_legitimes.iter().any(|hl| hl.heir_id == heir_id);
+
+        if is_compulsory {
+            let heir_legitime = heir_legitimes
+                .iter()
+                .find(|hl| hl.heir_id == heir_id)
+                .map(|hl| &hl.legitime_amount)
+                .cloned()
+                .unwrap_or_else(Frac::zero);
+            let excess = &inst_value - &heir_legitime;
+            if excess.is_positive() {
+                total_will_dispositions = total_will_dispositions + excess;
+            }
+        } else {
+            total_will_dispositions = total_will_dispositions + inst_value;
+        }
+    }
+
+    // Legacies
+    for legacy in &will.legacies {
+        total_will_dispositions = total_will_dispositions + compute_legacy_value(legacy);
+    }
+
+    // Devises
+    for devise in &will.devises {
+        total_will_dispositions = total_will_dispositions + compute_devise_value(devise);
+    }
+
+    // Compute undisposed FP
+    let undisposed = fp_disposable - &total_will_dispositions;
+    let undisposed = if undisposed.is_negative() {
+        Frac::zero()
+    } else {
+        undisposed
+    };
+
+    WillCoverage {
+        disposes_of_entire_estate: undisposed.is_zero(),
+        total_will_from_fp: total_will_dispositions,
+        undisposed_fp: undisposed,
+    }
 }
 
 // ── Tests ───────────────────────────────────────────────────────────
