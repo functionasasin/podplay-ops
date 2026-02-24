@@ -82,9 +82,11 @@ fn add_lc_legitimes(
     cap_applied: bool,
     legal_basis: Vec<String>,
 ) {
+    // Only degree-1 heirs (line anchors) get per-line legitimes.
+    // Representatives (degree >= 2) inherit through their line ancestor in Step 7.
     for heir in heirs
         .iter()
-        .filter(|h| h.effective_category == EffectiveCategory::LegitimateChildGroup)
+        .filter(|h| h.effective_category == EffectiveCategory::LegitimateChildGroup && h.degree_from_decedent == 1)
     {
         out.push(HeirLegitime {
             heir_id: heir.id.clone(),
@@ -105,9 +107,11 @@ fn add_ic_legitimes(
     cap_applied: bool,
     legal_basis: Vec<String>,
 ) {
+    // Only degree-1 heirs (line anchors) get per-line legitimes.
+    // Representatives (degree >= 2) inherit through their line ancestor in Step 7.
     for heir in heirs
         .iter()
-        .filter(|h| h.effective_category == EffectiveCategory::IllegitimateChildGroup)
+        .filter(|h| h.effective_category == EffectiveCategory::IllegitimateChildGroup && h.degree_from_decedent == 1)
     {
         out.push(HeirLegitime {
             heir_id: heir.id.clone(),

@@ -215,10 +215,44 @@ pub fn step7_distribute(input: &Step7Input) -> Step7Output {
             };
 
             // Phase 1: Compulsory heirs get their legitimes
-            let mut distributions: Vec<HeirDistribution> = input
-                .heir_legitimes
-                .iter()
-                .map(|hl| HeirDistribution {
+            // For represented lines (disinherited/predeceased/unworthy heirs),
+            // the line ancestor gets 0 and their share is split among representatives.
+            let mut distributions: Vec<HeirDistribution> = Vec::new();
+            for hl in &input.heir_legitimes {
+                let heir = input.heirs.iter().find(|h| h.id == hl.heir_id);
+                let represented_by = heir.map(|h| &h.represented_by);
+
+                if let Some(reps) = represented_by {
+                    if !reps.is_empty() {
+                        // Heir's line is represented — heir gets 0, representatives split the share
+                        distributions.push(HeirDistribution {
+                            heir_id: hl.heir_id.clone(),
+                            effective_category: hl.effective_category,
+                            from_legitime: Frac::zero(),
+                            from_free_portion: Frac::zero(),
+                            from_intestate: Frac::zero(),
+                            total: Frac::zero(),
+                            legal_basis: hl.legal_basis.clone(),
+                        });
+                        let rep_count = frac(reps.len() as i64, 1);
+                        let per_rep = &hl.legitime_amount / &rep_count;
+                        for rep_id in reps {
+                            distributions.push(HeirDistribution {
+                                heir_id: rep_id.clone(),
+                                effective_category: hl.effective_category,
+                                from_legitime: per_rep.clone(),
+                                from_free_portion: Frac::zero(),
+                                from_intestate: Frac::zero(),
+                                total: per_rep.clone(),
+                                legal_basis: vec!["Art. 923".into(), "Art. 970".into()],
+                            });
+                        }
+                        continue;
+                    }
+                }
+
+                // Normal case: heir gets their own legitime
+                distributions.push(HeirDistribution {
                     heir_id: hl.heir_id.clone(),
                     effective_category: hl.effective_category,
                     from_legitime: hl.legitime_amount.clone(),
@@ -226,8 +260,8 @@ pub fn step7_distribute(input: &Step7Input) -> Step7Output {
                     from_intestate: Frac::zero(),
                     total: hl.legitime_amount.clone(),
                     legal_basis: hl.legal_basis.clone(),
-                })
-                .collect();
+                });
+            }
 
             // Phase 2: Distribute will dispositions from FP
             for inst in &will.institutions {
