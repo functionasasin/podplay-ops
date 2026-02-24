@@ -22,11 +22,9 @@
 //!   - §10.3 Accretion Rules
 //!   - §2.2 Restart Conditions
 
-use std::collections::HashMap;
-
 use crate::fraction::{frac, Frac};
 use crate::step7_distribute::HeirDistribution;
-use crate::step8_collation::{HeirCollationAdjustment, Step8Output};
+use crate::step8_collation::Step8Output;
 use crate::types::*;
 
 // ── Types ───────────────────────────────────────────────────────────
@@ -140,7 +138,337 @@ pub struct Step9Output {
 /// legitime vacancy triggers "in their own right" succession (Art. 1021),
 /// signals a pipeline restart.
 pub fn step9_resolve_vacancies(input: &Step9Input) -> Step9Output {
-    todo!("Step 9: vacancy resolution not yet implemented")
+    let mut warnings: Vec<ManualFlag> = Vec::new();
+    let mut vacancies: Vec<VacancyRecord> = Vec::new();
+    let mut adjusted_distributions = input.distributions.clone();
+    let mut requires_restart = false;
+    let mut restart_reason: Option<String> = None;
+    let heirs = input.heirs.clone();
+
+    let can_restart = input.restart_count < input.max_restarts;
+
+    // Phase 0: Check for total renunciation of a degree (Art. 969).
+    // This takes priority over individual vacancy resolution because it triggers
+    // a complete scenario restart.
+    if let Some(renounced_category) = check_total_renunciation(&heirs) {
+        if can_restart {
+            requires_restart = true;
+            restart_reason = Some(format!(
+                "Art. 969: all nearest relatives of {:?} renounced — next degree inherits in own right",
+                renounced_category
+            ));
+
+            // Record vacancies for all renouncing heirs in that category
+            for heir in heirs.iter().filter(|h| {
+                h.effective_category == renounced_category && h.has_renounced
+            }) {
+                let dist = adjusted_distributions
+                    .iter()
+                    .find(|d| d.heir_id == heir.id);
+                let vacant_amount = dist.map_or(frac(0, 1), |d| d.total.clone());
+
+                vacancies.push(VacancyRecord {
+                    vacant_heir_id: heir.id.clone(),
+                    reason: VacancyReason::Renunciation,
+                    is_legitime_vacancy: dist
+                        .map_or(false, |d| is_legitime_vacancy(heir, d)),
+                    vacant_amount,
+                    resolution: VacancyResolution::ScenarioRestart {
+                        reason: "Art. 969: total renunciation of degree".to_string(),
+                    },
+                    legal_basis: vec![
+                        "Art. 969".to_string(),
+                        "Art. 977".to_string(),
+                    ],
+                });
+            }
+
+            return Step9Output {
+                adjusted_distributions,
+                vacancies,
+                requires_restart,
+                restart_reason,
+                heirs,
+                warnings,
+            };
+        } else {
+            warnings.push(ManualFlag {
+                category: "max_restarts".to_string(),
+                description: format!(
+                    "Art. 969 total renunciation of {:?} detected, but max restarts ({}) reached. Cannot restart pipeline.",
+                    renounced_category, input.max_restarts
+                ),
+                related_heir_id: None,
+            });
+        }
+    }
+
+    // Phase 1: Detect individual vacancies
+    let detected = detect_vacancies(&heirs, &adjusted_distributions);
+
+    if detected.is_empty() {
+        // No vacancies — passthrough
+        return Step9Output {
+            adjusted_distributions,
+            vacancies: vec![],
+            requires_restart: false,
+            restart_reason: None,
+            heirs,
+            warnings,
+        };
+    }
+
+    // Phase 2: Resolve each vacancy using the priority chain
+    for (vacant_heir_id, reason) in &detected {
+        let heir = match heirs.iter().find(|h| &h.id == vacant_heir_id) {
+            Some(h) => h,
+            None => continue,
+        };
+
+        let dist = adjusted_distributions
+            .iter()
+            .find(|d| &d.heir_id == vacant_heir_id);
+        let vacant_amount = dist.map_or(frac(0, 1), |d| d.total.clone());
+        let is_legitime = dist.map_or(false, |d| is_legitime_vacancy(heir, d));
+
+        // Priority 1: SUBSTITUTION (Art. 859, testate only)
+        if matches!(input.succession_type, SuccessionType::Testate | SuccessionType::Mixed) {
+            if let Some(will) = &input.will {
+                if let Some(substitute_id) = try_substitution(vacant_heir_id, will, &heirs) {
+                    // Transfer the vacant heir's distribution to the substitute
+                    if let Some(dist_mut) = adjusted_distributions
+                        .iter_mut()
+                        .find(|d| &d.heir_id == vacant_heir_id)
+                    {
+                        dist_mut.heir_id = substitute_id.clone();
+                    }
+
+                    vacancies.push(VacancyRecord {
+                        vacant_heir_id: vacant_heir_id.clone(),
+                        reason: *reason,
+                        is_legitime_vacancy: is_legitime,
+                        vacant_amount,
+                        resolution: VacancyResolution::Substitution {
+                            substitute_id,
+                        },
+                        legal_basis: vec!["Art. 859".to_string()],
+                    });
+                    continue;
+                }
+            }
+        }
+
+        // Priority 2: REPRESENTATION (Arts. 970-977)
+        // Art. 977: renouncing heir CANNOT be represented.
+        // If representation was already resolved in Step 2 (represented_by non-empty),
+        // it's not a vacancy. Only check for unresolved representation here.
+        if *reason != VacancyReason::Renunciation && !heir.children.is_empty() {
+            // Check if any children are alive and eligible to represent
+            let representative_ids: Vec<HeirId> = heir
+                .children
+                .iter()
+                .filter(|child_id| {
+                    heirs
+                        .iter()
+                        .find(|h| &h.id == *child_id)
+                        .map_or(false, |h| h.is_alive && h.is_eligible)
+                })
+                .cloned()
+                .collect();
+
+            if !representative_ids.is_empty() {
+                // Split the vacant share equally among representatives (per stirpes)
+                let count = Frac::new(representative_ids.len() as i64, 1);
+                let per_rep = vacant_amount.clone() / count;
+
+                // Update distributions: remove vacant heir's, add representatives'
+                adjusted_distributions.retain(|d| &d.heir_id != vacant_heir_id);
+                for rep_id in &representative_ids {
+                    adjusted_distributions.push(HeirDistribution {
+                        heir_id: rep_id.clone(),
+                        effective_category: heir.effective_category,
+                        from_legitime: if is_legitime { per_rep.clone() } else { frac(0, 1) },
+                        from_free_portion: if !is_legitime { per_rep.clone() } else { frac(0, 1) },
+                        from_intestate: frac(0, 1),
+                        total: per_rep.clone(),
+                        legal_basis: vec!["Arts. 970-977".to_string()],
+                    });
+                }
+
+                vacancies.push(VacancyRecord {
+                    vacant_heir_id: vacant_heir_id.clone(),
+                    reason: *reason,
+                    is_legitime_vacancy: is_legitime,
+                    vacant_amount,
+                    resolution: VacancyResolution::Representation { representative_ids },
+                    legal_basis: vec!["Arts. 970-977".to_string()],
+                });
+                continue;
+            }
+        }
+
+        // Priority 3: ACCRETION (Arts. 1015-1021)
+        let resolution = apply_accretion(
+            vacant_heir_id,
+            is_legitime,
+            &adjusted_distributions,
+            &heirs,
+        );
+
+        match &resolution {
+            VacancyResolution::ScenarioRestart { reason: restart_msg } => {
+                if can_restart {
+                    requires_restart = true;
+                    restart_reason = Some(restart_msg.clone());
+                    vacancies.push(VacancyRecord {
+                        vacant_heir_id: vacant_heir_id.clone(),
+                        reason: *reason,
+                        is_legitime_vacancy: is_legitime,
+                        vacant_amount,
+                        resolution,
+                        legal_basis: vec![
+                            "Art. 1021".to_string(),
+                        ],
+                    });
+                    // On restart, we don't need to process remaining vacancies
+                    return Step9Output {
+                        adjusted_distributions,
+                        vacancies,
+                        requires_restart,
+                        restart_reason,
+                        heirs,
+                        warnings,
+                    };
+                } else {
+                    warnings.push(ManualFlag {
+                        category: "max_restarts".to_string(),
+                        description: format!(
+                            "Legitime vacancy for heir {} requires restart (Art. 1021), but max restarts ({}) reached.",
+                            vacant_heir_id, input.max_restarts
+                        ),
+                        related_heir_id: Some(vacant_heir_id.clone()),
+                    });
+                    // Fall through to treat as FP accretion since we can't restart
+                    let fp_resolution = apply_accretion(
+                        vacant_heir_id,
+                        false, // treat as FP accretion
+                        &adjusted_distributions,
+                        &heirs,
+                    );
+                    apply_accretion_to_distributions(
+                        vacant_heir_id,
+                        &fp_resolution,
+                        &mut adjusted_distributions,
+                    );
+                    vacancies.push(VacancyRecord {
+                        vacant_heir_id: vacant_heir_id.clone(),
+                        reason: *reason,
+                        is_legitime_vacancy: is_legitime,
+                        vacant_amount,
+                        resolution: fp_resolution,
+                        legal_basis: vec![
+                            "Art. 1019".to_string(),
+                            "Art. 1020".to_string(),
+                        ],
+                    });
+                    continue;
+                }
+            }
+            VacancyResolution::Accretion { accreting_heirs } => {
+                if !accreting_heirs.is_empty() {
+                    apply_accretion_to_distributions(
+                        vacant_heir_id,
+                        &resolution,
+                        &mut adjusted_distributions,
+                    );
+                    vacancies.push(VacancyRecord {
+                        vacant_heir_id: vacant_heir_id.clone(),
+                        reason: *reason,
+                        is_legitime_vacancy: is_legitime,
+                        vacant_amount,
+                        resolution,
+                        legal_basis: vec![
+                            "Art. 1019".to_string(),
+                            "Art. 1020".to_string(),
+                        ],
+                    });
+                    continue;
+                }
+            }
+            _ => {}
+        }
+
+        // Priority 4: INTESTATE FALLBACK (Art. 1022(2), testate only)
+        if matches!(input.succession_type, SuccessionType::Testate | SuccessionType::Mixed) {
+            vacancies.push(VacancyRecord {
+                vacant_heir_id: vacant_heir_id.clone(),
+                reason: *reason,
+                is_legitime_vacancy: is_legitime,
+                vacant_amount,
+                resolution: VacancyResolution::IntestateFallback,
+                legal_basis: vec!["Art. 1022(2)".to_string()],
+            });
+        } else {
+            // Intestate: accretion always applies (Art. 1018), but if no co-heirs
+            // can accrete, this is an edge case that should be flagged.
+            warnings.push(ManualFlag {
+                category: "vacancy_unresolved".to_string(),
+                description: format!(
+                    "Vacancy for heir {} could not be resolved — no eligible co-heirs for accretion.",
+                    vacant_heir_id
+                ),
+                related_heir_id: Some(vacant_heir_id.clone()),
+            });
+        }
+    }
+
+    Step9Output {
+        adjusted_distributions,
+        vacancies,
+        requires_restart,
+        restart_reason,
+        heirs,
+        warnings,
+    }
+}
+
+/// Helper: apply accretion resolution to the adjusted distributions.
+/// Removes the vacant heir's distribution and adds the accreted amounts to co-heirs.
+fn apply_accretion_to_distributions(
+    vacant_heir_id: &HeirId,
+    resolution: &VacancyResolution,
+    adjusted_distributions: &mut Vec<HeirDistribution>,
+) {
+    if let VacancyResolution::Accretion { accreting_heirs } = resolution {
+        // Zero out the vacant heir's distribution
+        if let Some(vacant_dist) = adjusted_distributions
+            .iter_mut()
+            .find(|d| &d.heir_id == vacant_heir_id)
+        {
+            vacant_dist.from_legitime = frac(0, 1);
+            vacant_dist.from_free_portion = frac(0, 1);
+            vacant_dist.from_intestate = frac(0, 1);
+            vacant_dist.total = frac(0, 1);
+        }
+
+        // Add accreted amounts to each co-heir
+        for (heir_id, additional) in accreting_heirs {
+            if let Some(dist) = adjusted_distributions
+                .iter_mut()
+                .find(|d| &d.heir_id == heir_id)
+            {
+                // Add to the appropriate component based on what the co-heir already has
+                if dist.from_intestate > frac(0, 1) {
+                    dist.from_intestate = dist.from_intestate.clone() + additional.clone();
+                } else if dist.from_free_portion > frac(0, 1) {
+                    dist.from_free_portion = dist.from_free_portion.clone() + additional.clone();
+                } else {
+                    dist.from_legitime = dist.from_legitime.clone() + additional.clone();
+                }
+                dist.total = dist.total.clone() + additional.clone();
+            }
+        }
+    }
 }
 
 /// Detect which heirs have vacant shares after Steps 7-8.
@@ -151,7 +479,44 @@ pub fn step9_resolve_vacancies(input: &Step9Input) -> Step9Output {
 /// - Is incapacitated/unworthy (and incapacity not resolved by representation)
 /// - Was validly disinherited and descendants did not represent (already resolved in Step 2)
 pub fn detect_vacancies(heirs: &[Heir], distributions: &[HeirDistribution]) -> Vec<(HeirId, VacancyReason)> {
-    todo!("detect_vacancies not yet implemented")
+    let mut vacancies = Vec::new();
+
+    for heir in heirs {
+        // Only consider heirs that have a distribution
+        let has_distribution = distributions.iter().any(|d| d.heir_id == heir.id);
+        if !has_distribution {
+            continue;
+        }
+
+        // Renunciation: heir is alive but renounced (Art. 977: cannot be represented)
+        if heir.has_renounced {
+            vacancies.push((heir.id.clone(), VacancyReason::Renunciation));
+            continue;
+        }
+
+        // Valid disinheritance with no representatives
+        if heir.is_disinherited && heir.disinheritance_valid && heir.represented_by.is_empty() {
+            vacancies.push((heir.id.clone(), VacancyReason::Disinheritance));
+            continue;
+        }
+
+        // Incapacity/unworthiness (not condoned, no representatives)
+        if heir.is_unworthy && !heir.unworthiness_condoned && heir.represented_by.is_empty() {
+            vacancies.push((heir.id.clone(), VacancyReason::Incapacity));
+            continue;
+        }
+
+        // Predecease without representation (representation resolved in Step 2)
+        if !heir.is_alive && heir.represented_by.is_empty() {
+            vacancies.push((heir.id.clone(), VacancyReason::Predecease));
+            continue;
+        }
+
+        // Not eligible for other reasons (catch-all for ineligible heirs not covered above)
+        // but skip heirs that are simply not alive with representatives (handled in Step 2)
+    }
+
+    vacancies
 }
 
 /// Check if all nearest relatives of a degree have renounced (Art. 969).
@@ -159,7 +524,45 @@ pub fn detect_vacancies(heirs: &[Heir], distributions: &[HeirDistribution]) -> V
 /// If so, the next degree inherits in their own right, triggering a
 /// full scenario restart.
 pub fn check_total_renunciation(heirs: &[Heir]) -> Option<EffectiveCategory> {
-    todo!("check_total_renunciation not yet implemented")
+    // Art. 969: when ALL nearest relatives of a degree renounce → next degree inherits.
+    // Check each effective category group: if there are living members and ALL of them
+    // have renounced, this is a total renunciation of that degree.
+
+    let categories = [
+        EffectiveCategory::LegitimateChildGroup,
+        EffectiveCategory::IllegitimateChildGroup,
+        EffectiveCategory::SurvivingSpouseGroup,
+        EffectiveCategory::LegitimateAscendantGroup,
+    ];
+
+    for category in &categories {
+        let group_heirs: Vec<&Heir> = heirs
+            .iter()
+            .filter(|h| h.effective_category == *category)
+            .collect();
+
+        if group_heirs.is_empty() {
+            continue;
+        }
+
+        // Only consider living members of the group for renunciation check.
+        // Predeceased heirs are already excluded from the "nearest relatives" pool.
+        let living_members: Vec<&&Heir> = group_heirs
+            .iter()
+            .filter(|h| h.is_alive)
+            .collect();
+
+        if living_members.is_empty() {
+            continue;
+        }
+
+        let all_renounced = living_members.iter().all(|h| h.has_renounced);
+        if all_renounced {
+            return Some(*category);
+        }
+    }
+
+    None
 }
 
 /// Attempt testamentary substitution (Art. 859, testate only).
@@ -171,7 +574,81 @@ pub fn try_substitution(
     will: &Will,
     heirs: &[Heir],
 ) -> Option<HeirId> {
-    todo!("try_substitution not yet implemented")
+    // Art. 859: look for a named substitute in the will's institutions
+    // for the vacant heir. Return Some(substitute_id) if found and the
+    // substitute is alive & eligible.
+
+    for institution in &will.institutions {
+        // Match the institution to the vacant heir
+        let heir_matches = institution
+            .heir
+            .person_id
+            .as_ref()
+            .map_or(false, |pid| pid == vacant_heir_id);
+
+        if !heir_matches {
+            continue;
+        }
+
+        // Check each substitute
+        for substitute in &institution.substitutes {
+            if let Some(sub_person_id) = &substitute.substitute_heir.person_id {
+                // Find the substitute in our heirs list
+                if let Some(sub_heir) = heirs.iter().find(|h| &h.id == sub_person_id) {
+                    if sub_heir.is_alive && sub_heir.is_eligible {
+                        return Some(sub_person_id.clone());
+                    }
+                }
+            }
+        }
+    }
+
+    // Also check legacies and devises for substitutes
+    for legacy in &will.legacies {
+        let heir_matches = legacy
+            .legatee
+            .person_id
+            .as_ref()
+            .map_or(false, |pid| pid == vacant_heir_id);
+
+        if !heir_matches {
+            continue;
+        }
+
+        for substitute in &legacy.substitutes {
+            if let Some(sub_person_id) = &substitute.substitute_heir.person_id {
+                if let Some(sub_heir) = heirs.iter().find(|h| &h.id == sub_person_id) {
+                    if sub_heir.is_alive && sub_heir.is_eligible {
+                        return Some(sub_person_id.clone());
+                    }
+                }
+            }
+        }
+    }
+
+    for devise in &will.devises {
+        let heir_matches = devise
+            .devisee
+            .person_id
+            .as_ref()
+            .map_or(false, |pid| pid == vacant_heir_id);
+
+        if !heir_matches {
+            continue;
+        }
+
+        for substitute in &devise.substitutes {
+            if let Some(sub_person_id) = &substitute.substitute_heir.person_id {
+                if let Some(sub_heir) = heirs.iter().find(|h| &h.id == sub_person_id) {
+                    if sub_heir.is_alive && sub_heir.is_eligible {
+                        return Some(sub_person_id.clone());
+                    }
+                }
+            }
+        }
+    }
+
+    None
 }
 
 /// Apply accretion (Arts. 1015-1021).
@@ -185,7 +662,70 @@ pub fn apply_accretion(
     distributions: &[HeirDistribution],
     heirs: &[Heir],
 ) -> VacancyResolution {
-    todo!("apply_accretion not yet implemented")
+    // Art. 1021 critical distinction:
+    // - Legitime vacancy → co-heirs succeed "in their own right" → full scenario restart
+    // - Free portion vacancy → accretion proper (Art. 1019) → proportional distribution
+    if is_legitime_vacancy {
+        return VacancyResolution::ScenarioRestart {
+            reason: "Art. 1021: legitime vacancy — co-heirs succeed in their own right, scenario re-evaluation required".to_string(),
+        };
+    }
+
+    // Free portion / intestate accretion: distribute vacant share proportionally
+    // to eligible co-heirs' existing shares (Art. 1018 for intestate, Art. 1019 for testate).
+    let vacant_dist = distributions
+        .iter()
+        .find(|d| d.heir_id == *vacant_heir_id);
+
+    let vacant_total = match vacant_dist {
+        Some(d) => d.total.clone(),
+        None => return VacancyResolution::Accretion { accreting_heirs: vec![] },
+    };
+
+    // Identify eligible co-heirs (alive, eligible, not the vacant one)
+    let eligible_co_heirs: Vec<(&Heir, &HeirDistribution)> = heirs
+        .iter()
+        .filter(|h| {
+            h.id != *vacant_heir_id
+                && h.is_alive
+                && h.is_eligible
+                && !h.has_renounced
+        })
+        .filter_map(|h| {
+            distributions
+                .iter()
+                .find(|d| d.heir_id == h.id)
+                .map(|d| (h, d))
+        })
+        .collect();
+
+    if eligible_co_heirs.is_empty() {
+        return VacancyResolution::Accretion { accreting_heirs: vec![] };
+    }
+
+    // Sum of eligible co-heirs' total shares (for proportional distribution)
+    let total_eligible: Frac = eligible_co_heirs
+        .iter()
+        .fold(frac(0, 1), |acc, (_, d)| acc + d.total.clone());
+
+    let mut accreting_heirs = Vec::new();
+    if total_eligible > frac(0, 1) {
+        for (heir, dist) in &eligible_co_heirs {
+            // Each co-heir gets a proportion of the vacant share based on their existing share
+            let proportion = dist.total.clone() / total_eligible.clone();
+            let additional = vacant_total.clone() * proportion;
+            accreting_heirs.push((heir.id.clone(), additional));
+        }
+    } else {
+        // Equal distribution if all co-heirs have zero shares
+        let count = Frac::new(eligible_co_heirs.len() as i64, 1);
+        let per_heir = vacant_total.clone() / count;
+        for (heir, _) in &eligible_co_heirs {
+            accreting_heirs.push((heir.id.clone(), per_heir.clone()));
+        }
+    }
+
+    VacancyResolution::Accretion { accreting_heirs }
 }
 
 /// Determine whether a vacancy is in the legitime or free portion.
@@ -196,7 +736,10 @@ pub fn is_legitime_vacancy(
     heir: &Heir,
     distribution: &HeirDistribution,
 ) -> bool {
-    todo!("is_legitime_vacancy not yet implemented")
+    // A vacancy is in the legitime if:
+    // 1. The heir is a compulsory heir, AND
+    // 2. Their distribution includes a legitime component (from_legitime > 0)
+    heir.is_compulsory && distribution.from_legitime > frac(0, 1)
 }
 
 // ── Tests ───────────────────────────────────────────────────────────
@@ -825,11 +1368,13 @@ mod tests {
             make_renouncing_heir("lc3", EffectiveCategory::LegitimateChildGroup),
             make_heir("sp", EffectiveCategory::SurvivingSpouseGroup, true, true),
         ];
+        // Use absolute centavo amounts consistent with net_estate = 100_000_000
+        // LC share = net_estate / 6 each, SP share = net_estate / 2
         let distributions = vec![
-            make_intestate_distribution("lc1", EffectiveCategory::LegitimateChildGroup, frac(1, 6)),
-            make_intestate_distribution("lc2", EffectiveCategory::LegitimateChildGroup, frac(1, 6)),
-            make_intestate_distribution("lc3", EffectiveCategory::LegitimateChildGroup, frac(1, 6)),
-            make_intestate_distribution("sp", EffectiveCategory::SurvivingSpouseGroup, frac(1, 2)),
+            make_intestate_distribution("lc1", EffectiveCategory::LegitimateChildGroup, frac(1_000_000_00, 6)),
+            make_intestate_distribution("lc2", EffectiveCategory::LegitimateChildGroup, frac(1_000_000_00, 6)),
+            make_intestate_distribution("lc3", EffectiveCategory::LegitimateChildGroup, frac(1_000_000_00, 6)),
+            make_intestate_distribution("sp", EffectiveCategory::SurvivingSpouseGroup, frac(1_000_000_00, 2)),
         ];
         let input = make_step9_input(
             heirs,
