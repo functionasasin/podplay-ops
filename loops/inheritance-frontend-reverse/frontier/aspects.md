@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total aspects**: 25
-- **Analyzed**: 4
-- **Pending**: 21
-- **Convergence**: 16%
+- **Analyzed**: 5
+- **Pending**: 20
+- **Convergence**: 20%
 
 ## Wave 1: Rust Type → Frontend Spec (17 aspects)
 
@@ -13,7 +13,7 @@
 - [x] money — Money struct, centavos representation, pesos display conversion
 - [x] engine-config — EngineConfig struct, boolean flags and defaults
 - [x] decedent — Decedent struct, all fields including marriage and death-bed flags
-- [ ] person — Person struct, core fields (id, name, alive, degree, line)
+- [x] person — Person struct, core fields (id, name, alive, degree, line)
 - [ ] relationship-enum — Relationship enum, all 11 variants and their implications
 - [ ] filiation-proof — FiliationProof enum, when required, valid options
 - [ ] blood-type — BloodType enum (Full/Half), sibling-only field
