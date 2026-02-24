@@ -2,15 +2,15 @@
 
 ## Statistics
 - Total aspects: 16
-- Analyzed: 2
-- Pending: 14
-- Convergence: 13%
+- Analyzed: 3
+- Pending: 13
+- Convergence: 19%
 
 ## Wave 1: Source Scanning
 
 - [x] **nirc-income-tax** — NIRC Title II (Sec. 21-73): personal income tax (graduated rates, 8% option), corporate income tax (RCIT, MCIT, OSD), capital gains tax (6% real property, 15% shares), final/creditable withholding taxes, tax credits. BIR Forms 1700/1701/1702/1701Q.
 - [x] **nirc-other-taxes** — NIRC Titles IV-VII: VAT (12% output/input, zero-rated, exempt), percentage tax (3% non-VAT), excise tax (ad valorem + specific), documentary stamp tax (rate schedules per instrument type), donor's tax (6% flat post-TRAIN). BIR Forms 2550Q/2551Q/2000-series.
-- [ ] **labor-code-wages** — Labor Code Book III (Art. 82-134): minimum wage (regional), overtime (25%/30%), night differential (10%), holiday pay (regular/special/double), 13th month pay (RA 10653), service incentive leave, meal/rest periods. DOLE Wage Orders.
+- [x] **labor-code-wages** — Labor Code Book III (Art. 82-134): minimum wage (regional), overtime (25%/30%), night differential (10%), holiday pay (regular/special/double), 13th month pay (RA 10653), service incentive leave, meal/rest periods. DOLE Wage Orders.
 - [ ] **labor-code-termination** — Labor Code Book VI (Art. 278-302): separation pay (authorized causes: 1/2 month or 1 month per year of service), retirement pay (RA 7641: 1/2 month per year, expanded definition), back wages, final pay computation, illegal dismissal remedies. DOLE Department Orders.
 - [ ] **corporation-code** — RA 11232 (Revised Corporation Code): incorporation requirements and fees, annual compliance (GIS, AFS, SEC-MC-19 beneficial ownership), stock issuance/transfer computations, dissolution timeline, corporate governance compliance, SEC penalty computations.
 - [ ] **family-code** — EO 209 (Family Code): property regime computations (ACP vs CPG vs complete separation), support computation (proportional to means/needs), liquidation of conjugal/community property, annulment property division. Titles IV and VIII.
