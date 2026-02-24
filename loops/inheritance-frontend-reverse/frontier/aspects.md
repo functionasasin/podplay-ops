@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total aspects**: 25
-- **Analyzed**: 10
-- **Pending**: 15
-- **Convergence**: 40%
+- **Analyzed**: 11
+- **Pending**: 14
+- **Convergence**: 44%
 
 ## Wave 1: Rust Type → Frontend Spec (17 aspects)
 
@@ -19,7 +19,7 @@
 - [x] blood-type — BloodType enum (Full/Half), sibling-only field
 - [x] adoption — Adoption struct, regimes (RA 8552 vs RA 11642), rescission
 - [x] will — Will struct, top-level shape, date_executed
-- [ ] institution-of-heir — InstitutionOfHeir struct, HeirReference, ShareSpec enum
+- [x] institution-of-heir — InstitutionOfHeir struct, HeirReference, ShareSpec enum
 - [ ] legacy — Legacy struct, LegacySpec enum (FixedAmount, SpecificAsset, GenericClass)
 - [ ] devise — Devise struct, DeviseSpec enum (SpecificProperty, FractionalInterest)
 - [ ] condition-substitute — Condition and Substitute structs, enums for types/triggers
