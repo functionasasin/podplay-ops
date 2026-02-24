@@ -75,10 +75,14 @@ Qualifying funeral expenses include:
 // Applicable ONLY when regime == "pre_TRAIN"
 // i.e., decedent.dateOfDeath < 2018-01-01
 
-function computeFuneralExpenseDeduction(actual_expenses, gross_estate_total, regime):
+function computeFuneralExpenseDeduction(actual_expenses, gross_estate_total, regime, deductionRules):
+  // deductionRules: "PRE_TRAIN" | "TRAIN"
+  // For pre-2018 amnesty deaths, regime == "amnesty" AND deductionRules == "PRE_TRAIN" → deductible.
+  // For TRAIN-era amnesty deaths (2018-2022), regime == "amnesty" AND deductionRules == "TRAIN" → NOT deductible.
+  // See correction-amnesty-deductions.md for legal basis and impact analysis.
 
-  if regime != "pre_TRAIN":
-    return 0  // Not deductible under TRAIN or amnesty
+  if NOT ((regime == "pre_TRAIN") OR (regime == "amnesty" AND deductionRules == "PRE_TRAIN")):
+    return 0  // Not deductible: TRAIN-era regular, or amnesty with TRAIN deduction rules
 
   // Deductible amount = lower of actual expenses or 5% of gross estate
   limit_pct = gross_estate_total * 0.05
@@ -186,10 +190,13 @@ This provision encompassed ALL expenses incurred in settling the estate through 
 // Applicable ONLY when regime == "pre_TRAIN"
 // i.e., decedent.dateOfDeath < 2018-01-01
 
-function computeJudicialAdminExpenseDeduction(expenses, regime):
+function computeJudicialAdminExpenseDeduction(expenses, regime, deductionRules):
+  // deductionRules: "PRE_TRAIN" | "TRAIN"
+  // Same amnesty path logic as computeFuneralExpenseDeduction.
+  // See correction-amnesty-deductions.md.
 
-  if regime != "pre_TRAIN":
-    return 0  // Not deductible under TRAIN or amnesty
+  if NOT ((regime == "pre_TRAIN") OR (regime == "amnesty" AND deductionRules == "PRE_TRAIN")):
+    return 0  // Not deductible: TRAIN-era regular, or amnesty with TRAIN deduction rules
 
   total = 0
   for each expense in expenses:
@@ -397,8 +404,18 @@ item44 = max(0, item42 - item43)   // Net estate tax due
 The engine switches deduction rules based on `decedent.dateOfDeath`:
 
 ```
-function getOrdinaryDeductionItems(regime):
-  // Items common to all regimes:
+function getOrdinaryDeductionItems(regime, deductionRules):
+  // deductionRules: "PRE_TRAIN" | "TRAIN"
+  //   regime == "pre_TRAIN"  → deductionRules always "PRE_TRAIN"
+  //   regime == "TRAIN"      → deductionRules always "TRAIN"
+  //   regime == "amnesty"    → deductionRules from eligibility layer:
+  //                              dateOfDeath < 2018-01-01   → "PRE_TRAIN"
+  //                              2018-01-01 ≤ dod ≤ 2022-05-31 → "TRAIN"
+  //
+  // CORRECTED (see correction-amnesty-deductions.md):
+  // Pre-2018 amnesty deaths use pre-TRAIN deduction rules per RA 11213 Sec. 3.
+  // The old version incorrectly returned `common` for all amnesty estates.
+
   common = [
     "claimsAgainstEstate",      // 5A
     "claimsVsInsolvent",        // 5B
@@ -408,31 +425,46 @@ function getOrdinaryDeductionItems(regime):
     "transfersPublicUse"        // 5F
   ]
 
-  if regime == "pre_TRAIN":
-    // Add pre-TRAIN-only items
+  if (regime == "pre_TRAIN") OR (regime == "amnesty" AND deductionRules == "PRE_TRAIN"):
+    // Pre-TRAIN regular, or pre-2018 amnesty death:
+    // RA 11213 Sec. 3: "allowable deductions under the NIRC at the time of death"
+    // includes funeral and judicial/admin for deaths before January 1, 2018.
     return common + ["funeralExpenses", "judicialAdminExpenses"]
   else:
-    // TRAIN or amnesty: no funeral/judicial
+    // TRAIN-era regular, or amnesty with TRAIN deduction rules (2018-2022 deaths):
+    // Funeral and judicial/admin not deductible under TRAIN-era NIRC.
     return common
 
-function getSpecialDeductionAmounts(decedent, regime):
+function getSpecialDeductionAmounts(decedent, regime, deductionRules):
+  // deductionRules: "PRE_TRAIN" | "TRAIN" — same semantics as getOrdinaryDeductionItems.
+  //
+  // CORRECTED (see correction-amnesty-deductions.md):
+  // TRAIN-era amnesty deaths (2018-2022) must use TRAIN special deduction amounts
+  // (₱5M standard, ₱10M family home cap). The old version incorrectly applied pre-TRAIN
+  // amounts to all amnesty estates regardless of date of death.
+
   amounts = {}
 
   // Standard deduction
   if decedent.isNonResidentAlien:
-    amounts.standardDeduction = 500_000
-  elif regime == "TRAIN":
+    amounts.standardDeduction = 500_000  // ₱500K for NRAs across all regimes/deductionRules
+
+  elif (regime == "TRAIN") OR (regime == "amnesty" AND deductionRules == "TRAIN"):
+    // Regular TRAIN, or amnesty covering TRAIN-era deaths (2018-2022, RA 11956 expansion)
     amounts.standardDeduction = 5_000_000
-  else:  // pre_TRAIN or amnesty (pre-2018 death)
+
+  else:
+    // Pre-TRAIN regular, or amnesty covering pre-2018 deaths
     amounts.standardDeduction = 1_000_000
 
   // Family home cap
-  if regime == "TRAIN":
+  if (regime == "TRAIN") OR (regime == "amnesty" AND deductionRules == "TRAIN"):
     amounts.familyHomeCap = 10_000_000
-  else:  // pre_TRAIN or amnesty
+  else:
+    // Pre-TRAIN regular, or amnesty with pre-TRAIN deduction rules (pre-2018 deaths)
     amounts.familyHomeCap = 1_000_000
 
-  // Medical expenses cap: same across all regimes
+  // Medical expenses cap: same across all regimes and deductionRules values
   amounts.medicalExpensesCap = 500_000
 
   return amounts
@@ -599,7 +631,7 @@ The pre-TRAIN engine output must map to **BIR Form 1801 (June 2006 revision)** f
 - **deduction-standard**: Full standard deduction rules including the pre-TRAIN ₱1M amount.
 - **deduction-family-home**: Full family home rules including the pre-TRAIN ₱1M cap.
 - **nonresident-deductions**: Documents the Sec. 86(B) proportional deduction formula for NRAs (applies to funeral/judicial expenses under pre-TRAIN for NRA decedents).
-- **amnesty-computation**: The amnesty path does NOT include funeral expenses or judicial/admin expenses as deductions — even though these estates died pre-2018 and would have qualified for these deductions under the regular pre-TRAIN rules. The amnesty law restricts deductions to a more limited set. This distinction is critical.
+- **amnesty-computation**: For pre-2018 amnesty deaths (`deductionRules == "PRE_TRAIN"`), the full pre-TRAIN deduction set applies — including funeral expenses and judicial/admin expenses. RA 11213 Sec. 3 defines net estate as gross estate minus "allowable deductions under the NIRC at the time of death," and for deaths before January 1, 2018, those deductions include funeral and judicial/admin. For TRAIN-era amnesty deaths (2018–2022, RA 11956 expansion, `deductionRules == "TRAIN"`), TRAIN deduction rules apply — no funeral, no judicial/admin. The corrected `getOrdinaryDeductionItems(regime, deductionRules)` and `getSpecialDeductionAmounts(decedent, regime, deductionRules)` functions handle all four combinations correctly. See `analysis/correction-amnesty-deductions.md` for full legal basis and computed impact.
 
 ---
 
@@ -616,4 +648,6 @@ Two deductions exist in both regimes but with different amounts:
 
 All other deductions (medical expenses, ELIT items, vanishing deduction, transfers for public use, RA 4917, surviving spouse share) are **identical** between pre-TRAIN and TRAIN regimes.
 
-The engine must implement conditional branching at the deduction computation stage, selecting the appropriate deduction set and amounts based on `decedent.dateOfDeath`. The gross estate computation rules (Sec. 85) are identical across both regimes.
+The engine must implement conditional branching at the deduction computation stage, selecting the appropriate deduction set and amounts based on both `regime` and `deductionRules`. The `deductionRules` flag ("PRE_TRAIN" or "TRAIN") is set by the eligibility/regime-detection layer based on `decedent.dateOfDeath` and distinguishes pre-2018 amnesty deaths (which use the full pre-TRAIN deduction set) from TRAIN-era amnesty deaths (which use TRAIN-era deduction amounts). The gross estate computation rules (Sec. 85) are identical across all three regimes.
+
+**Amnesty path**: Pre-2018 amnesty deaths receive the full pre-TRAIN deduction set (funeral ✓, judicial ✓, standard ₱1M, family home cap ₱1M). TRAIN-era amnesty deaths receive TRAIN deduction rules (no funeral, no judicial, standard ₱5M, family home cap ₱10M). See `analysis/correction-amnesty-deductions.md` for the correction that updated the `getOrdinaryDeductionItems` and `getSpecialDeductionAmounts` functions.
