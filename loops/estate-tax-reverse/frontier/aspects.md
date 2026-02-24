@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 34
-- Analyzed: 18
-- Pending: 16
-- Convergence: 53%
+- Analyzed: 19
+- Pending: 15
+- Convergence: 56%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -29,7 +29,7 @@
 - [x] property-regime-cpg — Civil Code: Conjugal Partnership of Gains (default pre-Family Code)
 - [x] property-regime-separation — Complete Separation of Property (by prenuptial agreement)
 - [x] nonresident-deductions — Sec. 86(B)-(D): proportional deductions for non-resident aliens
-- [ ] exemptions — Sec. 87: exempt transfers (usufruct merger, fiduciary, charitable ≤30% admin)
+- [x] exemptions — Sec. 87: exempt transfers (usufruct merger, fiduciary, charitable ≤30% admin)
 - [ ] tax-credits — Foreign estate tax paid, prior return payments
 - [ ] filing-rules — Sec. 90: 1-year deadline, CPA requirement for >₱5M, extensions
 
@@ -57,6 +57,7 @@
 - [ ] spec-review — Self-review: can a developer with no context build the engine?
 
 ## Recently Analyzed
+- [x] exemptions — 2026-02-24 — Sec. 87: four exempt transfers — (a) personal usufruct merger (excluded from gross estate; Sec. 87(a) does NOT apply to naked owner or fixed-term usufruct); (b)/(c) fiduciary/fideicommissary transmission (excluded from pass-through estate); (d) charitable bequests to qualifying PRIVATE institutions (excluded from gross estate — critical: this is NOT the same as Sec. 86(A)(3) government transfers which are deducted via Schedule 5F). Sec. 87 not amended by TRAIN — applies identically across TRAIN, pre-TRAIN, and amnesty regimes. No Form 1801 schedule for Sec. 87 exemptions: they are pre-computation exclusions. Engine runs Sec. 87 filter before populating gross estate schedules. 87(d) conditions: no income inures to individual + admin ≤ 30%. Partial bequest (fraction of asset) supported. Foreign charities excluded. Fixed-term usufruct IS includable at Sec. 88(A) actuarial value. 10 edge cases, 10 test implications.
 - [x] deduction-family-home — 2026-02-23 — Sec. 86(A)(5): TRAIN cap ₱10M; pre-TRAIN/amnesty cap ₱1M. Exclusive: min(FMV, cap). Conjugal/communal: min(FMV×0.5, cap) — decedent's share only; spouse's ½ handled at Item 39. Requires: barangay certification, actual residence at death, citizen/resident only, one property max. Gross estate (Item 30/Sched 1A) shows full FMV; deduction (Item 37B) shows capped/halved amount. Legal ambiguity flagged: sample computations show full FMV for conjugal but NIRC text says ½ — engine implements ½ (recommend verify against BIR RR 12-2018). Correction to form-1801-fields.md Validation Rule 8 documented. 12 test implications. Amnesty path: available with ₱1M cap.
 - [x] deduction-vanishing — 2026-02-23 — Sec. 86(A)(2): 5-step formula (IV=min(prior,current FMV); NV=IV−mortgage; ratio=(GE−ELIT)/GE; pct from 5-year table; VD=pct×NV×ratio). Percentage table: 100%/80%/60%/40%/20% for each 1-year band; 0% after 5 years. Eligibility: within 5 years, prior tax paid, property identifiable, still in gross estate. Formula identical across TRAIN and pre-TRAIN regimes (different ELIT composition). VD NOT available under amnesty path. 12 edge cases (depreciation, appreciation, prior tax unpaid, property sold, mortgage > IV, ELIT > GE, multiple properties, conjugal VD, NRA situs). 12 test implications. Form 1801: Schedule 5E, Columns A+B, feeds Item 35.
 - [x] legal-source-fetch — 2026-02-23 — 5 legal source files cached in input/legal-sources/
