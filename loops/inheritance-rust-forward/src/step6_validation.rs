@@ -292,14 +292,19 @@ pub fn step6_validate_will(input: &Step6Input) -> Step6Output {
 /// Scope: Only LC, IC, adopted, legitimated, ascendants. Spouse omission
 /// is NEVER preterition.
 pub fn check_preterition(will: &Will, heirs: &[Heir]) -> PreteritionResult {
-    // Scope: Only direct-line compulsory heirs (LC, IC, adopted, legitimated, ascendants).
-    // Surviving spouse omission is NEVER preterition.
+    // Scope: Only FIRST-DEGREE direct-line compulsory heirs (LC, IC, adopted,
+    // legitimated, ascendants). Exclude:
+    //   - Surviving spouse (omission is NEVER preterition)
+    //   - Representatives (degree > 1) — grandchildren represent through their
+    //     parent's line; Art. 854 ¶2 handles preterition through representation
+    //     only when the original heir predeceased AND representatives are also omitted.
     let direct_line_compulsory: Vec<&Heir> = heirs
         .iter()
         .filter(|h| {
             h.is_compulsory
                 && h.is_eligible
                 && h.effective_category != EffectiveCategory::SurvivingSpouseGroup
+                && h.degree_from_decedent <= 1
         })
         .collect();
 

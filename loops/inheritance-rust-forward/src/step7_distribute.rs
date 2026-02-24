@@ -174,17 +174,25 @@ fn compute_devise_value(devise: &Devise) -> Frac {
 pub fn step7_distribute(input: &Step7Input) -> Step7Output {
     match input.succession_type {
         SuccessionType::Intestate | SuccessionType::IntestateByPreterition => {
+            // For IntestateByPreterition, the scenario_code from Step 3 is still a
+            // testate code (e.g. T3). Derive the correct intestate scenario from
+            // line counts so compute_intestate_distribution gets an I-code.
+            let scenario = if input.succession_type == SuccessionType::IntestateByPreterition {
+                derive_intestate_scenario(&input.line_counts)
+            } else {
+                input.scenario_code
+            };
             let distributions = compute_intestate_distribution(
                 &input.net_estate,
                 &input.heirs,
                 &input.line_counts,
-                &input.scenario_code,
+                &scenario,
             );
             Step7Output {
                 distributions,
                 will_coverage: None,
                 final_succession_type: input.succession_type,
-                intestate_scenario: Some(input.scenario_code),
+                intestate_scenario: Some(scenario),
                 warnings: vec![],
             }
         }
