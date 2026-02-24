@@ -3,44 +3,21 @@
 ## Spec Sections
 - Testate Validation: §9 (preterition, disinheritance, underprovision, inofficiousness)
 
-## Test Results (updated by loop — iteration 1)
+## Test Results (updated by loop — iteration 2)
 ```
-warning: unused import: `crate::types::*`
-   --> src/step1_classify.rs:229:9
-    |
-229 |     use crate::types::*;
-    |         ^^^^^^^^^^^^^^^
-    |
-    = note: `#[warn(unused_imports)]` on by default
+229 passed; 34 failed (all step6 stubs — todo!() panics as expected)
 
-warning: unused import: `crate::fraction::frac`
-   --> src/step4_estate_base.rs:308:9
-    |
-308 |     use crate::fraction::frac;
-    |         ^^^^^^^^^^^^^^^^^^^^^
-
-warning: function `ineligible` is never used
-   --> src/step2_lines.rs:359:8
-    |
-359 |     fn ineligible(mut heir: Heir) -> Heir {
-    |        ^^^^^^^^^^
-    |
-    = note: `#[warn(dead_code)]` on by default
-
-warning: `inheritance-engine` (lib test) generated 3 warnings (run `cargo fix --lib -p inheritance-engine --tests` to apply 2 suggestions)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.01s
-     Running unittests src/lib.rs (target/debug/deps/inheritance_engine-8b461b4b5a77e766)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 229 filtered out; finished in 0.00s
-
-     Running unittests src/main.rs (target/debug/deps/inheritance_engine-00f75bddf55cb074)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Step 6 test coverage (34 tests):
+- Check 1 Preterition: 8 tests (detection, annulment, spouse exclusion, token legacy, invalid disinheritance, IC, ascendant, no omission)
+- Check 2 Disinheritance: 6 tests (valid 4-gate, TV-08, unproven, unspecified, reconciliation, no spouse representation)
+- Check 3 Underprovision: 3 tests (shortfall detection, no shortfall, TV-12 spouse recovery)
+- Check 4 Inofficiousness: 3 tests (excess detected, within FP, donations increase excess)
+- Art. 911 Reduction: 5 tests (phase 1a pro rata, preferred after non-preferred, phase 2 voluntary, phase 3 reverse-chrono, stops when absorbed)
+- Check 5 Condition Stripping: 3 tests (compulsory heir, no conditions, voluntary heir keeps)
+- Pipeline: 2 tests (preterition terminates, no preterition runs all)
+- Helper: 4 tests (heir_addressed_in_will by institution/legacy/devise/disinheritance)
 ```
 
 ## Work Log
-(no iterations yet)
+- Iteration 1: loop detected stage 6 with no tests → wrote tests
+- Iteration 2: Created step6_validation.rs with types, stubs, 34 comprehensive tests covering all 5 checks

@@ -9,4 +9,5 @@ pub mod step2_lines;
 pub mod step3_scenario;
 pub mod step4_estate_base;
 pub mod step5_legitimes;
+pub mod step6_validation;
 pub mod types;
