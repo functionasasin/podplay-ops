@@ -267,6 +267,12 @@ pub fn step7_distribute(input: &Step7Input) -> Step7Output {
             }
 
             // Phase 2: Distribute will dispositions from FP
+            // Track remaining FP to prevent over-distribution. An institution
+            // like "1/1 of my estate" for a compulsory heir produces an excess
+            // over their legitime that may exceed FP_disposable. We must cap
+            // all FP allocations so their sum never exceeds FP_disposable.
+            let mut remaining_fp = input.free_portion.fp_disposable.clone();
+
             for inst in &will.institutions {
                 let heir_id = inst
                     .heir
@@ -275,18 +281,14 @@ pub fn step7_distribute(input: &Step7Input) -> Step7Output {
                     .unwrap_or(&inst.heir.name);
 
                 if inst.is_residuary {
-                    // Residuary captures remaining FP
-                    let used_fp: Frac = distributions
-                        .iter()
-                        .map(|d| &d.from_free_portion)
-                        .fold(Frac::zero(), |acc, f| &acc + f);
-                    let remaining_fp = &input.free_portion.fp_disposable - &used_fp;
-                    let remaining_fp = if remaining_fp.is_negative() {
-                        Frac::zero()
+                    // Residuary captures whatever FP remains
+                    let residuary_amount = if remaining_fp.is_positive() {
+                        remaining_fp.clone()
                     } else {
-                        remaining_fp
+                        Frac::zero()
                     };
-                    add_fp_to_distributions(&mut distributions, heir_id, remaining_fp);
+                    remaining_fp = Frac::zero();
+                    add_fp_to_distributions(&mut distributions, heir_id, residuary_amount);
                     continue;
                 }
 
@@ -300,7 +302,7 @@ pub fn step7_distribute(input: &Step7Input) -> Step7Output {
                     .iter()
                     .any(|hl| hl.heir_id == heir_id);
 
-                if is_compulsory {
+                let fp_amount = if is_compulsory {
                     let heir_legitime = input
                         .heir_legitimes
                         .iter()
@@ -309,11 +311,16 @@ pub fn step7_distribute(input: &Step7Input) -> Step7Output {
                         .cloned()
                         .unwrap_or_else(Frac::zero);
                     let excess = &inst_value - &heir_legitime;
-                    if excess.is_positive() {
-                        add_fp_to_distributions(&mut distributions, heir_id, excess);
-                    }
+                    if excess.is_positive() { excess } else { Frac::zero() }
                 } else {
-                    add_fp_to_distributions(&mut distributions, heir_id, inst_value);
+                    inst_value
+                };
+
+                // Cap at remaining FP to prevent over-distribution
+                let capped = std::cmp::min(fp_amount, remaining_fp.clone());
+                if capped.is_positive() {
+                    remaining_fp = &remaining_fp - &capped;
+                    add_fp_to_distributions(&mut distributions, heir_id, capped);
                 }
             }
 
@@ -336,7 +343,12 @@ pub fn step7_distribute(input: &Step7Input) -> Step7Output {
                     .person_id
                     .as_deref()
                     .unwrap_or(&legacy.legatee.name);
-                add_fp_to_distributions(&mut distributions, heir_id, legacy_value);
+                // Cap at remaining FP
+                let capped = std::cmp::min(legacy_value, remaining_fp.clone());
+                if capped.is_positive() {
+                    remaining_fp = &remaining_fp - &capped;
+                    add_fp_to_distributions(&mut distributions, heir_id, capped);
+                }
             }
 
             // Phase 3: If mixed, distribute undisposed FP intestate
