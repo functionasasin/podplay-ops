@@ -317,9 +317,20 @@ pub fn step7_distribute(input: &Step7Input) -> Step7Output {
                 }
             }
 
-            // Legacies
+            // Legacies — use reduced amounts from Step 6 inofficiousness if applicable
             for legacy in &will.legacies {
-                let legacy_value = compute_legacy_value(legacy);
+                let mut legacy_value = compute_legacy_value(legacy);
+                // Apply inofficiousness reductions from Step 6
+                if let Some(ref validation) = input.validation {
+                    if validation.inofficiousness.detected {
+                        for reduction in &validation.inofficiousness.reductions {
+                            if reduction.target_id == legacy.id {
+                                legacy_value = reduction.remaining_amount.clone();
+                                break;
+                            }
+                        }
+                    }
+                }
                 let heir_id = legacy
                     .legatee
                     .person_id

@@ -292,12 +292,41 @@ pub fn step6_validate_will(input: &Step6Input) -> Step6Output {
 /// Scope: Only LC, IC, adopted, legitimated, ascendants. Spouse omission
 /// is NEVER preterition.
 pub fn check_preterition(will: &Will, heirs: &[Heir]) -> PreteritionResult {
+    // Art. 854 annuls the "institution of heirs." If the will contains no
+    // institutions (only legacies/devises), there is nothing to annul and
+    // preterition cannot occur.
+    if will.institutions.is_empty() {
+        return PreteritionResult {
+            detected: false,
+            preterited_heirs: vec![],
+            institutions_annulled: false,
+            legacies_devises_survive: true,
+            legal_basis: vec![],
+        };
+    }
+
+    // Determine whether any IC is explicitly instituted. ICs receive their
+    // legitime from the free portion (Art. 895), so omission from LC-only
+    // institutions does not constitute preterition. Only check ICs when the
+    // testator explicitly instituted at least one other IC (showing intent to
+    // address the IC class) but omitted others.
+    let instituted_ids: Vec<&str> = will
+        .institutions
+        .iter()
+        .filter_map(|inst| inst.heir.person_id.as_deref())
+        .collect();
+    let any_ic_instituted = heirs.iter().any(|h| {
+        h.effective_category == EffectiveCategory::IllegitimateChildGroup
+            && instituted_ids.contains(&h.id.as_str())
+    });
+
     // Scope: Only FIRST-DEGREE direct-line compulsory heirs (LC, IC, adopted,
     // legitimated, ascendants). Exclude:
     //   - Surviving spouse (omission is NEVER preterition)
     //   - Representatives (degree > 1) — grandchildren represent through their
     //     parent's line; Art. 854 ¶2 handles preterition through representation
     //     only when the original heir predeceased AND representatives are also omitted.
+    //   - ICs when no IC is instituted (their FP-based share is unaffected)
     let direct_line_compulsory: Vec<&Heir> = heirs
         .iter()
         .filter(|h| {
@@ -305,6 +334,8 @@ pub fn check_preterition(will: &Will, heirs: &[Heir]) -> PreteritionResult {
                 && h.is_eligible
                 && h.effective_category != EffectiveCategory::SurvivingSpouseGroup
                 && h.degree_from_decedent <= 1
+                && (h.effective_category != EffectiveCategory::IllegitimateChildGroup
+                    || any_ic_instituted)
         })
         .collect();
 
@@ -468,7 +499,11 @@ pub fn check_inofficiousness(
     free_portion: &FreePortion,
     _estate_base: &Frac,
 ) -> InofficiousnessResult {
-    // Compute total testamentary dispositions (legacies + devises + voluntary institutions)
+    // Compute total testamentary dispositions (legacies + devises + voluntary institutions).
+    // Donations are NOT included here — they are handled separately by the collation
+    // mechanism (Step 8), which charges them against each donee-heir's share. Including
+    // them would double-count since estate_base (on which FP_disposable is computed)
+    // already reflects collatable donations.
     let mut total_dispositions = Frac::zero();
 
     for leg in &will.legacies {
@@ -476,16 +511,8 @@ pub fn check_inofficiousness(
     }
     // Devises of specific property would need appraisal values — skip for now
 
-    // Add collatable donations
-    let mut total_donations = Frac::zero();
-    for d in donations {
-        total_donations =
-            &total_donations + &Frac::from_money_centavos(&d.value_at_time_of_donation.centavos);
-    }
-
-    let total = &total_dispositions + &total_donations;
-    let excess = if &total > &free_portion.fp_disposable {
-        &total - &free_portion.fp_disposable
+    let excess = if &total_dispositions > &free_portion.fp_disposable {
+        &total_dispositions - &free_portion.fp_disposable
     } else {
         Frac::zero()
     };
@@ -1161,9 +1188,10 @@ mod tests {
     }
 
     #[test]
-    fn test_preterition_ic_omitted() {
-        // Illegitimate children are also direct-line compulsory heirs.
-        // Omitting an IC triggers preterition.
+    fn test_preterition_ic_omitted_no_ic_instituted() {
+        // When only LCs are instituted and an IC is omitted, preterition does NOT
+        // trigger — the IC's legitime comes from the FP and is protected by the
+        // underprovision mechanism (Art. 855), not preterition (Art. 854).
         let lc1 = make_lc("lc1");
         let ic1 = make_ic("ic1");
         let heirs = vec![lc1, ic1];
@@ -1177,8 +1205,50 @@ mod tests {
         };
 
         let result = check_preterition(&will, &heirs);
-        assert!(result.detected, "Omitted IC triggers preterition");
-        assert!(result.preterited_heirs.contains(&"ic1".to_string()));
+        assert!(!result.detected, "IC omission without IC institution is not preterition");
+    }
+
+    #[test]
+    fn test_preterition_ic_omitted_when_other_ic_instituted() {
+        // When another IC IS instituted but one IC is omitted, preterition triggers.
+        let lc1 = make_lc("lc1");
+        let ic1 = make_ic("ic1");
+        let ic2 = make_ic("ic2");
+        let heirs = vec![lc1, ic1, ic2];
+
+        let will = Will {
+            institutions: vec![
+                make_institution("i1", "lc1", ShareSpec::EntireEstate),
+                make_institution("i2", "ic1", ShareSpec::Fraction(frac(1, 4))),
+            ],
+            legacies: vec![],
+            devises: vec![],
+            disinheritances: vec![],
+            date_executed: "2025-01-01".into(),
+        };
+
+        let result = check_preterition(&will, &heirs);
+        assert!(result.detected, "IC omission when other IC is instituted triggers preterition");
+        assert!(result.preterited_heirs.contains(&"ic2".to_string()));
+    }
+
+    #[test]
+    fn test_preterition_no_institutions_no_preterition() {
+        // A will with only legacies (no institutions) cannot trigger preterition.
+        // Art. 854 annuls "the institution of heirs" — if none exist, nothing to annul.
+        let lc1 = make_lc("lc1");
+        let heirs = vec![lc1];
+
+        let will = Will {
+            institutions: vec![],
+            legacies: vec![make_legacy("leg1", "friend", 5_000_000, false)],
+            devises: vec![],
+            disinheritances: vec![],
+            date_executed: "2025-01-01".into(),
+        };
+
+        let result = check_preterition(&will, &heirs);
+        assert!(!result.detected, "No institutions means no preterition");
     }
 
     #[test]
@@ -1530,9 +1600,10 @@ mod tests {
     }
 
     #[test]
-    fn test_inofficiousness_donations_increase_excess() {
+    fn test_inofficiousness_donations_do_not_affect_excess() {
         // FP_disposable = ₱2.5M. Will gives ₱1M legacy. Collatable donation = ₱2M.
-        // Total dispositions = ₱1M + ₱2M = ₱3M > ₱2.5M → excess = ₱0.5M.
+        // Donations are handled by collation (Step 8), not by inofficiousness.
+        // Only testamentary dispositions count: ₱1M < ₱2.5M → no excess.
         let will = Will {
             institutions: vec![],
             legacies: vec![make_legacy("leg1", "friend", 1_000_000, false)],
@@ -1546,8 +1617,7 @@ mod tests {
         let e = estate(10_000_000);
 
         let result = check_inofficiousness(&will, &donations, &fp, &e);
-        assert!(result.detected);
-        assert_eq!(result.excess, estate(500_000));
+        assert!(!result.detected, "Donations should not increase testamentary excess");
     }
 
     // ═══════════════════════════════════════════════════════════════
