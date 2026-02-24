@@ -1,6 +1,6 @@
 # Wave 1: DOLE Compliance — OSH Standards, Labor Inspections, and Mandatory Reporting
 
-**Source**: RA 11058 (Occupational Safety and Health Standards Law, 2018), DO 198-18 (original IRR), DO 252-25 (revised IRR, effective May 16, 2025), DO 238-23 (revised inspection rules), DOLE Rules 1020/1030/1040/1050 (OSHS), PD 851 (13th Month Pay compliance reporting), Labor Code Book IV (Health, Safety, and Social Welfare), DOLE Bureau of Working Conditions (BWC) reportorial requirements
+**Source**: RA 11058 (Occupational Safety and Health Standards Law, 2018), DO 198-18 (original IRR), DO 252-25 (revised IRR, effective May 16, 2025), DO 238-23 (revised inspection rules), DOLE Rules 1020/1030/1040/1050 (OSHS), PD 851 (13th Month Pay compliance reporting), Labor Code Book IV (Health, Safety, and Social Welfare), DOLE Bureau of Working Conditions (BWC) reportorial requirements, RA 10396 (SEnA Act), DO 174-17 (Contracting/Subcontracting), DO 248-25 (Foreign National Employment), RA 11165 (Telecommuting Act), DA 02-09 (Compressed Work Week), DOLE Labor Advisories
 
 **Date analyzed**: 2026-02-25
 

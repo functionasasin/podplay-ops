@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total aspects**: 25
-- **Analyzed**: 21
-- **Pending**: 4
-- **Convergence**: 84%
+- **Analyzed**: 22
+- **Pending**: 3
+- **Convergence**: 88%
 
 ## Wave 1: Rust Type → Frontend Spec (17 aspects)
 
@@ -33,7 +33,7 @@
 - [x] invalid-combinations — Combinations the engine rejects or that produce warnings (mine pipeline validation logic and test case failures)
 - [x] scenario-field-mapping — Which scenario codes (T1-T15, I1-I15) are reachable from which input configurations, and how the results view adapts
 - [x] test-case-field-coverage — Analyze all 20+ test case JSONs to verify Wave 1 specs cover every field value that appears in practice
-- [ ] shared-components — Identify reusable form components (MoneyInput, PersonPicker, DateInput, FractionInput) from Wave 1 field metadata
+- [x] shared-components — Identify reusable form components (MoneyInput, PersonPicker, DateInput, FractionInput) from Wave 1 field metadata
 
 ## Wave 3: Synthesis (3 aspects)
 
