@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 34
-- Analyzed: 21
-- Pending: 13
-- Convergence: 62%
+- Analyzed: 22
+- Pending: 12
+- Convergence: 65%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -34,7 +34,7 @@
 - [x] filing-rules — Sec. 90: 1-year deadline, CPA requirement for >₱5M, extensions
 
 ### Wave 3: Pre-TRAIN Rule Extraction (deaths before Jan 1, 2018)
-- [ ] tax-rate-pre-train — Original NIRC Sec. 84: graduated rate schedule (5%-20%) with brackets
+- [x] tax-rate-pre-train — Original NIRC Sec. 84: graduated rate schedule (5%-20%) with brackets
 - [ ] deductions-pre-train-diffs — Deduction amounts/rules that differ from TRAIN-era (old standard deduction, old family home cap, etc.)
 - [ ] pre-train-computation-flow — End-to-end computation differences from TRAIN-era (graduated rate application, different thresholds)
 
