@@ -11,4 +11,5 @@ pub mod step4_estate_base;
 pub mod step5_legitimes;
 pub mod step6_validation;
 pub mod step7_distribute;
+pub mod step8_collation;
 pub mod types;
