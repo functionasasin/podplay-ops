@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 35
-- Analyzed: 27
-- Pending: 8
-- Convergence: 77%
+- Analyzed: 28
+- Pending: 7
+- Convergence: 80%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -44,7 +44,7 @@
 - [x] amnesty-vs-regular — Decision logic: when to use amnesty path vs. regular pre-TRAIN computation
 
 ### Wave 2 (continued): Corrections
-- [ ] correction-nra-public-transfers — Correct deduction-public-transfers.md: NRA public transfers are PROPORTIONAL per Sec. 86(B)(2), not full-value. Sec. 86(B)(2) explicitly includes paragraph (3) (transfers for public use) in the proportional formula alongside paragraph (1) (ELIT).
+- [x] correction-nra-public-transfers — Correct deduction-public-transfers.md: NRA public transfers are PROPORTIONAL per Sec. 86(B)(2), not full-value. Sec. 86(B)(2) explicitly includes paragraph (3) (transfers for public use) in the proportional formula alongside paragraph (1) (ELIT).
 - [ ] correction-amnesty-deductions — Correct deductions-pre-train-diffs.md: The `getOrdinaryDeductionItems` function incorrectly excludes funeral and judicial/admin expenses from the amnesty path for pre-2018 deaths. RA 11213 Sec. 3 defines net estate using "allowable deductions under the NIRC at time of death," which includes funeral and judicial expenses for pre-2018 deaths. The function should return `common + ["funeralExpenses", "judicialAdminExpenses"]` when `(regime == "pre_TRAIN") OR (regime == "amnesty" AND deductionRules == "PRE_TRAIN")`. Also update the `getSpecialDeductionAmounts` function to correctly handle amnesty + pre-2018 deaths separately from amnesty + TRAIN deaths.
 
 ### Wave 5: Synthesis

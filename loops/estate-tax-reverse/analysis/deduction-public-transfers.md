@@ -129,7 +129,7 @@ The deduction applies to:
 | TRAIN-era (death ≥ 2018-01-01) | **Yes** | Sec. 86(A)(3) — unchanged by TRAIN |
 | Pre-TRAIN (death < 2018-01-01) | **Yes** | Sec. 86(A)(3) — same provision, same rule |
 | Estate Tax Amnesty (RA 11213/11569) | **No** | Amnesty path allows only: standard deduction + surviving spouse share; this deduction is NOT available |
-| Non-resident aliens (any regime) | **Yes** | Via Sec. 86(B)(4), limited to PH-situated property and PH government |
+| Non-resident aliens (any regime) | **Yes (proportional)** | Via Sec. 86(B)(2)+(4); PH government transfers only; deduction = proportional_factor × FMV (same factor as ELIT: PH gross estate / worldwide gross estate) — **NOT full value**; see `correction-nra-public-transfers.md` |
 
 **Conclusion**: This deduction is **regime-invariant between TRAIN and pre-TRAIN**. The provision was NOT amended by TRAIN. Only the amnesty path excludes it.
 
@@ -225,11 +225,18 @@ No minimum tax applies under regular rules (TRAIN or pre-TRAIN).
 **Engine behavior**: The deduction is limited to the **value of the interest actually transferred**. If only 50% interest is bequeathed, the deduction = ₱2.5M (50% × ₱5M FMV). The remaining 50% stays in the estate. The engine should allow partial-property transfers: `transfer.percentageInterestTransferred` → `deductionAmount = fmvAtDeath × percentageInterestTransferred`.
 
 ### EC-10: NRA Transferring PH Property to PH Government
+
+**⚠ CORRECTED — see `analysis/correction-nra-public-transfers.md`**
+
 **Scenario**: Non-resident alien decedent bequeaths PH real property to a Philippine city.
 
-**Engine behavior**: Qualifies under Sec. 86(B)(4). The NRA deductions use a proportional formula for most items, but transfers for public use appears to be deducted at **full value** (not proportionally), since Sec. 86(B)(4) says "same as Sec. 86(A)(3)" without adding a proportional limitation. This is distinct from the proportional ELIT deductions under Sec. 86(B)(2). Deduction = full FMV of the PH-situated property transferred.
+**Engine behavior (corrected)**: Qualifies under Sec. 86(B)(2)+(4), but the deduction is **proportional**, not full-value. Sec. 86(B)(2) explicitly applies the proportional formula to deductions under paragraphs "(1) and **(3)**" of Sec. 86(A) — paragraph (3) is transfers for public use. The deduction = `proportional_factor × FMV`, where `proportional_factor = PH_gross_estate / total_worldwide_gross_estate`.
 
-**Note**: This interpretation should be confirmed in the `nonresident-deductions` aspect when it analyzes the Sec. 86(B) framework in full.
+**Example**: NRA bequeaths PH property (FMV ₱1M) to City of Manila. PH estate = ₱5M; worldwide estate = ₱20M.
+- proportional_factor = ₱5M / ₱20M = 0.25
+- Deduction = 0.25 × ₱1M = **₱250,000** (NOT ₱1,000,000)
+
+**Implementation**: The same `proportional_factor` computed for NRA ELIT (Sec. 86(B)(2)) applies here. No additional input needed — the FMV is already in the NRA gross estate; the factor is already computed.
 
 ---
 
@@ -251,7 +258,7 @@ No minimum tax applies under regular rules (TRAIN or pre-TRAIN).
 
 8. **Test: Partial interest transfer** — Only percentage of property transferred; deduction scaled accordingly.
 
-9. **Test: NRA with PH government bequest** — Full value deducted (not proportional), feeds NRA deduction total.
+9. **Test: NRA with PH government bequest** — ⚠ CORRECTED: Deduction is **proportional** (not full-value). NRA bequest ₱1M to PH city, PH estate = 25% of worldwide → deduction = 0.25 × ₱1M = ₱250K. Feeds Schedule 5F at proportional amount.
 
 10. **Test: Mixed transfers** — One bequest to charity (Sec. 87, excluded from GE), one to government (Sec. 86(A)(3), included in GE then deducted). No double-counting; separate line items.
 
@@ -268,7 +275,7 @@ No minimum tax applies under regular rules (TRAIN or pre-TRAIN).
 | Purpose Requirement | Exclusively public purposes |
 | Property Types | Any property includible in gross estate |
 | Regime | **TRAIN-era**: Yes. **Pre-TRAIN**: Yes (identical rule). **Amnesty**: No |
-| NRA Availability | Yes (Sec. 86(B)(4)); limited to PH-situated property; full value (not proportional) |
+| NRA Availability | Yes (Sec. 86(B)(2)+(4)); PH government transfers only; **proportional** (proportional_factor × FMV, same factor as ELIT) — see `correction-nra-public-transfers.md` |
 | Column Assignment | Column A (exclusive) or Column B (conjugal/communal) matching gross estate entry |
 | Documentation | Will/testament language; government acceptance; deed of donation if applicable |
 | Interaction with Sec. 87(d) | Mutually exclusive by recipient type; government → 86(A)(3); private charity → 87(d) |
