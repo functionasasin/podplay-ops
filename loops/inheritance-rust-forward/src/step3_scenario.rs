@@ -50,7 +50,33 @@ pub struct Step3Output {
 /// groups survive (line counts) and special conditions (e.g. illegitimate
 /// decedent for T14/T15/I-ID scenarios).
 pub fn step3_determine_scenario(input: &Step3Input) -> Step3Output {
-    todo!("Step 3 not yet implemented")
+    // Step 3 preliminary: will present → TESTATE, else INTESTATE.
+    // Mixed detection happens after Step 5 (§2.4).
+    let succession_type = if input.has_will {
+        SuccessionType::Testate
+    } else {
+        SuccessionType::Intestate
+    };
+
+    let (scenario_code, warnings) = match succession_type {
+        SuccessionType::Testate => {
+            determine_testate_scenario(&input.line_counts, &input.decedent)
+        }
+        SuccessionType::Intestate => determine_intestate_scenario(
+            &input.line_counts,
+            &input.decedent,
+            input.has_siblings_or_nephews,
+            input.has_other_collaterals,
+        ),
+        // Mixed and IntestateByPreterition are not determined in Step 3.
+        _ => unreachable!("Step 3 only produces Testate or Intestate"),
+    };
+
+    Step3Output {
+        succession_type,
+        scenario_code,
+        warnings,
+    }
 }
 
 // ── Internal helpers ────────────────────────────────────────────────
@@ -63,22 +89,149 @@ pub fn step3_determine_scenario(input: &Step3Input) -> Step3Output {
 /// - Regime C (no primary/secondary compulsory heirs): T10-T13
 /// - Special (illegitimate decedent): T14-T15
 fn determine_testate_scenario(
-    _lc: &LineCounts,
-    _decedent: &Decedent,
+    lc: &LineCounts,
+    decedent: &Decedent,
 ) -> (ScenarioCode, Vec<ManualFlag>) {
-    todo!("testate scenario determination not yet implemented")
+    let warnings = Vec::new();
+    let has_lc = lc.legitimate_child > 0;
+    let has_ic = lc.illegitimate_child > 0;
+    let has_spouse = lc.surviving_spouse > 0;
+    let has_asc = lc.legitimate_ascendant > 0;
+
+    // §4.2: Descendants exclude ascendants. If any LC exists, ascendants
+    // are excluded from compulsory succession — use Regime A.
+
+    // ── Regime A: Descendants present ──
+    if has_lc {
+        let code = match (has_ic, has_spouse) {
+            // T1: n LC only (no IC, no spouse)
+            (false, false) => ScenarioCode::T1,
+            // T4: n LC + m IC (no spouse)
+            (true, false) => ScenarioCode::T4,
+            // T2/T3: LC + spouse (no IC) — T2 if 1 LC, T3 if n≥2
+            (false, true) => {
+                if lc.legitimate_child == 1 {
+                    ScenarioCode::T2
+                } else {
+                    ScenarioCode::T3
+                }
+            }
+            // T5a/T5b: LC + IC + spouse — T5a if 1 LC, T5b if n≥2
+            (true, true) => {
+                if lc.legitimate_child == 1 {
+                    ScenarioCode::T5a
+                } else {
+                    ScenarioCode::T5b
+                }
+            }
+        };
+        return (code, warnings);
+    }
+
+    // ── Special: Illegitimate decedent with ascendants (Art. 903) ──
+    // T14/T15 take priority over Regime B when decedent is illegitimate.
+    if decedent.is_illegitimate && has_asc {
+        let code = if has_spouse {
+            ScenarioCode::T15
+        } else {
+            ScenarioCode::T14
+        };
+        return (code, warnings);
+    }
+
+    // ── Regime B: Ascendants present, no descendants ──
+    if has_asc {
+        let code = match (has_ic, has_spouse) {
+            (false, false) => ScenarioCode::T6,
+            (false, true) => ScenarioCode::T7,
+            (true, false) => ScenarioCode::T8,
+            (true, true) => ScenarioCode::T9,
+        };
+        return (code, warnings);
+    }
+
+    // ── Regime C: No primary (descendants) or secondary (ascendants) heirs ──
+    let code = match (has_ic, has_spouse) {
+        (true, true) => ScenarioCode::T10,
+        (true, false) => ScenarioCode::T11,
+        (false, true) => ScenarioCode::T12,
+        (false, false) => ScenarioCode::T13,
+    };
+    (code, warnings)
 }
 
 /// Map line counts to an intestate scenario code (I1-I15).
 ///
 /// Uses the intestate scenario table from §3.7.
 fn determine_intestate_scenario(
-    _lc: &LineCounts,
+    lc: &LineCounts,
     _decedent: &Decedent,
-    _has_siblings_or_nephews: bool,
-    _has_other_collaterals: bool,
+    has_siblings_or_nephews: bool,
+    has_other_collaterals: bool,
 ) -> (ScenarioCode, Vec<ManualFlag>) {
-    todo!("intestate scenario determination not yet implemented")
+    let warnings = Vec::new();
+    let has_lc = lc.legitimate_child > 0;
+    let has_ic = lc.illegitimate_child > 0;
+    let has_spouse = lc.surviving_spouse > 0;
+    let has_asc = lc.legitimate_ascendant > 0;
+
+    // §4.2: Descendants exclude ascendants.
+
+    // ── Regime A: Descendants present ──
+    if has_lc {
+        let code = match (has_ic, has_spouse) {
+            (false, false) => ScenarioCode::I1,
+            (false, true) => ScenarioCode::I2,
+            (true, false) => ScenarioCode::I3,
+            (true, true) => ScenarioCode::I4,
+        };
+        return (code, warnings);
+    }
+
+    // ── Regime B: Ascendants present, no descendants ──
+    if has_asc {
+        let code = match (has_ic, has_spouse) {
+            (false, false) => ScenarioCode::I5,
+            (false, true) => ScenarioCode::I6,
+            (true, false) => ScenarioCode::I9,
+            (true, true) => ScenarioCode::I10,
+        };
+        return (code, warnings);
+    }
+
+    // ── Regime C: No descendants, no ascendants ──
+
+    // IC present (with or without spouse)
+    if has_ic {
+        let code = if has_spouse {
+            ScenarioCode::I8
+        } else {
+            ScenarioCode::I7
+        };
+        return (code, warnings);
+    }
+
+    // Spouse present (no IC, no descendants, no ascendants)
+    if has_spouse {
+        // I12 if siblings/nephews exist alongside spouse; I11 if spouse alone
+        let code = if has_siblings_or_nephews {
+            ScenarioCode::I12
+        } else {
+            ScenarioCode::I11
+        };
+        return (code, warnings);
+    }
+
+    // No compulsory heirs at all — collateral relatives or escheat
+    if has_siblings_or_nephews {
+        return (ScenarioCode::I13, warnings);
+    }
+    if has_other_collaterals {
+        return (ScenarioCode::I14, warnings);
+    }
+
+    // I15: No heirs → State (escheat)
+    (ScenarioCode::I15, warnings)
 }
 
 // ── Tests ───────────────────────────────────────────────────────────
