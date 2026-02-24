@@ -12,4 +12,5 @@ pub mod step5_legitimes;
 pub mod step6_validation;
 pub mod step7_distribute;
 pub mod step8_collation;
+pub mod step9_vacancy;
 pub mod types;
