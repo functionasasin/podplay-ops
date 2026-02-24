@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total aspects**: 25
-- **Analyzed**: 5
-- **Pending**: 20
-- **Convergence**: 20%
+- **Analyzed**: 6
+- **Pending**: 19
+- **Convergence**: 24%
 
 ## Wave 1: Rust Type → Frontend Spec (17 aspects)
 
@@ -14,7 +14,7 @@
 - [x] engine-config — EngineConfig struct, boolean flags and defaults
 - [x] decedent — Decedent struct, all fields including marriage and death-bed flags
 - [x] person — Person struct, core fields (id, name, alive, degree, line)
-- [ ] relationship-enum — Relationship enum, all 11 variants and their implications
+- [x] relationship-enum — Relationship enum, all 11 variants and their implications
 - [ ] filiation-proof — FiliationProof enum, when required, valid options
 - [ ] blood-type — BloodType enum (Full/Half), sibling-only field
 - [ ] adoption — Adoption struct, regimes (RA 8552 vs RA 11642), rescission
