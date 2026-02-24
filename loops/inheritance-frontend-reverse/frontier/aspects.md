@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total aspects**: 25
-- **Analyzed**: 11
-- **Pending**: 14
-- **Convergence**: 44%
+- **Analyzed**: 12
+- **Pending**: 13
+- **Convergence**: 48%
 
 ## Wave 1: Rust Type → Frontend Spec (17 aspects)
 
@@ -20,7 +20,7 @@
 - [x] adoption — Adoption struct, regimes (RA 8552 vs RA 11642), rescission
 - [x] will — Will struct, top-level shape, date_executed
 - [x] institution-of-heir — InstitutionOfHeir struct, HeirReference, ShareSpec enum
-- [ ] legacy — Legacy struct, LegacySpec enum (FixedAmount, SpecificAsset, GenericClass)
+- [x] legacy — Legacy struct, LegacySpec enum (FixedAmount, SpecificAsset, GenericClass)
 - [ ] devise — Devise struct, DeviseSpec enum (SpecificProperty, FractionalInterest)
 - [ ] condition-substitute — Condition and Substitute structs, enums for types/triggers
 - [ ] disinheritance — Disinheritance struct, 23 cause codes grouped by article
