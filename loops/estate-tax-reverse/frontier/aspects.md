@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 34
-- Analyzed: 24
-- Pending: 10
-- Convergence: 71%
+- Analyzed: 25
+- Pending: 9
+- Convergence: 74%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -39,7 +39,7 @@
 - [x] pre-train-computation-flow — End-to-end computation differences from TRAIN-era (graduated rate application, different thresholds)
 
 ### Wave 4: Estate Tax Amnesty (RA 11213/11569)
-- [ ] amnesty-eligibility — Who qualifies: estates of decedents who died before Jan 1, 2018, with unpaid/unsettled estate tax
+- [x] amnesty-eligibility — Who qualifies: estates of decedents who died before Jan 1, 2018, with unpaid/unsettled estate tax
 - [ ] amnesty-computation — Amnesty tax: 6% of net estate, limited deductions (standard deduction + surviving spouse share only)
 - [ ] amnesty-vs-regular — Decision logic: when to use amnesty path vs. regular pre-TRAIN computation
 
