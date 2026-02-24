@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 34
-- Analyzed: 19
-- Pending: 15
-- Convergence: 56%
+- Analyzed: 20
+- Pending: 14
+- Convergence: 59%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -30,7 +30,7 @@
 - [x] property-regime-separation — Complete Separation of Property (by prenuptial agreement)
 - [x] nonresident-deductions — Sec. 86(B)-(D): proportional deductions for non-resident aliens
 - [x] exemptions — Sec. 87: exempt transfers (usufruct merger, fiduciary, charitable ≤30% admin)
-- [ ] tax-credits — Foreign estate tax paid, prior return payments
+- [x] tax-credits — Foreign estate tax paid, prior return payments
 - [ ] filing-rules — Sec. 90: 1-year deadline, CPA requirement for >₱5M, extensions
 
 ### Wave 3: Pre-TRAIN Rule Extraction (deaths before Jan 1, 2018)
