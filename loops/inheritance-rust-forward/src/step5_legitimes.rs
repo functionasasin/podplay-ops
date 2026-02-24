@@ -72,6 +72,108 @@ pub struct Step5Output {
     pub warnings: Vec<ManualFlag>,
 }
 
+// ── Internal helpers ────────────────────────────────────────────────
+
+fn add_lc_legitimes(
+    out: &mut Vec<HeirLegitime>,
+    heirs: &[Heir],
+    per_lc_frac: &Frac,
+    estate_base: &Frac,
+    cap_applied: bool,
+    legal_basis: Vec<String>,
+) {
+    for heir in heirs
+        .iter()
+        .filter(|h| h.effective_category == EffectiveCategory::LegitimateChildGroup)
+    {
+        out.push(HeirLegitime {
+            heir_id: heir.id.clone(),
+            effective_category: EffectiveCategory::LegitimateChildGroup,
+            legitime_fraction: per_lc_frac.clone(),
+            legitime_amount: estate_base * per_lc_frac,
+            cap_applied,
+            legal_basis: legal_basis.clone(),
+        });
+    }
+}
+
+fn add_ic_legitimes(
+    out: &mut Vec<HeirLegitime>,
+    heirs: &[Heir],
+    per_ic_frac: &Frac,
+    estate_base: &Frac,
+    cap_applied: bool,
+    legal_basis: Vec<String>,
+) {
+    for heir in heirs
+        .iter()
+        .filter(|h| h.effective_category == EffectiveCategory::IllegitimateChildGroup)
+    {
+        out.push(HeirLegitime {
+            heir_id: heir.id.clone(),
+            effective_category: EffectiveCategory::IllegitimateChildGroup,
+            legitime_fraction: per_ic_frac.clone(),
+            legitime_amount: estate_base * per_ic_frac,
+            cap_applied,
+            legal_basis: legal_basis.clone(),
+        });
+    }
+}
+
+fn add_spouse_legitime(
+    out: &mut Vec<HeirLegitime>,
+    heirs: &[Heir],
+    sp_frac: &Frac,
+    estate_base: &Frac,
+    legal_basis: Vec<String>,
+) {
+    for heir in heirs
+        .iter()
+        .filter(|h| h.effective_category == EffectiveCategory::SurvivingSpouseGroup)
+    {
+        out.push(HeirLegitime {
+            heir_id: heir.id.clone(),
+            effective_category: EffectiveCategory::SurvivingSpouseGroup,
+            legitime_fraction: sp_frac.clone(),
+            legitime_amount: estate_base * sp_frac,
+            cap_applied: false,
+            legal_basis: legal_basis.clone(),
+        });
+    }
+}
+
+fn divide_equally(
+    heirs: &[&Heir],
+    total_fraction: &Frac,
+    estate_base: &Frac,
+) -> Vec<HeirLegitime> {
+    let count = frac(heirs.len() as i64, 1);
+    let per_heir_frac = total_fraction / &count;
+    let per_heir_amount = estate_base * &per_heir_frac;
+
+    heirs
+        .iter()
+        .map(|h| HeirLegitime {
+            heir_id: h.id.clone(),
+            effective_category: h.effective_category,
+            legitime_fraction: per_heir_frac.clone(),
+            legitime_amount: per_heir_amount.clone(),
+            cap_applied: false,
+            legal_basis: vec!["Art. 890".into()],
+        })
+        .collect()
+}
+
+fn empty_fp() -> FreePortion {
+    FreePortion {
+        fp_gross: Frac::zero(),
+        spouse_from_fp: Frac::zero(),
+        ic_from_fp: Frac::zero(),
+        fp_disposable: Frac::zero(),
+        cap_triggered: false,
+    }
+}
+
 // ── Public API ──────────────────────────────────────────────────────
 
 /// Compute legitimes and the free portion pipeline for the given scenario.
@@ -80,17 +182,237 @@ pub struct Step5Output {
 /// correct fraction table from §6, computes per-heir legitimes, and runs
 /// the FP pipeline (§2.3) to determine FP_disposable.
 pub fn step5_compute_legitimes(input: &Step5Input) -> Step5Output {
-    todo!("Step 5 implementation")
+    let e = &input.estate_base;
+    let n = input.line_counts.legitimate_child;
+    let m = input.line_counts.illegitimate_child;
+    let scenario = input.scenario_code;
+
+    // Intestate scenarios: legitime computation does not apply.
+    // Actual distribution happens in Step 7.
+    if matches!(
+        scenario,
+        ScenarioCode::I1
+            | ScenarioCode::I2
+            | ScenarioCode::I3
+            | ScenarioCode::I4
+            | ScenarioCode::I5
+            | ScenarioCode::I6
+            | ScenarioCode::I7
+            | ScenarioCode::I8
+            | ScenarioCode::I9
+            | ScenarioCode::I10
+            | ScenarioCode::I11
+            | ScenarioCode::I12
+            | ScenarioCode::I13
+            | ScenarioCode::I14
+            | ScenarioCode::I15
+    ) {
+        return Step5Output {
+            heir_legitimes: vec![],
+            free_portion: empty_fp(),
+            warnings: vec![],
+        };
+    }
+
+    let mut heir_legitimes = Vec::new();
+    let mut fp_gross = Frac::zero();
+    let mut spouse_from_fp = Frac::zero();
+    let mut ic_from_fp = Frac::zero();
+    let mut cap_triggered = false;
+
+    match scenario {
+        // ── Regime A: Descendants present ────────────────────────
+
+        ScenarioCode::T1 => {
+            // n LC only (Art. 888): each LC = E/(2n), FP = E/2
+            let per_lc = frac(1, 2 * n as i64);
+            add_lc_legitimes(&mut heir_legitimes, &input.heirs, &per_lc, e, false, vec!["Art. 888".into()]);
+            fp_gross = e * &frac(1, 2);
+        }
+
+        ScenarioCode::T2 => {
+            // 1 LC + Spouse (Arts. 888, 892 ¶1): LC = E/2, Spouse = E/4
+            add_lc_legitimes(&mut heir_legitimes, &input.heirs, &frac(1, 2), e, false, vec!["Art. 888".into()]);
+            let sp = frac(1, 4);
+            add_spouse_legitime(&mut heir_legitimes, &input.heirs, &sp, e, vec!["Art. 892 ¶1".into()]);
+            fp_gross = e * &frac(1, 2);
+            spouse_from_fp = e * &sp;
+        }
+
+        ScenarioCode::T3 => {
+            // n≥2 LC + Spouse (Arts. 888, 892 ¶2): each LC = E/(2n), Spouse = E/(2n)
+            let per_lc = frac(1, 2 * n as i64);
+            add_lc_legitimes(&mut heir_legitimes, &input.heirs, &per_lc, e, false, vec!["Art. 888".into()]);
+            add_spouse_legitime(&mut heir_legitimes, &input.heirs, &per_lc, e, vec!["Art. 892 ¶2".into()]);
+            fp_gross = e * &frac(1, 2);
+            spouse_from_fp = e * &per_lc;
+        }
+
+        ScenarioCode::T4 => {
+            // n LC + m IC, no spouse (Arts. 888, 895)
+            let per_lc = frac(1, 2 * n as i64);
+            add_lc_legitimes(&mut heir_legitimes, &input.heirs, &per_lc, e, false, vec!["Art. 888".into()]);
+            fp_gross = e * &frac(1, 2);
+            let (per_ic, cap) = apply_cap_rule(&per_lc, m, &frac(1, 2), &Frac::zero());
+            cap_triggered = cap;
+            add_ic_legitimes(&mut heir_legitimes, &input.heirs, &per_ic, e, cap, vec!["Art. 895".into()]);
+            ic_from_fp = e * &(&per_ic * &frac(m as i64, 1));
+        }
+
+        ScenarioCode::T5a => {
+            // 1 LC + m IC + Spouse (Arts. 888, 892 ¶1, 895)
+            add_lc_legitimes(&mut heir_legitimes, &input.heirs, &frac(1, 2), e, false, vec!["Art. 888".into()]);
+            let sp = frac(1, 4);
+            add_spouse_legitime(&mut heir_legitimes, &input.heirs, &sp, e, vec!["Art. 892 ¶1".into()]);
+            fp_gross = e * &frac(1, 2);
+            spouse_from_fp = e * &sp;
+            let (per_ic, cap) = apply_cap_rule(&frac(1, 2), m, &frac(1, 2), &sp);
+            cap_triggered = cap;
+            add_ic_legitimes(&mut heir_legitimes, &input.heirs, &per_ic, e, cap, vec!["Art. 895".into()]);
+            ic_from_fp = e * &(&per_ic * &frac(m as i64, 1));
+        }
+
+        ScenarioCode::T5b => {
+            // n≥2 LC + m IC + Spouse (Arts. 888, 892 ¶2, 895, 897)
+            let per_lc = frac(1, 2 * n as i64);
+            add_lc_legitimes(&mut heir_legitimes, &input.heirs, &per_lc, e, false, vec!["Art. 888".into()]);
+            let sp = per_lc.clone(); // spouse = same as one LC share
+            add_spouse_legitime(&mut heir_legitimes, &input.heirs, &sp, e, vec!["Art. 892 ¶2".into()]);
+            fp_gross = e * &frac(1, 2);
+            spouse_from_fp = e * &sp;
+            let (per_ic, cap) = apply_cap_rule(&per_lc, m, &frac(1, 2), &sp);
+            cap_triggered = cap;
+            add_ic_legitimes(&mut heir_legitimes, &input.heirs, &per_ic, e, cap, vec!["Art. 895".into()]);
+            ic_from_fp = e * &(&per_ic * &frac(m as i64, 1));
+        }
+
+        // ── Regime B: Ascendants present, no descendants ────────
+
+        ScenarioCode::T6 => {
+            // Ascendants only (Art. 889): collective = E/2, FP = E/2
+            let asc = divide_among_ascendants(&input.heirs, &frac(1, 2), e);
+            heir_legitimes.extend(asc);
+            fp_gross = e * &frac(1, 2);
+        }
+
+        ScenarioCode::T7 => {
+            // Ascendants + Spouse (Arts. 889, 893): asc = E/2, spouse = E/4
+            let asc = divide_among_ascendants(&input.heirs, &frac(1, 2), e);
+            heir_legitimes.extend(asc);
+            let sp = frac(1, 4);
+            add_spouse_legitime(&mut heir_legitimes, &input.heirs, &sp, e, vec!["Art. 893".into()]);
+            fp_gross = e * &frac(1, 2);
+            spouse_from_fp = e * &sp;
+        }
+
+        ScenarioCode::T8 => {
+            // Ascendants + m IC (Arts. 889, 896): asc = E/2, IC collective = E/4
+            let asc = divide_among_ascendants(&input.heirs, &frac(1, 2), e);
+            heir_legitimes.extend(asc);
+            let per_ic = frac(1, 4 * m as i64);
+            add_ic_legitimes(&mut heir_legitimes, &input.heirs, &per_ic, e, false, vec!["Art. 896".into()]);
+            fp_gross = e * &frac(1, 2);
+            ic_from_fp = e * &frac(1, 4);
+        }
+
+        ScenarioCode::T9 => {
+            // Ascendants + m IC + Spouse (Art. 899): asc = E/2, IC = E/4, spouse = E/8
+            let asc = divide_among_ascendants(&input.heirs, &frac(1, 2), e);
+            heir_legitimes.extend(asc);
+            let per_ic = frac(1, 4 * m as i64);
+            add_ic_legitimes(&mut heir_legitimes, &input.heirs, &per_ic, e, false, vec!["Art. 896".into()]);
+            let sp = frac(1, 8);
+            add_spouse_legitime(&mut heir_legitimes, &input.heirs, &sp, e, vec!["Art. 899".into()]);
+            fp_gross = e * &frac(1, 2);
+            spouse_from_fp = e * &sp;
+            ic_from_fp = e * &frac(1, 4);
+        }
+
+        // ── Regime C: No primary/secondary compulsory heirs ─────
+
+        ScenarioCode::T10 => {
+            // m IC + Spouse (Art. 894): IC collective = E/3, Spouse = E/3
+            let per_ic = frac(1, 3 * m as i64);
+            add_ic_legitimes(&mut heir_legitimes, &input.heirs, &per_ic, e, false, vec!["Art. 894".into()]);
+            let sp = frac(1, 3);
+            add_spouse_legitime(&mut heir_legitimes, &input.heirs, &sp, e, vec!["Art. 894".into()]);
+            fp_gross = e.clone();
+            spouse_from_fp = e * &sp;
+            ic_from_fp = e * &frac(1, 3);
+        }
+
+        ScenarioCode::T11 => {
+            // m IC only (Art. 901): IC collective = E/2
+            let per_ic = frac(1, 2 * m as i64);
+            add_ic_legitimes(&mut heir_legitimes, &input.heirs, &per_ic, e, false, vec!["Art. 901".into()]);
+            fp_gross = e.clone();
+            ic_from_fp = e * &frac(1, 2);
+        }
+
+        ScenarioCode::T12 => {
+            // Spouse only (Art. 900): normal = E/2, articulo mortis = E/3
+            let am = is_articulo_mortis(&input.decedent);
+            let sp = if am { frac(1, 3) } else { frac(1, 2) };
+            add_spouse_legitime(&mut heir_legitimes, &input.heirs, &sp, e, vec!["Art. 900".into()]);
+            fp_gross = e.clone();
+            spouse_from_fp = e * &sp;
+        }
+
+        ScenarioCode::T13 => {
+            // No compulsory heirs: entire estate is free portion
+            fp_gross = e.clone();
+        }
+
+        // ── Special: Illegitimate decedent (Art. 903) ───────────
+
+        ScenarioCode::T14 => {
+            // Parents of illegitimate decedent: parents collective = E/2
+            let asc = divide_among_ascendants(&input.heirs, &frac(1, 2), e);
+            heir_legitimes.extend(asc);
+            fp_gross = e * &frac(1, 2);
+        }
+
+        ScenarioCode::T15 => {
+            // Parents + Spouse of illegitimate decedent: parents = E/4, spouse = E/4
+            let asc = divide_among_ascendants(&input.heirs, &frac(1, 4), e);
+            heir_legitimes.extend(asc);
+            let sp = frac(1, 4);
+            add_spouse_legitime(&mut heir_legitimes, &input.heirs, &sp, e, vec!["Art. 903".into()]);
+            // FP_gross = E - parents' E/4 = 3E/4; spouse E/4 charged against FP
+            fp_gross = e * &frac(3, 4);
+            spouse_from_fp = e * &sp;
+        }
+
+        // Intestate already handled above
+        _ => {}
+    }
+
+    let fp_disposable = (&fp_gross - &spouse_from_fp) - ic_from_fp.clone();
+
+    Step5Output {
+        heir_legitimes,
+        free_portion: FreePortion {
+            fp_gross,
+            spouse_from_fp,
+            ic_from_fp,
+            fp_disposable,
+            cap_triggered,
+        },
+        warnings: vec![],
+    }
 }
 
 /// Check whether the articulo mortis conditions are met (Art. 900 ¶2).
 ///
 /// All three conditions must hold:
-/// 1. Marriage contracted during the illness that caused death
-/// 2. Decedent did not recover (illness_caused_death)
+/// 1. Marriage solemnized in articulo mortis
+/// 2. Decedent was ill at marriage and illness caused death
 /// 3. Years of cohabitation < 5 (≥5 exempts articulo mortis)
 pub fn is_articulo_mortis(decedent: &Decedent) -> bool {
-    todo!("articulo mortis check")
+    decedent.marriage_solemnized_in_articulo_mortis
+        && decedent.was_ill_at_marriage
+        && decedent.illness_caused_death
+        && decedent.years_of_cohabitation < 5
 }
 
 /// Ascendant division sub-algorithm (§6.5, Art. 890).
@@ -103,20 +425,92 @@ pub fn divide_among_ascendants(
     collective_fraction: &Frac,
     estate_base: &Frac,
 ) -> Vec<HeirLegitime> {
-    todo!("ascendant division sub-algorithm")
+    let ascendants: Vec<&Heir> = heirs
+        .iter()
+        .filter(|h| {
+            h.effective_category == EffectiveCategory::LegitimateAscendantGroup
+                && h.is_eligible
+                && h.is_alive
+        })
+        .collect();
+
+    if ascendants.is_empty() {
+        return vec![];
+    }
+
+    // Tier 1: Parents (degree 1)
+    let parents: Vec<&Heir> = ascendants
+        .iter()
+        .filter(|h| h.degree_from_decedent == 1)
+        .copied()
+        .collect();
+
+    if !parents.is_empty() {
+        return divide_equally(&parents, collective_fraction, estate_base);
+    }
+
+    // Tier 2: Nearest degree among higher ascendants
+    let min_degree = ascendants
+        .iter()
+        .map(|h| h.degree_from_decedent)
+        .min()
+        .unwrap();
+
+    let nearest: Vec<&Heir> = ascendants
+        .iter()
+        .filter(|h| h.degree_from_decedent == min_degree)
+        .copied()
+        .collect();
+
+    // Tier 3: By-line split (Art. 890 ¶2, Art. 987)
+    let paternal: Vec<&Heir> = nearest
+        .iter()
+        .filter(|h| h.line == Some(LineOfDescent::Paternal))
+        .copied()
+        .collect();
+    let maternal: Vec<&Heir> = nearest
+        .iter()
+        .filter(|h| h.line == Some(LineOfDescent::Maternal))
+        .copied()
+        .collect();
+
+    if !paternal.is_empty() && !maternal.is_empty() {
+        let half = collective_fraction / &frac(2, 1);
+        let mut result = divide_equally(&paternal, &half, estate_base);
+        result.extend(divide_equally(&maternal, &half, estate_base));
+        result
+    } else {
+        // Only one line survives — gets entire collective
+        let surviving = if !paternal.is_empty() {
+            paternal
+        } else {
+            maternal
+        };
+        divide_equally(&surviving, collective_fraction, estate_base)
+    }
 }
 
 /// Apply the Art. 895 ¶3 cap rule.
 ///
 /// Ensures total IC legitime does not exceed FP remaining after spouse.
-/// Returns (per_ic_amount, cap_triggered).
+/// Returns (per_ic_fraction, cap_triggered).
 pub fn apply_cap_rule(
     per_lc_amount: &Frac,
     m: usize,
     fp_gross: &Frac,
     spouse_from_fp: &Frac,
 ) -> (Frac, bool) {
-    todo!("cap rule")
+    let per_ic_uncapped = per_lc_amount / &frac(2, 1);
+    let fp_remaining = fp_gross - spouse_from_fp;
+    let m_frac = frac(m as i64, 1);
+    let total_ic_uncapped = &per_ic_uncapped * &m_frac;
+
+    if total_ic_uncapped > fp_remaining {
+        let per_ic_capped = &fp_remaining / &m_frac;
+        (per_ic_capped, true)
+    } else {
+        (per_ic_uncapped, false)
+    }
 }
 
 // ── Tests ───────────────────────────────────────────────────────────
