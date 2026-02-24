@@ -72,15 +72,25 @@ pub fn step2_build_lines(input: &Step2Input) -> Step2Output {
         .collect();
 
     // Build each line and collect results: (anchor_id, line, trigger)
-    let line_results: Vec<(HeirId, Line, Option<RepresentationTrigger>)> = anchor_ids
-        .iter()
-        .filter_map(|anchor_id| {
-            let anchor = heirs.iter().find(|h| h.id == *anchor_id).unwrap();
-            let trigger = get_representation_trigger(anchor);
-            build_single_line(anchor, &heirs)
-                .map(|line| (anchor_id.clone(), line, trigger))
-        })
-        .collect();
+    // Also collect extinct lines (trigger exists but no representatives) so we can
+    // set representation_trigger on those heirs for downstream stages (Step 5).
+    let mut line_results: Vec<(HeirId, Line, Option<RepresentationTrigger>)> = Vec::new();
+    let mut extinct_triggers: Vec<(HeirId, RepresentationTrigger)> = Vec::new();
+
+    for anchor_id in &anchor_ids {
+        let anchor = heirs.iter().find(|h| h.id == *anchor_id).unwrap();
+        let trigger = get_representation_trigger(anchor);
+        match build_single_line(anchor, &heirs) {
+            Some(line) => line_results.push((anchor_id.clone(), line, trigger)),
+            None => {
+                // Line is extinct. If a trigger exists, record it so downstream
+                // stages know this heir had a trigger but no representatives.
+                if let Some(t) = trigger {
+                    extinct_triggers.push((anchor_id.clone(), t));
+                }
+            }
+        }
+    }
 
     // Phase 2: Update heir fields based on computed lines (mutable pass)
     let mut lines = Vec::new();
@@ -109,6 +119,15 @@ pub fn step2_build_lines(input: &Step2Input) -> Step2Output {
             }
         }
         lines.push(line.clone());
+    }
+
+    // Set representation_trigger on heirs with extinct lines so Step 5 can
+    // detect them via has_extinct_line() and exclude them from legitime distribution.
+    for (anchor_id, trigger) in &extinct_triggers {
+        if let Some(heir) = heirs.iter_mut().find(|h| h.id == *anchor_id) {
+            heir.representation_trigger = Some(*trigger);
+            // represented_by stays empty — this is how Step 5 detects extinct lines
+        }
     }
 
     // Phase 3: Compute per-category line counts

@@ -70,3 +70,11 @@ loops:
     timeout_minutes: 30
     status: active
     created: 2026-02-24
+  ph-compliance-moats-reverse:
+    description: "Survey PH legal codes + regulatory agencies → ranked shortlist of compliance domains ripe for automation"
+    type: reverse
+    schedule: "*/30 * * * *"
+    max_iterations: 40
+    timeout_minutes: 30
+    status: active
+    created: 2026-02-24
