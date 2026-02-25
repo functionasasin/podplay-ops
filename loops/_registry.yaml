@@ -96,3 +96,11 @@ loops:
     timeout_minutes: 30
     status: active
     created: 2026-02-25
+  mm-transit-routes-reverse:
+    description: "Research all Metro Manila jeepney/bus/UV Express routes → comprehensive GTFS database"
+    type: reverse
+    schedule: "*/30 * * * *"
+    max_iterations: 40
+    timeout_minutes: 30
+    status: active
+    created: 2026-02-25
