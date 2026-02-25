@@ -1,30 +1,30 @@
-# Current Stage: 4 (WASM Bridge Mock)
+# Current Stage: 1 (Project Scaffold)
 
 ## Spec Sections
-- engine-output.md (EngineOutput, InheritanceShare, HeirNarrative, ComputationLog, ManualFlag)
-- scenario-field-mapping.md (scenario prediction logic, 30 scenario codes)
+- No spec needed — scaffold from tech stack requirements
+- Tech: Vite + React 18 + TypeScript + Tailwind CSS 4 + React Hook Form + Zod + Recharts + Vitest
 
-## Test Results (updated by loop — iteration 6)
+## Test Results (updated by loop — iteration 8)
 ```
 
 [1m[46m RUN [49m[22m [36mv4.0.18 [39m[90m/home/clsandoval/cs/monorepo/loops/inheritance-frontend-forward/app[39m
 
  [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mRelationship enum[2m > [22mhas exactly 11 variants[32m 2[2mms[22m[39m
- [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mRelationship enum[2m > [22mcontains all expected PascalCase variants[32m 2[2mms[22m[39m
+ [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mRelationship enum[2m > [22mcontains all expected PascalCase variants[32m 1[2mms[22m[39m
  [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mFiliationProof enum[2m > [22mhas exactly 6 variants[32m 0[2mms[22m[39m
  [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mFiliationProof enum[2m > [22mcontains all expected variants[32m 0[2mms[22m[39m
  [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mAdoptionRegime enum[2m > [22mhas exactly 2 variants[32m 0[2mms[22m[39m
  [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mAdoptionRegime enum[2m > [22mcontains Ra8552 and Ra11642[32m 0[2mms[22m[39m
  [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mLineOfDescent enum[2m > [22mhas exactly 2 variants[32m 0[2mms[22m[39m
- [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mLineOfDescent enum[2m > [22mcontains Paternal and Maternal[32m 0[2mms[22m[39m
- [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mEffectiveCategory enum[2m > [22mhas exactly 5 variants[32m 0[2mms[22m[39m
+ [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mLineOfDescent enum[2m > [22mcontains Paternal and Maternal[32m 1[2mms[22m[39m
+ [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mEffectiveCategory enum[2m > [22mhas exactly 5 variants[32m 1[2mms[22m[39m
  [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mEffectiveCategory enum[2m > [22mcontains all group variants[32m 1[2mms[22m[39m
  [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mInheritanceMode enum[2m > [22mhas exactly 2 variants[32m 0[2mms[22m[39m
  [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mInheritanceMode enum[2m > [22mcontains OwnRight and Representation[32m 0[2mms[22m[39m
  [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mBloodType enum[2m > [22mhas exactly 2 variants[32m 0[2mms[22m[39m
- [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mBloodType enum[2m > [22mcontains Full and Half[32m 0[2mms[22m[39m
+ [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mBloodType enum[2m > [22mcontains Full and Half[32m 1[2mms[22m[39m
  [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mSuccessionType enum[2m > [22mhas exactly 4 variants[32m 0[2mms[22m[39m
- [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mSuccessionType enum[2m > [22mcontains all succession types[32m 0[2mms[22m[39m
+ [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mSuccessionType enum[2m > [22mcontains all succession types[32m 1[2mms[22m[39m
  [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mScenarioCode enum[2m > [22mhas exactly 31 variants (16 testate + 15 intestate)[32m 0[2mms[22m[39m
  [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mScenarioCode enum[2m > [22mcontains all T-codes[32m 1[2mms[22m[39m
  [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mScenarioCode enum[2m > [22mcontains all I-codes[32m 1[2mms[22m[39m
@@ -55,7 +55,7 @@
  [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mcentavosToPesos[2m > [22mconverts 100 centavos to 1 peso[32m 0[2mms[22m[39m
  [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mcentavosToPesos[2m > [22maccepts string centavos[32m 0[2mms[22m[39m
  [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mcentavosToPesos[2m > [22mconverts 100000000 centavos to 1000000 pesos[32m 0[2mms[22m[39m
- [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mformatPeso[2m > [22mformats 500000000 centavos as ₱5,000,000[32m 14[2mms[22m[39m
+ [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mformatPeso[2m > [22mformats 500000000 centavos as ₱5,000,000[32m 13[2mms[22m[39m
  [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mformatPeso[2m > [22mformats 50025 centavos as ₱500.25[32m 0[2mms[22m[39m
  [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mformatPeso[2m > [22mformats 0 centavos as ₱0[32m 0[2mms[22m[39m
  [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mformatPeso[2m > [22mformats 100 centavos as ₱1[32m 0[2mms[22m[39m
@@ -73,7 +73,7 @@
  [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mfracToString[2m > [22mconverts 1/4 to '1/4'[32m 0[2mms[22m[39m
  [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mfracToString[2m > [22mconverts 3/8 to '3/8'[32m 0[2mms[22m[39m
  [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mfracToString[2m > [22mhandles 0 numerator[32m 0[2mms[22m[39m
- [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mstringToFrac[2m > [22mparses '1/2' to {numer: 1, denom: 2}[32m 0[2mms[22m[39m
+ [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mstringToFrac[2m > [22mparses '1/2' to {numer: 1, denom: 2}[32m 1[2mms[22m[39m
  [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mstringToFrac[2m > [22mparses '1/4' to {numer: 1, denom: 4}[32m 0[2mms[22m[39m
  [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mstringToFrac[2m > [22mparses '3/8' to {numer: 3, denom: 8}[32m 0[2mms[22m[39m
  [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mstringToFrac[2m > [22mroundtrips with fracToString[32m 0[2mms[22m[39m
@@ -107,17 +107,70 @@
  [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mSerialization formats[2m > [22mDeviseSpec FractionalInterest serializes as 2-tuple[32m 0[2mms[22m[39m
  [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mSerialization formats[2m > [22mwill field is null for intestate[32m 0[2mms[22m[39m
  [32m✓[39m src/types/__tests__/types.test.ts[2m > [22mtypes[2m > [22mSerialization formats[2m > [22menums serialize as PascalCase strings[32m 0[2mms[22m[39m
- [32m✓[39m src/__tests__/smoke.test.tsx[2m > [22msmoke[2m > [22mrenders the app without crashing[32m 21[2mms[22m[39m
+ [32m✓[39m src/__tests__/smoke.test.tsx[2m > [22msmoke[2m > [22mrenders the app without crashing[32m 24[2mms[22m[39m
  [32m✓[39m src/__tests__/smoke.test.tsx[2m > [22msmoke[2m > [22mReact is importable and functional[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mcompute() return type[2m > [22mreturns an EngineOutput that passes Zod validation[32m 17[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mcompute() return type[2m > [22mreturns an object with all required EngineOutput fields[32m 1[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mcompute() return type[2m > [22mreturns arrays for per_heir_shares, narratives, warnings[32m 1[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mintestate scenarios[2m > [22mreturns I-prefix scenario for intestate input (will=null)[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mintestate scenarios[2m > [22mreturns I1 for single LC intestate[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mintestate scenarios[2m > [22mreturns I2 for LC + spouse intestate[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mintestate scenarios[2m > [22mreturns I3 for LC + IC intestate[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mintestate scenarios[2m > [22mreturns I4 for LC + IC + spouse intestate[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mintestate scenarios[2m > [22mreturns I5 for ascendants only intestate[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mintestate scenarios[2m > [22mreturns I6 for ascendants + spouse intestate[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mintestate scenarios[2m > [22mreturns I7 for IC only intestate[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mintestate scenarios[2m > [22mreturns I8 for IC + spouse intestate[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mintestate scenarios[2m > [22mreturns I11 for spouse only intestate[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mintestate scenarios[2m > [22mreturns I13 for siblings only intestate[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mintestate scenarios[2m > [22mreturns I15 for empty family tree (escheat)[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mtestate scenarios[2m > [22mreturns T-prefix scenario for testate input[32m 1[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mtestate scenarios[2m > [22mreturns T1 for LC only testate[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mtestate scenarios[2m > [22mreturns T2 for 1 LC + spouse testate[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mtestate scenarios[2m > [22mreturns T3 for 2+ LC + spouse testate[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mtestate scenarios[2m > [22mreturns T13 for no compulsory heirs testate[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mtestate scenarios[2m > [22mreturns T6 for ascendants only testate[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22minvalid input[2m > [22mthrows for input that fails EngineInputSchema[32m 2[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22minvalid input[2m > [22mthrows for duplicate person IDs[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22minvalid input[2m > [22mthrows for multiple SurvivingSpouse[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22minvalid input[2m > [22mthrows for will date after death date[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mshares per heir[2m > [22mreturns one share entry per heir in family_tree[32m 1[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mshares per heir[2m > [22meach share has the correct heir_id from family_tree[32m 1[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mshares per heir[2m > [22meach share has required Money fields[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mshares per heir[2m > [22meach share has heir_category as valid EffectiveCategory[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mshares per heir[2m > [22mmaps LegitimateChild to LegitimateChildGroup category[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mshares per heir[2m > [22mmaps AdoptedChild to LegitimateChildGroup category[32m 1[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mshares per heir[2m > [22mmaps IllegitimateChild to IllegitimateChildGroup category[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mshares per heir[2m > [22mmaps SurvivingSpouse to SurvivingSpouseGroup category[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mshares per heir[2m > [22mreturns empty shares for escheat scenario (I15)[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mshares per heir[2m > [22mshares have inherits_by defaulting to OwnRight[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mnarratives per heir[2m > [22mreturns one narrative entry per heir in family_tree[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mnarratives per heir[2m > [22meach narrative has matching heir_id from shares[32m 1[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mnarratives per heir[2m > [22mnarrative text contains Markdown bold markers[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mnarratives per heir[2m > [22mnarrative has non-empty heir_category_label[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mnarratives per heir[2m > [22mnarrative heir_name matches the input person name[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mnarratives per heir[2m > [22mreturns empty narratives for escheat scenario[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mcomputation log[2m > [22mhas at least one step entry[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mcomputation log[2m > [22mfinal_scenario matches scenario_code[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mcomputation log[2m > [22mtotal_restarts is a non-negative integer[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mcomputation log[2m > [22mstep entry has step_number, step_name, description[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mwarnings[2m > [22mreturns warnings as an array (may be empty)[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mformatPeso on output amounts[2m > [22mcorrectly formats output centavo amounts from shares[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mformatPeso on output amounts[2m > [22mformatPeso formats 500000000 centavos as ₱5,000,000[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mformatPeso on output amounts[2m > [22mformatPeso formats 50025 centavos as ₱500.25[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mformatPeso on output amounts[2m > [22mformatPeso formats 0 centavos as ₱0[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mmock distribution[2m > [22mdistributes estate equally among LC heirs in intestate[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mmock distribution[2m > [22msingle heir gets the full estate[32m 0[2mms[22m[39m
+ [32m✓[39m src/wasm/__tests__/bridge.test.ts[2m > [22mwasm bridge[2m > [22mshares and narratives consistency[2m > [22mevery share heir_id has a matching narrative[32m 0[2mms[22m[39m
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mDateSchema[2m > [22maccepts valid ISO-8601 date 2026-01-15[32m 1[2mms[22m[39m
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mDateSchema[2m > [22maccepts valid date 2000-12-31[32m 0[2mms[22m[39m
- [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mDateSchema[2m > [22mrejects date with slash format 2026/01/15[32m 0[2mms[22m[39m
- [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mDateSchema[2m > [22mrejects date with dot format 2026.01.15[32m 0[2mms[22m[39m
+ [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mDateSchema[2m > [22mrejects date with slash format 2026/01/15[32m 1[2mms[22m[39m
+ [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mDateSchema[2m > [22mrejects date with dot format 2026.01.15[32m 1[2mms[22m[39m
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mDateSchema[2m > [22mrejects empty string[32m 0[2mms[22m[39m
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mDateSchema[2m > [22mrejects non-string input[32m 0[2mms[22m[39m
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mDateSchema[2m > [22mrejects invalid calendar date 2026-02-30[32m 0[2mms[22m[39m
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mDateSchema[2m > [22mrejects date without leading zeros 2026-1-5[32m 0[2mms[22m[39m
- [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mFracSchema[2m > [22maccepts valid fraction "1/2"[32m 0[2mms[22m[39m
+ [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mFracSchema[2m > [22maccepts valid fraction "1/2"[32m 1[2mms[22m[39m
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mFracSchema[2m > [22maccepts "3/8"[32m 0[2mms[22m[39m
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mFracSchema[2m > [22maccepts "0/1" (zero numerator)[32m 0[2mms[22m[39m
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mFracSchema[2m > [22mrejects "1:2" (wrong separator)[32m 0[2mms[22m[39m
@@ -149,7 +202,7 @@
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mLineOfDescentSchema[2m > [22maccepts Paternal and Maternal[32m 0[2mms[22m[39m
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mBloodTypeSchema[2m > [22maccepts Full and Half[32m 0[2mms[22m[39m
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mDisinheritanceCauseSchema[2m > [22maccepts all 22 causes (8 Child + 8 Parent + 6 Spouse)[32m 1[2mms[22m[39m
- [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mScenarioCodeSchema[2m > [22maccepts T-codes and I-codes from import[32m 0[2mms[22m[39m
+ [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mScenarioCodeSchema[2m > [22maccepts T-codes and I-codes from import[32m 1[2mms[22m[39m
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mShareSpecSchema[2m > [22maccepts unit variant "EntireFreePort" as bare string[32m 0[2mms[22m[39m
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mShareSpecSchema[2m > [22maccepts unit variant "EqualWithOthers" as bare string[32m 0[2mms[22m[39m
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mShareSpecSchema[2m > [22maccepts unit variant "EntireEstate"[32m 0[2mms[22m[39m
@@ -196,7 +249,7 @@
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mPersonSchema[2m > [22mrejects degree > 5 (Art. 1010)[32m 0[2mms[22m[39m
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mPersonSchema[2m > [22mrejects person ID with spaces[32m 0[2mms[22m[39m
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mPersonSchema[2m > [22mrejects empty person name[32m 0[2mms[22m[39m
- [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mDecedentSchema[2m > [22maccepts valid decedent[32m 0[2mms[22m[39m
+ [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mDecedentSchema[2m > [22maccepts valid decedent[32m 1[2mms[22m[39m
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mDecedentSchema[2m > [22mrejects married decedent without date_of_marriage[32m 0[2mms[22m[39m
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mDecedentSchema[2m > [22maccepts unmarried decedent with null date_of_marriage[32m 0[2mms[22m[39m
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mDecedentSchema[2m > [22mrejects negative years_of_cohabitation[32m 0[2mms[22m[39m
@@ -211,12 +264,12 @@
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mDonationSchema[2m > [22mrejects imputed_savings when parent_required=false[32m 0[2mms[22m[39m
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mDonationSchema[2m > [22maccepts professional expense with full cascade[32m 0[2mms[22m[39m
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mDonationSchema[2m > [22mrejects donation with zero value[32m 0[2mms[22m[39m
- [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mDisinheritanceSchema[2m > [22maccepts valid disinheritance[32m 1[2mms[22m[39m
+ [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mDisinheritanceSchema[2m > [22maccepts valid disinheritance[32m 0[2mms[22m[39m
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mDisinheritanceSchema[2m > [22mrejects disinheritance with null person_id in heir_reference[32m 0[2mms[22m[39m
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mEngineConfigSchema[2m > [22maccepts valid config with defaults[32m 0[2mms[22m[39m
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mEngineConfigSchema[2m > [22mrejects max_pipeline_restarts = 0[32m 0[2mms[22m[39m
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mEngineConfigSchema[2m > [22mrejects max_pipeline_restarts > 100[32m 0[2mms[22m[39m
- [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mEngineInputSchema[2m > [22maccepts valid intestate EngineInput[32m 0[2mms[22m[39m
+ [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mEngineInputSchema[2m > [22maccepts valid intestate EngineInput[32m 1[2mms[22m[39m
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mEngineInputSchema[2m > [22maccepts valid testate EngineInput[32m 0[2mms[22m[39m
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mEngineInputSchema[2m > [22mrejects will date_executed after date_of_death[32m 0[2mms[22m[39m
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22mEngineInputSchema[2m > [22mrejects duplicate person IDs in family_tree[32m 0[2mms[22m[39m
@@ -255,10 +308,10 @@
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22minvalid-combinations edge cases[2m > [22mInstitutionOfHeirSchema accepts valid institution[32m 0[2mms[22m[39m
  [32m✓[39m src/schemas/__tests__/schemas.test.ts[2m > [22mschemas[2m > [22minvalid-combinations edge cases[2m > [22mInstitutionOfHeirSchema rejects empty ID[32m 0[2mms[22m[39m
 
-[2m Test Files [22m [1m[32m3 passed[39m[22m[90m (3)[39m
-[2m      Tests [22m [1m[32m245 passed[39m[22m[90m (245)[39m
-[2m   Start at [22m 19:57:47
-[2m   Duration [22m 964ms[2m (transform 279ms, setup 222ms, import 445ms, tests 91ms, environment 1.60s)[22m
+[2m Test Files [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[32m298 passed[39m[22m[90m (298)[39m
+[2m   Start at [22m 20:04:16
+[2m   Duration [22m 1.39s[2m (transform 515ms, setup 307ms, import 828ms, tests 138ms, environment 3.39s)[22m
 ```
 
 ## Work Log
