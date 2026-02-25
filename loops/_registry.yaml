@@ -35,8 +35,9 @@ loops:
     schedule: "*/30 * * * *"
     max_iterations: 25
     timeout_minutes: 15
-    status: active
+    status: converged
     created: 2026-02-23
+    converged_at: "2026-02-23"
   estate-tax-reverse:
     description: "Extract PH estate tax rules (TRAIN + pre-TRAIN + amnesty) → deterministic computation engine spec with explainer"
     type: reverse
