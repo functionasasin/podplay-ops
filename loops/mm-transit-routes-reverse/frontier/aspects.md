@@ -1,10 +1,10 @@
 # Metro Manila Transit Routes — Frontier
 
 ## Statistics
-- Total aspects: 78
-- Analyzed: 4
-- Pending: 74
-- Convergence: 5%
+- Total aspects: 80
+- Analyzed: 5
+- Pending: 75
+- Convergence: 6%
 
 ---
 
@@ -15,7 +15,7 @@
 - [x] LTFRB franchise database — bus route franchises, provincial and city bus operators
 - [x] LTFRB franchise database — UV Express route franchises and operator lists
 - [x] LTFRB fare matrices — current fare tables for jeepney, bus, UV Express by route type
-- [ ] DOTr (Department of Transportation) — published transit plans, route maps, modernization data
+- [x] DOTr (Department of Transportation) — published transit plans, route maps, modernization data
 - [ ] MMDA traffic engineering — bus route assignments, EDSA Busway routes, traffic management data
 - [ ] EDSA Busway system — all carousel routes, stops, schedules, fare structure
 - [ ] LTFRB modernization program — modern jeepney routes, consolidated routes, new franchises
@@ -36,6 +36,8 @@
 - [ ] OpenStreetMap — stop/station nodes tagged as bus_stop, platform, etc.
 - [ ] Mapillary/KartaView — street-level imagery of route signage and terminals
 - [ ] Open Transit Data initiatives — any GTFS feeds published for Manila
+- [ ] TUMI Datahub Manila GTFS — DOTr/LRTA/LTFRB/MRTC/PNR-affiliated GTFS dataset (hub.tumidata.org/dataset/gtfs-manila)
+- [ ] SafeTravelPH — crowdsourced bus operational data, GPS stop coordinates, EDSA Carousel research
 - [ ] Citizen mapping projects — community-driven route mapping efforts (OpenRouteService, etc.)
 
 ### Academic & International Organization Studies
