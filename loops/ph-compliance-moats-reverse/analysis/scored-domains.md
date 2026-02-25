@@ -138,13 +138,13 @@ Each domain is scored on four dimensions, then combined into a weighted opportun
 |----|--------|:------:|:----:|:----:|:----:|:---------:|
 | F1 | Real Property Tax (RPT) + SEF Calculator | 5 | 3 | 5 | 3 | **4.10** |
 | F2 | Local Business Tax + Business Permit Calculator | 5 | 3 | 3 | 4 | **3.70** |
-| F3 | RPVARA Tax Amnesty Calculator | 5 | 4 | 5 | 5 | **4.75** |
+| F3 | RPVARA Tax Amnesty Calculator | 5 | 3 | 5 | 5 | **4.50** |
 | F4 | Maceda Law Cash Surrender Value Calculator | 3 | 5 | 5 | 4 | **4.30** |
 
 **Scoring notes:**
 - **F1**: Market = 5 (35–45M real property units; ₱113.4B annual RPT collection). Moat = 3 (property tax consultants ₱5K–₱25K for assessment review; RPVARA amnesty facilitation ₱10K–₱50K; but LGU assessors do basic computation). Computability = 5 (Assessment Level × FMV = AV; AV × rate = RPT; delinquency penalty = 2%/month × N months, max 72%). Pain = 3 (LGU variation is main friction; primary computation handled by LGU assessors; pain strongest at portfolio management level and amnesty decision). Note: Large market but lower pain/moat for individual property owners.
 - **F2**: Market = 5 (1.24M registered establishments; all must renew annually by January 20). Moat = 3 (bookkeeper/accountant ₱3K–₱15K/year; business permit fixers ₱2K–₱10K per LGU). Computability = 3 (formula is deterministic but requires 1,600+ LGU rate database; building and maintaining that database is the technical moat). Pain = 4 (January 20 deadline crunch; LGU variation confusion; "hidden fees" surprise; multi-branch allocation rules misunderstood). Note: Lower computability score due to LGU database dependency — engineering challenge, not statutory uncertainty.
-- **F3**: Market = 5 (2–5M delinquent property accounts eligible for amnesty). Moat = 4 (RPVARA amnesty facilitation ₱10K–₱50K per account; new breed of "amnesty facilitators" emerging). Computability = 5 (accumulated principal = sum of unpaid basic RPT + SEF per year; penalties = 2%/month × N months capped at 72%; amnesty amount = principal only). Pain = 5 (**TIME-LIMITED**: amnesty closes July 5, 2026; many property owners don't know delinquency amount or that amnesty exists; failure to avail means paying 72% penalty cap; delinquency blocks title transfer for estate settlements). **Highest-scoring domain in the survey (tied with E1). Urgency is unique — time-limited opportunity.**
+- **F3**: Market = 5 (2–5M delinquent property accounts eligible for amnesty). Moat = 3 (BLGF MC 003-2025 confirmed direct LGU Treasurer access without LGU ordinance — individuals can avail amnesty without professional intermediary; moat persists for portfolio investors and estate cases; no specific facilitator fee schedule found in market search). Computability = 5 (accumulated principal = sum of unpaid basic RPT + SEF per year; penalties = 2%/month × N months capped at 72%; amnesty amount = principal only). Pain = 5 (**TIME-LIMITED**: amnesty closes July 5, 2026; many property owners don't know delinquency amount or that amnesty exists; failure to avail means paying 72% penalty cap; delinquency blocks title transfer for estate settlements). **REVISED: Moat 4→3 per professional-fees-validation; score 4.75→4.50. Urgency factor (July 2026 deadline) not captured in score — treat as high-priority regardless.**
 - **F4**: Market = 3 (20K–80K contested CSV computation events/year; millions of ongoing installment contracts proactively). Moat = 5 (₱15K–₱50K+ lawyer acceptance fee for DHSUD/HSAC complaint; total ₱30K–₱100K+; buyers systematically accept CSV refunds below statutory floor). Computability = 5 (inputs = total payments + years of installment → exact percentage from statutory table). Pain = 4 (buyers systematically accept below-floor refunds; developers issue improper cancellations via text/not notarial act; Sec. 6 voiding clause widely unknown). **Strongest consumer empowerment use case — identical to inheritance engine thesis.**
 
 ---
@@ -173,9 +173,9 @@ Each domain is scored on four dimensions, then combined into a weighted opportun
 | Rank | ID | Domain | Market | Moat | Comp | Pain | **Score** |
 |------|----|--------|:------:|:----:|:----:|:----:|:---------:|
 | 1 | E1 | SEC Compliance Navigator & Penalty Engine | 4 | 5 | 5 | 5 | **4.75** |
-| 1 | F3 | RPVARA Tax Amnesty Calculator | 5 | 4 | 5 | 5 | **4.75** |
-| 3 | G1 | Legal Interest Computation Engine | 5 | 4 | 5 | 4 | **4.55** |
-| 4 | D3 | Final Pay Computation | 5 | 3 | 5 | 5 | **4.50** |
+| 2 | G1 | Legal Interest Computation Engine | 5 | 4 | 5 | 4 | **4.55** |
+| 3 | D3 | Final Pay Computation | 5 | 3 | 5 | 5 | **4.50** |
+| 3 | F3 | RPVARA Tax Amnesty Calculator | 5 | 3 | 5 | 5 | **4.50** |
 | 5 | A1 | Individual Self-Employed / Professional IT Optimizer | 5 | 3 | 5 | 4 | **4.30** |
 | 5 | A3 | Capital Gains Tax — Real Property | 3 | 5 | 5 | 4 | **4.30** |
 | 5 | B2 | BIR Penalty and Interest Calculator | 4 | 4 | 5 | 4 | **4.30** |
@@ -220,7 +220,8 @@ Each domain is scored on four dimensions, then combined into a weighted opportun
 
 | Score Band | Count | Domains |
 |------------|-------|---------|
-| 4.50–4.75 | 4 | E1, F3, G1, D3 |
+| 4.75 | 1 | E1 |
+| 4.50–4.74 | 3 | G1, D3, F3 |
 | 4.25–4.49 | 3 | D4, B4, E3 |
 | 4.00–4.24 | 18 | A1, A3, B2, B3, B5, D1, D5, E4, E6, F4, G4; C4, F1; A4, B1, B7, C1, G2; A2, B6, D2 |
 | 3.75–3.99 | 8 | G3, D6, A5, D7, D8, E2; C2, C5 |
@@ -234,12 +235,12 @@ Each domain is scored on four dimensions, then combined into a weighted opportun
 ## Notable Patterns and Cross-Domain Insights
 
 ### 1. The "Perfect Storm" Cluster (Score ≥ 4.50)
-Four domains combine massive markets, deep professional moats, full computability, and maximum pain:
+Four domains combine large markets, strong computability, and maximum pain. Moat scores are validated by actual professional pricing (see wave2-professional-fees-validation.md):
 
-- **E1 (SEC Penalty Engine)**: 100K–200K non-compliant corporations, ₱50K–₱200K remediation fees, and a fully deterministic penalty matrix that corporations cannot compute themselves.
-- **F3 (RPVARA Amnesty)**: 2–5M delinquent accounts, ₱10K–₱50K facilitation fees, and a **hard deadline of July 5, 2026** creating urgency no other domain can match.
-- **G1 (Legal Interest Engine)**: 500K–1M+ computation events per year, is cross-domain infrastructure needed by every other domain in this survey.
-- **D3 (Final Pay)**: Millions of employment separations annually, a 30-day DOLE deadline, and both employer-side (compliance) and employee-side (verification) demand.
+- **E1 (SEC Penalty Engine)**: 100K–200K non-compliant corporations, ₱120K–₱300K/year corporate secretary retainer, ₱50K–₱200K remediation fees confirmed. Penalty matrix is fully deterministic.
+- **G1 (Legal Interest Engine)**: 500K–1M+ computation events per year, demand letters ₱5K–₱25K confirmed, contingency ~25% of recovery. Cross-domain infrastructure for every other domain.
+- **D3 (Final Pay)**: Millions of employment separations annually, a 30-day DOLE deadline, both employer-side (compliance) and employee-side (verification) demand. Moat = 3 confirmed.
+- **F3 (RPVARA Amnesty)**: 2–5M delinquent accounts, **hard deadline July 5, 2026**. *Note: Moat revised 4→3 (BLGF MC 003-2025 enables direct LGU Treasurer access); time-urgency factor not captured in score keeps this high-priority regardless.*
 
 ### 2. The "Inheritance Engine Equivalents" (High Moat + High Computability)
 Domains where the statutory formula is simple arithmetic but professionals extract large fees due to information asymmetry:
@@ -279,7 +280,7 @@ Spot-check of formula: Opportunity Score = (Market × 0.25) + (Moat × 0.25) + (
 | ID | Market×0.25 | Moat×0.25 | Comp×0.30 | Pain×0.20 | Total |
 |----|:-----------:|:---------:|:---------:|:---------:|:-----:|
 | E1 | 4×0.25=1.00 | 5×0.25=1.25 | 5×0.30=1.50 | 5×0.20=1.00 | **4.75** |
-| F3 | 5×0.25=1.25 | 4×0.25=1.00 | 5×0.30=1.50 | 5×0.20=1.00 | **4.75** |
+| F3 | 5×0.25=1.25 | 3×0.25=0.75 | 5×0.30=1.50 | 5×0.20=1.00 | **4.50** |
 | G1 | 5×0.25=1.25 | 4×0.25=1.00 | 5×0.30=1.50 | 4×0.20=0.80 | **4.55** |
 | D3 | 5×0.25=1.25 | 3×0.25=0.75 | 5×0.30=1.50 | 5×0.20=1.00 | **4.50** |
 | D4 | 3×0.25=0.75 | 4×0.25=1.00 | 5×0.30=1.50 | 5×0.20=1.00 | **4.25** |
