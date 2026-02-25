@@ -1,10 +1,10 @@
 # Analysis Frontier
 
 ## Statistics
-- Total aspects discovered: 37
-- Analyzed: 36
-- Pending: 1
-- Convergence: 97%
+- Total aspects discovered: 39
+- Analyzed: 37
+- Pending: 2
+- Convergence: 95%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -55,9 +55,14 @@
 - [x] explainer-format — Template for plain-English explainer section targeting heirs/executors
 - [x] edge-cases — Catalog of all edge cases discovered, with legal citations
 - [x] spec-draft — Synthesize all analysis into complete software specification
-- [ ] spec-review — Self-review: can a developer with no context build the engine?
+- [x] spec-review — Self-review: can a developer with no context build the engine? FAIL — 2 fix-it aspects added (see below)
+
+### Wave 5: Fix-It Aspects (from spec-review)
+- [ ] fix-nra-pretrain-pipeline — Fix spec Section 16 pipeline: Phases 5-6 invoke citizen/resident funeral/judicial functions for ALL estates including NRAs, producing non-proportional (wrong) amounts for pre-TRAIN NRAs. For NRAs with deductionRules=PRE_TRAIN, funeral and judicial must come from elitResult (proportional) not from computeFuneralExpenses/computeJudicialAdminExpenses. Also: add assembleOrdinaryDeductions pseudocode to spec; fix Phase 7 elitForVanishingRatio for NRAs to use elitResult.funeral + elitResult.judicial.
+- [ ] fix-tv02-inline — Fix spec Section 19 TV-02: the inline computation is internally contradictory (shows ₱57K then ₱87K then defers to test-vectors.md which shows ₱111K NTE ₱1,850,000). Remove the contradictory self-correction paragraph and replace TV-02 with the authoritative values from analysis/test-vectors.md TV-02.
 
 ## Recently Analyzed
+- [x] spec-review — 2026-02-25 — FAIL. Spec covers ~95% of required ground. One critical pipeline bug found: NRA pre-TRAIN estates have funeral/judicial computed twice via conflicting paths (Phase 4 computeNRAELIT returns proportional values; Phases 5-6 also call citizen/resident functions producing non-proportional values; Phase 7 adds non-proportional values to vanishing ratio). Fix: skip Phases 5-6 for NRAs; add assembleOrdinaryDeductions pseudocode; fix Phase 7 elitForVanishingRatio. One documentation issue: TV-02 inline shows three contradictory answers (₱57K/₱87K/₱111K). Two fix-it aspects added to frontier. All four corrections correctly applied. All NIRC sections 84–97 covered. Form 1801 output contract complete. Explainer template complete. 10 test vectors + 1 unit test. 26 critical edge cases cataloged. status/converged.txt NOT written.
 - [x] amnesty-computation — 2026-02-24 — RA 11213 Sec. 5: flat 6% on amnesty tax base. Track A (no prior return) = 6% × full net taxable estate; Track B (prior return filed) = 6% × net undeclared estate = max(0, net taxable − previously declared). Minimum ₱5,000 always applies. Primary deduction interpretation: full set at time of death (RA 11213 Sec. 3 plain text) — pre-2018 deaths use pre-TRAIN rules (funeral ✓, judicial ✓, standard ₱1M, family home ₱1M); 2018–2022 deaths use TRAIN rules (standard ₱5M, family home ₱10M, no funeral/judicial). Narrow interpretation (standard + spouse only) available as engine toggle with disclaimer. Deduction conflict documented: deductions-pre-train-diffs.md incorrectly excludes funeral/judicial from amnesty pre-2018 path; new correction-amnesty-deductions aspect added. TRAIN-era amnesty produces identical base tax to regular TRAIN — engine displays equivalence notice. No foreign tax credit under amnesty. Filing form = ETAR (not Form 1801), window closed June 14, 2025. NRA: proportional Sec. 86(B) formula applies. 3 worked examples, 10 edge cases, 12 test implications.
 - [x] deductions-pre-train-diffs — 2026-02-24 — Two pre-TRAIN-only deductions: (1) Funeral expenses: min(actual, 5% × gross estate) — REMOVED by TRAIN; (2) Judicial/admin expenses: actual, no cap — REMOVED by TRAIN. Two deductions with different amounts: standard deduction ₱1M vs. ₱5M (TRAIN); family home cap ₱1M vs. ₱10M (TRAIN). All other deductions (medical ₱500K, ELIT items, vanishing, public transfers, RA4917, spouse share) are IDENTICAL across regimes. Engine branching: regime == "pre_TRAIN" enables funeralExpenses + judicialAdminExpenses inputs and applies lower standard/family home amounts. Funeral 5% limit uses gross estate TOTAL (Item 34) — must finalize gross estate before computing funeral deduction limit. NRA: proportional formula (Sec. 86B) applies to pre-TRAIN-only items. Amnesty: does NOT include funeral/judicial expenses — amnesty restricts deductions further. 12 edge cases, 12 test implications. Commentary Sample 5 confirmed: ₱8M CPG estate (2015) → tax ₱91,000.
 - [x] exemptions — 2026-02-24 — Sec. 87: four exempt transfers — (a) personal usufruct merger (excluded from gross estate; Sec. 87(a) does NOT apply to naked owner or fixed-term usufruct); (b)/(c) fiduciary/fideicommissary transmission (excluded from pass-through estate); (d) charitable bequests to qualifying PRIVATE institutions (excluded from gross estate — critical: this is NOT the same as Sec. 86(A)(3) government transfers which are deducted via Schedule 5F). Sec. 87 not amended by TRAIN — applies identically across TRAIN, pre-TRAIN, and amnesty regimes. No Form 1801 schedule for Sec. 87 exemptions: they are pre-computation exclusions. Engine runs Sec. 87 filter before populating gross estate schedules. 87(d) conditions: no income inures to individual + admin ≤ 30%. Partial bequest (fraction of asset) supported. Foreign charities excluded. Fixed-term usufruct IS includable at Sec. 88(A) actuarial value. 10 edge cases, 10 test implications.
