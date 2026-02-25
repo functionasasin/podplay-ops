@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 80
-- Analyzed: 8
-- Pending: 72
-- Convergence: 10%
+- Analyzed: 9
+- Pending: 71
+- Convergence: 11%
 
 ---
 
@@ -19,7 +19,7 @@
 - [x] MMDA traffic engineering — bus route assignments, EDSA Busway routes, traffic management data
 - [x] EDSA Busway system — all carousel routes, stops, schedules, fare structure
 - [x] LTFRB modernization program — modern jeepney routes, consolidated routes, new franchises
-- [ ] LTO/LTFRB route rationalization studies — planned vs actual route changes
+- [x] LTO/LTFRB route rationalization studies — planned vs actual route changes
 - [ ] Congress/Senate transportation committee — hearing transcripts on route changes, published reports
 - [ ] Philippine Statistics Authority — transport sector data, commuter surveys
 
