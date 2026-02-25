@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 78
-- Analyzed: 3
-- Pending: 75
-- Convergence: 4%
+- Analyzed: 4
+- Pending: 74
+- Convergence: 5%
 
 ---
 
@@ -14,7 +14,7 @@
 - [x] LTFRB franchise database — jeepney route franchises, route designations, operator names
 - [x] LTFRB franchise database — bus route franchises, provincial and city bus operators
 - [x] LTFRB franchise database — UV Express route franchises and operator lists
-- [ ] LTFRB fare matrices — current fare tables for jeepney, bus, UV Express by route type
+- [x] LTFRB fare matrices — current fare tables for jeepney, bus, UV Express by route type
 - [ ] DOTr (Department of Transportation) — published transit plans, route maps, modernization data
 - [ ] MMDA traffic engineering — bus route assignments, EDSA Busway routes, traffic management data
 - [ ] EDSA Busway system — all carousel routes, stops, schedules, fare structure
