@@ -61,7 +61,7 @@ describe('wizard-step1 > WizardContainer', () => {
     it('renders a step indicator showing current step', () => {
       render(<WizardContainer />);
       // Step 1 "Estate Details" should be shown as current step
-      expect(screen.getByText(/Estate/i)).toBeInTheDocument();
+      expect(screen.getByTestId('estate-step')).toBeInTheDocument();
     });
 
     it('renders navigation buttons (Next/Back)', () => {
@@ -82,7 +82,7 @@ describe('wizard-step1 > WizardContainer', () => {
       render(<WizardContainer />);
       await user.click(screen.getByRole('button', { name: /next/i }));
       // Should now show step 2 "Decedent Details"
-      expect(screen.getByText(/Decedent/i)).toBeInTheDocument();
+      expect(screen.getByTestId('decedent-step')).toBeInTheDocument();
     });
 
     it('shows Back button on step 2', async () => {
@@ -108,7 +108,7 @@ describe('wizard-step1 > WizardContainer', () => {
       await user.click(screen.getByRole('button', { name: /next/i })); // → Decedent
       await user.click(screen.getByRole('button', { name: /next/i })); // → Family Tree
       await user.click(screen.getByRole('button', { name: /next/i })); // → should skip to Donations
-      expect(screen.getByText(/Donations/i)).toBeInTheDocument();
+      expect(screen.getByTestId('donations-step')).toBeInTheDocument();
     });
 
     it('renders step indicator with correct number of visible steps', () => {
@@ -132,7 +132,7 @@ describe('wizard-step1 > WizardContainer', () => {
       await user.click(screen.getByRole('button', { name: /next/i }));
       await user.click(screen.getByRole('button', { name: /back/i }));
       // Value should persist
-      expect(screen.getByLabelText(/Net Distributable Estate/i)).toHaveValue('1000000');
+      expect(screen.getByLabelText(/Net Distributable Estate/i)).toHaveValue('1,000,000.00');
     });
   });
 

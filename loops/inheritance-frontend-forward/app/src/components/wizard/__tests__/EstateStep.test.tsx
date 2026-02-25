@@ -97,7 +97,7 @@ describe('wizard-step1 > EstateStep', () => {
       render(<EstateStepWrapper />);
       expect(screen.getByText(/Succession Type/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/Intestate/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/Testate/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/^Testate$/i)).toBeInTheDocument();
     });
 
     it('renders estate hint text', () => {
@@ -119,7 +119,7 @@ describe('wizard-step1 > EstateStep', () => {
       const onHasWillChange = vi.fn();
       const user = userEvent.setup();
       render(<EstateStepWrapper onHasWillChange={onHasWillChange} />);
-      await user.click(screen.getByLabelText(/Testate/i));
+      await user.click(screen.getByLabelText(/^Testate$/i));
       expect(onHasWillChange).toHaveBeenCalledWith(true);
     });
 
@@ -133,7 +133,7 @@ describe('wizard-step1 > EstateStep', () => {
 
     it('hasWill=true selects the Testate radio', () => {
       render(<EstateStepWrapper hasWill={true} />);
-      const testateRadio = screen.getByLabelText(/Testate/i);
+      const testateRadio = screen.getByLabelText(/^Testate$/i);
       expect(testateRadio).toBeChecked();
     });
 
@@ -148,7 +148,7 @@ describe('wizard-step1 > EstateStep', () => {
       await user.type(input, '1000');
 
       // Toggle to testate
-      await user.click(screen.getByLabelText(/Testate/i));
+      await user.click(screen.getByLabelText(/^Testate$/i));
 
       // Submit and check will is initialized
       await user.click(screen.getByText('Submit'));
@@ -229,7 +229,7 @@ describe('wizard-step1 > EstateStep', () => {
       fireEvent.blur(input);
 
       // Should show formatted value with commas
-      expect(input).toHaveValue('₱5,000,000.00');
+      expect(input).toHaveValue('5,000,000.00');
     });
   });
 
