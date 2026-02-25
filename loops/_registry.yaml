@@ -79,6 +79,14 @@ loops:
     timeout_minutes: 30
     status: active
     created: 2026-02-24
+  inheritance-frontend-forward:
+    description: "Build PH inheritance wizard frontend (React + TypeScript) from spec, 12-stage TDD pipeline"
+    type: forward
+    schedule: "*/30 * * * *"
+    max_iterations: 50
+    timeout_minutes: 30
+    status: active
+    created: 2026-02-25
   cheerful-reverse:
     description: "Distill Cheerful codebase → ultra-comprehensive modular rebuild spec with full user stories"
     type: reverse
