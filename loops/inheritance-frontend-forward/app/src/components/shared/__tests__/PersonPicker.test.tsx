@@ -109,7 +109,8 @@ describe('shared > PersonPicker', () => {
 
       // Should show relationship info alongside name
       expect(screen.getByText(/Juan Dela Cruz/)).toBeInTheDocument();
-      expect(screen.getByText(/LegitimateChild|Legitimate Child/)).toBeInTheDocument();
+      // Multiple persons share LegitimateChild, so use getAllByText
+      expect(screen.getAllByText(/LegitimateChild|Legitimate Child/).length).toBeGreaterThan(0);
     });
 
     it('pre-selects person from default value', () => {
@@ -125,7 +126,8 @@ describe('shared > PersonPicker', () => {
       const select = screen.getByRole('combobox') ?? screen.getByRole('listbox');
       fireEvent.click(select);
 
-      expect(screen.getByText(/Other|not in family tree|stranger/i)).toBeInTheDocument();
+      // Use "not in family tree" to avoid matching "Grandmother" which contains "other"
+      expect(screen.getByText(/not in family tree/i)).toBeInTheDocument();
     });
 
     it('selecting stranger sets person_id to null', async () => {
@@ -133,9 +135,8 @@ describe('shared > PersonPicker', () => {
       render(<PersonPickerWrapper allowStranger onValues={onValues} />);
 
       const select = screen.getByRole('combobox') ?? screen.getByRole('listbox');
-      // Select the stranger/other option
-      const strangerOption = screen.getByText(/Other|not in family tree|stranger/i);
-      await userEvent.click(strangerOption);
+      // Select the stranger/other option via select value
+      await userEvent.selectOptions(select, '__stranger__');
 
       await userEvent.click(screen.getByText('Submit'));
       await waitFor(() => {
@@ -149,7 +150,8 @@ describe('shared > PersonPicker', () => {
       const select = screen.getByRole('combobox') ?? screen.getByRole('listbox');
       fireEvent.click(select);
 
-      expect(screen.queryByText(/Other|not in family tree|stranger/i)).not.toBeInTheDocument();
+      // Use "not in family tree" to avoid matching "Grandmother" which contains "other"
+      expect(screen.queryByText(/not in family tree/i)).not.toBeInTheDocument();
     });
   });
 

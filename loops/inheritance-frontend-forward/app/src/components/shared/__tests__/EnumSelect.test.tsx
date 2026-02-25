@@ -209,12 +209,13 @@ describe('shared > EnumSelect', () => {
 
     it('renders "Compulsory Heirs" group', () => {
       render(<EnumSelectWrapper options={GROUPED_RELATIONSHIP_OPTIONS} />);
-      expect(screen.getByText('Compulsory Heirs')).toBeInTheDocument();
+      // optgroup label attribute is not text content; use getByRole with name
+      expect(screen.getByRole('group', { name: 'Compulsory Heirs' })).toBeInTheDocument();
     });
 
     it('renders "Collateral Heirs" group', () => {
       render(<EnumSelectWrapper options={GROUPED_RELATIONSHIP_OPTIONS} />);
-      expect(screen.getByText('Collateral Heirs')).toBeInTheDocument();
+      expect(screen.getByRole('group', { name: 'Collateral Heirs' })).toBeInTheDocument();
     });
   });
 
