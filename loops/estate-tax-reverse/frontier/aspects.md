@@ -1,10 +1,10 @@
 # Analysis Frontier
 
 ## Statistics
-- Total aspects discovered: 35
-- Analyzed: 35
-- Pending: 0
-- Convergence: 100%
+- Total aspects discovered: 37
+- Analyzed: 36
+- Pending: 1
+- Convergence: 97%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -54,7 +54,7 @@
 - [x] test-vectors — 8-10 complete test cases across all three regimes with intermediate values
 - [x] explainer-format — Template for plain-English explainer section targeting heirs/executors
 - [x] edge-cases — Catalog of all edge cases discovered, with legal citations
-- [ ] spec-draft — Synthesize all analysis into complete software specification
+- [x] spec-draft — Synthesize all analysis into complete software specification
 - [ ] spec-review — Self-review: can a developer with no context build the engine?
 
 ## Recently Analyzed
