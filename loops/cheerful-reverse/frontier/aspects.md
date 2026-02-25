@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total aspects**: 27
-- **Analyzed**: 8
-- **Pending**: 19
-- **Convergence**: 30%
+- **Analyzed**: 9
+- **Pending**: 18
+- **Convergence**: 33%
 
 ## Wave 1: Layer-by-Layer Extraction (13 aspects)
 
@@ -17,7 +17,7 @@
 - [x] ai-features — All 13 AI feature services, prompt strategies, structured output schemas, RAG architecture
 - [x] webapp-routing — All pages, layouts, navigation structure, auth gates
 - [x] webapp-campaign-wizard — 7-step campaign creation flow, state management, validation, API calls
-- [ ] webapp-mail-inbox — Email thread view, drafts, compose/reply, thread processing UI
+- [x] webapp-mail-inbox — Email thread view, drafts, compose/reply, thread processing UI
 - [ ] webapp-state-stores — Zustand stores, custom hooks, server state vs client state architecture
 - [ ] context-engine-core — Routing, chunking, selection, Slack bot, prompt templates
 - [ ] context-engine-mcp-tools — All 8 MCP tool integrations, registry, tool catalog
