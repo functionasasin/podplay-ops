@@ -1,13 +1,16 @@
-# Current Stage: 1 (Project Scaffold)
+# Current Stage: 2 (Types & Enums)
 
 ## Spec Sections
-- No spec needed — scaffold from tech stack requirements
-- Tech: Vite + React 18 + TypeScript + Tailwind CSS 4 + React Hook Form + Zod + Recharts + Vitest
+- `../inheritance-frontend-reverse/analysis/synthesis/types.ts`
 
-## Test Results (updated by loop — iteration 0)
+## Test Results (updated by loop — iteration 1)
 ```
-(no tests yet — project not scaffolded)
+98 tests | 73 failed | 25 passed
+
+Failures are expected — stub implementations in src/types/index.ts return defaults.
+All enum arrays are empty [], all utility functions return 0/"".
+Tests compile and run correctly. Implementation needed next.
 ```
 
 ## Work Log
-(no iterations yet)
+- Iteration 1: Created src/types/index.ts (stubs) + src/types/__tests__/types.test.ts (98 tests)
