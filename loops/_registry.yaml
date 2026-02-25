@@ -79,3 +79,11 @@ loops:
     timeout_minutes: 30
     status: active
     created: 2026-02-24
+  cheerful-reverse:
+    description: "Distill Cheerful codebase → ultra-comprehensive modular rebuild spec with full user stories"
+    type: reverse
+    schedule: "*/30 * * * *"
+    max_iterations: 40
+    timeout_minutes: 30
+    status: active
+    created: 2026-02-25
