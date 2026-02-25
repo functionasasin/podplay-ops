@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total aspects**: 25
-- **Analyzed**: 22
-- **Pending**: 3
-- **Convergence**: 88%
+- **Analyzed**: 23
+- **Pending**: 2
+- **Convergence**: 92%
 
 ## Wave 1: Rust Type → Frontend Spec (17 aspects)
 
@@ -37,6 +37,6 @@
 
 ## Wave 3: Synthesis (3 aspects)
 
-- [ ] synthesis-types — Assemble complete types.ts from all Wave 1 TypeScript interfaces
+- [x] synthesis-types — Assemble complete types.ts from all Wave 1 TypeScript interfaces
 - [ ] synthesis-schemas — Assemble complete schemas.ts from all Wave 1 Zod schemas
 - [ ] synthesis-spec — Assemble wizard-steps.md, results-view.md, and spec-summary.md from all analysis
