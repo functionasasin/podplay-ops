@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 80
-- Analyzed: 10
-- Pending: 70
-- Convergence: 13%
+- Analyzed: 11
+- Pending: 69
+- Convergence: 14%
 
 ---
 
@@ -21,7 +21,7 @@
 - [x] LTFRB modernization program — modern jeepney routes, consolidated routes, new franchises
 - [x] LTO/LTFRB route rationalization studies — planned vs actual route changes
 - [x] Congress/Senate transportation committee — hearing transcripts on route changes, published reports
-- [ ] Philippine Statistics Authority — transport sector data, commuter surveys
+- [x] Philippine Statistics Authority — transport sector data, commuter surveys
 
 ### Transit App & Platform Data
 - [ ] Sakay.ph — all routes in their database, route shapes, coverage assessment
