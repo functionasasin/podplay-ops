@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 17
-- Analyzed: 12
-- Pending: 5
-- Convergence: 71%
+- Analyzed: 13
+- Pending: 4
+- Convergence: 76%
 
 ## Wave 1: Source Scanning
 
@@ -20,7 +20,7 @@
 - [x] **sec-filings-catalog** — sec.gov.ph filing requirements: annual filing calendar (GIS, AFS, beneficial ownership), compliance monitoring penalties, SEC fee computations, reportorial requirements for listed companies, registration and licensing fees.
 - [x] **dole-compliance** — DOLE Department Orders, RA 11058 (OSH Law): labor standards compliance (self-audit), occupational safety and health compliance, mandatory contributions (SSS/PhilHealth/Pag-IBIG employer+employee share computations), DOLE reporting requirements.
 - [x] **lgu-real-property** — RA 7160 Book II (Local Government Code — Local Taxation): real property tax computation (assessment level x tax rate x assessed value), business permit fees (graduated by gross revenue), community tax (cedula), transfer tax (local), idle land tax, special education fund. Sample LGU revenue codes.
-- [ ] **maceda-law-real-estate** — RA 6552 (Maceda Law): cash surrender value computation (50% of total payments for 2+ years, +5% per additional year up to 90% cap), grace period formula (1 month per year of installment paid), notarial cancellation notice requirements, refund timeline. Discovered via civil-code-obligations analysis; affects millions of real estate installment buyers and is fully deterministic.
+- [x] **maceda-law-real-estate** — RA 6552 (Maceda Law): cash surrender value computation (50% of total payments for 2+ years, +5% per additional year up to 90% cap), grace period formula (1 month per year of installment paid), notarial cancellation notice requirements, refund timeline. Discovered via civil-code-obligations analysis; affects millions of real estate installment buyers and is fully deterministic.
 
 ## Wave 2: Cross-Reference and Scoring (blocked by Wave 1)
 
