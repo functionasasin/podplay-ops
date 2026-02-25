@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 80
-- Analyzed: 6
-- Pending: 74
-- Convergence: 8%
+- Analyzed: 7
+- Pending: 73
+- Convergence: 9%
 
 ---
 
@@ -17,7 +17,7 @@
 - [x] LTFRB fare matrices — current fare tables for jeepney, bus, UV Express by route type
 - [x] DOTr (Department of Transportation) — published transit plans, route maps, modernization data
 - [x] MMDA traffic engineering — bus route assignments, EDSA Busway routes, traffic management data
-- [ ] EDSA Busway system — all carousel routes, stops, schedules, fare structure
+- [x] EDSA Busway system — all carousel routes, stops, schedules, fare structure
 - [ ] LTFRB modernization program — modern jeepney routes, consolidated routes, new franchises
 - [ ] LTO/LTFRB route rationalization studies — planned vs actual route changes
 - [ ] Congress/Senate transportation committee — hearing transcripts on route changes, published reports
