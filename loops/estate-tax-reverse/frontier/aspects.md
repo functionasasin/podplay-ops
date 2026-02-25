@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 35
-- Analyzed: 31
-- Pending: 4
-- Convergence: 89%
+- Analyzed: 32
+- Pending: 3
+- Convergence: 91%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -50,7 +50,7 @@
 ### Wave 5: Synthesis
 - [x] regime-detection — Decision tree for auto-selecting regime from date of death and estate status
 - [x] computation-pipeline — End-to-end computation flow for all three regimes: inputs → gross estate → deductions → net estate → tax due
-- [ ] data-model — Complete entity/type definitions with all fields and validations (supporting all regimes)
+- [x] data-model — Complete entity/type definitions with all fields and validations (supporting all regimes)
 - [ ] test-vectors — 8-10 complete test cases across all three regimes with intermediate values
 - [ ] explainer-format — Template for plain-English explainer section targeting heirs/executors
 - [ ] edge-cases — Catalog of all edge cases discovered, with legal citations
