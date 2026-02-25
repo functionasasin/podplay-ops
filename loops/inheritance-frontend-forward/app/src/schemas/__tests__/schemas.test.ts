@@ -30,6 +30,7 @@ import {
   ConditionSchema,
   InstitutionOfHeirSchema,
   DisinheritanceSchema,
+  ScenarioCodeSchema,
   CHILD_CAUSES,
   PARENT_CAUSES,
   SPOUSE_CAUSES,
@@ -403,7 +404,6 @@ describe("schemas", () => {
 
   describe("ScenarioCodeSchema", () => {
     it("accepts T-codes and I-codes from import", () => {
-      const { ScenarioCodeSchema } = require("../index");
       const codes = [
         "T1", "T2", "T3", "T4", "T5a", "T5b", "T6", "T7", "T8",
         "T9", "T10", "T11", "T12", "T13", "T14", "T15",
