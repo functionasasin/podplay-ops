@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 35
-- Analyzed: 33
-- Pending: 2
-- Convergence: 94%
+- Analyzed: 34
+- Pending: 1
+- Convergence: 97%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -52,7 +52,7 @@
 - [x] computation-pipeline — End-to-end computation flow for all three regimes: inputs → gross estate → deductions → net estate → tax due
 - [x] data-model — Complete entity/type definitions with all fields and validations (supporting all regimes)
 - [x] test-vectors — 8-10 complete test cases across all three regimes with intermediate values
-- [ ] explainer-format — Template for plain-English explainer section targeting heirs/executors
+- [x] explainer-format — Template for plain-English explainer section targeting heirs/executors
 - [ ] edge-cases — Catalog of all edge cases discovered, with legal citations
 - [ ] spec-draft — Synthesize all analysis into complete software specification
 - [ ] spec-review — Self-review: can a developer with no context build the engine?
