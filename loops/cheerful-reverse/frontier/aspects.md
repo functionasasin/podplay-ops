@@ -3,14 +3,14 @@
 ## Statistics
 
 - **Total aspects**: 27
-- **Analyzed**: 1
-- **Pending**: 26
-- **Convergence**: 4%
+- **Analyzed**: 2
+- **Pending**: 25
+- **Convergence**: 7%
 
 ## Wave 1: Layer-by-Layer Extraction (13 aspects)
 
 - [x] supabase-schema — All 35+ tables, relationships, RLS policies, triggers, migration history
-- [ ] backend-api-surface — All 25 route files, endpoints, request/response shapes, auth requirements
+- [x] backend-api-surface — All 25 route files, endpoints, request/response shapes, auth requirements
 - [ ] backend-services — Business logic layer, domain organization, service-repository relationships
 - [ ] temporal-workflows — All 23+ workflow definitions, triggers, activity sequences, error handling
 - [ ] temporal-activities — All 45+ activities grouped by domain, input/output types, side effects
