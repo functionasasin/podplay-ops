@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 80
-- Analyzed: 9
-- Pending: 71
-- Convergence: 11%
+- Analyzed: 10
+- Pending: 70
+- Convergence: 13%
 
 ---
 
@@ -20,7 +20,7 @@
 - [x] EDSA Busway system — all carousel routes, stops, schedules, fare structure
 - [x] LTFRB modernization program — modern jeepney routes, consolidated routes, new franchises
 - [x] LTO/LTFRB route rationalization studies — planned vs actual route changes
-- [ ] Congress/Senate transportation committee — hearing transcripts on route changes, published reports
+- [x] Congress/Senate transportation committee — hearing transcripts on route changes, published reports
 - [ ] Philippine Statistics Authority — transport sector data, commuter surveys
 
 ### Transit App & Platform Data

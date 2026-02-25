@@ -1,0 +1,37 @@
+{
+  "source": "government",
+  "retrieved_date": "2026-02-25",
+  "notes": "Congressional/Senate hearings do not publish route lists. This file captures only what was explicitly cited in hearings or congressional media coverage. Aggregate statistics confirmed: ~950 jeepney routes in NCR (555 consolidated, 395 without TSE), ~250 UV Express routes (142 consolidated, 108 without), ~68 city bus routes post-rationalization. No geometry or stop data available from this source.",
+  "routes": [
+    {
+      "route_id": "congress-01",
+      "route_name": "Cubao–Divisoria",
+      "mode": "jeepney",
+      "origin": "Cubao",
+      "destination": "Divisoria",
+      "key_stops": [],
+      "fare_min": null,
+      "fare_max": null,
+      "frequency_notes": "Cited in PISTON testimony to Senate: only 13 modern jeepneys operating as of Jan 2024; 100 traditional units to be phased out",
+      "geometry_available": false,
+      "geometry_source": null,
+      "confidence": "high",
+      "notes": "Route cited in Senate Committee hearing coverage as example of low modernization penetration. Route existence confirmed by multiple sources. No endpoint coordinates available from this source."
+    },
+    {
+      "route_id": "congress-02",
+      "route_name": "EDSA Busway Carousel",
+      "mode": "bus",
+      "origin": "Monumento / Fernando Poe Jr. Station",
+      "destination": "Taft / Gil Puyat Station",
+      "key_stops": [],
+      "fare_min": 15,
+      "fare_max": 75.5,
+      "frequency_notes": "Frequently cited in Senate oversight hearings; 751 buses, 87 operators; 24/7 operation",
+      "geometry_available": false,
+      "geometry_source": null,
+      "confidence": "high",
+      "notes": "Confirmed in multiple Senate and House hearings as flagship modernization route. Full data available from EDSA Busway aspect."
+    }
+  ]
+}
