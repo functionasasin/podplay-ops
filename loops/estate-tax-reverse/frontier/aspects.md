@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 35
-- Analyzed: 34
-- Pending: 1
-- Convergence: 97%
+- Analyzed: 35
+- Pending: 0
+- Convergence: 100%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -53,7 +53,7 @@
 - [x] data-model — Complete entity/type definitions with all fields and validations (supporting all regimes)
 - [x] test-vectors — 8-10 complete test cases across all three regimes with intermediate values
 - [x] explainer-format — Template for plain-English explainer section targeting heirs/executors
-- [ ] edge-cases — Catalog of all edge cases discovered, with legal citations
+- [x] edge-cases — Catalog of all edge cases discovered, with legal citations
 - [ ] spec-draft — Synthesize all analysis into complete software specification
 - [ ] spec-review — Self-review: can a developer with no context build the engine?
 
