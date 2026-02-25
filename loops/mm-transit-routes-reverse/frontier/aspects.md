@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 78
-- Analyzed: 1
-- Pending: 77
-- Convergence: 1%
+- Analyzed: 2
+- Pending: 76
+- Convergence: 3%
 
 ---
 
@@ -12,7 +12,7 @@
 
 ### Official Government Sources
 - [x] LTFRB franchise database — jeepney route franchises, route designations, operator names
-- [ ] LTFRB franchise database — bus route franchises, provincial and city bus operators
+- [x] LTFRB franchise database — bus route franchises, provincial and city bus operators
 - [ ] LTFRB franchise database — UV Express route franchises and operator lists
 - [ ] LTFRB fare matrices — current fare tables for jeepney, bus, UV Express by route type
 - [ ] DOTr (Department of Transportation) — published transit plans, route maps, modernization data
