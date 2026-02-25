@@ -1,8 +1,11 @@
 import React from 'react';
-import { Control, UseFormSetValue, UseFormWatch } from 'react-hook-form';
-import type { EngineInput, Relationship } from '../../types';
+import { Control, UseFormSetValue, UseFormWatch, useFieldArray } from 'react-hook-form';
+import type { EngineInput, Person, Relationship } from '../../types';
+import { PersonCard } from './PersonCard';
 
+// ============================================================================
 // Constants from spec: wizard-steps.md §3
+// ============================================================================
 
 export const PERSON_ID_PREFIXES: Record<Relationship, string> = {
   LegitimateChild: 'lc',
@@ -79,6 +82,10 @@ export const CHILDREN_RELEVANT: Set<Relationship> = new Set([
   'NephewNiece',
 ]);
 
+// ============================================================================
+// FamilyTreeStep Component
+// ============================================================================
+
 export interface FamilyTreeStepProps {
   control: Control<EngineInput>;
   setValue: UseFormSetValue<EngineInput>;
@@ -86,7 +93,87 @@ export interface FamilyTreeStepProps {
   errors?: Record<string, { message?: string }>;
 }
 
-export function FamilyTreeStep(_props: FamilyTreeStepProps) {
-  // Stub — implementation in next iteration
-  return <div data-testid="family-tree-step">Family Tree Step (stub)</div>;
+function createDefaultPerson(relationship: Relationship, id: string): Person {
+  return {
+    id,
+    name: '',
+    relationship_to_decedent: relationship,
+    is_alive_at_succession: true,
+    degree: DEFAULT_DEGREE[relationship],
+    line: null,
+    children: [],
+    filiation_proved: true,
+    filiation_proof_type: null,
+    adoption: null,
+    is_unworthy: false,
+    unworthiness_condoned: false,
+    has_renounced: false,
+    blood_type: null,
+    is_guilty_party_in_legal_separation: false,
+  };
+}
+
+export function FamilyTreeStep({
+  control,
+  setValue,
+  watch,
+  errors,
+}: FamilyTreeStepProps) {
+  const { fields, append, remove } = useFieldArray({ control, name: 'family_tree' as any });
+  const familyTree = (watch('family_tree') ?? []) as Person[];
+  const hasLegalSeparation = watch('decedent.has_legal_separation') as boolean;
+
+  // Count surviving spouses for validation
+  const spouseCount = familyTree.filter(
+    (p) => p.relationship_to_decedent === 'SurvivingSpouse'
+  ).length;
+
+  const handleAddPerson = () => {
+    const defaultRel: Relationship = 'LegitimateChild';
+    const prefix = PERSON_ID_PREFIXES[defaultRel];
+    let count = 0;
+    for (const p of familyTree) {
+      if (p.relationship_to_decedent === defaultRel) count++;
+    }
+    const newId = `${prefix}${count + 1}`;
+    append(createDefaultPerson(defaultRel, newId) as any);
+  };
+
+  return (
+    <div data-testid="family-tree-step" className="space-y-4">
+      {fields.length === 0 && (
+        <p className="text-gray-500 text-center py-8">
+          No family members added yet. Click &quot;Add Person&quot; to begin.
+        </p>
+      )}
+
+      {fields.map((field, index) => (
+        <PersonCard
+          key={field.id}
+          index={index}
+          control={control}
+          setValue={setValue}
+          watch={watch}
+          onRemove={(i) => remove(i)}
+          persons={familyTree}
+          hasLegalSeparation={hasLegalSeparation ?? false}
+          errors={errors}
+        />
+      ))}
+
+      {spouseCount > 1 && (
+        <p className="text-red-600 text-sm font-medium">
+          Only one Surviving Spouse allowed
+        </p>
+      )}
+
+      <button
+        type="button"
+        onClick={handleAddPerson}
+        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+      >
+        Add Person
+      </button>
+    </div>
+  );
 }
