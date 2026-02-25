@@ -1386,19 +1386,32 @@ function computeEstateTax(input) → EngineOutput:
     }
   elitTotal = sum(elitResult.claimsAgainstEstate + claimsVsInsolvent + unpaidMortgages + casualties).total
 
-  // ── Phase 5: Funeral Expenses (5G) — if PRE_TRAIN ─────────────────────
-  // Depends on: Phase 3 (grossEstate.total.total needed for 5% limit)
-  funeralDeduction = computeFuneralExpenses(input.funeralExpenses, grossEstate.total.total, deductionRules)
+  // ── Phase 5: Funeral Expenses (5G) — PRE_TRAIN, citizen/resident only ───
+  // NRAs: proportional funeral is already in elitResult.funeral (Phase 4 computeNRAELIT).
+  //        computeFuneralExpenses must NOT be called for NRAs — it produces a non-proportional
+  //        amount that would overstate the deduction for NRA pre-TRAIN estates.
+  // Depends on: Phase 3 (grossEstate.total.total needed for 5% cap)
+  funeralDeduction = { exclusive: 0, conjugal: 0, total: 0 }
+  if not input.decedent.isNonResidentAlien:
+    funeralDeduction = computeFuneralExpenses(input.funeralExpenses, grossEstate.total.total, deductionRules)
 
-  // ── Phase 6: Judicial/Admin Expenses (5H) — if PRE_TRAIN ──────────────
-  judicialDeduction = computeJudicialAdminExpenses(input.judicialAdminExpenses, deductionRules)
+  // ── Phase 6: Judicial/Admin Expenses (5H) — PRE_TRAIN, citizen/resident only ─
+  // NRAs: proportional judicial is already in elitResult.judicial (Phase 4 computeNRAELIT).
+  judicialDeduction = { exclusive: 0, conjugal: 0, total: 0 }
+  if not input.decedent.isNonResidentAlien:
+    judicialDeduction = computeJudicialAdminExpenses(input.judicialAdminExpenses, deductionRules)
 
   // ── Phase 7: ELIT total for vanishing ratio ────────────────────────────
-  // Pre-TRAIN: ELIT for ratio = 5A + 5B + 5C + 5D + 5G + 5H
-  // TRAIN: ELIT for ratio = 5A + 5B + 5C + 5D only
-  elitForVanishingRatio = elitTotal
+  // Citizen/resident PRE_TRAIN: ratio = 5A+5B+5C+5D+5G+5H (funeral/judicial not yet in elitTotal)
+  // NRA PRE_TRAIN:              ratio = proportional 5A+5B+5C+5D+5G+5H (funeral+judicial in elitResult)
+  // TRAIN (any residency):      ratio = 5A+5B+5C+5D only
+  elitForVanishingRatio = elitTotal   // always includes proportional/actual 5A–5D
   if deductionRules == PRE_TRAIN:
-    elitForVanishingRatio += funeralDeduction.total + judicialDeduction.total
+    if input.decedent.isNonResidentAlien:
+      // NRA: funeral + judicial stored in elitResult (proportional); not in funeralDeduction/judicialDeduction
+      elitForVanishingRatio += elitResult.funeral + elitResult.judicial
+    else:
+      elitForVanishingRatio += funeralDeduction.total + judicialDeduction.total
 
   // ── Phase 8: Vanishing Deduction (5E) ─────────────────────────────────
   // Depends on: Phase 3 (gross estate total) and Phase 7 (ELIT for ratio)
@@ -1414,9 +1427,47 @@ function computeEstateTax(input) → EngineOutput:
   )
 
   // ── Phase 10: Total Ordinary Deductions (Item 35) + Item 36 ───────────
+  // assembleOrdinaryDeductions populates Schedule 5 lines 5A–5H and totals Item 35.
+  // Critical NRA rule: for NRAs, funeral (5G) and judicial (5H) come from elitResult
+  //   (already proportional from computeNRAELIT in Phase 4); funeralDeduction and
+  //   judicialDeduction are zero for NRAs (Phase 5–6 skipped). For citizens/residents,
+  //   5G/5H come from funeralDeduction / judicialDeduction.
+  function assembleOrdinaryDeductions(elitResult, vanishingDeduction, publicTransfers,
+                                      funeralDeduction, judicialDeduction,
+                                      isNRA) → OrdinaryDeductionsResult:
+    line5G = isNRA
+      ? { exclusive: 0, conjugal: 0, total: elitResult.funeral }
+      : funeralDeduction
+    line5H = isNRA
+      ? { exclusive: 0, conjugal: 0, total: elitResult.judicial }
+      : judicialDeduction
+    all = [
+      elitResult.claimsAgainstEstate,   // 5A
+      elitResult.claimsVsInsolvent,     // 5B
+      elitResult.unpaidMortgages,       // 5C
+      elitResult.casualtyLosses,        // 5D
+      vanishingDeduction,               // 5E
+      publicTransfers,                  // 5F (A/B from user ownership tag on each transfer)
+      line5G,                           // 5G
+      line5H                            // 5H
+    ]
+    A = sum(all.map(x => x.exclusive))
+    B = sum(all.map(x => x.conjugal))
+    return {
+      schedule5: { line5A: elitResult.claimsAgainstEstate,
+                   line5B: elitResult.claimsVsInsolvent,
+                   line5C: elitResult.unpaidMortgages,
+                   line5D: elitResult.casualtyLosses,
+                   line5E: vanishingDeduction,
+                   line5F: publicTransfers,
+                   line5G, line5H },
+      total: { exclusive: A, conjugal: B, total: A + B }
+    }
+
   ordinaryDeductions = assembleOrdinaryDeductions(
     elitResult, vanishingDeduction, publicTransfers,
-    funeralDeduction, judicialDeduction
+    funeralDeduction, judicialDeduction,
+    input.decedent.isNonResidentAlien
   )
   // Item 35: total ordinary deductions per column
   estateAfterOrdinary = {
@@ -1470,10 +1521,11 @@ function computeEstateTax(input) → EngineOutput:
 
 | Computation | Must Follow |
 |-------------|------------|
-| Funeral deduction (5G) | Gross estate finalized (Item 34.C needed for 5% cap) |
+| Funeral deduction 5G (citizen/resident) | Gross estate finalized (Item 34.C needed for 5% cap) — Phase 3 before Phase 5 |
+| NRA funeral/judicial 5G/5H | computeNRAELIT (Phase 4) — no separate phase; already in elitResult |
 | Vanishing deduction (5E) | ELIT 5A–5D finalized (needed for ratio); gross estate finalized |
 | NRA proportional factor | Gross estate (PH total) finalized |
-| NRA vanishing ratio | Proportional ELIT finalized |
+| NRA vanishing ratio | Proportional ELIT (5A–5D+5G+5H) finalized — use elitResult.funeral + elitResult.judicial |
 | Surviving spouse share | All ordinary + special deductions finalized (uses gross estate Col B, not net estate) |
 | Tax rate | Net taxable estate (Item 40) finalized |
 | Foreign tax credit | Estate tax due (Item 42) finalized |
