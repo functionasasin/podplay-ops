@@ -194,14 +194,14 @@
 
 **Computation sketch**:
 - Input: Monthly salary credit / basic monthly compensation per employee
-- **SSS contributions** (2025 schedule):
-  - Employee share: 4.5% of monthly salary credit (MSC)
-  - Employer share: 9.5% of MSC
-  - Total: 14% of MSC
-  - MSC range: P4,000 (floor) to P35,000 (cap, scheduled to increase P5,000 every 2 years until P80,000)
-  - WISP (Workers' Investment and Savings Program): additional P80 employer share for MSC P20,000+
-  - EC (Employees' Compensation): P10-P30 employer-only contribution
-  - 31 salary brackets with specific amounts per bracket
+- **SSS contributions** (2025 schedule — RA 11199 final phase increase effective Jan 1, 2025):
+  - Employee share: 5% of monthly salary credit (MSC) (up from 4.5% in 2024)
+  - Employer share: 10% of MSC (up from 9.5% in 2024)
+  - Total: 15% of MSC (up from 14% in 2024; per KPMG Flash Alert 2025-026)
+  - MSC range: P5,000 (floor, up from P4,000) to P35,000 (cap, up from P30,000; scheduled to increase P5,000 every 2 years until P80,000)
+  - WISP/MPF (MySSS Pension Booster): for MSC exceeding P20,000, additional contributions credited to individual account
+  - EC (Employees' Compensation): P10 for MSC below P15,000, P30 for MSC P15,000+ (employer-only)
+  - Minimum total contribution: P750/month; Maximum: P5,250/month
 - **PhilHealth contributions** (2025):
   - Rate: 5% of basic monthly salary (split 50/50 employer-employee)
   - Salary floor: P10,000; Salary cap: P100,000
