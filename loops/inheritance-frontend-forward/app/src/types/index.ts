@@ -125,35 +125,110 @@ export type DeviseSpec =
 // Enum value arrays (for runtime validation and UI dropdowns)
 // ============================================================================
 
-export const RELATIONSHIPS: readonly Relationship[] = [];
+export const RELATIONSHIPS: readonly Relationship[] = [
+  "LegitimateChild",
+  "LegitimatedChild",
+  "AdoptedChild",
+  "IllegitimateChild",
+  "SurvivingSpouse",
+  "LegitimateParent",
+  "LegitimateAscendant",
+  "Sibling",
+  "NephewNiece",
+  "OtherCollateral",
+  "Stranger",
+];
 
-export const FILIATION_PROOFS: readonly FiliationProof[] = [];
+export const FILIATION_PROOFS: readonly FiliationProof[] = [
+  "BirthCertificate",
+  "FinalJudgment",
+  "PublicDocumentAdmission",
+  "PrivateHandwrittenAdmission",
+  "OpenContinuousPossession",
+  "OtherEvidence",
+];
 
-export const ADOPTION_REGIMES: readonly AdoptionRegime[] = [];
+export const ADOPTION_REGIMES: readonly AdoptionRegime[] = ["Ra8552", "Ra11642"];
 
-export const LINES_OF_DESCENT: readonly LineOfDescent[] = [];
+export const LINES_OF_DESCENT: readonly LineOfDescent[] = ["Paternal", "Maternal"];
 
-export const EFFECTIVE_CATEGORIES: readonly EffectiveCategory[] = [];
+export const EFFECTIVE_CATEGORIES: readonly EffectiveCategory[] = [
+  "LegitimateChildGroup",
+  "IllegitimateChildGroup",
+  "SurvivingSpouseGroup",
+  "LegitimateAscendantGroup",
+  "CollateralGroup",
+];
 
-export const INHERITANCE_MODES: readonly InheritanceMode[] = [];
+export const INHERITANCE_MODES: readonly InheritanceMode[] = ["OwnRight", "Representation"];
 
-export const BLOOD_TYPES: readonly BloodType[] = [];
+export const BLOOD_TYPES: readonly BloodType[] = ["Full", "Half"];
 
-export const SUCCESSION_TYPES: readonly SuccessionType[] = [];
+export const SUCCESSION_TYPES: readonly SuccessionType[] = [
+  "Testate",
+  "Intestate",
+  "Mixed",
+  "IntestateByPreterition",
+];
 
-export const SCENARIO_CODES: readonly ScenarioCode[] = [];
+export const SCENARIO_CODES: readonly ScenarioCode[] = [
+  "T1", "T2", "T3", "T4", "T5a", "T5b", "T6", "T7", "T8",
+  "T9", "T10", "T11", "T12", "T13", "T14", "T15",
+  "I1", "I2", "I3", "I4", "I5", "I6", "I7", "I8",
+  "I9", "I10", "I11", "I12", "I13", "I14", "I15",
+];
 
-export const CONDITION_TYPES: readonly ConditionType[] = [];
+export const CONDITION_TYPES: readonly ConditionType[] = ["Suspensive", "Resolutory", "Modal"];
 
-export const CONDITION_STATUSES: readonly ConditionStatus[] = [];
+export const CONDITION_STATUSES: readonly ConditionStatus[] = [
+  "Pending",
+  "Fulfilled",
+  "Failed",
+  "NotApplicable",
+];
 
-export const SUBSTITUTION_TYPES: readonly SubstitutionType[] = [];
+export const SUBSTITUTION_TYPES: readonly SubstitutionType[] = [
+  "Simple",
+  "Reciprocal",
+  "Fideicommissary",
+];
 
-export const SUBSTITUTION_TRIGGERS: readonly SubstitutionTrigger[] = [];
+export const SUBSTITUTION_TRIGGERS: readonly SubstitutionTrigger[] = [
+  "Predecease",
+  "Renunciation",
+  "Incapacity",
+];
 
-export const FIDEICOMMISSARY_VALIDATION_RESULTS: readonly FideicommissaryValidationResult[] = [];
+export const FIDEICOMMISSARY_VALIDATION_RESULTS: readonly FideicommissaryValidationResult[] = [
+  "Valid",
+  "Invalid",
+  "PartialValid",
+];
 
-export const DISINHERITANCE_CAUSES: readonly DisinheritanceCause[] = [];
+export const DISINHERITANCE_CAUSES: readonly DisinheritanceCause[] = [
+  "ChildAttemptOnLife",
+  "ChildGroundlessAccusation",
+  "ChildAdulteryWithSpouse",
+  "ChildFraudUndueInfluence",
+  "ChildRefusalToSupport",
+  "ChildMaltreatment",
+  "ChildDishonorableLife",
+  "ChildCivilInterdiction",
+  "ParentAbandonmentCorruption",
+  "ParentAttemptOnLife",
+  "ParentGroundlessAccusation",
+  "ParentAdulteryWithSpouse",
+  "ParentFraudUndueInfluence",
+  "ParentLossParentalAuthority",
+  "ParentRefusalToSupport",
+  "ParentAttemptOnOther",
+  "SpouseAttemptOnLife",
+  "SpouseGroundlessAccusation",
+  "SpouseFraudUndueInfluence",
+  "SpouseCauseLegalSeparation",
+  "SpouseLossParentalAuthority",
+  "SpouseRefusalToSupport",
+];
 
 // ============================================================================
 // Interfaces
@@ -368,36 +443,68 @@ export interface ManualFlag {
 // Display Constants (stubs)
 // ============================================================================
 
-export const EFFECTIVE_CATEGORY_LABELS = {} as Record<EffectiveCategory, string>;
+export const EFFECTIVE_CATEGORY_LABELS: Record<EffectiveCategory, string> = {
+  LegitimateChildGroup: "Legitimate Child",
+  IllegitimateChildGroup: "Illegitimate Child",
+  SurvivingSpouseGroup: "Surviving Spouse",
+  LegitimateAscendantGroup: "Legitimate Ascendant",
+  CollateralGroup: "Collateral Relative",
+};
 
-export const SUCCESSION_TYPE_LABELS = {} as Record<SuccessionType, string>;
+export const SUCCESSION_TYPE_LABELS: Record<SuccessionType, string> = {
+  Testate: "Testate Succession",
+  Intestate: "Intestate Succession",
+  Mixed: "Mixed Succession",
+  IntestateByPreterition: "Intestate (Preterition)",
+};
 
-export const WARNING_SEVERITY = {} as Record<string, "error" | "warning" | "info">;
+export const WARNING_SEVERITY: Record<string, "error" | "warning" | "info"> = {
+  preterition: "error",
+  inofficiousness: "warning",
+  disinheritance: "warning",
+  max_restarts: "error",
+  vacancy_unresolved: "warning",
+  unknown_donee: "info",
+};
 
 // ============================================================================
 // Utility Functions (stubs — implementation in next iteration)
 // ============================================================================
 
-export function pesosToCentavos(_pesos: number): number {
-  return 0;
+export function pesosToCentavos(pesos: number): number {
+  return Math.round(pesos * 100);
 }
 
-export function centavosToPesos(_centavos: number | string): number {
-  return 0;
+export function centavosToPesos(centavos: number | string): number {
+  const c = typeof centavos === "string" ? Number(centavos) : centavos;
+  return c / 100;
 }
 
-export function formatPeso(_centavos: number | string): string {
-  return "";
+export function formatPeso(centavos: number | string): string {
+  const c = typeof centavos === "string" ? BigInt(centavos) : BigInt(centavos);
+  const pesos = c / 100n;
+  const cents = c % 100n;
+  const pesosStr = pesos.toLocaleString("en-US");
+  if (cents === 0n) {
+    return `₱${pesosStr}`;
+  }
+  return `₱${pesosStr}.${cents.toString().padStart(2, "0")}`;
 }
 
-export function serializeCentavos(_centavos: number | bigint): number | string {
-  return 0;
+export function serializeCentavos(centavos: number | bigint): number | string {
+  if (typeof centavos === "bigint") {
+    return centavos <= BigInt(Number.MAX_SAFE_INTEGER)
+      ? Number(centavos)
+      : centavos.toString();
+  }
+  return centavos;
 }
 
-export function fracToString(_numer: number, _denom: number): string {
-  return "";
+export function fracToString(numer: number, denom: number): string {
+  return `${numer}/${denom}`;
 }
 
-export function stringToFrac(_s: string): { numer: number; denom: number } {
-  return { numer: 0, denom: 0 };
+export function stringToFrac(s: string): { numer: number; denom: number } {
+  const [n, d] = s.split("/").map(Number);
+  return { numer: n, denom: d };
 }

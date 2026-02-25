@@ -161,8 +161,8 @@ describe("types", () => {
   });
 
   describe("ScenarioCode enum", () => {
-    it("has exactly 30 variants (15 testate + 15 intestate)", () => {
-      expect(SCENARIO_CODES).toHaveLength(30);
+    it("has exactly 31 variants (16 testate + 15 intestate)", () => {
+      expect(SCENARIO_CODES).toHaveLength(31);
     });
 
     it("contains all T-codes", () => {
