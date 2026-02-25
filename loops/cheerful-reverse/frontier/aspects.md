@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total aspects**: 27
-- **Analyzed**: 6
-- **Pending**: 21
-- **Convergence**: 22%
+- **Analyzed**: 7
+- **Pending**: 20
+- **Convergence**: 26%
 
 ## Wave 1: Layer-by-Layer Extraction (13 aspects)
 
@@ -15,7 +15,7 @@
 - [x] temporal-workflows — All 23+ workflow definitions, triggers, activity sequences, error handling
 - [x] temporal-activities — All 45+ activities grouped by domain, input/output types, side effects
 - [x] ai-features — All 13 AI feature services, prompt strategies, structured output schemas, RAG architecture
-- [ ] webapp-routing — All pages, layouts, navigation structure, auth gates
+- [x] webapp-routing — All pages, layouts, navigation structure, auth gates
 - [ ] webapp-campaign-wizard — 7-step campaign creation flow, state management, validation, API calls
 - [ ] webapp-mail-inbox — Email thread view, drafts, compose/reply, thread processing UI
 - [ ] webapp-state-stores — Zustand stores, custom hooks, server state vs client state architecture
