@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total aspects**: 27
-- **Analyzed**: 12
-- **Pending**: 15
-- **Convergence**: 44%
+- **Analyzed**: 13
+- **Pending**: 14
+- **Convergence**: 48%
 
 ## Wave 1: Layer-by-Layer Extraction (13 aspects)
 
@@ -21,7 +21,7 @@
 - [x] webapp-state-stores — Zustand stores, custom hooks, server state vs client state architecture
 - [x] context-engine-core — Routing, chunking, selection, Slack bot, prompt templates
 - [x] context-engine-mcp-tools — All 8 MCP tool integrations, registry, tool catalog
-- [ ] infra-deploy — Fly.io, Vercel, Docker, environment management, CI/CD, local dev setup
+- [x] infra-deploy — Fly.io, Vercel, Docker, environment management, CI/CD, local dev setup
 
 ## Wave 2: Cross-Cutting Analysis (6 aspects)
 
