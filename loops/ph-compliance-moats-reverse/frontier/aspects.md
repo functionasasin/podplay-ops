@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 17
-- Analyzed: 13
-- Pending: 4
-- Convergence: 76%
+- Analyzed: 14
+- Pending: 3
+- Convergence: 82%
 
 ## Wave 1: Source Scanning
 
@@ -24,7 +24,7 @@
 
 ## Wave 2: Cross-Reference and Scoring (blocked by Wave 1)
 
-- [ ] **deduplicate-and-merge** — Consolidate all domains from Wave 1 into clean master list, resolve overlaps between sources
+- [x] **deduplicate-and-merge** — Consolidate all domains from Wave 1 into clean master list, resolve overlaps between sources
 - [ ] **score-domains** — Score each domain on 4 dimensions (market/moat/computability/pain), compute weighted opportunity score
 - [ ] **professional-fees-validation** — WebSearch for actual professional service pricing for top-scoring domains, validate moat depth
 
