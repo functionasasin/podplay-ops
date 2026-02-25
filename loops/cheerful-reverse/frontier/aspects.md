@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total aspects**: 27
-- **Analyzed**: 4
-- **Pending**: 23
-- **Convergence**: 15%
+- **Analyzed**: 5
+- **Pending**: 22
+- **Convergence**: 19%
 
 ## Wave 1: Layer-by-Layer Extraction (13 aspects)
 
@@ -13,7 +13,7 @@
 - [x] backend-api-surface — All 25 route files, endpoints, request/response shapes, auth requirements
 - [x] backend-services — Business logic layer, domain organization, service-repository relationships
 - [x] temporal-workflows — All 23+ workflow definitions, triggers, activity sequences, error handling
-- [ ] temporal-activities — All 45+ activities grouped by domain, input/output types, side effects
+- [x] temporal-activities — All 45+ activities grouped by domain, input/output types, side effects
 - [ ] ai-features — All 13 AI feature services, prompt strategies, structured output schemas, RAG architecture
 - [ ] webapp-routing — All pages, layouts, navigation structure, auth gates
 - [ ] webapp-campaign-wizard — 7-step campaign creation flow, state management, validation, API calls
