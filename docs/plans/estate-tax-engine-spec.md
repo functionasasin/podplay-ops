@@ -1771,50 +1771,42 @@ Complete integration test cases with all inputs and expected outputs.
 
 ### TV-02: TRAIN Standard (married ACP, exclusive family home, medical)
 
-**Regime**: TRAIN | **Decedent**: Married Filipino citizen, ACP | **Date of death**: 2020-03-10
+**Regime**: TRAIN | **Decedent**: Married Filipino citizen, ACP | **Date of death**: 2023-06-20
 
 **Inputs**:
-- Real property (exclusive): ₱5,000,000
-- Family home (exclusive, barangay cert obtained): ₱4,000,000 (FMV)
-- Cash (conjugal): ₱3,000,000
-- Claims against estate (conjugal, 5A): ₱500,000
-- Medical expenses (all within 1 year): ₱300,000
+- Real property (exclusive — commercial lot, Makati): ₱4,000,000
+- Family home (exclusive — inherited from parents, Pasig; barangay cert obtained): ₱6,000,000 (FMV)
+- Personal property (exclusive — vehicles & jewelry): ₱2,000,000
+- Personal property (conjugal — joint bank account and deposits): ₱3,000,000
+- Claims against estate (conjugal personal loan, 5A, notarized): ₱500,000
+- Medical expenses (within 1 year before death): ₱400,000
 
 **Expected computation**:
 | Step | Value |
 |------|-------|
-| Item 29 | Col A: ₱5M, Col B: ₱0, Col C: ₱5M |
-| Item 30 | Col A: ₱4M (exclusive), Col B: ₱0, Col C: ₱4M |
-| Item 31 | Col A: ₱0, Col B: ₱3M, Col C: ₱3M |
-| Item 34 (Gross Estate) | Col A: ₱9M, Col B: ₱3M, **Col C: ₱12M** |
-| 5A (claims, conjugal) | Col A: ₱0, Col B: ₱500K, Col C: ₱500K |
-| Item 35 | Col A: ₱0, Col B: ₱500K, Col C: ₱500K |
-| Item 36 | Col A: ₱9M, Col B: ₱2.5M, Col C: ₱11.5M |
-| 37A standard deduction | ₱5,000,000 |
-| 37B family home | min(₱4M, ₱10M) = ₱4,000,000 (exclusive, no halving) |
-| 37C medical | min(₱300K, ₱500K) = ₱300,000 |
-| Item 37 | ₱9,300,000 |
-| Item 38 (net estate) | max(0, ₱11.5M − ₱9.3M) = ₱2,200,000 |
-| Spouse share (6A): totalConjugal ₱3M − obligations ₱500K = ₱2.5M × 0.5 = **₱1,250,000** |
-| Item 39 | ₱1,250,000 |
-| Item 40 | max(0, ₱2.2M − ₱1.25M) = **₱950,000** |
-| Item 42 | ₱950,000 × 0.06 = **₱57,000** |
+| Item 29 (Real Property excl. FH) | Col A: ₱4,000,000 / Col B: ₱0 / Col C: ₱4,000,000 |
+| Item 30 (Family Home) | Col A: ₱6,000,000 / Col B: ₱0 / Col C: ₱6,000,000 |
+| Item 31 (Personal Property) | Col A: ₱2,000,000 / Col B: ₱3,000,000 / Col C: ₱5,000,000 |
+| Item 32 (Taxable Transfers) | ₱0 |
+| Item 33 (Business Interest) | ₱0 |
+| Item 34 (Gross Estate) | Col A: ₱12,000,000 / Col B: ₱3,000,000 / **Col C: ₱15,000,000** |
+| 5A claims (conjugal) | Col A: ₱0 / Col B: ₱500,000 / Col C: ₱500,000 |
+| Item 35 (Ordinary Deductions) | Col A: ₱0 / Col B: ₱500,000 / **Col C: ₱500,000** |
+| Item 36 (Estate after Ordinary) | max(0, ₱15,000,000 − ₱500,000) = **₱14,500,000** |
+| 37A standard deduction | ₱5,000,000 (citizen, TRAIN) |
+| 37B family home | min(₱6,000,000, ₱10,000,000) = ₱6,000,000 (exclusive — full FMV, no halving) |
+| 37C medical | min(₱400,000, ₱500,000) = ₱400,000 |
+| 37D RA 4917 | ₱0 |
+| Item 37 (Special Deductions) | ₱5,000,000 + ₱6,000,000 + ₱400,000 = **₱11,400,000** |
+| Item 38 (Net Estate) | max(0, ₱14,500,000 − ₱11,400,000) = **₱3,100,000** |
+| Schedule 6A (Spouse share — ACP) | Community assets (Col B): ₱3,000,000; ELIT obligations (Col B): ₱500,000; net community: ₱2,500,000; spouse share = ₱2,500,000 × 0.50 = **₱1,250,000** |
+| Item 39 | **₱1,250,000** |
+| Item 40 (Net Taxable Estate) | max(0, ₱3,100,000 − ₱1,250,000) = **₱1,850,000** |
+| Item 42 (Estate Tax Due) | ₱1,850,000 × 0.06 = **₱111,000** |
+| Item 43 (Foreign Credit) | ₱0 |
+| Item 44 (Net Estate Tax Due) | **₱111,000** |
 
-Wait — let me recalculate. Net estate = ₱11.5M − ₱9.3M = ₱2.2M. Item 40 = ₱2.2M − ₱1.25M = ₱950K. Tax = ₱57,000. But the summary in test-vectors.md shows ₱111,000 — let me recheck using the data from the analysis file. The test-vectors.md showed ₱1,850,000 NTE and ₱111,000 tax. The difference is that TV-02 in the analysis uses a different gross estate. I'll use the analysis values directly.
-
-**From analysis test-vectors.md TV-02**:
-- Gross estate: Real (excl) ₱5M + Family home (excl) ₱4M + Cash (conjugal) ₱3M + Jewelry (conjugal) ₱1M = ₱13M
-- Claims (conjugal 5A): ₱500K
-- Item 34: Col A ₱9M, Col B ₱4M, Col C ₱13M
-- Item 35: Col B ₱500K, Col C ₱500K
-- Item 36: Col A ₱9M, Col B ₱3.5M, Col C ₱12.5M
-- 37A: ₱5M, 37B: ₱4M (exclusive FH), 37C: ₱300K → Item 37 = ₱9.3M
-- Item 38: ₱12.5M − ₱9.3M = ₱3.2M
-- Spouse share: (₱4M − ₱500K) × 0.5 = ₱1.75M
-- Item 40: ₱3.2M − ₱1.75M = **₱1,450,000**
-- Tax: ₱1.45M × 0.06 = **₱87,000**
-
-The exact values depend on the exact inputs specified in the analysis file. Developers should run the computation engine against the test vectors file at `loops/estate-tax-reverse/analysis/test-vectors.md` for the authoritative input/output values.
+**Rules exercised**: ACP property regime (community assets in Col B; exclusive in Col A); exclusive family home deducted at full FMV (no halving — halving applies only to conjugal/communal family homes); medical deduction within ₱500K cap; surviving spouse share computed on net conjugal (Col B gross estate minus Col B ELIT obligations only; Col A excluded).
 
 ---
 

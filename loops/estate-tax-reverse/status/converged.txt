@@ -1,0 +1,68 @@
+CONVERGED
+Date: 2026-02-25
+Final aspect: fix-tv02-inline
+Total aspects analyzed: 39
+Pending: 0
+
+## Convergence Summary
+
+All 39 aspects of the Philippine estate tax engine have been extracted, formalized, and synthesized.
+
+### Coverage
+
+**Wave 1 — Legal Sources (2 aspects)**
+- All primary legal sources fetched and cached (NIRC Title III, pre-TRAIN rates, RA 11213/11569, BIR Form 1801, commentary samples)
+- Form 1801 complete field mapping defined (engine output contract)
+
+**Wave 2 — TRAIN-Era Rules (16 aspects)**
+- Tax rate: flat 6% on net taxable estate (Sec. 84 as amended by TRAIN)
+- Gross estate: citizens/residents (worldwide) and non-resident aliens (PH-situs only)
+- Gross estate inclusions: Sec. 85(B)–(G) taxable transfers
+- Deductions: ELIT (5A–5D), vanishing (5-step formula + 5-year table), public transfers, standard (₱5M / ₱500K), family home (₱10M cap), medical (₱500K cap), RA 4917 benefits
+- Surviving spouse share: Sec. 86(A)(9) — ACP and CPG regimes
+- Property regimes: ACP, CPG, separation
+- NRA proportional deductions: Sec. 86(B)–(D)
+- Exemptions: Sec. 87 (usufruct, fiduciary, charitable bequests)
+- Tax credits: foreign estate tax, prior payments
+- Filing rules: Sec. 90 (1-year deadline, CPA requirement, extensions)
+
+**Wave 2 Corrections (2 aspects)**
+- NRA public transfers: proportional per Sec. 86(B)(2), not full-value
+- Amnesty deductions: funeral/judicial included for pre-2018 deaths per RA 11213 Sec. 3 plain text
+
+**Wave 3 — Pre-TRAIN Rules (3 aspects)**
+- Graduated rate schedule: 5 brackets from 5%–20% (old Sec. 84)
+- Pre-TRAIN-only deductions: funeral (min(actual, 5% × GE)), judicial/admin expenses (actual, no cap)
+- Deduction amount differences: standard ₱1M vs ₱5M; family home cap ₱1M vs ₱10M
+- End-to-end pre-TRAIN computation flow
+
+**Wave 4 — Estate Tax Amnesty (3 aspects)**
+- Eligibility: deaths before Jan 1, 2018, with unpaid/unsettled estate tax
+- Computation: 6% flat; Track A (no prior return) vs Track B (undeclared portion); minimum ₱5,000; ETAR form; window closed June 14, 2025
+- Regime interaction: when amnesty applies vs regular pre-TRAIN computation
+
+**Wave 5 — Synthesis (7 aspects + 2 fix-it aspects)**
+- Regime detection: decision tree from date of death and estate status
+- Computation pipeline: full 13-phase graph for all three regimes
+- Data model: all types with fields, validations, and regime branching
+- Test vectors: 10 complete scenarios with all intermediate values
+- Explainer format: plain-English template for heirs/executors
+- Edge cases: 26 cataloged cases with legal citations
+- Spec draft: complete software specification at docs/plans/estate-tax-engine-spec.md
+- Spec review: identified 2 bugs (NRA pipeline + TV-02 contradiction)
+- Fix NRA pipeline: corrected Phase 5/6/7/10 for NRA pre-TRAIN estates
+- Fix TV-02 inline: replaced contradictory computation with authoritative values
+
+### Output
+
+Primary deliverable: `docs/plans/estate-tax-engine-spec.md`
+
+A developer with zero Philippine tax knowledge can implement the full estate tax computation engine from this spec alone. The spec covers:
+- All three regimes (TRAIN, pre-TRAIN, amnesty) with auto-detection
+- Complete Form 1801 output contract
+- All deductions with exact pseudocode and conditions
+- NRA proportional deduction path
+- Surviving spouse share for ACP and CPG
+- 10 fully-specified test vectors across all regimes
+- Plain-English explainer template for non-expert users
+- 26 edge cases with legal citations and expected engine behavior
