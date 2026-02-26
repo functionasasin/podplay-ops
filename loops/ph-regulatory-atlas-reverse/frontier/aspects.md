@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 32
-- Analyzed: 12
-- Pending: 20
-- Convergence: 38%
+- Analyzed: 13
+- Pending: 19
+- Convergence: 41%
 
 ## Wave 0: Regulatory Body Inventory
 
@@ -36,7 +36,7 @@
 
 - [x] **dar-land-valuation** — DAR (RA 6657, RA 9700 CARP/CARPER): just compensation formula LV = (CNI × 0.90) + (MV × 0.10) or comparable sales; CNI capitalization rate (6% for irrigated, 12% for others); installment amortization computation for emancipation patents. ~2.5M agrarian reform beneficiaries. → wrote analysis/wave1-dar-land-valuation.md; 4 domains identified: Just Compensation Estimator (3.50, LV formula from DAR AO 5-98 is fully codified; transparency tool vs. LBP's internal valuation), CARP Coverage Screener (3.00, retention area formula deterministic), ARB Amortization Generator (2.90, fully deterministic but reduced by RA 11953 debt condonation), SAC Filing Decision Tool (2.65). Top opportunity: LV Estimator — LBP valuations typically 20–50% below SAC-awarded values, ≥2,400 vintage contested cases, no public verification tool, 15-day SAC filing deadline trap; formula is statutory (DAR AO 5-98), fully deterministic given DA price data + user production inputs.
 
-- [ ] **ipophl-trademark-patent** — IPOPHL (RA 8293 IP Code): trademark registration fee (big vs. small entity, youth = 50%); annual patent maintenance fees (escalating schedule years 1–20); trademark renewal at years 5, 10; industrial design fees. ~50K+ trademark applications/year.
+- [x] **ipophl-trademark-patent** — IPOPHL (RA 8293 IP Code): trademark registration fee (big vs. small entity, youth = 50%); annual patent maintenance fees (escalating schedule years 1–20); trademark renewal at years 5, 10; industrial design fees. ~42K trademark + ~6.4K patent/UM applications/year; 4 domains identified; top opportunity: IP Portfolio Compliance Dashboard (4.05) combining trademark DAU deadline tracking + patent annuity calendar — 200K–400K active marks + 20K–45K active patents, no IPOPHL self-service tool exists, moat = IP firm retainers (₱5K–₱15K/year) + enterprise docketing software. Second: Trademark Fee Calculator + DAU Tracker (3.80). → wrote analysis/wave1-ipophl-trademark-patent.md
 
 - [ ] **erc-electricity-rates** — Energy Regulatory Commission (RA 9136 EPIRA): distribution wheeling rate formula (Performance-Based Regulation with WACC, RAB, OPEX); lifeline rate subsidy computation; cross-subsidization rules; renewable energy feed-in tariffs. ~25M+ electricity consumers.
 
