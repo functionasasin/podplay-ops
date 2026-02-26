@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 32
-- Analyzed: 15
-- Pending: 17
-- Convergence: 47%
+- Analyzed: 16
+- Pending: 16
+- Convergence: 50%
 
 ## Wave 0: Regulatory Body Inventory
 
@@ -44,7 +44,7 @@
 
 - [x] **cda-cooperative-registration** — CDA (RA 9520): registration fee = 0.1% of authorized share capital (min ₱2K); annual audit requirements; tax exemption eligibility (cooperative income, dividend); re-registration fees. ~20K+ active cooperatives; 4 domains identified; top opportunity: CTE Eligibility Checker + Compliance Dashboard combining net surplus distribution checker (Domain 2, 3.55) + CTE navigator (Domain 3, 3.70) + compliance calendar (Domain 4, 3.20) — 20K cooperatives × recurring annual multi-agency compliance (CDA + BIR), no existing tool, fully deterministic from RA 9520 Arts. 60–61–86–87 + Joint Rules. The 60-day CTE initial filing window (almost universally missed) is the highest-pain entry point with clear immediate value. → wrote analysis/wave1-cda-cooperative-registration.md
 
-- [ ] **npc-data-privacy-compliance** — NPC (RA 10173 DPA): DPO appointment/registration, DPS registration, breach notification (72-hour rule), privacy impact assessment triggers, graduated penalty computation (₱500K–₱5M + imprisonment). All organizations processing personal data of Filipinos.
+- [x] **npc-data-privacy-compliance** — NPC (RA 10173 DPA): DPO appointment/registration, DPS registration, breach notification (72-hour rule), privacy impact assessment triggers, graduated penalty computation (₱500K–₱5M + imprisonment). All organizations processing personal data of Filipinos. 4 domains identified; top opportunity: "DPA Compliance Engine" combining NPC Registration Eligibility Screener (3.30) + 72-Hour Breach Notification Protocol (3.50) + ASIR Filing Tool (3.35) — universe of 50K–100K PICs/PIPs with ASIR duty; 15K–30K mandatory registrants; no comprehensive tool exists; fully deterministic threshold checks + compliance calendar + breach countdown. PIA Trigger Screener (3.00) is secondary. → wrote analysis/wave1-npc-data-privacy-compliance.md
 
 - [ ] **dti-business-registration** — DTI/BNRS (RA 3883): fee by territorial scope (barangay ₱200, city ₱500, regional ₱1K, national ₱2K) + DST ₱30; 5-year validity; late renewal = 50% penalty; integration with LGU business permit computation. ~5M+ sole proprietors.
 
