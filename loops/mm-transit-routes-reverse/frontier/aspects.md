@@ -1,9 +1,9 @@
 # Metro Manila Transit Routes — Frontier
 
 ## Statistics
-- Total aspects: 80
-- Analyzed: 14
-- Pending: 66
+- Total aspects: 82
+- Analyzed: 15
+- Pending: 67
 - Convergence: 18%
 
 ---
@@ -27,9 +27,11 @@
 - [x] Sakay.ph — all routes in their database, route shapes, coverage assessment
 - [x] Google Maps transit layer — Manila routes available in Google Transit, GTFS feeds already submitted
 - [x] Moovit Manila — routes, user-contributed data, coverage
-- [ ] Transit app — Manila coverage, real-time data availability
+- [x] Transit app — Manila coverage, real-time data availability
 - [ ] Apple Maps transit — Manila routes available
 - [ ] Grab transport — GrabBus routes, Grab shuttle routes if any
+- [ ] Chalo app Metro Manila — real-time GPS bus/jeepney tracking, route database underlying live tracking system
+- [ ] Komyut app (github.com/vrymel/komyut) — open-source Filipino route planner, extract jeepney route dataset from GitHub repo
 
 ### Open Data & Mapping Projects
 - [ ] OpenStreetMap — transit relations for NCR, bus routes, jeepney routes tagged
