@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 32
-- Analyzed: 1
-- Pending: 31
-- Convergence: 3%
+- Analyzed: 2
+- Pending: 30
+- Convergence: 6%
 
 ## Wave 0: Regulatory Body Inventory
 
@@ -14,7 +14,7 @@
 
 ### HIGH Priority (13 aspects)
 
-- [ ] **sss-benefits** — Social Security System (RA 11199): retirement BMP formula (3 alternatives), sickness benefit (90% ADSC), maternity, disability, unemployment (50% AMSC × 2 months), funeral grant (₱20K–40K), death/survivor pension. ~40M+ members.
+- [x] **sss-benefits** — Social Security System (RA 11199): retirement BMP formula (3 alternatives), sickness benefit (90% ADSC), maternity, disability, unemployment (50% AMSC × 2 months), funeral grant (₱12K–₱60K sliding), death/survivor pension. ~42M members; 8 domains identified; highest opportunities: contribution computation (4.55) and BMP pension (4.35). → wrote analysis/wave1-sss-benefits.md
 
 - [ ] **philhealth-contributions** — PhilHealth (RA 11223 UHC Act): premium = 5% of basic salary (floor ₱10K, ceiling ₱100K), benefit eligibility thresholds, case rate reimbursement schedule. Universal coverage target ~112M Filipinos.
 
