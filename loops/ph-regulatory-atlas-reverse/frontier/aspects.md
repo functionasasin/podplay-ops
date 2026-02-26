@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 32
-- Analyzed: 3
-- Pending: 29
-- Convergence: 9%
+- Analyzed: 4
+- Pending: 28
+- Convergence: 12%
 
 ## Wave 0: Regulatory Body Inventory
 
@@ -18,7 +18,7 @@
 
 - [x] **philhealth-contributions** — PhilHealth (RA 11223 UHC Act): premium = 5% of basic salary (floor ₱10K, ceiling ₱100K), benefit eligibility thresholds, case rate reimbursement schedule. Universal coverage target ~112M Filipinos. → wrote analysis/wave1-philhealth-contributions.md; 4 domains identified: premium computation (fully deterministic, 5% × BMS with floor/ceiling/split rules), benefit eligibility determination (contribution-count gates by member type), case rate application (~9,000 fixed case rates + Z benefit packages), OFW contribution portability. Top opportunity: case rate transparency tool (Domain 3, no patient-facing tool exists, ~9K case rates in PDF only) and employer compliance dashboard (Domain 1+2 combined for SME market).
 
-- [ ] **pagibig-loans** — Pag-IBIG/HDMF (RA 9679): monthly savings contributions, housing loan amortization (annuity formula), multi-purpose loan (MPL) computation, TAV accumulation, penalty formula (1/20 of 1%/day). ~15M+ members.
+- [x] **pagibig-loans** — Pag-IBIG/HDMF (RA 9679): monthly savings contributions, housing loan amortization (annuity formula), multi-purpose loan (MPL) computation, TAV accumulation, penalty formula (1/20 of 1%/day). ~16.58M active members (2024); 90,616 housing loans (₱129.73B); 3.2M+ cash loans (₱70.33B). 5 domains identified; top opportunity: housing loan eligibility & amortization (est. 4.00) — multi-step HLAR/LTV/rate-tier/age-cap/insurance computation with Affordable Housing track chronically underutilized. → wrote analysis/wave1-pagibig-loans.md
 
 - [ ] **gsis-retirement** — GSIS (RA 8291): BMP = 0.025 × (AMC + ₱700) × PPP; max 90% of AMC; Option 1 (60 months lump sum) vs. Option 2 (18 months cash + immediate pension); disability gradings; portability with SSS under RA 7699. ~1.5M government employees.
 
