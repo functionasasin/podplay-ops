@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 32
-- Analyzed: 7
-- Pending: 25
-- Convergence: 22%
+- Analyzed: 8
+- Pending: 24
+- Convergence: 25%
 
 ## Wave 0: Regulatory Body Inventory
 
@@ -26,7 +26,7 @@
 
 - [x] **lto-registration** — Land Transportation Office (RA 4136, RA 8794): MVUC graduated table by vehicle type/weight/year model; late penalty (50% surcharge); EV discount (30% battery, 15% hybrid); driver's license application/renewal fees. ~10M+ registered vehicles. → wrote analysis/wave1-lto-registration.md; 4 domains identified: MVUC + total registration cost calculator (4.40), late penalty calculator (3.90), vehicle transfer cost estimator (3.75), driver's license cost calculator (3.40). Top opportunity: unified LTO fee calculator covering MVUC + emission + CTPL + delinquency computation — ~14M annual transactions, fixer-demand driven by fee confusion across 4 agencies, fully deterministic from RA 8794 + LTO MCs.
 
-- [ ] **prc-licensure** — Professional Regulation Commission (RA 8981): 43 professional boards each with distinct CPD unit requirements (15–45 units/3 years); licensure exam fees; renewal fees; foreign professional surcharge. ~4M+ licensed professionals.
+- [x] **prc-licensure** — Professional Regulation Commission (RA 8981): 43 professional boards each with distinct CPD unit requirements (15–45 units/3 years); licensure exam fees; renewal fees; foreign professional surcharge. ~4M+ licensed professionals. → wrote analysis/wave1-prc-licensure.md; 4 domains identified: CPD compliance eligibility calculator (4.00, fully deterministic from RA 10912 + PRB resolutions, OFW exemption + SDL cap + carryover logic), renewal fee + surcharge calculator (3.85), board exam application eligibility checker (3.20), CPD cost optimizer/seminar selector (3.75). Top opportunity: unified PRC Compliance Dashboard combining domains 1+2+4 — 4M+ professionals × triennial renewal cycle, no comprehensive tool exists, CPD seminar pain extreme (43K petition signatures).
 
 - [ ] **marina-seafarer-certs** — MARINA (RA 9295, RA 10635, STCW Convention): COC/COP fee schedule (622 line items in MC GC-2026-01); SIRB/seaman's book fees; vessel registration; Certificate of Marine Profession (CMP); STCW endorsement fees. ~500K+ active seafarers.
 
