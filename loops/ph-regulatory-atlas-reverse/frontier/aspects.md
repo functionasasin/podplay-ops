@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 32
-- Analyzed: 10
-- Pending: 22
-- Convergence: 31%
+- Analyzed: 11
+- Pending: 21
+- Convergence: 34%
 
 ## Wave 0: Regulatory Body Inventory
 
@@ -32,7 +32,7 @@
 
 - [x] **dmw-ofw-compliance** — DMW/POEA (RA 11641, RA 10022): placement fee cap = 1 month basic salary (or zero for no-fee categories); OWWA membership = USD 25/contract; PDOS/PEOS fee; documentary requirement matrix; penalty for illegal fee collection. 2.19M active OFWs. → wrote analysis/wave1-dmw-ofw-compliance.md; 4 domains identified: Placement Fee Legality Checker (4.35, fully deterministic binary tree: country list + job category + 1×salary cap = max allowable fee), Total Pre-Departure Cost Calculator (3.80), OFW Documentary Matrix Generator (3.55), OWWA Benefits Computation Tool (3.60). Top opportunity: "OFW Fee Shield" combining Domains 1+2 — targets the documented ₱45K–₱200K per-victim illegal fee epidemic, 500K+ new deployments/year, fully deterministic from RA 10022 Sec. 6 + DMW-DC-01-2023 Sec. 49–54 + annual country advisory updates; no judgment required, pure information asymmetry moat.
 
-- [ ] **fda-product-registration** — FDA (RA 9711): CPR + LTO fee schedule (tiered by product category); renewal = 70% of initial fee; late surcharge = 2x renewal + 10%/month (max 120 days); annual LTO renewal. ~50K+ registered health products.
+- [x] **fda-product-registration** — FDA (RA 9711): CPR + LTO fee schedule (tiered by product category); renewal = 70% of initial fee; late surcharge = 2×renewal + 10%/month (max 120 days); AO 2024-0016 new fee structure (suspended). 4 domains identified: CPR+LTO cost calculator (3.80), multi-product renewal calendar (3.80), product classification screener (3.45), late surcharge/120-day cliff calculator (3.30). Top opportunity: "FDA Compliance Suite" combining Domains 1+4 — fully deterministic formulas, no public tool exists, ~30K-80K regulated entities, dual-fee-schedule uncertainty under AO 2024-0016 suspension adds urgency. → wrote analysis/wave1-fda-product-registration.md
 
 - [ ] **dar-land-valuation** — DAR (RA 6657, RA 9700 CARP/CARPER): just compensation formula LV = (CNI × 0.90) + (MV × 0.10) or comparable sales; CNI capitalization rate (6% for irrigated, 12% for others); installment amortization computation for emancipation patents. ~2.5M agrarian reform beneficiaries.
 
