@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 84
-- Analyzed: 21
-- Pending: 63
-- Convergence: 25%
+- Analyzed: 22
+- Pending: 62
+- Convergence: 26%
 
 ---
 
@@ -37,7 +37,7 @@
 - [x] PinoyCommute.com — static route guide claiming current 2025 fares and terminal info for jeepneys, buses, MRT, LRT; may have structured route listings worth extracting
 
 ### Open Data & Mapping Projects
-- [ ] OpenStreetMap — transit relations for NCR, bus routes, jeepney routes tagged
+- [x] OpenStreetMap — transit relations for NCR, bus routes, jeepney routes tagged
 - [ ] OpenStreetMap — stop/station nodes tagged as bus_stop, platform, etc.
 - [ ] Mapillary/KartaView — street-level imagery of route signage and terminals
 - [ ] Open Transit Data initiatives — any GTFS feeds published for Manila
