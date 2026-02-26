@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 32
-- Analyzed: 11
-- Pending: 21
-- Convergence: 34%
+- Analyzed: 12
+- Pending: 20
+- Convergence: 38%
 
 ## Wave 0: Regulatory Body Inventory
 
@@ -34,7 +34,7 @@
 
 - [x] **fda-product-registration** — FDA (RA 9711): CPR + LTO fee schedule (tiered by product category); renewal = 70% of initial fee; late surcharge = 2×renewal + 10%/month (max 120 days); AO 2024-0016 new fee structure (suspended). 4 domains identified: CPR+LTO cost calculator (3.80), multi-product renewal calendar (3.80), product classification screener (3.45), late surcharge/120-day cliff calculator (3.30). Top opportunity: "FDA Compliance Suite" combining Domains 1+4 — fully deterministic formulas, no public tool exists, ~30K-80K regulated entities, dual-fee-schedule uncertainty under AO 2024-0016 suspension adds urgency. → wrote analysis/wave1-fda-product-registration.md
 
-- [ ] **dar-land-valuation** — DAR (RA 6657, RA 9700 CARP/CARPER): just compensation formula LV = (CNI × 0.90) + (MV × 0.10) or comparable sales; CNI capitalization rate (6% for irrigated, 12% for others); installment amortization computation for emancipation patents. ~2.5M agrarian reform beneficiaries.
+- [x] **dar-land-valuation** — DAR (RA 6657, RA 9700 CARP/CARPER): just compensation formula LV = (CNI × 0.90) + (MV × 0.10) or comparable sales; CNI capitalization rate (6% for irrigated, 12% for others); installment amortization computation for emancipation patents. ~2.5M agrarian reform beneficiaries. → wrote analysis/wave1-dar-land-valuation.md; 4 domains identified: Just Compensation Estimator (3.50, LV formula from DAR AO 5-98 is fully codified; transparency tool vs. LBP's internal valuation), CARP Coverage Screener (3.00, retention area formula deterministic), ARB Amortization Generator (2.90, fully deterministic but reduced by RA 11953 debt condonation), SAC Filing Decision Tool (2.65). Top opportunity: LV Estimator — LBP valuations typically 20–50% below SAC-awarded values, ≥2,400 vintage contested cases, no public verification tool, 15-day SAC filing deadline trap; formula is statutory (DAR AO 5-98), fully deterministic given DA price data + user production inputs.
 
 - [ ] **ipophl-trademark-patent** — IPOPHL (RA 8293 IP Code): trademark registration fee (big vs. small entity, youth = 50%); annual patent maintenance fees (escalating schedule years 1–20); trademark renewal at years 5, 10; industrial design fees. ~50K+ trademark applications/year.
 
