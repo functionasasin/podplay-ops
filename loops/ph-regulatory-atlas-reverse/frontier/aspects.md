@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 32
-- Analyzed: 4
-- Pending: 28
-- Convergence: 12%
+- Analyzed: 5
+- Pending: 27
+- Convergence: 16%
 
 ## Wave 0: Regulatory Body Inventory
 
@@ -20,7 +20,7 @@
 
 - [x] **pagibig-loans** — Pag-IBIG/HDMF (RA 9679): monthly savings contributions, housing loan amortization (annuity formula), multi-purpose loan (MPL) computation, TAV accumulation, penalty formula (1/20 of 1%/day). ~16.58M active members (2024); 90,616 housing loans (₱129.73B); 3.2M+ cash loans (₱70.33B). 5 domains identified; top opportunity: housing loan eligibility & amortization (est. 4.00) — multi-step HLAR/LTV/rate-tier/age-cap/insurance computation with Affordable Housing track chronically underutilized. → wrote analysis/wave1-pagibig-loans.md
 
-- [ ] **gsis-retirement** — GSIS (RA 8291): BMP = 0.025 × (AMC + ₱700) × PPP; max 90% of AMC; Option 1 (60 months lump sum) vs. Option 2 (18 months cash + immediate pension); disability gradings; portability with SSS under RA 7699. ~1.5M government employees.
+- [x] **gsis-retirement** — GSIS (RA 8291): BMP = 0.025 × (AMC + ₱700) × PPP; max 90% of AMC; Option 1 (60 months lump sum) vs. Option 2 (18 months cash + immediate pension); disability gradings; portability with SSS under RA 7699. 2.12M active members (2024); 6 domains identified; top opportunities: BMP retirement pension + Option 1/2 NPV decision (4.00) and legacy law selection RA 660/RA 1616/PD 1146/RA 8291 (3.80) — 200K+ pre-1997 employees facing irreversible benefit-maximization choice worth ₱5K-20K/month in pension differential. → wrote analysis/wave1-gsis-retirement.md
 
 - [ ] **boc-customs-duties** — Bureau of Customs (RA 10863 CMTA): CIF valuation + duty rate by AHTN/HS code + 12% VAT on landed cost + excise tax (alcohol, tobacco, petroleum, autos); de minimis threshold (₱10K FOB); dumping/safeguard duties. ~1M+ import transactions/year.
 
