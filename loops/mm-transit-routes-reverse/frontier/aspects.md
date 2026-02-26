@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 82
-- Analyzed: 17
-- Pending: 65
-- Convergence: 21%
+- Analyzed: 18
+- Pending: 64
+- Convergence: 22%
 
 ---
 
@@ -30,7 +30,7 @@
 - [x] Transit app — Manila coverage, real-time data availability
 - [x] Apple Maps transit — Manila routes available
 - [x] Grab transport — GrabBus routes, Grab shuttle routes if any
-- [ ] Chalo app Metro Manila — real-time GPS bus/jeepney tracking, route database underlying live tracking system
+- [x] Chalo app Metro Manila — real-time GPS bus/jeepney tracking, route database underlying live tracking system
 - [ ] Komyut app (github.com/vrymel/komyut) — open-source Filipino route planner, extract jeepney route dataset from GitHub repo
 
 ### Open Data & Mapping Projects

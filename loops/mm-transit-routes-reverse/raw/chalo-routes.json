@@ -1,0 +1,25 @@
+{
+  "source": "transit_app",
+  "app_name": "Chalo",
+  "app_url": "https://chalo.com/metromanila",
+  "retrieved_date": "2026-02-26",
+  "data_accessibility": "closed_platform",
+  "accessibility_notes": "chalo.com/metromanila returns HTTP 403; no public API, no GTFS export, no route list published. Operator portal requires login. Route data is fully proprietary.",
+  "coverage_estimate": {
+    "routes_tracked": "unknown",
+    "estimated_range": "50-200",
+    "confidence": "low",
+    "modes_likely_tracked": ["modern_jeepney", "city_bus"],
+    "modes_unlikely_tracked": ["traditional_jeepney", "uv_express", "p2p"],
+    "rationale": "Chalo requires GPS hardware fitted to each vehicle; only organized cooperatives or bus operators with formal agreements can be onboarded. Modern PUJ cooperatives (PUVMP) and city bus operators are most likely partners. Traditional jeepney individual operators cannot be onboarded at scale."
+  },
+  "platform_notes": {
+    "ios_app_id": "id1607824800",
+    "android_app_id": "app.zophop",
+    "features_confirmed": ["live_gps_tracking", "mobile_ticketing"],
+    "issues_reported": ["OTP_sms_verification_failures_for_PH_numbers", "gps_accuracy_problems", "limited_commuter_adoption_in_PH"],
+    "ph_media_mentions": 0,
+    "dominant_local_app": "Sakay.ph"
+  },
+  "routes": []
+}
