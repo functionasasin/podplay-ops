@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 32
-- Analyzed: 2
-- Pending: 30
-- Convergence: 6%
+- Analyzed: 3
+- Pending: 29
+- Convergence: 9%
 
 ## Wave 0: Regulatory Body Inventory
 
@@ -16,7 +16,7 @@
 
 - [x] **sss-benefits** — Social Security System (RA 11199): retirement BMP formula (3 alternatives), sickness benefit (90% ADSC), maternity, disability, unemployment (50% AMSC × 2 months), funeral grant (₱12K–₱60K sliding), death/survivor pension. ~42M members; 8 domains identified; highest opportunities: contribution computation (4.55) and BMP pension (4.35). → wrote analysis/wave1-sss-benefits.md
 
-- [ ] **philhealth-contributions** — PhilHealth (RA 11223 UHC Act): premium = 5% of basic salary (floor ₱10K, ceiling ₱100K), benefit eligibility thresholds, case rate reimbursement schedule. Universal coverage target ~112M Filipinos.
+- [x] **philhealth-contributions** — PhilHealth (RA 11223 UHC Act): premium = 5% of basic salary (floor ₱10K, ceiling ₱100K), benefit eligibility thresholds, case rate reimbursement schedule. Universal coverage target ~112M Filipinos. → wrote analysis/wave1-philhealth-contributions.md; 4 domains identified: premium computation (fully deterministic, 5% × BMS with floor/ceiling/split rules), benefit eligibility determination (contribution-count gates by member type), case rate application (~9,000 fixed case rates + Z benefit packages), OFW contribution portability. Top opportunity: case rate transparency tool (Domain 3, no patient-facing tool exists, ~9K case rates in PDF only) and employer compliance dashboard (Domain 1+2 combined for SME market).
 
 - [ ] **pagibig-loans** — Pag-IBIG/HDMF (RA 9679): monthly savings contributions, housing loan amortization (annuity formula), multi-purpose loan (MPL) computation, TAV accumulation, penalty formula (1/20 of 1%/day). ~15M+ members.
 
