@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 32
-- Analyzed: 6
-- Pending: 26
-- Convergence: 19%
+- Analyzed: 7
+- Pending: 25
+- Convergence: 22%
 
 ## Wave 0: Regulatory Body Inventory
 
@@ -24,7 +24,7 @@
 
 - [x] **boc-customs-duties** — Bureau of Customs (RA 10863 CMTA): CIF valuation + duty rate by AHTN/HS code + 12% VAT on landed cost + excise tax (alcohol, tobacco, petroleum, autos); de minimis threshold (₱10K FOB); dumping/safeguard duties. ~1M+ import transactions/year. → wrote analysis/wave1-boc-customs-duties.md; 5 domains identified: landed cost calculator (4.20), PCA compliance checker (3.90), automobile excise calculator (3.85), FTA rate optimizer (3.35), petroleum/excise (3.00). Top opportunity: landed cost + HS lookup tool serving millions of Filipino e-commerce importers and 100K+ SMEs.
 
-- [ ] **lto-registration** — Land Transportation Office (RA 4136, RA 8794): MVUC graduated table by vehicle type/weight/year model; late penalty (50% surcharge); EV discount (30% battery, 15% hybrid); driver's license application/renewal fees. ~10M+ registered vehicles.
+- [x] **lto-registration** — Land Transportation Office (RA 4136, RA 8794): MVUC graduated table by vehicle type/weight/year model; late penalty (50% surcharge); EV discount (30% battery, 15% hybrid); driver's license application/renewal fees. ~10M+ registered vehicles. → wrote analysis/wave1-lto-registration.md; 4 domains identified: MVUC + total registration cost calculator (4.40), late penalty calculator (3.90), vehicle transfer cost estimator (3.75), driver's license cost calculator (3.40). Top opportunity: unified LTO fee calculator covering MVUC + emission + CTPL + delinquency computation — ~14M annual transactions, fixer-demand driven by fee confusion across 4 agencies, fully deterministic from RA 8794 + LTO MCs.
 
 - [ ] **prc-licensure** — Professional Regulation Commission (RA 8981): 43 professional boards each with distinct CPD unit requirements (15–45 units/3 years); licensure exam fees; renewal fees; foreign professional surcharge. ~4M+ licensed professionals.
 
