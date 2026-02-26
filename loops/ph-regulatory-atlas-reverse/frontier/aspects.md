@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 32
-- Analyzed: 8
-- Pending: 24
-- Convergence: 25%
+- Analyzed: 9
+- Pending: 23
+- Convergence: 28%
 
 ## Wave 0: Regulatory Body Inventory
 
@@ -28,7 +28,7 @@
 
 - [x] **prc-licensure** — Professional Regulation Commission (RA 8981): 43 professional boards each with distinct CPD unit requirements (15–45 units/3 years); licensure exam fees; renewal fees; foreign professional surcharge. ~4M+ licensed professionals. → wrote analysis/wave1-prc-licensure.md; 4 domains identified: CPD compliance eligibility calculator (4.00, fully deterministic from RA 10912 + PRB resolutions, OFW exemption + SDL cap + carryover logic), renewal fee + surcharge calculator (3.85), board exam application eligibility checker (3.20), CPD cost optimizer/seminar selector (3.75). Top opportunity: unified PRC Compliance Dashboard combining domains 1+2+4 — 4M+ professionals × triennial renewal cycle, no comprehensive tool exists, CPD seminar pain extreme (43K petition signatures).
 
-- [ ] **marina-seafarer-certs** — MARINA (RA 9295, RA 10635, STCW Convention): COC/COP fee schedule (622 line items in MC GC-2026-01); SIRB/seaman's book fees; vessel registration; Certificate of Marine Profession (CMP); STCW endorsement fees. ~500K+ active seafarers.
+- [x] **marina-seafarer-certs** — MARINA (RA 9295, RA 10635, STCW Convention, RA 12021): COC/COP fee schedule (622 line items in MC GC-2026-01); SID/SRB seaman's book; vessel ATF computation; STCW training requirements. 576K+ deployed seafarers (2023 all-time high); 4 domains identified: STCW Certification Pathway & Sea Service Eligibility Calculator (4.05), Total STCW Certification Cost Calculator (4.10), COC/COP Document Checklist Generator (3.80), Annual Tonnage Fee calculator (3.20). Top opportunity: combined STCW Cost Calculator (Domain 2) + Pathway Eligibility (Domain 1) — 115K+ revalidations/year; missed deployment = direct income loss; 622-line fee schedule inaccessible to ordinary seafarers; RA 12021 (2024) will make training fees fully deterministic once MARINA issues implementing rules. → wrote analysis/wave1-marina-seafarer-certs.md
 
 - [ ] **dmw-ofw-compliance** — DMW/POEA (RA 11641, RA 10022): placement fee cap = 1 month basic salary (or zero for no-fee categories); OWWA membership = USD 25/contract; PDOS/PEOS fee; documentary requirement matrix; penalty for illegal fee collection. 2.19M active OFWs.
 
