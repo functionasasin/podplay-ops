@@ -18,3 +18,24 @@ export type { AdoptionSubFormProps } from './AdoptionSubForm';
 
 export { FiliationSection } from './FiliationSection';
 export type { FiliationSectionProps } from './FiliationSection';
+
+export { WillStep } from './WillStep';
+export type { WillStepProps } from './WillStep';
+
+export { InstitutionsTab, SHARE_SPEC_OPTIONS } from './InstitutionsTab';
+export type { InstitutionsTabProps } from './InstitutionsTab';
+
+export { LegaciesTab, LEGACY_SPEC_OPTIONS } from './LegaciesTab';
+export type { LegaciesTabProps } from './LegaciesTab';
+
+export { DevisesTab, DEVISE_SPEC_OPTIONS } from './DevisesTab';
+export type { DevisesTabProps } from './DevisesTab';
+
+export { DisinheritancesTab, COMPULSORY_RELATIONSHIPS } from './DisinheritancesTab';
+export type { DisinheritancesTabProps } from './DisinheritancesTab';
+
+export { HeirReferenceForm } from './HeirReferenceForm';
+export type { HeirReferenceFormProps } from './HeirReferenceForm';
+
+export { ShareSpecForm, SHARE_SPEC_UNIT_VARIANTS, serializeShareSpec, deserializeShareSpec } from './ShareSpecForm';
+export type { ShareSpecFormProps } from './ShareSpecForm';

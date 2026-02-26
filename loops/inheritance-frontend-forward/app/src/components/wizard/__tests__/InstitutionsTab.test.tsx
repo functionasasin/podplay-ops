@@ -133,7 +133,7 @@ describe('wizard-step4 > InstitutionsTab', () => {
     it('renders empty state when no institutions', () => {
       render(<InstitutionsTabWrapper />);
       expect(
-        screen.getByText(/No institutions added/i)
+        screen.getByText(/None added yet/i)
       ).toBeInTheDocument();
     });
   });
