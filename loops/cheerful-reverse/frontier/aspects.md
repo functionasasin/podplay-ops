@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total aspects**: 27
-- **Analyzed**: 16
-- **Pending**: 11
-- **Convergence**: 59%
+- **Analyzed**: 17
+- **Pending**: 10
+- **Convergence**: 63%
 
 ## Wave 1: Layer-by-Layer Extraction (13 aspects)
 
@@ -28,7 +28,7 @@
 - [x] user-journeys — Every distinct user journey end-to-end across all layers, organized by persona
 - [x] data-flow-map — Entity lifecycle tracking from creation → processing → storage → display
 - [x] integration-points — All external integrations: Gmail, SMTP, Shopify, YouTube, Slack, Apify, PostHog
-- [ ] auth-permissions — Supabase Auth, team model, RLS policies, permission matrix
+- [x] auth-permissions — Supabase Auth, team model, RLS policies, permission matrix
 - [ ] campaign-lifecycle — Full campaign state machine from creation → launch → outreach → tracking → reporting
 - [ ] ai-orchestration — Every place Claude/AI is used across the stack, prompt strategies, orchestration patterns
 
