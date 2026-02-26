@@ -114,10 +114,10 @@ describe('wizard-step4 > WillStep', () => {
 
     it('renders 4 sub-tabs', () => {
       render(<WillStepWrapper />);
-      expect(screen.getByText(/Institutions/i)).toBeInTheDocument();
-      expect(screen.getByText(/Legacies/i)).toBeInTheDocument();
-      expect(screen.getByText(/Devises/i)).toBeInTheDocument();
-      expect(screen.getByText(/Disinheritances/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^Institutions$/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^Legacies$/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^Devises$/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^Disinheritances$/i })).toBeInTheDocument();
     });
 
     it('defaults to Institutions sub-tab active', () => {

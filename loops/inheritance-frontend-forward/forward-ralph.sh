@@ -53,17 +53,17 @@ declare -A STAGE_DEPS=(
     [12]="1 2 3 4 5 6 7 8 9 10 11"
 )
 
-# Test filter patterns for vitest
+# Test filter patterns for vitest (file path substrings, pipe-separated → split to args)
 declare -A STAGE_TEST_FILTERS=(
     [1]="smoke"
     [2]="types"
     [3]="schemas"
     [4]="wasm"
     [5]="shared"
-    [6]="wizard-step1|wizard-step2|estate|decedent"
-    [7]="wizard-step3|family-tree|person"
-    [8]="wizard-step4|will|institution|legacy|devise|disinheritance"
-    [9]="wizard-step5|wizard-step6|donation|review"
+    [6]="EstateStep|DecedentStep|WizardContainer"
+    [7]="FamilyTreeStep|PersonCard|AdoptionSubForm|FiliationSection"
+    [8]="WillStep|InstitutionsTab|LegaciesTab|DevisesTab|DisinheritancesTab|ShareSpecForm|HeirReferenceForm"
+    [9]="DonationsStep|DonationCard|ReviewStep"
     [10]="results"
     [11]="validation|warning"
     [12]="integration|e2e"
@@ -121,8 +121,12 @@ run_tests() {
         return
     fi
 
+    # Split pipe-separated filter into separate vitest positional args
+    local -a filter_args
+    IFS='|' read -ra filter_args <<< "$filter"
+
     local output
-    output=$(cd "$APP_DIR" && npx vitest run --reporter=verbose 2>&1) || true
+    output=$(cd "$APP_DIR" && npx vitest run --reporter=verbose --no-color "${filter_args[@]}" 2>&1) || true
     echo "$output"
 }
 
