@@ -108,7 +108,8 @@ You are a development agent in a forward ralph loop. Each time you run, you do O
 | 9 | Wizard Steps 5-6 | `wizard-step5\|wizard-step6\|donation\|review` | `synthesis/wizard-steps.md` §5-6 | 7 |
 | 10 | Results View | `results` | `synthesis/results-view.md` | 4 |
 | 11 | Validation Layer 3 | `validation\|warning` | `invalid-combinations.md`, `conditional-visibility.md` | 6, 7, 8, 9 |
-| 12 | Integration & Polish | `integration\|e2e` | `synthesis/spec-summary.md` | all |
+| 12 | Integration & Polish | `integration\|e2e` | `synthesis/spec-summary.md` | all 1-11 |
+| 13 | Real WASM Engine | `wasm-real\|wasm-engine` | Rust source at `loops/inheritance-rust-forward/` | 4, 12 |
 
 ## Stage Details
 
@@ -404,6 +405,90 @@ Produce:
 - Integration test: export JSON → parse as EngineInput → valid
 - Integration test: copy narratives → clipboard content matches
 - Integration test: edit input → returns to wizard with state preserved
+
+### Stage 13 — Real WASM Engine
+
+Replace the Stage 4 mock bridge with the actual Rust inheritance engine compiled to WASM.
+
+**Rust engine location**: `../../loops/inheritance-rust-forward/` (relative to loop dir)
+- Public API: `pub fn run_pipeline(input: &EngineInput) -> EngineOutput` in `src/pipeline.rs`
+- All types have `Serialize`/`Deserialize` — JSON in, JSON out
+- 411 Rust tests passing, fully working engine
+- Example input: `loops/inheritance-rust-forward/examples/simple-intestate.json`
+
+**Step 1 — Add wasm-bindgen to the Rust project**:
+- Edit `loops/inheritance-rust-forward/Cargo.toml`:
+  - Add `[lib]` section: `crate-type = ["cdylib", "rlib"]`
+  - Add dependency: `wasm-bindgen = "0.2"`
+  - Add dependency: `getrandom = { version = "0.2", features = ["js"] }` (if needed for WASM target)
+- Create a `#[wasm_bindgen]` entry point in `src/lib.rs`:
+  ```rust
+  use wasm_bindgen::prelude::*;
+
+  #[wasm_bindgen]
+  pub fn compute_json(input_json: &str) -> Result<String, JsValue> {
+      let input: EngineInput = serde_json::from_str(input_json)
+          .map_err(|e| JsValue::from_str(&e.to_string()))?;
+      let output = run_pipeline(&input);
+      serde_json::to_string(&output)
+          .map_err(|e| JsValue::from_str(&e.to_string()))
+  }
+  ```
+- Verify `cargo build` still works after changes
+- Verify existing Rust tests still pass: `cargo test`
+
+**Step 2 — Build WASM package**:
+- Install wasm-pack if needed: `cargo install wasm-pack`
+- Build: `wasm-pack build --target web --out-dir ../../loops/inheritance-frontend-forward/app/src/wasm/pkg`
+- This produces: `inheritance_engine_bg.wasm`, `inheritance_engine.js`, `inheritance_engine.d.ts`
+- Add `app/src/wasm/pkg/` to `.gitignore` (generated artifact)
+- Add a build script to `app/package.json`: `"build:wasm": "wasm-pack build --target web --release --out-dir ../app/src/wasm/pkg ../../loops/inheritance-rust-forward"`
+
+**Step 3 — Replace mock bridge with real WASM**:
+- Update `src/wasm/bridge.ts`:
+  ```typescript
+  import init, { compute_json } from './pkg/inheritance_engine';
+
+  let initialized = false;
+
+  export async function compute(input: EngineInput): Promise<EngineOutput> {
+    if (!initialized) {
+      await init();
+      initialized = true;
+    }
+    const resultJson = compute_json(JSON.stringify(input));
+    return JSON.parse(resultJson);
+  }
+  ```
+- Keep the mock `compute()` as `computeMock()` for test fallback
+- The public API (`compute(EngineInput) → Promise<EngineOutput>`) stays identical
+
+**Step 4 — Write tests**:
+- Test file: `src/wasm/__tests__/wasm-real.test.ts`
+- Use the example input from `loops/inheritance-rust-forward/examples/simple-intestate.json`
+- Tests must validate structural correctness, NOT mock-specific values
+
+**Tests** (`src/wasm/__tests__/wasm-real.test.ts`):
+- `compute()` with simple intestate input returns valid EngineOutput
+- Output `per_heir_shares[]` has one entry per heir in input
+- Output `narratives[]` has one entry per heir
+- Output `scenario_code` is a valid ScenarioCode enum value
+- Output `succession_type` matches input (intestate when will=null)
+- Output `computation_log` has at least one step
+- Output Money fields have `centavos` property
+- `compute()` with invalid input throws/rejects
+- Known scenario: 2 LC + spouse intestate → scenario I1, 3 heir shares
+- Total of all `per_heir_shares[].total.centavos` equals input `net_distributable_estate.centavos`
+
+**Vite config**: Add WASM support to `vite.config.ts`:
+- Install `vite-plugin-wasm` and `vite-plugin-top-level-await`
+- Configure the plugins so `.wasm` files load correctly in dev and build
+
+**Important notes**:
+- The Rust project is at `../../loops/inheritance-rust-forward/` relative to the loop dir
+- Do NOT copy Rust source files — build WASM in-place and output to the frontend's `src/wasm/pkg/`
+- The WASM build is a one-time step; the `.wasm` file is a build artifact, not checked in
+- If wasm-pack is not available, document the install command and skip to writing tests with a TODO
 
 ## Serialization Rules (CRITICAL)
 

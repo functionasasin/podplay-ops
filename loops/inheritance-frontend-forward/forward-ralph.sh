@@ -3,7 +3,7 @@
 # Runs Claude Code repeatedly to build one stage at a time.
 #
 # Usage:
-#   ./forward-ralph.sh [stage_number]   # Build a specific stage (1-12)
+#   ./forward-ralph.sh [stage_number]   # Build a specific stage (1-13)
 #   ./forward-ralph.sh                  # Auto-detect lowest incomplete stage
 #   ./forward-ralph.sh all              # Build all stages sequentially
 
@@ -19,7 +19,7 @@ MAX_ITERATIONS=${2:-40}
 SLEEP_BETWEEN=5
 
 # Dev order (sequential)
-DEV_ORDER=(1 2 3 4 5 6 7 8 9 10 11 12)
+DEV_ORDER=(1 2 3 4 5 6 7 8 9 10 11 12 13)
 
 # Stage names for display
 declare -A STAGE_NAMES=(
@@ -35,6 +35,7 @@ declare -A STAGE_NAMES=(
     [10]="Results View"
     [11]="Validation Layer 3"
     [12]="Integration & Polish"
+    [13]="Real WASM Engine"
 )
 
 # Stage dependencies (space-separated upstream stage numbers)
@@ -51,6 +52,7 @@ declare -A STAGE_DEPS=(
     [10]="4"
     [11]="6 7 8 9"
     [12]="1 2 3 4 5 6 7 8 9 10 11"
+    [13]="4 12"
 )
 
 # Test filter patterns for vitest (file path substrings, pipe-separated → split to args)
@@ -67,6 +69,7 @@ declare -A STAGE_TEST_FILTERS=(
     [10]="results"
     [11]="validation|warning"
     [12]="integration|e2e"
+    [13]="wasm-real|wasm-engine"
 )
 
 cd "$WORK_DIR"
@@ -161,6 +164,7 @@ update_frontier() {
         10) spec_sections="- Results view: synthesis/results-view.md\n- 5 sections, 7 layout variants, Recharts pie chart" ;;
         11) spec_sections="- Validation: invalid-combinations.md\n- Conditional visibility: conditional-visibility.md\n- 13 pre-submission warnings" ;;
         12) spec_sections="- Full integration: synthesis/spec-summary.md\n- WASM bridge prep, export, e2e flow" ;;
+        13) spec_sections="- Rust engine: loops/inheritance-rust-forward/\n- Compile to WASM, replace mock bridge with real engine" ;;
     esac
 
     cat > "$CURRENT_STAGE_FILE" << FRONTIER_EOF
@@ -294,7 +298,7 @@ elif [ "$MODE" = "auto" ]; then
 else
     STAGE="$MODE"
     if [ -z "${STAGE_NAMES[$STAGE]+x}" ]; then
-        echo "ERROR: Unknown stage '$STAGE'. Valid: 1 2 3 4 5 6 7 8 9 10 11 12 all"
+        echo "ERROR: Unknown stage '$STAGE'. Valid: 1 2 3 4 5 6 7 8 9 10 11 12 13 all"
         exit 1
     fi
     run_stage "$STAGE"
