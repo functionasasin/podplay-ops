@@ -1,10 +1,10 @@
 # Metro Manila Transit Routes — Frontier
 
 ## Statistics
-- Total aspects: 83
-- Analyzed: 19
+- Total aspects: 84
+- Analyzed: 20
 - Pending: 64
-- Convergence: 23%
+- Convergence: 24%
 
 ---
 
@@ -32,7 +32,9 @@
 - [x] Grab transport — GrabBus routes, Grab shuttle routes if any
 - [x] Chalo app Metro Manila — real-time GPS bus/jeepney tracking, route database underlying live tracking system
 - [x] Komyut app (github.com/vrymel/komyut) — open-source Filipino route planner, extract jeepney route dataset from GitHub repo
-- [ ] Komyut AI app (komyut-app.vercel.app) — separate AI-powered Metro Manila transit planner (different from vrymel/komyut); assess route coverage and data extractability
+- [x] Komyut AI app (komyut-app.vercel.app) — separate AI-powered Metro Manila transit planner (different from vrymel/komyut); assess route coverage and data extractability
+
+- [ ] PinoyCommute.com — static route guide claiming current 2025 fares and terminal info for jeepneys, buses, MRT, LRT; may have structured route listings worth extracting
 
 ### Open Data & Mapping Projects
 - [ ] OpenStreetMap — transit relations for NCR, bus routes, jeepney routes tagged
