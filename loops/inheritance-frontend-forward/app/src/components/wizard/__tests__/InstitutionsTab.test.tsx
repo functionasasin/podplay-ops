@@ -201,7 +201,7 @@ describe('wizard-step4 > InstitutionsTab', () => {
       const user = userEvent.setup();
       render(<InstitutionsTabWrapper />);
       await user.click(screen.getByText(/Add Institution/i));
-      expect(screen.getByText(/Heir/i)).toBeInTheDocument();
+      expect(screen.getByTestId('heir-reference-form')).toBeInTheDocument();
       expect(screen.getByText(/Heir Name/i)).toBeInTheDocument();
     });
 
@@ -282,7 +282,7 @@ describe('wizard-step4 > InstitutionsTab', () => {
 
       await waitFor(() => {
         // FractionInput should appear with numerator/denominator
-        expect(screen.getByText(/Fraction/i)).toBeInTheDocument();
+        expect(screen.getByTestId('fraction-input')).toBeInTheDocument();
       });
     });
 

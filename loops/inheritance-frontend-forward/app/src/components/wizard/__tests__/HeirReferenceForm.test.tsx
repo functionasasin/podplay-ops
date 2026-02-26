@@ -115,7 +115,7 @@ describe('wizard-step4 > HeirReferenceForm', () => {
 
     it('renders PersonPicker for heir selection', () => {
       render(<HeirReferenceFormWrapper />);
-      expect(screen.getByText(/Heir/i)).toBeInTheDocument();
+      expect(screen.getByTestId('person-picker')).toBeInTheDocument();
     });
 
     it('renders name input field', () => {
@@ -134,7 +134,7 @@ describe('wizard-step4 > HeirReferenceForm', () => {
       const user = userEvent.setup();
       render(<HeirReferenceFormWrapper />);
       // Select Juan Cruz from person picker
-      const select = screen.getByLabelText(/Heir/i);
+      const select = screen.getByRole('combobox');
       await user.selectOptions(select, 'lc1');
       await waitFor(() => {
         const nameInput = screen.getByLabelText(/Heir Name/i);

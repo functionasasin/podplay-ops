@@ -215,14 +215,11 @@ function LegacyCard({
               }}
             />
           </label>
-          <label>
-            <span>Estimated Value</span>
-            <MoneyInput<EngineInput>
-              name={`${basePath}.property.GenericClass.1.centavos` as any}
-              label="Estimated Value"
-              control={control}
-            />
-          </label>
+          <MoneyInput<EngineInput>
+            name={`${basePath}.property.GenericClass.1.centavos` as any}
+            label="Estimated Value"
+            control={control}
+          />
         </div>
       )}
 
