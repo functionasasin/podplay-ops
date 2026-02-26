@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 84
-- Analyzed: 25
-- Pending: 59
-- Convergence: 30%
+- Analyzed: 26
+- Pending: 58
+- Convergence: 31%
 
 ---
 
@@ -41,7 +41,7 @@
 - [x] OpenStreetMap — stop/station nodes tagged as bus_stop, platform, etc.
 - [x] Mapillary/KartaView — street-level imagery of route signage and terminals
 - [x] Open Transit Data initiatives — any GTFS feeds published for Manila
-- [ ] TUMI Datahub Manila GTFS — DOTr/LRTA/LTFRB/MRTC/PNR-affiliated GTFS dataset (hub.tumidata.org/dataset/gtfs-manila)
+- [x] TUMI Datahub Manila GTFS — DOTr/LRTA/LTFRB/MRTC/PNR-affiliated GTFS dataset (hub.tumidata.org/dataset/gtfs-manila)
 - [ ] SafeTravelPH — crowdsourced bus operational data, GPS stop coordinates, EDSA Carousel research
 - [ ] Citizen mapping projects — community-driven route mapping efforts (OpenRouteService, etc.)
 
