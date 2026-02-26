@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 32
-- Analyzed: 5
-- Pending: 27
-- Convergence: 16%
+- Analyzed: 6
+- Pending: 26
+- Convergence: 19%
 
 ## Wave 0: Regulatory Body Inventory
 
@@ -22,7 +22,7 @@
 
 - [x] **gsis-retirement** — GSIS (RA 8291): BMP = 0.025 × (AMC + ₱700) × PPP; max 90% of AMC; Option 1 (60 months lump sum) vs. Option 2 (18 months cash + immediate pension); disability gradings; portability with SSS under RA 7699. 2.12M active members (2024); 6 domains identified; top opportunities: BMP retirement pension + Option 1/2 NPV decision (4.00) and legacy law selection RA 660/RA 1616/PD 1146/RA 8291 (3.80) — 200K+ pre-1997 employees facing irreversible benefit-maximization choice worth ₱5K-20K/month in pension differential. → wrote analysis/wave1-gsis-retirement.md
 
-- [ ] **boc-customs-duties** — Bureau of Customs (RA 10863 CMTA): CIF valuation + duty rate by AHTN/HS code + 12% VAT on landed cost + excise tax (alcohol, tobacco, petroleum, autos); de minimis threshold (₱10K FOB); dumping/safeguard duties. ~1M+ import transactions/year.
+- [x] **boc-customs-duties** — Bureau of Customs (RA 10863 CMTA): CIF valuation + duty rate by AHTN/HS code + 12% VAT on landed cost + excise tax (alcohol, tobacco, petroleum, autos); de minimis threshold (₱10K FOB); dumping/safeguard duties. ~1M+ import transactions/year. → wrote analysis/wave1-boc-customs-duties.md; 5 domains identified: landed cost calculator (4.20), PCA compliance checker (3.90), automobile excise calculator (3.85), FTA rate optimizer (3.35), petroleum/excise (3.00). Top opportunity: landed cost + HS lookup tool serving millions of Filipino e-commerce importers and 100K+ SMEs.
 
 - [ ] **lto-registration** — Land Transportation Office (RA 4136, RA 8794): MVUC graduated table by vehicle type/weight/year model; late penalty (50% surcharge); EV discount (30% battery, 15% hybrid); driver's license application/renewal fees. ~10M+ registered vehicles.
 
