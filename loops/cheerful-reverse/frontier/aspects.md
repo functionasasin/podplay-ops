@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total aspects**: 27
-- **Analyzed**: 21
-- **Pending**: 6
-- **Convergence**: 78%
+- **Analyzed**: 22
+- **Pending**: 5
+- **Convergence**: 81%
 
 ## Wave 1: Layer-by-Layer Extraction (13 aspects)
 
@@ -36,7 +36,7 @@
 
 - [x] spec-data-model — Canonical data model spec with ER diagram, table specs, relationships, RLS
 - [x] spec-backend-api — API contract spec with full endpoint catalog, schemas, auth requirements
-- [ ] spec-workflows — Workflow orchestration spec with activity sequences, retry behavior, error handling
+- [x] spec-workflows — Workflow orchestration spec with activity sequences, retry behavior, error handling
 - [ ] spec-webapp — Frontend architecture spec with route map, component hierarchy, state management
 - [ ] spec-context-engine — Context engine spec with MCP tool contracts, Slack bot patterns, prompts
 - [ ] spec-integrations — External integrations spec with auth, data flow, failure handling per service
