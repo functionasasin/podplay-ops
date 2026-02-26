@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 32
-- Analyzed: 14
-- Pending: 18
-- Convergence: 44%
+- Analyzed: 15
+- Pending: 17
+- Convergence: 47%
 
 ## Wave 0: Regulatory Body Inventory
 
@@ -42,7 +42,7 @@
 
 ### MEDIUM Priority (14 aspects)
 
-- [ ] **cda-cooperative-registration** — CDA (RA 9520): registration fee = 0.1% of authorized share capital (min ₱2K); annual audit requirements; tax exemption eligibility (cooperative income, dividend); re-registration fees. ~26K+ registered cooperatives.
+- [x] **cda-cooperative-registration** — CDA (RA 9520): registration fee = 0.1% of authorized share capital (min ₱2K); annual audit requirements; tax exemption eligibility (cooperative income, dividend); re-registration fees. ~20K+ active cooperatives; 4 domains identified; top opportunity: CTE Eligibility Checker + Compliance Dashboard combining net surplus distribution checker (Domain 2, 3.55) + CTE navigator (Domain 3, 3.70) + compliance calendar (Domain 4, 3.20) — 20K cooperatives × recurring annual multi-agency compliance (CDA + BIR), no existing tool, fully deterministic from RA 9520 Arts. 60–61–86–87 + Joint Rules. The 60-day CTE initial filing window (almost universally missed) is the highest-pain entry point with clear immediate value. → wrote analysis/wave1-cda-cooperative-registration.md
 
 - [ ] **npc-data-privacy-compliance** — NPC (RA 10173 DPA): DPO appointment/registration, DPS registration, breach notification (72-hour rule), privacy impact assessment triggers, graduated penalty computation (₱500K–₱5M + imprisonment). All organizations processing personal data of Filipinos.
 
