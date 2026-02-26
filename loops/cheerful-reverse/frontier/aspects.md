@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total aspects**: 27
-- **Analyzed**: 19
-- **Pending**: 8
-- **Convergence**: 70%
+- **Analyzed**: 20
+- **Pending**: 7
+- **Convergence**: 74%
 
 ## Wave 1: Layer-by-Layer Extraction (13 aspects)
 
@@ -34,7 +34,7 @@
 
 ## Wave 3: Synthesis (8 aspects)
 
-- [ ] spec-data-model — Canonical data model spec with ER diagram, table specs, relationships, RLS
+- [x] spec-data-model — Canonical data model spec with ER diagram, table specs, relationships, RLS
 - [ ] spec-backend-api — API contract spec with full endpoint catalog, schemas, auth requirements
 - [ ] spec-workflows — Workflow orchestration spec with activity sequences, retry behavior, error handling
 - [ ] spec-webapp — Frontend architecture spec with route map, component hierarchy, state management
