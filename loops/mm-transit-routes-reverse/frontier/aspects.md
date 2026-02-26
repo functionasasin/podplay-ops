@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 84
-- Analyzed: 20
-- Pending: 64
-- Convergence: 24%
+- Analyzed: 21
+- Pending: 63
+- Convergence: 25%
 
 ---
 
@@ -34,7 +34,7 @@
 - [x] Komyut app (github.com/vrymel/komyut) — open-source Filipino route planner, extract jeepney route dataset from GitHub repo
 - [x] Komyut AI app (komyut-app.vercel.app) — separate AI-powered Metro Manila transit planner (different from vrymel/komyut); assess route coverage and data extractability
 
-- [ ] PinoyCommute.com — static route guide claiming current 2025 fares and terminal info for jeepneys, buses, MRT, LRT; may have structured route listings worth extracting
+- [x] PinoyCommute.com — static route guide claiming current 2025 fares and terminal info for jeepneys, buses, MRT, LRT; may have structured route listings worth extracting
 
 ### Open Data & Mapping Projects
 - [ ] OpenStreetMap — transit relations for NCR, bus routes, jeepney routes tagged

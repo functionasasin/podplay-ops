@@ -1,0 +1,7 @@
+{
+  "source": "blog",
+  "retrieved_date": "2026-02-26",
+  "source_url": "https://www.pinoycommute.com/",
+  "source_notes": "Consumer-facing OD-pair commute guide site. Content is narrative step-by-step directions, not a structured route database. No route codes, stop coordinates, shapes, or GTFS-compatible data. Site aggressively blocks scraping (HTTP 429). Zero routes extractable. AI-generated or template-driven content covering Metro Manila + Cebu + provincial routes. One known fare error: modern jeepney listed as PHP14 base (actual: PHP15 per LTFRB MC 2023-038).",
+  "routes": []
+}
