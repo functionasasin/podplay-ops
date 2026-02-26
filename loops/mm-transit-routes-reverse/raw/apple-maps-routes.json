@@ -1,0 +1,52 @@
+{
+  "source": "apple_maps",
+  "retrieved_date": "2026-02-26",
+  "notes": "Apple Maps added Manila transit in December 2018 but coverage is limited to rail only. Current Apple PH iOS Feature Availability page does not list transit directions for Philippines. No bus, jeepney, UV Express, or P2P data available. Apple Maps is not a viable data source for this project. Rail lines documented below for completeness only — use TUMI Datahub GTFS as authoritative rail source instead.",
+  "routes": [
+    {
+      "route_id": "apple-lrt1",
+      "route_name": "LRT Line 1",
+      "mode": "rail",
+      "origin": "Roosevelt",
+      "destination": "Baclaran",
+      "key_stops": ["Roosevelt", "Balintawak", "Monumento", "5th Avenue", "R. Papa", "Abad Santos", "Blumentritt", "Tayuman", "Bambang", "Doroteo Jose", "Carriedo", "Central Terminal", "United Nations", "Pedro Gil", "Quirino", "Vito Cruz", "Gil Puyat", "Libertad", "EDSA", "Baclaran"],
+      "fare_min": 15,
+      "fare_max": 30,
+      "frequency_notes": "Every 4-6 minutes peak, 8-12 minutes off-peak",
+      "geometry_available": false,
+      "geometry_source": null,
+      "confidence": "low",
+      "notes": "Rail outline likely present in Apple Maps since 2018 but not confirmed current. Use LRTA official data / TUMI Datahub GTFS instead."
+    },
+    {
+      "route_id": "apple-lrt2",
+      "route_name": "LRT Line 2",
+      "mode": "rail",
+      "origin": "Recto",
+      "destination": "Antipolo",
+      "key_stops": ["Recto", "Legarda", "Pureza", "V. Mapa", "J. Ruiz", "Gilmore", "Betty Go-Belmonte", "Araneta-Cubao", "Anonas", "Katipunan", "Santolan", "Marikina-Pasig", "Antipolo"],
+      "fare_min": 15,
+      "fare_max": 30,
+      "frequency_notes": "Every 4-6 minutes peak, 10-15 minutes off-peak",
+      "geometry_available": false,
+      "geometry_source": null,
+      "confidence": "low",
+      "notes": "Rail outline likely present in Apple Maps since 2018 but not confirmed current. Antipolo extension opened 2021 — may not be reflected."
+    },
+    {
+      "route_id": "apple-mrt3",
+      "route_name": "MRT Line 3",
+      "mode": "rail",
+      "origin": "North Avenue",
+      "destination": "Taft Avenue",
+      "key_stops": ["North Avenue", "Quezon Avenue", "GMA-Kamuning", "Araneta-Cubao", "Santolan-Annapolis", "Ortigas", "Shaw Boulevard", "Boni", "Guadalupe", "Buendia", "Ayala", "Magallanes", "Taft Avenue"],
+      "fare_min": 13,
+      "fare_max": 28,
+      "frequency_notes": "Every 3-5 minutes peak, 6-10 minutes off-peak",
+      "geometry_available": false,
+      "geometry_source": null,
+      "confidence": "low",
+      "notes": "Rail outline likely present in Apple Maps since 2018 but not confirmed current. Use MRTC official data / TUMI Datahub GTFS instead."
+    }
+  ]
+}
