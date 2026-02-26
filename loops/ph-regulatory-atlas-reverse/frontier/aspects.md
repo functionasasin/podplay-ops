@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 32
-- Analyzed: 9
-- Pending: 23
-- Convergence: 28%
+- Analyzed: 10
+- Pending: 22
+- Convergence: 31%
 
 ## Wave 0: Regulatory Body Inventory
 
@@ -30,7 +30,7 @@
 
 - [x] **marina-seafarer-certs** — MARINA (RA 9295, RA 10635, STCW Convention, RA 12021): COC/COP fee schedule (622 line items in MC GC-2026-01); SID/SRB seaman's book; vessel ATF computation; STCW training requirements. 576K+ deployed seafarers (2023 all-time high); 4 domains identified: STCW Certification Pathway & Sea Service Eligibility Calculator (4.05), Total STCW Certification Cost Calculator (4.10), COC/COP Document Checklist Generator (3.80), Annual Tonnage Fee calculator (3.20). Top opportunity: combined STCW Cost Calculator (Domain 2) + Pathway Eligibility (Domain 1) — 115K+ revalidations/year; missed deployment = direct income loss; 622-line fee schedule inaccessible to ordinary seafarers; RA 12021 (2024) will make training fees fully deterministic once MARINA issues implementing rules. → wrote analysis/wave1-marina-seafarer-certs.md
 
-- [ ] **dmw-ofw-compliance** — DMW/POEA (RA 11641, RA 10022): placement fee cap = 1 month basic salary (or zero for no-fee categories); OWWA membership = USD 25/contract; PDOS/PEOS fee; documentary requirement matrix; penalty for illegal fee collection. 2.19M active OFWs.
+- [x] **dmw-ofw-compliance** — DMW/POEA (RA 11641, RA 10022): placement fee cap = 1 month basic salary (or zero for no-fee categories); OWWA membership = USD 25/contract; PDOS/PEOS fee; documentary requirement matrix; penalty for illegal fee collection. 2.19M active OFWs. → wrote analysis/wave1-dmw-ofw-compliance.md; 4 domains identified: Placement Fee Legality Checker (4.35, fully deterministic binary tree: country list + job category + 1×salary cap = max allowable fee), Total Pre-Departure Cost Calculator (3.80), OFW Documentary Matrix Generator (3.55), OWWA Benefits Computation Tool (3.60). Top opportunity: "OFW Fee Shield" combining Domains 1+2 — targets the documented ₱45K–₱200K per-victim illegal fee epidemic, 500K+ new deployments/year, fully deterministic from RA 10022 Sec. 6 + DMW-DC-01-2023 Sec. 49–54 + annual country advisory updates; no judgment required, pure information asymmetry moat.
 
 - [ ] **fda-product-registration** — FDA (RA 9711): CPR + LTO fee schedule (tiered by product category); renewal = 70% of initial fee; late surcharge = 2x renewal + 10%/month (max 120 days); annual LTO renewal. ~50K+ registered health products.
 
