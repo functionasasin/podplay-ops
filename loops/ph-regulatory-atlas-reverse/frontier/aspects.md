@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 32
-- Analyzed: 13
-- Pending: 19
-- Convergence: 41%
+- Analyzed: 14
+- Pending: 18
+- Convergence: 44%
 
 ## Wave 0: Regulatory Body Inventory
 
@@ -38,7 +38,7 @@
 
 - [x] **ipophl-trademark-patent** — IPOPHL (RA 8293 IP Code): trademark registration fee (big vs. small entity, youth = 50%); annual patent maintenance fees (escalating schedule years 1–20); trademark renewal at years 5, 10; industrial design fees. ~42K trademark + ~6.4K patent/UM applications/year; 4 domains identified; top opportunity: IP Portfolio Compliance Dashboard (4.05) combining trademark DAU deadline tracking + patent annuity calendar — 200K–400K active marks + 20K–45K active patents, no IPOPHL self-service tool exists, moat = IP firm retainers (₱5K–₱15K/year) + enterprise docketing software. Second: Trademark Fee Calculator + DAU Tracker (3.80). → wrote analysis/wave1-ipophl-trademark-patent.md
 
-- [ ] **erc-electricity-rates** — Energy Regulatory Commission (RA 9136 EPIRA): distribution wheeling rate formula (Performance-Based Regulation with WACC, RAB, OPEX); lifeline rate subsidy computation; cross-subsidization rules; renewable energy feed-in tariffs. ~25M+ electricity consumers.
+- [x] **erc-electricity-rates** — Energy Regulatory Commission (RA 9136 EPIRA + RA 11552 + RA 9513): 4 domains identified; bill verification tool (12+ unbundled line items per EPIRA Sec. 36, 3.75 score), lifeline rate eligibility calculator (ERC Res. 02 S. 2026, 0–50kWh=100%/51–70kWh=35%/71–100kWh=20%, 4.5M eligible vs 330K enrolled, 3.55 score), net metering credit & payback calculator (DC2024-08-0025, exported kWh × DU blended generation rate, 3.10), FIT adjustment calculator (Res. 16 S. 2010, CPI/FX formula, B2B niche, 2.90). Top opportunity: "Power Check PH" combining bill verification + lifeline eligibility — 18M billed households, fully deterministic from published ERC rate orders, 93% lifeline enrollment gap represents ₱30B+ in unclaimed annual subsidies. → wrote analysis/wave1-erc-electricity-rates.md
 
 ### MEDIUM Priority (14 aspects)
 
