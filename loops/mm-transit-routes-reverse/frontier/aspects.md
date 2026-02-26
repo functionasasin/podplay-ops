@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 84
-- Analyzed: 27
-- Pending: 57
-- Convergence: 32%
+- Analyzed: 28
+- Pending: 56
+- Convergence: 33%
 
 ---
 
@@ -43,7 +43,7 @@
 - [x] Open Transit Data initiatives — any GTFS feeds published for Manila
 - [x] TUMI Datahub Manila GTFS — DOTr/LRTA/LTFRB/MRTC/PNR-affiliated GTFS dataset (hub.tumidata.org/dataset/gtfs-manila)
 - [x] SafeTravelPH — crowdsourced bus operational data, GPS stop coordinates, EDSA Carousel research
-- [ ] Citizen mapping projects — community-driven route mapping efforts (OpenRouteService, etc.)
+- [x] Citizen mapping projects — community-driven route mapping efforts (OpenRouteService, etc.)
 
 ### Academic & International Organization Studies
 - [ ] JICA Metro Manila transport studies — MMUTIS, Dream Plan, route surveys
