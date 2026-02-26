@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 84
-- Analyzed: 22
-- Pending: 62
-- Convergence: 26%
+- Analyzed: 23
+- Pending: 61
+- Convergence: 27%
 
 ---
 
@@ -38,7 +38,7 @@
 
 ### Open Data & Mapping Projects
 - [x] OpenStreetMap — transit relations for NCR, bus routes, jeepney routes tagged
-- [ ] OpenStreetMap — stop/station nodes tagged as bus_stop, platform, etc.
+- [x] OpenStreetMap — stop/station nodes tagged as bus_stop, platform, etc.
 - [ ] Mapillary/KartaView — street-level imagery of route signage and terminals
 - [ ] Open Transit Data initiatives — any GTFS feeds published for Manila
 - [ ] TUMI Datahub Manila GTFS — DOTr/LRTA/LTFRB/MRTC/PNR-affiliated GTFS dataset (hub.tumidata.org/dataset/gtfs-manila)
