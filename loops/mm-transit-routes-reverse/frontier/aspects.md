@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 84
-- Analyzed: 28
-- Pending: 56
-- Convergence: 33%
+- Analyzed: 29
+- Pending: 55
+- Convergence: 35%
 
 ---
 
@@ -46,7 +46,7 @@
 - [x] Citizen mapping projects — community-driven route mapping efforts (OpenRouteService, etc.)
 
 ### Academic & International Organization Studies
-- [ ] JICA Metro Manila transport studies — MMUTIS, Dream Plan, route surveys
+- [x] JICA Metro Manila transport studies — MMUTIS, Dream Plan, route surveys
 - [ ] World Bank Manila transport projects — route data from feasibility studies
 - [ ] Asian Development Bank — Manila public transport improvement projects, route data
 - [ ] UP NCTS (National Center for Transportation Studies) — academic papers on Manila routes
