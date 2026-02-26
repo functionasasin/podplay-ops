@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 80
-- Analyzed: 12
-- Pending: 68
-- Convergence: 15%
+- Analyzed: 13
+- Pending: 67
+- Convergence: 16%
 
 ---
 
@@ -25,7 +25,7 @@
 
 ### Transit App & Platform Data
 - [x] Sakay.ph — all routes in their database, route shapes, coverage assessment
-- [ ] Google Maps transit layer — Manila routes available in Google Transit, GTFS feeds already submitted
+- [x] Google Maps transit layer — Manila routes available in Google Transit, GTFS feeds already submitted
 - [ ] Moovit Manila — routes, user-contributed data, coverage
 - [ ] Transit app — Manila coverage, real-time data availability
 - [ ] Apple Maps transit — Manila routes available
