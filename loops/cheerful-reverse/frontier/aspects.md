@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total aspects**: 27
-- **Analyzed**: 14
-- **Pending**: 13
-- **Convergence**: 52%
+- **Analyzed**: 15
+- **Pending**: 12
+- **Convergence**: 56%
 
 ## Wave 1: Layer-by-Layer Extraction (13 aspects)
 
@@ -26,7 +26,7 @@
 ## Wave 2: Cross-Cutting Analysis (6 aspects)
 
 - [x] user-journeys — Every distinct user journey end-to-end across all layers, organized by persona
-- [ ] data-flow-map — Entity lifecycle tracking from creation → processing → storage → display
+- [x] data-flow-map — Entity lifecycle tracking from creation → processing → storage → display
 - [ ] integration-points — All external integrations: Gmail, SMTP, Shopify, YouTube, Slack, Apify, PostHog
 - [ ] auth-permissions — Supabase Auth, team model, RLS policies, permission matrix
 - [ ] campaign-lifecycle — Full campaign state machine from creation → launch → outreach → tracking → reporting
