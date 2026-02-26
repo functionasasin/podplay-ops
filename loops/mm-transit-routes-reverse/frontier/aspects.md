@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 84
-- Analyzed: 29
-- Pending: 55
-- Convergence: 35%
+- Analyzed: 30
+- Pending: 54
+- Convergence: 36%
 
 ---
 
@@ -47,7 +47,7 @@
 
 ### Academic & International Organization Studies
 - [x] JICA Metro Manila transport studies — MMUTIS, Dream Plan, route surveys
-- [ ] World Bank Manila transport projects — route data from feasibility studies
+- [x] World Bank Manila transport projects — route data from feasibility studies
 - [ ] Asian Development Bank — Manila public transport improvement projects, route data
 - [ ] UP NCTS (National Center for Transportation Studies) — academic papers on Manila routes
 - [ ] DLSU/Ateneo/UST transport research — thesis papers on jeepney/bus routes
