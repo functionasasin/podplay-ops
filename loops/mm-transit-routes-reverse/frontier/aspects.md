@@ -1,10 +1,10 @@
 # Metro Manila Transit Routes — Frontier
 
 ## Statistics
-- Total aspects: 84
-- Analyzed: 33
+- Total aspects: 85
+- Analyzed: 34
 - Pending: 51
-- Convergence: 39%
+- Convergence: 40%
 
 ---
 
@@ -51,7 +51,8 @@
 - [x] Asian Development Bank — Manila public transport improvement projects, route data
 - [x] UP NCTS (National Center for Transportation Studies) — academic papers on Manila routes
 - [x] DLSU/Ateneo/UST transport research — thesis papers on jeepney/bus routes
-- [ ] Other academic papers — Google Scholar search for "Metro Manila jeepney routes" and "Metro Manila bus routes"
+- [x] Other academic papers — Google Scholar search for "Metro Manila jeepney routes" and "Metro Manila bus routes"
+- [ ] JICA 2022 data collection survey — improving road-based public transportation in Metro Manila (most recent comprehensive official survey)
 
 ### Terminal & Operator Sources
 - [ ] Cubao terminal complex — all routes departing from Araneta, Ali Mall area, Gateway
