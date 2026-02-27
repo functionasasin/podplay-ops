@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 32
-- Analyzed: 28
-- Pending: 4
-- Convergence: 88%
+- Analyzed: 29
+- Pending: 3
+- Convergence: 91%
 
 ## Wave 0: Regulatory Body Inventory
 
@@ -72,7 +72,7 @@
 
 ## Wave 2: Cross-Reference and Scoring (blocked by Wave 1)
 
-- [ ] **deduplicate-and-merge** — Consolidate all domains from Wave 1 into clean master list, resolve overlaps within this loop AND with ph-compliance-moats-reverse's 41 domains
+- [x] **deduplicate-and-merge** — Consolidate all domains from Wave 1 into clean master list, resolve overlaps within this loop AND with ph-compliance-moats-reverse's 41 domains → wrote analysis/master-domain-list.md; 107 unique domains across 20 categories; 1 internal merge (OWWA duplicates); 7 excluded (below 2.75); 4 cross-loop overlaps noted (SSS/PHI/HDMF vs. sibling D7; LGU LBT vs. sibling F2; ONETT pipeline vs. sibling A3/C5/B2). Top score: SSS contribution at 4.55; top cluster: social insurance + transport + OFW + fire safety.
 
 - [ ] **score-domains** — Score each domain on 4 dimensions (market/moat/computability/pain), compute weighted opportunity score
 
