@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 88
-- Analyzed: 46
-- Pending: 42
-- Convergence: 52%
+- Analyzed: 47
+- Pending: 41
+- Convergence: 53%
 
 ---
 
@@ -67,7 +67,7 @@
 - [x] Baclaran terminal area — all routes from Baclaran, LRT-1 terminus
 - [x] Other major terminals — Divisoria, Quiapo, Lawton, Santa Cruz, Blumentritt
 - [x] Provincial bus operators — Victory Liner, Philtranco, DLTB, JAM, Five Star, Genesis, etc.
-- [ ] P2P bus operators — HM Transport, Froehlich, Rrcg, other premium bus services
+- [x] P2P bus operators — HM Transport, Froehlich, Rrcg, other premium bus services
 - [ ] City bus operators — list and routes for each (e.g., Herrera Transport, RRCG, etc.)
 
 ### Community & Social Sources
