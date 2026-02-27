@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 32
-- Analyzed: 22
-- Pending: 10
-- Convergence: 69%
+- Analyzed: 23
+- Pending: 9
+- Convergence: 72%
 
 ## Wave 0: Regulatory Body Inventory
 
@@ -58,7 +58,7 @@
 
 - [x] **bsp-msb-licensing** — BSP (RA 7653, RA 11127, BSP Circular 1206): Certificate of Authority for pawnshops (3-stage process); OPS registration (₱20K one-time fee); remittance company license fees; EMI (e-money issuer) registration; annual supervisory fee. ~15K+ pawnshops + MSBs. 1,428 operators / 16,219 offices; 4 domains identified: Pawnshop Loan Transparency (3.60, consumer-facing, BSP has existing calc but mobile/UX gap), AMLA+BSP Compliance Calendar (3.50, B2B, Circular 1206 Dec 2024 transition urgency + AMLA penalty cliff ₱500K–₱1M/violation), OPS/EMI/VASP Classification Screener (3.50, narrow fintech market but deep law-firm moat ₱500K–₱2M), ASF Calculator (2.90, low pain — BSP proactively bills). → wrote analysis/wave1-bsp-msb-licensing.md
 
-- [ ] **owwa-membership** — OWWA (RA 10022): membership fee = USD 25 per contract period; death benefit = ₱200K; disability benefit = ₱20K–₱100K by degree; scholarship computation (₱25K–₱50K/year); livelihood program grant computation. 2.19M OFWs.
+- [x] **owwa-membership** — OWWA (RA 10801, RA 10022): death benefit ₱100K–₱200K + ₱20K burial; disability ₱2.5K–₱100K by impediment grade (14-grade MOI No. 004 S. 1996 schedule); rebate formula (N-5)×₱100×loyalty_multiplier (MC No. 003 S. 2020); 8 scholarship programs (₱7.5K–₱60K/yr); BPBH tiered grant ₱5K/₱10K/₱20K. 2.5M+ active OFWs; 2,613,903 deployed in 2023 (all-time high). 4 domains identified; top opportunities: OFW Benefits Eligibility Navigator (3.55) + Scholarship Program Selector (3.55) — primarily information-asymmetry moat (free OWWA legal assistance undercuts professional moat, but 80%+ benefit underutilization confirms value); Rebate Calculator (3.10) is secondary; BPBH Calculator (2.65) is low. Key insight: OWWA benefits partially overlaps with dmw-ofw-compliance aspect (which covered USD 25 contribution computation and OWWA as pre-departure cost component); this aspect covers the post-deployment benefit side. Best product concept: "OFW Benefits Compass" combining eligibility navigator + scholarship selector. → wrote analysis/wave1-owwa-membership.md
 
 - [ ] **pagcor-gaming-license** — PAGCOR (PD 1869, RA 9487): gaming license fee rates (30% of gross gaming revenue for brick-and-mortar; 25% for IR + online); 5% franchise tax in lieu of all taxes; gaming junket computation; casino Filipino rake computation. ~1,000+ gaming licensees.
 
