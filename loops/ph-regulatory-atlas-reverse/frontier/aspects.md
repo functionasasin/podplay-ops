@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 32
-- Analyzed: 27
-- Pending: 5
-- Convergence: 84%
+- Analyzed: 28
+- Pending: 4
+- Convergence: 88%
 
 ## Wave 0: Regulatory Body Inventory
 
@@ -68,7 +68,7 @@
 
 - [x] **bfp-fire-safety** — Bureau of Fire Protection (RA 9514 Fire Code): FSIC fee = 10% of LGU permit fees (floor ₱500); FSEC = 0.10% of construction cost (max ₱50K); Fire Code Realty Tax = 0.10% of assessed value; ~3M annual inspections (BFP 1H 2024: 1.67M). 4 domains identified: Fire Safety Equipment Requirements Screener (4.15, TOP — IRR Rule 10 Div.6–21 occupancy thresholds, ~170K failed inspections/year = immediate closure pain), FSIC Compliance Calendar + FSMR Tracker (4.05, fully deterministic deadline engine), FSIC Annual Fee Pre-Calculator (3.65), FSEC Fee Calculator (2.95, low pain). Top opportunity: "FireReady PH" combining pre-inspection diagnostic + compliance calendar — ~1.2M businesses, 170K+ annual failures, FSP knowledge moat ₱10K–₱50K/engagement. → wrote analysis/wave1-bfp-fire-safety.md
 
-- [ ] **lra-land-registration** — LRA (PD 1529 Property Registration Decree): title registration fee scaled to assessed value (graduated rate table); annotation fees (mortgage, lease, adverse claim); entry fees; transfer tax base computation (BIR zonal value vs. actual price). ~2M+ real estate transactions/year.
+- [x] **lra-land-registration** — LRA (PD 1529 Property Registration Decree): title registration fee scaled to assessed value (graduated 17-tier table); annotation fees (₱20/line); entry fee (₱50/instrument); PD 1529 Sec. 117 double-fee penalty (>1 year since notarization); ONETT pipeline (CGT 6% + DST 1.5% + LGU transfer tax 0.5–0.75% + LRA reg fee); BIR Zonal Value lookup as gating input. 400K–800K estimated transactions/year; 4 domains; top opportunity: ONETT Pipeline Calculator + Deadline Engine (3.80) combining multi-agency cost computation + 30-day CGT / 5-day DST deadline tracking + penalty escalation — processing services charge ₱20K–₱30K per transaction; LRA's own ERCF tool under maintenance. → wrote analysis/wave1-lra-land-registration.md
 
 ## Wave 2: Cross-Reference and Scoring (blocked by Wave 1)
 
