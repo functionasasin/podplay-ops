@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 88
-- Analyzed: 42
-- Pending: 46
-- Convergence: 48%
+- Analyzed: 43
+- Pending: 45
+- Convergence: 49%
 
 ---
 
@@ -63,7 +63,7 @@
 - [x] Pasay/EDSA terminal — all routes from Pasay rotonda, MRT Taft area
 - [x] Monumento terminal area — all routes from Monumento, Victory Liner, etc.
 - [x] SM North EDSA terminal — all jeepney/bus routes from SM North transport hub
-- [ ] Fairview terminal area — all routes originating from Fairview
+- [x] Fairview terminal area — all routes originating from Fairview
 - [ ] Baclaran terminal area — all routes from Baclaran, LRT-1 terminus
 - [ ] Other major terminals — Divisoria, Quiapo, Lawton, Santa Cruz, Blumentritt
 - [ ] Provincial bus operators — Victory Liner, Philtranco, DLTB, JAM, Five Star, Genesis, etc.
