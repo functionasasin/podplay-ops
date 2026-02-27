@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 32
-- Analyzed: 26
-- Pending: 6
-- Convergence: 81%
+- Analyzed: 27
+- Pending: 5
+- Convergence: 84%
 
 ## Wave 0: Regulatory Body Inventory
 
@@ -66,7 +66,7 @@
 
 - [x] **boi-investment-incentives** — BOI/PEZA (RA 11534 CREATE Act, RA 12066 CREATE MORE Act Nov 2024, EO 226, RA 7916): ITH period (4–7 yrs by Tier/Location lookup table); SCIT = 5% × GIE (direct cost deduction categories + 3%/2% national/LGU split); EDR at 20% CIT + 100% power expense deduction; SCIT vs EDR election irrevocable; ~3K–5K active enterprises. 4 domains: SCIT vs EDR Election Analysis Tool (3.95, TOP — irrevocable election, million-peso stakes, Big 4-only moat ₱200K–₱500K per engagement), ITH Period Calculator + Savings NPV (3.60, fully deterministic Tier×Location table), Annual GIE Compliance Tracker (3.05), SIPP Pre-Screener (3.00). → wrote analysis/wave1-boi-investment-incentives.md
 
-- [ ] **bfp-fire-safety** — Bureau of Fire Protection (RA 9514 Fire Code): FSIC (Fire Safety Inspection Certificate) fee = graduated table by occupancy classification and total floor area; FSEC (Fire Safety Evaluation Clearance) for building permits; annual renewal computation. ~3M+ commercial establishments.
+- [x] **bfp-fire-safety** — Bureau of Fire Protection (RA 9514 Fire Code): FSIC fee = 10% of LGU permit fees (floor ₱500); FSEC = 0.10% of construction cost (max ₱50K); Fire Code Realty Tax = 0.10% of assessed value; ~3M annual inspections (BFP 1H 2024: 1.67M). 4 domains identified: Fire Safety Equipment Requirements Screener (4.15, TOP — IRR Rule 10 Div.6–21 occupancy thresholds, ~170K failed inspections/year = immediate closure pain), FSIC Compliance Calendar + FSMR Tracker (4.05, fully deterministic deadline engine), FSIC Annual Fee Pre-Calculator (3.65), FSEC Fee Calculator (2.95, low pain). Top opportunity: "FireReady PH" combining pre-inspection diagnostic + compliance calendar — ~1.2M businesses, 170K+ annual failures, FSP knowledge moat ₱10K–₱50K/engagement. → wrote analysis/wave1-bfp-fire-safety.md
 
 - [ ] **lra-land-registration** — LRA (PD 1529 Property Registration Decree): title registration fee scaled to assessed value (graduated rate table); annotation fees (mortgage, lease, adverse claim); entry fees; transfer tax base computation (BIR zonal value vs. actual price). ~2M+ real estate transactions/year.
 
