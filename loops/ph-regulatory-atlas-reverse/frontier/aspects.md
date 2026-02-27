@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 32
-- Analyzed: 20
-- Pending: 12
-- Convergence: 63%
+- Analyzed: 21
+- Pending: 11
+- Convergence: 66%
 
 ## Wave 0: Regulatory Body Inventory
 
@@ -54,7 +54,7 @@
 
 - [x] **caap-aviation-licensing** — CAAP (RA 9497, PCAR Part 2/4/11): 4 domains identified; RPAS compliance suite is top opportunity (score 3.50) — fully deterministic 3-cert decision tree (controller ₱3,360 + registration ₱1,680 + operator cert), weight thresholds (≥7kg non-commercial / any weight commercial), ₱20K–₱100K penalty cliff, no public compliance tool; ~2,000–5,000 commercial drone operators + growing; secondary opportunities: aircraft airworthiness/reg calculator (3.00, narrow fleet ~500–1K aircraft but high professional fees ₱20K–₱80K for imports) and pilot license pathway eligibility (2.75, 8K+ pilots, training is flight school moat not CAAP licensing). → wrote analysis/wave1-caap-aviation-licensing.md
 
-- [ ] **ntc-telecom-licensing** — NTC (RA 7925, EO 546): spectrum user fee formula (RF band occupied × area × population density); service authorization fees (CMTS, VSAT, etc.); type acceptance certificate fees for telecom equipment; broadcast frequency assignment. ~100+ telecom/broadcast licensees.
+- [x] **ntc-telecom-licensing** — NTC (RA 7925, EO 546): spectrum user fee formula (RF band occupied × area × population density); service authorization fees (CMTS, VSAT, etc.); type acceptance certificate fees for telecom equipment; broadcast frequency assignment. ~100+ telecom/broadcast licensees. → wrote analysis/wave1-ntc-telecom-licensing.md; 4 domains identified: Spectrum User Fee Calculator (3.35, fully deterministic KHz×rate×tier from MC 10-10-97, 2K–8K spectrum holders), Private Radio Fleet License Manager (2.85, table-based by ERP×mode, 200K–500K stations), Type Acceptance Import Screener (2.75, TA vs. TAC decision tree + fee computation, 10K–30K models/year), Broadcast Station License Calculator (2.35, ERP table lookup, ~1,800 stations). Key finding: NTC compliance is fundamentally B2B and narrower in market reach than other atlas domains — best opportunity is a fleet management SaaS for security/logistics companies with large radio fleets, displacing ₱5K–₱25K/year consultant fees.
 
 - [ ] **bsp-msb-licensing** — BSP (RA 7653, RA 11127, BSP Circular 1206): Certificate of Authority for pawnshops (3-stage process); OPS registration (₱20K one-time fee); remittance company license fees; EMI (e-money issuer) registration; annual supervisory fee. ~15K+ pawnshops + MSBs.
 
