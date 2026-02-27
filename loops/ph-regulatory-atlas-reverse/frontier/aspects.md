@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 32
-- Analyzed: 18
-- Pending: 14
-- Convergence: 56%
+- Analyzed: 19
+- Pending: 13
+- Convergence: 59%
 
 ## Wave 0: Regulatory Body Inventory
 
@@ -50,7 +50,7 @@
 
 - [x] **pcab-contractor-licensing** — PCAB (RA 4566): Aggregate Credit Points (ACP) scoring (financial capacity + equipment value + experience); minimum net worth by category; annual license renewal fees; special license computation for joint ventures. ~70K+ licensed contractors. 4 domains identified; top opportunity: ACP Score Calculator + Renewal Calendar (3.60/3.30) — 51,500 annual applications, fully deterministic from Board Resolution No. 201, all 4 components pure arithmetic (FC_pts = NetWorth÷₱100K, EC_pts = EquipNBV÷₱100K, FE_pts = Years×10+AAVW÷₱100K, STE_pts), no public calculator exists, non-refundable fees + category downgrade risk create high pain. → wrote analysis/wave1-pcab-contractor-licensing.md
 
-- [ ] **dhsud-developer-licensing** — DHSUD (RA 11201, PD 957, BP 220): Certificate of Registration + License to Sell fees (scaled to project cost); 15% balanced housing requirement (subdivision) or 5% (condominium); HOA registration fees; PD 957 buyer protection computation. ~5K+ registered real estate developers.
+- [x] **dhsud-developer-licensing** — DHSUD (RA 11201, PD 957, BP 220): Certificate of Registration + License to Sell fees (₱17.30/sqm residential + ₱36/sqm commercial + ₱1,500/ha inspection); performance bond = 20% of unfinished development cost; balanced housing requirement: 15% of subdivision or 5% of condominium project cost/area with 4 compliance modes (self-develop, JV, bond subscription, LGU cash at 3.75%/1.25%); HOA registration under RA 9904. ~642 LTS projects/year; 5K+ registered developers. 4 domains: CR/LTS Fee+Bond Calculator (3.00), Balanced Housing Optimizer (3.50, TOP), HOA Compliance Tracker (2.50), PD 957 Buyer Protection (2.25). → wrote analysis/wave1-dhsud-developer-licensing.md
 
 - [ ] **caap-aviation-licensing** — CAAP (RA 9497): pilot license fees by category (SPL → PPL → CPL → ATPL); aircraft registration fees by weight class; drone/RPA registration (commercial: all weights; non-commercial: ≥7kg); airworthiness certificate fees. ~8K+ licensed pilots; growing drone sector.
 
