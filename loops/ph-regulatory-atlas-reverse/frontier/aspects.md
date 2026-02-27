@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 32
-- Analyzed: 25
-- Pending: 7
-- Convergence: 78%
+- Analyzed: 26
+- Pending: 6
+- Convergence: 81%
 
 ## Wave 0: Regulatory Body Inventory
 
@@ -64,7 +64,7 @@
 
 - [x] **tesda-nc-certification** — TESDA (RA 7796): assessment fees ₱400–₱3,723 by qualification title (fully deterministic lookup table); PESFA income threshold ≤₱300,000 (RA 8545 Sec. 8); TSF = ₱160/day × training days (2-tranche: 2-week + 80% completion); NC validity 5 years exact; UTPRAS registration ₱2K/program. 935,978 assessments/year (2023 data); 872,016 certified. 4 domains: NC Expiry Tracker (3.60), Assessment Fee Finder (3.40), Scholarship Eligibility Calculator (3.30), UTPRAS Compliance Navigator (2.80). Key finding: LOW professional moat (no lawyers/CPAs gatekeep TESDA); opportunity is information-asymmetry play — "SkillsPath PH" concept integrates all 4 domains for 40M+ working-age Filipinos. → wrote analysis/wave1-tesda-nc-certification.md
 
-- [ ] **boi-investment-incentives** — BOI/PEZA (RA 11534 CREATE Act, EO 226, RA 7916): ITH duration by tier (4–7 years based on qualifying activity); preferential CIT (10% domestic, 15% export after ITH); SCIT, EMZE, EAEZ computation; SIPP-based incentives; PEZA 5% GIE computation. ~5K+ registered firms.
+- [x] **boi-investment-incentives** — BOI/PEZA (RA 11534 CREATE Act, RA 12066 CREATE MORE Act Nov 2024, EO 226, RA 7916): ITH period (4–7 yrs by Tier/Location lookup table); SCIT = 5% × GIE (direct cost deduction categories + 3%/2% national/LGU split); EDR at 20% CIT + 100% power expense deduction; SCIT vs EDR election irrevocable; ~3K–5K active enterprises. 4 domains: SCIT vs EDR Election Analysis Tool (3.95, TOP — irrevocable election, million-peso stakes, Big 4-only moat ₱200K–₱500K per engagement), ITH Period Calculator + Savings NPV (3.60, fully deterministic Tier×Location table), Annual GIE Compliance Tracker (3.05), SIPP Pre-Screener (3.00). → wrote analysis/wave1-boi-investment-incentives.md
 
 - [ ] **bfp-fire-safety** — Bureau of Fire Protection (RA 9514 Fire Code): FSIC (Fire Safety Inspection Certificate) fee = graduated table by occupancy classification and total floor area; FSEC (Fire Safety Evaluation Clearance) for building permits; annual renewal computation. ~3M+ commercial establishments.
 
