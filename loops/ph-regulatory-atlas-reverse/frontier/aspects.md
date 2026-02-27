@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 32
-- Analyzed: 24
-- Pending: 8
-- Convergence: 75%
+- Analyzed: 25
+- Pending: 7
+- Convergence: 78%
 
 ## Wave 0: Regulatory Body Inventory
 
@@ -62,7 +62,7 @@
 
 - [x] **pagcor-gaming-license** — PAGCOR (PD 1869, RA 9487, RA 10927): GGR-based license fee schedule (30% e-games/non-IR, 25% IR online, 15% live sports, 15% junket); 5% franchise tax in lieu of all taxes; MGF floor (₱9M/month from Apr 2026); AML/CTR threshold (₱5M/gaming day per RA 10927); junket rolling-chip (1.25%) vs. revenue-share (40-50%) models. ~174 accredited operators (2024, 3× growth). B2B domain — 4 domains: AML Tracker (3.50), Gaming/Non-Gaming Tax Classifier (3.45), GGR Fee Dashboard (3.30), Junket Revenue Comparator (2.80). Top opportunity: Casino AML/CTR Compliance Tracker for small e-games operators (165% GGR growth segment, weakest compliance infrastructure, RA 10927 mandatory, ₱500K–₱1M/violation penalty). → wrote analysis/wave1-pagcor-gaming-license.md
 
-- [ ] **tesda-nc-certification** — TESDA (RA 7796): national certificate assessment fees (NC I–NC IV by sector); scholarship eligibility computation (income thresholds); TVET program accreditation fees; Recognition of Prior Learning (RPL) fee computation. ~3M+ assessments/year.
+- [x] **tesda-nc-certification** — TESDA (RA 7796): assessment fees ₱400–₱3,723 by qualification title (fully deterministic lookup table); PESFA income threshold ≤₱300,000 (RA 8545 Sec. 8); TSF = ₱160/day × training days (2-tranche: 2-week + 80% completion); NC validity 5 years exact; UTPRAS registration ₱2K/program. 935,978 assessments/year (2023 data); 872,016 certified. 4 domains: NC Expiry Tracker (3.60), Assessment Fee Finder (3.40), Scholarship Eligibility Calculator (3.30), UTPRAS Compliance Navigator (2.80). Key finding: LOW professional moat (no lawyers/CPAs gatekeep TESDA); opportunity is information-asymmetry play — "SkillsPath PH" concept integrates all 4 domains for 40M+ working-age Filipinos. → wrote analysis/wave1-tesda-nc-certification.md
 
 - [ ] **boi-investment-incentives** — BOI/PEZA (RA 11534 CREATE Act, EO 226, RA 7916): ITH duration by tier (4–7 years based on qualifying activity); preferential CIT (10% domestic, 15% export after ITH); SCIT, EMZE, EAEZ computation; SIPP-based incentives; PEZA 5% GIE computation. ~5K+ registered firms.
 
