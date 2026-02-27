@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 32
-- Analyzed: 30
-- Pending: 2
-- Convergence: 94%
+- Analyzed: 31
+- Pending: 1
+- Convergence: 97%
 
 ## Wave 0: Regulatory Body Inventory
 
@@ -76,7 +76,7 @@
 
 - [x] **score-domains** — Score each domain on 4 dimensions (market/moat/computability/pain), compute weighted opportunity score → wrote analysis/scored-domains.md; 107 domains ranked using formula (M×0.25)+(Mo×0.25)+(C×0.30)+(P×0.20); top score 4.50 (A-SSS-3 SSS Contribution + E-OFW-1 OFW Fee Shield); key reordering: N-BFP-1 drops from 4.15→3.65 after correcting computability to 3 (occupancy judgment required); 17 domains score ≥4.00; 2 domains at 4.50 ceiling; identified 8 natural product bundles.
 
-- [ ] **professional-fees-validation** — WebSearch for actual professional service pricing for top-scoring domains, validate moat depth
+- [x] **professional-fees-validation** — WebSearch for actual professional service pricing for top 15+ scoring domains; 5 score adjustments: O-LRA-1 (3→4, 4.30→4.55 Elite), O-LRA-2 (3→4, 4.00→4.25), G-LTO-1 (3→2, 4.30→4.05), C-HDMF-1 (3→2, 4.00→3.75), G-LTO-2 (3→2, 3.85→3.60). ONETT cluster confirmed as highest-moat domain; LTO and Pag-IBIG moats downgraded (tools exist). → wrote analysis/wave2-professional-fees-validation.md; updated analysis/scored-domains.md.
 
 ## Wave 3: Synthesis (blocked by Wave 2)
 

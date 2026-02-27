@@ -29,26 +29,26 @@
 | 1 | A-SSS-3 | SSS Contribution Computation & Remittance (monthly MSC table; kasambahay/OFW special rules; 3%/month penalty; criminal liability for officers) | 5 | 3 | 5 | 5 | **4.50** |
 | 2 | E-OFW-1 | OFW Placement Fee Legality Checker (binary tree: no-fee country? → zero; HSW/direct-hire? → zero; else 1× salary cap; RA 10022 Sec. 6) | 5 | 3 | 5 | 5 | **4.50** |
 | 3 | A-SSS-1 | SSS Monthly Retirement Pension / BMP (3-formula system; Option 1 vs. Option 2 NPV decision; 2.2M pensioners + 42M future) | 5 | 3 | 5 | 4 | **4.30** |
-| 4 | G-LTO-1 | MVUC + Total Annual Registration Cost Calculator (graduated table; 30%/15% EV discount; 50% late surcharge; full-bill aggregation; 14M+ annual transactions) | 5 | 3 | 5 | 4 | **4.30** |
+| 4* | G-LTO-1 | MVUC + Total Annual Registration Cost Calculator (graduated table; 30%/15% EV discount; 50% late surcharge; full-bill aggregation; 14M+ annual transactions) | 5 | **2** | 5 | 4 | **4.05** ▼ |
 | 5 | I-MAR-1 | Total STCW Certification Cost Calculator (MC GC-2026-01; 622-line fee schedule; training costs BST/GMDSS/ECDIS; 115K+ revalidations/yr) | 5 | 3 | 5 | 4 | **4.30** |
 | 6 | I-MAR-2 | STCW Certification Pathway & Sea Service Eligibility Calculator (Tables A-II/1, A-III/1; exact sea service thresholds; 50K+ promotion-seeking seafarers/yr) | 5 | 3 | 5 | 4 | **4.30** |
-| 7 | O-LRA-1 | ONETT Deadline & Late Penalty Calculator (30-day CGT + 5-day DST; 25% surcharge + 12%/yr interest; date arithmetic with multi-agency sequencing) | 5 | 3 | 5 | 4 | **4.30** |
+| 7* | O-LRA-1 | ONETT Deadline & Late Penalty Calculator (30-day CGT + 5-day DST; 25% surcharge + 12%/yr interest; date arithmetic with multi-agency sequencing) | 5 | **4** | 5 | 4 | **4.55** ▲ |
 | 8 | D-GSIS-1 | GSIS BMP Retirement Pension + Option 1/2 NPV Decision (0.025 × AMC+₱700 × PPP; max 90% AMC; Option 1 60× vs. Option 2 18× + pension; irreversible) | 4 | 3 | 5 | 4 | **4.05** |
 | 9 | E-OFW-2 | OFW Total Pre-Departure Cost Calculator (OWWA USD25 + OFW Pass + PhilHealth + Pag-IBIG + NBI/PSA/passport/medical; new hire vs. balik paths; 1.7M+ deployments/yr) | 5 | 2 | 5 | 4 | **4.05** |
 | 10 | H-PRC-1 | PRC CPD Compliance Eligibility & Unit Gap Calculator (43 profession-specific requirements; OFW/senior/PWD exemptions; SDL cap; carryover; 4M+ licensed professionals) | 4 | 3 | 5 | 4 | **4.05** |
 | 11 | N-BFP-2 | FSIC Compliance Calendar + FSMR Tracker (annual FSIC deadline + FSMR submission + fire drill records + extinguisher maintenance; January 20 crunch; 1.2M+ businesses) | 4 | 3 | 5 | 4 | **4.05** |
 | 12 | A-SSS-2 | SSS Maternity Benefit (100% ADSC × 60/90/105 days by delivery type; daily credit = 12-mo payroll ÷ 180; salary differential employer obligation) | 5 | 3 | 4 | 4 | **4.00** |
 | 13 | B-PHI-1 | PhilHealth Case Rate Benefit Application (~9,000 fixed case rates per PC2024-0037; PhilHealth share + patient OOP; no patient-facing tool exists) | 5 | 1 | 5 | 5 | **4.00** |
-| 14 | C-HDMF-1 | Pag-IBIG Housing Loan Eligibility & Amortization (35% HLAR cap; LTV; 3-tier interest; age+term ≤70; MRI + fire insurance; Affordable Housing 3% track) | 5 | 3 | 4 | 4 | **4.00** |
+| 14* | C-HDMF-1 | Pag-IBIG Housing Loan Eligibility & Amortization (35% HLAR cap; LTV; 3-tier interest; age+term ≤70; MRI + fire insurance; Affordable Housing 3% track) | 5 | **2** | 4 | 4 | **3.75** ▼ |
 | 15 | F-BOC-1 | BOC Landed Cost Calculator (CIF × AHTN duty + 12% VAT + brokerage + IPF + de minimis check; millions of e-commerce importers + 100K+ SMEs) | 5 | 3 | 4 | 4 | **4.00** |
-| 16 | O-LRA-2 | ONETT Pipeline Calculator (CGT 6% + DST 1.5% + LGU transfer tax + LRA 17-tier fee + PD 1529 Sec. 117 double-fee check; multi-agency; ₱20K–₱30K processing services) | 5 | 3 | 4 | 4 | **4.00** |
+| 16* | O-LRA-2 | ONETT Pipeline Calculator (CGT 6% + DST 1.5% + LGU transfer tax + LRA 17-tier fee + PD 1529 Sec. 117 double-fee check; multi-agency; ₱20K–₱30K processing services) | 5 | **4** | 4 | 4 | **4.25** ▲ |
 | 17 | R-DTI-1 | Annual Business Compliance Calendar (DTI 5-yr expiry + LGU Jan 20 deadline + quarterly LBT installments + BIR filing calendar + mandated benefits; 5M+ sole proprietors) | 5 | 3 | 4 | 4 | **4.00** |
 | 18 | P-IPO-1 | IP Portfolio Compliance Dashboard (trademark DAU year 3+5 + renewal year 10 + patent annuity years 5–20; 200K–400K active marks; IP firm retainers ₱10K–₱20K/yr) | 3 | 4 | 4 | 5 | **3.95** |
 | 19 | B-PHI-2 | PhilHealth Premium Contribution Computation (5% × BMS; floor ₱500/ceiling ₱5K; 50/50 employer/EE split; self-employed/OFW/kasambahay rules; 3%/month compounded) | 5 | 2 | 5 | 3 | **3.85** |
 | 20 | C-HDMF-2 | Pag-IBIG MPL & Calamity Loan Computation (80% TAV formula; ₱1M+₱1M combined ceiling; 10.75%/5.95% annuity; 1/20 of 1%/day penalty; 3.2M+ borrowers/yr) | 5 | 2 | 5 | 3 | **3.85** |
 | 21 | C-HDMF-3 | Pag-IBIG Mandatory Savings Contribution (graduated table 1%/2% of MBC up to ₱5K; OFW/kasambahay rules; 1/10 of 1%/day late penalty; 16.58M members) | 5 | 2 | 5 | 3 | **3.85** |
 | 22 | F-BOC-3 | Automobile Excise Tax Transparency Calculator (NMISP × rate table 4%/10%/20%/50%; hybrid 50% of rate; EV exempt; 400K+ new cars/yr) | 4 | 3 | 5 | 3 | **3.85** |
-| 23 | G-LTO-2 | LTO Late Registration Penalty Calculator (50% MVUC surcharge; multi-year computation; inherited penalties for used-car buyers) | 4 | 3 | 5 | 3 | **3.85** |
+| 23* | G-LTO-2 | LTO Late Registration Penalty Calculator (50% MVUC surcharge; multi-year computation; inherited penalties for used-car buyers) | 4 | **2** | 5 | 3 | **3.60** ▼ |
 | 24 | H-PRC-2 | PRC License Renewal Total Cost Calculator (base fee ₱420–₱450; 50% late surcharge; CPD seminar ₱1K–₱3K/unit unregulated; 1.3–1.6M renewals/yr) | 5 | 2 | 5 | 3 | **3.85** |
 | 25 | I-MAR-3 | COC/COP Revalidation Document Checklist Generator (rank-specific conditional lookup; MISMO rejections = weeks-long deployment delays; 300K–500K transactions/yr) | 5 | 2 | 5 | 3 | **3.85** |
 | 26 | L-TES-1 | TESDA NC Expiry Tracker & Re-assessment Reminder (NC valid exactly 5 years; ~4M–5M active NCs; ~800K–1M expiries/yr; no TESDA notification system) | 5 | 2 | 5 | 3 | **3.85** |
@@ -138,39 +138,43 @@
 
 ## Score Distribution Summary
 
-| Score Range | Count | % of Total |
-|-------------|-------|------------|
-| 4.50–5.00 (Elite) | 2 | 1.9% |
-| 4.00–4.49 (Top Tier) | 15 | 14.0% |
-| 3.50–3.99 (Strong) | 42 | 39.3% |
-| 3.00–3.49 (Moderate) | 36 | 33.6% |
-| 2.75–2.99 (Marginal) | 12 | 11.2% |
+*Updated after Wave 2 professional-fees-validation pass (2026-02-27). Rows marked ▲/▼ above have been adjusted.*
+
+| Score Range | Count (original) | Count (after validation) | Δ |
+|-------------|-----------------|--------------------------|---|
+| 4.50–5.00 (Elite) | 2 | **3** | +1 (O-LRA-1 rises to 4.55) |
+| 4.00–4.49 (Top Tier) | 15 | **13** | −2 (C-HDMF-1 drops; O-LRA-1 rises) |
+| 3.50–3.99 (Strong) | 42 | **44** | +2 (C-HDMF-1 + G-LTO-2 join) |
+| 3.00–3.49 (Moderate) | 36 | 36 | 0 |
+| 2.75–2.99 (Marginal) | 12 | 12 | 0 |
+| **Total** | **107** | **107** | — |
 
 ---
 
-## Top 25 by Score
+## Top 25 by Score (Post-Validation)
+
+*Rankings updated after Wave 2 professional-fees-validation pass. O-LRA-1 and O-LRA-2 moats upgraded to 4; G-LTO-1, G-LTO-2, C-HDMF-1 moats downgraded to 2.*
 
 | Rank | ID | Domain | Score |
 |------|----|--------|-------|
-| 1 | A-SSS-3 | SSS Contribution Computation & Remittance | **4.50** |
-| 2 | E-OFW-1 | OFW Placement Fee Legality Checker | **4.50** |
-| 3 | A-SSS-1 | SSS Monthly Retirement Pension (BMP) | **4.30** |
-| 4 | G-LTO-1 | MVUC + Total Annual Registration Cost Calculator | **4.30** |
-| 5 | I-MAR-1 | Total STCW Certification Cost Calculator | **4.30** |
-| 6 | I-MAR-2 | STCW Pathway & Sea Service Eligibility Calculator | **4.30** |
-| 7 | O-LRA-1 | ONETT Deadline & Late Penalty Calculator | **4.30** |
+| 1 | O-LRA-1 | ONETT Deadline & Late Penalty Calculator | **4.55** ▲ |
+| 2 | A-SSS-3 | SSS Contribution Computation & Remittance | **4.50** |
+| 3 | E-OFW-1 | OFW Placement Fee Legality Checker | **4.50** |
+| 4 | O-LRA-2 | ONETT Pipeline Calculator | **4.25** ▲ |
+| 5 | A-SSS-1 | SSS Monthly Retirement Pension (BMP) | **4.30** |
+| 6 | I-MAR-1 | Total STCW Certification Cost Calculator | **4.30** |
+| 7 | I-MAR-2 | STCW Pathway & Sea Service Eligibility Calculator | **4.30** |
 | 8 | D-GSIS-1 | GSIS BMP Retirement Pension + Option 1/2 Decision | **4.05** |
 | 9 | E-OFW-2 | OFW Total Pre-Departure Cost Calculator | **4.05** |
-| 10 | H-PRC-1 | PRC CPD Compliance Eligibility & Unit Gap Calculator | **4.05** |
-| 11 | N-BFP-2 | FSIC Compliance Calendar + FSMR Tracker | **4.05** |
-| 12 | A-SSS-2 | SSS Maternity Benefit Computation | **4.00** |
-| 13 | B-PHI-1 | PhilHealth Case Rate Benefit Application | **4.00** |
-| 14 | C-HDMF-1 | Pag-IBIG Housing Loan Eligibility & Amortization | **4.00** |
+| 10 | G-LTO-1 | MVUC + Total Annual Registration Cost Calculator | **4.05** ▼ |
+| 11 | H-PRC-1 | PRC CPD Compliance Eligibility & Unit Gap Calculator | **4.05** |
+| 12 | N-BFP-2 | FSIC Compliance Calendar + FSMR Tracker | **4.05** |
+| 13 | A-SSS-2 | SSS Maternity Benefit Computation | **4.00** |
+| 14 | B-PHI-1 | PhilHealth Case Rate Benefit Application | **4.00** |
 | 15 | F-BOC-1 | BOC Landed Cost Calculator | **4.00** |
-| 16 | O-LRA-2 | ONETT Pipeline Calculator | **4.00** |
-| 17 | R-DTI-1 | Annual Business Compliance Calendar | **4.00** |
-| 18 | P-IPO-1 | IP Portfolio Compliance Dashboard | **3.95** |
-| 19–27 | *(9 domains tied)* | B-PHI-2, C-HDMF-2, C-HDMF-3, F-BOC-3, G-LTO-2, H-PRC-2, I-MAR-3, L-TES-1, S-BSP-1 | **3.85** |
+| 16 | R-DTI-1 | Annual Business Compliance Calendar | **4.00** |
+| 17 | P-IPO-1 | IP Portfolio Compliance Dashboard | **3.95** |
+| 18–25 | *(8 domains tied)* | B-PHI-2, C-HDMF-2, C-HDMF-3, F-BOC-3, H-PRC-2, I-MAR-3, L-TES-1, S-BSP-1 | **3.85** |
 
 ---
 
@@ -192,6 +196,27 @@ The following domains have **material score changes** (±0.10+) when applying th
 
 ---
 
+## Score Adjustments from Wave 2 Professional Fees Validation
+
+*Applied 2026-02-27. See full analysis in `analysis/wave2-professional-fees-validation.md`.*
+
+| ID | Domain | Moat Old | Moat New | Score Before | Score After | Δ | Evidence |
+|----|--------|----------|----------|-------------|------------|---|----------|
+| O-LRA-1 | ONETT Deadline & Late Penalty Calculator | 3 | **4** | 4.30 | **4.55** ▲ | +0.25 | Processing services ₱20K–₱50K confirmed; lawyers 0.5%–1.5% of property price; notarization prerequisite |
+| O-LRA-2 | ONETT Pipeline Calculator | 3 | **4** | 4.00 | **4.25** ▲ | +0.25 | Same professional market as O-LRA-1; full-service property transfer requires specialist |
+| G-LTO-1 | MVUC + Total Registration Cost | 3 | **2** | 4.30 | **4.05** ▼ | −0.25 | LTMS portal + multiple free guides + fixer market explicitly illegal; no real professional moat |
+| C-HDMF-1 | Pag-IBIG Housing Loan Eligibility & Amortization | 3 | **2** | 4.00 | **3.75** ▼ | −0.25 | Multiple online calculators confirmed (Nook, omnicalculator, myhousingloancal, Globe); Pag-IBIG Virtual portal |
+| G-LTO-2 | LTO Late Penalty Calculator | 3 | **2** | 3.85 | **3.60** ▼ | −0.25 | Same reasoning as G-LTO-1; simple 50% MVUC formula, multiple free guides |
+
+**Key insights from validation:**
+- **ONETT is the most underrated domain:** Confirmed ₱20K–₱50K service fees per transaction upgrade the ONETT cluster to the top tier (4.55/4.25). Property transfer is the highest-moat domain with real professional gatekeeping.
+- **LTO tools already exist:** The LTMS portal, multiple consumer guides, and the illegal status of fixers mean the LTO moat was overstated. Still high-market-size but reduced moat.
+- **Pag-IBIG calculator market is served:** Three independent online calculators already exist for Pag-IBIG housing loan computation, reducing the unmet tool need.
+- **BOI SCIT election Moat=5 confirmed:** Big 4 advisory confirmed as "indispensable, not optional" for CREATE MORE irrevocable elections.
+- **PhilHealth case rate Moat=1 confirmed:** Hospital processes it directly; patient-facing transparency is the opportunity, not professional displacement.
+
+---
+
 ## Category Champions
 
 | Category | Champion Domain | Score | Why It Leads |
@@ -202,7 +227,7 @@ The following domains have **material score changes** (±0.10+) when applying th
 | D — GSIS | D-GSIS-1 (BMP Pension) | 4.05 | Fully deterministic formula; irreversible financial decision |
 | E — OFW | E-OFW-1 (Fee Shield) | 4.50 | Pure information asymmetry; illegal fees ₱45K–₱200K/victim |
 | F — Customs | F-BOC-1 (Landed Cost) | 4.00 | Millions of importers; no unified tool |
-| G — LTO | G-LTO-1 (MVUC) | 4.30 | 14M annual transactions; highest market + computability |
+| G — LTO | G-LTO-1 (MVUC) | **4.05** ▼ | 14M annual transactions; moat downgraded (LTMS portal exists, multiple free guides, fixers illegal) |
 | H — PRC | H-PRC-1 (CPD) | 4.05 | 4M professionals; 43 professions; 3-year renewal crunch |
 | I — MARINA | I-MAR-1+2 (STCW) | 4.30 | 576K seafarers; missed certs = direct income loss |
 | J — CAAP | J-CAP-1 (RPAS) | 3.80 | Fastest-growing segment; ₱20K–₱100K penalty |
@@ -210,7 +235,7 @@ The following domains have **material score changes** (±0.10+) when applying th
 | L — TESDA | L-TES-1 (NC Expiry) | 3.85 | 4–5M active NCs; no notification system |
 | M — FDA | M-FDA-1/2 (CPR+Calendar) | 3.80 | Dual: cost transparency + renewal cliff |
 | N — BFP | N-BFP-2 (FSIC Calendar) | 4.05 | 1.2M businesses; January 20 crunch |
-| O — Land | O-LRA-1 (ONETT Deadline) | 4.30 | 400K–800K transactions; multi-agency; penalty cliff |
+| O — Land | O-LRA-1 (ONETT Deadline) | **4.55** ▲ | 400K–800K transactions; multi-agency; ₱20K–₱50K processing service market confirmed |
 | P — IPOPHL | P-IPO-1 (IP Dashboard) | 3.95 | 200K–400K marks; IP firm retainer moat |
 | Q — ERC | Q-ERC-1 (Bill Verify) | 3.75 | 18M households; 12+ line items |
 | R — Business | R-DTI-1 (Biz Calendar) | 4.00 | 5M sole proprietors; multi-deadline engine |
@@ -227,7 +252,7 @@ Several domains naturally bundle into single product experiences:
 |--------|---------|----------------|---------|
 | SSS Suite | A-SSS-1, A-SSS-2, A-SSS-3, A-SSS-4 | 4.50 anchor | Philippine Social Insurance Calculator |
 | STCW Lifecycle | I-MAR-1, I-MAR-2, I-MAR-3 | 4.30 anchor | Seafarer Certification Lifecycle Dashboard |
-| ONETT / Transfer | O-LRA-1, O-LRA-2, O-LRA-3, O-LRA-4 | 4.30 anchor | Transfer PH — Property Transfer Orchestrator |
+| ONETT / Transfer | O-LRA-1, O-LRA-2, O-LRA-3, O-LRA-4 | **4.55** anchor ▲ | Transfer PH — Property Transfer Orchestrator; moat confirmed ₱20K–₱50K/transaction |
 | OFW Shield | E-OFW-1, E-OFW-2, E-OFW-4 | 4.50 anchor | OFW Fee Shield + Pre-Departure Planner |
 | FireReady PH | N-BFP-1, N-BFP-2, N-BFP-3 | 4.05 anchor | Pre-inspection diagnostic + compliance calendar |
 | PRC Compliance | H-PRC-1, H-PRC-2, H-PRC-3 | 4.05 anchor | PRC Renewal & CPD Navigator |
