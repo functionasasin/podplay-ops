@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 88
-- Analyzed: 47
-- Pending: 41
-- Convergence: 53%
+- Analyzed: 48
+- Pending: 40
+- Convergence: 55%
 
 ---
 
@@ -68,7 +68,7 @@
 - [x] Other major terminals — Divisoria, Quiapo, Lawton, Santa Cruz, Blumentritt
 - [x] Provincial bus operators — Victory Liner, Philtranco, DLTB, JAM, Five Star, Genesis, etc.
 - [x] P2P bus operators — HM Transport, Froehlich, Rrcg, other premium bus services
-- [ ] City bus operators — list and routes for each (e.g., Herrera Transport, RRCG, etc.)
+- [x] City bus operators — list and routes for each (e.g., Herrera Transport, RRCG, etc.)
 
 ### Community & Social Sources
 - [ ] Facebook commuter groups — PH Commuters, Manila Commuters, area-specific groups
