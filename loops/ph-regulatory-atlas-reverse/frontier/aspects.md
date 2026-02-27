@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 32
-- Analyzed: 17
-- Pending: 15
-- Convergence: 53%
+- Analyzed: 18
+- Pending: 14
+- Convergence: 56%
 
 ## Wave 0: Regulatory Body Inventory
 
@@ -48,7 +48,7 @@
 
 - [x] **dti-business-registration** — DTI/BNRS (RA 3883): fee by territorial scope (barangay ₱200, city ₱500, regional ₱1K, national ₱2K) + DST ₱30; 5-year validity; late renewal = 50% penalty; integration with LGU business permit computation. ~5M+ sole proprietors. 4 domains identified; top opportunity: Annual Compliance Calendar (4.00) combining DTI 5-year renewal tracking + LGU January 20 deadline + quarterly LBT installment + BIR calendar + mandated benefits — serves 5M+ sole proprietors, fully deterministic deadline engine. LGU LBT Estimator (3.70) and Startup Navigator (3.70) are strong secondaries. Key insight: DTI registration itself is low-moat (BNRS portal is self-service); the LGU annual business permit renewal is the real pain point (1.2M+ businesses, January 20 deadline, 25%+2%/month penalty). "Negosyo Calc PH" concept combines all 4 domains. → wrote analysis/wave1-dti-business-registration.md
 
-- [ ] **pcab-contractor-licensing** — PCAB (RA 4566): Aggregate Credit Points (ACP) scoring (financial capacity + equipment value + experience); minimum net worth by category; annual license renewal fees; special license computation for joint ventures. ~70K+ licensed contractors.
+- [x] **pcab-contractor-licensing** — PCAB (RA 4566): Aggregate Credit Points (ACP) scoring (financial capacity + equipment value + experience); minimum net worth by category; annual license renewal fees; special license computation for joint ventures. ~70K+ licensed contractors. 4 domains identified; top opportunity: ACP Score Calculator + Renewal Calendar (3.60/3.30) — 51,500 annual applications, fully deterministic from Board Resolution No. 201, all 4 components pure arithmetic (FC_pts = NetWorth÷₱100K, EC_pts = EquipNBV÷₱100K, FE_pts = Years×10+AAVW÷₱100K, STE_pts), no public calculator exists, non-refundable fees + category downgrade risk create high pain. → wrote analysis/wave1-pcab-contractor-licensing.md
 
 - [ ] **dhsud-developer-licensing** — DHSUD (RA 11201, PD 957, BP 220): Certificate of Registration + License to Sell fees (scaled to project cost); 15% balanced housing requirement (subdivision) or 5% (condominium); HOA registration fees; PD 957 buyer protection computation. ~5K+ registered real estate developers.
 
