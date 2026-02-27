@@ -2,17 +2,17 @@
 
 ## Statistics
 
-- **Total aspects**: 13
-- **Analyzed**: 0
-- **Pending**: 13
-- **Convergence**: 0%
+- **Total aspects**: 36
+- **Analyzed**: 1
+- **Pending**: 35
+- **Convergence**: 3%
 
 ## Wave 1: Feature Category Research + Discovery
 
 Research what the influencer marketing platform market offers in each category,
 cross-reference with Cheerful's existing spec, identify hero feature candidates.
 
-- [ ] competitor-landscape — Scan the market for all influencer marketing platforms; compile master competitor list; add each as a Wave 2a aspect
+- [x] competitor-landscape — Scan the market for all influencer marketing platforms; compile master competitor list; add each as a Wave 2a aspect
 - [ ] discovery-search — Creator/influencer discovery, search, filtering, databases
 - [ ] outreach-crm — Email outreach, relationship management, contact tracking, communication history
 - [ ] campaign-management — Campaign creation, briefs, workflows, approvals, status tracking
@@ -28,6 +28,37 @@ cross-reference with Cheerful's existing spec, identify hero feature candidates.
 
 _Dynamically populated by the competitor-landscape aspect. Each discovered competitor
 gets added here as an unchecked aspect._
+
+### Enterprise Tier
+
+- [ ] creatoriq — Enterprise-grade; acquired HypeAuditor ($78M Apr 2025); ISO27001; 40-language fraud detection; trusted by LVMH, Unilever
+- [ ] traackr — Enterprise ROI + competitive benchmarking; share-of-voice analytics; governance for regulated industries
+- [ ] sprout-social-influencer — 250M+ creator profiles; unified organic+paid+influencer suite (acquired Tagger 2023); AI topic discovery
+- [ ] impact-com — Enterprise affiliate + creator partnerships; deep conversion tracking; legacy infrastructure
+- [ ] captiv8 — AI-powered; social listening roots; 15M+ profiles; Snapchat API partner; Looker Studio integration; $25K/yr
+- [ ] linqia — Full-service managed+tech; guaranteed ROI model; content lab; performance media amplification
+- [ ] brandwatch — 50M+ creator profiles; consumer intelligence suite; Klear acquisition; $750+/mo
+- [ ] meltwater — PR + media intelligence + influencer; all-in-one comms platform
+
+### Mid-Market Tier
+
+- [ ] grin — DTC e-commerce; deep Shopify/Klaviyo/DocuSign integrations; AI copilot "Gia"; first-party creator pool only; $2.5K+/mo
+- [ ] upfluence — Performance marketing + affiliate; ecommerce revenue attribution; $2K–$3.5K+/mo
+- [ ] aspire — Creator communities + ambassador programs; hybrid SaaS + managed; long-term relationship focus
+- [ ] later-influence — Fmr Mavrck; end-to-end automation; Shopify gifting; Mavely affiliate links; 10M profiles; $28.5K+/yr
+- [ ] neoreach — Predictive analytics; 40+ search filters; automation; custom list import
+- [ ] influencer-hero — All-in-one; fraud detection + centralized dashboard; e-commerce focus
+
+### SMB / Prosumer Tier
+
+- [ ] hypeauditor — 68.7M+ profiles; 98.3% fraud accuracy; 35 audience quality metrics; acquired by CreatorIQ Apr 2025
+- [ ] modash — 250M+ creator profiles; $99–$399/mo; zero creator sign-up for tracking; Shopify integration
+- [ ] favikon — 9 platforms; LinkedIn-first; B2B/SaaS focused; social ranking system; $99/mo
+- [ ] collabstr — Free–$399/mo; marketplace + management; free tier; all-in-one for startups
+- [ ] archive — Auto-capture of Stories + ephemeral UGC; Instagram/TikTok/YouTube; content library
+- [ ] afluencer — 100% free tier; 1M+ creators; AI matching; startup-friendly
+- [ ] brand24 — Social listening + influencer sourcing + ranking; public company (Warsaw SE)
+- [ ] heepsy — 11M+ profiles; affordable SMB discovery; accessible entry-level
 
 ## Wave 2b: Campaign & Trend Research
 
