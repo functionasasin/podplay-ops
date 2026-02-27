@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 32
-- Analyzed: 19
-- Pending: 13
-- Convergence: 59%
+- Analyzed: 20
+- Pending: 12
+- Convergence: 63%
 
 ## Wave 0: Regulatory Body Inventory
 
@@ -52,7 +52,7 @@
 
 - [x] **dhsud-developer-licensing** — DHSUD (RA 11201, PD 957, BP 220): Certificate of Registration + License to Sell fees (₱17.30/sqm residential + ₱36/sqm commercial + ₱1,500/ha inspection); performance bond = 20% of unfinished development cost; balanced housing requirement: 15% of subdivision or 5% of condominium project cost/area with 4 compliance modes (self-develop, JV, bond subscription, LGU cash at 3.75%/1.25%); HOA registration under RA 9904. ~642 LTS projects/year; 5K+ registered developers. 4 domains: CR/LTS Fee+Bond Calculator (3.00), Balanced Housing Optimizer (3.50, TOP), HOA Compliance Tracker (2.50), PD 957 Buyer Protection (2.25). → wrote analysis/wave1-dhsud-developer-licensing.md
 
-- [ ] **caap-aviation-licensing** — CAAP (RA 9497): pilot license fees by category (SPL → PPL → CPL → ATPL); aircraft registration fees by weight class; drone/RPA registration (commercial: all weights; non-commercial: ≥7kg); airworthiness certificate fees. ~8K+ licensed pilots; growing drone sector.
+- [x] **caap-aviation-licensing** — CAAP (RA 9497, PCAR Part 2/4/11): 4 domains identified; RPAS compliance suite is top opportunity (score 3.50) — fully deterministic 3-cert decision tree (controller ₱3,360 + registration ₱1,680 + operator cert), weight thresholds (≥7kg non-commercial / any weight commercial), ₱20K–₱100K penalty cliff, no public compliance tool; ~2,000–5,000 commercial drone operators + growing; secondary opportunities: aircraft airworthiness/reg calculator (3.00, narrow fleet ~500–1K aircraft but high professional fees ₱20K–₱80K for imports) and pilot license pathway eligibility (2.75, 8K+ pilots, training is flight school moat not CAAP licensing). → wrote analysis/wave1-caap-aviation-licensing.md
 
 - [ ] **ntc-telecom-licensing** — NTC (RA 7925, EO 546): spectrum user fee formula (RF band occupied × area × population density); service authorization fees (CMTS, VSAT, etc.); type acceptance certificate fees for telecom equipment; broadcast frequency assignment. ~100+ telecom/broadcast licensees.
 
