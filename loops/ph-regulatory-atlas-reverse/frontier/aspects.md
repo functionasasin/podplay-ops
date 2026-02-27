@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 32
-- Analyzed: 29
-- Pending: 3
-- Convergence: 91%
+- Analyzed: 30
+- Pending: 2
+- Convergence: 94%
 
 ## Wave 0: Regulatory Body Inventory
 
@@ -74,7 +74,7 @@
 
 - [x] **deduplicate-and-merge** — Consolidate all domains from Wave 1 into clean master list, resolve overlaps within this loop AND with ph-compliance-moats-reverse's 41 domains → wrote analysis/master-domain-list.md; 107 unique domains across 20 categories; 1 internal merge (OWWA duplicates); 7 excluded (below 2.75); 4 cross-loop overlaps noted (SSS/PHI/HDMF vs. sibling D7; LGU LBT vs. sibling F2; ONETT pipeline vs. sibling A3/C5/B2). Top score: SSS contribution at 4.55; top cluster: social insurance + transport + OFW + fire safety.
 
-- [ ] **score-domains** — Score each domain on 4 dimensions (market/moat/computability/pain), compute weighted opportunity score
+- [x] **score-domains** — Score each domain on 4 dimensions (market/moat/computability/pain), compute weighted opportunity score → wrote analysis/scored-domains.md; 107 domains ranked using formula (M×0.25)+(Mo×0.25)+(C×0.30)+(P×0.20); top score 4.50 (A-SSS-3 SSS Contribution + E-OFW-1 OFW Fee Shield); key reordering: N-BFP-1 drops from 4.15→3.65 after correcting computability to 3 (occupancy judgment required); 17 domains score ≥4.00; 2 domains at 4.50 ceiling; identified 8 natural product bundles.
 
 - [ ] **professional-fees-validation** — WebSearch for actual professional service pricing for top-scoring domains, validate moat depth
 
