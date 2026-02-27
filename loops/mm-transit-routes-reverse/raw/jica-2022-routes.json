@@ -1,0 +1,42 @@
+{
+  "source": "government",
+  "source_detail": "JICA 2022 Data Collection Survey on Improving Road-Based Public Transport System in Metro Manila (openjicareport.jica.go.jp/pdf/12369815.pdf)",
+  "retrieved_date": "2026-02-27",
+  "extraction_status": "zero_routes_extracted",
+  "extraction_reason": "Primary PDF is binary-encoded and exceeds 10MB content limit; not text-extractable. This is a policy diagnostic survey, not a route inventory — it does not enumerate individual routes with GTFS-compatible data.",
+  "document_metadata": {
+    "title": "Data Collection Survey on Improving Road-Based Public Transport System in Metro Manila, Republic of the Philippines: Final Report",
+    "published": "April 2022",
+    "consultants": ["ALMEC Corporation", "Oriental Consultants Global Co., Ltd."],
+    "commissioned_by": "JICA",
+    "pdf_url": "https://openjicareport.jica.go.jp/pdf/12369815.pdf",
+    "document_id": "12369815"
+  },
+  "aggregate_statistics": {
+    "note": "The following figures are from secondary sources citing the JICA survey series (MUCEP 2015, GCR Follow-Up 2019, 2022 survey); approximate, not route-by-route",
+    "intra_city_bus_routes": 73,
+    "bus_routes_on_edsa": 33,
+    "intra_city_jeepney_routes": "640+",
+    "uv_express_routes": 130,
+    "pre_rationalization_total_routes": "900+",
+    "pre_rationalization_bus_franchises": 830,
+    "pre_rationalization_jeepney_franchises": "43000+"
+  },
+  "routes": [],
+  "follow_on_project": {
+    "name": "Capacity Development of Public Utility Vehicles (PUV) in Metro Manila and its Adjoining Areas",
+    "type": "Technical Cooperation Project",
+    "partners": ["JICA", "DOTr Philippines"],
+    "signed": "2024-07-17",
+    "duration_years": 3,
+    "components": [
+      "Effective route planning (overlapping route rationalization)",
+      "Development of intermodal transport hubs",
+      "Improving convenience of fixed-route PUVs",
+      "Consolidation support for jeepney cooperatives",
+      "Financing and vehicle acquisition review",
+      "Communication and social component"
+    ],
+    "expected_outputs_period": "2025-2027"
+  }
+}
