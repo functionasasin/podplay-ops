@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 88
-- Analyzed: 48
-- Pending: 40
-- Convergence: 55%
+- Analyzed: 49
+- Pending: 39
+- Convergence: 56%
 
 ---
 
@@ -71,7 +71,7 @@
 - [x] City bus operators — list and routes for each (e.g., Herrera Transport, RRCG, etc.)
 
 ### Community & Social Sources
-- [ ] Facebook commuter groups — PH Commuters, Manila Commuters, area-specific groups
+- [x] Facebook commuter groups — PH Commuters, Manila Commuters, area-specific groups
 - [ ] Reddit r/Philippines — transit route discussions, commuter advice threads
 - [ ] Twitter/X — #ManilaCommute, transit-related accounts, LTFRB announcements
 - [ ] Transit blogs and enthusiast sites — PinoyCommuter, commute guides, route blogs
