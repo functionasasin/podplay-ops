@@ -1,0 +1,72 @@
+{
+  "source": "social",
+  "retrieved_date": "2026-02-27",
+  "notes": "Twitter/X is a low-value route data source. Content is authentication-walled and unstructured. The two routes below were surfaced from news reports quoting LTFRB/DOTr tweets — not extracted directly from Twitter. Platform is useful only for confirming announcements already reported elsewhere.",
+  "routes": [
+    {
+      "route_id": "pnr-aug-route1",
+      "route_name": "PNR Augmentation Route 1",
+      "mode": "bus",
+      "origin": "Divisoria (Tutuban)",
+      "destination": "Alabang (Starmall)",
+      "key_stops": [
+        "Divisoria (Tutuban)",
+        "Mayhaligue St",
+        "Abad Santos Ave",
+        "Recto Ave",
+        "Legarda St",
+        "Quirino Ave",
+        "Nagtahan Flyover",
+        "Mabini Bridge",
+        "Osmeña Highway",
+        "Nichols Entry",
+        "SLEX",
+        "Alabang (Starmall)"
+      ],
+      "fare_min": null,
+      "fare_max": null,
+      "frequency_notes": "Introduced during PNR Metro Commuter Line suspension; service status post-2023 unconfirmed",
+      "geometry_available": false,
+      "geometry_source": null,
+      "confidence": "medium",
+      "notes": "Southbound path only. Announced by LTFRB/DOTr via Twitter in 2023 during PNR suspension for NSCR construction. Cross-reference with ltfrb-bus-routes.md for current status."
+    },
+    {
+      "route_id": "valenzuela-gateway-route1",
+      "route_name": "Valenzuela Gateway – Manila/Pasay Route",
+      "mode": "bus",
+      "origin": "Valenzuela Gateway Complex",
+      "destination": "Manila / Pasay",
+      "key_stops": [
+        "Valenzuela Gateway Complex",
+        "Manila (terminus unspecified)",
+        "Pasay (terminus unspecified)"
+      ],
+      "fare_min": null,
+      "fare_max": null,
+      "frequency_notes": "5 units per route; electric minibuses (20-seater); DOTr/GET Philippines operated; launched Sept 2025",
+      "geometry_available": false,
+      "geometry_source": null,
+      "confidence": "low",
+      "notes": "DOTr/GET Philippines 20-seater electric minibus routes from Valenzuela Gateway Complex. Launched Sept 2025. Exact alignment unknown. Two routes total (Manila/Pasay + Quezon City). Only confirmed from secondary sources quoting DOTr announcement."
+    },
+    {
+      "route_id": "valenzuela-gateway-route2",
+      "route_name": "Valenzuela Gateway – Quezon City Route",
+      "mode": "bus",
+      "origin": "Valenzuela Gateway Complex",
+      "destination": "Quezon City",
+      "key_stops": [
+        "Valenzuela Gateway Complex",
+        "Quezon City (terminus unspecified)"
+      ],
+      "fare_min": null,
+      "fare_max": null,
+      "frequency_notes": "5 units; electric minibuses (20-seater); launched Sept 2025",
+      "geometry_available": false,
+      "geometry_source": null,
+      "confidence": "low",
+      "notes": "Companion route to Valenzuela-Manila route. Same DOTr/GET Philippines electric minibus service. Exact alignment not available from Twitter source."
+    }
+  ]
+}
