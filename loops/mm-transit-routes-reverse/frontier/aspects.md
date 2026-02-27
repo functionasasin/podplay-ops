@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 88
-- Analyzed: 35
-- Pending: 53
-- Convergence: 40%
+- Analyzed: 36
+- Pending: 52
+- Convergence: 41%
 
 ---
 
@@ -54,7 +54,7 @@
 - [x] Other academic papers — Google Scholar search for "Metro Manila jeepney routes" and "Metro Manila bus routes"
 - [x] JICA 2022 data collection survey — improving road-based public transportation in Metro Manila (most recent comprehensive official survey)
 
-- [ ] JICA CTMP full report (openjicareport.jica.go.jp/pdf/12374831.pdf) — 5-Year Traffic Management Plan approved Nov 2022; contains bus stop relocation data, 209 traffic bottlenecks, 42 major congestion points; may have bus corridor geometry
+- [x] JICA CTMP full report (openjicareport.jica.go.jp/pdf/12374831.pdf) — 5-Year Traffic Management Plan approved Nov 2022; contains bus stop relocation data, 209 traffic bottlenecks, 42 major congestion points; may have bus corridor geometry
 - [ ] FOI portal MMDA CTMP document (foi.gov.ph/agencies/mmda) — FOI-accessible version of CTMP; potentially HTML or non-binary format of bus stop and corridor data
 - [ ] JICA-DOTr 2024 TCP outputs — "Capacity Development of PUV in Metro Manila" deliverables (route rationalization plans, intermodal hub designs); expected 2025–2027; check DOTr and JICA Philippines for any interim releases
 
