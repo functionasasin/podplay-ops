@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 88
-- Analyzed: 40
-- Pending: 48
-- Convergence: 45%
+- Analyzed: 41
+- Pending: 47
+- Convergence: 47%
 
 ---
 
@@ -61,7 +61,7 @@
 ### Terminal & Operator Sources
 - [x] Cubao terminal complex — all routes departing from Araneta, Ali Mall area, Gateway
 - [x] Pasay/EDSA terminal — all routes from Pasay rotonda, MRT Taft area
-- [ ] Monumento terminal area — all routes from Monumento, Victory Liner, etc.
+- [x] Monumento terminal area — all routes from Monumento, Victory Liner, etc.
 - [ ] SM North EDSA terminal — all jeepney/bus routes from SM North transport hub
 - [ ] Fairview terminal area — all routes originating from Fairview
 - [ ] Baclaran terminal area — all routes from Baclaran, LRT-1 terminus
