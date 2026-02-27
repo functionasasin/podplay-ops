@@ -19,12 +19,14 @@ Master distribution and franchise operation for [[Pod Play]] and [[Ping Pod]] ac
 - **HQ location**: [[Singapore]] being evaluated — EDB supportive with tax incentives and visa support
 - **First venue target**: [[Tela Park]] in Las Piñas — facility checklist created, pre-installation site survey needed
 
-### Current Activity (as of 2026-02-18)
+### Current Activity (as of 2026-02-25)
 
-- Syncing with [[Dominic]] tomorrow (2026-02-19) — PodPlay coordination
-- Syncing with [[Marco Basug]] next week — TBD
-- Emailed [[Niko]] to set up a meeting next week — TBD
-- [[2026-03 NJ PodPlay Training]] booked for March 2–10
+- Nico training overview call completed (2026-02-25) — see [[2026-02-25 Nico PodPlay Training Overview]]
+- [[Andy]] (PodPlay project manager) to send install document and schedule kickoff call
+- [[Chad]] to decide on account setup (shared vs. separate Mosyle, UniFi, etc.)
+- Payment integration (Stripe alternative) confirmed in progress by developer team ([[Julius]])
+- V2 replay service in final testing — will learn both V1 and V2 during NJ trip
+- [[2026-03 NJ PodPlay Training]] booked for March 2–10; staying at Hampton Inn Newark Harrison Riverwalk
 - [[Tela Park]] facility checklist created — need someone to do site survey before NJ training
 
 ## Revenue Model
@@ -47,13 +49,15 @@ Master distribution and franchise operation for [[Pod Play]] and [[Ping Pod]] ac
 - **Infrastructure Analysis**: [[PodPlay Asia Infrastructure Analysis]] — shared vs. local components, payment questions, PAL/NTSC issues
 - Key blocker: Payment integration (Stripe → [[Magpie]]) needs API surface understanding from training
 
-## Current Status (2026-02-18)
+## Current Status (2026-02-25)
 
-- Meeting with [[Dominic]] tomorrow (Feb 19) — PodPlay sync
-- Meeting with [[Marco Basu]] planned for this weekend or next week
-- Meeting with [[Nico]] tentatively next week — pending confirmation
-- Number of courts to be set up TBD
-- NJ training trip in ~12 days (March 2-10)
+- Nico training overview call completed — full infrastructure walkthrough done
+- Andy to send detailed install document (camera positions, specs, hardware placement)
+- Andy to schedule installer kickoff call with Carlos
+- Chad deciding on credential/account setup for Asia operations
+- Payment integration nearly done — devs aware of Philippines requirements
+- NJ training trip in ~5 days (March 2-10)
+- Carlos and [[Marco]] traveling together
 
 ## Automation
 
@@ -63,10 +67,12 @@ Master distribution and franchise operation for [[Pod Play]] and [[Ping Pod]] ac
 ## Action Items
 
 - **Site survey [[Tela Park]]** — send someone or go personally to check all items on the facility checklist before NJ training
-- Sync with [[Dominic]] (2026-02-19)
-- Sync with [[Marco Basug]] (week of 2026-02-23)
-- Meeting with [[Niko]] (week of 2026-02-23, pending confirmation)
+- ~~Meeting with [[Nico]] (week of 2026-02-23)~~ — completed 2026-02-25
+- Wait for [[Andy]] to send install document and schedule kickoff call
+- Wait for [[Chad]] to decide on account setup (Mosyle, UniFi, deployment server)
 - Complete NJ training trip and document all Asia-specific configuration differences
+- Learn V2 replay service migration during NJ trip
+- Set up Google Cloud alerting for our own locations
 - Get PodPlay Stripe integration details for Magpie compatibility assessment
 - Finalize legal agreements urgently
 - Follow up with Cutie on legal completion
