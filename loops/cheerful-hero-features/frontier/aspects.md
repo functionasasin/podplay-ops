@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total aspects**: 36
-- **Analyzed**: 12
-- **Pending**: 24
-- **Convergence**: 33%
+- **Analyzed**: 13
+- **Pending**: 23
+- **Convergence**: 36%
 
 ## Wave 1: Feature Category Research + Discovery
 
@@ -32,7 +32,7 @@ gets added here as an unchecked aspect._
 ### Enterprise Tier
 
 - [x] creatoriq — Enterprise-grade; acquired HypeAuditor ($78M Apr 2025); ISO27001; 40-language fraud detection; trusted by LVMH, Unilever
-- [ ] traackr — Enterprise ROI + competitive benchmarking; share-of-voice analytics; governance for regulated industries
+- [x] traackr — Enterprise ROI + competitive benchmarking; share-of-voice analytics; governance for regulated industries
 - [ ] sprout-social-influencer — 250M+ creator profiles; unified organic+paid+influencer suite (acquired Tagger 2023); AI topic discovery
 - [ ] impact-com — Enterprise affiliate + creator partnerships; deep conversion tracking; legacy infrastructure
 - [ ] captiv8 — AI-powered; social listening roots; 15M+ profiles; Snapchat API partner; Looker Studio integration; $25K/yr
