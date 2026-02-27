@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 88
-- Analyzed: 37
-- Pending: 51
-- Convergence: 42%
+- Analyzed: 38
+- Pending: 50
+- Convergence: 43%
 
 ---
 
@@ -56,7 +56,7 @@
 
 - [x] JICA CTMP full report (openjicareport.jica.go.jp/pdf/12374831.pdf) — 5-Year Traffic Management Plan approved Nov 2022; contains bus stop relocation data, 209 traffic bottlenecks, 42 major congestion points; may have bus corridor geometry
 - [x] FOI portal MMDA CTMP document (foi.gov.ph/agencies/mmda) — FOI-accessible version of CTMP; potentially HTML or non-binary format of bus stop and corridor data
-- [ ] JICA-DOTr 2024 TCP outputs — "Capacity Development of PUV in Metro Manila" deliverables (route rationalization plans, intermodal hub designs); expected 2025–2027; check DOTr and JICA Philippines for any interim releases
+- [x] JICA-DOTr 2024 TCP outputs — "Capacity Development of PUV in Metro Manila" deliverables (route rationalization plans, intermodal hub designs); expected 2025–2027; check DOTr and JICA Philippines for any interim releases
 
 ### Terminal & Operator Sources
 - [ ] Cubao terminal complex — all routes departing from Araneta, Ali Mall area, Gateway
