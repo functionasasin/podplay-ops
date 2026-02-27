@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 88
-- Analyzed: 49
-- Pending: 39
-- Convergence: 56%
+- Analyzed: 50
+- Pending: 38
+- Convergence: 57%
 
 ---
 
@@ -72,7 +72,7 @@
 
 ### Community & Social Sources
 - [x] Facebook commuter groups — PH Commuters, Manila Commuters, area-specific groups
-- [ ] Reddit r/Philippines — transit route discussions, commuter advice threads
+- [x] Reddit r/Philippines — transit route discussions, commuter advice threads
 - [ ] Twitter/X — #ManilaCommute, transit-related accounts, LTFRB announcements
 - [ ] Transit blogs and enthusiast sites — PinoyCommuter, commute guides, route blogs
 - [ ] YouTube — jeepney/bus route documentation videos, commuter vlogs with route info
