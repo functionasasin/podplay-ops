@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 88
-- Analyzed: 44
-- Pending: 44
-- Convergence: 50%
+- Analyzed: 45
+- Pending: 43
+- Convergence: 51%
 
 ---
 
@@ -65,7 +65,7 @@
 - [x] SM North EDSA terminal — all jeepney/bus routes from SM North transport hub
 - [x] Fairview terminal area — all routes originating from Fairview
 - [x] Baclaran terminal area — all routes from Baclaran, LRT-1 terminus
-- [ ] Other major terminals — Divisoria, Quiapo, Lawton, Santa Cruz, Blumentritt
+- [x] Other major terminals — Divisoria, Quiapo, Lawton, Santa Cruz, Blumentritt
 - [ ] Provincial bus operators — Victory Liner, Philtranco, DLTB, JAM, Five Star, Genesis, etc.
 - [ ] P2P bus operators — HM Transport, Froehlich, Rrcg, other premium bus services
 - [ ] City bus operators — list and routes for each (e.g., Herrera Transport, RRCG, etc.)
