@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 32
-- Analyzed: 31
-- Pending: 1
-- Convergence: 97%
+- Analyzed: 32
+- Pending: 0
+- Convergence: 100%
 
 ## Wave 0: Regulatory Body Inventory
 
@@ -80,4 +80,4 @@
 
 ## Wave 3: Synthesis (blocked by Wave 2)
 
-- [ ] **ranked-shortlist** — Produce final ranked shortlist with rationale, next-step recommendations for top 5 candidates, and unified atlas combining both surveys
+- [x] **ranked-shortlist** — Produce final ranked shortlist with rationale, next-step recommendations for top 5 candidates, and unified atlas combining both surveys → wrote analysis/ranked-shortlist.md; 107 domains ranked by post-validation opportunity score; top 3 domains (O-LRA-1 4.55, A-SSS-3 4.50, E-OFW-1 4.50); top 5 loop candidates: onett-transfer-reverse, ofw-fee-shield-reverse, sss-benefits-engine-reverse, stcw-seafarer-reverse, prc-cpd-reverse; combined atlas merges 148 unique domains across both loops (7 domains ≥4.50 elite tier, 44 domains ≥4.00 top tier).
