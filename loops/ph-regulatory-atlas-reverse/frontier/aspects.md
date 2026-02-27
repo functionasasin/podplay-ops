@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 32
-- Analyzed: 21
-- Pending: 11
-- Convergence: 66%
+- Analyzed: 22
+- Pending: 10
+- Convergence: 69%
 
 ## Wave 0: Regulatory Body Inventory
 
@@ -56,7 +56,7 @@
 
 - [x] **ntc-telecom-licensing** — NTC (RA 7925, EO 546): spectrum user fee formula (RF band occupied × area × population density); service authorization fees (CMTS, VSAT, etc.); type acceptance certificate fees for telecom equipment; broadcast frequency assignment. ~100+ telecom/broadcast licensees. → wrote analysis/wave1-ntc-telecom-licensing.md; 4 domains identified: Spectrum User Fee Calculator (3.35, fully deterministic KHz×rate×tier from MC 10-10-97, 2K–8K spectrum holders), Private Radio Fleet License Manager (2.85, table-based by ERP×mode, 200K–500K stations), Type Acceptance Import Screener (2.75, TA vs. TAC decision tree + fee computation, 10K–30K models/year), Broadcast Station License Calculator (2.35, ERP table lookup, ~1,800 stations). Key finding: NTC compliance is fundamentally B2B and narrower in market reach than other atlas domains — best opportunity is a fleet management SaaS for security/logistics companies with large radio fleets, displacing ₱5K–₱25K/year consultant fees.
 
-- [ ] **bsp-msb-licensing** — BSP (RA 7653, RA 11127, BSP Circular 1206): Certificate of Authority for pawnshops (3-stage process); OPS registration (₱20K one-time fee); remittance company license fees; EMI (e-money issuer) registration; annual supervisory fee. ~15K+ pawnshops + MSBs.
+- [x] **bsp-msb-licensing** — BSP (RA 7653, RA 11127, BSP Circular 1206): Certificate of Authority for pawnshops (3-stage process); OPS registration (₱20K one-time fee); remittance company license fees; EMI (e-money issuer) registration; annual supervisory fee. ~15K+ pawnshops + MSBs. 1,428 operators / 16,219 offices; 4 domains identified: Pawnshop Loan Transparency (3.60, consumer-facing, BSP has existing calc but mobile/UX gap), AMLA+BSP Compliance Calendar (3.50, B2B, Circular 1206 Dec 2024 transition urgency + AMLA penalty cliff ₱500K–₱1M/violation), OPS/EMI/VASP Classification Screener (3.50, narrow fintech market but deep law-firm moat ₱500K–₱2M), ASF Calculator (2.90, low pain — BSP proactively bills). → wrote analysis/wave1-bsp-msb-licensing.md
 
 - [ ] **owwa-membership** — OWWA (RA 10022): membership fee = USD 25 per contract period; death benefit = ₱200K; disability benefit = ₱20K–₱100K by degree; scholarship computation (₱25K–₱50K/year); livelihood program grant computation. 2.19M OFWs.
 
