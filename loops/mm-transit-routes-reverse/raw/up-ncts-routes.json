@@ -1,0 +1,44 @@
+{
+  "source": "academic",
+  "retrieved_date": "2026-02-27",
+  "notes": "UP NCTS does not publish open route databases. This file contains 0 new routes — all referenced data (DOTC PTIS GTFS, SafeTravelPH, LTFRB tallies) has been captured in prior aspects (sakay-ph, tumi-datahub, safetravelph, ltfrb-*). The Mega Manila PTPSS (DOTC/NCTS 2012) is the most important unpublished comprehensive route database; contact ncts.library.updiliman@up.edu.ph for access.",
+  "aggregate_statistics": {
+    "pre_covid_2019": {
+      "jeepney_routes": "900+",
+      "jeepney_franchises": "43000+",
+      "bus_companies": "830",
+      "bus_units": "12595",
+      "bus_operators": "1122",
+      "uv_express_units": "6500",
+      "source": "JICA Dream Plan 2014 / NCTS Mega Manila PTPSS 2012"
+    },
+    "covid_restart_jun2020": {
+      "modern_jeepney_routes": 48,
+      "modern_jeepney_units": 865,
+      "bus_routes": 35,
+      "bus_units": 4499,
+      "uv_express_routes": 118,
+      "uv_express_units": 6755,
+      "p2p_routes": 34,
+      "p2p_units": 387,
+      "source": "LTFRB / NCTS TSSP 2023 context"
+    },
+    "post_rationalization_nov2024": {
+      "local_bus_routes": 68,
+      "jeepney_routes_approx": 950,
+      "jeepney_consolidated": 555,
+      "jeepney_no_tse": 395,
+      "uv_express_routes_approx": 250,
+      "uv_express_consolidated": 142,
+      "uv_express_not_consolidated": 108,
+      "edsa_carousel_buses": 533,
+      "edsa_carousel_operators": 47,
+      "source": "TSSP 2024 context / LTFRB congressional testimony Dec 2023"
+    },
+    "edsa_pre_carousel": {
+      "routes_through_edsa": 47,
+      "source": "NCTS/TSSP 2023 Sanciangco et al (Mega Manila PTPSS 2012)"
+    }
+  },
+  "routes": []
+}
