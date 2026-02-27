@@ -115,3 +115,11 @@ loops:
     timeout_minutes: 30
     status: active
     created: 2026-02-25
+  cheerful-hero-features:
+    description: "Mine influencer marketing landscape → living competitive intel DB with stickiness-scored hero features"
+    type: reverse
+    schedule: "*/30 * * * *"
+    max_iterations: 40
+    timeout_minutes: 30
+    status: active
+    created: 2026-02-27
