@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 88
-- Analyzed: 38
-- Pending: 50
-- Convergence: 43%
+- Analyzed: 39
+- Pending: 49
+- Convergence: 44%
 
 ---
 
@@ -59,7 +59,7 @@
 - [x] JICA-DOTr 2024 TCP outputs — "Capacity Development of PUV in Metro Manila" deliverables (route rationalization plans, intermodal hub designs); expected 2025–2027; check DOTr and JICA Philippines for any interim releases
 
 ### Terminal & Operator Sources
-- [ ] Cubao terminal complex — all routes departing from Araneta, Ali Mall area, Gateway
+- [x] Cubao terminal complex — all routes departing from Araneta, Ali Mall area, Gateway
 - [ ] Pasay/EDSA terminal — all routes from Pasay rotonda, MRT Taft area
 - [ ] Monumento terminal area — all routes from Monumento, Victory Liner, etc.
 - [ ] SM North EDSA terminal — all jeepney/bus routes from SM North transport hub
