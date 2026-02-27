@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 32
-- Analyzed: 16
-- Pending: 16
-- Convergence: 50%
+- Analyzed: 17
+- Pending: 15
+- Convergence: 53%
 
 ## Wave 0: Regulatory Body Inventory
 
@@ -46,7 +46,7 @@
 
 - [x] **npc-data-privacy-compliance** — NPC (RA 10173 DPA): DPO appointment/registration, DPS registration, breach notification (72-hour rule), privacy impact assessment triggers, graduated penalty computation (₱500K–₱5M + imprisonment). All organizations processing personal data of Filipinos. 4 domains identified; top opportunity: "DPA Compliance Engine" combining NPC Registration Eligibility Screener (3.30) + 72-Hour Breach Notification Protocol (3.50) + ASIR Filing Tool (3.35) — universe of 50K–100K PICs/PIPs with ASIR duty; 15K–30K mandatory registrants; no comprehensive tool exists; fully deterministic threshold checks + compliance calendar + breach countdown. PIA Trigger Screener (3.00) is secondary. → wrote analysis/wave1-npc-data-privacy-compliance.md
 
-- [ ] **dti-business-registration** — DTI/BNRS (RA 3883): fee by territorial scope (barangay ₱200, city ₱500, regional ₱1K, national ₱2K) + DST ₱30; 5-year validity; late renewal = 50% penalty; integration with LGU business permit computation. ~5M+ sole proprietors.
+- [x] **dti-business-registration** — DTI/BNRS (RA 3883): fee by territorial scope (barangay ₱200, city ₱500, regional ₱1K, national ₱2K) + DST ₱30; 5-year validity; late renewal = 50% penalty; integration with LGU business permit computation. ~5M+ sole proprietors. 4 domains identified; top opportunity: Annual Compliance Calendar (4.00) combining DTI 5-year renewal tracking + LGU January 20 deadline + quarterly LBT installment + BIR calendar + mandated benefits — serves 5M+ sole proprietors, fully deterministic deadline engine. LGU LBT Estimator (3.70) and Startup Navigator (3.70) are strong secondaries. Key insight: DTI registration itself is low-moat (BNRS portal is self-service); the LGU annual business permit renewal is the real pain point (1.2M+ businesses, January 20 deadline, 25%+2%/month penalty). "Negosyo Calc PH" concept combines all 4 domains. → wrote analysis/wave1-dti-business-registration.md
 
 - [ ] **pcab-contractor-licensing** — PCAB (RA 4566): Aggregate Credit Points (ACP) scoring (financial capacity + equipment value + experience); minimum net worth by category; annual license renewal fees; special license computation for joint ventures. ~70K+ licensed contractors.
 
