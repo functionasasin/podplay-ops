@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 84
-- Analyzed: 32
-- Pending: 52
-- Convergence: 38%
+- Analyzed: 33
+- Pending: 51
+- Convergence: 39%
 
 ---
 
@@ -50,7 +50,7 @@
 - [x] World Bank Manila transport projects — route data from feasibility studies
 - [x] Asian Development Bank — Manila public transport improvement projects, route data
 - [x] UP NCTS (National Center for Transportation Studies) — academic papers on Manila routes
-- [ ] DLSU/Ateneo/UST transport research — thesis papers on jeepney/bus routes
+- [x] DLSU/Ateneo/UST transport research — thesis papers on jeepney/bus routes
 - [ ] Other academic papers — Google Scholar search for "Metro Manila jeepney routes" and "Metro Manila bus routes"
 
 ### Terminal & Operator Sources
