@@ -2,14 +2,14 @@
 
 ## Statistics
 - Total aspects discovered: 16
-- Analyzed: 0
-- Pending: 16
-- Convergence: 0%
+- Analyzed: 1
+- Pending: 15
+- Convergence: 6%
 
 ## Pending Aspects (ordered by dependency)
 
 ### Wave 1: Interview Requirements Extraction
-- [ ] interview-anatomy — Break down every round of the Anthropic SWE interview: skills tested, format, evaluation criteria, examples
+- [x] interview-anatomy — Break down every round of the Anthropic SWE interview: skills tested, format, evaluation criteria, examples
 - [ ] skill-taxonomy — Create complete taxonomy of discrete trainable skills across all interview rounds
 - [ ] current-level-diagnostic — Design 10-15 diagnostic exercises to assess current level across all skill categories
 - [ ] practice-session-formats — Design the different 30-minute session types (Code Kata, Spec Decomposition, Mini System Design, etc.)
@@ -35,7 +35,7 @@
 - [ ] convergence-review — Final review: is the curriculum complete, realistic, and actionable?
 
 ## Recently Analyzed
-(None yet)
+- [x] interview-anatomy — Detailed breakdown of all 5 rounds: OA (LRU Cache + Task DAG), Coding Round 1 (async web crawler), System Design (LLM inference API), Coding Round 2 (stack profiler), Hiring Manager. Cross-cutting skills identified: concurrency, edge cases, production quality, simplicity. Pass/fail criteria documented for each round.
 
 ## Discovered Aspects
 (None yet)
