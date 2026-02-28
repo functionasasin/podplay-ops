@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 35
-- Analyzed: 8
-- Pending: 27
-- Convergence: 23%
+- Analyzed: 9
+- Pending: 26
+- Convergence: 26%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -18,7 +18,7 @@
 - [x] competitive-landscape — Search 8+ queries for estate planning calculators, succession tools, PH legal tech, estate tax SaaS. Deep-dive top 5 competitors with feature matrices.
 - [x] legal-doc-formatting — Research PH court document formatting standards, BIR submission requirements, legal report conventions, Philippine legal citation format (NCC articles).
 - [x] estate-tax-integration — Read converged estate-tax-engine-spec.md. Map InheritanceShare output → estate tax engine input. Identify data model bridges, combined UI flow, combined PDF output.
-- [ ] multi-tenancy-patterns — Research multi-tenant SaaS architecture for professional services. Analyze role-based access, firm account management, seat-based pricing patterns.
+- [x] multi-tenancy-patterns — Research multi-tenant SaaS architecture for professional services. Analyze role-based access, firm account management, seat-based pricing patterns.
 
 ### Wave 2: Per-Feature Specifications (depends: ALL Wave 1 complete)
 
