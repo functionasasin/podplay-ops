@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total aspects**: 39
-- **Analyzed**: 36
-- **Pending**: 3
-- **Convergence**: 92%
+- **Analyzed**: 37
+- **Pending**: 2
+- **Convergence**: 95%
 
 ## Wave 1: Feature Category Research + Discovery
 
@@ -70,6 +70,6 @@ gets added here as an unchecked aspect._
 _Unlocked after all Wave 1 and Wave 2 aspects are complete._
 
 - [x] competitor-matrix — Cross-competitor feature comparison grid across all categories
-- [ ] hero-feature-cards — Individual hero feature specs with stickiness scores and workflow integration maps
+- [x] hero-feature-cards — Individual hero feature specs with stickiness scores and workflow integration maps
 - [ ] stickiness-scorecard — All hero features ranked by stickiness score with justifications
 - [ ] workflow-integration-map — How hero features chain together into an inescapable operating system
