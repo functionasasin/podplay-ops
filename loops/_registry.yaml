@@ -175,3 +175,11 @@ loops:
     timeout_minutes: 30
     status: active
     created: 2026-02-28
+  freelance-tax-reverse:
+    description: "Extract PH freelance/self-employed income tax rules into exhaustive product spec"
+    type: reverse
+    schedule: "*/30 * * * *"
+    max_iterations: 60
+    timeout_minutes: 30
+    status: active
+    created: 2026-02-28
