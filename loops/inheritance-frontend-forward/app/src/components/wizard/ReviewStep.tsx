@@ -246,7 +246,7 @@ export function ReviewStep({
 
   return (
     <div data-testid="review-step" className="space-y-6">
-      <h2 className="text-xl font-bold text-[hsl(var(--primary))] font-serif">Review & Run</h2>
+      <h2 className="text-lg sm:text-xl font-bold text-[hsl(var(--primary))] font-serif">Review & Run</h2>
 
       {/* Summary sections */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -391,7 +391,7 @@ export function ReviewStep({
                   type="checkbox"
                   checked={!!retroactiveRa.field.value}
                   onChange={(e) => retroactiveRa.field.onChange(e.target.checked)}
-                  className="h-4 w-4 rounded border-slate-300 text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
+                  className="h-4 w-4 rounded border-input accent-primary"
                 />
                 <span className="font-medium">Retroactive RA 11642</span>
               </label>

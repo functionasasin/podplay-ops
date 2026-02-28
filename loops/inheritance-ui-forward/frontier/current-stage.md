@@ -5,7 +5,9 @@ Make everything work on mobile and do a consistency pass: responsive breakpoints
 
 ## Test Results (updated by loop)
 ```
-(not yet run)
+Test Files  30 passed (30)
+Tests       667 passed (667)
+CSS bundle: 63.45 KB
 ```
 
 ## Work Log
@@ -17,3 +19,4 @@ Make everything work on mobile and do a consistency pass: responsive breakpoints
 - Stage 6 completed: Restyled WillStep (styled tab bar with gold accent underline, design token colors), InstitutionsTab (shadcn Card repeater, Button with Plus/Trash2 icons, Separator, styled conditions/substitutes sections), LegaciesTab (shadcn Card, styled select for legacy type, Alert for specific asset warning, Input for text fields), DevisesTab (shadcn Card, Alert info banner, styled select/Input), DisinheritancesTab (shadcn Card, Alert for validity indicator with CheckCircle2/XCircle icons, styled checkboxes, design token colors for valid/invalid states), HeirReferenceForm (shadcn Input, styled checkbox, space-y layout), ShareSpecForm (styled select, shadcn Input for fraction numerator/denominator). All 1033 tests pass.
 - Stage 7 completed: Restyled DonationsStep (shadcn Button with Plus icon, text-muted-foreground empty state), DonationCard (shadcn Card/CardHeader/CardAction/CardContent, Button ghost destructive with Trash2, Input, Alert for stranger banner, Separator, styled exemption flags with gold accent, border-left cascade for professional expense), ReviewStep (Card grid summaries, gold accent Badge for predicted scenario, severity-styled warnings with icons and dismiss, shadcn Accordion for advanced settings, gold accent Compute Distribution button). All 1033 tests pass.
 - Stage 8 completed: Restyled ResultsView (space-y-8 section spacing), ResultsHeader (serif title, shadcn Badge color-coded per succession type, Separator, Alert with icons for preterition/mixed banners), DistributionSection (shadcn Table, Badge for categories and legal basis, Alert for info banners, Separator, serif section headings), NarrativePanel (shadcn Accordion type=multiple with first open, Badge for categories, Button for copy, serif legal text), WarningsPanel (shadcn Alert with severity icons AlertCircle/AlertTriangle/Info), ComputationLog (shadcn Accordion collapsed by default, Badge for scenario, Alert for restarts, monospace step numbers), ActionsBar (shadcn Button outline with Pencil/Download/Copy icons, Separator). All 1033 tests pass.
+- Stage 9 completed: Responsive breakpoints (header/main padding, ResultsHeader flex-wrap, table overflow-x-auto, action buttons stack on mobile, shorter button text on mobile). Empty state consistency (normalized py-8 across all tab repeaters). Focus states (global checkbox/radio focus-visible ring). Form field consistency (ReviewStep checkbox normalized to accent-primary). All 667 component tests pass. CSS bundle 63.45 KB.

@@ -1,7 +1,6 @@
 /**
  * ComputationLog — collapsible advanced section showing pipeline steps.
  */
-import React from 'react';
 import { Info } from 'lucide-react';
 import type { ComputationLog as ComputationLogType } from '../../types';
 import { Badge } from '../ui/badge';

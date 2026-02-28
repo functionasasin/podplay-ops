@@ -1,7 +1,6 @@
 /**
  * ResultsHeader — scenario badge, succession type, estate total.
  */
-import React from 'react';
 import { AlertTriangle, Info } from 'lucide-react';
 import type { ScenarioCode, SuccessionType, Money } from '../../types';
 import { formatPeso } from '../../types';
@@ -36,13 +35,13 @@ export function ResultsHeader({ scenarioCode, successionType, netDistributableEs
 
   return (
     <div data-testid="results-header">
-      <h1 className="font-serif text-2xl font-bold text-primary tracking-tight">
+      <h1 className="font-serif text-xl sm:text-2xl font-bold text-primary tracking-tight">
         Philippine Inheritance Distribution
       </h1>
 
       <Separator className="my-4" />
 
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-3 sm:gap-4">
         <Badge
           data-testid="scenario-badge"
           variant="outline"
@@ -50,11 +49,11 @@ export function ResultsHeader({ scenarioCode, successionType, netDistributableEs
         >
           {scenarioCode}
         </Badge>
-        <span className="text-lg font-medium text-foreground">
+        <span className="text-base sm:text-lg font-medium text-foreground">
           {SUCCESSION_LABELS[successionType]}
         </span>
-        <Separator orientation="vertical" className="h-5" />
-        <span className="text-lg">
+        <Separator orientation="vertical" className="h-5 hidden sm:block" />
+        <span className="text-base sm:text-lg">
           <span className="text-muted-foreground">Total Estate: </span>
           <span className="font-semibold text-foreground">{formatPeso(netDistributableEstate.centavos)}</span>
         </span>

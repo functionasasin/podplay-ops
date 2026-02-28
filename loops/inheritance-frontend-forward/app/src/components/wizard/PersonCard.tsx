@@ -211,7 +211,7 @@ export function PersonCard({
 
         {/* Status Toggles */}
         <div className="space-y-3">
-          <label className="flex items-center gap-2.5 cursor-pointer">
+          <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
               checked={isAlive ?? true}
@@ -223,7 +223,7 @@ export function PersonCard({
             <span className="text-sm">Alive at Time of Succession</span>
           </label>
 
-          <label className="flex items-center gap-2.5 cursor-pointer">
+          <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
               checked={hasRenounced ?? false}
@@ -235,7 +235,7 @@ export function PersonCard({
             <span className="text-sm">Has Renounced Inheritance</span>
           </label>
 
-          <label className="flex items-center gap-2.5 cursor-pointer">
+          <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
               checked={isUnworthy ?? false}
@@ -252,8 +252,8 @@ export function PersonCard({
 
           {/* Conditional: Unworthiness Condoned */}
           {showUnworthinessCondoned && (
-            <div className="ml-6.5">
-              <label className="flex items-center gap-2.5 cursor-pointer">
+            <div className="ml-7">
+              <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={unworthinessCondoned ?? false}
@@ -313,7 +313,7 @@ export function PersonCard({
         {/* Conditional: Guilty Party (SurvivingSpouse + legal separation) */}
         {showGuiltyParty && (
           <div className="ml-4 border-l-2 border-border pl-4">
-            <label className="flex items-center gap-2.5 cursor-pointer">
+            <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={isGuiltyParty ?? false}

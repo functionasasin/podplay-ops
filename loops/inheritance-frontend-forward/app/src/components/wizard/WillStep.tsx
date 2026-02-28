@@ -35,6 +35,7 @@ export function WillStep({
 
   return (
     <div data-testid="will-step" className="space-y-6">
+      <h2 className="sr-only">Last Will &amp; Testament</h2>
       <DateInput<EngineInput>
         name={'will.date_executed' as any}
         label="Date Will Was Executed"

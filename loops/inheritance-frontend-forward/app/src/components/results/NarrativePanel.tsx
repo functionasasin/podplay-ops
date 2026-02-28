@@ -48,20 +48,22 @@ export function NarrativePanel({ narratives, decedentName, dateOfDeath }: Narrat
     await navigator.clipboard.writeText(header + body);
   };
 
-  const defaultOpen = narratives.length > 0 ? [narratives[0].heir_id] : [];
+  const defaultOpen = narratives.length > 0 ? [narratives[0]!.heir_id] : [];
 
   return (
     <div data-testid="narrative-panel">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="font-serif text-lg font-semibold text-primary">Heir Narratives</h2>
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <h2 className="font-serif text-base sm:text-lg font-semibold text-primary">Heir Narratives</h2>
         <Button
           type="button"
           variant="outline"
           size="sm"
           onClick={handleCopyAll}
+          className="shrink-0"
         >
           <Copy className="size-3.5" />
-          Copy All Narratives
+          <span className="hidden sm:inline">Copy All Narratives</span>
+          <span className="sm:hidden">Copy All</span>
         </Button>
       </div>
 

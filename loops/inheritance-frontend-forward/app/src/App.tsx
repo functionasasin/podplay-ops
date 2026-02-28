@@ -34,16 +34,16 @@ function App() {
   return (
     <div className="min-h-screen bg-background">
       <header className="bg-primary text-primary-foreground shadow-md">
-        <div className="max-w-3xl mx-auto px-6 py-4">
-          <h1 className="text-xl font-bold tracking-tight font-serif">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4">
+          <h1 className="text-lg sm:text-xl font-bold tracking-tight font-serif">
             Inheritance Calculator
           </h1>
-          <p className="text-sm text-primary-foreground/70">Philippine Succession Law Engine</p>
+          <p className="text-xs sm:text-sm text-primary-foreground/70">Philippine Succession Law Engine</p>
         </div>
         <Separator className="bg-accent h-0.5" />
       </header>
 
-      <main className="max-w-3xl mx-auto py-8 px-4">
+      <main className="max-w-3xl mx-auto py-6 sm:py-8 px-4 sm:px-6">
         {state.phase === 'wizard' && (
           <WizardContainer onSubmit={handleSubmit} />
         )}

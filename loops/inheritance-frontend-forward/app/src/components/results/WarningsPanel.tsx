@@ -2,7 +2,6 @@
  * WarningsPanel — manual flag cards (forward-compatible).
  * Hidden when warnings array is empty.
  */
-import React from 'react';
 import { AlertTriangle, AlertCircle, Info } from 'lucide-react';
 import type { ManualFlag, InheritanceShare } from '../../types';
 import { getWarningSeverity } from './utils';

@@ -143,6 +143,7 @@ export function FamilyTreeStep({
 
   return (
     <div data-testid="family-tree-step" className="space-y-4">
+      <h2 className="sr-only">Family Tree</h2>
       {fields.length === 0 && (
         <p className="text-muted-foreground text-center py-8">
           No family members added yet. Click &quot;Add Person&quot; to begin.

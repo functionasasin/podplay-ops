@@ -75,6 +75,7 @@ export function DecedentStep({
 
   return (
     <div data-testid="decedent-step" className="space-y-6">
+      <h2 className="sr-only">Decedent Information</h2>
       {/* Section 1: Identity */}
       <div className="space-y-4">
         <h3 className="text-sm font-semibold text-primary uppercase tracking-wide">Identity</h3>
@@ -100,7 +101,7 @@ export function DecedentStep({
       {/* Section 2: Legitimacy Status */}
       <div className="space-y-3">
         <h3 className="text-sm font-semibold text-primary uppercase tracking-wide">Legitimacy</h3>
-        <label className="flex items-center gap-2.5 cursor-pointer">
+        <label className="flex items-center gap-2 cursor-pointer">
           <input
             type="checkbox"
             checked={watch('decedent.is_illegitimate') ?? false}
@@ -109,7 +110,7 @@ export function DecedentStep({
           />
           <span className="text-sm">Decedent is Illegitimate</span>
         </label>
-        <p className="text-xs text-muted-foreground ml-6.5">
+        <p className="text-xs text-muted-foreground ml-7">
           Only affects scenario when no descendants and will exists — Arts. T14/T15 via Art. 903
         </p>
       </div>
@@ -119,7 +120,7 @@ export function DecedentStep({
       {/* Section 3: Marital Status */}
       <div className="space-y-3">
         <h3 className="text-sm font-semibold text-primary uppercase tracking-wide">Marital Status</h3>
-        <label className="flex items-center gap-2.5 cursor-pointer">
+        <label className="flex items-center gap-2 cursor-pointer">
           <input
             type="checkbox"
             checked={isMarried ?? false}
@@ -151,7 +152,7 @@ export function DecedentStep({
             />
           </label>
 
-          <label className="flex items-center gap-2.5 cursor-pointer">
+          <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
               checked={watch('decedent.has_legal_separation') ?? false}
@@ -161,7 +162,7 @@ export function DecedentStep({
             <span className="text-sm">Legal Separation</span>
           </label>
 
-          <label className="flex items-center gap-2.5 cursor-pointer">
+          <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
               checked={articuloMortis ?? false}
@@ -174,7 +175,7 @@ export function DecedentStep({
           {/* Articulo Mortis cascade — level 2 */}
           {articuloMortis && (
             <div className="ml-4 space-y-4 border-l-2 border-warning/30 pl-4">
-              <label className="flex items-center gap-2.5 cursor-pointer">
+              <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={wasIll ?? false}
@@ -187,7 +188,7 @@ export function DecedentStep({
               {/* Level 3: illness_caused_death */}
               {wasIll && (
                 <div className="ml-4">
-                  <label className="flex items-center gap-2.5 cursor-pointer">
+                  <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={illnessCausedDeath ?? false}

@@ -61,7 +61,7 @@ export function InstitutionsTab({
   return (
     <div data-testid="institutions-tab" className="space-y-4">
       {fields.length === 0 && (
-        <p className="text-muted-foreground text-sm py-4 text-center">None added yet</p>
+        <p className="text-muted-foreground text-center py-8">None added yet</p>
       )}
 
       {fields.map((field, index) => (

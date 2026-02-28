@@ -80,7 +80,7 @@ export function DisinheritancesTab({
   return (
     <div data-testid="disinheritances-tab" className="space-y-4">
       {fields.length === 0 && (
-        <p className="text-muted-foreground text-sm py-4 text-center">No disinheritances added</p>
+        <p className="text-muted-foreground text-center py-8">No disinheritances added</p>
       )}
 
       {fields.map((field, index) => (

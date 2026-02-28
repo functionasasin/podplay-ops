@@ -77,7 +77,7 @@ export function LegaciesTab({
   return (
     <div data-testid="legacies-tab" className="space-y-4">
       {fields.length === 0 && (
-        <p className="text-muted-foreground text-sm py-4 text-center">No legacies added</p>
+        <p className="text-muted-foreground text-center py-8">No legacies added</p>
       )}
 
       {fields.map((field, index) => (

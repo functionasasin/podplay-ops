@@ -2,7 +2,6 @@
  * ResultsView — main container for the results display.
  * Renders all 5 sections + actions bar after engine returns EngineOutput.
  */
-import React from 'react';
 import type { EngineInput, EngineOutput } from '../../types';
 import { ResultsHeader } from './ResultsHeader';
 import { DistributionSection } from './DistributionSection';

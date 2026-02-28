@@ -42,6 +42,7 @@ export function EstateStep({
 
   return (
     <div data-testid="estate-step" className="space-y-6">
+      <h2 className="sr-only">Estate Information</h2>
       <MoneyInput<EngineInput>
         name="net_distributable_estate.centavos"
         label="Net Distributable Estate"

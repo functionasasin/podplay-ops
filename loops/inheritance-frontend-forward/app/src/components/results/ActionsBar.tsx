@@ -1,7 +1,6 @@
 /**
  * ActionsBar — Edit Input, Export JSON, Copy Narratives.
  */
-import React from 'react';
 import { Pencil, Download, Copy } from 'lucide-react';
 import type { EngineInput, EngineOutput } from '../../types';
 import { stripMarkdownBold } from './utils';
@@ -45,7 +44,7 @@ export function ActionsBar({ input, output, onEditInput }: ActionsBarProps) {
   return (
     <div data-testid="actions-bar">
       <Separator className="mb-4" />
-      <div className="flex gap-3">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
         <Button
           type="button"
           variant="outline"

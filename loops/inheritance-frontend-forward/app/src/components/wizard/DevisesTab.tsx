@@ -80,7 +80,7 @@ export function DevisesTab({
       </Alert>
 
       {fields.length === 0 && (
-        <p className="text-muted-foreground text-sm py-4 text-center">No devises added</p>
+        <p className="text-muted-foreground text-center py-8">No devises added</p>
       )}
 
       {fields.map((field, index) => (

@@ -1,7 +1,6 @@
 /**
  * DistributionSection — pie chart + heir table with 7 layout variants.
  */
-import React from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { Info, Scale } from 'lucide-react';
 import type { InheritanceShare, SuccessionType, ScenarioCode, Person } from '../../types';
@@ -82,8 +81,8 @@ function HeirTable({ shares, showDonations, showRepresentation, persons, layout 
   const isCollateral = layout === 'collateral-weighted';
 
   return (
-    <div>
-      <Table data-testid="heir-table">
+    <div className="overflow-x-auto -mx-1">
+      <Table data-testid="heir-table" className="min-w-[600px]">
         <TableHeader>
           <TableRow className="border-border">
             <TableHead>Name</TableHead>
@@ -163,9 +162,9 @@ function DistributionChart({ chartData }: { chartData: { name: string; value: nu
   if (chartData.length === 0) return null;
   return (
     <div data-testid="distribution-chart" className="mb-6">
-      <ResponsiveContainer width="100%" height={250}>
+      <ResponsiveContainer width="100%" height={220}>
         <PieChart>
-          <Pie data={chartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100}>
+          <Pie data={chartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={85}>
             {chartData.map((entry, i) => (
               <Cell key={i} fill={CHART_COLORS[entry.category] ?? '#6b7280'} />
             ))}
@@ -179,7 +178,7 @@ function DistributionChart({ chartData }: { chartData: { name: string; value: nu
 
 export function DistributionSection({
   shares,
-  totalCentavos,
+  totalCentavos: _totalCentavos,
   successionType,
   scenarioCode,
   persons,
@@ -267,10 +266,10 @@ export function DistributionSection({
     return (
       <div data-testid="distribution-section">
         <DistributionChart chartData={chartData} />
-        <h3 className="font-serif text-lg font-semibold text-primary mb-3">Testate Portion</h3>
+        <h3 className="font-serif text-base sm:text-lg font-semibold text-primary mb-3">Testate Portion</h3>
         <HeirTable shares={shares} showDonations={showDonations} showRepresentation={showRepresentation} persons={persons} layout={layout} />
         <Separator className="my-6" />
-        <h3 className="font-serif text-lg font-semibold text-primary mb-3">Intestate Remainder</h3>
+        <h3 className="font-serif text-base sm:text-lg font-semibold text-primary mb-3">Intestate Remainder</h3>
       </div>
     );
   }
@@ -279,10 +278,10 @@ export function DistributionSection({
     return (
       <div data-testid="distribution-section">
         <DistributionChart chartData={chartData} />
-        <h3 className="font-serif text-lg font-semibold text-primary mb-3">Compulsory Shares (Legitime)</h3>
+        <h3 className="font-serif text-base sm:text-lg font-semibold text-primary mb-3">Compulsory Shares (Legitime)</h3>
         <HeirTable shares={shares} showDonations={showDonations} showRepresentation={showRepresentation} persons={persons} layout={layout} />
         <Separator className="my-6" />
-        <h3 className="font-serif text-lg font-semibold text-primary mb-3">Free Portion (Testamentary Dispositions)</h3>
+        <h3 className="font-serif text-base sm:text-lg font-semibold text-primary mb-3">Free Portion (Testamentary Dispositions)</h3>
       </div>
     );
   }

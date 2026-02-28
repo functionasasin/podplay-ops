@@ -63,7 +63,7 @@ export function DonationsStep({
 
   return (
     <div data-testid="donations-step" className="space-y-4">
-      <h3 className="text-lg font-semibold text-[hsl(var(--primary))]">Donations</h3>
+      <h2 className="text-lg font-semibold text-[hsl(var(--primary))]">Donations</h2>
 
       {fields.length === 0 && (
         <p className="text-muted-foreground text-center py-8">

@@ -94,6 +94,13 @@
     --sidebar-ring: #c5a44e;
 }
 
+/* Focus states for native form controls */
+input[type="checkbox"]:focus-visible,
+input[type="radio"]:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
