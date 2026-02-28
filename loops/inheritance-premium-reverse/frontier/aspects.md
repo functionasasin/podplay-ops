@@ -1,10 +1,10 @@
 # Frontier — Inheritance Premium Features
 
 ## Statistics
-- Total aspects discovered: 28
-- Analyzed: 3
-- Pending: 25
-- Convergence: 11%
+- Total aspects discovered: 31
+- Analyzed: 4
+- Pending: 27
+- Convergence: 13%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -13,7 +13,7 @@
 - [x] codebase-audit — Mine existing frontend types, components, WASM bridge, and engine outputs. Catalog every computed field not rendered, every action not wired, every integration point available.
 - [x] pdf-export-patterns — Research react-pdf / @react-pdf/renderer patterns, legal document PDF generation in React. Analyze legal report templates and formatting conventions.
 - [x] auth-persistence-patterns — Research Supabase auth + RLS, case management data models, auto-save patterns for legal tools.
-- [ ] crm-law-firm-patterns — Research law firm CRM tools (Clio, PracticePanther, MyCase). Client management UX patterns for small/solo PH law practices.
+- [x] crm-law-firm-patterns — Research law firm CRM tools (Clio, PracticePanther, MyCase). Client management UX patterns for small/solo PH law practices.
 - [ ] ph-practice-workflow — Research the complete PH estate settlement process: client intake → computation → BIR filing → court petition → distribution. Map where software touches each stage.
 - [ ] competitive-landscape — Search 8+ queries for estate planning calculators, succession tools, PH legal tech, estate tax SaaS. Deep-dive top 5 competitors with feature matrices.
 - [ ] legal-doc-formatting — Research PH court document formatting standards, BIR submission requirements, legal report conventions, Philippine legal citation format (NCC articles).
@@ -38,6 +38,9 @@
 - [ ] spec-represents-display — Show "representing [deceased parent name]" label when inherits_by === Representation. Reads: codebase-audit. [Discovered: codebase-audit]
 - [ ] spec-donation-summary-in-results — Display the input donations list in results view (advances on inheritance transparency). Reads: codebase-audit. [Discovered: codebase-audit]
 - [ ] spec-case-export-zip — Export all case files (input JSON, output JSON, PDF) as a ZIP for offline archival. Legal obligation for PH lawyers. Depends: spec-pdf-export, spec-auth-persistence. [Discovered: auth-persistence-patterns]
+- [ ] spec-conflict-check — Search existing clients/heirs before new case intake. PH bar ethics require conflict-of-interest screening. Depends: spec-client-profiles. [Discovered: crm-law-firm-patterns]
+- [ ] spec-intake-form — Guided digital intake capturing decedent info, family composition, asset summary; pre-populates case wizard. Depends: spec-client-profiles. [Discovered: crm-law-firm-patterns]
+- [ ] spec-family-tree-visualizer — Interactive heir tree diagram (SVG/canvas) showing succession relationships, separate from distribution table. Reads: codebase-audit. [Discovered: crm-law-firm-patterns]
 
 ### Wave 3: Synthesis (depends: ALL Wave 2 complete)
 
