@@ -133,3 +133,11 @@ loops:
     timeout_minutes: 30
     status: active
     created: 2026-02-28
+  tiktok-integrations-reverse:
+    description: "Map entire TikTok API/integration landscape → integration atlas + Cheerful applicability matrix"
+    type: reverse
+    schedule: "*/30 * * * *"
+    max_iterations: 40
+    timeout_minutes: 30
+    status: active
+    created: 2026-02-28
