@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total aspects**: 36
-- **Analyzed**: 18
-- **Pending**: 18
-- **Convergence**: 50%
+- **Analyzed**: 19
+- **Pending**: 17
+- **Convergence**: 53%
 
 ## Wave 1: Feature Category Research + Discovery
 
@@ -38,7 +38,7 @@ gets added here as an unchecked aspect._
 - [x] captiv8 — AI-powered; social listening roots; 15M+ profiles; Snapchat API partner; Looker Studio integration; $25K/yr
 - [x] linqia — Full-service managed+tech; guaranteed ROI model; content lab; performance media amplification
 - [x] brandwatch — 50M+ creator profiles; consumer intelligence suite; Klear acquisition; $750+/mo
-- [ ] meltwater — PR + media intelligence + influencer; all-in-one comms platform
+- [x] meltwater — PR + media intelligence + influencer; all-in-one comms platform
 
 ### Mid-Market Tier
 
