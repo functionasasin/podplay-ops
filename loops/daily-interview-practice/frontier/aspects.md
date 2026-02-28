@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 16
-- Analyzed: 3
-- Pending: 13
-- Convergence: 19%
+- Analyzed: 4
+- Pending: 12
+- Convergence: 25%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -12,7 +12,7 @@
 - [x] interview-anatomy — Break down every round of the Anthropic SWE interview: skills tested, format, evaluation criteria, examples
 - [x] skill-taxonomy — Create complete taxonomy of discrete trainable skills across all interview rounds
 - [x] current-level-diagnostic — Design 10-15 diagnostic exercises to assess current level across all skill categories
-- [ ] practice-session-formats — Design the different 30-minute session types (Code Kata, Spec Decomposition, Mini System Design, etc.)
+- [x] practice-session-formats — Design the different 30-minute session types (Code Kata, Spec Decomposition, Mini System Design, etc.)
 
 ### Wave 2: Curriculum Design (depends on Wave 1)
 - [ ] progression-map — Design 7-phase progression from diagnostic to interview-ready (~20 weeks)
@@ -38,6 +38,7 @@
 - [x] interview-anatomy — Detailed breakdown of all 5 rounds: OA (LRU Cache + Task DAG), Coding Round 1 (async web crawler), System Design (LLM inference API), Coding Round 2 (stack profiler), Hiring Manager. Cross-cutting skills identified: concurrency, edge cases, production quality, simplicity. Pass/fail criteria documented for each round.
 - [x] skill-taxonomy — 50+ discrete skills catalogued across 8 categories (Python Fluency, Concurrency, Data Structures, Algorithms, System Design, HTTP/Networking, Under-Pressure Execution, Communication). Priority tiers assigned: 10 CRITICAL skills, ~15 HIGH. Multi-round multiplier table identifies highest-ROI training targets. 5-tier trainability framework maps each skill to training approach.
 - [x] current-level-diagnostic — 15 diagnostic exercises across 3 days (Python/DS, Concurrency/Algos, Systems/Communication). Each exercise has 1-5 scoring rubric, target time, follow-up prompts, and OpenClaw delivery instructions. Level mapping: 15–75 pts → Beginner/Developing/Intermediate/Advanced/Interview-Ready. Per-category gap flags (CONCURRENCY-GAP, ASYNCIO-GAP, etc.) guide Phase 1 customization.
+- [x] practice-session-formats — 9 session formats designed: Code Kata, Spec Decomposition, Mini System Design, Debug & Read, SQL Challenge, Mock Pressure Round, Review & Reflect, Concept Deep Dive, Behavioral Story Practice. Each has timing breakdown, OpenClaw delivery instructions, sample problem libraries, and phase-frequency table. Cross-format principles: Socratic coaching, "I don't know" handling, edge-case-mid-session drilling, "explain it to me" close.
 
 ## Discovered Aspects
 (None yet)
