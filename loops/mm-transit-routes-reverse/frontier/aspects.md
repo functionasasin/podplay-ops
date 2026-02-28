@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 91
-- Analyzed: 66
-- Pending: 25
-- Convergence: 73%
+- Analyzed: 67
+- Pending: 24
+- Convergence: 74%
 
 ---
 
@@ -97,7 +97,7 @@
 ### By Major Corridor
 - [x] EDSA corridor — all routes using any segment of EDSA, cross-referenced across sources
 - [x] C5 corridor — all routes along C5, including partial-overlap routes
-- [ ] Commonwealth Avenue corridor — all routes from Quezon Ave to Fairview
+- [x] Commonwealth Avenue corridor — all routes from Quezon Ave to Fairview
 - [ ] España-Quezon Avenue corridor — all routes along this University Belt axis
 - [ ] Taft Avenue corridor — all routes along Taft, Buendia, through Pasay
 - [ ] Aurora Boulevard corridor — all routes along Aurora from Cubao to Marikina
