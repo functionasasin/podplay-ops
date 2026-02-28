@@ -5,9 +5,9 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 23 |
-| Analyzed | 2 |
-| Pending | 21 |
-| Convergence | 9% |
+| Analyzed | 3 |
+| Pending | 20 |
+| Convergence | 13% |
 
 ---
 
@@ -15,7 +15,7 @@
 
 - [x] `tiktok-login-kit` — OAuth 2.0 for TikTok: auth flow, scopes, token management, prerequisite for other APIs
 - [x] `tiktok-display-api` — Creator profiles, video metadata, metrics: core data access for discovery and tracking
-- [ ] `tiktok-content-posting-api` — Video/photo upload, direct post, inbox upload, scheduling
+- [x] `tiktok-content-posting-api` — Video/photo upload, direct post, inbox upload, scheduling
 - [ ] `tiktok-research-api` — Academic/commercial research: video search, user search, comments, historical data
 - [ ] `tiktok-shop-api` — Commerce: product catalogs, orders, affiliates, seller tools, regional availability
 - [ ] `tiktok-ads-marketing-api` — Campaign management, Spark Ads (boosting creator content), audience targeting, reporting
