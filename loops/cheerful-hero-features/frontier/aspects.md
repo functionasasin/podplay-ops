@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total aspects**: 36
-- **Analyzed**: 31
-- **Pending**: 5
-- **Convergence**: 86%
+- **Analyzed**: 32
+- **Pending**: 4
+- **Convergence**: 89%
 
 ## Wave 1: Feature Category Research + Discovery
 
@@ -57,7 +57,7 @@ gets added here as an unchecked aspect._
 - [x] collabstr — Free–$399/mo; marketplace + management; free tier; all-in-one for startups
 - [x] archive — Auto-capture of Stories + ephemeral UGC; Instagram/TikTok/YouTube; content library
 - [x] afluencer — 100% free tier; 1M+ creators; AI matching; startup-friendly
-- [ ] brand24 — Social listening + influencer sourcing + ranking; public company (Warsaw SE)
+- [x] brand24 — Social listening + influencer sourcing + ranking; public company (Warsaw SE)
 - [ ] heepsy — 11M+ profiles; affordable SMB discovery; accessible entry-level
 
 ## Wave 2b: Campaign & Trend Research
