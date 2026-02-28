@@ -2,15 +2,15 @@
 
 ## Statistics
 - Total aspects discovered: 16
-- Analyzed: 1
-- Pending: 15
-- Convergence: 6%
+- Analyzed: 2
+- Pending: 14
+- Convergence: 13%
 
 ## Pending Aspects (ordered by dependency)
 
 ### Wave 1: Interview Requirements Extraction
 - [x] interview-anatomy — Break down every round of the Anthropic SWE interview: skills tested, format, evaluation criteria, examples
-- [ ] skill-taxonomy — Create complete taxonomy of discrete trainable skills across all interview rounds
+- [x] skill-taxonomy — Create complete taxonomy of discrete trainable skills across all interview rounds
 - [ ] current-level-diagnostic — Design 10-15 diagnostic exercises to assess current level across all skill categories
 - [ ] practice-session-formats — Design the different 30-minute session types (Code Kata, Spec Decomposition, Mini System Design, etc.)
 
@@ -36,6 +36,7 @@
 
 ## Recently Analyzed
 - [x] interview-anatomy — Detailed breakdown of all 5 rounds: OA (LRU Cache + Task DAG), Coding Round 1 (async web crawler), System Design (LLM inference API), Coding Round 2 (stack profiler), Hiring Manager. Cross-cutting skills identified: concurrency, edge cases, production quality, simplicity. Pass/fail criteria documented for each round.
+- [x] skill-taxonomy — 50+ discrete skills catalogued across 8 categories (Python Fluency, Concurrency, Data Structures, Algorithms, System Design, HTTP/Networking, Under-Pressure Execution, Communication). Priority tiers assigned: 10 CRITICAL skills, ~15 HIGH. Multi-round multiplier table identifies highest-ROI training targets. 5-tier trainability framework maps each skill to training approach.
 
 ## Discovered Aspects
 (None yet)
