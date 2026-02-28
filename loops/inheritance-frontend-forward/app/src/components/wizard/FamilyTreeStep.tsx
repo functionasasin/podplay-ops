@@ -1,7 +1,9 @@
 import React from 'react';
 import { Control, UseFormSetValue, UseFormWatch, useFieldArray } from 'react-hook-form';
+import { UserPlus } from 'lucide-react';
 import type { EngineInput, Person, Relationship } from '../../types';
 import { PersonCard } from './PersonCard';
+import { Button } from '@/components/ui/button';
 
 // ============================================================================
 // Constants from spec: wizard-steps.md §3
@@ -142,7 +144,7 @@ export function FamilyTreeStep({
   return (
     <div data-testid="family-tree-step" className="space-y-4">
       {fields.length === 0 && (
-        <p className="text-gray-500 text-center py-8">
+        <p className="text-muted-foreground text-center py-8">
           No family members added yet. Click &quot;Add Person&quot; to begin.
         </p>
       )}
@@ -162,18 +164,15 @@ export function FamilyTreeStep({
       ))}
 
       {spouseCount > 1 && (
-        <p className="text-red-600 text-sm font-medium">
+        <p className="text-destructive text-sm font-medium">
           Only one Surviving Spouse allowed
         </p>
       )}
 
-      <button
-        type="button"
-        onClick={handleAddPerson}
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-      >
+      <Button type="button" onClick={handleAddPerson}>
+        <UserPlus className="h-4 w-4" />
         Add Person
-      </button>
+      </Button>
     </div>
   );
 }

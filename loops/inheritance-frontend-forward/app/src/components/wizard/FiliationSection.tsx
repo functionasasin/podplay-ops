@@ -1,7 +1,16 @@
 import React from 'react';
 import { Control, UseFormSetValue, UseFormWatch } from 'react-hook-form';
+import { AlertTriangle } from 'lucide-react';
 import type { EngineInput } from '../../types';
 import { FILIATION_PROOF_OPTIONS } from './FamilyTreeStep';
+import { cn } from '@/lib/utils';
+import { Alert, AlertTitle } from '@/components/ui/alert';
+
+const selectClassName = cn(
+  "border-input flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none md:text-sm",
+  "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
+  "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
+);
 
 export interface FiliationSectionProps {
   personIndex: number;
@@ -28,44 +37,43 @@ export function FiliationSection({
   };
 
   return (
-    <div data-testid="filiation-section" className="space-y-3 ml-4 border-l-2 border-purple-200 pl-4">
-      <div>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={filiationProved ?? true}
-            onChange={handleFiliationProvedChange}
-          />
-          Filiation Proved
-        </label>
-      </div>
+    <div data-testid="filiation-section" className="space-y-4 ml-4 border-l-2 border-purple-300 pl-4">
+      <label className="flex items-center gap-2.5 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={filiationProved ?? true}
+          onChange={handleFiliationProvedChange}
+          className="h-4 w-4 rounded accent-primary"
+        />
+        <span className="text-sm">Filiation Proved</span>
+      </label>
 
       {filiationProved && (
-        <div>
-          <label>
-            <span>Proof of Filiation</span>
-            <select
-              value={filiationProofType ?? ''}
-              onChange={(e) => {
-                const val = e.target.value || null;
-                setValue(`family_tree.${personIndex}.filiation_proof_type` as any, val);
-              }}
-            >
-              <option value="">-- Select --</option>
-              {FILIATION_PROOF_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
+        <label className="block space-y-2">
+          <span className="text-sm font-medium leading-none">Proof of Filiation</span>
+          <select
+            value={filiationProofType ?? ''}
+            onChange={(e) => {
+              const val = e.target.value || null;
+              setValue(`family_tree.${personIndex}.filiation_proof_type` as any, val);
+            }}
+            className={selectClassName}
+          >
+            <option value="">-- Select --</option>
+            {FILIATION_PROOF_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </label>
       )}
 
       {!filiationProved && (
-        <div className="bg-red-50 border border-red-300 rounded p-3 text-red-800 text-sm">
-          Art. 887 &para;3: IC excluded &mdash; filiation not proved
-        </div>
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Art. 887 &para;3: IC excluded &mdash; filiation not proved</AlertTitle>
+        </Alert>
       )}
     </div>
   );
