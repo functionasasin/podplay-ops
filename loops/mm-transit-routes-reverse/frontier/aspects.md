@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 91
-- Analyzed: 72
-- Pending: 19
-- Convergence: 79%
+- Analyzed: 73
+- Pending: 18
+- Convergence: 80%
 
 ---
 
@@ -103,7 +103,7 @@
 - [x] Aurora Boulevard corridor — all routes along Aurora from Cubao to Marikina
 - [x] Marcos Highway corridor — all routes from Masinag to Cubao/Santolan
 - [x] Ortigas Avenue corridor — all routes from Pasig to Manila via Ortigas
-- [ ] Shaw Boulevard corridor — all routes along Shaw from Mandaluyong to Pasig
+- [x] Shaw Boulevard corridor — all routes along Shaw from Mandaluyong to Pasig
 - [ ] Rizal Avenue/Marikina corridor — routes through Caloocan, Malabon, into Marikina
 - [ ] Coastal/Roxas Boulevard corridor — all routes along Manila Bay coast
 
