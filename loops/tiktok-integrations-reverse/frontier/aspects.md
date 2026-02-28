@@ -5,15 +5,15 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 23 |
-| Analyzed | 0 |
-| Pending | 23 |
-| Convergence | 0% |
+| Analyzed | 1 |
+| Pending | 22 |
+| Convergence | 4% |
 
 ---
 
 ## Wave 1: Official TikTok APIs
 
-- [ ] `tiktok-login-kit` — OAuth 2.0 for TikTok: auth flow, scopes, token management, prerequisite for other APIs
+- [x] `tiktok-login-kit` — OAuth 2.0 for TikTok: auth flow, scopes, token management, prerequisite for other APIs
 - [ ] `tiktok-display-api` — Creator profiles, video metadata, metrics: core data access for discovery and tracking
 - [ ] `tiktok-content-posting-api` — Video/photo upload, direct post, inbox upload, scheduling
 - [ ] `tiktok-research-api` — Academic/commercial research: video search, user search, comments, historical data
