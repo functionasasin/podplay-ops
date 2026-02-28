@@ -5,9 +5,9 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 23 |
-| Analyzed | 21 |
-| Pending | 2 |
-| Convergence | 91% |
+| Analyzed | 22 |
+| Pending | 1 |
+| Convergence | 96% |
 
 ---
 
@@ -43,5 +43,5 @@
 
 ## Wave 4: Synthesis
 
-- [ ] `synthesis-tiktok-atlas` — Master integration atlas: capability matrices, auth map, rate limits, access requirements
+- [x] `synthesis-tiktok-atlas` — Master integration atlas: capability matrices, auth map, rate limits, access requirements
 - [ ] `synthesis-cheerful-applicability` — Per-workflow applicability matrix, effort estimates, dependencies, quick wins vs deep integrations
