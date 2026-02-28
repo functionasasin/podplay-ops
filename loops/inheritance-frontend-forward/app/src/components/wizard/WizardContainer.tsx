@@ -1,8 +1,16 @@
 import React, { useState, useMemo } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
+import { Check } from 'lucide-react';
 import type { EngineInput } from '../../types';
 import { EstateStep } from './EstateStep';
 import { DecedentStep } from './DecedentStep';
+import { FamilyTreeStep } from './FamilyTreeStep';
+import { WillStep } from './WillStep';
+import { DonationsStep } from './DonationsStep';
+import { ReviewStep } from './ReviewStep';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 export interface WizardMeta {
   hasWill: boolean;
@@ -124,13 +132,46 @@ export function WizardContainer({ onSubmit, defaultValues }: WizardContainerProp
           />
         );
       case 'family-tree':
-        return <div data-testid="family-tree-step">Family Tree (not yet implemented)</div>;
+        return (
+          <FamilyTreeStep
+            control={methods.control}
+            setValue={methods.setValue}
+            watch={methods.watch}
+            errors={methods.formState.errors as Record<string, { message?: string }>}
+          />
+        );
       case 'will':
-        return <div data-testid="will-step">Will & Dispositions (not yet implemented)</div>;
+        return (
+          <WillStep
+            control={methods.control}
+            setValue={methods.setValue}
+            watch={methods.watch}
+            errors={methods.formState.errors as Record<string, { message?: string }>}
+            persons={(methods.watch('family_tree') ?? []) as any}
+          />
+        );
       case 'donations':
-        return <div data-testid="donations-step">Donations (not yet implemented)</div>;
+        return (
+          <DonationsStep
+            control={methods.control}
+            setValue={methods.setValue}
+            watch={methods.watch}
+            errors={methods.formState.errors as Record<string, { message?: string }>}
+            persons={(methods.watch('family_tree') ?? []) as any}
+          />
+        );
       case 'review':
-        return <div data-testid="review-step">Review & Config (not yet implemented)</div>;
+        return (
+          <ReviewStep
+            control={methods.control}
+            setValue={methods.setValue}
+            watch={methods.watch}
+            errors={methods.formState.errors as Record<string, { message?: string }>}
+            hasWill={hasWill}
+            persons={(methods.watch('family_tree') ?? []) as any}
+            onSubmit={methods.handleSubmit((data) => onSubmit?.(data))}
+          />
+        );
       default:
         return null;
     }
@@ -138,55 +179,83 @@ export function WizardContainer({ onSubmit, defaultValues }: WizardContainerProp
 
   return (
     <FormProvider {...methods}>
-      <div data-testid="wizard-container" className="max-w-2xl mx-auto p-4">
+      <div data-testid="wizard-container" className="max-w-2xl mx-auto">
         {/* Step indicators */}
-        <div className="flex gap-2 mb-6">
-          {visibleSteps.map((step, idx) => (
-            <div
-              key={step.key}
-              data-testid={`step-indicator-${step.key}`}
-              className={`px-3 py-1 rounded text-sm ${
-                idx === currentStepIndex
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-600'
-              }`}
-            >
-              {step.label}
-            </div>
-          ))}
-        </div>
+        <nav className="flex items-center gap-1 mb-8 overflow-x-auto pb-2">
+          {visibleSteps.map((step, idx) => {
+            const isCompleted = idx < currentStepIndex;
+            const isCurrent = idx === currentStepIndex;
+
+            return (
+              <React.Fragment key={step.key}>
+                {idx > 0 && (
+                  <div
+                    className={cn(
+                      'hidden sm:block h-px flex-1 min-w-4 max-w-12',
+                      isCompleted ? 'bg-accent' : 'bg-border',
+                    )}
+                  />
+                )}
+                <div
+                  data-testid={`step-indicator-${step.key}`}
+                  className={cn(
+                    'flex items-center gap-2 px-3 py-1.5 rounded-md text-sm whitespace-nowrap transition-colors',
+                    isCurrent && 'bg-accent text-accent-foreground font-medium',
+                    isCompleted && 'text-primary font-medium',
+                    !isCurrent && !isCompleted && 'text-muted-foreground',
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'flex items-center justify-center w-6 h-6 rounded-full text-xs font-semibold shrink-0',
+                      isCurrent && 'bg-primary text-primary-foreground',
+                      isCompleted && 'bg-primary text-primary-foreground',
+                      !isCurrent && !isCompleted && 'bg-muted text-muted-foreground',
+                    )}
+                  >
+                    {isCompleted ? <Check className="h-3.5 w-3.5" /> : idx + 1}
+                  </span>
+                  <span className="hidden sm:inline">{step.label}</span>
+                </div>
+              </React.Fragment>
+            );
+          })}
+        </nav>
 
         {/* Current step content */}
-        {renderStep()}
+        <Card>
+          <CardContent className="pt-6">
+            {renderStep()}
+          </CardContent>
+        </Card>
 
         {/* Navigation buttons */}
         <div className="flex justify-between mt-6">
           {currentStepIndex > 0 && (
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={handleBack}
-              className="px-4 py-2 bg-gray-200 rounded"
             >
               Back
-            </button>
+            </Button>
           )}
           <div className="ml-auto">
             {currentStepIndex < visibleSteps.length - 1 ? (
-              <button
+              <Button
                 type="button"
                 onClick={handleNext}
-                className="px-4 py-2 bg-blue-600 text-white rounded"
               >
                 Next
-              </button>
+              </Button>
             ) : (
-              <button
+              <Button
                 type="button"
                 onClick={methods.handleSubmit((data) => onSubmit?.(data))}
-                className="px-4 py-2 bg-green-600 text-white rounded"
+                className="bg-accent text-accent-foreground hover:bg-accent/90"
               >
                 Submit
-              </button>
+              </Button>
             )}
           </div>
         </div>
