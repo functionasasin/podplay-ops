@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 91
-- Analyzed: 63
-- Pending: 28
-- Convergence: 69%
+- Analyzed: 64
+- Pending: 27
+- Convergence: 70%
 
 ---
 
@@ -88,7 +88,7 @@
 - [x] MRT-3 feeder routes — jeepney/bus routes connecting to each MRT-3 station
 - [x] BGC Bus system — all BGC bus routes, stops, schedules
 - [x] Makati Loop shuttle — routes and stops if still operating
-- [ ] University shuttle services — UP Ikot, DLSU shuttle, and other campus loops that serve as public transit
+- [x] University shuttle services — UP Ikot, DLSU shuttle, and other campus loops that serve as public transit
 
 ---
 
