@@ -1,0 +1,6 @@
+{
+  "source": "social",
+  "retrieved_date": "2026-02-28",
+  "notes": "Waze is a car navigation app with no public transit layer for Metro Manila. Zero transit routes are available from any Waze data source (core app, CCP/Waze for Cities MMDA partnership, or Philippines editor community). The MMDA-Waze Connected Citizens Program provides road-speed and incident data to government partners only — not public transit route data. Waze editor community maps terminal POIs as point locations but encodes no route structure.",
+  "routes": []
+}

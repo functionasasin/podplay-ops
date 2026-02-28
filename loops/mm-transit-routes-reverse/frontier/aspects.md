@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 91
-- Analyzed: 53
-- Pending: 38
-- Convergence: 58%
+- Analyzed: 54
+- Pending: 37
+- Convergence: 59%
 
 ---
 
@@ -76,7 +76,7 @@
 - [x] Twitter/X — #ManilaCommute, transit-related accounts, LTFRB announcements
 - [x] Transit blogs and enthusiast sites — PinoyCommuter, commute guides, route blogs
 - [x] YouTube — jeepney/bus route documentation videos, commuter vlogs with route info
-- [ ] Waze community — traffic and route data contributed by Manila drivers
+- [x] Waze community — traffic and route data contributed by Manila drivers
 - [ ] ltoportal.ph bus route directory — 64 numbered city bus routes with terminal names and service areas; cross-reference with Wikipedia for missing routes 36–68
 - [ ] WikiMili Metro Manila bus routes — Wikipedia mirror (wikimili.com/en/List_of_bus_routes_in_Metro_Manila); may be accessible where Wikipedia is blocked; extract full 68-route table
 - [ ] QCityBus routes — all 8 Quezon City Government electric bus routes, stops, and schedules
