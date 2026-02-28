@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 35
-- Analyzed: 9
-- Pending: 26
-- Convergence: 26%
+- Analyzed: 10
+- Pending: 25
+- Convergence: 29%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -22,7 +22,7 @@
 
 ### Wave 2: Per-Feature Specifications (depends: ALL Wave 1 complete)
 
-- [ ] spec-pdf-export — PDF with firm header, distribution table, statute citations, narratives, computation log, warnings. Reads: codebase-audit, pdf-export-patterns, legal-doc-formatting.
+- [x] spec-pdf-export — PDF with firm header, distribution table, statute citations, narratives, computation log, warnings. Reads: codebase-audit, pdf-export-patterns, legal-doc-formatting.
 - [ ] spec-auth-persistence — Supabase auth, cases table, save/load, auto-save. Reads: auth-persistence-patterns, codebase-audit.
 - [ ] spec-client-profiles — Client table, client-case FK, list/detail pages, intake flow. Depends: spec-auth-persistence. Reads: crm-law-firm-patterns.
 - [ ] spec-firm-branding — Settings page, firm header on PDF, logo upload/storage. Depends: spec-pdf-export, spec-auth-persistence.
