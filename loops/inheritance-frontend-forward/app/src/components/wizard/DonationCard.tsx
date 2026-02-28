@@ -130,7 +130,7 @@ export function DonationCard({
 
       <CardContent className="space-y-4">
         {/* Stranger toggle */}
-        <label className="flex items-center gap-2.5 cursor-pointer text-sm">
+        <label className="flex items-center gap-2 cursor-pointer text-sm">
           <input
             type="checkbox"
             checked={isStranger}
@@ -200,7 +200,7 @@ export function DonationCard({
                   <label
                     key={flag}
                     className={cn(
-                      "flex items-center gap-2.5 cursor-pointer text-sm rounded-md px-2 py-1.5 transition-colors",
+                      "flex items-center gap-2 cursor-pointer text-sm rounded-md px-2 py-1.5 transition-colors",
                       flagVal
                         ? "bg-[hsl(var(--accent))]/10 text-foreground font-medium"
                         : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -223,7 +223,7 @@ export function DonationCard({
         {/* Professional expense cascade: parent_required */}
         {!isStranger && isProfessionalExpense && (
           <div className="ml-6 border-l-2 border-[hsl(var(--accent))]/30 pl-4 space-y-3">
-            <label className="flex items-center gap-2.5 cursor-pointer text-sm">
+            <label className="flex items-center gap-2 cursor-pointer text-sm">
               <input
                 type="checkbox"
                 checked={parentRequired}

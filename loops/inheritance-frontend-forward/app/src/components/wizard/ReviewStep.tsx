@@ -386,7 +386,7 @@ export function ReviewStep({
                 />
               </div>
 
-              <label className="flex items-center gap-2.5 cursor-pointer text-sm">
+              <label className="flex items-center gap-2 cursor-pointer text-sm">
                 <input
                   type="checkbox"
                   checked={!!retroactiveRa.field.value}

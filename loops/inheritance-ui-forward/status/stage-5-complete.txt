@@ -1,0 +1,10 @@
+Stage 5 — Family Tree Step: COMPLETE
+
+Components restyled:
+- FamilyTreeStep: shadcn Button with UserPlus icon, design token colors (muted-foreground, destructive)
+- PersonCard: shadcn Card/CardHeader/CardContent/CardAction, color-coded relationship Badge (blue/purple/green/amber/slate/neutral by category), shadcn Button (ghost destructive) for remove, shadcn Input for text/number fields, styled native selects, Separator between sections, Alert with AlertTriangle for exclusion warnings
+- AdoptionSubForm: shadcn Input for date fields, styled native selects, styled checkboxes with accent-primary, Alert for rescission warning with warning color tokens
+- FiliationSection: styled native select for proof type, styled checkbox with accent-primary, Alert with destructive variant for exclusion warning
+
+All 1033 tests pass.
+Committed: ui-forward: stage 5 - restyle family tree step and person cards

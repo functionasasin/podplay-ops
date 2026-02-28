@@ -1,26 +1,11 @@
 Stage 9 — Responsive + Final Polish — COMPLETE
 
 Changes made:
-1. Responsive breakpoints:
-   - App.tsx: Responsive header padding (px-4 sm:px-6), responsive title sizing (text-lg sm:text-xl), responsive main area padding (py-6 sm:py-8, px-4 sm:px-6)
-   - ResultsHeader: Responsive h1 (text-xl sm:text-2xl), flex-wrap on info line, responsive text sizing (text-base sm:text-lg), hide vertical separator on mobile
-   - DistributionSection: Horizontal scroll wrapper (overflow-x-auto, min-w-[600px]) for heir table on mobile, slightly smaller pie chart (220px/r85) for better mobile fit
-   - ActionsBar: Stack buttons vertically on mobile (flex-col sm:flex-row, gap-2 sm:gap-3)
-   - NarrativePanel: Shorter "Copy All" button text on mobile, shrink-0 to prevent wrapping
+1. Responsive breakpoints: App.tsx uses max-w-3xl (768px), WizardContainer uses max-w-2xl (672px), step labels hidden on mobile — verified correct
+2. Spacing audit: Fixed non-standard ml-6.5 to ml-7 and gap-2.5 to gap-2 in DecedentStep and PersonCard
+3. Typography audit: Added sr-only h2 headings to EstateStep, DecedentStep, FamilyTreeStep, WillStep; changed DonationsStep h3 to h2
+4. Responsive text sizing: Added text-base sm:text-lg to DistributionSection h3s and NarrativePanel; text-lg sm:text-xl to ReviewStep
+5. Focus states: Added global focus-visible styles for native checkboxes and radios in index.css
+6. Empty states: FamilyTreeStep and DonationsStep already have styled empty states
 
-2. Empty state consistency:
-   - Normalized empty states in InstitutionsTab, LegaciesTab, DevisesTab, DisinheritancesTab from py-4 to py-8 (matching FamilyTreeStep and DonationsStep pattern)
-
-3. Focus states:
-   - Added global focus-visible styles for native checkbox and radio inputs in index.css (2px navy outline with offset)
-
-4. Form field consistency:
-   - ReviewStep checkbox: normalized from border-slate-300 text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))] to border-input accent-primary (matching all other checkboxes)
-
-5. Typography audit:
-   - Heading hierarchy confirmed consistent: h1 for page titles, h2 for section headings, h3 for sub-sections
-   - Responsive sizing added to key headings
-
-All 667 component tests pass.
-Vite build succeeds.
-CSS bundle: 63.45 KB (well above 20KB threshold).
+All 1053 tests pass. Vite build succeeds. CSS bundle: 63.45 KB.

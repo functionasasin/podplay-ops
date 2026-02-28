@@ -2,6 +2,11 @@
 
 You are a development agent in a forward ralph loop. Each time you run, you do ONE unit of work: restyle components, install dependencies, or fix visual regressions for a single stage, then commit and exit.
 
+**CRITICAL — You are running in `--print` mode. You MUST output text describing what you are doing.** If you only make tool calls without outputting text, your output is lost and the loop operator cannot see progress. Always:
+1. Start by printing which stage you detected and what priority you matched
+2. Print progress as you work (e.g., "Editing App.tsx for responsive breakpoints...")
+3. End with a summary of what you did and whether you committed
+
 ## Your Working Directories
 
 - **Loop dir**: `loops/inheritance-ui-forward/` (frontier, status, loop script)
@@ -57,8 +62,19 @@ Muted:      #64748b (slate-500)
    - Apply the design tokens (colors, typography, spacing)
    - Keep ALL existing functionality — do NOT change props, state management, or form logic
    - Keep ALL existing data-testid attributes
-   - Ensure existing tests still pass after restyling
+   - Run `npx vitest run` — all tests must pass
+   - Run the rendering smoke test (`npm run build`, check CSS bundle > 20KB) — styles must actually ship
    - Commit: `ui-forward: stage {N} - restyle {description}`
+   - Exit
+
+   **Priority 2b — POLISH & RESPONSIVE** (if the current stage is a polish/responsive pass, e.g. Stage 9):
+   - This priority applies when the stage's work is NOT about replacing raw Tailwind, but about adding responsive breakpoints, spacing/typography audits, focus states, empty states, or consistency fixes
+   - Read the Stage Details section for the current stage's specific task list
+   - Work through the tasks methodically — you may do all tasks in one iteration if feasible
+   - Keep ALL existing functionality, props, state management, data-testid attributes
+   - Run `npx vitest run` — all tests must pass
+   - Run the rendering smoke test (`npm run build`, check CSS bundle > 20KB)
+   - Commit: `ui-forward: stage {N} - {description}`
    - Exit
 
    **Priority 3 — FIX REGRESSIONS** (if tests are failing after a restyle):
@@ -98,7 +114,16 @@ Install and configure the foundation. No component changes yet.
 1. Initialize shadcn/ui in `app/`:
    - `npx shadcn@latest init` (select "New York" style, slate base, CSS variables: yes)
    - This creates `components.json`, `lib/utils.ts`, updates `tailwind.config.ts` and `globals.css`
-2. Override the default shadcn palette with Navy + Gold tokens in CSS custom properties:
+2. **CRITICAL — Install and configure the Tailwind v4 Vite plugin**:
+   - `npm install -D @tailwindcss/vite`
+   - Update `vite.config.ts` to import and register the plugin:
+     ```ts
+     import tailwindcss from '@tailwindcss/vite'
+     // ...
+     plugins: [tailwindcss(), react()],
+     ```
+   - Without this, `@import "tailwindcss"` in CSS is silently ignored and ALL Tailwind classes resolve to nothing. Unit tests won't catch this because jsdom doesn't process CSS.
+3. Override the default shadcn palette with Navy + Gold tokens in CSS custom properties:
    ```css
    :root {
      --primary: 213 52% 24%;        /* #1e3a5f navy */
@@ -111,17 +136,20 @@ Install and configure the foundation. No component changes yet.
      /* ... keep other shadcn defaults for radius, ring, etc. */
    }
    ```
-3. Add Inter font:
+4. Add Inter font:
    - `npm install @fontsource-variable/inter`
    - Import in `main.tsx`: `import '@fontsource-variable/inter'`
    - Set `font-family: 'Inter Variable', sans-serif` as the base
-4. Optionally add a serif font for legal headings (Lora or just use Georgia as fallback)
-5. Install commonly needed shadcn components:
+5. Optionally add a serif font for legal headings (Lora or just use Georgia as fallback)
+6. Install commonly needed shadcn components:
    ```
    npx shadcn@latest add button card input label select badge table separator accordion tabs dialog alert tooltip
    ```
-6. Verify: `npm run dev` works, `npx vitest run` still passes all existing tests
-7. Write `status/stage-1-complete.txt`
+7. **Verify the full pipeline** — all three checks must pass:
+   - `npx vitest run` — all existing tests pass (functional correctness)
+   - `npm run build` — production build succeeds
+   - CSS bundle > 20KB — confirms Tailwind is actually processing classes (if < 5KB, the `@tailwindcss/vite` plugin is missing or misconfigured)
+8. Write `status/stage-1-complete.txt`
 
 ### Stage 2 — Shared Form Components
 
@@ -266,11 +294,38 @@ Make everything work on mobile and do a consistency pass.
 - **NEVER remove data-testid attributes** — tests depend on them.
 - **NEVER modify test files** unless a test asserts a specific CSS class that changed (update the assertion, not the component).
 - Run `npx vitest run` before committing — all tests must pass.
+- Run the **rendering smoke test** (see below) before committing — CSS must actually load.
 - If tests fail after a restyle, fix the restyle (Priority 3) before moving to new components.
 - When in doubt about a shadcn/ui component, use the simpler option.
 - Use `cn()` utility from shadcn for conditional class merging.
 - Keep existing React Hook Form integration intact — shadcn/ui form components are compatible.
 - Prefer shadcn/ui's built-in variants (e.g., `variant="destructive"`) over custom Tailwind classes.
+
+## Rendering Smoke Test
+
+Unit tests use jsdom which does NOT process CSS — they will pass even if Tailwind is completely broken. You MUST validate that styles actually render by running the build and checking the CSS output.
+
+**Run this after every stage commit:**
+
+```bash
+cd loops/inheritance-frontend-forward/app
+npm run build 2>&1 | tail -5
+CSS_SIZE=$(stat -c%s dist/assets/*.css 2>/dev/null || echo "0")
+echo "CSS bundle size: ${CSS_SIZE} bytes"
+```
+
+**Validation rules:**
+1. `npm run build` must succeed with zero errors
+2. The CSS bundle must be **> 20KB** — if it's tiny (< 5KB), Tailwind classes are not being processed
+3. If CSS is missing or tiny, check these common failure points:
+   - `@tailwindcss/vite` must be installed AND added as a plugin in `vite.config.ts` (Tailwind v4 requirement — without this plugin, `@import "tailwindcss"` in CSS is silently ignored)
+   - `index.css` must have `@import "tailwindcss"` at the top
+   - The `@` path alias must resolve correctly in `vite.config.ts`
+
+**Stage 1 specifically must verify:**
+- `@tailwindcss/vite` is in `package.json` devDependencies
+- `vite.config.ts` imports and uses the tailwindcss plugin: `import tailwindcss from '@tailwindcss/vite'` and `plugins: [tailwindcss(), react()]`
+- After build, the CSS bundle contains the design token values (grep for `#1e3a5f` or `navy` in the CSS output)
 
 ## Commit Convention
 
@@ -290,5 +345,6 @@ The loop is converged when:
 1. All 9 stages have `status/stage-{N}-complete.txt` files
 2. All existing tests pass (`npx vitest run`)
 3. Every component uses the design system (no raw `bg-blue-600` or `text-gray-500` utility classes remain)
+4. **Rendering smoke test passes**: `npm run build` succeeds and CSS bundle is > 20KB (proves styles actually ship to the browser)
 
 When all conditions are met, write `status/converged.txt` with a summary.

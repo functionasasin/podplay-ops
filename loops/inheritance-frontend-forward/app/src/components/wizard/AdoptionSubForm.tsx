@@ -84,7 +84,7 @@ export function AdoptionSubForm({
       </label>
 
       {/* Stepparent Adoption Toggle */}
-      <label className="flex items-center gap-2.5 cursor-pointer">
+      <label className="flex items-center gap-2 cursor-pointer">
         <input
           type="checkbox"
           checked={isStepparent ?? false}
@@ -96,7 +96,7 @@ export function AdoptionSubForm({
 
       {/* Biological Parent Spouse (conditional on stepparent) */}
       {isStepparent && (
-        <div className="ml-6.5">
+        <div className="ml-7">
           <label className="block space-y-2">
             <span className="text-sm font-medium leading-none">Biological Parent Spouse</span>
             <select
@@ -123,7 +123,7 @@ export function AdoptionSubForm({
       )}
 
       {/* Adoption Rescinded Toggle */}
-      <label className="flex items-center gap-2.5 cursor-pointer">
+      <label className="flex items-center gap-2 cursor-pointer">
         <input
           type="checkbox"
           checked={isRescinded ?? false}
@@ -135,7 +135,7 @@ export function AdoptionSubForm({
 
       {/* Rescission Date (conditional on rescinded) */}
       {isRescinded && (
-        <div className="ml-6.5">
+        <div className="ml-7">
           <label className="block space-y-2">
             <span className="text-sm font-medium leading-none">Rescission Date</span>
             <Input

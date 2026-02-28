@@ -38,7 +38,7 @@ export function FiliationSection({
 
   return (
     <div data-testid="filiation-section" className="space-y-4 ml-4 border-l-2 border-purple-300 pl-4">
-      <label className="flex items-center gap-2.5 cursor-pointer">
+      <label className="flex items-center gap-2 cursor-pointer">
         <input
           type="checkbox"
           checked={filiationProved ?? true}
