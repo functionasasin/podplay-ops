@@ -1,10 +1,10 @@
 # Frontier — Philippine Freelance & Self-Employed Income Tax Optimizer
 
 ## Statistics
-- Total aspects discovered: 49
-- Analyzed: 5
-- Pending: 44
-- Convergence: 10%
+- Total aspects discovered: 53
+- Analyzed: 6
+- Pending: 47
+- Convergence: 11%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -15,8 +15,11 @@ Fetch and cache all primary source material before any analysis begins.
 - [x] bir-forms-fetch — Fetch BIR Form 1701, 1701A, 1701Q, 2551Q, 2307 field descriptions, save to input/sources/
 - [x] worked-examples-fetch — Find 5-10 worked examples from CPA blogs and tax advisory sites showing all 3 regime computations
 - [x] competitive-analysis — Survey existing tools (Taxumo, JuanTax, TaxWhiz, BIR eBIRForms), document features and gaps
-- [ ] market-research — Find market size data, freelancer population, CPA fee benchmarks, pain points from forums/Reddit/Facebook groups
+- [x] market-research — Find market size data, freelancer population, CPA fee benchmarks, pain points from forums/Reddit/Facebook groups
 - [ ] eopt-create-fetch — Fetch RA 11976 (EOPT Act) and RA 11534 (CREATE Law) provisions affecting self-employed filing
+- [ ] eopt-taxpayer-tiers — EOPT Act tiered taxpayer classification (Micro/Small/Medium/Large), how it affects self-employed filing procedures and deadlines
+- [ ] bir-rr-16-2023-emarketplace — BIR RR 16-2023: 1% withholding on e-marketplace remittances (Upwork/Fiverr via Payoneer/PayPal); how this affects CWT credit computation for freelancers
+- [ ] bir-penalty-schedule — Complete BIR penalty structure: interest rate (12% per annum under EOPT), surcharge rates (25%/50%), compromise penalties, late filing fees; how to compute total penalties on past-due taxes
 
 ### Wave 2: Domain Rules Extraction
 Extract every computation rule, decision tree, and lookup table from source material.
