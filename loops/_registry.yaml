@@ -123,8 +123,9 @@ loops:
     schedule: "*/30 * * * *"
     max_iterations: 40
     timeout_minutes: 30
-    status: active
+    status: converged
     created: 2026-02-27
+    converged_at: "2026-02-28"
   cheerful-ig-dm-reverse:
     description: "Explore all approaches for Instagram DM inbound support → exhaustive options catalog (API methods, architecture patterns, trade-offs)"
     type: reverse
