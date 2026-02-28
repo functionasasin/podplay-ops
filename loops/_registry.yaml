@@ -191,3 +191,11 @@ loops:
     timeout_minutes: 30
     status: active
     created: 2026-03-01
+  cheerful-ugc-capture-reverse:
+    description: "Explore all approaches to zero-signup Instagram UGC auto-capture → exhaustive options catalog"
+    type: reverse
+    schedule: "*/30 * * * *"
+    max_iterations: 40
+    timeout_minutes: 30
+    status: active
+    created: 2026-03-01
