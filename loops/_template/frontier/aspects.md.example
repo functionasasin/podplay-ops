@@ -1,4 +1,4 @@
-# Frontier — [Idea Name]
+# Frontier — [Domain Name]
 
 ## Statistics
 - Total aspects discovered: N
@@ -8,18 +8,70 @@
 
 ## Pending Aspects (ordered by dependency)
 
-### Wave 1: [Initial Exploration]
-- [ ] aspect-1 — Description of what to explore
-- [ ] aspect-2 — Description of what to explore
+### Wave 1: Source Acquisition
+Fetch and cache all primary source material before any analysis begins.
+- [ ] legal-source-fetch — Fetch full text of governing statutes/regulations, save to input/sources/
+- [ ] rate-tables-fetch — Fetch all official rate tables, fee schedules, penalty matrices
+- [ ] worked-examples-fetch — Find 5-10 worked examples from professional practice guides
+- [ ] competitive-analysis — Survey existing tools/calculators in this space, document gaps
+- [ ] market-research — Find market size data, professional fee benchmarks, user pain points
 
-### Wave 2: [Pattern Analysis]
-Depends on Wave 1 raw data.
-- [ ] aspect-3 — Description of pattern to analyze
-- [ ] aspect-4 — Description of pattern to analyze
+### Wave 2: Domain Rules
+Extract every computation rule, decision tree, and lookup table from source material.
+- [ ] core-formula-1 — [Describe the primary computation rule]
+- [ ] core-formula-2 — [Describe secondary computation rules]
+- [ ] decision-tree-1 — [Describe the primary branching logic]
+- [ ] lookup-table-1 — [Describe the first lookup table to extract]
+- [ ] scenario-enumeration — Enumerate and code every possible input scenario
+- [ ] edge-cases — Catalog all edge cases found during rule extraction
+- [ ] manual-review-flags — Identify things the engine cannot decide deterministically
 
-### Wave 3: [Synthesis]
-Depends on all Wave 2 analysis.
-- [ ] synthesis — Combine all findings into final output
+### Wave 3: Engine Design
+Design the computation engine from the extracted domain rules.
+- [ ] pipeline-design — Design step-by-step computation flow with typed inputs/outputs per step
+- [ ] data-model — Define every struct, enum, and type needed by the engine
+- [ ] invariants — Define what must always be true about outputs
+- [ ] error-states — Define every invalid input state and the engine's response
+- [ ] test-vectors-basic — Write happy-path test vectors (one per common scenario)
+- [ ] test-vectors-edge — Write edge-case test vectors
+- [ ] test-vectors-exhaustive — Write one test vector per scenario code
+- [ ] fuzz-properties — Define invariants for randomized testing
+
+### Wave 4: Full-Stack Product Design
+Design everything around the engine to make it a shippable product.
+- [ ] user-journeys — Map every user type through every flow
+- [ ] wizard-steps — Specify every input field, validation rule, conditional visibility, error message
+- [ ] results-views — Specify every output visualization, layout variant
+- [ ] frontend-validation — Client-side validation, pre-submission warnings
+- [ ] frontend-copy — All user-facing text: labels, tooltips, errors, empty states, CTAs
+- [ ] database-schema — Every table, column, type, constraint, index
+- [ ] api-endpoints — Every route, method, request/response schema, error responses
+- [ ] api-auth — Auth model, roles, permissions, session management
+- [ ] premium-tiers — Free vs pro vs enterprise feature gating
+- [ ] premium-pricing — Price points, billing cycles, trial logic
+- [ ] professional-features — B2B features: batch, API access, PDF export, white-label
+
+### Wave 5: Ship & Polish Design
+Design everything needed to launch and operate the product.
+- [ ] deployment-infra — Where each component runs, exact commands
+- [ ] ci-cd — Build, test, deploy pipeline
+- [ ] monitoring — Health checks, alerts, error tracking
+- [ ] design-system — Colors (hex), typography (fonts/sizes/weights), spacing, components
+- [ ] responsive-design — Breakpoints, mobile behavior, touch targets
+- [ ] accessibility — WCAG compliance, ARIA labels, keyboard nav
+- [ ] branding — Logo concepts, favicon, OG images, brand voice
+- [ ] legal-disclaimers — Exact disclaimer text for this domain
+- [ ] terms-and-privacy — ToS structure, privacy policy sections
+- [ ] seo-strategy — Target keywords, page titles, meta descriptions, schema markup
+- [ ] landing-page — Hero copy, value prop, feature bullets, CTAs
+- [ ] content-strategy — Blog topics, comparison pages, educational content
+
+### Wave 6: Synthesis & Completeness Audit
+Cross-cutting concerns and gap filling. Only start after Waves 2-5 are complete.
+- [ ] data-model-reconciliation — Verify data model covers engine + frontend + API + database
+- [ ] cross-reference-audit — Verify all file references and links are valid
+- [ ] completeness-audit — Read every file in final-mega-spec/, check for gaps
+- [ ] convergence-check — Run final convergence checklist, either add new aspects or converge
 
 ## Recently Analyzed
 (Empty — loop hasn't started yet)
