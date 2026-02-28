@@ -6,32 +6,32 @@
 
 ## Test Results (updated by loop — iteration 2)
 ```
- ✓ src/wasm/__tests__/scenario-coverage.test.ts (14 tests) 77ms
-     ✓ I1: single legitimate child gets entire estate
-     ✓ I2: legitimate children + spouse intestate
-     ✓ I4: LC + IC + spouse intestate
-     ✓ I5: ascendants only (parents, no children, no spouse)
-     ✓ I7: illegitimate children only
-     ✓ I11: surviving spouse only (no children, no ascendants)
-     ✓ I13: siblings only (full + half blood)
-     ✓ I15: escheat — no heirs, estate goes to state
-     ✓ T1: legitimate children with will (FP to charity)
-     ✓ T6: ascendants testate (parents + stranger in will)
-     ✓ T13: no compulsory heirs testate (entire estate disposed by will)
-     ✓ computation_log has multiple pipeline steps for all scenarios
-     ✓ large estate values: exact centavo arithmetic preserved
-     ✓ donation collation: shares account for prior donations
+
+ RUN  v4.0.18 /home/clsandoval/cs/monorepo/loops/inheritance-frontend-forward/app
+
+stderr | src/wasm/__tests__/scenario-coverage.test.ts
+using deprecated parameters for `initSync()`; pass a single object instead
+
+ ✓ src/wasm/__tests__/scenario-coverage.test.ts > scenario-coverage: intestate scenarios > I1: single legitimate child gets entire estate 32ms
+ ✓ src/wasm/__tests__/scenario-coverage.test.ts > scenario-coverage: intestate scenarios > I2: legitimate children + spouse intestate 2ms
+ ✓ src/wasm/__tests__/scenario-coverage.test.ts > scenario-coverage: intestate scenarios > I4: LC + IC + spouse intestate 2ms
+ ✓ src/wasm/__tests__/scenario-coverage.test.ts > scenario-coverage: intestate scenarios > I5: ascendants only (parents, no children, no spouse) 2ms
+ ✓ src/wasm/__tests__/scenario-coverage.test.ts > scenario-coverage: intestate scenarios > I7: illegitimate children only 1ms
+ ✓ src/wasm/__tests__/scenario-coverage.test.ts > scenario-coverage: intestate scenarios > I11: surviving spouse only (no children, no ascendants) 1ms
+ ✓ src/wasm/__tests__/scenario-coverage.test.ts > scenario-coverage: intestate scenarios > I13: siblings only (full + half blood) 2ms
+ ✓ src/wasm/__tests__/scenario-coverage.test.ts > scenario-coverage: intestate scenarios > I15: escheat — no heirs, estate goes to state 1ms
+ ✓ src/wasm/__tests__/scenario-coverage.test.ts > scenario-coverage: testate scenarios > T1: legitimate children with will (FP to charity) 8ms
+ ✓ src/wasm/__tests__/scenario-coverage.test.ts > scenario-coverage: testate scenarios > T6: ascendants testate (parents + stranger in will) 3ms
+ ✓ src/wasm/__tests__/scenario-coverage.test.ts > scenario-coverage: testate scenarios > T13: no compulsory heirs testate (entire estate disposed by will) 1ms
+ ✓ src/wasm/__tests__/scenario-coverage.test.ts > scenario-coverage: cross-cutting invariants > computation_log has multiple pipeline steps for all scenarios 1ms
+ ✓ src/wasm/__tests__/scenario-coverage.test.ts > scenario-coverage: cross-cutting invariants > large estate values: exact centavo arithmetic preserved 1ms
+ ✓ src/wasm/__tests__/scenario-coverage.test.ts > scenario-coverage: cross-cutting invariants > donation collation: shares account for prior donations 2ms
 
  Test Files  1 passed (1)
-       Tests  14 passed (14)
+      Tests  14 passed (14)
+   Start at  16:42:13
+   Duration  1.14s (transform 115ms, setup 103ms, import 93ms, tests 70ms, environment 673ms)
 ```
 
 ## Work Log
-### Iteration 2
-- Created `scenario-coverage.test.ts` with 14 tests across 3 describe blocks
-- Intestate scenarios: I1, I2, I4, I5, I7, I11, I13, I15
-- Testate scenarios: T1, T6, T13
-- Cross-cutting: computation_log validation, large estate arithmetic, donation collation
-- Fixed T6 assertion: engine returns `IntestateByPreterition` (preterition of parents)
-- Fixed computation_log: some scenarios (single-ascendant) produce fewer steps
-- All 14 tests passing
+(no iterations yet)
