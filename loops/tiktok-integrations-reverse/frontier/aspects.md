@@ -5,9 +5,9 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 23 |
-| Analyzed | 6 |
-| Pending | 17 |
-| Convergence | 26% |
+| Analyzed | 7 |
+| Pending | 16 |
+| Convergence | 30% |
 
 ---
 
@@ -19,7 +19,7 @@
 - [x] `tiktok-research-api` — Academic/commercial research: video search, user search, comments, historical data
 - [x] `tiktok-shop-api` — Commerce: product catalogs, orders, affiliates, seller tools, regional availability
 - [x] `tiktok-ads-marketing-api` — Campaign management, Spark Ads (boosting creator content), audience targeting, reporting
-- [ ] `tiktok-creator-marketplace-api` — TCM: creator discovery, campaign briefs, collaboration management
+- [x] `tiktok-creator-marketplace-api` — TCM: creator discovery, campaign briefs, collaboration management
 - [ ] `tiktok-messaging-comments-api` — Comment read/write, DM access, moderation, webhook events
 - [ ] `tiktok-live-api` — Live streams, viewer metrics, gifts, live commerce
 - [ ] `tiktok-webhooks-events` — Consolidated webhook/event reference across all API products
