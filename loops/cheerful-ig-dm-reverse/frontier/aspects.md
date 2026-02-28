@@ -5,9 +5,9 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 20 |
-| Analyzed | 7 |
-| Pending | 13 |
-| Convergence | 35% |
+| Analyzed | 8 |
+| Pending | 12 |
+| Convergence | 40% |
 
 ---
 
@@ -20,7 +20,7 @@
 - [x] `third-party-messagebird-bird` — Bird (MessageBird) Instagram channel: API, webhooks, pricing
 - [x] `third-party-composio` — Composio Instagram integration: leverage existing Cheerful integration
 - [x] `third-party-others` — Survey: Sendbird, Twilio, Zendesk, Intercom Instagram integrations
-- [ ] `unofficial-approaches` — Apify actors, browser automation: capabilities, TOS risks, reliability
+- [x] `unofficial-approaches` — Apify actors, browser automation: capabilities, TOS risks, reliability
 
 ## Wave 2: Internal Landscape — Cheerful's Current Architecture
 
