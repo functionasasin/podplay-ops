@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 16
-- Analyzed: 10
-- Pending: 6
-- Convergence: 63%
+- Analyzed: 11
+- Pending: 5
+- Convergence: 69%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -23,7 +23,7 @@
 ### Wave 3: Curriculum Generation (depends on Wave 2)
 - [x] phase-0-content — Generate complete Phase 0 (Diagnostic, Days 1-3) session content
 - [x] phase-1-content — Generate Phase 1 (Foundations, Weeks 1-4) — 28 daily sessions
-- [ ] phase-2-content — Generate Phase 2 (Pattern Building, Weeks 5-8) — 28 daily sessions
+- [x] phase-2-content — Generate Phase 2 (Pattern Building, Weeks 5-8) — 28 daily sessions
 - [ ] phase-3-content — Generate Phase 3 (System Thinking, Weeks 9-12) — 28 daily sessions
 - [ ] phase-4-content — Generate Phase 4 (Integration, Weeks 13-16) — 28 daily sessions + mock interviews
 - [ ] phase-5-content — Generate Phase 5 (Sharpening, Weeks 17-20) — 28 daily sessions + full mocks
@@ -42,6 +42,7 @@
 - [x] weekly-templates — Fully specified day-by-day sessions for all 6 phases (20 individual weeks + Phase 6 maintenance). Each session has format, topic, and key skill. Phase 1: 4 Code Katas + 1 SD + 1 RR + 1 DR per week. Phase 2: 3 CK + 1 SQL + 1 MPR + 1 RR + rotating MS/DR. Phase 3: 2 CD + 2–3 MS + CK/SQL + MPR + RR. Phase 4: 2 MPR + SD + BS + CK/SQL + RR + MS. Phase 5: 3 MPR + 2 BS + targeted weak-area + RR + rest. Phase 6: 6-week skill rotation with monthly re-diagnostic + interview ramp-up protocol.
 - [x] progress-tracking-design — Two-level entity structure: project entity (current state) + meeting entities (session logs per day). Meeting entity schema: phase/day/format/topic/key_skill/time_spent_min/self_assessment/verdict/gap_flags_triggered. Verdict: pass/conditional-pass/fail/not-applicable. Streak tracking with milestones at 7/14/30/50/100 days. Phase advancement: 3-of-4 MPR conditional-pass threshold + early advancement on 5-day 4+/5 self-assessment trend. Weekly Sunday summary format. Trend analysis signals: category drift, verdict rolling avg, time-to-complete slope, gap flag resolution. Commit convention: `bot: interview practice day NNN — FORMAT: topic-slug`. OpenClaw open/close protocol and full YAML schema for project entity fields.
 - [x] phase-0-content — Full OpenClaw executable scripts for all 3 diagnostic days at analysis/curriculum/phase-0-diagnostic.md. Each exercise has verbatim prompt, 1-5 scoring rubric, follow-up questions, score-tiered feedback templates, and transition lines. Includes complete scoring + level determination logic, gap flag triggering (5 flags), level → starting phase table, slower pace note for score < 30, verbatim result message template, and delivery principles appendix.
+- [x] phase-2-content — 28 fully-scripted daily sessions at analysis/curriculum/phase-2-patterns.md. Week 5: topological sort (Kahn's with cycle detection), asyncio event loop mental model, two-pointer, SQL aggregation + LIMIT, BFS maze solver MPR, rate limiter MS. Week 6: asyncio.gather, asyncio.Semaphore (the web crawler pattern), sliding window (fixed + variable), SQL HAVING with error rates, thread-safe rate limiter MPR, sequential-asyncio bug DR. Week 7: binary search on answer space, prefix sums + hashmap subarray counting, leaderboard SD, SQL window functions (running totals), heapq task scheduler MPR, message queue MS. Week 8: lazy deletion in heapq (mutable priorities), asyncio.Queue producer-consumer, config diff SD, p95 SQL with PERCENTILE_CONT, async web crawler MPR (Phase 2 exit benchmark), crawl dedup/normalization RR, topological sort silent cycle bug DR. Phase 2 exit gate: asyncio.Semaphore from memory, topo sort <12 min, pattern ID within 2 min, SQL window function correct, 2/4 mocks conditional-pass+. Pattern recognition trigger table included.
 - [x] phase-1-content — 28 fully-scripted daily sessions at analysis/curriculum/phase-1-foundations.md. Week 1: DLL (insert/remove/sentinel) + threading (Lock, thread-safe counter/stack). Week 2: LRU Cache (OrderedDict version + edge cases + thread-safe wrapper + producer-consumer). Week 3: LRU from scratch (Part 1 DLL layer + Part 2 dict+DLL integration) + BFS canonical + thread-safe from-scratch LRU. Week 4: DFS recursive + 3-color cycle detection + URL parser spec + threading.Condition producer-consumer + Phase 1 exit assessment (LRU from scratch, 15-min target). Every session has: OpenClaw verbatim opening, kata/spec/code prompt, 10-min check-in, evaluation guide with pass/fail criteria and common bugs, Socratic feedback approach, mid-session edge case throws, key insight delivery, stretch question, and next-day preview. Phase 1 → Phase 2 gate criteria and slower pace protocol included.
 
 ## Discovered Aspects
