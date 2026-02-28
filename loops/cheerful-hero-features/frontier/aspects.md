@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total aspects**: 36
-- **Analyzed**: 28
-- **Pending**: 8
-- **Convergence**: 78%
+- **Analyzed**: 29
+- **Pending**: 7
+- **Convergence**: 81%
 
 ## Wave 1: Feature Category Research + Discovery
 
@@ -54,7 +54,7 @@ gets added here as an unchecked aspect._
 - [x] hypeauditor — 68.7M–206M profiles; 95.5% fraud accuracy; 35 audience quality metrics; ~$8.1M ARR Jul 2025 (independent — CreatorIQ acquisition claim unverified); competitor intelligence + audience overlap unique in SMB tier
 - [x] modash — 250M+ creator profiles; $99–$399/mo; zero creator sign-up for tracking; Shopify integration
 - [x] favikon — 9 platforms; LinkedIn-first; B2B/SaaS focused; social ranking system; $99/mo
-- [ ] collabstr — Free–$399/mo; marketplace + management; free tier; all-in-one for startups
+- [x] collabstr — Free–$399/mo; marketplace + management; free tier; all-in-one for startups
 - [ ] archive — Auto-capture of Stories + ephemeral UGC; Instagram/TikTok/YouTube; content library
 - [ ] afluencer — 100% free tier; 1M+ creators; AI matching; startup-friendly
 - [ ] brand24 — Social listening + influencer sourcing + ranking; public company (Warsaw SE)
