@@ -1,6 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Control, FieldValues, Path, useController } from 'react-hook-form';
 import { stringToFrac } from '../../types';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 export const FRACTION_PRESETS = [
   { label: '1/2', numer: 1, denom: 2 },
@@ -91,12 +93,12 @@ export function FractionInput<T extends FieldValues>({
   );
 
   return (
-    <div data-testid="fraction-input">
+    <div data-testid="fraction-input" className="space-y-2">
       <label>
-        <span>{label}</span>
+        <span className="text-sm font-medium leading-none">{label}</span>
       </label>
-      <div className="flex items-center gap-1">
-        <input
+      <div className="flex items-center gap-2">
+        <Input
           type="number"
           value={numer}
           onChange={handleNumerChange}
@@ -104,11 +106,11 @@ export function FractionInput<T extends FieldValues>({
           readOnly={readOnly}
           aria-readonly={readOnly ? 'true' : undefined}
           disabled={readOnly}
-          className="w-16"
+          className="w-20"
           aria-label="Numerator"
         />
-        <span>/</span>
-        <input
+        <span className="text-muted-foreground font-medium">/</span>
+        <Input
           type="number"
           value={denom}
           onChange={handleDenomChange}
@@ -116,25 +118,26 @@ export function FractionInput<T extends FieldValues>({
           readOnly={readOnly}
           aria-readonly={readOnly ? 'true' : undefined}
           disabled={readOnly}
-          className="w-16"
+          className="w-20"
           aria-label="Denominator"
         />
       </div>
       {showPresets && (
-        <div className="flex gap-1 mt-1">
+        <div className="flex gap-1.5">
           {FRACTION_PRESETS.map((preset) => (
-            <button
+            <Button
               key={preset.label}
               type="button"
+              variant="outline"
+              size="xs"
               onClick={() => handlePresetClick(preset)}
-              className="px-2 py-1 text-xs border rounded"
             >
               {preset.label}
-            </button>
+            </Button>
           ))}
         </div>
       )}
-      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+      {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
 }

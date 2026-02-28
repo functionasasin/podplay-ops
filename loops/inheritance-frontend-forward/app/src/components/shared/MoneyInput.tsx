@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Control, FieldValues, Path, useController } from 'react-hook-form';
 import { pesosToCentavos, centavosToPesos } from '../../types';
+import { Input } from '@/components/ui/input';
 
 export interface MoneyInputProps<T extends FieldValues> {
   name: Path<T>;
@@ -95,12 +96,12 @@ export function MoneyInput<T extends FieldValues>({
     warnOnZero && field.value != null && Number(field.value) === 0;
 
   return (
-    <div data-testid="money-input">
-      <label>
-        <span>{label}</span>
-        <div className="flex items-center">
-          <span className="mr-1">₱</span>
-          <input
+    <div data-testid="money-input" className="space-y-2">
+      <label className="block space-y-2">
+        <span className="text-sm font-medium leading-none">{label}</span>
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none">₱</span>
+          <Input
             type="text"
             inputMode="decimal"
             role="textbox"
@@ -112,12 +113,13 @@ export function MoneyInput<T extends FieldValues>({
             readOnly={readOnly}
             aria-readonly={readOnly ? 'true' : undefined}
             min={min}
+            className="pl-7"
           />
         </div>
       </label>
-      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+      {error && <p className="text-sm text-destructive">{error}</p>}
       {showZeroWarning && (
-        <p className="text-amber-500 text-sm mt-1">Value is ₱0</p>
+        <p className="text-sm text-warning">Value is ₱0</p>
       )}
     </div>
   );

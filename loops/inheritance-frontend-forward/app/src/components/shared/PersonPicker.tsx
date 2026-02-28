@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { Control, FieldValues, Path, useController } from 'react-hook-form';
+import { cn } from '@/lib/utils';
 
 export interface PersonOption {
   id: string;
@@ -19,6 +20,12 @@ export interface PersonPickerProps<T extends FieldValues> {
 }
 
 const STRANGER_VALUE = '__stranger__';
+
+const selectClassName = cn(
+  "border-input flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none md:text-sm",
+  "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
+  "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
+);
 
 /**
  * PersonPicker — Select dropdown listing persons from the family tree.
@@ -65,14 +72,15 @@ export function PersonPicker<T extends FieldValues>({
       : field.value ?? '';
 
   return (
-    <div data-testid="person-picker">
-      <label>
-        <span>{label}</span>
+    <div data-testid="person-picker" className="space-y-2">
+      <label className="block space-y-2">
+        <span className="text-sm font-medium leading-none">{label}</span>
         <select
           value={selectValue}
           onChange={handleChange}
           onBlur={field.onBlur}
           role="combobox"
+          className={selectClassName}
         >
           <option value="">-- Select --</option>
           {filteredPersons.map((person) => (
@@ -88,7 +96,7 @@ export function PersonPicker<T extends FieldValues>({
           )}
         </select>
       </label>
-      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+      {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
 }

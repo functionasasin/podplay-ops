@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { Control, FieldValues, Path, useController } from 'react-hook-form';
+import { cn } from '@/lib/utils';
 
 export interface EnumOption<T extends string = string> {
   value: T;
@@ -17,6 +18,12 @@ export interface EnumSelectProps<T extends FieldValues, V extends string = strin
   placeholder?: string;
   filter?: (option: EnumOption<V>) => boolean;
 }
+
+const selectClassName = cn(
+  "border-input flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none md:text-sm",
+  "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
+  "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
+);
 
 /**
  * EnumSelect — Generic select for any PascalCase enum.
@@ -82,20 +89,21 @@ export function EnumSelect<T extends FieldValues, V extends string = string>({
   };
 
   return (
-    <div data-testid="enum-select">
-      <label>
-        <span>{label}</span>
+    <div data-testid="enum-select" className="space-y-2">
+      <label className="block space-y-2">
+        <span className="text-sm font-medium leading-none">{label}</span>
         <select
           value={field.value ?? ''}
           onChange={handleChange}
           onBlur={field.onBlur}
           role="combobox"
+          className={selectClassName}
         >
           {placeholder && <option value="">{placeholder}</option>}
           {renderOptions()}
         </select>
       </label>
-      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+      {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
 }

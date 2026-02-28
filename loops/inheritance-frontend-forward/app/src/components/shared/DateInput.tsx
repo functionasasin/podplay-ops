@@ -1,5 +1,6 @@
 import React from 'react';
 import { Control, FieldValues, Path, useController } from 'react-hook-form';
+import { Input } from '@/components/ui/input';
 
 export interface DateInputProps<T extends FieldValues> {
   name: Path<T>;
@@ -26,10 +27,10 @@ export function DateInput<T extends FieldValues>({
   const { field } = useController({ name, control });
 
   return (
-    <div data-testid="date-input">
-      <label>
-        <span>{label}</span>
-        <input
+    <div data-testid="date-input" className="space-y-2">
+      <label className="block space-y-2">
+        <span className="text-sm font-medium leading-none">{label}</span>
+        <Input
           type="date"
           value={field.value ?? ''}
           onChange={(e) => {
@@ -40,8 +41,8 @@ export function DateInput<T extends FieldValues>({
           min={minDate}
         />
       </label>
-      {hint && <p className="text-gray-500 text-sm mt-1">{hint}</p>}
-      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+      {hint && <p className="text-sm text-muted-foreground">{hint}</p>}
+      {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
 }
