@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total aspects**: 36
-- **Analyzed**: 32
-- **Pending**: 4
-- **Convergence**: 89%
+- **Analyzed**: 33
+- **Pending**: 3
+- **Convergence**: 92%
 
 ## Wave 1: Feature Category Research + Discovery
 
@@ -58,7 +58,7 @@ gets added here as an unchecked aspect._
 - [x] archive — Auto-capture of Stories + ephemeral UGC; Instagram/TikTok/YouTube; content library
 - [x] afluencer — 100% free tier; 1M+ creators; AI matching; startup-friendly
 - [x] brand24 — Social listening + influencer sourcing + ranking; public company (Warsaw SE)
-- [ ] heepsy — 11M+ profiles; affordable SMB discovery; accessible entry-level
+- [x] heepsy — 11M+ profiles; affordable SMB discovery; accessible entry-level
 
 ## Wave 2b: Campaign & Trend Research
 
