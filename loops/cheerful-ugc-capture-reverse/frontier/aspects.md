@@ -5,9 +5,9 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 18 |
-| Analyzed | 6 |
-| Pending | 12 |
-| Convergence | 33% |
+| Analyzed | 7 |
+| Pending | 11 |
+| Convergence | 39% |
 
 ---
 
@@ -19,7 +19,7 @@
 - [x] `story-mention-capture` — Messaging API `story_mention` events: CDN URL expiry, media download, IG DM webhook overlap
 - [x] `ai-visual-detection` — Logo/product detection (YOLO/DETR/CLIP), OCR, frame sampling, build-vs-buy (Cloud Vision, Rekognition, Roboflow)
 - [x] `ai-audio-detection` — Whisper STT + brand mention NER/keyword matching: cost, accuracy, self-hosted vs API
-- [ ] `ai-candidate-discovery` — Candidate content pool: hashtag expansion, follower graphs, creator networks, coverage estimates
+- [x] `ai-candidate-discovery` — Candidate content pool: hashtag expansion, follower graphs, creator networks, coverage estimates
 - [ ] `third-party-ugc-platforms` — Archive, Pixlee/Emplifi, TINT, Bazaarvoice, Dash Hudson: pricing, APIs, buy-vs-build assessment
 - [ ] `unofficial-scraping` — Apify actors, instagrapi for UGC monitoring: capabilities, TOS risks, existing Cheerful Apify usage
 
