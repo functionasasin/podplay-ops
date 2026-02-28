@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total aspects**: 36
-- **Analyzed**: 19
-- **Pending**: 17
-- **Convergence**: 53%
+- **Analyzed**: 20
+- **Pending**: 16
+- **Convergence**: 56%
 
 ## Wave 1: Feature Category Research + Discovery
 
@@ -42,7 +42,7 @@ gets added here as an unchecked aspect._
 
 ### Mid-Market Tier
 
-- [ ] grin — DTC e-commerce; deep Shopify/Klaviyo/DocuSign integrations; AI copilot "Gia"; first-party creator pool only; $2.5K+/mo
+- [x] grin — DTC e-commerce; deep Shopify/Klaviyo/DocuSign integrations; AI copilot "Gia"; first-party creator pool only; $2.5K+/mo
 - [ ] upfluence — Performance marketing + affiliate; ecommerce revenue attribution; $2K–$3.5K+/mo
 - [ ] aspire — Creator communities + ambassador programs; hybrid SaaS + managed; long-term relationship focus
 - [ ] later-influence — Fmr Mavrck; end-to-end automation; Shopify gifting; Mavely affiliate links; 10M profiles; $28.5K+/yr
