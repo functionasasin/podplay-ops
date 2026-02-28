@@ -5,9 +5,9 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 20 |
-| Analyzed | 17 |
-| Pending | 3 |
-| Convergence | 85% |
+| Analyzed | 18 |
+| Pending | 2 |
+| Convergence | 90% |
 
 ---
 
@@ -36,7 +36,7 @@
 - [x] `option-graph-api-polling` — Polling-based approach via Graph API (or document why not viable)
 - [x] `option-composio-relay` — Composio as DM bridge, leveraging existing integration
 - [x] `option-third-party-relay` — Best third-party candidate as relay (from Wave 1 findings)
-- [ ] `option-channel-abstraction` — Architecture pattern: generic channel layer unifying email + DMs
+- [x] `option-channel-abstraction` — Architecture pattern: generic channel layer unifying email + DMs
 - [ ] `option-parallel-tables` — Architecture pattern: add `ig_dm_*` tables mirroring Gmail/SMTP
 
 ## Wave 4: Synthesis
