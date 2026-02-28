@@ -14,19 +14,35 @@ This is NOT a typical converging loop. The output is a **living curriculum** —
 
 ### The North Star
 
-Pass this interview loop:
-1. **90-min CodeSignal assessment** — Progressive Python coding (4 levels, starts simple, gets hard). Example: build an in-memory database with SET/GET/DELETE → filtered scans → TTL → compression. No LeetCode — messy specs with progressive complexity.
-2. **System Design** — Pragmatic, shippable systems (not academic). Example: distributed search for 1B docs, ride-sharing infra, data warehouses. p95 latency targets, failure modes, trade-off documentation.
-3. **Coding rounds** — Live Python, shared environment. Clean code under pressure, corner case handling.
-4. **Behavioral** — Real project stories, safety-first decisions, technical misjudgments, reliability vs velocity.
+Pass this interview loop (based on a real Anthropic infra SWE account — 5 rounds, 3 weeks):
+
+1. **Online Assessment (90 min, 2 problems)** — Production-quality Python. Not just "does it work" but "would you ship this." Thread safety, error handling, complexity analysis in comments. Examples: LRU Cache (first with OrderedDict, then from scratch with doubly linked list + hashmap), Task Management System (DAG with topological sort, cascading cancellation, circular dependency detection).
+
+2. **Coding Round 1** — Build something real with escalating complexity. Example: web crawler — BFS, depth control, dedup, rate limiting, robots.txt. Then make it concurrent (asyncio + semaphore). Interviewer throws edge cases at you live: redirect loops, relative vs absolute URLs, pages that hang for 30 seconds.
+
+3. **System Design — THE round** — Design an LLM inference API. This is literally what Anthropic builds, so they go DEEP. Variable-length requests, GPU memory management, request queuing with priority, streaming responses. Key topics: dynamic batching strategy (when to flush vs hold), KV cache management, autoscaling signals (queue depth weighted by token count > raw GPU util because util can look fine while latency tanks).
+
+4. **Coding Round 2** — Unfamiliar domain, fatigued. Example: convert stack sampling profiler output into trace events. Diff consecutive samples, detect function enters/exits. Catch: recursive functions — track by stack position, not function name.
+
+5. **Hiring Manager (45 min)** — Past projects, debugging process, scaling challenges. Key moment: presented two approaches to a real team problem, asked which to pick. Winning answer: the simpler one — "flexibility you don't need yet is just complexity you pay for now."
+
+### Cross-Cutting: Concurrency Is EVERYWHERE
+
+- Online assessment: thread-safe LRU cache
+- Coding round 1: asyncio web crawler with semaphore
+- System design: concurrent GPU request management
+- **If you're not comfortable with concurrency in Python, you will struggle in every round**
 
 ### The Gap to Close
 
 The user can code and leverage AI effectively, but:
 - Instincts and intuition for problem decomposition aren't automatic yet
+- Concurrency patterns (asyncio, threading, locks, semaphores) aren't muscle memory
+- Can't implement core data structures from scratch under pressure (just knows stdlib)
 - Pattern recognition for algorithmic approaches needs development
-- System design mental models need to become second nature
+- System design mental models (especially ML infra / inference serving) need to become second nature
 - Under-pressure coding fluency (without AI assist) needs building
+- Edge case handling isn't automatic — needs to become reflexive
 - Think of it like learning a language — daily immersion until it clicks
 
 ### The Approach

@@ -76,27 +76,27 @@ Before the curriculum starts, we figure out where you are. Three diagnostic sess
 
 ### Phase 1: Foundations (Weeks 1-4)
 
-Build the base. Daily code katas focused on Python fluency and fundamental data structures. This is the "scales and exercises" phase — not glamorous, but everything builds on this.
+Build the base. Python fluency, fundamental data structures (both stdlib AND from scratch), and introduce concurrency early because it shows up in every round.
 
-**Focus areas**: Python stdlib mastery, list/dict/set operations, string manipulation, basic recursion, sorting/searching, hash maps, stacks/queues
+**Focus areas**: Python stdlib mastery, list/dict/set operations, string manipulation, basic recursion, sorting/searching, hash maps, stacks/queues, **implement core data structures from scratch** (linked lists, hash maps, trees), **intro to asyncio and threading**
 
 **Weekly pattern**: Mon-Wed code katas (progressive), Thu spec decomposition, Fri mock pressure, Sat review, Sun debug & read
 
-### Phase 2: Pattern Building (Weeks 5-8)
+### Phase 2: Pattern Building + Concurrency (Weeks 5-8)
 
-Start recognizing patterns. The goal isn't to memorize — it's to develop intuition for WHEN to use each approach. Each session teaches the "why" behind the pattern.
+Build pattern recognition AND concurrency fluency in parallel. Concurrency shows up in basically every Anthropic interview round — it needs to be muscle memory.
 
-**Focus areas**: Two-pointer, sliding window, BFS/DFS, dynamic programming basics, greedy algorithms, prefix sums, binary search variations, SQL window functions and complex joins
+**Focus areas**: Two-pointer, sliding window, BFS/DFS, dynamic programming basics, greedy algorithms, prefix sums, graph algorithms (DAG, topological sort), **asyncio patterns** (semaphores, task groups, rate limiting), **threading** (locks, thread safety), production-quality coding patterns
 
-**Weekly pattern**: Mon-Tue code katas (new pattern + harder variant), Wed SQL challenge, Thu spec decomposition, Fri mock pressure, Sat review, Sun debug & read
+**Weekly pattern**: Mon code kata (algorithm), Tue concurrency exercise, Wed graph/BFS problem, Thu spec decomposition, Fri mock pressure, Sat review, Sun debug & read
 
-### Phase 3: System Thinking (Weeks 9-12)
+### Phase 3: System Thinking + ML Infra (Weeks 9-12)
 
-System design isn't about memorizing architectures — it's about developing intuition for trade-offs. Every session is a mini design discussion: "how would you build X?" with follow-up questions that force you to think about failure modes, scaling, and real numbers.
+System design with heavy emphasis on ML infrastructure — because Anthropic's system design round is about LLM inference serving, their actual product. Not generic "design Twitter" questions.
 
-**Focus areas**: API design, caching, database design, sharding, load balancing, message queues, CAP theorem in practice, latency budgets, failure mode analysis
+**Focus areas**: API design, caching, database design, sharding, load balancing, message queues, **LLM inference serving** (batching strategies, KV cache management, GPU memory), **autoscaling signals** (queue depth vs GPU util), failure modes, latency budgets, streaming responses
 
-**Weekly pattern**: Mon-Tue mini system design, Wed code kata, Thu spec decomposition (system-level), Fri mock pressure, Sat review, Sun design case study
+**Weekly pattern**: Mon-Tue mini system design (one ML infra, one general), Wed code kata, Thu spec decomposition (system-level), Fri mock pressure, Sat review, Sun design case study (read about vLLM, PagedAttention, etc.)
 
 ### Phase 4: Integration (Weeks 13-16)
 

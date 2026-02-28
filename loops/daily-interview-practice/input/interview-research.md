@@ -1,148 +1,231 @@
 # Anthropic SWE Interview — Research Compilation
 
-Source: Multiple interview experience reports, prep guides, and candidate accounts (2025-2026).
+Sources: First-hand candidate account (infrastructure SWE, passed, got offer) + multiple interview experience reports, prep guides (2025-2026).
 
 ## Interview Loop Overview
 
-The Anthropic SWE interview has 5 stages. Total process takes ~3-4 weeks (avg 19 days).
+Anthropic infrastructure SWE. Five rounds, three weeks. The bar is high — production-quality code, concurrency in basically every round, and system design deeply specific to what Anthropic actually builds.
 
 ---
 
-## Stage 1: Recruiter Screen (~30 min)
+## Round 1: Online Assessment (90 min, 2 problems)
 
-- Previous experience walkthrough
-- Why Anthropic? Understanding of their value proposition
-- Anthropic is a B Corp — know what that means
-- What you're looking for career-wise
+### Problem 1: LRU Cache
 
-**Skills tested**: Communication, genuine interest in AI safety, self-awareness
+Sounds easy. It's not. They wanted **production quality**: thread safety, error handling, complexity analysis in comments.
 
----
+- **Phase 1**: Implement with `OrderedDict` — clean, Pythonic
+- **Phase 2**: Now implement it from scratch with a **doubly linked list + hashmap**
+- The pointer updates on eviction are where people lose time
+- This tests: can you go from "I know the stdlib shortcut" to "I understand the underlying data structure"
 
-## Stage 2: CodeSignal Assessment (~90 min)
+### Problem 2: Task Management System
 
-**Format**: Take-home or live. 90-minute timed assessment on CodeSignal. General specification with a black-box evaluator. 4 progressive levels — spec gets more complicated at each level, code must pass all tests at one level to unlock the next.
+Priorities, worker assignment, dependencies, **cascading cancellation**.
 
-**NOT LeetCode**. These are practical, progressive coding challenges.
+- Used a **DAG with topological sort** for dependencies
+- Nearly forgot **circular dependency detection** — added it with 8 minutes left
+- This tests: can you model real-world complexity as a graph problem under time pressure
 
-### Example Problems Reported
-
-**In-Memory Database (4 levels)**:
-1. Basic SET/GET/DELETE operations
-2. Filtered scans (query by prefix, range, etc.)
-3. TTL with timestamps (keys expire, cleanup)
-4. File compression/decompression (serialize state to disk)
-
-**Bank Transaction System (4 levels)**:
-1. Basic deposit/withdraw/balance
-2. Multiple account types with different rules
-3. Transaction history with filtering
-4. Interest calculations, overdraft protection
-
-### Key Skills Tested
-- Python fluency (it's all Python)
-- Clean, correct code written quickly
-- Corner case handling (automated grading — edge cases matter)
-- Iterative building: start minimal, add complexity
-- Time management — candidates commonly run out of time
-- Reading messy specs and extracting requirements
-
-### Success Strategy
-- "Get something passing. Then clean it up. Add edge cases. Submit often."
-- Don't over-optimize early
-- Read the FULL spec before coding
-- Submit after each level passes — partial credit counts
+### Key Takeaways
+- Production quality matters — not just "does it work" but "would you ship this"
+- Thread safety is expected, not bonus
+- Time pressure is real — 90 minutes for 2 complex problems
+- Know your data structures cold, both the stdlib shortcuts AND the manual implementations
 
 ---
 
-## Stage 3: Hiring Manager Screen (~1 hour)
+## Round 2: Coding Round 1 — Web Crawler
 
-- Deep dive into background and motivations
-- Passion for Anthropic and AI safety
-- Career goals alignment
-- Technical depth on past projects
-- Usually friendly and collaborative
+BFS from a start URL, crawl to a depth, extract links, build a site map.
 
----
+### Requirements
+- Rate limit yourself
+- Dedup visited URLs
+- Respect robots.txt
 
-## Stage 4: Technical Interview Loop (4-5 rounds)
+### How It Escalated
+- Started single-threaded
+- Interviewer immediately asked to make it **concurrent** → `asyncio` with a semaphore
+- robots.txt parsing became a whole thing
+- Edge cases thrown continuously:
+  - **Redirect loops**
+  - **Relative vs absolute URLs**
+  - **Pages that hang for 30 seconds** (timeout logic)
+  - Most handled, but janky timeout logic was noticed
 
-You interview for Research or Applied org. All interviewers from that org.
-
-### Coding Rounds (2 rounds typically)
-
-**Format**: Shared Python environment (CoderPad or similar). Live coding with interviewer.
-
-**Key Skills**:
-- Clean code under pressure
-- Corner case handling
-- SQL proficiency: window functions, joins, aggregation
-- Real database scenarios (sampling from 100M+ rows, NULL handling, timezone logic)
-- Prefix sum algorithms, two-pointer techniques
-- Readable abstractions
-- Willingness to say "I'm not sure, here's how I'd find out"
-
-### System Design (1 round)
-
-**Philosophy**: "Keep it real... build the most miniature possible version that would actually ship"
-
-**Example Problems**:
-- Distributed search system for 1B documents, 1M QPS — sharding, caching, LLM inference scaling
-- Ride-sharing infrastructure — state tracking, immutable events
-- Data warehouses for e-commerce — fact/dimension modeling
-- API key storage with rotation and audit trails
-
-**What They're Looking For**:
-- Real throughput/latency numbers (p95 under 150ms targets)
-- Clear ownership of data and dependencies via diagrams
-- Failure mode identification with quick mitigation paths
-- Trade-off documentation backed by concrete constraints
-- Pragmatic, not academic solutions
-
-### Behavioral / Culture Fit (1 round)
-
-**Key Areas**:
-- Real project stories (90 seconds each): decisions, not fluff
-- Safety-first decisions in past projects
-- Technical misjudgments that delayed a project
-- Reliability vs velocity tradeoffs with concrete examples
-- Understanding AI safety concerns beyond buzzwords
-- Questions about safety telemetry and postmortem practices
+### What This Tests
+- Can you write concurrent Python (asyncio, semaphores, task groups)
+- Can you handle an interviewer throwing edge cases at you in real-time
+- Do you think about failure modes (timeouts, infinite loops, malformed input)
+- Can you iterate on a design while someone watches
 
 ---
 
-## Stage 5: Reference Checks & Offer
+## Round 3: System Design — LLM Inference API
 
-2 reference checks required before offer.
+**THIS IS THE ROUND.** If you only prepare for one thing at Anthropic, make it this. This is literally what they build, so they go DEEP.
+
+### The Problem
+Design an inference API for serving large language models:
+- Variable-length requests
+- GPU memory management across concurrent requests
+- Request queuing with priority
+- Streaming responses
+
+### Key Discussion Areas
+
+**Batching Strategy** (main discussion):
+- How to dynamically group requests of similar length to maximize GPU utilization
+- When to flush a batch vs hold for one more request
+- Trade-off: latency (flush now) vs throughput (wait for fuller batch)
+
+**KV Cache Management**:
+- How to manage key-value cache across concurrent requests
+- Memory pressure → which requests to evict/preempt
+- Cache sharing opportunities across similar requests
+
+**Autoscaling**:
+- Candidate argued: **queue depth weighted by estimated token count** is better than raw GPU utilization as a scaling signal
+- Why: GPU util can look fine while latency is tanking (because the queue is backing up with long requests)
+- Interviewer liked this insight
+
+### What This Tests
+- Do you understand how LLM inference actually works (not just API calls)
+- Can you reason about GPU memory, batching, and scheduling trade-offs
+- Do you have real intuition for when metrics lie (GPU util vs actual user experience)
+- Pragmatic design vs academic design
+
+### Preparation Advice
+- Read up on inference serving (vLLM, TGI, Triton Inference Server)
+- Understand continuous batching, PagedAttention, KV cache management
+- Know GPU memory hierarchy and how transformer inference uses it
+- Think about real numbers: what's a reasonable batch size, what's p95 latency target
 
 ---
 
-## What Makes Someone Pass
+## Round 4: Coding Round 2 — Stack Profiler → Trace Events
+
+Converting stack sampling profiler output into trace events.
+
+### The Problem
+- You get periodic call stack snapshots (samples)
+- Reconstruct when each function started and stopped
+- Diff consecutive samples to detect enters and exits
+
+### The Catch
+- **Recursive functions**: same function appears multiple times in one stack
+- Must track by **position in the stack**, not by function name
+- This is a subtle but critical distinction
+
+### How It Went
+- Got through main implementation
+- Could feel there was a follow-up that was never reached
+- Weakest round — fatigue was a factor (5th hour of interviews)
+
+### What This Tests
+- Can you work with unfamiliar problem domains (profiler internals)
+- Careful reasoning about data representation
+- Handling recursive/edge cases correctly
+- Performance under fatigue
+
+---
+
+## Round 5: Hiring Manager (45 min)
+
+Infra team lead. More conversational than technical.
+
+### Topics
+- Past projects deep dive
+- Debugging process — how do you approach unknown problems
+- Scaling challenges you've faced
+
+### The Key Moment
+Described two approaches to a real problem on their team. Asked which one to pick.
+
+- Candidate chose the simpler one: *"Flexibility you don't need yet is just complexity you pay for now"*
+- Interviewer pushed back but seemed satisfied
+- This tests: can you defend technical decisions under pushback, and do you default to simplicity
+
+---
+
+## Cross-Cutting Themes
+
+### Concurrency Is Everywhere
+Shows up in basically every round:
+- Online assessment: thread-safe LRU cache
+- Coding round 1: asyncio web crawler with semaphore
+- System design: concurrent GPU request management
+- **If you're not comfortable with concurrency in Python, you will struggle**
+
+### Production Quality Expected
+Not "does it work" but "would you deploy this":
+- Error handling
+- Thread safety
+- Complexity analysis
+- Clean abstractions
+- Edge case handling
+
+### They Test What They Actually Build
+The system design round is about LLM inference serving — their core product. They're not asking generic "design Twitter" questions. They go deep because they live it.
+
+### Edge Case Thinking Must Be Automatic
+Interviewers don't ask "what about edge cases?" — they throw them at you and watch if you catch them or break.
+
+### Simplicity Is a Strength
+"Flexibility you don't need yet is just complexity you pay for now" — this philosophy resonates at Anthropic.
+
+---
+
+## Skill Priority Matrix (Based on This Account)
+
+| Skill | Priority | Appears In |
+|-------|----------|------------|
+| Python concurrency (asyncio, threading, locks) | CRITICAL | Rounds 1, 2, 3 |
+| Data structures from scratch (linked lists, hash maps, trees) | CRITICAL | Round 1 |
+| Graph algorithms (DAG, topological sort, BFS/DFS) | HIGH | Rounds 1, 2 |
+| System design for ML infrastructure | CRITICAL | Round 3 |
+| GPU/inference serving knowledge | HIGH | Round 3 |
+| Edge case handling under pressure | HIGH | Rounds 1, 2, 4 |
+| Production-quality coding patterns | HIGH | Round 1 |
+| Time management under pressure | HIGH | All rounds |
+| Defending technical decisions | MEDIUM | Round 5 |
+| Unfamiliar problem domain reasoning | MEDIUM | Round 4 |
+| Batch processing / scheduling theory | MEDIUM | Round 3 |
+| Network protocols (HTTP, redirects, robots.txt) | MEDIUM | Round 2 |
+
+---
+
+## What Makes Someone Pass (Synthesized)
 
 ### Technical Bar
 - Python fluency is NON-NEGOTIABLE — stdlib, idioms, clean patterns
-- Can decompose a messy spec into clean, buildable steps under time pressure
-- System design thinking is pragmatic: what would you actually ship, not textbook answers
-- Can write SQL that handles real-world messiness (NULLs, timezones, edge cases)
-- Corner case thinking is automatic, not an afterthought
+- Concurrency must be second nature — asyncio, threading, locks, semaphores
+- Can implement data structures from scratch, not just use stdlib wrappers
+- Can decompose messy specs into buildable steps under time pressure
+- System design thinking is pragmatic: what would you actually ship
+- Edge case thinking is automatic, not an afterthought
+- Know how LLM inference works at the systems level
 
 ### Mindset Bar
-- Genuine interest in what Anthropic is building (AI safety)
+- Default to simplicity: "flexibility you don't need yet is just complexity you pay for now"
 - Honest about what you don't know
-- Clear, structured communication of technical decisions
-- Build incrementally — ship something, then improve
-- Safety-consciousness shows up in how you think about systems
+- Build incrementally — get something working, then improve
+- Can iterate on a design while being watched and questioned
+- Comfortable with fatigue and pressure across multiple hours
 
 ### What Separates Pass from Fail
-- **Pass**: Gets something working quickly, handles edge cases, communicates clearly, shows pragmatic design thinking
-- **Fail**: Gets stuck on perfection, can't decompose messy specs, designs academic systems nobody would build, memorized patterns without understanding
+- **Pass**: Gets something working quickly, handles edge cases as they come, communicates trade-offs clearly, shows deep understanding of practical systems, defends decisions under pushback
+- **Fail**: Gets stuck on perfection, can't handle edge cases thrown in real-time, designs academic systems, memorized patterns without real understanding, crumbles under pushback or fatigue
 
 ---
 
-## Preparation Recommendations (from successful candidates)
+## Preparation Recommendations
 
-- **Daily practice**: 45-90 min — one timed problem, review optimal solution, document one lesson learned
-- **System design**: ~10 focused hours total; practice by designing real systems you've used
-- **Mindset**: Consistency over intensity. It's a skill you build, not a thing you cram.
-- **Critical**: Get comfortable with messy specs and progressive complexity. This isn't about pattern matching — it's about thinking.
-- **Red flags**: Over-optimizing early, pattern memorization without understanding, grinding without reflection
+- **Concurrency first**: Get asyncio, threading, and locks into muscle memory
+- **Data structures from scratch**: Implement linked lists, hash maps, trees, graphs without stdlib help
+- **LLM inference**: Read about vLLM, continuous batching, PagedAttention, KV cache management
+- **Practice under pressure**: Timed problems, no AI help, someone watching
+- **Edge case drills**: Practice having someone throw edge cases at you while you code
+- **System design**: Design real infra systems (inference serving, crawlers, task schedulers) — not "design Instagram"
+- **Daily practice**: 30-60 min, consistent, reflective. Quality over quantity.
