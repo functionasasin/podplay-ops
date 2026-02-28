@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 16
-- Analyzed: 16
-- Pending: 0
-- Convergence: 100%
+- Analyzed: 15
+- Pending: 1
+- Convergence: 94%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -31,7 +31,7 @@
 
 ### Wave 4: OpenClaw Integration & Output (depends on Wave 3)
 - [x] practice-guide — Generate the complete OpenClaw practice guide entity at entities/projects/daily-interview-practice.md
-- [ ] openclaw-skill-prompt — Write the OpenClaw skill prompt for delivering daily sessions
+- [x] openclaw-skill-prompt — Write the OpenClaw skill prompt for delivering daily sessions
 - [ ] convergence-review — Final review: is the curriculum complete, realistic, and actionable?
 
 ## Recently Analyzed
