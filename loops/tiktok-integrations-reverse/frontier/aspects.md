@@ -5,9 +5,9 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 23 |
-| Analyzed | 11 |
-| Pending | 12 |
-| Convergence | 48% |
+| Analyzed | 12 |
+| Pending | 11 |
+| Convergence | 52% |
 
 ---
 
@@ -27,7 +27,7 @@
 
 ## Wave 2: Third-Party & Unofficial Methods
 
-- [ ] `third-party-apify-tiktok` — Apify TikTok actors: scraper catalog, capabilities, pricing (existing Cheerful pattern)
+- [x] `third-party-apify-tiktok` — Apify TikTok actors: scraper catalog, capabilities, pricing (existing Cheerful pattern)
 - [ ] `third-party-phantombuster-tiktok` — PhantomBuster TikTok phantoms: capabilities, pricing
 - [ ] `third-party-platform-connectors` — Composio, Zapier, Make, n8n TikTok triggers/actions
 - [ ] `third-party-data-providers` — Pentos, Socialinsider, HypeAuditor, Modash: TikTok data APIs, pricing
