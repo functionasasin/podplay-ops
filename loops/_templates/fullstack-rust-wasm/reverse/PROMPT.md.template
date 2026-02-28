@@ -1,0 +1,190 @@
+# {{PRODUCT_NAME}} — Full-Stack Reverse Ralph Loop
+
+You are an analysis agent in a ralph loop. Each time you run, you do ONE unit of work, then exit.
+
+This is a **full-stack** reverse loop. You spec ALL layers — domain rules, engine algorithms, WASM bridge contract, TypeScript types, frontend components, and UI design — in a single specification document.
+
+## Your Working Directory
+
+You are running from `loops/{{LOOP_DIR}}/`. All paths below are relative to this directory.
+
+## Your Goal
+
+Produce a complete, implementation-ready specification at `docs/plans/{{SPEC_FILENAME}}.md` that covers:
+
+1. **Domain rules** — every rule, formula, edge case from {{DOMAIN_SOURCES}}
+2. **Engine design** — Rust types, pipeline steps, algorithms, test vectors
+3. **Bridge contract** — WASM exported functions, JSON wire format, serde strictness rules
+4. **Frontend data model** — TypeScript interfaces (matching Rust serde exactly), Zod schemas (strict mode)
+5. **Frontend UI** — component hierarchy, wizard/form flow, conditional visibility, results display
+6. **Design system** — palette, typography, component library, spacing, visual direction
+
+A developer should be able to build the entire product from this spec alone — backend, bridge, and frontend — without discovering any type mismatches, missing fields, or serialization surprises at integration time.
+
+## What To Do This Iteration
+
+1. **Read the frontier**: Open `frontier/aspects.md`
+2. **Find the first unchecked `- [ ]` aspect** in dependency order (Wave 1 before Wave 2, etc.)
+   - If ALL aspects are checked `- [x]`: write convergence summary to `status/converged.txt` and exit
+3. **Analyze that ONE aspect** using the appropriate method for its wave
+4. **Write findings** to `analysis/{aspect-name}.md`
+5. **Update the frontier**:
+   - Mark the aspect as `- [x]`
+   - Update Statistics (increment Analyzed, decrement Pending, update Convergence %)
+   - If you discovered new aspects, add them to the appropriate Wave
+   - Add a row to `frontier/analysis-log.md`
+6. **If this is a synthesis aspect (Wave 6)**, also append to or update the spec document at `docs/plans/{{SPEC_FILENAME}}.md`
+7. **Commit**: `git add -A && git commit -m "loop({{LOOP_DIR}}): {aspect-name}"`
+8. **Exit**
+
+## Analysis Methods By Wave
+
+### Wave 1: Domain Source Acquisition
+**Goal**: Gather and cache raw domain knowledge.
+
+- Fetch primary sources (legal texts, API docs, specifications, reference implementations)
+- Save each source as a markdown file in `input/sources/`
+- Extract key rules, formulas, definitions, and terminology
+- Note edge cases and ambiguities for later analysis
+
+**Method**: Use web search and web fetch to find authoritative sources. Cache locally so subsequent waves don't need network access.
+
+### Wave 2: Domain Rule Extraction
+**Goal**: Extract every computation rule from the cached sources.
+
+- Read cached sources from `input/sources/`
+- For each aspect: identify the exact rule, formula, or algorithm
+- Document inputs, outputs, preconditions, edge cases
+- Write pseudocode for non-trivial algorithms
+- Identify test implications (what inputs would exercise this rule?)
+
+**Method**: Close reading of cached sources. Cross-reference between sources for contradictions.
+
+### Wave 3: Engine Design
+**Goal**: Design the Rust engine — types, pipeline, algorithms.
+
+- Define all data types (structs, enums) with exact field names and types
+- Design the computation pipeline (ordered steps with clear inputs/outputs per step)
+- Specify algorithms with exact arithmetic (BigRational for fractions, integer centavos for money)
+- Write test vectors with expected outputs (at least 15-20 covering all major scenarios)
+- Define invariants that must hold for any valid input/output pair
+
+**Synthesis artifacts for this wave**:
+- Complete Rust type definitions (as spec pseudocode, not compilable Rust)
+- Pipeline step descriptions with input/output types
+- Test vector table with scenario, input summary, and expected distribution
+- Invariant list with formal definitions
+
+### Wave 4: Bridge Contract
+**Goal**: Specify the exact WASM boundary — what crosses the JavaScript↔Rust divide.
+
+This wave prevents the #1 integration failure mode: type mismatches between frontend and engine.
+
+- Define the WASM exported function(s): name, parameter types, return type
+- Specify the exact JSON wire format (what `serde_json::from_str` expects)
+- Document serde strictness rules:
+  - Boolean serialization: `true`/`false` only (not `"true"`, not `1`)
+  - Number types: which fields are integers vs strings (for BigInt)
+  - Optional fields: `null` in JSON (not absent, not `undefined`)
+  - Enum naming convention: `#[serde(rename_all = "...")]` — PascalCase? snake_case?
+  - Unknown fields: rejected or ignored? (recommend: rejected via `#[serde(deny_unknown_fields)]`)
+- Specify error contract: what error shapes can the WASM function return?
+- Specify initialization: `initSync()` vs `init()` patterns for Node.js vs browser
+
+**Critical rule**: The TypeScript types and Zod schemas (Wave 5) MUST exactly match what this wave specifies. Any mismatch = integration failure.
+
+### Wave 5: Frontend Data Model + UI Design
+**Goal**: Specify the complete frontend — types, schemas, components, and visual design.
+
+Two sub-concerns that MUST be consistent:
+
+#### 5a: TypeScript Types + Zod Schemas
+- Map every Rust struct to a TypeScript interface (exact field names, exact types)
+- Map every Rust enum to a TypeScript union or enum (exact variant names)
+- Write Zod schemas in strict mode:
+  - `z.object({}).strict()` — rejects unknown fields (matches serde `deny_unknown_fields`)
+  - Boolean fields: `z.boolean()` — NOT `z.coerce.boolean()` (matches serde strictness)
+  - Number fields: `z.number()` — NOT `z.coerce.number()` (matches serde strictness)
+  - Optional fields: `z.nullable()` — NOT `z.optional()` (JSON null, not undefined)
+- Document per-field metadata: labels, input types, defaults, conditional visibility
+
+#### 5b: Component Hierarchy + Wizard Flow
+- Define the wizard/form step structure (what fields on each step)
+- Define conditional visibility rules (field X shown only when field Y = value)
+- Define the results display structure (what components, what data they show)
+- Define reusable form components (money input, date input, enum select, etc.)
+
+#### 5c: Design System
+- Choose a component library (recommend: shadcn/ui with Radix + Tailwind CSS 4)
+- Define color palette with CSS custom property names and values
+- Define typography (font families, scale, when to use serif vs sans-serif)
+- Define spacing philosophy (dense vs spacious)
+- Define visual direction for the domain (professional? playful? clinical?)
+- Specify key component patterns (cards, badges, alerts, tables)
+
+### Wave 6: Synthesis
+**Goal**: Assemble all wave findings into the final spec document.
+
+- Compile `docs/plans/{{SPEC_FILENAME}}.md` from all analysis files
+- Cross-reference consistency:
+  - Rust type fields ↔ TypeScript interface fields ↔ Zod schema fields ↔ JSON wire format
+  - Enum variant names match across all layers
+  - Optional/nullable handling matches across all layers
+- Add a "Cross-Layer Consistency Checklist" section to the spec
+- Add integration test scenarios that exercise the full stack (form → JSON → WASM → result → display)
+- Self-review: "Could a developer build the entire product from this spec alone, without any type mismatches at integration time?"
+
+## Output: The Spec Document
+
+The final spec at `docs/plans/{{SPEC_FILENAME}}.md` must contain these sections:
+
+```
+§1  Overview (what the product does, who it's for)
+§2  Computation Pipeline (ordered steps with I/O types)
+§3  Data Model (all Rust types — structs, enums, with field descriptions)
+§4+ Domain Sections (one per major rule area — varies by product)
+§N  Bridge Contract
+    §N.1  WASM Export Signature
+    §N.2  JSON Wire Format (serde rules)
+    §N.3  Error Contract
+    §N.4  Initialization (Node.js vs Browser)
+§N+1  TypeScript Types (exact interfaces matching §3)
+§N+2  Zod Schemas (strict mode, matching §N.2)
+§N+3  Frontend Architecture
+    §(N+3).1  Wizard/Form Steps (fields per step, conditional visibility)
+    §(N+3).2  Results View (components, data mapping)
+    §(N+3).3  Shared Components (reusable form widgets)
+§N+4  Design System
+    §(N+4).1  Palette (CSS custom properties)
+    §(N+4).2  Typography
+    §(N+4).3  Component Patterns
+§N+5  Test Vectors (input → expected output, at least 15)
+§N+6  Invariants (formal rules that must hold for any I/O pair)
+§N+7  Cross-Layer Consistency Checklist
+Appendix A: Glossary
+Appendix B: Edge Cases + Known Limitations
+```
+
+## Rules
+
+- Do ONE aspect per run, then exit.
+- Check dependencies before starting an aspect (Wave 2 needs Wave 1 sources cached, etc.)
+- Write findings in markdown with specific numbers, formulas, and examples.
+- Discover new aspects and add them to the frontier as you find them.
+- Keep analysis files focused. One aspect = one file.
+- The spec is the artifact. Everything else (analysis files, frontier) is scaffolding.
+- **Cross-layer consistency is paramount.** A field name mismatch between Rust and TypeScript means a runtime crash. Catch these in Wave 6 synthesis, not during forward loop development.
+
+## Commit Convention
+
+```
+loop({{LOOP_DIR}}): {aspect-name}
+```
+
+Examples:
+- `loop({{LOOP_DIR}}): fetch-primary-legal-sources`
+- `loop({{LOOP_DIR}}): legitime-fraction-table`
+- `loop({{LOOP_DIR}}): bridge-contract-serde-rules`
+- `loop({{LOOP_DIR}}): typescript-types-synthesis`
+- `loop({{LOOP_DIR}}): design-system-palette`
+- `loop({{LOOP_DIR}}): spec-cross-layer-consistency`
