@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 91
-- Analyzed: 78
-- Pending: 13
-- Convergence: 86%
+- Analyzed: 79
+- Pending: 12
+- Convergence: 87%
 
 ---
 
@@ -111,7 +111,7 @@
 - [x] Manila (city proper) — validate all routes within/through Manila
 - [x] Quezon City — validate all routes within/through QC
 - [x] Makati — validate all routes within/through Makati
-- [ ] Pasig — validate all routes within/through Pasig
+- [x] Pasig — validate all routes within/through Pasig
 - [ ] Taguig/BGC — validate all routes within/through Taguig
 - [ ] Mandaluyong — validate all routes within/through Mandaluyong
 - [ ] Caloocan — validate all routes within/through Caloocan
