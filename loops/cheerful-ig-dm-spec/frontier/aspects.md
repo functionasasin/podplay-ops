@@ -5,16 +5,16 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 25 |
-| Analyzed | 1 |
-| Pending | 24 |
-| Convergence | 4% |
+| Analyzed | 2 |
+| Pending | 23 |
+| Convergence | 8% |
 
 ---
 
 ## Wave 1: Codebase Audit
 
 - [x] `audit-db-schemas` — Read all migrations for thread/campaign/creator tables: exact columns, CHECK constraints, GmailThreadStatus enum, triggers, RLS
-- [ ] `audit-backend-services` — Read Gmail/SMTP/thread services: exact class names, method signatures, Candidate object, DI patterns
+- [x] `audit-backend-services` — Read Gmail/SMTP/thread services: exact class names, method signatures, Candidate object, DI patterns
 - [ ] `audit-temporal-workflows` — Read all workflow/activity files: exact names, branching logic, input/output types, coordinator elif pattern
 - [ ] `audit-api-routes` — Read all relevant FastAPI routers: exact route paths, methods, request/response models, auth patterns
 - [ ] `audit-frontend-types` — Read TypeScript types: GmailThread, GmailMessage, API client functions, TanStack Query hooks
