@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 91
-- Analyzed: 64
-- Pending: 27
-- Convergence: 70%
+- Analyzed: 65
+- Pending: 26
+- Convergence: 71%
 
 ---
 
@@ -95,7 +95,7 @@
 ## Wave 2: Cross-Reference & Validation
 
 ### By Major Corridor
-- [ ] EDSA corridor — all routes using any segment of EDSA, cross-referenced across sources
+- [x] EDSA corridor — all routes using any segment of EDSA, cross-referenced across sources
 - [ ] C5 corridor — all routes along C5, including partial-overlap routes
 - [ ] Commonwealth Avenue corridor — all routes from Quezon Ave to Fairview
 - [ ] España-Quezon Avenue corridor — all routes along this University Belt axis
