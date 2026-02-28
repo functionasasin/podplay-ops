@@ -4,166 +4,405 @@ name: Daily Interview Practice
 status: active
 started: 2026-02-28
 current_phase: 0
-current_day: 0
+current_day: 1
 current_week: 0
 streak: 0
 longest_streak: 0
 total_sessions: 0
+last_session_date: null
 estimated_weeks: 20
-target: "Pass Anthropic-level SWE interview loop"
+target: "Pass Anthropic SWE infrastructure interview loop"
 tags: [interview-prep, daily-practice, swe-interview, openclaw-driven]
+
+# Phase 0 diagnostic results (populated after Day 3)
+diagnostic_score: null
+diagnostic_level: null
+diagnostic_start_phase: null
+gap_flags: []
+
+# Per-category baselines (populated after Phase 0 diagnostic)
+category_baselines:
+  python_fluency: null
+  concurrency: null
+  data_structures: null
+  algorithms: null
+  system_design: null
+  sql: null
+  communication: null
+
+# Rolling 7-session per-category averages (updated each session)
+category_rolling_avg:
+  python_fluency: null
+  concurrency: null
+  data_structures: null
+  algorithms: null
+  system_design: null
+  sql: null
+  communication: null
+
+# Weekly summaries (appended each Sunday)
+weekly_summaries: []
+
+# Phase advancement log
+phase_log:
+  - phase: 0
+    started: 2026-02-28
+    completed: null
+    verdict: null
 ---
 
 # Daily Interview Practice
 
 ## The Goal
 
-Go from "can code and leverage AI, but lacks raw problem-solving instincts" to "can confidently pass an Anthropic-level SWE interview" — through 30 minutes of daily practice, delivered via OpenClaw.
+Pass the Anthropic SWE infrastructure interview — 5 rounds, 3 weeks — through 30 minutes of daily practice delivered via OpenClaw on Telegram.
 
-This is like learning a language. No shortcuts. Just 30 minutes every day until the instincts are automatic.
-
-## How This Works
-
-1. **OpenClaw reminds you daily** to start your practice session
-2. **You talk to OpenClaw for 30 minutes** — it delivers today's exercise, you work through it conversationally
-3. **OpenClaw logs completion** — updates this file and creates a meeting entity for the session
-4. **The curriculum progresses automatically** — each day builds on the last
-5. **A reverse ralph loop** (`loops/daily-interview-practice/`) generated this curriculum and can regenerate/update it
-
-## Current Status
-
-- **Phase**: 0 — Diagnostic (not yet started)
-- **Day**: 0 / ~143 total
-- **Streak**: 0 days
-- **Next session**: Phase 0, Day 1 — Python Fluency Diagnostic
-
-## Timeline Estimate
-
-| Phase | Focus | Weeks | Sessions |
-|-------|-------|-------|----------|
-| 0 | Diagnostic | <1 | 3 |
-| 1 | Foundations — Python fluency, basic DS&A | 4 | 28 |
-| 2 | Pattern Building — algorithmic patterns, SQL | 4 | 28 |
-| 3 | System Thinking — design, scaling, trade-offs | 4 | 28 |
-| 4 | Integration — combined exercises, mock interviews | 4 | 28 |
-| 5 | Sharpening — full mocks, weak-area targeting | 4 | 28 |
-| 6 | Maintenance — ongoing mixed practice | ∞ | ∞ |
-
-**Total to interview-ready: ~20 weeks (5 months) at 30 min/day.**
-With rest days and life happening, realistically **6-7 months**.
-
-## Session Types
-
-| Type | Duration | What You Do |
-|------|----------|-------------|
-| Code Kata | 15-20 min | Solve a focused coding exercise, then review the optimal approach |
-| Spec Decomposition | 20 min | Break a messy/vague spec into implementation steps (thinking, not coding) |
-| Mini System Design | 20 min | Design a system component, explain trade-offs |
-| Debug & Read | 15 min | Read unfamiliar code, find the bug, explain what it does |
-| SQL Challenge | 15 min | Progressively harder SQL query challenge |
-| Mock Pressure Round | 30 min | Full timed problem simulating interview conditions — no AI help |
-| Review & Reflect | 10 min | Review yesterday's problem, identify what you missed, extract the pattern |
-
-## Phase Details
-
-### Phase 0: Diagnostic (Days 1-3)
-
-Before the curriculum starts, we figure out where you are. Three diagnostic sessions covering all skill areas. Based on your results, the curriculum adjusts — you might skip ahead in areas where you're strong and spend more time where you need it.
-
-- **Day 1**: Python fluency + data structures diagnostic
-- **Day 2**: Problem decomposition + algorithmic thinking diagnostic
-- **Day 3**: System design + SQL diagnostic
-
-### Phase 1: Foundations (Weeks 1-4)
-
-Build the base. Python fluency, fundamental data structures (both stdlib AND from scratch), and introduce concurrency early because it shows up in every round.
-
-**Focus areas**: Python stdlib mastery, list/dict/set operations, string manipulation, basic recursion, sorting/searching, hash maps, stacks/queues, **implement core data structures from scratch** (linked lists, hash maps, trees), **intro to asyncio and threading**
-
-**Weekly pattern**: Mon-Wed code katas (progressive), Thu spec decomposition, Fri mock pressure, Sat review, Sun debug & read
-
-### Phase 2: Pattern Building + Concurrency (Weeks 5-8)
-
-Build pattern recognition AND concurrency fluency in parallel. Concurrency shows up in basically every Anthropic interview round — it needs to be muscle memory.
-
-**Focus areas**: Two-pointer, sliding window, BFS/DFS, dynamic programming basics, greedy algorithms, prefix sums, graph algorithms (DAG, topological sort), **asyncio patterns** (semaphores, task groups, rate limiting), **threading** (locks, thread safety), production-quality coding patterns
-
-**Weekly pattern**: Mon code kata (algorithm), Tue concurrency exercise, Wed graph/BFS problem, Thu spec decomposition, Fri mock pressure, Sat review, Sun debug & read
-
-### Phase 3: System Thinking + ML Infra (Weeks 9-12)
-
-System design with heavy emphasis on ML infrastructure — because Anthropic's system design round is about LLM inference serving, their actual product. Not generic "design Twitter" questions.
-
-**Focus areas**: API design, caching, database design, sharding, load balancing, message queues, **LLM inference serving** (batching strategies, KV cache management, GPU memory), **autoscaling signals** (queue depth vs GPU util), failure modes, latency budgets, streaming responses
-
-**Weekly pattern**: Mon-Tue mini system design (one ML infra, one general), Wed code kata, Thu spec decomposition (system-level), Fri mock pressure, Sat review, Sun design case study (read about vLLM, PagedAttention, etc.)
-
-### Phase 4: Integration (Weeks 13-16)
-
-Put it all together. Combined exercises that mirror the actual interview: messy specs you decompose and then implement, design discussions that require concrete code, and full mock CodeSignal-style challenges with progressive levels.
-
-**Focus areas**: Multi-step implementation from spec, CodeSignal-style progressive problems, combined code + design, behavioral prep (STAR stories)
-
-**Weekly pattern**: Mon spec→code, Tue system design, Wed progressive challenge, Thu behavioral prep, Fri full mock round, Sat review, Sun debug & read
-
-### Phase 5: Sharpening (Weeks 17-20)
-
-The hardest problems. Full mock interview rounds. Targeted practice on your weak areas (based on self-assessment trends). This phase builds confidence through competence.
-
-**Focus areas**: Hardest problems in each category, full mock rounds, weak-area targeting, communication under pressure, "explain your approach" practice
-
-**Weekly pattern**: Mon-Tue targeted weak-area practice, Wed hard code kata, Thu system design, Fri full mock round, Sat review + self-assessment, Sun rest or catch-up
-
-### Phase 6: Maintenance (Ongoing)
-
-Stay sharp. Mixed sessions across all categories. Monthly re-diagnostic. Ramp up intensity before an actual interview.
+The gap to close: you can code and leverage AI effectively, but raw problem-solving instincts aren't automatic yet. Concurrency patterns, data structure implementation from scratch, system design depth, and under-pressure execution all need to become muscle memory. Think of it like learning a language — daily immersion until it clicks.
 
 ---
 
-## OpenClaw Instructions
+## The North Star: What Anthropic Looks For
 
-When the user wants to do their daily interview practice:
+Five rounds, progressively harder, each testing overlapping skills:
 
-1. **Read this file** to determine current phase, day, and session type
-2. **Look up today's session** in the curriculum files at `loops/daily-interview-practice/analysis/curriculum/`
-3. **Deliver the session conversationally**:
-   - Present the exercise
-   - Let the user think and respond
-   - Guide with hints if stuck (Socratic — don't give answers)
-   - Evaluate their response
-   - Share the key insight / optimal approach
-   - Ask "what would you do differently next time?"
-4. **Log completion**:
-   - Update `current_day` and `streak` in this file's frontmatter
-   - Create a meeting entity: `entities/meetings/YYYY-MM-DD-interview-practice.md` with tags: [interview-practice]
-   - Include: phase, session type, topic, self-assessment score (ask user 1-5), notes
-5. **Advance the curriculum**: increment day, check if phase transition is needed
+**Round 1 — Online Assessment (90 min, 2 problems)**
+Production-quality Python. Not "does it work" — "would you ship this." Thread safety, error handling, complexity analysis in comments.
+- Problem 1: LRU Cache — first with OrderedDict, then from scratch (doubly linked list + hashmap, thread-safe)
+- Problem 2: Task Management System — DAG with topological sort, cascading cancellation, circular dependency detection
 
-### Daily Reminder
+**Round 2 — Coding Round 1**
+Build something real with escalating complexity. Example: web crawler — BFS, depth control, dedup, rate limiting, robots.txt. Then make it concurrent (asyncio + semaphore). Live edge cases thrown mid-session: redirect loops, relative vs absolute URLs, pages that hang for 30 seconds.
 
-Send a Telegram message at the user's preferred time:
-> "Interview practice time — 30 min. Today: [session type] — [topic]. Ready when you are."
+**Round 3 — System Design (THE round)**
+Design an LLM inference API. This is literally what Anthropic builds — they go deep. Key topics:
+- Dynamic batching strategy: when to flush vs hold (latency/throughput trade-off)
+- KV cache management: VRAM limits, eviction policies, PagedAttention
+- Autoscaling signals: queue depth weighted by token count > raw GPU util (GPU util can look fine while latency tanks)
+- Streaming responses: SSE vs WebSocket, backpressure, disconnect cleanup
 
-### If the user says "skip today"
+**Round 4 — Coding Round 2**
+Unfamiliar domain, fatigued. Example: convert stack sampling profiler output into trace events. Diff consecutive samples, detect function enters/exits. Catch: recursive functions — track by stack position, not function name.
 
-Log it. Don't guilt trip. Reset streak. Move on.
+**Round 5 — Hiring Manager (45 min)**
+Past projects, debugging process, scaling challenges. Key moment: presented two approaches to a real team problem, asked which to pick. Winning answer: the simpler one. "Flexibility you don't need yet is just complexity you pay for now."
 
-### If the user says "I don't know" during an exercise
+**Concurrency is EVERYWHERE.** OA: thread-safe LRU cache. Coding Round 1: asyncio web crawler with semaphore. System Design: concurrent GPU request management. If it's not muscle memory, you'll struggle in every round.
 
-Don't give the answer. Instead:
-1. Simplify the problem — "What if we only had 10 items instead of 10,000?"
-2. Ask about related concepts — "What data structure lets you look up by key in O(1)?"
-3. Walk backward from the answer — "The optimal solution uses X. Why might that work here?"
+---
 
-### Tone
+## How This Works
 
-Coach, not lecturer. You're a practice partner, not a professor. Be direct, encouraging, and honest. If the answer is wrong, say so — then help them find the right one.
+1. **You message OpenClaw** when you have 30 minutes. Any time, any day.
+2. **OpenClaw reads this file** — checks `current_phase`, `current_day`, `streak`, `last_session_date`, and `gap_flags`.
+3. **OpenClaw announces the session:**
+   > "Day 23 — Phase 2, Week 6. You've got 8 days straight. Today: Code Kata — asyncio.Semaphore pattern."
+4. **OpenClaw delivers the session** conversationally — asks questions, evaluates your answers, coaches Socratically. No lectures. No spoon-feeding.
+5. **You work through it** — typing on your phone is fine. Most exercises are about thinking and explaining, not writing full code in an IDE.
+6. **Session closes** — OpenClaw asks "How did that feel? 1-5?", "How long?", "Anything to note?". Assigns verdict. Gives key insight. Previews tomorrow.
+7. **OpenClaw logs everything** — creates a meeting entity, updates this file, commits both.
+
+**If you miss a day:** Streak resets. OpenClaw notes the gap without guilt. Keep going.
+
+**If you say "I don't know":** OpenClaw does NOT give the answer. Asks a simpler version, asks about a related concept, walks backward from the answer shape. Socratic until you get there.
+
+**Commit convention:** `bot: interview practice day NNN — FORMAT: topic-slug`
+
+---
+
+## Current Status
+
+| Field | Value |
+|-------|-------|
+| Current Phase | 0 — Diagnostic |
+| Day | 1 of 3 |
+| Streak | 0 days |
+| Total Sessions | 0 |
+| Last Session | — |
+| Diagnostic Score | — |
+| Diagnostic Level | — |
+| Active Gap Flags | None yet |
+| Starting Phase | TBD after Day 3 |
+
+---
+
+## Today's Session
+
+**Phase 0 · Day 1 — Python Fluency + Data Structures Diagnostic**
+
+OpenClaw delivers this to start the session:
+
+> **Day 1 of 3: Diagnostic.**
+>
+> Five exercises today — Python and data structures. No IDE, no looking things up. Just type what you know, the way you'd explain it to someone. Think aloud as you answer.
+>
+> I'll score each one and move on. No long explanations yet — that comes in Phase 1. Be honest: a lower score just means more runway.
+>
+> Ready? Let's go.
+
+**Full session content:** `loops/daily-interview-practice/analysis/curriculum/phase-0-diagnostic.md` → Day 1 (DIAG-01 through DIAG-05)
+
+**After this session:** Log Day 1 scores internally. Advance to Day 2. Do not disclose scores until Day 3 debrief.
+
+---
+
+## Phase Overview
+
+### Phase 0: Diagnostic (Days 1–3)
+
+Calibrate baseline before practicing the wrong things. Pure assessment — no teaching. OpenClaw scores 15 exercises across 6 categories and delivers a starting-phase recommendation.
+
+- **Day 1:** Python fluency + data structures (DIAG-01–05)
+- **Day 2:** Concurrency + algorithms (DIAG-06–10)
+- **Day 3:** Systems + decomposition + communication (DIAG-11–15) + full debrief
+- **Output:** Level, starting phase, top 3 gap flags
+
+**Phase skip logic:**
+
+| Diagnostic Score | Level | Start At |
+|-----------------|-------|----------|
+| 60–75 | Interview-Ready | Phase 4 (or 5 if systems strong) |
+| 45–59 | Advanced | Phase 2 |
+| 30–44 | Intermediate | Phase 1 (standard) |
+| 15–29 | Developing | Phase 1 (slower: 6 weeks instead of 4) |
+| < 15 | Beginner | Phase 1 (+ supplementary Python basics) |
+
+---
+
+### Phase 1: Foundations (Weeks 1–4)
+
+Build the mechanical foundations until they're effortless. Not pattern recognition yet — just fluency. By end of Phase 1, implementing a doubly linked list from scratch should feel like writing a for loop.
+
+**Skills:** Doubly linked list (node, insert_after, remove, sentinel nodes), LRU Cache (OrderedDict version → from scratch → thread-safe), threading.Lock / threading.RLock (with lock: pattern), BFS on adjacency list (deque, visited-on-enqueue), DFS with cycle detection (recursive, 3-color marking), thread-safe producer-consumer patterns.
+
+**Weekly rhythm:** 4 Code Katas + 1 Spec Decomposition + 1 Review & Reflect + 1 Debug & Read.
+
+**Exit gate:** LRU Cache from scratch (DLL + hashmap + thread-safe) in < 15 min without looking anything up. BFS and DFS written correctly on first attempt. threading.Lock usage automatic. Given a buggy DLL or BFS, find the bug in < 5 min.
+
+**Maps to:** OA problems (LRU Cache + Task Management System).
+
+---
+
+### Phase 2: Pattern Building (Weeks 5–8)
+
+Where intuition starts to develop. Trains pattern recognition — see a problem, feel its shape. By end, you should look at a problem and say "that's a sliding window" before reaching for code.
+
+**Skills:** Topological sort (Kahn's, cycle detection), asyncio (event loop mental model, async/await, gather, Semaphore — the web crawler pattern), two-pointer, sliding window (fixed + variable), binary search (standard + on answer space), prefix sums, priority queue with heapq, SQL (JOINs, aggregation, window functions).
+
+**Weekly rhythm:** 3 Code Katas + 1 SQL + 1 Mock Pressure Round + 1 Review & Reflect + rotating Mini System Design/Debug & Read.
+
+**Exit gate:** asyncio.Semaphore pattern written without thinking. Topological sort (Kahn's + cycle detection) in < 12 min. Pattern identification (sliding window, two-pointer, BFS) within 2 min. SQL window function written correctly. 2/4 MPRs at conditional-pass or better.
+
+**Maps to:** OA + Coding Round 1 (async web crawler).
+
+---
+
+### Phase 3: System Thinking (Weeks 9–12)
+
+The make-or-break phase. The System Design round tests domain-specific LLM inference knowledge — interviewers build this for a living and will find the edges of your knowledge. Generic "load balancer + GPU servers" answers fail.
+
+**Skills:** Autoregressive generation, KV cache (what's cached, why VRAM limits matter, eviction policies), continuous batching vs static batching, prefix caching, PagedAttention/vLLM, dynamic batching scheduler (flush trigger design: VRAM + time deadline + SLA), autoscaling signals (queue depth × token count beats raw GPU util), streaming (SSE vs WebSocket, backpressure), request queuing with priority + starvation prevention, caching strategy taxonomy, message queue patterns.
+
+**Weekly rhythm:** 2 Concept Deep Dives + 2–3 Mini System Designs + 1 Code Kata/SQL + 1 Mock Pressure Round + 1 Review & Reflect.
+
+**Exit gate:** Explain continuous batching without notes. Design inference queue layer in 20 min. Know the correct autoscaling signal and defend it. Name 3 vLLM concepts and explain why they matter. Discuss KV cache eviction trade-offs.
+
+**Maps to:** System Design round (LLM inference API).
+
+---
+
+### Phase 4: Integration (Weeks 13–16)
+
+Bring it all together. Full problems under time pressure, live edge cases thrown mid-session, behavioral storytelling. By end, completing an async web crawler in 30 min while talking through thinking.
+
+**Skills:** Full web crawler (BFS → dedup → rate limiting → robots.txt → asyncio + semaphore → redirect loops → timeouts), Task Management System (full OA-quality), Stack profiler (position-based diff, recursive case), LRU from scratch (timed, production quality), 3–5 STAR behavioral stories (rehearsed, specific, confident), trade-off articulation under pushback.
+
+**Weekly rhythm:** 2 Mock Pressure Rounds + 1 Spec Decomposition + 1 Behavioral Story Practice + 1 Code Kata/SQL + 1 Review & Reflect + 1 Mini System Design.
+
+**Exit gate:** Web crawler (async, rate-limited, redirect-safe, robots.txt) in 30 min at conditional-pass or better (consistent). TMS (DAG, topo sort, cascading cancel) consistent conditional-pass or better. 3 behavioral stories rehearsed and specific. 3/4 mocks in Week 16 at conditional-pass or better.
+
+**Maps to:** All rounds — OA, Coding Round 1, Coding Round 2, Hiring Manager.
+
+---
+
+### Phase 5: Sharpening (Weeks 17–20)
+
+Remove inconsistency. Not learning new things — performing reliably. Every session is a mock round, behavioral drill, or targeted weak-area session. Raise the floor, not the ceiling.
+
+**Skills:** Full mock OA (both problems, 90 min stamina), full mock Coding Round 1 (60 min, live edge cases), System Design mock (all 4 areas without prompting), Hiring Manager simulation, weak-area elimination, edge case drills, "explain it to me" communication, recovery from being stuck.
+
+**Weekly rhythm:** 3 Mock Pressure Rounds + 2 Behavioral Story Practice + 1 targeted weak-area session + 1 Review & Reflect (optional rest on Sunday).
+
+**Exit gate:** Full mock OA (both problems, 90 min): pass on both. Mock Coding Round 1 (30 min async crawler + live edge cases): pass. Mock System Design (30 min LLM inference): all 4 areas articulated without prompting. 3 behavioral stories delivered with specifics, held position on pushback. 4 consecutive days without a session below conditional-pass.
+
+**Maps to:** Final preparation across all 5 rounds.
+
+---
+
+### Phase 6: Maintenance (Ongoing)
+
+Skills decay. Phase 6 prevents that with a sustainable weekly cadence. Right mode for post-interview-ready or between interview loops.
+
+**Weekly template:** Code Kata (skill rotation) + Mini System Design (random Phase 3 component) + Light Review + SQL or Debug & Read + Mock Pressure Round + Review & Reflect + Rest (mandatory Sunday).
+
+**Monthly:** Mini diagnostic (5 exercises across 5 categories). If any category drops significantly from Phase 5 baseline, it gets an extra weekly session for the next month.
+
+**Interview ramp-up protocol:** When an interview is confirmed (3 weeks out), shift to Phase 5 schedule for 2 weeks, then light review + behavioral only in the final week. Day before: rest.
+
+---
+
+## Session Format Reference
+
+| Code | Format | Duration | What It Builds |
+|------|--------|----------|----------------|
+| CK | Code Kata | 25 min | Muscle memory for patterns — repetition until automatic |
+| SD | Spec Decomposition | 25 min | Plan-before-code habit; ask clarifying questions reflex |
+| MS | Mini System Design | 25–30 min | System component intuition; trade-off articulation |
+| DR | Debug & Read | 20–25 min | Code reading speed; bug pattern recognition |
+| SQL | SQL Challenge | 20 min | Analytical query fluency; window functions |
+| MPR | Mock Pressure Round | 30 min | Under-pressure execution; time management; iterative build |
+| RR | Review & Reflect | 20 min | Deliberate retrieval; gap identification; pattern solidification |
+| CD | Concept Deep Dive | 25 min | ML infra knowledge depth; "why" not just "what" |
+| BS | Behavioral Story Practice | 25 min | STAR stories; pushback handling; specificity |
+
+**Cross-format coaching principles:**
+- Socratic delivery — asks questions, doesn't give answers
+- Edge cases thrown mid-session (like a real interviewer, not at the end)
+- 3-tier hint system: simplify → related concept → backward from answer shape
+- "Explain it to me" close on every CK and MPR: "In 2 sentences — what does this do and why?"
+- Simplicity rewarded: "Is that complexity earning its keep?" when the user overengineers
+- Gap flags surface when relevant: "Remember, this is your CONCURRENCY-GAP area — let's make sure this one lands."
+
+---
+
+## Verdict System
+
+Every Mock Pressure Round gets an OpenClaw verdict:
+
+| Verdict | Meaning |
+|---------|---------|
+| `pass` | All requirements met, edge cases handled, no major prompting needed |
+| `conditional-pass` | Core requirements met, minor gaps; ready to advance but worth revisiting |
+| `fail` | Significant gaps, couldn't complete without heavy hints, wrong approach |
+| `not-applicable` | Review, Concept Deep Dive, Behavioral (pass/fail less meaningful) |
+
+---
+
+## Streak Milestones
+
+| Milestone | OpenClaw Message |
+|-----------|-----------------|
+| Day 7 | "One week in. The daily habit is forming." |
+| Day 14 | "Two weeks straight. That's discipline." |
+| Day 30 | "30 sessions. You've done more practice than most people do in a year." |
+| Day 50 | "Halfway through the core curriculum." |
+| Day 100 | "100 sessions. If you're not ready by now, you will be soon." |
+| Phase advance | "Phase N complete. You've earned Phase N+1." |
+
+---
+
+## Phase Advancement Logic
+
+**Standard:** End of final week → OpenClaw runs phase exit assessment → "Advance" or "Extra week" (harder variants, same phase).
+
+**Early:** 4–5/5 self-assessment across all categories for 5+ consecutive sessions → OpenClaw proposes early advance.
+
+**Triggered review:** ≤2/5 for 3 consecutive sessions in same category → OpenClaw inserts one targeted session before advancing.
+
+---
+
+## Curriculum Files
+
+All session content lives in `loops/daily-interview-practice/analysis/curriculum/`:
+
+| File | Content |
+|------|---------|
+| `phase-0-diagnostic.md` | Days 1–3: full diagnostic scripts, scoring rubrics, level determination, gap flag logic |
+| `phase-1-foundations.md` | Weeks 1–4: 28 daily sessions (DLL, LRU, BFS/DFS, threading) |
+| `phase-2-patterns.md` | Weeks 5–8: 28 daily sessions (topo sort, asyncio, algorithms, SQL) |
+| `phase-3-systems.md` | Weeks 9–12: 28 daily sessions (LLM infra, KV cache, batching, streaming) |
+| `phase-4-integration.md` | Weeks 13–16: 28 daily sessions (full problems, behavioral, time pressure) |
+| `phase-5-sharpening.md` | Weeks 17–20: 28 daily sessions (mock rounds, gap elimination) |
+| `phase-6-maintenance.md` | Ongoing: 6-week rotation, monthly mini-diagnostic, interview ramp-up protocol |
+
+**Session logs:** `entities/meetings/YYYY-MM-DD-interview-practice-day-NNN.md`
+
+**OpenClaw skill prompt:** `loops/daily-interview-practice/analysis/openclaw-skill-prompt.md`
+
+---
+
+## OpenClaw Integration
+
+### How to Read This File
+
+`current_phase` and `current_day` are the single source of truth. Read them at session start. `current_day` is the day number within the current phase (resets to 1 on phase advance). For meeting entity filenames, use `total_sessions + 1` padded to 3 digits.
+
+### Session Start Protocol
+
+1. Read this file's frontmatter
+2. Check `last_session_date` — note any gap without guilt-tripping; reset streak if gap > 1 day
+3. Announce: `"Day {total_sessions+1} — Phase {N}, Week {W}. {streak}-day streak. Today: {FORMAT} — {topic}."`
+4. Open the curriculum file for `current_phase`
+5. Find the session matching `current_day` within that phase
+6. Deliver conversationally
+
+### Finding Today's Session
+
+```
+current_phase → curriculum file → day number within phase → session content
+```
+
+Phase 0: `phase-0-diagnostic.md`, days 1–3
+Phase 1: `phase-1-foundations.md`, days 1–28 (Week 1 = days 1–7, Week 2 = days 8–14, etc.)
+Phase 2: `phase-2-patterns.md`, days 1–28
+Phase 3: `phase-3-systems.md`, days 1–28
+Phase 4: `phase-4-integration.md`, days 1–28
+Phase 5: `phase-5-sharpening.md`, days 1–28
+Phase 6: `phase-6-maintenance.md`, 6-week rotation
+
+### Session End Protocol
+
+1. Ask: "How did that feel? 1-5?"
+2. Ask: "How long did that take?"
+3. Ask: "Anything to note?" (optional — skip if tired)
+4. Assign internal verdict
+5. Deliver coaching close: "The key insight today: [one sentence]. File that away — it'll show up again."
+6. Preview: "Tomorrow: {FORMAT} — {topic-teaser}."
+7. Write session meeting entity
+8. Update this file: increment `current_day`, update `streak`, `total_sessions`, `last_session_date`
+9. Commit: `bot: interview practice day NNN — FORMAT: topic-slug`
+
+### Gap Flag Behavior
+
+If `gap_flags` contains `CONCURRENCY-GAP`, `ASYNCIO-GAP`, `GRAPH-GAP`, `LLM-INFRA-GAP`, or `COMMUNICATION-GAP`, mention the relevant flag when delivering sessions in that skill area:
+
+> "Remember, this is your CONCURRENCY-GAP area — let's make sure this one lands."
+
+**Gap flag resolution:** After 3 sessions in that category with self-assessment ≥ 4/5, remove the flag from `gap_flags` in this file's frontmatter.
+
+### Interview Ramp-Up
+
+If user mentions a confirmed interview (3+ weeks out), activate ramp-up protocol from `phase-6-maintenance.md`: shift to Phase 5 schedule for 2 weeks, then light review + behavioral only in the final week. Day before: rest (tell the user to close the chat and sleep).
 
 ---
 
 ## Progress Log
 
-| Date | Phase | Day | Type | Topic | Score | Streak | Notes |
-|------|-------|-----|------|-------|-------|--------|-------|
+*(OpenClaw appends a row here after each completed session)*
 
-<!-- OpenClaw appends rows here after each session -->
+| Day | Date | Phase | Format | Topic | Self-Assessment | Verdict |
+|-----|------|-------|--------|-------|----------------|---------|
+
+---
+
+## Weekly Summaries
+
+*(OpenClaw appends these each Sunday)*
+
+```
+Week {N} summary:
+- Sessions: N/7 (streak: N days)
+- Best session: {topic} — {verdict}
+- Toughest session: {topic} — {verdict}
+- Self-assessment trend: up ↑ / stable → / down ↓ vs last week
+- Next week focus: {the one thing to pay attention to}
+```
