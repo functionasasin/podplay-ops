@@ -5,9 +5,9 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 25 |
-| Analyzed | 7 |
-| Pending | 18 |
-| Convergence | 28% |
+| Analyzed | 8 |
+| Pending | 17 |
+| Convergence | 32% |
 
 ---
 
@@ -23,7 +23,7 @@
 
 ## Wave 2: Schema & Interface Design
 
-- [ ] `spec-db-migrations` — Exact CREATE TABLE / ALTER TABLE SQL for 6 new tables + 4 modified tables, indexes, triggers, RLS policies
+- [x] `spec-db-migrations` — Exact CREATE TABLE / ALTER TABLE SQL for 6 new tables + 4 modified tables, indexes, triggers, RLS policies
 - [ ] `spec-pydantic-models` — Exact Pydantic model classes: IG DM entities, webhook payloads, modified Candidate, DTOs
 - [ ] `spec-typescript-types` — Exact TypeScript types: IgDmThread, IgDmMessage, channel discriminator, API client functions, TanStack hooks
 - [ ] `spec-api-contracts` — Exact route signatures: webhook endpoints, IG account CRUD, DM thread queries, reply endpoint
