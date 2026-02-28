@@ -88,7 +88,7 @@ describe('results > NarrativePanel', () => {
       // so use a function matcher on the content container
       expect(screen.getByText((_content, element) =>
         element?.tagName === 'DIV' &&
-        element.classList.contains('text-gray-700') &&
+        element.classList.contains('text-muted-foreground') &&
         /Juan Cruz/.test(element.textContent ?? '') &&
         /receives/.test(element.textContent ?? ''),
       )).toBeInTheDocument();

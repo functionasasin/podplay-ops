@@ -21,7 +21,12 @@ export function getResultsLayout(
   successionType: SuccessionType,
   scenarioCode: ScenarioCode,
 ): ResultsLayout {
-  // TODO: implement
+  if (scenarioCode === 'I15') return 'escheat';
+  if (scenarioCode === 'T13') return 'no-compulsory-full-fp';
+  if (successionType === 'IntestateByPreterition') return 'preterition-override';
+  if (successionType === 'Mixed') return 'mixed-succession';
+  if (['I12', 'I13', 'I14'].includes(scenarioCode)) return 'collateral-weighted';
+  if (successionType === 'Testate') return 'testate-with-dispositions';
   return 'standard-distribution';
 }
 
@@ -30,24 +35,29 @@ export function getResultsLayout(
  * Only bold markers are used by the engine.
  */
 export function renderNarrativeText(text: string): string {
-  // TODO: implement
-  return text;
+  return text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
 }
 
 /**
  * Strip Markdown bold markers from text for plain-text copy.
  */
 export function stripMarkdownBold(text: string): string {
-  // TODO: implement
-  return text;
+  return text.replace(/\*\*(.+?)\*\*/g, '$1');
 }
 
 /**
  * Determine warning severity from category.
  */
 export function getWarningSeverity(category: string): 'error' | 'warning' | 'info' {
-  // TODO: implement
-  return 'info';
+  const severity: Record<string, 'error' | 'warning' | 'info'> = {
+    preterition: 'error',
+    max_restarts: 'error',
+    inofficiousness: 'warning',
+    disinheritance: 'warning',
+    vacancy_unresolved: 'warning',
+    unknown_donee: 'info',
+  };
+  return severity[category] ?? 'info';
 }
 
 /**
