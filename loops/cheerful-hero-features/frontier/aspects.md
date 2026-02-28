@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total aspects**: 36
-- **Analyzed**: 29
-- **Pending**: 7
-- **Convergence**: 81%
+- **Analyzed**: 30
+- **Pending**: 6
+- **Convergence**: 83%
 
 ## Wave 1: Feature Category Research + Discovery
 
@@ -55,7 +55,7 @@ gets added here as an unchecked aspect._
 - [x] modash — 250M+ creator profiles; $99–$399/mo; zero creator sign-up for tracking; Shopify integration
 - [x] favikon — 9 platforms; LinkedIn-first; B2B/SaaS focused; social ranking system; $99/mo
 - [x] collabstr — Free–$399/mo; marketplace + management; free tier; all-in-one for startups
-- [ ] archive — Auto-capture of Stories + ephemeral UGC; Instagram/TikTok/YouTube; content library
+- [x] archive — Auto-capture of Stories + ephemeral UGC; Instagram/TikTok/YouTube; content library
 - [ ] afluencer — 100% free tier; 1M+ creators; AI matching; startup-friendly
 - [ ] brand24 — Social listening + influencer sourcing + ranking; public company (Warsaw SE)
 - [ ] heepsy — 11M+ profiles; affordable SMB discovery; accessible entry-level
