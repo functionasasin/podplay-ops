@@ -14,6 +14,9 @@ data/Timeline.json
 data/Timeline.json:Zone.Identifier
 data/*.json
 
+# Anime recap engine data
+automations/anime-recap-engine/data/
+
 # Worktrees
 .worktrees/
 
