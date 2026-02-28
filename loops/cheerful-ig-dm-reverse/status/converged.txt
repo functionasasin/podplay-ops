@@ -1,0 +1,53 @@
+CONVERGED
+Loop: cheerful-ig-dm-reverse
+Date: 2026-02-28
+Aspects analyzed: 20 / 20
+Convergence: 100%
+
+All aspects checked and analysis files written. The options catalog is complete at:
+  analysis/synthesis/options-catalog.md
+
+Summary of findings:
+
+API/ACCESS OPTIONS (4 viable paths):
+1. Direct Meta API (webhook-first) — 20–28 days engineering + App Review calendar wait. Free at
+   scale. Highest operational control. Real-time inbound. Requires Cheerful to manage Meta OAuth
+   tokens and host webhook endpoint.
+
+2. Graph API Polling — Variant A (pure polling): viable only for ≤5 accounts, useful as prototype
+   before App Review. Variants B (recovery) and C (initial sync) are required components of any
+   webhook-based production deployment.
+
+3. Composio Relay — 28–39 days. Simplest auth onboarding (Composio-hosted OAuth). Polling-only
+   (no real-time). Meta App Review still required. Composio adds a SPOF and ongoing tier cost.
+   Best for teams wanting to minimize new auth infrastructure.
+
+4. Bird Relay — 22–31 days. Webhook-based (real-time). No Meta App Review required for Cheerful
+   (Bird holds the approval). Per-message cost: $0.005. Best for fastest path to production.
+   Bird serves as abstraction layer with multi-channel expansion potential.
+
+REJECTED: ManyChat (flow-gated, text-only, no thread IDs), all other third-party survey
+candidates (support desk destinations, not relays), unofficial/scraping approaches (TOS risk,
+unreliable for production).
+
+ARCHITECTURE PATTERNS (2 orthogonal to API choice):
+1. Parallel Tables — zero overhead, follows SMTP precedent exactly, full FK integrity, zero
+   migration risk. Naming debt accumulates (GmailThreadStatus for 3 channels; 3-way CHECK grows).
+
+2. Channel Abstraction — configurable investment. Strategy 3 (incremental naming): +1–2 days.
+   Strategy 2 (Façade): +3–5 days, recommended if 4th channel (WhatsApp/LinkedIn) is planned.
+   Strategy 1 (Big Bang): +8–12 days, high migration risk.
+
+UNIVERSAL CONSTRAINTS (apply to all options):
+- Meta App Review required for all official API paths (2–10 days; can be months if rejected).
+  Bird relay bypasses this for Cheerful.
+- Instagram Professional Account (Business/Creator) required for all creators.
+- 24-hour messaging window must be tracked and surfaced in UI.
+- IGSID → creator resolution is a shared unsolved problem; GIN index + ig_igsid_cache required.
+- Media URLs expire ~1 hour; must download to Supabase Storage immediately on ingest.
+
+RECOMMENDED COMBINATIONS:
+- Speed: Bird Relay + Parallel Tables (~4.5–6 weeks, no App Review wait)
+- Cost-optimized: Direct Meta API + Parallel Tables (~4–6 weeks + App Review calendar)
+- Future-proof: Direct Meta API + Channel Abstraction Façade (~5–7 weeks + App Review)
+- Pre-App Review prototype: Graph API Polling (Variant A) + Parallel Tables (~3–4 weeks)
