@@ -5,9 +5,9 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 20 |
-| Analyzed | 10 |
-| Pending | 10 |
-| Convergence | 50% |
+| Analyzed | 11 |
+| Pending | 9 |
+| Convergence | 55% |
 
 ---
 
@@ -26,7 +26,7 @@
 
 - [x] `current-thread-model` — Thread identity, state machine, campaign/creator linking: what's email-specific vs channel-agnostic
 - [x] `current-email-pipeline` — Inbound email pipeline end-to-end: abstraction boundaries
-- [ ] `current-creator-identity` — Creator identification, Instagram handle storage, DM sender → creator matching
+- [x] `current-creator-identity` — Creator identification, Instagram handle storage, DM sender → creator matching
 - [ ] `current-inbox-ui` — Mail inbox UI: what's hardcoded to email vs abstract, changes for DM threads
 - [ ] `current-ai-drafting` — AI draft generation: adaptation for DMs (shorter, no subject, media, tone)
 
