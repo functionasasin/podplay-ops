@@ -76,8 +76,20 @@ The foundational tax code of the Philippines. All income tax, percentage tax, an
   - Details the 8% income tax rate option: who can avail, election procedure, filing obligations
   - Clarifies mixed-income earner treatment (compensation always at graduated rates; business income can elect 8%)
   - Specifies that ₱250,000 threshold under 8% option does NOT apply to mixed-income earners
-  - Clarifies OSD election irrevocability
-  - Specifies BIR Form 1701A for purely self-employed; BIR Form 1701 for mixed-income earners
+  - **OSD vs. itemized deduction choice is IRREVOCABLE for the year** — election made in Q1 1701Q stands for all quarters and annual return
+  - Specifies BIR Form 1701A for purely self-employed under OSD or 8% option; BIR Form 1701 for mixed-income earners
+  - GPP partners CANNOT avail of 8% option (distributive share is already net of GPP expenses)
+  - Taxpayer who exceeds ₱3M can revert to non-VAT after 3 consecutive years below ₱3M
+  - **Installment payment rule:** If annual tax due exceeds ₱2,000, taxpayer may pay in two equal installments: first by April 15, second by July 15
+- **Source:** BIR Revenue Regulations, issuance date February 20, 2018
+
+### 2.1a RR No. 11-2018 (February 20, 2018)
+- **Title:** Implementing the Withholding Tax Provisions of the TRAIN Law
+- **Key provisions relevant to self-employed:**
+  - Sets creditable withholding tax (CWT) rates on professional fees: 5% if gross receipts ≤ ₱3M; 10% if gross receipts > ₱3M or VAT-registered
+  - Requires self-employed individuals to submit sworn declaration to clients stating whether gross receipts are above/below ₱3M
+  - The sworn declaration determines the EWT rate the client applies
+  - Supersedes earlier CWT rates under RR 2-98 for this purpose
 - **Source:** BIR Revenue Regulations, issuance date February 20, 2018
 
 ### 2.2 RR No. 16-2008 (October 27, 2008)
@@ -128,6 +140,17 @@ The foundational tax code of the Philippines. All income tax, percentage tax, an
   - How to signify 8% election on the form (Item No. 16)
   - Cumulative method computation examples
   - CWT credits on the quarterly return
+  - ₱250,000 deduction field: enter only if purely self-employed (leave blank for mixed-income earners)
+  - Mandates filing of revised 1701Q even if old-version form was already filed for Q1 (amended return required)
+
+### 4.2 RMC No. 50-2018
+- **Title:** Clarifications on RR Nos. 8-2018 and 11-2018 (TRAIN Law implementing rules)
+- **Key clarifications:**
+  - GPP partners cannot claim further deductions from distributive share (already net of GPP expenses) — confirms 8% ineligibility
+  - Excess of ₱250,000 over actual taxable compensation income of a mixed-income earner is NOT deductible against business/professional income under 8% option
+  - Minimum wage earners: statutory minimum wage, holiday pay, overtime, hazard pay, night shift differential remain exempt; other income is taxable
+  - De minimis benefits excess above ceiling: included in "other benefits" subject to ₱90,000 ceiling
+  - Employee incentives (not specifically exempt under special law) are compensation subject to income tax
 
 ---
 

@@ -2,16 +2,16 @@
 
 ## Statistics
 - Total aspects discovered: 49
-- Analyzed: 1
-- Pending: 48
-- Convergence: 2%
+- Analyzed: 2
+- Pending: 47
+- Convergence: 4%
 
 ## Pending Aspects (ordered by dependency)
 
 ### Wave 1: Source Acquisition
 Fetch and cache all primary source material before any analysis begins.
 - [x] legal-source-fetch — Fetch full text of NIRC Sec. 24(A), 34(L), 34(A)-(K), 74-79, 116 as amended by TRAIN/CREATE, save to input/sources/
-- [ ] rr-8-2018-fetch — Fetch RR No. 8-2018 (TRAIN implementing rules, 8% option election procedures), save to input/sources/
+- [x] rr-8-2018-fetch — Fetch RR No. 8-2018 (TRAIN implementing rules, 8% option election procedures), save to input/sources/
 - [ ] bir-forms-fetch — Fetch BIR Form 1701, 1701A, 1701Q, 2551Q, 2307 field descriptions, save to input/sources/
 - [ ] worked-examples-fetch — Find 5-10 worked examples from CPA blogs and tax advisory sites showing all 3 regime computations
 - [ ] competitive-analysis — Survey existing tools (Taxumo, JuanTax, TaxWhiz, BIR eBIRForms), document features and gaps
