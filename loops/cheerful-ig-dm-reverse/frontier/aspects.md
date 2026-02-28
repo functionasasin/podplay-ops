@@ -5,9 +5,9 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 20 |
-| Analyzed | 14 |
-| Pending | 6 |
-| Convergence | 70% |
+| Analyzed | 15 |
+| Pending | 5 |
+| Convergence | 75% |
 
 ---
 
@@ -33,7 +33,7 @@
 ## Wave 3: Options Cross-Product
 
 - [x] `option-direct-meta-api` — Full integration via Instagram Messaging API + webhooks
-- [ ] `option-graph-api-polling` — Polling-based approach via Graph API (or document why not viable)
+- [x] `option-graph-api-polling` — Polling-based approach via Graph API (or document why not viable)
 - [ ] `option-composio-relay` — Composio as DM bridge, leveraging existing integration
 - [ ] `option-third-party-relay` — Best third-party candidate as relay (from Wave 1 findings)
 - [ ] `option-channel-abstraction` — Architecture pattern: generic channel layer unifying email + DMs
