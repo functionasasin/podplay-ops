@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 91
-- Analyzed: 57
-- Pending: 34
-- Convergence: 63%
+- Analyzed: 58
+- Pending: 33
+- Convergence: 64%
 
 ---
 
@@ -82,7 +82,7 @@
 - [x] QCityBus routes — all 8 Quezon City Government electric bus routes, stops, and schedules
 
 ### Specialized Data
-- [ ] PNR commuter rail — feeder routes to/from PNR stations
+- [x] PNR commuter rail — feeder routes to/from PNR stations
 - [ ] LRT-1 feeder routes — jeepney/bus routes connecting to each LRT-1 station
 - [ ] LRT-2 feeder routes — jeepney/bus routes connecting to each LRT-2 station
 - [ ] MRT-3 feeder routes — jeepney/bus routes connecting to each MRT-3 station
