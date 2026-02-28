@@ -2,16 +2,16 @@
 
 ## Statistics
 - Total aspects discovered: 27
-- Analyzed: 1
-- Pending: 26
-- Convergence: 4%
+- Analyzed: 2
+- Pending: 25
+- Convergence: 7%
 
 ## Pending Aspects (ordered by dependency)
 
 ### Wave 1: Domain Research
 
 - [x] codebase-audit — Mine existing frontend types, components, WASM bridge, and engine outputs. Catalog every computed field not rendered, every action not wired, every integration point available.
-- [ ] pdf-export-patterns — Research react-pdf / @react-pdf/renderer patterns, legal document PDF generation in React. Analyze legal report templates and formatting conventions.
+- [x] pdf-export-patterns — Research react-pdf / @react-pdf/renderer patterns, legal document PDF generation in React. Analyze legal report templates and formatting conventions.
 - [ ] auth-persistence-patterns — Research Supabase auth + RLS, case management data models, auto-save patterns for legal tools.
 - [ ] crm-law-firm-patterns — Research law firm CRM tools (Clio, PracticePanther, MyCase). Client management UX patterns for small/solo PH law practices.
 - [ ] ph-practice-workflow — Research the complete PH estate settlement process: client intake → computation → BIR filing → court petition → distribution. Map where software touches each stage.
