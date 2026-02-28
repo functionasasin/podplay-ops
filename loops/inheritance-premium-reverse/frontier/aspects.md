@@ -1,10 +1,10 @@
 # Frontier — Inheritance Premium Features
 
 ## Statistics
-- Total aspects discovered: 34
-- Analyzed: 7
+- Total aspects discovered: 35
+- Analyzed: 8
 - Pending: 27
-- Convergence: 21%
+- Convergence: 23%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -17,7 +17,7 @@
 - [x] ph-practice-workflow — Research the complete PH estate settlement process: client intake → computation → BIR filing → court petition → distribution. Map where software touches each stage.
 - [x] competitive-landscape — Search 8+ queries for estate planning calculators, succession tools, PH legal tech, estate tax SaaS. Deep-dive top 5 competitors with feature matrices.
 - [x] legal-doc-formatting — Research PH court document formatting standards, BIR submission requirements, legal report conventions, Philippine legal citation format (NCC articles).
-- [ ] estate-tax-integration — Read converged estate-tax-engine-spec.md. Map InheritanceShare output → estate tax engine input. Identify data model bridges, combined UI flow, combined PDF output.
+- [x] estate-tax-integration — Read converged estate-tax-engine-spec.md. Map InheritanceShare output → estate tax engine input. Identify data model bridges, combined UI flow, combined PDF output.
 - [ ] multi-tenancy-patterns — Research multi-tenant SaaS architecture for professional services. Analyze role-based access, firm account management, seat-based pricing patterns.
 
 ### Wave 2: Per-Feature Specifications (depends: ALL Wave 1 complete)
@@ -44,6 +44,7 @@
 - [ ] spec-deadline-tracker — Per-case deadline timeline: BIR 1-year filing deadline, 3-week newspaper publication window, eCAR receipt, RD filing window. Color-coded status (green/yellow/red). Depends: spec-auth-persistence. [Discovered: ph-practice-workflow]
 - [ ] spec-timeline-report — Visual settlement timeline (milestone list or Gantt) generated from case facts showing all stages a lawyer can share with clients. Depends: spec-auth-persistence. [Discovered: competitive-landscape]
 - [ ] spec-document-checklist — Per-case document checklist (PSA death cert, TCT/CCT, ITR, bank certs) with check-off status tracking. Depends: spec-auth-persistence. [Discovered: competitive-landscape]
+- [ ] spec-estate-tax-inputs-wizard — Detailed multi-tab wizard UI for estate tax inputs: Schedules 1/1A/2/2A/3/4 (assets) + Schedules 5A-5H/6 (deductions) + amnesty/filing flags. Depends: spec-auth-persistence. Reads: estate-tax-integration. [Discovered: estate-tax-integration]
 
 ### Wave 3: Synthesis (depends: ALL Wave 2 complete)
 
