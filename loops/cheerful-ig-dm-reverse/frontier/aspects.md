@@ -5,9 +5,9 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 20 |
-| Analyzed | 4 |
-| Pending | 16 |
-| Convergence | 20% |
+| Analyzed | 5 |
+| Pending | 15 |
+| Convergence | 25% |
 
 ---
 
@@ -17,7 +17,7 @@
 - [x] `meta-graph-api-conversations` — Graph API conversation endpoints: capabilities vs Messaging API, deprecation status
 - [x] `meta-webhooks-realtime` — Meta webhook infrastructure: event types, delivery guarantees, verification, payloads
 - [x] `third-party-manychat` — ManyChat as DM relay: API, webhooks, pricing, limitations
-- [ ] `third-party-messagebird-bird` — Bird (MessageBird) Instagram channel: API, webhooks, pricing
+- [x] `third-party-messagebird-bird` — Bird (MessageBird) Instagram channel: API, webhooks, pricing
 - [ ] `third-party-composio` — Composio Instagram integration: leverage existing Cheerful integration
 - [ ] `third-party-others` — Survey: Sendbird, Twilio, Zendesk, Intercom Instagram integrations
 - [ ] `unofficial-approaches` — Apify actors, browser automation: capabilities, TOS risks, reliability
