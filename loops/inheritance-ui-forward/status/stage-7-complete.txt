@@ -1,0 +1,8 @@
+Stage 7 complete: Donations + Review restyled with shadcn/ui
+
+Components restyled:
+- DonationsStep: shadcn Button with Plus icon, text-muted-foreground empty state, space-y layout
+- DonationCard: shadcn Card/CardHeader/CardAction/CardContent, Button (ghost destructive) with Trash2 icon, Input for description, Alert for stranger info banner, Separator between sections, styled exemption flags with gold accent highlight, border-left cascade for professional expense
+- ReviewStep: Card grid for summaries, gold accent Badge for predicted scenario, severity-styled warnings with icons (AlertCircle/AlertTriangle/Info) and X dismiss, shadcn Accordion for advanced settings, Input for max restarts, gold accent Compute Distribution button
+
+All 1033 tests pass.

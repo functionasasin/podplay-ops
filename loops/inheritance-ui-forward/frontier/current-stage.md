@@ -1,7 +1,7 @@
-# Current Stage: 7 (Donations + Review)
+# Current Stage: 8 (Results View)
 
 ## Goal
-Restyle DonationsStep, DonationCard, and ReviewStep with shadcn/ui components — Card repeaters, Badge, Accordion, styled summary grid, and design tokens.
+Restyle ResultsView, ResultsHeader, DistributionSection, NarrativePanel, WarningsPanel, ComputationLog, and ActionsBar with shadcn/ui components — Table, Accordion, Alert, Badge, Button, and design tokens.
 
 ## Test Results (updated by loop)
 ```
@@ -15,3 +15,4 @@ Restyle DonationsStep, DonationCard, and ReviewStep with shadcn/ui components �
 - Stage 4 completed: Restyled EstateStep (shadcn Separator, design tokens for warnings/hints, styled radio group) and DecedentStep (section headings, shadcn Input/Separator/Alert, design token borders, AlertTriangle icon for articulo mortis warning). All 1033 tests pass.
 - Stage 5 completed: Restyled FamilyTreeStep (shadcn Button with UserPlus icon, design tokens), PersonCard (shadcn Card/CardHeader/CardContent/CardAction, color-coded relationship Badge, shadcn Button/Input/Separator, Alert for exclusion warnings), AdoptionSubForm (shadcn Input, styled selects, Alert for rescission warning), FiliationSection (styled select, Alert for exclusion warning). All 1033 tests pass.
 - Stage 6 completed: Restyled WillStep (styled tab bar with gold accent underline, design token colors), InstitutionsTab (shadcn Card repeater, Button with Plus/Trash2 icons, Separator, styled conditions/substitutes sections), LegaciesTab (shadcn Card, styled select for legacy type, Alert for specific asset warning, Input for text fields), DevisesTab (shadcn Card, Alert info banner, styled select/Input), DisinheritancesTab (shadcn Card, Alert for validity indicator with CheckCircle2/XCircle icons, styled checkboxes, design token colors for valid/invalid states), HeirReferenceForm (shadcn Input, styled checkbox, space-y layout), ShareSpecForm (styled select, shadcn Input for fraction numerator/denominator). All 1033 tests pass.
+- Stage 7 completed: Restyled DonationsStep (shadcn Button with Plus icon, text-muted-foreground empty state), DonationCard (shadcn Card/CardHeader/CardAction/CardContent, Button ghost destructive with Trash2, Input, Alert for stranger banner, Separator, styled exemption flags with gold accent, border-left cascade for professional expense), ReviewStep (Card grid summaries, gold accent Badge for predicted scenario, severity-styled warnings with icons and dismiss, shadcn Accordion for advanced settings, gold accent Compute Distribution button). All 1033 tests pass.
