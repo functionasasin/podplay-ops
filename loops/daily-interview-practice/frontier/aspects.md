@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 16
-- Analyzed: 11
-- Pending: 5
-- Convergence: 69%
+- Analyzed: 12
+- Pending: 4
+- Convergence: 75%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -24,7 +24,7 @@
 - [x] phase-0-content — Generate complete Phase 0 (Diagnostic, Days 1-3) session content
 - [x] phase-1-content — Generate Phase 1 (Foundations, Weeks 1-4) — 28 daily sessions
 - [x] phase-2-content — Generate Phase 2 (Pattern Building, Weeks 5-8) — 28 daily sessions
-- [ ] phase-3-content — Generate Phase 3 (System Thinking, Weeks 9-12) — 28 daily sessions
+- [x] phase-3-content — Generate Phase 3 (System Thinking, Weeks 9-12) — 28 daily sessions
 - [ ] phase-4-content — Generate Phase 4 (Integration, Weeks 13-16) — 28 daily sessions + mock interviews
 - [ ] phase-5-content — Generate Phase 5 (Sharpening, Weeks 17-20) — 28 daily sessions + full mocks
 - [ ] phase-6-template — Generate Phase 6 (Maintenance, ongoing) — repeating weekly template
@@ -44,6 +44,7 @@
 - [x] phase-0-content — Full OpenClaw executable scripts for all 3 diagnostic days at analysis/curriculum/phase-0-diagnostic.md. Each exercise has verbatim prompt, 1-5 scoring rubric, follow-up questions, score-tiered feedback templates, and transition lines. Includes complete scoring + level determination logic, gap flag triggering (5 flags), level → starting phase table, slower pace note for score < 30, verbatim result message template, and delivery principles appendix.
 - [x] phase-2-content — 28 fully-scripted daily sessions at analysis/curriculum/phase-2-patterns.md. Week 5: topological sort (Kahn's with cycle detection), asyncio event loop mental model, two-pointer, SQL aggregation + LIMIT, BFS maze solver MPR, rate limiter MS. Week 6: asyncio.gather, asyncio.Semaphore (the web crawler pattern), sliding window (fixed + variable), SQL HAVING with error rates, thread-safe rate limiter MPR, sequential-asyncio bug DR. Week 7: binary search on answer space, prefix sums + hashmap subarray counting, leaderboard SD, SQL window functions (running totals), heapq task scheduler MPR, message queue MS. Week 8: lazy deletion in heapq (mutable priorities), asyncio.Queue producer-consumer, config diff SD, p95 SQL with PERCENTILE_CONT, async web crawler MPR (Phase 2 exit benchmark), crawl dedup/normalization RR, topological sort silent cycle bug DR. Phase 2 exit gate: asyncio.Semaphore from memory, topo sort <12 min, pattern ID within 2 min, SQL window function correct, 2/4 mocks conditional-pass+. Pattern recognition trigger table included.
 - [x] phase-1-content — 28 fully-scripted daily sessions at analysis/curriculum/phase-1-foundations.md. Week 1: DLL (insert/remove/sentinel) + threading (Lock, thread-safe counter/stack). Week 2: LRU Cache (OrderedDict version + edge cases + thread-safe wrapper + producer-consumer). Week 3: LRU from scratch (Part 1 DLL layer + Part 2 dict+DLL integration) + BFS canonical + thread-safe from-scratch LRU. Week 4: DFS recursive + 3-color cycle detection + URL parser spec + threading.Condition producer-consumer + Phase 1 exit assessment (LRU from scratch, 15-min target). Every session has: OpenClaw verbatim opening, kata/spec/code prompt, 10-min check-in, evaluation guide with pass/fail criteria and common bugs, Socratic feedback approach, mid-session edge case throws, key insight delivery, stretch question, and next-day preview. Phase 1 → Phase 2 gate criteria and slower pace protocol included.
+- [x] phase-3-content — 28 fully-scripted daily sessions at analysis/curriculum/phase-3-systems.md. Week 9: autoregressive generation + KV cache mental model (CD), KV cache manager design (MS), async generator token streaming (CK), KV cache eviction policies (MS), LRU OA benchmark MPR, RR, PERCENTILE_DISC SQL. Week 10: continuous batching (CD), dynamic batching scheduler (MS), prefix caching (CD), PagedAttention/VRAM paging (MS), async crawler with timeout MPR, RR (CancelledError cleanup), fixed-window burst bug DR. Week 11: autoscaling signals — queue depth × token count (CD), inference queue design with starvation prevention (MS), asyncio.Queue+heapq priority (CK), streaming/backpressure (MS), mini in-memory DB MPR, RR (bisect trade-offs), cohort retention SQL. Week 12: priority aging (CD), full inference API end-to-end synthesis (MS), caching strategy taxonomy (MS), async token bucket (CK), self-selected exit MPR, Phase 3 5-question self-assessment RR, KV cache priority inversion DR. Phase 3 exit criteria: 5 key concepts unprompted, exit mock conditional-pass+, full oral gate.
 
 ## Discovered Aspects
 (None yet)
