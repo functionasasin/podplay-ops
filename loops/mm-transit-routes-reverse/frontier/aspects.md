@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 91
-- Analyzed: 59
-- Pending: 32
-- Convergence: 65%
+- Analyzed: 60
+- Pending: 31
+- Convergence: 66%
 
 ---
 
@@ -84,7 +84,7 @@
 ### Specialized Data
 - [x] PNR commuter rail — feeder routes to/from PNR stations
 - [x] LRT-1 feeder routes — jeepney/bus routes connecting to each LRT-1 station
-- [ ] LRT-2 feeder routes — jeepney/bus routes connecting to each LRT-2 station
+- [x] LRT-2 feeder routes — jeepney/bus routes connecting to each LRT-2 station
 - [ ] MRT-3 feeder routes — jeepney/bus routes connecting to each MRT-3 station
 - [ ] BGC Bus system — all BGC bus routes, stops, schedules
 - [ ] Makati Loop shuttle — routes and stops if still operating
