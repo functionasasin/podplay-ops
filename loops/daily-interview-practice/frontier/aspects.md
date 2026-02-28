@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 16
-- Analyzed: 4
-- Pending: 12
-- Convergence: 25%
+- Analyzed: 5
+- Pending: 11
+- Convergence: 31%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -15,7 +15,7 @@
 - [x] practice-session-formats — Design the different 30-minute session types (Code Kata, Spec Decomposition, Mini System Design, etc.)
 
 ### Wave 2: Curriculum Design (depends on Wave 1)
-- [ ] progression-map — Design 7-phase progression from diagnostic to interview-ready (~20 weeks)
+- [x] progression-map — Design 7-phase progression from diagnostic to interview-ready (~20 weeks)
 - [ ] weekly-templates — Design weekly session templates for each phase (which format on which day)
 - [ ] problem-bank-design — Design problem bank structure, sourcing, format; write example problems per category
 - [ ] progress-tracking-design — Design how OpenClaw logs sessions, tracks streaks, triggers phase advancement
