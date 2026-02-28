@@ -5,9 +5,9 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 20 |
-| Analyzed | 12 |
-| Pending | 8 |
-| Convergence | 60% |
+| Analyzed | 13 |
+| Pending | 7 |
+| Convergence | 65% |
 
 ---
 
@@ -28,7 +28,7 @@
 - [x] `current-email-pipeline` — Inbound email pipeline end-to-end: abstraction boundaries
 - [x] `current-creator-identity` — Creator identification, Instagram handle storage, DM sender → creator matching
 - [x] `current-inbox-ui` — Mail inbox UI: what's hardcoded to email vs abstract, changes for DM threads
-- [ ] `current-ai-drafting` — AI draft generation: adaptation for DMs (shorter, no subject, media, tone)
+- [x] `current-ai-drafting` — AI draft generation: adaptation for DMs (shorter, no subject, media, tone)
 
 ## Wave 3: Options Cross-Product
 
