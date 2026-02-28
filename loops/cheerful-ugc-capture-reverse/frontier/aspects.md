@@ -5,15 +5,15 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 18 |
-| Analyzed | 0 |
-| Pending | 18 |
-| Convergence | 0% |
+| Analyzed | 1 |
+| Pending | 17 |
+| Convergence | 6% |
 
 ---
 
 ## Wave 1: External Landscape — Instagram UGC Capture Methods
 
-- [ ] `graph-api-mentions-tags` — Graph API `mentioned_media` + `tags` endpoints: permissions, fields, rate limits, content types covered
+- [x] `graph-api-mentions-tags` — Graph API `mentioned_media` + `tags` endpoints: permissions, fields, rate limits, content types covered
 - [ ] `webhooks-mentions` — Instagram webhook `mentions` field: real-time push, payload format, comparison with polling
 - [ ] `hashtag-monitoring` — Hashtag API: `ig_hashtag_search` + `recent_media`/`top_media`, 30-hashtag/7-day limit, viability at scale
 - [ ] `story-mention-capture` — Messaging API `story_mention` events: CDN URL expiry, media download, IG DM webhook overlap
