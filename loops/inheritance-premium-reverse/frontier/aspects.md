@@ -1,16 +1,16 @@
 # Frontier — Inheritance Premium Features
 
 ## Statistics
-- Total aspects discovered: 23
-- Analyzed: 0
-- Pending: 23
-- Convergence: 0%
+- Total aspects discovered: 27
+- Analyzed: 1
+- Pending: 26
+- Convergence: 4%
 
 ## Pending Aspects (ordered by dependency)
 
 ### Wave 1: Domain Research
 
-- [ ] codebase-audit — Mine existing frontend types, components, WASM bridge, and engine outputs. Catalog every computed field not rendered, every action not wired, every integration point available.
+- [x] codebase-audit — Mine existing frontend types, components, WASM bridge, and engine outputs. Catalog every computed field not rendered, every action not wired, every integration point available.
 - [ ] pdf-export-patterns — Research react-pdf / @react-pdf/renderer patterns, legal document PDF generation in React. Analyze legal report templates and formatting conventions.
 - [ ] auth-persistence-patterns — Research Supabase auth + RLS, case management data models, auto-save patterns for legal tools.
 - [ ] crm-law-firm-patterns — Research law firm CRM tools (Clio, PracticePanther, MyCase). Client management UX patterns for small/solo PH law practices.
@@ -33,6 +33,10 @@
 - [ ] spec-bir-1801-integration — Combined inheritance + estate tax workflow, additional input form, combined PDF. Depends: spec-pdf-export, spec-auth-persistence. Reads: estate-tax-integration.
 - [ ] spec-shareable-links — Read-only case URLs, access control, QR codes, share UI. Depends: spec-auth-persistence.
 - [ ] spec-multi-seat — Firm accounts, roles (admin/attorney/paralegal), shared client pool, invitation flow. Depends: spec-auth-persistence. Reads: multi-tenancy-patterns.
+- [ ] spec-share-breakdown-panel — Expandable per-heir row showing from_legitime / from_free_portion / from_intestate split and legitime_fraction. Reads: codebase-audit. [Discovered: codebase-audit]
+- [ ] spec-decedent-header — Add decedent name and date of death to ResultsHeader for professional report context. Reads: codebase-audit. [Discovered: codebase-audit]
+- [ ] spec-represents-display — Show "representing [deceased parent name]" label when inherits_by === Representation. Reads: codebase-audit. [Discovered: codebase-audit]
+- [ ] spec-donation-summary-in-results — Display the input donations list in results view (advances on inheritance transparency). Reads: codebase-audit. [Discovered: codebase-audit]
 
 ### Wave 3: Synthesis (depends: ALL Wave 2 complete)
 
