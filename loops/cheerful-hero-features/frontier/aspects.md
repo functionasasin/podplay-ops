@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total aspects**: 36
-- **Analyzed**: 16
-- **Pending**: 20
-- **Convergence**: 44%
+- **Analyzed**: 19
+- **Pending**: 17
+- **Convergence**: 53%
 
 ## Wave 1: Feature Category Research + Discovery
 
@@ -36,9 +36,9 @@ gets added here as an unchecked aspect._
 - [x] sprout-social-influencer — 250M+ creator profiles; unified organic+paid+influencer suite (acquired Tagger 2023); AI topic discovery
 - [x] impact-com — Enterprise affiliate + creator partnerships; deep conversion tracking; legacy infrastructure
 - [x] captiv8 — AI-powered; social listening roots; 15M+ profiles; Snapchat API partner; Looker Studio integration; $25K/yr
-- [ ] linqia — Full-service managed+tech; guaranteed ROI model; content lab; performance media amplification
-- [ ] brandwatch — 50M+ creator profiles; consumer intelligence suite; Klear acquisition; $750+/mo
-- [ ] meltwater — PR + media intelligence + influencer; all-in-one comms platform
+- [x] linqia — Full-service managed+tech; guaranteed ROI model; content lab; performance media amplification
+- [x] brandwatch — 50M+ creator profiles; consumer intelligence suite; Klear acquisition; $750+/mo
+- [x] meltwater — PR + media intelligence + influencer; all-in-one comms platform
 
 ### Mid-Market Tier
 

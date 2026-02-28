@@ -5,18 +5,18 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 20 |
-| Analyzed | 1 |
-| Pending | 19 |
-| Convergence | 5% |
+| Analyzed | 4 |
+| Pending | 16 |
+| Convergence | 20% |
 
 ---
 
 ## Wave 1: External Landscape — Instagram DM Access Methods
 
 - [x] `meta-instagram-messaging-api` — Instagram Messaging API (Messenger Platform): webhook events, 24-hour window, permissions, app review
-- [ ] `meta-graph-api-conversations` — Graph API conversation endpoints: capabilities vs Messaging API, deprecation status
-- [ ] `meta-webhooks-realtime` — Meta webhook infrastructure: event types, delivery guarantees, verification, payloads
-- [ ] `third-party-manychat` — ManyChat as DM relay: API, webhooks, pricing, limitations
+- [x] `meta-graph-api-conversations` — Graph API conversation endpoints: capabilities vs Messaging API, deprecation status
+- [x] `meta-webhooks-realtime` — Meta webhook infrastructure: event types, delivery guarantees, verification, payloads
+- [x] `third-party-manychat` — ManyChat as DM relay: API, webhooks, pricing, limitations
 - [ ] `third-party-messagebird-bird` — Bird (MessageBird) Instagram channel: API, webhooks, pricing
 - [ ] `third-party-composio` — Composio Instagram integration: leverage existing Cheerful integration
 - [ ] `third-party-others` — Survey: Sendbird, Twilio, Zendesk, Intercom Instagram integrations
