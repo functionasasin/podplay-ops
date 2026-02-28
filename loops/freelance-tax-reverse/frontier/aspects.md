@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 49
-- Analyzed: 2
-- Pending: 47
-- Convergence: 4%
+- Analyzed: 3
+- Pending: 46
+- Convergence: 6%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -12,7 +12,7 @@
 Fetch and cache all primary source material before any analysis begins.
 - [x] legal-source-fetch — Fetch full text of NIRC Sec. 24(A), 34(L), 34(A)-(K), 74-79, 116 as amended by TRAIN/CREATE, save to input/sources/
 - [x] rr-8-2018-fetch — Fetch RR No. 8-2018 (TRAIN implementing rules, 8% option election procedures), save to input/sources/
-- [ ] bir-forms-fetch — Fetch BIR Form 1701, 1701A, 1701Q, 2551Q, 2307 field descriptions, save to input/sources/
+- [x] bir-forms-fetch — Fetch BIR Form 1701, 1701A, 1701Q, 2551Q, 2307 field descriptions, save to input/sources/
 - [ ] worked-examples-fetch — Find 5-10 worked examples from CPA blogs and tax advisory sites showing all 3 regime computations
 - [ ] competitive-analysis — Survey existing tools (Taxumo, JuanTax, TaxWhiz, BIR eBIRForms), document features and gaps
 - [ ] market-research — Find market size data, freelancer population, CPA fee benchmarks, pain points from forums/Reddit/Facebook groups
@@ -86,3 +86,4 @@ Cross-cutting concerns and gap filling. Only start after Waves 2-5 are complete.
 
 ## Recently Analyzed
 - legal-source-fetch (2026-02-28): Fetched NIRC Sec. 24A (both graduated rate schedules 2018-2022 and 2023+), Sec. 34 (all itemized deductions A-K + OSD 34L), Sec. 74-79 (quarterly filing, cumulative method), Sec. 116 (percentage tax, CREATE rate history). Also captured RR 8-2018 8% option rules. Wrote to input/sources/ (3 files) and final-mega-spec/domain/legal-basis.md.
+- bir-forms-fetch (2026-02-28): Fetched exhaustive field-by-field descriptions for all 5 BIR forms. Form 1701 (4 pages, 6 schedules, ~80 items including all deduction line items), Form 1701A (2 pages, graduated OSD items 36-46 + 8% items 47-56, credits items 57-65), Form 1701Q (Schedules I/II/III/IV, items 36-68, both graduated cumulative and 8% cumulative methods), Form 2551Q (items 1-23, Schedule 1 with ATC table PT010-PT160), Form 2307 (Parts I-III, complete EWT ATC table with 50+ WI/WC codes and rates). Wrote to input/sources/bir-forms-field-descriptions.md.
