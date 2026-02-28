@@ -1,0 +1,7 @@
+Stage 4 (Estate + Decedent Steps) completed.
+
+Components restyled:
+- EstateStep.tsx: shadcn Separator between sections, design tokens (text-warning, text-muted-foreground), styled radio group with accent-primary, testate hint in gold accent
+- DecedentStep.tsx: Section headings (Identity, Legitimacy, Marital Status) with text-primary uppercase, shadcn Input for Full Name and Years of Cohabitation, shadcn Separator between sections, shadcn Alert with AlertTriangle icon for articulo mortis warning, border-border and border-warning/30 design tokens, consistent checkbox styling with accent-primary
+
+All 1033 tests pass.

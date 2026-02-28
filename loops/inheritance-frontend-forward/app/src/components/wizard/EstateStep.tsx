@@ -2,6 +2,7 @@ import React from 'react';
 import { Control, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 import type { EngineInput } from '../../types';
 import { MoneyInput } from '../shared/MoneyInput';
+import { Separator } from '@/components/ui/separator';
 
 export interface EstateStepProps {
   control: Control<EngineInput>;
@@ -50,35 +51,46 @@ export function EstateStep({
       />
 
       {showZeroWarning && (
-        <p className="text-amber-600 text-sm">Estate must be greater than zero</p>
+        <p className="text-sm text-warning">Estate must be greater than zero</p>
       )}
 
-      <p className="text-gray-500 text-sm">
+      <p className="text-sm text-muted-foreground">
         Total estate value after debts, taxes, and administration expenses.
       </p>
 
-      <fieldset className="space-y-2">
-        <legend className="font-medium">Succession Type</legend>
-        <label className="flex items-center gap-2">
-          <input
-            type="radio"
-            name="succession-type"
-            value="intestate"
-            checked={!hasWill}
-            onChange={handleSuccessionChange}
-          />
-          Intestate
-        </label>
-        <label className="flex items-center gap-2">
-          <input
-            type="radio"
-            name="succession-type"
-            value="testate"
-            checked={hasWill}
-            onChange={handleSuccessionChange}
-          />
-          Testate
-        </label>
+      <Separator />
+
+      <fieldset className="space-y-3">
+        <legend className="text-sm font-medium leading-none">Succession Type</legend>
+        <div className="flex gap-6 pt-1">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="succession-type"
+              value="intestate"
+              checked={!hasWill}
+              onChange={handleSuccessionChange}
+              className="h-4 w-4 accent-primary"
+            />
+            <span className="text-sm">Intestate</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="succession-type"
+              value="testate"
+              checked={hasWill}
+              onChange={handleSuccessionChange}
+              className="h-4 w-4 accent-primary"
+            />
+            <span className="text-sm">Testate</span>
+          </label>
+        </div>
+        {hasWill && (
+          <p className="text-xs text-accent font-medium">
+            Will & dispositions will be configured in a later step.
+          </p>
+        )}
       </fieldset>
     </div>
   );
