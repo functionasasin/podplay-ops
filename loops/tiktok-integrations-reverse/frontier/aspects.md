@@ -5,9 +5,9 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 23 |
-| Analyzed | 14 |
-| Pending | 9 |
-| Convergence | 61% |
+| Analyzed | 15 |
+| Pending | 8 |
+| Convergence | 65% |
 
 ---
 
@@ -30,7 +30,7 @@
 - [x] `third-party-apify-tiktok` — Apify TikTok actors: scraper catalog, capabilities, pricing (existing Cheerful pattern)
 - [x] `third-party-phantombuster-tiktok` — PhantomBuster TikTok phantoms: capabilities, pricing
 - [x] `third-party-platform-connectors` — Composio, Zapier, Make, n8n TikTok triggers/actions
-- [ ] `third-party-data-providers` — Pentos, Socialinsider, HypeAuditor, Modash: TikTok data APIs, pricing
+- [x] `third-party-data-providers` — Pentos, Socialinsider, HypeAuditor, Modash: TikTok data APIs, pricing
 - [ ] `third-party-social-management` — Hootsuite, Sprout Social, Later, Buffer: TikTok API exposure
 - [ ] `unofficial-scraping-methods` — TikTok-Api Python, Puppeteer, anti-bot measures, legal risks
 
