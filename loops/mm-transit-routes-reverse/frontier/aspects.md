@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 91
-- Analyzed: 69
-- Pending: 22
-- Convergence: 76%
+- Analyzed: 70
+- Pending: 21
+- Convergence: 77%
 
 ---
 
@@ -100,7 +100,7 @@
 - [x] Commonwealth Avenue corridor — all routes from Quezon Ave to Fairview
 - [x] España-Quezon Avenue corridor — all routes along this University Belt axis
 - [x] Taft Avenue corridor — all routes along Taft, Buendia, through Pasay
-- [ ] Aurora Boulevard corridor — all routes along Aurora from Cubao to Marikina
+- [x] Aurora Boulevard corridor — all routes along Aurora from Cubao to Marikina
 - [ ] Marcos Highway corridor — all routes from Masinag to Cubao/Santolan
 - [ ] Ortigas Avenue corridor — all routes from Pasig to Manila via Ortigas
 - [ ] Shaw Boulevard corridor — all routes along Shaw from Mandaluyong to Pasig
