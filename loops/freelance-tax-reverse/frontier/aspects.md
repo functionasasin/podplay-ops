@@ -2,15 +2,15 @@
 
 ## Statistics
 - Total aspects discovered: 49
-- Analyzed: 0
-- Pending: 49
-- Convergence: 0%
+- Analyzed: 1
+- Pending: 48
+- Convergence: 2%
 
 ## Pending Aspects (ordered by dependency)
 
 ### Wave 1: Source Acquisition
 Fetch and cache all primary source material before any analysis begins.
-- [ ] legal-source-fetch — Fetch full text of NIRC Sec. 24(A), 34(L), 34(A)-(K), 74-79, 116 as amended by TRAIN/CREATE, save to input/sources/
+- [x] legal-source-fetch — Fetch full text of NIRC Sec. 24(A), 34(L), 34(A)-(K), 74-79, 116 as amended by TRAIN/CREATE, save to input/sources/
 - [ ] rr-8-2018-fetch — Fetch RR No. 8-2018 (TRAIN implementing rules, 8% option election procedures), save to input/sources/
 - [ ] bir-forms-fetch — Fetch BIR Form 1701, 1701A, 1701Q, 2551Q, 2307 field descriptions, save to input/sources/
 - [ ] worked-examples-fetch — Find 5-10 worked examples from CPA blogs and tax advisory sites showing all 3 regime computations
@@ -85,4 +85,4 @@ Cross-cutting concerns and gap filling. Only start after Waves 2-5 are complete.
 - [ ] convergence-check — Run final convergence checklist, either add new aspects or converge
 
 ## Recently Analyzed
-(Empty — loop hasn't started yet)
+- legal-source-fetch (2026-02-28): Fetched NIRC Sec. 24A (both graduated rate schedules 2018-2022 and 2023+), Sec. 34 (all itemized deductions A-K + OSD 34L), Sec. 74-79 (quarterly filing, cumulative method), Sec. 116 (percentage tax, CREATE rate history). Also captured RR 8-2018 8% option rules. Wrote to input/sources/ (3 files) and final-mega-spec/domain/legal-basis.md.
