@@ -51,19 +51,111 @@ The foundational tax code of the Philippines. All income tax, percentage tax, an
 
 ### 1.3 RA 11534 — Corporate Recovery and Tax Incentives for Enterprises (CREATE Act)
 - **Enacted:** March 26, 2021
-- **Effective:** Various dates
-- **Key change affecting self-employed:**
-  - Temporarily reduced Section 116 percentage tax rate from 3% to 1%
-  - Effective period: July 1, 2020 to June 30, 2023
-  - Rate reverted to 3% as of July 1, 2023
+- **Published:** March 27, 2021 (Business Mirror)
+- **Effective:** April 11, 2021 (15 days after publication)
+- **Key provision for self-employed — Section 13 (amending NIRC Section 116):**
+  - Temporarily reduced Section 116 percentage tax rate from 3% to **1%**
+  - Effective period: **July 1, 2020 to June 30, 2023** (retroactive to July 1, 2020)
+  - Rate reverted to **3%** as of July 1, 2023
+  - Cooperatives remain exempt from Section 116 entirely
+  - 8% income tax option electors remain exempt from Section 116 (unchanged)
+  - MCIT reduction (2% to 1%) applies ONLY to corporations — NOT to individual self-employed
+  - Individual income tax rates (including 8% option) NOT changed by CREATE
+- **Section 116 statutory text (as amended by CREATE):**
+  *"SEC. 116. — Any person whose sales or receipts are exempt under Section 109(CC) of this Code from the payment of value-added tax and who is not a VAT-registered person shall pay a tax equivalent to three percent (3%) of his gross quarterly sales or receipts: Provided, That cooperatives shall be exempt from the three percent (3%) gross receipts tax herein imposed: Provided, further, That effective July 1, 2020 until June 30, 2023, the rate shall be one percent (1%)."*
+- **Implementing regulations:** RR 4-2021 (April 8, 2021); RMC 67-2021 (May 24, 2021)
+- **Percentage tax filing deadlines confirmed by RMC 67-2021 (BIR Form 2551Q):**
+  - Q1: on or before April 25
+  - Q2: on or before July 25
+  - Q3: on or before October 25
+  - Q4: on or before January 25 (of the following year)
 
 ### 1.4 RA 11976 — Ease of Paying Taxes (EOPT Act)
 - **Enacted:** January 5, 2024
+- **Published:** Official Gazette, January 7, 2024
+- **Effective:** January 22, 2024 (15 days after publication)
 - **Key changes affecting self-employed:**
-  - Repealed the requirement to withhold taxes as a prerequisite for claiming expense deductions
-  - Simplified filing procedures and venue rules
-  - Authorized BIR to classify taxpayers by size (Micro, Small, Medium, Large) with corresponding compliance simplifications
-  - Authorized electronic and online filing/payment without regard to RDO limitations
+
+#### 1.4.1 Taxpayer Classification System (New)
+Four-tier classification based on gross sales (net of VAT, business income only):
+
+| Classification | Gross Sales (Business Income) | Self-Employed Implication |
+|---|---|---|
+| Micro | Less than ₱3,000,000 | Most freelancers; eligible for 8% option |
+| Small | ₱3,000,000 to less than ₱20,000,000 | Above VAT threshold; must register VAT |
+| Medium | ₱20,000,000 to less than ₱1,000,000,000 | Well above VAT threshold |
+| Large | ₱1,000,000,000 and above | N/A for individual freelancers |
+
+Classification rules: Existing taxpayers (registered before 2023) classified by 2022 gross sales. BIR must notify in writing before reclassification.
+
+#### 1.4.2 File-and-Pay-Anywhere (NIRC Section 51, as amended)
+- Returns may be filed at **any authorized agent bank, Revenue District Office (RCO), or authorized tax software provider**.
+- Pre-EOPT restriction (file only at RDO of registration, pay only at AABs within that RDO) — **eliminated**.
+- Effective January 22, 2024.
+
+#### 1.4.3 Simplified ITR for Micro/Small Taxpayers
+- ITR for micro and small taxpayers = maximum **two (2) pages** in paper or electronic form.
+- Corresponds to existing BIR Form 1701A (2-page form already used by eligible self-employed).
+
+#### 1.4.4 Repeal of Section 34(K) — Withholding as Deductibility Prerequisite
+- **Former rule (pre-January 22, 2024):** Expenses subject to creditable withholding tax were deductible ONLY if the withholding tax had been withheld and remitted to BIR.
+- **Post-EOPT (effective January 22, 2024):** Expenses are deductible even if no tax was withheld, provided the expense is: (a) necessary and ordinary, (b) related to the registered business, (c) duly substantiated.
+- **The withholding obligation itself remains.** Failure to withhold is still an offense. Only the "withholding as prerequisite for deduction" was repealed.
+- **Prospective effect only (RMC 60-2024, May 9, 2024):** For taxable periods prior to January 1, 2024, old rule applies — deduction requires withholding to have been paid.
+
+#### 1.4.5 Reduced Penalties for Micro/Small Taxpayers
+
+| Penalty Type | Large/Medium | Small/Micro |
+|---|---|---|
+| Civil penalty (failure to file/pay/underpayment) | 25% of amount due | **10% of amount due** |
+| Interest on unpaid taxes | 12% per annum | **6% per annum** |
+| Penalty per failure (information returns) | ₱1,000 | **₱500** |
+| Annual aggregate cap (information returns) | ₱25,000 | **₱12,500** |
+| Compromise penalties (Secs 113, 237, 238 violations) | Standard rate | **50% reduction** |
+
+#### 1.4.6 Wrong-Venue Penalty — Eliminated
+- Pre-EOPT: 25% surcharge for filing return with incorrect RDO.
+- Post-EOPT: **25% wrong-venue surcharge eliminated entirely.** No penalty for filing at incorrect RDO or AAB.
+
+#### 1.4.7 Invoice System Reform (Replaces Official Receipts)
+- "Official Receipt" is no longer the primary sales document for services.
+- All transactions (goods AND services) now require an **Invoice** as the primary document.
+- "Official Receipt" reclassified as supplementary document.
+- Mandatory invoicing threshold: increased from ₱100 to **₱500** per transaction (CPI-adjusted every 3 years).
+- Electronic invoices explicitly authorized.
+- VAT-registered sellers: must issue invoice for every transaction regardless of amount.
+
+#### 1.4.8 Gross Sales vs. Gross Receipts (NIRC Section 116 Basis Shift)
+- Pre-EOPT: percentage tax computed on **gross receipts** (cash method — amounts actually received).
+- Post-EOPT (via RR 3-2024, effective October 27, 2024 post-transition): basis shifted to **gross sales** (accrual method — amounts invoiced, whether collected or not).
+- For income tax (Forms 1701/1701A/1701Q): the forms use "gross sales or gross receipts" — both terms accepted.
+
+#### 1.4.9 Books of Accounts Retention
+- Pre-EOPT: 10 years
+- Post-EOPT: **5 years** from day following filing deadline
+
+#### 1.4.10 Annual Registration Fee — Abolished
+- Per RMC 14-2024, effective January 22, 2024: no more BIR Form 0605, no more ₱500 ARF.
+- Applies to all business taxpayers including self-employed individuals.
+
+#### 1.4.11 Micro Taxpayer Withholding Exemption — VETOED (NOT ENACTED)
+- Section 8 of RA 11976 originally included a provision exempting micro taxpayers from withholding obligations.
+- This provision was **VETOED by President Marcos** before signing.
+- Reason: Estimated ₱40.4 billion revenue loss in 2024; ₱206.4 billion over 2024–2028.
+- **Result: Micro taxpayers remain fully subject to all creditable withholding tax obligations.**
+
+#### 1.4.12 Joint Filing for Self-Employed Spouses
+- Married individuals, both self-employed, shall file ITR jointly.
+- EXCEPTION: If businesses registered under two different RDOs, each spouse files separately.
+
+#### 1.4.13 Individuals NOT Required to File ITR (Per RR 4-2024)
+1. Individuals earning purely compensation income with annual taxable income ≤ ₱250,000
+2. Individuals whose income tax has been correctly withheld by employer (substituted filing)
+3. Individuals whose sole income has been subjected to final withholding tax
+4. Minimum wage earners
+5. OFWs/OCWs earning income solely from abroad (new exemption added by EOPT)
+
+- **Implementing regulations:** RR 3-2024, RR 4-2024, RR 7-2024, RR 8-2024 (all April 11-12, 2024); RMC 60-2024 (May 9, 2024)
 
 ---
 
@@ -117,6 +209,50 @@ The foundational tax code of the Philippines. All income tax, percentage tax, an
   - Audited FS required for individuals/corporations with annual gross sales/receipts > ₱3M
   - But if OSD is elected, FS need NOT be attached to the return — must be available upon BIR demand
 
+### 2.6 RR No. 4-2021 (April 8, 2021)
+- **Title:** Implementing the VAT and Percentage Tax Provisions of the CREATE Act
+- **Key provisions:**
+  - Only the Section 116 percentage tax **rate** was reduced (3% to 1%); all other rules unchanged.
+  - Taxpayers who filed 2020 returns at 3% must amend returns; no penalty for carry-over amendments.
+  - Overpaid amounts can be carried forward to succeeding quarters or applied for refund/TCC.
+  - If the 3% percentage tax was already claimed as a deductible expense in 2020 Annual ITR, taxpayer is NOT eligible for carry-over or refund of overpaid portion.
+  - Government withholding agents must withhold **1% (not 3%)** on payments to Section 116 taxpayers for July 1, 2020 – June 30, 2023.
+
+### 2.7 RR No. 3-2024 (April 11, 2024)
+- **Title:** Implementing VAT and Percentage Tax provisions of the EOPT Act
+- **Key provisions for self-employed:**
+  - Shifts Section 116 percentage tax computation basis from **gross receipts** (cash) to **gross sales** (accrual)
+  - Accrual method: amount included when invoiced, not when received
+  - 6-month transition period ending approximately October 27, 2024
+  - Rate remains 3% (no change from reversion after CREATE)
+
+### 2.8 RR No. 4-2024 (April 11, 2024)
+- **Title:** Implementing Filing, Payment, Withholding, and Deductibility provisions of the EOPT Act
+- **Key provisions for self-employed:**
+  - Payment may be made electronically or manually at any AAB, RCO, or authorized tax software provider
+  - File-and-pay-anywhere; no restriction by RDO registration
+  - Section 34(K) repeal confirmation: expenses are deductible regardless of withholding status for taxable periods starting January 1, 2024
+  - Withholding timing: obligation arises upon accrual, recording as expense, or issuance of invoice — whichever comes first (actual payment trigger removed)
+  - Joint filing rules for married self-employed individuals
+
+### 2.9 RR No. 7-2024 (April 11, 2024)
+- **Title:** Implementing Registration Procedures and Invoicing Requirements of the EOPT Act
+- **Key provisions for self-employed:**
+  - Invoice replaces Official Receipt as primary sales document for all transactions (goods and services)
+  - Mandatory invoicing threshold: ₱500 per transaction (increased from ₱100), CPI-adjusted every 3 years
+  - Electronic invoices authorized without special BIR approval
+  - Annual Registration Fee (₱500 ARF) abolished
+
+### 2.10 RR No. 8-2024 (April 12, 2024)
+- **Title:** Implementing Taxpayer Classification Rules of the EOPT Act
+- **Key provisions:**
+  - Four-tier classification (Micro/Small/Medium/Large) based on gross sales
+  - Micro: gross sales < ₱3,000,000 (aligns with non-VAT threshold and 8% option eligibility)
+  - Small: ₱3,000,000 to < ₱20,000,000
+  - Medium: ₱20,000,000 to < ₱1,000,000,000
+  - Large: ₱1,000,000,000 and above
+  - Classification determines penalty rates (Sec. 248), interest rates (Sec. 249), and compliance simplifications
+
 ---
 
 ## 3. Revenue Memorandum Orders
@@ -151,6 +287,48 @@ The foundational tax code of the Philippines. All income tax, percentage tax, an
   - Minimum wage earners: statutory minimum wage, holiday pay, overtime, hazard pay, night shift differential remain exempt; other income is taxable
   - De minimis benefits excess above ceiling: included in "other benefits" subject to ₱90,000 ceiling
   - Employee incentives (not specifically exempt under special law) are compensation subject to income tax
+
+### 4.3 RMC No. 67-2021 (May 24, 2021)
+- **Title:** Clarifications on CREATE Law Percentage Tax Provisions
+- **Key clarifications:**
+  - 3% to 1% reduction (July 1, 2020 – June 30, 2023) applies to both corporate and individual self-employed taxpayers with gross sales/receipts ≤ ₱3,000,000.
+  - **EXCEPTIONS from Section 116 percentage tax:**
+    1. Cooperatives
+    2. Self-employed individuals and professionals availing the 8% income tax rate option
+  - Taxpayers on 8% income tax option are NOT required to file BIR Form 2551Q for quarters on which the 8% rate applies.
+  - **Quarterly Percentage Tax (BIR Form 2551Q) deadlines:**
+    - Q1: on or before April 25
+    - Q2: on or before July 25
+    - Q3: on or before October 25
+    - Q4: on or before January 25 (of the following year)
+
+### 4.4 RMC No. 3-2024 (January 10, 2024)
+- **Title:** Circularizing RA 11976 and Presidential Veto Message
+- **Key provisions:**
+  - Officially circularizes the full text of RA 11976 (EOPT Act)
+  - Circularizes the presidential veto message (vetoed micro-taxpayer withholding exemption)
+  - Sets the stage for implementing regulations
+
+### 4.5 RMC No. 14-2024 (~January 2024)
+- **Title:** Abolition of Annual Registration Fee
+- **Key provision:**
+  - Effective January 22, 2024: BIR ceased collection of the ₱500 Annual Registration Fee
+  - BIR Form 0605 no longer required for ARF payment
+  - Applies to all business taxpayers — including new and existing self-employed individuals
+
+### 4.6 RMC No. 60-2024 (May 9, 2024)
+- **Title:** Clarification on Section 34(K) Repeal — Prospective Effect
+- **Key provision:**
+  - **Section 34(K) repeal applies ONLY prospectively, from January 1, 2024 onwards.**
+  - For all ongoing audits/assessments/cases covering taxable periods prior to January 1, 2024: the OLD rule applies — expenses are allowed as deductions ONLY if the corresponding withholding tax was withheld and remitted to BIR (or was subsequently paid before BIR demand or audit).
+  - The 2024+ rule: expenses deductible regardless of withholding status, provided substantiated.
+
+### 4.7 RMC No. 91-2024 (August 14, 2024)
+- **Title:** Registration Procedures for Self-Employed Individuals and Online Sellers
+- **Key provisions:**
+  - Updated registration procedures for self-employed individuals under EOPT
+  - Online sellers (e-commerce) registration requirements
+  - Invoice issuance requirements for digital/online transactions
 
 ---
 
@@ -203,10 +381,30 @@ Note: These are CREDITABLE withholding taxes — they are not final taxes. The w
 | Graduated rate Schedule 2 (current) | January 1, 2023 | RA 10963 |
 | 8% income tax option | January 1, 2018 | RA 10963 / RR 8-2018 |
 | VAT threshold raised to ₱3M | January 1, 2018 | RA 10963 |
-| Section 116 rate reduced to 1% | July 1, 2020 | RA 11534 (CREATE) |
+| Section 116 rate reduced to 1% (retroactive) | July 1, 2020 | RA 11534 (CREATE) |
 | Section 116 rate reverted to 3% | July 1, 2023 | RA 11534 (CREATE) |
-| EOPT Act simplifications | January 5, 2024 | RA 11976 |
-| Withholding as deductibility prerequisite repealed | January 5, 2024 | RA 11976 |
+| EOPT Act effective (all provisions) | January 22, 2024 | RA 11976 |
+| Section 34(K) repeal (withholding prerequisite removed) | January 22, 2024 | RA 11976 |
+| Annual Registration Fee (₱500 ARF) abolished | January 22, 2024 | RA 11976 / RMC 14-2024 |
+| Wrong-venue penalty (25%) eliminated | January 22, 2024 | RA 11976 |
+| File-and-pay-anywhere provision | January 22, 2024 | RA 11976 |
+| Reduced civil penalty for Micro/Small (10% vs 25%) | January 22, 2024 | RA 11976 |
+| Reduced interest for Micro/Small (6% vs 12% per annum) | January 22, 2024 | RA 11976 |
+| RR 4-2024 (filing, payment, withholding rules) | April 27, 2024 | RR 4-2024 |
+| RR 8-2024 (taxpayer classification — Micro/Small/Medium/Large) | April 27, 2024 | RR 8-2024 |
+| Invoice system reform (replaces OR with Invoice) | April 27, 2024 (transition thru Oct 27, 2024) | RR 7-2024 |
+| Gross Sales basis for percentage tax (Sec. 116) | October 27, 2024 (post-transition) | RR 3-2024 |
+| Books retention period reduced to 5 years | January 22, 2024 | RA 11976 |
+
+### 8.1 Section 116 Percentage Tax Rate History (Complete)
+
+| Period | Rate | Basis | Law |
+|---|---|---|---|
+| Pre-January 1, 2018 | 3% | Gross receipts | Pre-TRAIN NIRC |
+| January 1, 2018 – June 30, 2020 | 3% | Gross receipts | RA 10963 (TRAIN) |
+| July 1, 2020 – June 30, 2023 | **1%** | Gross receipts | RA 11534 (CREATE) retroactive |
+| July 1, 2023 – October 26, 2024 | 3% | Gross receipts | CREATE reversion |
+| October 27, 2024 onwards | **3%** | **Gross sales** | RA 11976 (EOPT) / RR 3-2024 |
 
 ---
 

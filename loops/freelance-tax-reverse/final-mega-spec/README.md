@@ -3,7 +3,7 @@
 This directory contains the complete product specification. A forward loop can build the entire platform by reading ONLY this directory.
 
 **Last updated:** 2026-02-28
-**Convergence status:** IN PROGRESS (6/53 aspects analyzed)
+**Convergence status:** IN PROGRESS (7/53 aspects analyzed)
 
 ---
 
@@ -13,7 +13,7 @@ This directory contains the complete product specification. A forward loop can b
 
 | File | Status | Description |
 |------|--------|-------------|
-| [domain/legal-basis.md](domain/legal-basis.md) | COMPLETE | All statutes, regulations, circulars, forms cited; effective dates; scope boundaries |
+| [domain/legal-basis.md](domain/legal-basis.md) | UPDATED | All statutes, regulations, circulars, forms cited; effective dates; scope boundaries. Expanded with full EOPT Act (RA 11976) provisions (14 key changes for self-employed, penalty tables, Micro/Small/Medium/Large classification), CREATE Act (RA 11534) Section 116 rate history and retroactivity, and all implementing regulations RR 3-2024 through RR 8-2024, RMC 60-2024, RMC 67-2021. |
 | [domain/computation-rules.md](domain/computation-rules.md) | PARTIAL | CR-001 to CR-014: both rate tables (2018-2022 + 2023+), 3 path formulas, OSD base clarification, 8% eligibility, quarterly cumulative method, CWT mechanics, installment rule, breakeven analysis |
 | domain/decision-trees.md | PENDING | Every branching path, fully expanded to leaf nodes |
 | domain/lookup-tables/graduated-rate-table.md | PARTIAL | Both rate schedules included in computation-rules.md; dedicated file pending |
