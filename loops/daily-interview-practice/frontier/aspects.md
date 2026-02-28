@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 16
-- Analyzed: 8
-- Pending: 8
-- Convergence: 50%
+- Analyzed: 9
+- Pending: 7
+- Convergence: 56%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -21,7 +21,7 @@
 - [x] progress-tracking-design — Design how OpenClaw logs sessions, tracks streaks, triggers phase advancement
 
 ### Wave 3: Curriculum Generation (depends on Wave 2)
-- [ ] phase-0-content — Generate complete Phase 0 (Diagnostic, Days 1-3) session content
+- [x] phase-0-content — Generate complete Phase 0 (Diagnostic, Days 1-3) session content
 - [ ] phase-1-content — Generate Phase 1 (Foundations, Weeks 1-4) — 28 daily sessions
 - [ ] phase-2-content — Generate Phase 2 (Pattern Building, Weeks 5-8) — 28 daily sessions
 - [ ] phase-3-content — Generate Phase 3 (System Thinking, Weeks 9-12) — 28 daily sessions
@@ -41,6 +41,7 @@
 - [x] practice-session-formats — 9 session formats designed: Code Kata, Spec Decomposition, Mini System Design, Debug & Read, SQL Challenge, Mock Pressure Round, Review & Reflect, Concept Deep Dive, Behavioral Story Practice. Each has timing breakdown, OpenClaw delivery instructions, sample problem libraries, and phase-frequency table. Cross-format principles: Socratic coaching, "I don't know" handling, edge-case-mid-session drilling, "explain it to me" close.
 - [x] weekly-templates — Fully specified day-by-day sessions for all 6 phases (20 individual weeks + Phase 6 maintenance). Each session has format, topic, and key skill. Phase 1: 4 Code Katas + 1 SD + 1 RR + 1 DR per week. Phase 2: 3 CK + 1 SQL + 1 MPR + 1 RR + rotating MS/DR. Phase 3: 2 CD + 2–3 MS + CK/SQL + MPR + RR. Phase 4: 2 MPR + SD + BS + CK/SQL + RR + MS. Phase 5: 3 MPR + 2 BS + targeted weak-area + RR + rest. Phase 6: 6-week skill rotation with monthly re-diagnostic + interview ramp-up protocol.
 - [x] progress-tracking-design — Two-level entity structure: project entity (current state) + meeting entities (session logs per day). Meeting entity schema: phase/day/format/topic/key_skill/time_spent_min/self_assessment/verdict/gap_flags_triggered. Verdict: pass/conditional-pass/fail/not-applicable. Streak tracking with milestones at 7/14/30/50/100 days. Phase advancement: 3-of-4 MPR conditional-pass threshold + early advancement on 5-day 4+/5 self-assessment trend. Weekly Sunday summary format. Trend analysis signals: category drift, verdict rolling avg, time-to-complete slope, gap flag resolution. Commit convention: `bot: interview practice day NNN — FORMAT: topic-slug`. OpenClaw open/close protocol and full YAML schema for project entity fields.
+- [x] phase-0-content — Full OpenClaw executable scripts for all 3 diagnostic days at analysis/curriculum/phase-0-diagnostic.md. Each exercise has verbatim prompt, 1-5 scoring rubric, follow-up questions, score-tiered feedback templates, and transition lines. Includes complete scoring + level determination logic, gap flag triggering (5 flags), level → starting phase table, slower pace note for score < 30, verbatim result message template, and delivery principles appendix.
 
 ## Discovered Aspects
 (None yet)
