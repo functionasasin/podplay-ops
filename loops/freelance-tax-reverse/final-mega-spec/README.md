@@ -3,7 +3,7 @@
 This directory contains the complete product specification. A forward loop can build the entire platform by reading ONLY this directory.
 
 **Last updated:** 2026-02-28
-**Convergence status:** IN PROGRESS (4/49 aspects analyzed)
+**Convergence status:** IN PROGRESS (5/49 aspects analyzed)
 
 ---
 
@@ -107,6 +107,6 @@ This directory contains the complete product specification. A forward loop can b
 
 | File | Status | Description |
 |------|--------|-------------|
-| seo-and-growth/landing-page.md | PENDING | Hero, value prop, social proof, CTAs |
-| seo-and-growth/seo-strategy.md | PENDING | Keywords, page titles, meta, schema |
+| [seo-and-growth/landing-page.md](seo-and-growth/landing-page.md) | INITIAL DRAFT | Pain points, value prop, CTAs, competitor positioning, social proof stats — from competitive research; to be expanded in Wave 5 |
+| [seo-and-growth/seo-strategy.md](seo-and-growth/seo-strategy.md) | INITIAL DRAFT | 14 target keywords with current owners, 10 priority blog topics, schema markup, domain strategy, competitive SEO notes — from competitive research; to be expanded in Wave 5 |
 | seo-and-growth/content-strategy.md | PENDING | Blog topics, comparison pages |
