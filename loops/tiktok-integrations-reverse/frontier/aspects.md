@@ -5,9 +5,9 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 23 |
-| Analyzed | 16 |
-| Pending | 7 |
-| Convergence | 70% |
+| Analyzed | 17 |
+| Pending | 6 |
+| Convergence | 74% |
 
 ---
 
@@ -32,7 +32,7 @@
 - [x] `third-party-platform-connectors` — Composio, Zapier, Make, n8n TikTok triggers/actions
 - [x] `third-party-data-providers` — Pentos, Socialinsider, HypeAuditor, Modash: TikTok data APIs, pricing
 - [x] `third-party-social-management` — Hootsuite, Sprout Social, Later, Buffer: TikTok API exposure
-- [ ] `unofficial-scraping-methods` — TikTok-Api Python, Puppeteer, anti-bot measures, legal risks
+- [x] `unofficial-scraping-methods` — TikTok-Api Python, Puppeteer, anti-bot measures, legal risks
 
 ## Wave 3: Cheerful Architecture Analysis
 
