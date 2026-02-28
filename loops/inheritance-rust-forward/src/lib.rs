@@ -16,3 +16,4 @@ pub mod step8_collation;
 pub mod step9_vacancy;
 pub mod step10_finalize;
 pub mod types;
+pub mod wasm;
