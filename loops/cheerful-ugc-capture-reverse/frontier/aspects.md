@@ -5,9 +5,9 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 18 |
-| Analyzed | 2 |
-| Pending | 16 |
-| Convergence | 11% |
+| Analyzed | 3 |
+| Pending | 15 |
+| Convergence | 17% |
 
 ---
 
@@ -15,7 +15,7 @@
 
 - [x] `graph-api-mentions-tags` — Graph API `mentioned_media` + `tags` endpoints: permissions, fields, rate limits, content types covered
 - [x] `webhooks-mentions` — Instagram webhook `mentions` field: real-time push, payload format, comparison with polling
-- [ ] `hashtag-monitoring` — Hashtag API: `ig_hashtag_search` + `recent_media`/`top_media`, 30-hashtag/7-day limit, viability at scale
+- [x] `hashtag-monitoring` — Hashtag API: `ig_hashtag_search` + `recent_media`/`top_media`, 30-hashtag/7-day limit, viability at scale
 - [ ] `story-mention-capture` — Messaging API `story_mention` events: CDN URL expiry, media download, IG DM webhook overlap
 - [ ] `ai-visual-detection` — Logo/product detection (YOLO/DETR/CLIP), OCR, frame sampling, build-vs-buy (Cloud Vision, Rekognition, Roboflow)
 - [ ] `ai-audio-detection` — Whisper STT + brand mention NER/keyword matching: cost, accuracy, self-hosted vs API
