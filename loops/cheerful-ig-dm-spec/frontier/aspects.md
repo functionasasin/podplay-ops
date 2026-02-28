@@ -5,9 +5,9 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 25 |
-| Analyzed | 6 |
-| Pending | 19 |
-| Convergence | 24% |
+| Analyzed | 7 |
+| Pending | 18 |
+| Convergence | 28% |
 
 ---
 
@@ -19,7 +19,7 @@
 - [x] `audit-api-routes` — Read all relevant FastAPI routers: exact route paths, methods, request/response models, auth patterns
 - [x] `audit-frontend-types` — Read TypeScript types: GmailThread, GmailMessage, API client functions, TanStack Query hooks
 - [x] `audit-frontend-components` — Read inbox components: mail list, mail display, reply composer, account settings, email-hardcoded logic
-- [ ] `audit-ai-drafting` — Read LLM/drafting services: exact methods, Langfuse prompt names, RAG tables, thread context XML generation
+- [x] `audit-ai-drafting` — Read LLM/drafting services: exact methods, Langfuse prompt names, RAG tables, thread context XML generation
 
 ## Wave 2: Schema & Interface Design
 
