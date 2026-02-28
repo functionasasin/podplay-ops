@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 34
-- Analyzed: 6
-- Pending: 28
-- Convergence: 18%
+- Analyzed: 7
+- Pending: 27
+- Convergence: 21%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -16,7 +16,7 @@
 - [x] crm-law-firm-patterns — Research law firm CRM tools (Clio, PracticePanther, MyCase). Client management UX patterns for small/solo PH law practices.
 - [x] ph-practice-workflow — Research the complete PH estate settlement process: client intake → computation → BIR filing → court petition → distribution. Map where software touches each stage.
 - [x] competitive-landscape — Search 8+ queries for estate planning calculators, succession tools, PH legal tech, estate tax SaaS. Deep-dive top 5 competitors with feature matrices.
-- [ ] legal-doc-formatting — Research PH court document formatting standards, BIR submission requirements, legal report conventions, Philippine legal citation format (NCC articles).
+- [x] legal-doc-formatting — Research PH court document formatting standards, BIR submission requirements, legal report conventions, Philippine legal citation format (NCC articles).
 - [ ] estate-tax-integration — Read converged estate-tax-engine-spec.md. Map InheritanceShare output → estate tax engine input. Identify data model bridges, combined UI flow, combined PDF output.
 - [ ] multi-tenancy-patterns — Research multi-tenant SaaS architecture for professional services. Analyze role-based access, firm account management, seat-based pricing patterns.
 
