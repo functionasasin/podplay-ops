@@ -5,9 +5,9 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 23 |
-| Analyzed | 10 |
-| Pending | 13 |
-| Convergence | 43% |
+| Analyzed | 11 |
+| Pending | 12 |
+| Convergence | 48% |
 
 ---
 
@@ -23,7 +23,7 @@
 - [x] `tiktok-messaging-comments-api` — Comment read/write, DM access, moderation, webhook events
 - [x] `tiktok-live-api` — Live streams, viewer metrics, gifts, live commerce
 - [x] `tiktok-webhooks-events` — Consolidated webhook/event reference across all API products
-- [ ] `tiktok-embed-oembed` — Embed player, oEmbed endpoint, zero-auth data extraction
+- [x] `tiktok-embed-oembed` — Embed player, oEmbed endpoint, zero-auth data extraction
 
 ## Wave 2: Third-Party & Unofficial Methods
 
