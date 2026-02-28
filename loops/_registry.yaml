@@ -165,3 +165,11 @@ loops:
     timeout_minutes: 30
     status: active
     created: 2026-02-28
+  inheritance-premium-reverse:
+    description: "Research and specify all premium features for PH inheritance professional platform → mega-spec"
+    type: reverse
+    schedule: "*/30 * * * *"
+    max_iterations: 40
+    timeout_minutes: 30
+    status: active
+    created: 2026-02-28
