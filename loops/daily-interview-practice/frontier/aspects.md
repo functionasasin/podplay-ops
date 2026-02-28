@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 16
-- Analyzed: 6
-- Pending: 10
-- Convergence: 38%
+- Analyzed: 7
+- Pending: 9
+- Convergence: 44%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -17,7 +17,7 @@
 ### Wave 2: Curriculum Design (depends on Wave 1)
 - [x] progression-map — Design 7-phase progression from diagnostic to interview-ready (~20 weeks)
 - [x] weekly-templates — Design weekly session templates for each phase (which format on which day)
-- [ ] problem-bank-design — Design problem bank structure, sourcing, format; write example problems per category
+- [x] problem-bank-design — Design problem bank structure, sourcing, format; write example problems per category
 - [ ] progress-tracking-design — Design how OpenClaw logs sessions, tracks streaks, triggers phase advancement
 
 ### Wave 3: Curriculum Generation (depends on Wave 2)
