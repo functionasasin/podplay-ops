@@ -213,7 +213,7 @@ function zeroMoney(): Money {
  * Compute inheritance distribution from the given input.
  * Currently a mock — validates input, predicts scenario, returns synthetic output.
  */
-export async function compute(input: EngineInput): Promise<EngineOutput> {
+export async function computeMock(input: EngineInput): Promise<EngineOutput> {
   // 1. Validate input with EngineInputSchema
   const parseResult = EngineInputSchema.safeParse(input);
   if (!parseResult.success) {
@@ -305,4 +305,25 @@ export async function compute(input: EngineInput): Promise<EngineOutput> {
     succession_type: successionType,
     scenario_code: scenarioCode,
   };
+}
+
+/**
+ * Compute using the real WASM engine.
+ * Stage 13 stub — delegates to mock until real WASM is integrated.
+ * Will be replaced with: init() + compute_json() from ./pkg/inheritance_engine
+ */
+export async function computeWasm(input: EngineInput): Promise<EngineOutput> {
+  // TODO: Replace with real WASM engine:
+  //   import init, { compute_json } from './pkg/inheritance_engine';
+  //   if (!initialized) { await init(); initialized = true; }
+  //   const resultJson = compute_json(JSON.stringify(input));
+  //   return JSON.parse(resultJson);
+  return computeMock(input);
+}
+
+/**
+ * Public API — delegates to computeWasm (falls back to mock until WASM is ready).
+ */
+export async function compute(input: EngineInput): Promise<EngineOutput> {
+  return computeWasm(input);
 }

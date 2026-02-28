@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { ResultsView } from '../ResultsView';
 import type { EngineInput, EngineOutput, Money } from '../../../types';
@@ -215,9 +215,10 @@ describe('results > ResultsView', () => {
 
     it('passes heir shares to distribution section', () => {
       renderResults();
-      // Both heirs should appear
-      expect(screen.getByText('Juan Cruz')).toBeInTheDocument();
-      expect(screen.getByText('Maria Cruz')).toBeInTheDocument();
+      // Both heirs should appear in the distribution table
+      const distSection = screen.getByTestId('distribution-section');
+      expect(within(distSection).getByText('Juan Cruz')).toBeInTheDocument();
+      expect(within(distSection).getByText('Maria Cruz')).toBeInTheDocument();
     });
 
     it('passes narratives to narrative panel', () => {

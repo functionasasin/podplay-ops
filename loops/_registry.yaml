@@ -149,3 +149,11 @@ loops:
     timeout_minutes: 30
     status: active
     created: 2026-02-28
+  inheritance-ui-forward:
+    description: "Redesign inheritance calculator frontend with shadcn/ui, Navy + Gold professional legal aesthetic"
+    type: forward
+    schedule: "*/30 * * * *"
+    max_iterations: 50
+    timeout_minutes: 30
+    status: active
+    created: 2026-02-28
