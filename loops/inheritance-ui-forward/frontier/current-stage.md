@@ -1,7 +1,7 @@
-# Current Stage: 5 (Family Tree Step)
+# Current Stage: 7 (Donations + Review)
 
 ## Goal
-Restyle FamilyTreeStep, PersonCard, AdoptionSubForm, and FiliationSection with shadcn/ui components — cards, badges, selects, switches, and color-coded relationship badges.
+Restyle DonationsStep, DonationCard, and ReviewStep with shadcn/ui components — Card repeaters, Badge, Accordion, styled summary grid, and design tokens.
 
 ## Test Results (updated by loop)
 ```
@@ -13,3 +13,5 @@ Restyle FamilyTreeStep, PersonCard, AdoptionSubForm, and FiliationSection with s
 - Stage 2 completed: Restyled MoneyInput, DateInput, FractionInput, PersonPicker, EnumSelect with shadcn/ui Input, Button, and design tokens. All 1033 tests pass.
 - Stage 3 completed: Restyled App.tsx (navy header, gold accent, shadcn Alert errors) and WizardContainer (horizontal stepper with numbers/checkmarks, shadcn Card content wrapper, shadcn Buttons). All 1033 tests pass.
 - Stage 4 completed: Restyled EstateStep (shadcn Separator, design tokens for warnings/hints, styled radio group) and DecedentStep (section headings, shadcn Input/Separator/Alert, design token borders, AlertTriangle icon for articulo mortis warning). All 1033 tests pass.
+- Stage 5 completed: Restyled FamilyTreeStep (shadcn Button with UserPlus icon, design tokens), PersonCard (shadcn Card/CardHeader/CardContent/CardAction, color-coded relationship Badge, shadcn Button/Input/Separator, Alert for exclusion warnings), AdoptionSubForm (shadcn Input, styled selects, Alert for rescission warning), FiliationSection (styled select, Alert for exclusion warning). All 1033 tests pass.
+- Stage 6 completed: Restyled WillStep (styled tab bar with gold accent underline, design token colors), InstitutionsTab (shadcn Card repeater, Button with Plus/Trash2 icons, Separator, styled conditions/substitutes sections), LegaciesTab (shadcn Card, styled select for legacy type, Alert for specific asset warning, Input for text fields), DevisesTab (shadcn Card, Alert info banner, styled select/Input), DisinheritancesTab (shadcn Card, Alert for validity indicator with CheckCircle2/XCircle icons, styled checkboxes, design token colors for valid/invalid states), HeirReferenceForm (shadcn Input, styled checkbox, space-y layout), ShareSpecForm (styled select, shadcn Input for fraction numerator/denominator). All 1033 tests pass.

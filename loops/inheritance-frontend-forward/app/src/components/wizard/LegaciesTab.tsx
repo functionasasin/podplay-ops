@@ -1,9 +1,16 @@
 import React, { useRef } from 'react';
 import { useFieldArray } from 'react-hook-form';
 import type { Control, UseFormSetValue, UseFormWatch } from 'react-hook-form';
+import { Plus, Trash2 } from 'lucide-react';
 import type { EngineInput, Person, LegacySpec } from '../../types';
 import { HeirReferenceForm } from './HeirReferenceForm';
 import { MoneyInput } from '../shared/MoneyInput';
+import { cn } from '@/lib/utils';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export interface LegaciesTabProps {
   control: Control<EngineInput>;
@@ -18,6 +25,12 @@ export const LEGACY_SPEC_OPTIONS = [
   { value: 'SpecificAsset', label: 'Specific Asset' },
   { value: 'GenericClass', label: 'Generic Class of Items' },
 ] as const;
+
+const selectClassName = cn(
+  "border-input flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none md:text-sm",
+  "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
+  "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
+);
 
 function getLegacyVariant(property: LegacySpec): string {
   if (typeof property === 'object' && 'FixedAmount' in property)
@@ -64,7 +77,7 @@ export function LegaciesTab({
   return (
     <div data-testid="legacies-tab" className="space-y-4">
       {fields.length === 0 && (
-        <p className="text-gray-500">No legacies added</p>
+        <p className="text-muted-foreground text-sm py-4 text-center">No legacies added</p>
       )}
 
       {fields.map((field, index) => (
@@ -80,13 +93,15 @@ export function LegaciesTab({
         />
       ))}
 
-      <button
+      <Button
         type="button"
         onClick={handleAdd}
-        className="px-4 py-2 bg-blue-500 text-white rounded"
+        variant="outline"
+        className="gap-1.5"
       >
+        <Plus className="size-4" />
         Add Legacy
-      </button>
+      </Button>
     </div>
   );
 }
@@ -134,124 +149,137 @@ function LegacyCard({
   };
 
   return (
-    <div className="border p-4 rounded space-y-3">
-      <span className="font-medium">Legatee</span>
-      <HeirReferenceForm
-        control={control}
-        setValue={setValue}
-        watch={watch}
-        fieldPath={`${basePath}.legatee`}
-        persons={persons}
-        allowStranger
-        errors={errors}
-      />
-
-      <label>
-        <span>Legacy Type</span>
-        <select
-          value={variant}
-          onChange={(e) => handleVariantChange(e.target.value)}
-        >
-          {LEGACY_SPEC_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      {variant === 'FixedAmount' && (
-        <MoneyInput<EngineInput>
-          name={`${basePath}.property.FixedAmount.centavos` as any}
-          label="Amount"
+    <Card>
+      <CardContent className="space-y-4">
+        <span className="text-sm font-semibold leading-none">Legatee</span>
+        <HeirReferenceForm
           control={control}
+          setValue={setValue}
+          watch={watch}
+          fieldPath={`${basePath}.legatee`}
+          persons={persons}
+          allowStranger
+          errors={errors}
         />
-      )}
 
-      {variant === 'SpecificAsset' && (
-        <div>
-          <label>
-            <span>Asset Identifier</span>
-            <input
-              type="text"
-              value={
-                property && 'SpecificAsset' in property
-                  ? (property as any).SpecificAsset
-                  : ''
-              }
-              onChange={(e) =>
-                setValue(`${basePath}.property` as any, {
-                  SpecificAsset: e.target.value,
-                })
-              }
-            />
-          </label>
-          <p className="text-amber-600 text-sm mt-1">
-            The engine cannot compute a monetary value for specific assets. The
-            legacy will be noted but not included in the peso distribution.
-          </p>
-        </div>
-      )}
+        <label className="block space-y-2">
+          <span className="text-sm font-medium leading-none">Legacy Type</span>
+          <select
+            value={variant}
+            onChange={(e) => handleVariantChange(e.target.value)}
+            className={selectClassName}
+          >
+            {LEGACY_SPEC_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </label>
 
-      {variant === 'GenericClass' && (
-        <div className="space-y-2">
-          <label>
-            <span>Description</span>
-            <input
-              type="text"
-              value={
-                property && 'GenericClass' in property
-                  ? (property as any).GenericClass[0]
-                  : ''
-              }
-              onChange={(e) => {
-                const current =
-                  property && 'GenericClass' in property
-                    ? (property as any).GenericClass
-                    : ['', { centavos: 0 }];
-                setValue(`${basePath}.property` as any, {
-                  GenericClass: [e.target.value, current[1]],
-                });
-              }}
-            />
-          </label>
+        {variant === 'FixedAmount' && (
           <MoneyInput<EngineInput>
-            name={`${basePath}.property.GenericClass.1.centavos` as any}
-            label="Estimated Value"
+            name={`${basePath}.property.FixedAmount.centavos` as any}
+            label="Amount"
             control={control}
           />
-        </div>
-      )}
+        )}
 
-      <label className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          checked={!!isPreferred}
-          onChange={(e) =>
-            setValue(`${basePath}.is_preferred` as any, e.target.checked)
-          }
+        {variant === 'SpecificAsset' && (
+          <div className="space-y-3">
+            <label className="block space-y-2">
+              <span className="text-sm font-medium leading-none">Asset Identifier</span>
+              <Input
+                type="text"
+                value={
+                  property && 'SpecificAsset' in property
+                    ? (property as any).SpecificAsset
+                    : ''
+                }
+                onChange={(e) =>
+                  setValue(`${basePath}.property` as any, {
+                    SpecificAsset: e.target.value,
+                  })
+                }
+              />
+            </label>
+            <Alert>
+              <AlertDescription className="text-amber-700">
+                The engine cannot compute a monetary value for specific assets. The
+                legacy will be noted but not included in the peso distribution.
+              </AlertDescription>
+            </Alert>
+          </div>
+        )}
+
+        {variant === 'GenericClass' && (
+          <div className="space-y-3">
+            <label className="block space-y-2">
+              <span className="text-sm font-medium leading-none">Description</span>
+              <Input
+                type="text"
+                value={
+                  property && 'GenericClass' in property
+                    ? (property as any).GenericClass[0]
+                    : ''
+                }
+                onChange={(e) => {
+                  const current =
+                    property && 'GenericClass' in property
+                      ? (property as any).GenericClass
+                      : ['', { centavos: 0 }];
+                  setValue(`${basePath}.property` as any, {
+                    GenericClass: [e.target.value, current[1]],
+                  });
+                }}
+              />
+            </label>
+            <MoneyInput<EngineInput>
+              name={`${basePath}.property.GenericClass.1.centavos` as any}
+              label="Estimated Value"
+              control={control}
+            />
+          </div>
+        )}
+
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            checked={!!isPreferred}
+            onChange={(e) =>
+              setValue(`${basePath}.is_preferred` as any, e.target.checked)
+            }
+            className="h-4 w-4 rounded border-input accent-[hsl(var(--primary))]"
+          />
+          Preferred Legacy (Art. 911)
+        </label>
+
+        <Separator />
+
+        <ConditionsSection
+          control={control}
+          basePath={basePath}
         />
-        Preferred Legacy (Art. 911)
-      </label>
 
-      <ConditionsSection
-        control={control}
-        basePath={basePath}
-      />
+        <SubstitutesSection
+          control={control}
+          basePath={basePath}
+        />
 
-      <SubstitutesSection
-        control={control}
-        basePath={basePath}
-      />
+        <Separator />
 
-      <button
-        type="button"
-        onClick={onRemove}
-        className="text-red-500 text-sm"
-      >
-        Remove
-      </button>
-    </div>
+        <Button
+          type="button"
+          onClick={onRemove}
+          variant="ghost"
+          size="sm"
+          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+        >
+          <Trash2 className="size-3.5" />
+          Remove
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -268,23 +296,25 @@ function ConditionsSection({
   });
 
   return (
-    <div className="border-t pt-2">
-      <span className="font-medium text-sm">Conditions</span>
+    <div className="space-y-2">
+      <span className="text-sm font-medium leading-none">Conditions</span>
       {fields.map((field, i) => (
-        <div key={field.id} className="ml-4 mt-1 flex gap-2 items-center">
-          <span className="text-sm">
+        <div key={field.id} className="ml-4 flex gap-2 items-center">
+          <span className="text-sm text-muted-foreground">
             {(field as any).condition_type || 'Suspensive'}
           </span>
-          <button
+          <Button
             type="button"
             onClick={() => remove(i)}
-            className="text-red-400 text-xs"
+            variant="ghost"
+            size="xs"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10"
           >
             Remove
-          </button>
+          </Button>
         </div>
       ))}
-      <button
+      <Button
         type="button"
         onClick={() =>
           append({
@@ -293,10 +323,12 @@ function ConditionsSection({
             status: 'Pending',
           } as any)
         }
-        className="text-blue-500 text-sm mt-1"
+        variant="link"
+        size="sm"
+        className="px-0"
       >
         Add Condition
-      </button>
+      </Button>
     </div>
   );
 }
@@ -314,23 +346,25 @@ function SubstitutesSection({
   });
 
   return (
-    <div className="border-t pt-2">
-      <span className="font-medium text-sm">Substitutes</span>
+    <div className="space-y-2">
+      <span className="text-sm font-medium leading-none">Substitutes</span>
       {fields.map((field, i) => (
-        <div key={field.id} className="ml-4 mt-1 flex gap-2 items-center">
-          <span className="text-sm">
+        <div key={field.id} className="ml-4 flex gap-2 items-center">
+          <span className="text-sm text-muted-foreground">
             {(field as any).substitution_type || 'Simple'}
           </span>
-          <button
+          <Button
             type="button"
             onClick={() => remove(i)}
-            className="text-red-400 text-xs"
+            variant="ghost"
+            size="xs"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10"
           >
             Remove
-          </button>
+          </Button>
         </div>
       ))}
-      <button
+      <Button
         type="button"
         onClick={() =>
           append({
@@ -344,10 +378,12 @@ function SubstitutesSection({
             triggers: ['Predecease', 'Renunciation', 'Incapacity'],
           } as any)
         }
-        className="text-blue-500 text-sm mt-1"
+        variant="link"
+        size="sm"
+        className="px-0"
       >
         Add Substitute
-      </button>
+      </Button>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useFieldArray } from 'react-hook-form';
 import type { Control, UseFormSetValue, UseFormWatch } from 'react-hook-form';
+import { Plus, Trash2, CheckCircle2, XCircle } from 'lucide-react';
 import type {
   EngineInput,
   Person,
@@ -9,6 +10,12 @@ import type {
 } from '../../types';
 import { CAUSE_BY_RELATIONSHIP } from '../../schemas';
 import { PersonPicker } from '../shared/PersonPicker';
+import { cn } from '@/lib/utils';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 
 export interface DisinheritancesTabProps {
   control: Control<EngineInput>;
@@ -28,6 +35,12 @@ export const COMPULSORY_RELATIONSHIPS = [
   'LegitimateParent',
   'LegitimateAscendant',
 ] as const;
+
+const selectClassName = cn(
+  "border-input flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none md:text-sm",
+  "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
+  "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
+);
 
 function isCompulsory(relationship: string): boolean {
   return (COMPULSORY_RELATIONSHIPS as readonly string[]).includes(relationship);
@@ -67,7 +80,7 @@ export function DisinheritancesTab({
   return (
     <div data-testid="disinheritances-tab" className="space-y-4">
       {fields.length === 0 && (
-        <p className="text-gray-500">No disinheritances added</p>
+        <p className="text-muted-foreground text-sm py-4 text-center">No disinheritances added</p>
       )}
 
       {fields.map((field, index) => (
@@ -84,13 +97,15 @@ export function DisinheritancesTab({
         />
       ))}
 
-      <button
+      <Button
         type="button"
         onClick={handleAdd}
-        className="px-4 py-2 bg-blue-500 text-white rounded"
+        variant="outline"
+        className="gap-1.5"
       >
+        <Plus className="size-4" />
         Add Disinheritance
-      </button>
+      </Button>
     </div>
   );
 }
@@ -155,105 +170,118 @@ function DisinheritanceCard({
     invalidReasons.push('Art. 922: Reconciliation occurred');
 
   return (
-    <div className="border p-4 rounded space-y-3">
-      <PersonPicker<EngineInput>
-        name={`${basePath}.heir_reference.person_id` as any}
-        label="Heir to Disinherit"
-        control={control}
-        persons={compulsoryPersons.map((p) => ({
-          id: p.id,
-          name: p.name,
-          relationship: p.relationship_to_decedent,
-        }))}
-      />
-
-      <label>
-        <span>Cause of Disinheritance</span>
-        <select
-          value={causeCode ?? ''}
-          onChange={(e) =>
-            setValue(`${basePath}.cause_code` as any, e.target.value || null)
-          }
-        >
-          <option value="">-- Select Cause --</option>
-          {validCauses.map((cause) => (
-            <option key={cause} value={cause}>
-              {cause}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <label className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          checked={causeSpecified ?? true}
-          onChange={(e) =>
-            setValue(
-              `${basePath}.cause_specified_in_will` as any,
-              e.target.checked
-            )
-          }
+    <Card>
+      <CardContent className="space-y-4">
+        <PersonPicker<EngineInput>
+          name={`${basePath}.heir_reference.person_id` as any}
+          label="Heir to Disinherit"
+          control={control}
+          persons={compulsoryPersons.map((p) => ({
+            id: p.id,
+            name: p.name,
+            relationship: p.relationship_to_decedent,
+          }))}
         />
-        Cause Stated in Will
-      </label>
 
-      <label className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          checked={causeProven ?? true}
-          onChange={(e) =>
-            setValue(`${basePath}.cause_proven` as any, e.target.checked)
-          }
-        />
-        Cause Proven
-      </label>
+        <label className="block space-y-2">
+          <span className="text-sm font-medium leading-none">Cause of Disinheritance</span>
+          <select
+            value={causeCode ?? ''}
+            onChange={(e) =>
+              setValue(`${basePath}.cause_code` as any, e.target.value || null)
+            }
+            className={selectClassName}
+          >
+            <option value="">-- Select Cause --</option>
+            {validCauses.map((cause) => (
+              <option key={cause} value={cause}>
+                {cause}
+              </option>
+            ))}
+          </select>
+        </label>
 
-      <label className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          checked={reconciliation ?? false}
-          onChange={(e) =>
-            setValue(
-              `${basePath}.reconciliation_occurred` as any,
-              e.target.checked
-            )
-          }
-        />
-        Reconciliation Occurred
-      </label>
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              checked={causeSpecified ?? true}
+              onChange={(e) =>
+                setValue(
+                  `${basePath}.cause_specified_in_will` as any,
+                  e.target.checked
+                )
+              }
+              className="h-4 w-4 rounded border-input accent-[hsl(var(--primary))]"
+            />
+            Cause Stated in Will
+          </label>
 
-      {/* Validity Indicator */}
-      <div
-        className={`p-2 rounded text-sm ${
-          isValid
-            ? 'bg-green-50 text-green-700'
-            : 'bg-red-50 text-red-700'
-        }`}
-      >
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              checked={causeProven ?? true}
+              onChange={(e) =>
+                setValue(`${basePath}.cause_proven` as any, e.target.checked)
+              }
+              className="h-4 w-4 rounded border-input accent-[hsl(var(--primary))]"
+            />
+            Cause Proven
+          </label>
+
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              checked={reconciliation ?? false}
+              onChange={(e) =>
+                setValue(
+                  `${basePath}.reconciliation_occurred` as any,
+                  e.target.checked
+                )
+              }
+              className="h-4 w-4 rounded border-input accent-[hsl(var(--primary))]"
+            />
+            Reconciliation Occurred
+          </label>
+        </div>
+
+        {/* Validity Indicator */}
         {isValid ? (
-          <span>Valid Disinheritance</span>
+          <Alert className="border-[hsl(var(--success))] bg-[hsl(var(--success))]/5">
+            <CheckCircle2 className="size-4 text-[hsl(var(--success))]" />
+            <AlertTitle className="text-[hsl(var(--success))]">
+              Valid Disinheritance
+            </AlertTitle>
+          </Alert>
         ) : (
-          <div>
-            <span className="font-medium">
+          <Alert variant="destructive">
+            <XCircle className="size-4" />
+            <AlertTitle>
               Invalid — Heir Will Be Reinstated
-            </span>
-            <ul className="mt-1 ml-4 list-disc">
-              {invalidReasons.map((reason) => (
-                <li key={reason}>{reason}</li>
-              ))}
-            </ul>
-          </div>
+            </AlertTitle>
+            <AlertDescription>
+              <ul className="mt-1 ml-4 list-disc">
+                {invalidReasons.map((reason) => (
+                  <li key={reason}>{reason}</li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </Alert>
         )}
-      </div>
 
-      <button
-        type="button"
-        onClick={onRemove}
-        className="text-red-500 text-sm"
-      >
-        Remove
-      </button>
-    </div>
+        <Separator />
+
+        <Button
+          type="button"
+          onClick={onRemove}
+          variant="ghost"
+          size="sm"
+          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+        >
+          <Trash2 className="size-3.5" />
+          Remove
+        </Button>
+      </CardContent>
+    </Card>
   );
 }

@@ -6,6 +6,7 @@ import { InstitutionsTab } from './InstitutionsTab';
 import { LegaciesTab } from './LegaciesTab';
 import { DevisesTab } from './DevisesTab';
 import { DisinheritancesTab } from './DisinheritancesTab';
+import { cn } from '@/lib/utils';
 
 export interface WillStepProps {
   control: Control<EngineInput>;
@@ -33,66 +34,70 @@ export function WillStep({
   }
 
   return (
-    <div data-testid="will-step" className="space-y-4">
+    <div data-testid="will-step" className="space-y-6">
       <DateInput<EngineInput>
         name={'will.date_executed' as any}
         label="Date Will Was Executed"
         control={control}
       />
 
-      <div className="flex gap-2 border-b mb-4">
+      <div className="flex gap-1 border-b border-border">
         {SUB_TABS.map((tab) => (
           <button
             key={tab}
             type="button"
             onClick={() => setActiveTab(tab)}
-            className={`px-3 py-2 ${
+            className={cn(
+              "px-4 py-2.5 text-sm font-medium transition-colors relative",
+              "hover:text-foreground",
               activeTab === tab
-                ? 'font-bold border-b-2 border-blue-500'
-                : 'text-gray-500'
-            }`}
+                ? "text-foreground after:absolute after:bottom-0 after:inset-x-0 after:h-0.5 after:bg-[hsl(var(--accent))]"
+                : "text-muted-foreground"
+            )}
           >
             {tab}
           </button>
         ))}
       </div>
 
-      {activeTab === 'Institutions' && (
-        <InstitutionsTab
-          control={control}
-          setValue={setValue}
-          watch={watch}
-          errors={errors}
-          persons={persons}
-        />
-      )}
-      {activeTab === 'Legacies' && (
-        <LegaciesTab
-          control={control}
-          setValue={setValue}
-          watch={watch}
-          errors={errors}
-          persons={persons}
-        />
-      )}
-      {activeTab === 'Devises' && (
-        <DevisesTab
-          control={control}
-          setValue={setValue}
-          watch={watch}
-          errors={errors}
-          persons={persons}
-        />
-      )}
-      {activeTab === 'Disinheritances' && (
-        <DisinheritancesTab
-          control={control}
-          setValue={setValue}
-          watch={watch}
-          errors={errors}
-          persons={persons}
-        />
-      )}
+      <div className="pt-2">
+        {activeTab === 'Institutions' && (
+          <InstitutionsTab
+            control={control}
+            setValue={setValue}
+            watch={watch}
+            errors={errors}
+            persons={persons}
+          />
+        )}
+        {activeTab === 'Legacies' && (
+          <LegaciesTab
+            control={control}
+            setValue={setValue}
+            watch={watch}
+            errors={errors}
+            persons={persons}
+          />
+        )}
+        {activeTab === 'Devises' && (
+          <DevisesTab
+            control={control}
+            setValue={setValue}
+            watch={watch}
+            errors={errors}
+            persons={persons}
+          />
+        )}
+        {activeTab === 'Disinheritances' && (
+          <DisinheritancesTab
+            control={control}
+            setValue={setValue}
+            watch={watch}
+            errors={errors}
+            persons={persons}
+          />
+        )}
+      </div>
     </div>
   );
 }

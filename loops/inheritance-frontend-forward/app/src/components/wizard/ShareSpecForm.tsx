@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import type { Control, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 import type { EngineInput, ShareSpec } from '../../types';
 import { stringToFrac } from '../../types';
+import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
 
 export interface ShareSpecFormProps {
   control: Control<EngineInput>;
@@ -29,6 +31,12 @@ const SHARE_TYPE_OPTIONS = [
   { value: 'Fraction', label: 'Specific Fraction (e.g. 1/3)' },
   { value: 'Unspecified', label: 'Unspecified' },
 ];
+
+const selectClassName = cn(
+  "border-input flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none md:text-sm",
+  "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
+  "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
+);
 
 /**
  * Serialize a ShareSpec variant + optional fraction value into the wire format.
@@ -107,12 +115,13 @@ export function ShareSpecForm({
   };
 
   return (
-    <div data-testid="share-spec-form">
-      <label>
-        <span>Share Type</span>
+    <div data-testid="share-spec-form" className="space-y-3">
+      <label className="block space-y-2">
+        <span className="text-sm font-medium leading-none">Share Type</span>
         <select
           value={variant}
           onChange={(e) => handleVariantChange(e.target.value)}
+          className={selectClassName}
         >
           {SHARE_TYPE_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -123,26 +132,24 @@ export function ShareSpecForm({
       </label>
 
       {variant === 'Fraction' && (
-        <div data-testid="fraction-input" className="mt-2">
-          <label>
-            <span>Fraction</span>
-          </label>
-          <div className="flex items-center gap-1">
-            <input
+        <div data-testid="fraction-input" className="space-y-2">
+          <span className="text-sm font-medium leading-none">Fraction</span>
+          <div className="flex items-center gap-2">
+            <Input
               type="number"
               value={numer}
               onChange={(e) => handleFractionChange(e.target.value, denom)}
               min={0}
-              className="w-16"
+              className="w-20"
               aria-label="Numerator"
             />
-            <span>/</span>
-            <input
+            <span className="text-muted-foreground font-medium">/</span>
+            <Input
               type="number"
               value={denom}
               onChange={(e) => handleFractionChange(numer, e.target.value)}
               min={1}
-              className="w-16"
+              className="w-20"
               aria-label="Denominator"
             />
           </div>

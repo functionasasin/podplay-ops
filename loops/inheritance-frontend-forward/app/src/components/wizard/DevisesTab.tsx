@@ -1,8 +1,15 @@
 import React, { useRef } from 'react';
 import { useFieldArray } from 'react-hook-form';
 import type { Control, UseFormSetValue, UseFormWatch } from 'react-hook-form';
+import { Plus, Trash2, Info } from 'lucide-react';
 import type { EngineInput, Person, DeviseSpec } from '../../types';
 import { HeirReferenceForm } from './HeirReferenceForm';
+import { cn } from '@/lib/utils';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export interface DevisesTabProps {
   control: Control<EngineInput>;
@@ -16,6 +23,12 @@ export const DEVISE_SPEC_OPTIONS = [
   { value: 'SpecificProperty', label: 'Specific Property' },
   { value: 'FractionalInterest', label: 'Fractional Interest' },
 ] as const;
+
+const selectClassName = cn(
+  "border-input flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none md:text-sm",
+  "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
+  "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
+);
 
 function getDeviseVariant(property: DeviseSpec): string {
   if (typeof property === 'object' && 'SpecificProperty' in property)
@@ -59,12 +72,15 @@ export function DevisesTab({
 
   return (
     <div data-testid="devises-tab" className="space-y-4">
-      <p className="text-blue-600 text-sm bg-blue-50 p-2 rounded">
-        Devises are recorded but do not affect the peso distribution computation.
-      </p>
+      <Alert>
+        <Info className="size-4" />
+        <AlertDescription>
+          Devises are recorded but do not affect the peso distribution computation.
+        </AlertDescription>
+      </Alert>
 
       {fields.length === 0 && (
-        <p className="text-gray-500">No devises added</p>
+        <p className="text-muted-foreground text-sm py-4 text-center">No devises added</p>
       )}
 
       {fields.map((field, index) => (
@@ -80,13 +96,15 @@ export function DevisesTab({
         />
       ))}
 
-      <button
+      <Button
         type="button"
         onClick={handleAdd}
-        className="px-4 py-2 bg-blue-500 text-white rounded"
+        variant="outline"
+        className="gap-1.5"
       >
+        <Plus className="size-4" />
         Add Devise
-      </button>
+      </Button>
     </div>
   );
 }
@@ -129,118 +147,129 @@ function DeviseCard({
   };
 
   return (
-    <div className="border p-4 rounded space-y-3">
-      <span className="font-medium">Devisee</span>
-      <HeirReferenceForm
-        control={control}
-        setValue={setValue}
-        watch={watch}
-        fieldPath={`${basePath}.devisee`}
-        persons={persons}
-        allowStranger
-        errors={errors}
-      />
+    <Card>
+      <CardContent className="space-y-4">
+        <span className="text-sm font-semibold leading-none">Devisee</span>
+        <HeirReferenceForm
+          control={control}
+          setValue={setValue}
+          watch={watch}
+          fieldPath={`${basePath}.devisee`}
+          persons={persons}
+          allowStranger
+          errors={errors}
+        />
 
-      <label>
-        <span>Devise Type</span>
-        <select
-          value={variant}
-          onChange={(e) => handleVariantChange(e.target.value)}
-        >
-          {DEVISE_SPEC_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      {variant === 'SpecificProperty' && (
-        <label>
-          <span>Property Identifier</span>
-          <input
-            type="text"
-            value={
-              property && 'SpecificProperty' in property
-                ? (property as any).SpecificProperty
-                : ''
-            }
-            onChange={(e) =>
-              setValue(`${basePath}.property` as any, {
-                SpecificProperty: e.target.value,
-              })
-            }
-          />
+        <label className="block space-y-2">
+          <span className="text-sm font-medium leading-none">Devise Type</span>
+          <select
+            value={variant}
+            onChange={(e) => handleVariantChange(e.target.value)}
+            className={selectClassName}
+          >
+            {DEVISE_SPEC_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
         </label>
-      )}
 
-      {variant === 'FractionalInterest' && (
-        <div className="space-y-2">
-          <label>
-            <span>Property Identifier</span>
-            <input
+        {variant === 'SpecificProperty' && (
+          <label className="block space-y-2">
+            <span className="text-sm font-medium leading-none">Property Identifier</span>
+            <Input
               type="text"
               value={
-                property && 'FractionalInterest' in property
-                  ? (property as any).FractionalInterest[0]
+                property && 'SpecificProperty' in property
+                  ? (property as any).SpecificProperty
                   : ''
               }
-              onChange={(e) => {
-                const current =
-                  property && 'FractionalInterest' in property
-                    ? (property as any).FractionalInterest
-                    : ['', '1/2'];
+              onChange={(e) =>
                 setValue(`${basePath}.property` as any, {
-                  FractionalInterest: [e.target.value, current[1]],
-                });
-              }}
-            />
-          </label>
-          <label>
-            <span>Fractional Share</span>
-            <input
-              type="text"
-              value={
-                property && 'FractionalInterest' in property
-                  ? (property as any).FractionalInterest[1]
-                  : '1/2'
+                  SpecificProperty: e.target.value,
+                })
               }
-              onChange={(e) => {
-                const current =
-                  property && 'FractionalInterest' in property
-                    ? (property as any).FractionalInterest
-                    : ['', '1/2'];
-                setValue(`${basePath}.property` as any, {
-                  FractionalInterest: [current[0], e.target.value],
-                });
-              }}
             />
           </label>
-        </div>
-      )}
+        )}
 
-      <label className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          checked={!!isPreferred}
-          onChange={(e) =>
-            setValue(`${basePath}.is_preferred` as any, e.target.checked)
-          }
-        />
-        Preferred Devise
-      </label>
+        {variant === 'FractionalInterest' && (
+          <div className="space-y-3">
+            <label className="block space-y-2">
+              <span className="text-sm font-medium leading-none">Property Identifier</span>
+              <Input
+                type="text"
+                value={
+                  property && 'FractionalInterest' in property
+                    ? (property as any).FractionalInterest[0]
+                    : ''
+                }
+                onChange={(e) => {
+                  const current =
+                    property && 'FractionalInterest' in property
+                      ? (property as any).FractionalInterest
+                      : ['', '1/2'];
+                  setValue(`${basePath}.property` as any, {
+                    FractionalInterest: [e.target.value, current[1]],
+                  });
+                }}
+              />
+            </label>
+            <label className="block space-y-2">
+              <span className="text-sm font-medium leading-none">Fractional Share</span>
+              <Input
+                type="text"
+                value={
+                  property && 'FractionalInterest' in property
+                    ? (property as any).FractionalInterest[1]
+                    : '1/2'
+                }
+                onChange={(e) => {
+                  const current =
+                    property && 'FractionalInterest' in property
+                      ? (property as any).FractionalInterest
+                      : ['', '1/2'];
+                  setValue(`${basePath}.property` as any, {
+                    FractionalInterest: [current[0], e.target.value],
+                  });
+                }}
+              />
+            </label>
+          </div>
+        )}
 
-      <ConditionsSection control={control} basePath={basePath} />
-      <SubstitutesSection control={control} basePath={basePath} />
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            checked={!!isPreferred}
+            onChange={(e) =>
+              setValue(`${basePath}.is_preferred` as any, e.target.checked)
+            }
+            className="h-4 w-4 rounded border-input accent-[hsl(var(--primary))]"
+          />
+          Preferred Devise
+        </label>
 
-      <button
-        type="button"
-        onClick={onRemove}
-        className="text-red-500 text-sm"
-      >
-        Remove
-      </button>
-    </div>
+        <Separator />
+
+        <ConditionsSection control={control} basePath={basePath} />
+        <SubstitutesSection control={control} basePath={basePath} />
+
+        <Separator />
+
+        <Button
+          type="button"
+          onClick={onRemove}
+          variant="ghost"
+          size="sm"
+          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+        >
+          <Trash2 className="size-3.5" />
+          Remove
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -257,19 +286,19 @@ function ConditionsSection({
   });
 
   return (
-    <div className="border-t pt-2">
-      <span className="font-medium text-sm">Conditions</span>
+    <div className="space-y-2">
+      <span className="text-sm font-medium leading-none">Conditions</span>
       {fields.map((field, i) => (
-        <div key={field.id} className="ml-4 mt-1 flex gap-2 items-center">
-          <span className="text-sm">
+        <div key={field.id} className="ml-4 flex gap-2 items-center">
+          <span className="text-sm text-muted-foreground">
             {(field as any).condition_type || 'Suspensive'}
           </span>
-          <button type="button" onClick={() => remove(i)} className="text-red-400 text-xs">
+          <Button type="button" onClick={() => remove(i)} variant="ghost" size="xs" className="text-destructive hover:text-destructive hover:bg-destructive/10">
             Remove
-          </button>
+          </Button>
         </div>
       ))}
-      <button
+      <Button
         type="button"
         onClick={() =>
           append({
@@ -278,10 +307,12 @@ function ConditionsSection({
             status: 'Pending',
           } as any)
         }
-        className="text-blue-500 text-sm mt-1"
+        variant="link"
+        size="sm"
+        className="px-0"
       >
         Add Condition
-      </button>
+      </Button>
     </div>
   );
 }
@@ -299,19 +330,19 @@ function SubstitutesSection({
   });
 
   return (
-    <div className="border-t pt-2">
-      <span className="font-medium text-sm">Substitutes</span>
+    <div className="space-y-2">
+      <span className="text-sm font-medium leading-none">Substitutes</span>
       {fields.map((field, i) => (
-        <div key={field.id} className="ml-4 mt-1 flex gap-2 items-center">
-          <span className="text-sm">
+        <div key={field.id} className="ml-4 flex gap-2 items-center">
+          <span className="text-sm text-muted-foreground">
             {(field as any).substitution_type || 'Simple'}
           </span>
-          <button type="button" onClick={() => remove(i)} className="text-red-400 text-xs">
+          <Button type="button" onClick={() => remove(i)} variant="ghost" size="xs" className="text-destructive hover:text-destructive hover:bg-destructive/10">
             Remove
-          </button>
+          </Button>
         </div>
       ))}
-      <button
+      <Button
         type="button"
         onClick={() =>
           append({
@@ -325,10 +356,12 @@ function SubstitutesSection({
             triggers: ['Predecease', 'Renunciation', 'Incapacity'],
           } as any)
         }
-        className="text-blue-500 text-sm mt-1"
+        variant="link"
+        size="sm"
+        className="px-0"
       >
         Add Substitute
-      </button>
+      </Button>
     </div>
   );
 }

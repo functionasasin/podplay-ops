@@ -1,9 +1,13 @@
 import React, { useRef } from 'react';
 import { useFieldArray } from 'react-hook-form';
 import type { Control, UseFormSetValue, UseFormWatch } from 'react-hook-form';
+import { Plus, Trash2 } from 'lucide-react';
 import type { EngineInput, Person } from '../../types';
 import { HeirReferenceForm } from './HeirReferenceForm';
 import { ShareSpecForm } from './ShareSpecForm';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 
 export interface InstitutionsTabProps {
   control: Control<EngineInput>;
@@ -57,7 +61,7 @@ export function InstitutionsTab({
   return (
     <div data-testid="institutions-tab" className="space-y-4">
       {fields.length === 0 && (
-        <p className="text-gray-500">None added yet</p>
+        <p className="text-muted-foreground text-sm py-4 text-center">None added yet</p>
       )}
 
       {fields.map((field, index) => (
@@ -73,13 +77,15 @@ export function InstitutionsTab({
         />
       ))}
 
-      <button
+      <Button
         type="button"
         onClick={handleAdd}
-        className="px-4 py-2 bg-blue-500 text-white rounded"
+        variant="outline"
+        className="gap-1.5"
       >
+        <Plus className="size-4" />
         Add Institution
-      </button>
+      </Button>
     </div>
   );
 }
@@ -105,61 +111,71 @@ function InstitutionCard({
   const isResiduary = watch(`${basePath}.is_residuary` as any);
 
   return (
-    <div className="border p-4 rounded space-y-3">
-      <HeirReferenceForm
-        control={control}
-        setValue={setValue}
-        watch={watch}
-        fieldPath={`${basePath}.heir`}
-        persons={persons}
-        allowStranger
-        errors={errors}
-      />
-
-      <label className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          checked={!!isResiduary}
-          onChange={(e) =>
-            setValue(`${basePath}.is_residuary` as any, e.target.checked)
-          }
-        />
-        Residuary Heir
-      </label>
-
-      {!isResiduary && (
-        <ShareSpecForm
+    <Card>
+      <CardContent className="space-y-4">
+        <HeirReferenceForm
           control={control}
           setValue={setValue}
           watch={watch}
-          fieldPath={`${basePath}.share`}
+          fieldPath={`${basePath}.heir`}
+          persons={persons}
+          allowStranger
           errors={errors}
         />
-      )}
 
-      <ConditionsSection
-        control={control}
-        setValue={setValue}
-        watch={watch}
-        basePath={basePath}
-      />
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            checked={!!isResiduary}
+            onChange={(e) =>
+              setValue(`${basePath}.is_residuary` as any, e.target.checked)
+            }
+            className="h-4 w-4 rounded border-input accent-[hsl(var(--primary))]"
+          />
+          Residuary Heir
+        </label>
 
-      <SubstitutesSection
-        control={control}
-        setValue={setValue}
-        watch={watch}
-        basePath={basePath}
-        persons={persons}
-      />
+        {!isResiduary && (
+          <ShareSpecForm
+            control={control}
+            setValue={setValue}
+            watch={watch}
+            fieldPath={`${basePath}.share`}
+            errors={errors}
+          />
+        )}
 
-      <button
-        type="button"
-        onClick={onRemove}
-        className="text-red-500 text-sm"
-      >
-        Remove
-      </button>
-    </div>
+        <Separator />
+
+        <ConditionsSection
+          control={control}
+          setValue={setValue}
+          watch={watch}
+          basePath={basePath}
+        />
+
+        <SubstitutesSection
+          control={control}
+          setValue={setValue}
+          watch={watch}
+          basePath={basePath}
+          persons={persons}
+        />
+
+        <Separator />
+
+        <Button
+          type="button"
+          onClick={onRemove}
+          variant="ghost"
+          size="sm"
+          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+        >
+          <Trash2 className="size-3.5" />
+          Remove
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -178,25 +194,27 @@ function ConditionsSection({
   });
 
   return (
-    <div className="border-t pt-2">
-      <span className="font-medium text-sm">Conditions</span>
+    <div className="space-y-2">
+      <span className="text-sm font-medium leading-none">Conditions</span>
 
       {fields.map((field, i) => (
-        <div key={field.id} className="ml-4 mt-1 flex gap-2 items-center">
-          <span className="text-sm">
+        <div key={field.id} className="ml-4 flex gap-2 items-center">
+          <span className="text-sm text-muted-foreground">
             {(field as any).condition_type || 'Suspensive'}
           </span>
-          <button
+          <Button
             type="button"
             onClick={() => remove(i)}
-            className="text-red-400 text-xs"
+            variant="ghost"
+            size="xs"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10"
           >
             Remove
-          </button>
+          </Button>
         </div>
       ))}
 
-      <button
+      <Button
         type="button"
         onClick={() =>
           append({
@@ -205,10 +223,12 @@ function ConditionsSection({
             status: 'Pending',
           } as any)
         }
-        className="text-blue-500 text-sm mt-1"
+        variant="link"
+        size="sm"
+        className="px-0"
       >
         Add Condition
-      </button>
+      </Button>
     </div>
   );
 }
@@ -230,25 +250,27 @@ function SubstitutesSection({
   });
 
   return (
-    <div className="border-t pt-2">
-      <span className="font-medium text-sm">Substitutes</span>
+    <div className="space-y-2">
+      <span className="text-sm font-medium leading-none">Substitutes</span>
 
       {fields.map((field, i) => (
-        <div key={field.id} className="ml-4 mt-1 flex gap-2 items-center">
-          <span className="text-sm">
+        <div key={field.id} className="ml-4 flex gap-2 items-center">
+          <span className="text-sm text-muted-foreground">
             {(field as any).substitution_type || 'Simple'}
           </span>
-          <button
+          <Button
             type="button"
             onClick={() => remove(i)}
-            className="text-red-400 text-xs"
+            variant="ghost"
+            size="xs"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10"
           >
             Remove
-          </button>
+          </Button>
         </div>
       ))}
 
-      <button
+      <Button
         type="button"
         onClick={() =>
           append({
@@ -262,10 +284,12 @@ function SubstitutesSection({
             triggers: ['Predecease', 'Renunciation', 'Incapacity'],
           } as any)
         }
-        className="text-blue-500 text-sm mt-1"
+        variant="link"
+        size="sm"
+        className="px-0"
       >
         Add Substitute
-      </button>
+      </Button>
     </div>
   );
 }

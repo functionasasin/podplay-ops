@@ -2,6 +2,8 @@ import React, { useEffect, useRef } from 'react';
 import type { Control, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 import type { EngineInput, Person } from '../../types';
 import { PersonPicker } from '../shared/PersonPicker';
+import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
 
 export interface HeirReferenceFormProps {
   control: Control<EngineInput>;
@@ -47,7 +49,7 @@ export function HeirReferenceForm({
   const nameIsReadonly = !allowStranger && !!personId;
 
   return (
-    <div data-testid="heir-reference-form">
+    <div data-testid="heir-reference-form" className="space-y-3">
       <PersonPicker<EngineInput>
         name={`${fieldPath}.person_id` as any}
         label="Heir"
@@ -60,19 +62,20 @@ export function HeirReferenceForm({
         allowStranger={allowStranger}
       />
 
-      <label>
-        <span>Heir Name</span>
-        <input
+      <label className="block space-y-2">
+        <span className="text-sm font-medium leading-none">Heir Name</span>
+        <Input
           type="text"
           value={name ?? ''}
           onChange={(e) =>
             setValue(`${fieldPath}.name` as any, e.target.value)
           }
           readOnly={nameIsReadonly}
+          className={cn(nameIsReadonly && 'bg-muted')}
         />
       </label>
 
-      <label className="flex items-center gap-2">
+      <label className="flex items-center gap-2 text-sm cursor-pointer">
         <input
           type="checkbox"
           checked={!!isCollective}
@@ -85,14 +88,15 @@ export function HeirReferenceForm({
               setValue(`${fieldPath}.class_designation` as any, null);
             }
           }}
+          className="h-4 w-4 rounded border-input accent-[hsl(var(--primary))]"
         />
         Collective Gift
       </label>
 
       {isCollective && (
-        <label>
-          <span>Class Description</span>
-          <input
+        <label className="block space-y-2">
+          <span className="text-sm font-medium leading-none">Class Description</span>
+          <Input
             type="text"
             value={
               watch(`${fieldPath}.class_designation` as any) ?? ''
