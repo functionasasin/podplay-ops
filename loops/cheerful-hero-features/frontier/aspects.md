@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total aspects**: 36
-- **Analyzed**: 22
-- **Pending**: 14
-- **Convergence**: 61%
+- **Analyzed**: 23
+- **Pending**: 13
+- **Convergence**: 64%
 
 ## Wave 1: Feature Category Research + Discovery
 
@@ -45,7 +45,7 @@ gets added here as an unchecked aspect._
 - [x] grin — DTC e-commerce; deep Shopify/Klaviyo/DocuSign integrations; AI copilot "Gia"; first-party creator pool only; $2.5K+/mo
 - [x] upfluence — Performance marketing + affiliate; ecommerce revenue attribution; $2K–$3.5K+/mo
 - [x] aspire — Creator communities + ambassador programs; hybrid SaaS + managed; long-term relationship focus
-- [ ] later-influence — Fmr Mavrck; end-to-end automation; Shopify gifting; Mavely affiliate links; 10M profiles; $28.5K+/yr
+- [x] later-influence — Fmr Mavrck; end-to-end automation; Shopify gifting; Mavely affiliate links; 10M profiles; $28.5K+/yr
 - [ ] neoreach — Predictive analytics; 40+ search filters; automation; custom list import
 - [ ] influencer-hero — All-in-one; fraud detection + centralized dashboard; e-commerce focus
 
