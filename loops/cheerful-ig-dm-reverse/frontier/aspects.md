@@ -5,9 +5,9 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 20 |
-| Analyzed | 2 |
-| Pending | 18 |
-| Convergence | 10% |
+| Analyzed | 3 |
+| Pending | 17 |
+| Convergence | 15% |
 
 ---
 
@@ -15,7 +15,7 @@
 
 - [x] `meta-instagram-messaging-api` — Instagram Messaging API (Messenger Platform): webhook events, 24-hour window, permissions, app review
 - [x] `meta-graph-api-conversations` — Graph API conversation endpoints: capabilities vs Messaging API, deprecation status
-- [ ] `meta-webhooks-realtime` — Meta webhook infrastructure: event types, delivery guarantees, verification, payloads
+- [x] `meta-webhooks-realtime` — Meta webhook infrastructure: event types, delivery guarantees, verification, payloads
 - [ ] `third-party-manychat` — ManyChat as DM relay: API, webhooks, pricing, limitations
 - [ ] `third-party-messagebird-bird` — Bird (MessageBird) Instagram channel: API, webhooks, pricing
 - [ ] `third-party-composio` — Composio Instagram integration: leverage existing Cheerful integration
