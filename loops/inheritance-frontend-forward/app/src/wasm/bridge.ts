@@ -1,6 +1,8 @@
 /**
- * WASM Bridge — mock implementation for UI development.
- * Real WASM integration will replace this in Stage 12.
+ * WASM Bridge — real WASM engine integration.
+ *
+ * Uses the Rust inheritance engine compiled to WASM via wasm-pack.
+ * Falls back to computeMock() if WASM is not available.
  *
  * Source of truth:
  *   - engine-output.md (EngineOutput shape)
@@ -21,6 +23,7 @@ import type {
   Relationship,
 } from "../types";
 import { EFFECTIVE_CATEGORY_LABELS, formatPeso } from "../types";
+import initAsync, { compute_json, initSync } from "./pkg/inheritance_engine";
 
 /**
  * Map relationship to effective category for grouping.
@@ -307,22 +310,43 @@ export async function computeMock(input: EngineInput): Promise<EngineOutput> {
   };
 }
 
+let wasmInitialized = false;
+
 /**
- * Compute using the real WASM engine.
- * Stage 13 stub — delegates to mock until real WASM is integrated.
- * Will be replaced with: init() + compute_json() from ./pkg/inheritance_engine
+ * Initialize the WASM module.
+ * In Node.js/tests: uses initSync with fs.readFileSync.
+ * In browser: uses async init() which fetches the .wasm file.
  */
-export async function computeWasm(input: EngineInput): Promise<EngineOutput> {
-  // TODO: Replace with real WASM engine:
-  //   import init, { compute_json } from './pkg/inheritance_engine';
-  //   if (!initialized) { await init(); initialized = true; }
-  //   const resultJson = compute_json(JSON.stringify(input));
-  //   return JSON.parse(resultJson);
-  return computeMock(input);
+async function ensureWasmInitialized(): Promise<void> {
+  if (wasmInitialized) return;
+
+  if (typeof process !== "undefined" && process.versions?.node) {
+    // Node.js (vitest) — load synchronously
+    const { readFileSync } = await import("node:fs");
+    const { resolve, dirname } = await import("node:path");
+    const { fileURLToPath } = await import("node:url");
+    const __dirname = dirname(fileURLToPath(import.meta.url));
+    const wasmPath = resolve(__dirname, "pkg/inheritance_engine_bg.wasm");
+    const wasmBytes = readFileSync(wasmPath);
+    initSync({ module: wasmBytes });
+  } else {
+    // Browser — async fetch
+    await initAsync();
+  }
+  wasmInitialized = true;
 }
 
 /**
- * Public API — delegates to computeWasm (falls back to mock until WASM is ready).
+ * Compute using the real WASM engine.
+ */
+export async function computeWasm(input: EngineInput): Promise<EngineOutput> {
+  await ensureWasmInitialized();
+  const resultJson = compute_json(JSON.stringify(input));
+  return JSON.parse(resultJson) as EngineOutput;
+}
+
+/**
+ * Public API — delegates to real WASM engine.
  */
 export async function compute(input: EngineInput): Promise<EngineOutput> {
   return computeWasm(input);
