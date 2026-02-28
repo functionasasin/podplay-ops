@@ -189,7 +189,8 @@ describe('DonationCard', () => {
           }}
         />
       );
-      expect(screen.getByText(/Recipient/i)).toBeInTheDocument();
+      // Use anchored regex to match only PersonPicker label "Recipient", not toggle "Recipient is Not in Family Tree"
+      expect(screen.getByText(/^Recipient$/)).toBeInTheDocument();
     });
 
     it('hides PersonPicker when recipient_is_stranger is true', () => {
