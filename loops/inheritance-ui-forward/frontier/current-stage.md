@@ -1,7 +1,7 @@
-# Current Stage: 1 (Design System Setup)
+# Current Stage: 2 (Shared Form Components)
 
 ## Goal
-Install shadcn/ui, configure Navy + Gold palette, add Inter font, install common components.
+Restyle MoneyInput, DateInput, FractionInput, PersonPicker, and EnumSelect to use shadcn/ui primitives.
 
 ## Test Results (updated by loop)
 ```
@@ -9,4 +9,4 @@ Install shadcn/ui, configure Navy + Gold palette, add Inter font, install common
 ```
 
 ## Work Log
-(no iterations yet)
+- Stage 1 completed: shadcn/ui installed, Navy + Gold palette configured, Inter + Lora fonts, 13 components added. All 1033 tests pass.

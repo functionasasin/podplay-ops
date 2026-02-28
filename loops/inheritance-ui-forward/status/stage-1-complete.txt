@@ -1,0 +1,28 @@
+Stage 1: Design System Setup — COMPLETE
+
+Date: 2026-02-28
+
+What was done:
+- Configured tsconfig.json and vite.config.ts with @/ path aliases (required by shadcn/ui)
+- Initialized shadcn/ui (New York style, Tailwind v4, CSS variables)
+- Replaced default neutral palette with Navy + Gold design tokens:
+  - Primary: #1e3a5f (deep navy)
+  - Accent: #c5a44e (warm gold)
+  - Success: #166534 (forest green)
+  - Warning: #92400e (amber brown)
+  - Destructive: #991b1b (deep red)
+  - Surface/Background: #f8fafc (slate-50)
+  - Border: #e2e8f0 (slate-200)
+  - Text: #0f172a (slate-900)
+  - Muted: #64748b (slate-500)
+- Added custom success and warning color tokens (not in default shadcn)
+- Installed Inter Variable font (@fontsource-variable/inter) as base sans-serif
+- Installed Lora Variable font (@fontsource-variable/lora) as serif for legal headings
+- Configured font-sans and font-serif CSS custom properties in theme
+- Installed 13 shadcn/ui components: button, card, input, label, select, badge, table, separator, accordion, tabs, dialog, alert, tooltip
+- Created src/lib/utils.ts with cn() utility
+
+Verification:
+- All 36 test files pass (1033 tests)
+- Vite build succeeds
+- No regressions introduced
