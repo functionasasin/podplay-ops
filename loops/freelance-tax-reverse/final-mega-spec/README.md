@@ -3,7 +3,7 @@
 This directory contains the complete product specification. A forward loop can build the entire platform by reading ONLY this directory.
 
 **Last updated:** 2026-02-28
-**Convergence status:** IN PROGRESS (1/49 aspects analyzed)
+**Convergence status:** IN PROGRESS (4/49 aspects analyzed)
 
 ---
 
@@ -14,12 +14,12 @@ This directory contains the complete product specification. A forward loop can b
 | File | Status | Description |
 |------|--------|-------------|
 | [domain/legal-basis.md](domain/legal-basis.md) | COMPLETE | All statutes, regulations, circulars, forms cited; effective dates; scope boundaries |
-| domain/computation-rules.md | PENDING | Every formula, algorithm, threshold — fully enumerated |
+| [domain/computation-rules.md](domain/computation-rules.md) | PARTIAL | CR-001 to CR-014: both rate tables (2018-2022 + 2023+), 3 path formulas, OSD base clarification, 8% eligibility, quarterly cumulative method, CWT mechanics, installment rule, breakeven analysis |
 | domain/decision-trees.md | PENDING | Every branching path, fully expanded to leaf nodes |
-| domain/lookup-tables/graduated-rate-table.md | PENDING | TRAIN graduated rate tables (both schedules), all 6 brackets |
+| domain/lookup-tables/graduated-rate-table.md | PARTIAL | Both rate schedules included in computation-rules.md; dedicated file pending |
 | domain/lookup-tables/percentage-tax-rates.md | PENDING | Section 116 rates by period |
 | domain/lookup-tables/filing-deadlines.md | PENDING | All BIR deadlines by form and period |
-| domain/scenarios.md | PENDING | Every possible input scenario, coded |
+| [domain/scenarios.md](domain/scenarios.md) | PARTIAL | 30+ scenario codes in 7 groups; to be expanded in scenario-enumeration aspect |
 | domain/edge-cases.md | PENDING | Every edge case, numbered, with resolution |
 | domain/manual-review-flags.md | PENDING | Items the engine cannot decide (flags for user) |
 
