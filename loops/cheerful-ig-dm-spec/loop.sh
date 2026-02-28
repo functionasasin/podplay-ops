@@ -18,7 +18,16 @@ PAUSED_FILE="$WORK_DIR/status/paused.txt"
 MAX_ITERATIONS=${1:-40}
 SLEEP_BETWEEN=5
 
+REPO_ROOT="$(cd "$WORK_DIR/../.." && pwd)"
+
 cd "$WORK_DIR"
+
+# Ensure the cheerful submodule is initialized (CI may do shallow clones)
+CHEERFUL_DIR="$REPO_ROOT/projects/cheerful"
+if [ ! -f "$CHEERFUL_DIR/.git" ] && [ ! -d "$CHEERFUL_DIR/.git" ]; then
+    echo "Initializing cheerful submodule..."
+    git -C "$REPO_ROOT" submodule update --init --depth 1 projects/cheerful
+fi
 
 if [ ! -f "$PROMPT_FILE" ]; then
     echo "ERROR: PROMPT.md not found at $PROMPT_FILE"
