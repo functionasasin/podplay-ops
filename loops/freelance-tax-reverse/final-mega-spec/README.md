@@ -3,7 +3,7 @@
 This directory contains the complete product specification. A forward loop can build the entire platform by reading ONLY this directory.
 
 **Last updated:** 2026-02-28
-**Convergence status:** IN PROGRESS (7/53 aspects analyzed)
+**Convergence status:** IN PROGRESS (8/53 aspects analyzed)
 
 ---
 
@@ -14,13 +14,14 @@ This directory contains the complete product specification. A forward loop can b
 | File | Status | Description |
 |------|--------|-------------|
 | [domain/legal-basis.md](domain/legal-basis.md) | UPDATED | All statutes, regulations, circulars, forms cited; effective dates; scope boundaries. Expanded with full EOPT Act (RA 11976) provisions (14 key changes for self-employed, penalty tables, Micro/Small/Medium/Large classification), CREATE Act (RA 11534) Section 116 rate history and retroactivity, and all implementing regulations RR 3-2024 through RR 8-2024, RMC 60-2024, RMC 67-2021. |
-| [domain/computation-rules.md](domain/computation-rules.md) | PARTIAL | CR-001 to CR-014: both rate tables (2018-2022 + 2023+), 3 path formulas, OSD base clarification, 8% eligibility, quarterly cumulative method, CWT mechanics, installment rule, breakeven analysis |
+| [domain/computation-rules.md](domain/computation-rules.md) | PARTIAL | CR-001 to CR-018: both rate tables (2018-2022 + 2023+), 3 path formulas, OSD base clarification, 8% eligibility, quarterly cumulative method, CWT mechanics, installment rule, breakeven analysis, EOPT taxpayer tier classification (CR-015), surcharge computation (CR-016), interest computation (CR-017), total penalty computation (CR-018) |
 | domain/decision-trees.md | PENDING | Every branching path, fully expanded to leaf nodes |
 | domain/lookup-tables/graduated-rate-table.md | PARTIAL | Both rate schedules included in computation-rules.md; dedicated file pending |
 | domain/lookup-tables/percentage-tax-rates.md | PENDING | Section 116 rates by period |
 | domain/lookup-tables/filing-deadlines.md | PENDING | All BIR deadlines by form and period |
+| [domain/lookup-tables/taxpayer-classification-tiers.md](domain/lookup-tables/taxpayer-classification-tiers.md) | COMPLETE | 7 tables: tier thresholds, filing obligations by tier, penalty/interest rates by tier, classification rules and procedures, ₱3M triple coincidence boundary rules, EOPT filing simplifications, uniform deadline schedule |
 | [domain/scenarios.md](domain/scenarios.md) | PARTIAL | 30+ scenario codes in 7 groups; to be expanded in scenario-enumeration aspect |
-| domain/edge-cases.md | PENDING | Every edge case, numbered, with resolution |
+| [domain/edge-cases.md](domain/edge-cases.md) | INITIAL | EC-T01 through EC-T09 (taxpayer tier edge cases); additional groups (EC-E, EC-M, EC-Q, EC-C, EC-F) to be added in Wave 2 edge-cases aspect |
 | domain/manual-review-flags.md | PENDING | Items the engine cannot decide (flags for user) |
 
 ### engine/ — How the tool computes
