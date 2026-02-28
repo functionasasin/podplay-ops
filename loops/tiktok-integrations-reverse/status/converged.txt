@@ -1,0 +1,20 @@
+CONVERGED — 2026-02-28
+
+All 23 aspects analyzed. Convergence: 100%.
+
+Final outputs:
+  analysis/synthesis/tiktok-integration-atlas.md   — master reference (all APIs, auth, rate limits, data availability, permanent gaps)
+  analysis/synthesis/cheerful-applicability-matrix.md — per-workflow applicability, 4 tiers, dependency graph, 7-sprint roadmap
+
+Key findings:
+  - TikTok has 3 separate auth systems (Developer Platform / Business+Marketing / Shop Open API) — no token cross-compatibility
+  - Research API is commercial-use-prohibited — not viable for Cheerful
+  - No TikTok API supports cold DM outreach — email remains the only automatable channel
+  - Apify clockworks actors provide the fastest path to creator discovery + content tracking (Tier 0)
+  - Login Kit OAuth is the key unlock for Display API enrichment + Spark Ads eligibility (Tier 2)
+  - Spark Ads is the highest-value unique TikTok feature for Cheerful's clients — organic-to-paid amplification
+  - creator_post table requires a 2-phase migration (add platform+platform_post_id+platform_metrics, then drop instagram_post_id)
+  - creator table, campaign_creator.social_media_handles, and campaign.discovery_config already support TikTok with no migration
+  - 8 new capabilities TikTok adds that Instagram cannot: hashtag UGC scanning, sound tracking, duet/stitch attribution,
+    Spark Ads amplification, TikTok Shop affiliate tracking, GMV as discovery signal, share rate + save rate metrics
+  - Total implementation effort: ~13.5 weeks across 4 tiers, 16 new files, 21 modified files, 5 new Temporal workflows
