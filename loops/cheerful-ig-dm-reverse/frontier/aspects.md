@@ -5,9 +5,9 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 20 |
-| Analyzed | 8 |
-| Pending | 12 |
-| Convergence | 40% |
+| Analyzed | 9 |
+| Pending | 11 |
+| Convergence | 45% |
 
 ---
 
@@ -24,7 +24,7 @@
 
 ## Wave 2: Internal Landscape — Cheerful's Current Architecture
 
-- [ ] `current-thread-model` — Thread identity, state machine, campaign/creator linking: what's email-specific vs channel-agnostic
+- [x] `current-thread-model` — Thread identity, state machine, campaign/creator linking: what's email-specific vs channel-agnostic
 - [ ] `current-email-pipeline` — Inbound email pipeline end-to-end: abstraction boundaries
 - [ ] `current-creator-identity` — Creator identification, Instagram handle storage, DM sender → creator matching
 - [ ] `current-inbox-ui` — Mail inbox UI: what's hardcoded to email vs abstract, changes for DM threads
