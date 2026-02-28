@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 91
-- Analyzed: 77
-- Pending: 14
-- Convergence: 85%
+- Analyzed: 78
+- Pending: 13
+- Convergence: 86%
 
 ---
 
@@ -110,7 +110,7 @@
 ### By NCR City/Municipality
 - [x] Manila (city proper) — validate all routes within/through Manila
 - [x] Quezon City — validate all routes within/through QC
-- [ ] Makati — validate all routes within/through Makati
+- [x] Makati — validate all routes within/through Makati
 - [ ] Pasig — validate all routes within/through Pasig
 - [ ] Taguig/BGC — validate all routes within/through Taguig
 - [ ] Mandaluyong — validate all routes within/through Mandaluyong
