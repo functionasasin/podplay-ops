@@ -91,14 +91,15 @@ loops:
     status: active
     created: 2026-02-25
   cheerful-reverse:
-    description: "Distill Cheerful codebase → ultra-comprehensive modular rebuild spec with full user stories"
+    description: "Distill Cheerful codebase + production usage data → ultra-comprehensive modular rebuild spec with full user stories"
     type: reverse
     schedule: "*/30 * * * *"
-    max_iterations: 40
+    max_iterations: 50
     timeout_minutes: 30
     status: converged
     created: 2026-02-25
     converged_at: "2026-02-26"
+    wave4_added: "2026-02-27"
   mm-transit-routes-reverse:
     description: "Research all Metro Manila jeepney/bus/UV Express routes → comprehensive GTFS database"
     type: reverse
@@ -124,3 +125,11 @@ loops:
     timeout_minutes: 30
     status: active
     created: 2026-02-27
+  cheerful-ig-dm-reverse:
+    description: "Explore all approaches for Instagram DM inbound support → exhaustive options catalog (API methods, architecture patterns, trade-offs)"
+    type: reverse
+    schedule: "*/30 * * * *"
+    max_iterations: 40
+    timeout_minutes: 30
+    status: active
+    created: 2026-02-28
