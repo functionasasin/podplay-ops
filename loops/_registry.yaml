@@ -157,3 +157,11 @@ loops:
     timeout_minutes: 30
     status: active
     created: 2026-02-28
+  inheritance-wasm-forward:
+    description: "Wire real Rust WASM engine into frontend, replacing mock bridge + fixing type conformance"
+    type: forward
+    schedule: "*/30 * * * *"
+    max_iterations: 30
+    timeout_minutes: 30
+    status: active
+    created: 2026-02-28

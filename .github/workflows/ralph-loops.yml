@@ -84,10 +84,15 @@ jobs:
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Install psql (for DB-querying loops)
+        if: steps.check.outputs.skip != 'true'
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
       - name: Run one iteration
         if: steps.check.outputs.skip != 'true'
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CHEERFUL_DATABASE_URL: ${{ secrets.CHEERFUL_DATABASE_URL }}
         run: |
           cd "loops/${{ matrix.loop }}"
           # Run one iteration — CI is the outer loop
