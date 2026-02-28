@@ -1,10 +1,10 @@
 # Frontier — Inheritance Premium Features
 
 ## Statistics
-- Total aspects discovered: 31
-- Analyzed: 4
+- Total aspects discovered: 32
+- Analyzed: 5
 - Pending: 27
-- Convergence: 13%
+- Convergence: 16%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -14,7 +14,7 @@
 - [x] pdf-export-patterns — Research react-pdf / @react-pdf/renderer patterns, legal document PDF generation in React. Analyze legal report templates and formatting conventions.
 - [x] auth-persistence-patterns — Research Supabase auth + RLS, case management data models, auto-save patterns for legal tools.
 - [x] crm-law-firm-patterns — Research law firm CRM tools (Clio, PracticePanther, MyCase). Client management UX patterns for small/solo PH law practices.
-- [ ] ph-practice-workflow — Research the complete PH estate settlement process: client intake → computation → BIR filing → court petition → distribution. Map where software touches each stage.
+- [x] ph-practice-workflow — Research the complete PH estate settlement process: client intake → computation → BIR filing → court petition → distribution. Map where software touches each stage.
 - [ ] competitive-landscape — Search 8+ queries for estate planning calculators, succession tools, PH legal tech, estate tax SaaS. Deep-dive top 5 competitors with feature matrices.
 - [ ] legal-doc-formatting — Research PH court document formatting standards, BIR submission requirements, legal report conventions, Philippine legal citation format (NCC articles).
 - [ ] estate-tax-integration — Read converged estate-tax-engine-spec.md. Map InheritanceShare output → estate tax engine input. Identify data model bridges, combined UI flow, combined PDF output.
@@ -41,6 +41,7 @@
 - [ ] spec-conflict-check — Search existing clients/heirs before new case intake. PH bar ethics require conflict-of-interest screening. Depends: spec-client-profiles. [Discovered: crm-law-firm-patterns]
 - [ ] spec-intake-form — Guided digital intake capturing decedent info, family composition, asset summary; pre-populates case wizard. Depends: spec-client-profiles. [Discovered: crm-law-firm-patterns]
 - [ ] spec-family-tree-visualizer — Interactive heir tree diagram (SVG/canvas) showing succession relationships, separate from distribution table. Reads: codebase-audit. [Discovered: crm-law-firm-patterns]
+- [ ] spec-deadline-tracker — Per-case deadline timeline: BIR 1-year filing deadline, 3-week newspaper publication window, eCAR receipt, RD filing window. Color-coded status (green/yellow/red). Depends: spec-auth-persistence. [Discovered: ph-practice-workflow]
 
 ### Wave 3: Synthesis (depends: ALL Wave 2 complete)
 
