@@ -5,15 +5,15 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 20 |
-| Analyzed | 0 |
-| Pending | 20 |
-| Convergence | 0% |
+| Analyzed | 1 |
+| Pending | 19 |
+| Convergence | 5% |
 
 ---
 
 ## Wave 1: External Landscape — Instagram DM Access Methods
 
-- [ ] `meta-instagram-messaging-api` — Instagram Messaging API (Messenger Platform): webhook events, 24-hour window, permissions, app review
+- [x] `meta-instagram-messaging-api` — Instagram Messaging API (Messenger Platform): webhook events, 24-hour window, permissions, app review
 - [ ] `meta-graph-api-conversations` — Graph API conversation endpoints: capabilities vs Messaging API, deprecation status
 - [ ] `meta-webhooks-realtime` — Meta webhook infrastructure: event types, delivery guarantees, verification, payloads
 - [ ] `third-party-manychat` — ManyChat as DM relay: API, webhooks, pricing, limitations
