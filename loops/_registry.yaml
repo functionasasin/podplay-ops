@@ -141,8 +141,9 @@ loops:
     schedule: "*/30 * * * *"
     max_iterations: 40
     timeout_minutes: 30
-    status: active
+    status: converged
     created: 2026-02-28
+    converged_at: "2026-02-28"
   daily-interview-practice:
     description: "Analyze Anthropic SWE interview → progressive daily 30-min practice curriculum delivered via OpenClaw"
     type: reverse
