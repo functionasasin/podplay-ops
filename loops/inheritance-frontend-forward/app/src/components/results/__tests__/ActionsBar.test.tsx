@@ -197,10 +197,6 @@ describe('results > ActionsBar', () => {
   describe('copy narratives', () => {
     it('copies narratives with bold stripped', async () => {
       const user = userEvent.setup();
-      const writeText = vi.fn().mockResolvedValue(undefined);
-      Object.assign(navigator, {
-        clipboard: { writeText },
-      });
 
       const input = createInput();
       const output = createOutput({
@@ -215,6 +211,7 @@ describe('results > ActionsBar', () => {
       });
 
       renderActions({ input, output });
+      const writeText = vi.spyOn(navigator.clipboard, 'writeText');
       await user.click(screen.getByRole('button', { name: /Copy Narratives/i }));
 
       expect(writeText).toHaveBeenCalled();
@@ -224,14 +221,11 @@ describe('results > ActionsBar', () => {
       // Should contain narrative text
       expect(copiedText).toContain('Juan Cruz');
       expect(copiedText).toContain('₱5,000,000');
+      writeText.mockRestore();
     });
 
     it('includes header with decedent name and date_of_death', async () => {
       const user = userEvent.setup();
-      const writeText = vi.fn().mockResolvedValue(undefined);
-      Object.assign(navigator, {
-        clipboard: { writeText },
-      });
 
       const input = createInput({
         decedent: {
@@ -250,19 +244,17 @@ describe('results > ActionsBar', () => {
       });
 
       renderActions({ input });
+      const writeText = vi.spyOn(navigator.clipboard, 'writeText');
       await user.click(screen.getByRole('button', { name: /Copy Narratives/i }));
 
       const copiedText = writeText.mock.calls[0][0];
       expect(copiedText).toContain('Don Pedro');
       expect(copiedText).toContain('2026-01-15');
+      writeText.mockRestore();
     });
 
     it('joins multiple narratives with double newline', async () => {
       const user = userEvent.setup();
-      const writeText = vi.fn().mockResolvedValue(undefined);
-      Object.assign(navigator, {
-        clipboard: { writeText },
-      });
 
       renderActions({
         output: createOutput({
@@ -272,6 +264,7 @@ describe('results > ActionsBar', () => {
           ],
         }),
       });
+      const writeText = vi.spyOn(navigator.clipboard, 'writeText');
       await user.click(screen.getByRole('button', { name: /Copy Narratives/i }));
 
       const copiedText = writeText.mock.calls[0][0];
@@ -279,6 +272,7 @@ describe('results > ActionsBar', () => {
       expect(copiedText).toContain('Second narrative.');
       // Narratives should be separated
       expect(copiedText).toMatch(/First narrative\.\n\nSecond narrative\./);
+      writeText.mockRestore();
     });
   });
 });

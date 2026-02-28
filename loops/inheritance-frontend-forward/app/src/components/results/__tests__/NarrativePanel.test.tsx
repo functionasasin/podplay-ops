@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 import { NarrativePanel } from '../NarrativePanel';
@@ -70,7 +70,9 @@ describe('results > NarrativePanel', () => {
           createNarrative({ heir_category_label: 'legitimate child' }),
         ],
       });
-      expect(screen.getByText(/legitimate child/i)).toBeInTheDocument();
+      // Scope to the narrative item header button to avoid matching narrative body text
+      const header = screen.getByRole('button', { name: /Juan Cruz/i });
+      expect(within(header).getByText(/legitimate child/i)).toBeInTheDocument();
     });
   });
 
@@ -82,8 +84,14 @@ describe('results > NarrativePanel', () => {
           createNarrative({ heir_id: 'sp', heir_name: 'Maria Cruz', text: '**Maria Cruz** receives **₱2,500,000**.' }),
         ],
       });
-      // First narrative text should be visible
-      expect(screen.getByText(/Juan Cruz.*receives/i)).toBeInTheDocument();
+      // First narrative text should be visible — text is split across <strong> elements
+      // so use a function matcher on the content container
+      expect(screen.getByText((_content, element) =>
+        element?.tagName === 'DIV' &&
+        element.classList.contains('text-gray-700') &&
+        /Juan Cruz/.test(element.textContent ?? '') &&
+        /receives/.test(element.textContent ?? ''),
+      )).toBeInTheDocument();
     });
 
     it('second and subsequent narrative items are collapsed by default', async () => {
@@ -149,11 +157,6 @@ describe('results > NarrativePanel', () => {
 
     it('copy button copies plain text with bold stripped', async () => {
       const user = userEvent.setup();
-      // Mock clipboard
-      const writeText = vi.fn().mockResolvedValue(undefined);
-      Object.assign(navigator, {
-        clipboard: { writeText },
-      });
 
       renderPanel({
         narratives: [
@@ -166,6 +169,8 @@ describe('results > NarrativePanel', () => {
         dateOfDeath: '2026-01-15',
       });
 
+      // Spy on the userEvent-managed clipboard stub
+      const writeText = vi.spyOn(navigator.clipboard, 'writeText');
       await user.click(screen.getByRole('button', { name: /Copy.*Narratives/i }));
       expect(writeText).toHaveBeenCalled();
 
@@ -177,6 +182,7 @@ describe('results > NarrativePanel', () => {
       // Should contain the narrative text content
       expect(copiedText).toContain('Juan Cruz');
       expect(copiedText).toContain('₱2,500,000');
+      writeText.mockRestore();
     });
   });
 
