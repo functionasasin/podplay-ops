@@ -1,0 +1,57 @@
+{
+  "source": "blog",
+  "retrieved_date": "2026-02-28",
+  "notes": "Compiled from TopGear.com.ph (Jun 2023), Spot.ph (May 2023), KMC Solutions (May 2025), Zoomer.ph (Sep 2023), Sakay.ph route explorer (DOTR:R_SAKAY_MPUJ_2176, DOTR:R_SAKAY_2018_PUJ_541). E-jeepney launched May 2023 by LTFRB + Ayala Land Inc. No discontinuation reported as of 2025.",
+  "routes": [
+    {
+      "route_id": "DOTR:R_SAKAY_MPUJ_2176",
+      "route_name": "Makati Loop E-Jeepney (Love Bus) — One Ayala–Circuit Makati",
+      "mode": "jeepney",
+      "origin": "One Ayala Terminal (EDSA/Ayala Ave, Makati)",
+      "destination": "Circuit Makati (Gallery Drive, Kalayaan Ave)",
+      "key_stops": [
+        "One Ayala (ground floor, P2P lane, in front of Lawson)",
+        "Greenbelt 3",
+        "Saint Andrew the Apostle Parish Church",
+        "Ayala Triangle Gardens",
+        "Makati Medical Center",
+        "Century City Mall",
+        "Makati City Hall",
+        "Circuit Makati (Gallery Drive / Circuit Lane, inside mall)"
+      ],
+      "fare_min": 14,
+      "fare_max": 14,
+      "frequency_notes": "No published headway. Fleet described as 'limited'; long waits possible during peak. Weekdays 6AM-10PM, Weekends 8:30AM-12MN. One 2025 source lists 5AM-10PM daily (unverified update).",
+      "geometry_available": false,
+      "geometry_source": null,
+      "confidence": "high",
+      "notes": "Modern e-jeepney ('Love Bus' livery, light blue). LTFRB franchised; inaugurated May 24 2023 by LTFRB + Ayala Land Inc. Flat ₱14 fare, cash only. Route passes through Ayala Ave → Makati Ave → Kalayaan Ave. ~4km. Drop-offs allowed at intermediate stops. Referenced active in May 2025 commute guide."
+    },
+    {
+      "route_id": "DOTR:R_SAKAY_2018_PUJ_541",
+      "route_name": "Makati PUJ Loop (traditional jeepney)",
+      "mode": "jeepney",
+      "origin": "Kalayaan Ave / South Ave Intersection",
+      "destination": "A. Reyes Ave / JP Rizal Ave Intersection (circular loop)",
+      "key_stops": [
+        "Kalayaan Ave / South Ave Intersection",
+        "Century City (Kalayaan Ave)",
+        "Makati Ave / Hercules Intersection",
+        "Gil Puyat Ave / Makati Ave Intersection",
+        "Makati Ave / North Dr Intersection",
+        "Nicanor Garcia / Kalayaan Ave Intersection",
+        "Nicanor Garcia / Ascuncion Intersection",
+        "Pililla / JP Rizal Ave",
+        "Kakarong / JP Rizal Ave Intersection",
+        "A. Reyes Ave / JP Rizal Ave Intersection"
+      ],
+      "fare_min": 15.5,
+      "fare_max": 15.5,
+      "frequency_notes": "No published headway. Assumed frequent daytime service as a standard CBD loop. Schedule hours unknown.",
+      "geometry_available": false,
+      "geometry_source": null,
+      "confidence": "medium",
+      "notes": "Traditional PUJ (jeepney) loop in southern Makati CBD / Poblacion-adjacent area. Sakay.ph LTFRB Service Contracting route. Fare ₱15.50 per Sakay.ph. Operates Kalayaan Ave, Makati Ave, Nicanor Garcia, JP Rizal Ave corridor. Stop list from Sakay.ph route explorer; ordering/completeness not fully verified."
+    }
+  ]
+}
