@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 91
-- Analyzed: 74
-- Pending: 17
-- Convergence: 81%
+- Analyzed: 75
+- Pending: 16
+- Convergence: 82%
 
 ---
 
@@ -105,7 +105,7 @@
 - [x] Ortigas Avenue corridor — all routes from Pasig to Manila via Ortigas
 - [x] Shaw Boulevard corridor — all routes along Shaw from Mandaluyong to Pasig
 - [x] Rizal Avenue/Marikina corridor — routes through Caloocan, Malabon, into Marikina
-- [ ] Coastal/Roxas Boulevard corridor — all routes along Manila Bay coast
+- [x] Coastal/Roxas Boulevard corridor — all routes along Manila Bay coast
 
 ### By NCR City/Municipality
 - [ ] Manila (city proper) — validate all routes within/through Manila
