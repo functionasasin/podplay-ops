@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 91
-- Analyzed: 79
-- Pending: 12
-- Convergence: 87%
+- Analyzed: 80
+- Pending: 11
+- Convergence: 88%
 
 ---
 
@@ -112,7 +112,7 @@
 - [x] Quezon City — validate all routes within/through QC
 - [x] Makati — validate all routes within/through Makati
 - [x] Pasig — validate all routes within/through Pasig
-- [ ] Taguig/BGC — validate all routes within/through Taguig
+- [x] Taguig/BGC — validate all routes within/through Taguig
 - [ ] Mandaluyong — validate all routes within/through Mandaluyong
 - [ ] Caloocan — validate all routes within/through Caloocan
 - [ ] Las Piñas, Parañaque, Muntinlupa — validate southern Metro Manila routes
