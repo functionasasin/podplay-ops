@@ -1,0 +1,56 @@
+# Frontier — {{PRODUCT_NAME}}
+
+## Statistics
+- Total aspects discovered: 0
+- Analyzed: 0
+- Pending: 0
+- Convergence: 0%
+
+## Pending Aspects (ordered by dependency)
+
+### Wave 1: Domain Source Acquisition
+Fetch and cache primary domain knowledge sources.
+<!-- Replace these examples with your actual domain sources -->
+<!-- - [ ] fetch-primary-source-1 — Fetch and cache [source name] -->
+<!-- - [ ] fetch-primary-source-2 — Fetch and cache [source name] -->
+<!-- - [ ] fetch-reference-examples — Fetch real-world examples and edge cases -->
+
+### Wave 2: Domain Rule Extraction
+Depends on Wave 1 sources being cached.
+<!-- Replace these examples with your actual domain rules -->
+<!-- - [ ] rule-category-1 — Extract rules for [category] -->
+<!-- - [ ] rule-category-2 — Extract rules for [category] -->
+<!-- - [ ] edge-cases — Identify and document edge cases and ambiguities -->
+
+### Wave 3: Engine Design
+Depends on Wave 2 rule extraction.
+- [ ] data-model — Define all Rust types (structs, enums, field types) from extracted rules
+- [ ] computation-pipeline — Design ordered pipeline steps with input/output types per step
+- [ ] algorithms — Specify algorithms with exact arithmetic (BigRational fractions, integer centavos)
+- [ ] test-vectors — Write 15-20 test vectors with expected outputs covering all major scenarios
+- [ ] invariants — Define invariants that must hold for any valid input/output pair
+
+### Wave 4: Bridge Contract
+Depends on Wave 3 data model.
+- [ ] wasm-export-signature — Define exported function names, parameter types, return types
+- [ ] serde-wire-format — Document exact JSON serialization rules (booleans, numbers, nulls, enums, unknown fields)
+- [ ] error-contract — Specify error shapes returned by WASM functions
+- [ ] initialization-patterns — Document initSync vs init for Node.js vs browser
+
+### Wave 5: Frontend Data Model + UI Design
+Depends on Wave 3 data model and Wave 4 bridge contract.
+- [ ] typescript-types — Map every Rust struct/enum to TypeScript interface/union (exact field names)
+- [ ] zod-schemas — Write strict Zod schemas matching serde wire format (no coercion, null not undefined)
+- [ ] wizard-steps — Define form step structure, fields per step, conditional visibility
+- [ ] results-view — Define results display components and data mapping
+- [ ] shared-components — Identify reusable form widgets (money input, date input, enum select, etc.)
+- [ ] design-system — Choose palette, typography, component library, spacing, visual direction
+
+### Wave 6: Synthesis
+Depends on all previous waves.
+- [ ] spec-draft — Assemble all findings into docs/plans/{{SPEC_FILENAME}}.md
+- [ ] cross-layer-consistency — Verify field names, types, enums, nullability match across Rust ↔ JSON ↔ TypeScript ↔ Zod
+- [ ] spec-review — Self-review: can a developer build the entire product from this spec alone?
+
+## Recently Analyzed
+(Empty — loop hasn't started yet)

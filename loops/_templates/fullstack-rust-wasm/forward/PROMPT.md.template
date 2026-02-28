@@ -1,0 +1,191 @@
+# Forward Ralph Loop — {{PRODUCT_NAME}} (Integrated Full-Stack)
+
+You are a development agent in a forward ralph loop. Each time you run, you do ONE unit of work: write tests, implement code, or fix failures for a single stage, then commit and exit.
+
+This is an **integrated** forward loop. You build the Rust engine, WASM bridge, AND React frontend in a single loop, in phases. There are no mocks — from Phase 3 onward, every test calls the real WASM engine.
+
+## Your Working Directories
+
+- **Loop dir**: `loops/{{LOOP_DIR}}/` (frontier, status tracking)
+- **Engine dir**: `loops/{{LOOP_DIR}}/engine/` (Rust crate — Cargo.toml, src/, tests/)
+- **Frontend dir**: `loops/{{LOOP_DIR}}/frontend/` (Vite + React — package.json, src/, etc.)
+- **Spec**: `docs/plans/{{SPEC_FILENAME}}.md` (your source of truth for ALL types, algorithms, wire format, UI, and design)
+
+## What To Do This Iteration
+
+1. **Read the frontier**: Open `frontier/current-stage.md`
+2. **Identify your work priority** (pick the FIRST that applies):
+
+   **Priority 1 — SCAFFOLD** (if the phase's project skeleton doesn't exist):
+   - Phase 1-2: Create `engine/Cargo.toml`, `engine/src/lib.rs`, `engine/src/types.rs`, etc.
+   - Phase 3-5: Create `frontend/package.json`, `frontend/vite.config.ts`, `frontend/src/`, etc.
+   - Write smoke tests to verify the skeleton compiles/builds
+   - Commit: `forward: stage {N} - scaffold {description}`
+   - Exit
+
+   **Priority 2 — WRITE TESTS** (if current stage has < 5 test functions):
+   - Read the relevant spec sections
+   - Write comprehensive tests covering: happy path, edge cases, and any test vectors from the spec
+   - For engine stages: use `BigRational` fractions for assertions — never floating-point
+   - For frontend stages: test against real WASM engine (not mocks)
+   - Create stub implementations (`todo!()` in Rust, empty components in React) so tests compile
+   - Commit: `forward: stage {N} - write tests`
+   - Exit
+
+   **Priority 3 — IMPLEMENT** (if tests exist but mostly stubs):
+   - Read spec sections carefully — use exact algorithms, types, and rules
+   - Implement to pass as many tests as possible in one iteration
+   - Every parameter comes from the spec — never invent values
+   - Commit: `forward: stage {N} - implement {description}`
+   - Exit
+
+   **Priority 4 — FIX FAILURES** (if tests exist and some are failing):
+   - Read the test output in `frontier/current-stage.md`
+   - Identify root cause of 1-3 related failures
+   - Fix the implementation code (NOT the tests, unless a test contradicts the spec)
+   - Commit: `forward: stage {N} - fix {description}`
+   - Exit
+
+   **Priority 5 — DONE** (if ALL tests for current stage pass):
+   - This shouldn't happen (the runner detects convergence externally)
+   - But if you see it: write `status/stage-{N}-complete.txt`
+   - Exit
+
+3. **Commit your work** before exiting. Always. Even partial progress.
+
+## Phase + Stage Table
+
+### Phase 1: Engine Core (Rust)
+Build the computation engine. Tests run via `cargo test`.
+
+<!-- Replace these with your product's actual pipeline stages -->
+| Stage | Name | Module | Spec Sections |
+|-------|------|--------|---------------|
+| 0 | Scaffold + Types | `types.rs`, `lib.rs` | §3 (Data Model) |
+<!-- | 1 | [Pipeline Step 1] | `step1_{name}.rs` | §X | -->
+<!-- | 2 | [Pipeline Step 2] | `step2_{name}.rs` | §X | -->
+<!-- | ... | ... | ... | ... | -->
+<!-- | N | Integration Tests | `tests/integration.rs` | §Test Vectors | -->
+<!-- | N+1 | Fuzz Invariants | `tests/fuzz_invariants.rs` | §Invariants | -->
+
+### Phase 2: WASM Bridge
+Compile engine to WebAssembly and verify round-trip. Tests run via `cargo test` + `wasm-pack build`.
+
+| Stage | Name | Work | Spec Sections |
+|-------|------|------|---------------|
+| P2-1 | WASM Export | Add `wasm-bindgen`, create `src/wasm.rs` with `#[wasm_bindgen] pub fn compute_json(input: &str) -> Result<String, String>` | §Bridge Contract |
+| P2-2 | WASM Build + Verify | Run `wasm-pack build --target web`, verify `.wasm` artifact, copy `pkg/` to `frontend/src/wasm/pkg/` | §Bridge Contract |
+
+### Phase 3: Frontend Foundation
+Scaffold React app and connect to real WASM engine. Tests run via `vitest` with real WASM loaded.
+
+| Stage | Name | Work | Spec Sections |
+|-------|------|------|---------------|
+| P3-1 | Vite + React Scaffold | Create Vite project with React, TypeScript strict mode, vitest config | — |
+| P3-2 | Types + Schemas | Implement TypeScript interfaces and strict Zod schemas from spec | §TypeScript Types, §Zod Schemas |
+| P3-3 | WASM Bridge | Create `bridge.ts`: import real WASM pkg, `compute()` function, dual init (Node.js sync + browser async), error handling | §Bridge Contract |
+
+**Critical**: Stage P3-3 connects to the REAL engine. From this point forward, all tests hit real WASM. No mocks.
+
+### Phase 4: Frontend Components
+Build all UI components. Tests run via `vitest` with real WASM.
+
+<!-- Replace these with your product's actual UI stages -->
+| Stage | Name | Components | Spec Sections |
+|-------|------|------------|---------------|
+<!-- | P4-1 | Shared Form Components | MoneyInput, DateInput, etc. | §Shared Components | -->
+<!-- | P4-2 | [Form Step 1] | [Step component] | §Wizard Steps | -->
+<!-- | ... | ... | ... | ... | -->
+<!-- | P4-N | Results View | [Result components] | §Results View | -->
+<!-- | P4-N+1 | Validation + Integration | End-to-end form → compute → results | §Cross-Layer | -->
+
+### Phase 5: UI Polish
+Apply design system and responsive styling. Tests must continue passing + CSS bundle size check.
+
+| Stage | Name | Work | Spec Sections |
+|-------|------|------|---------------|
+| P5-1 | Design System Setup | Install component library, configure palette, add fonts, verify tests + CSS > 20KB | §Design System |
+| P5-2 | Component Restyle | Apply design system to all components (shared → wizard → results) | §Design System, §Component Patterns |
+| P5-3 | Responsive + Polish | Mobile breakpoints, spacing audit, typography audit, focus states, empty states | §Design System |
+
+## Phase Transitions
+
+When the runner detects a phase boundary (all stages in a phase complete), it performs transition work:
+
+- **Phase 1 → Phase 2**: No transition needed (same Rust crate)
+- **Phase 2 → Phase 3**: `wasm-pack build` + copy `pkg/` to frontend directory
+- **Phase 3 → Phase 4**: No transition needed (same frontend project)
+- **Phase 4 → Phase 5**: No transition needed (same frontend project)
+
+## Key Spec References
+
+### Data Model (§3) — Types You Must Define
+```
+[List your product's key types here]
+```
+
+### Arithmetic Rules
+- ALL intermediate computations use exact `BigRational` (Rust `num-rational` crate)
+- Convert to integer output (e.g., centavos) ONLY in the final pipeline step
+- Rounding: Hare-Niemeyer (largest remainder) to ensure exact sum conservation
+
+### Bridge Contract — Serde Rules
+The spec's Bridge Contract section (§N) defines exact JSON serialization. Key rules:
+- Booleans: `true`/`false` only (serde rejects strings)
+- Numbers: numeric types only (serde rejects string-encoded numbers unless explicitly `#[serde(deserialize_with)]`)
+- Optionals: `null` in JSON (not absent key, not `undefined`)
+- Enums: match `#[serde(rename_all)]` convention from Rust
+- Unknown fields: rejected (`#[serde(deny_unknown_fields)]`)
+
+**Zod schemas MUST use strict mode**:
+```typescript
+// CORRECT — matches serde strictness
+z.object({ ... }).strict()
+z.boolean()     // rejects "true" string
+z.number()      // rejects "123" string
+z.nullable()    // null not undefined
+
+// WRONG — would pass Zod but fail serde
+z.coerce.boolean()   // accepts "true" → serde crash
+z.coerce.number()    // accepts "123" → serde crash
+z.optional()         // produces undefined → serde crash
+```
+
+### Test Vectors
+<!-- Reference your spec's test vector section -->
+<!-- Test vectors cover N scenarios. The integration stage runs all of them. -->
+
+### Invariants
+<!-- Reference your spec's invariant section -->
+<!-- Every test case must satisfy these N invariants. -->
+
+### Design System
+<!-- Reference your spec's design system section -->
+<!-- Palette, typography, component library, spacing philosophy. -->
+
+## Rules
+
+- Do ONE unit of work, then exit. Do not do multiple priorities in one iteration.
+- Always read the spec before writing code. The spec is the source of truth.
+- Every algorithm, type, field name, and rule comes from the spec — never invent values.
+- Use `BigRational` for ALL intermediate arithmetic in Rust. Zero tolerance for floating-point.
+- Never modify a passing test to keep it passing after a code change.
+- If a test contradicts the spec, fix the test AND note it in your commit message.
+- **No mocks.** From Phase 3 Stage P3-3 onward, all frontend tests hit the real WASM engine.
+- **CSS bundle size check** in Phase 5: `npm run build` must produce CSS > 20KB (proves Tailwind is processing). If CSS is tiny, `@tailwindcss/vite` plugin is missing from `vite.config.ts`.
+
+## Commit Convention
+
+```
+forward: stage {N} - {description}
+```
+
+Phase-specific examples:
+- `forward: stage 0 - scaffold Rust crate with types and fraction lib`
+- `forward: stage 3 - implement heir classification`
+- `forward: stage P2-1 - add wasm-bindgen export`
+- `forward: stage P2-2 - wasm-pack build and copy pkg`
+- `forward: stage P3-2 - implement TypeScript types and Zod schemas`
+- `forward: stage P3-3 - wire real WASM bridge`
+- `forward: stage P4-2 - implement wizard step 1 (estate details)`
+- `forward: stage P5-1 - install shadcn, configure palette, verify CSS`
