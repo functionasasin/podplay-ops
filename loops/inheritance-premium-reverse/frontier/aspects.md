@@ -1,10 +1,10 @@
 # Frontier — Inheritance Premium Features
 
 ## Statistics
-- Total aspects discovered: 27
-- Analyzed: 2
+- Total aspects discovered: 28
+- Analyzed: 3
 - Pending: 25
-- Convergence: 7%
+- Convergence: 11%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -12,7 +12,7 @@
 
 - [x] codebase-audit — Mine existing frontend types, components, WASM bridge, and engine outputs. Catalog every computed field not rendered, every action not wired, every integration point available.
 - [x] pdf-export-patterns — Research react-pdf / @react-pdf/renderer patterns, legal document PDF generation in React. Analyze legal report templates and formatting conventions.
-- [ ] auth-persistence-patterns — Research Supabase auth + RLS, case management data models, auto-save patterns for legal tools.
+- [x] auth-persistence-patterns — Research Supabase auth + RLS, case management data models, auto-save patterns for legal tools.
 - [ ] crm-law-firm-patterns — Research law firm CRM tools (Clio, PracticePanther, MyCase). Client management UX patterns for small/solo PH law practices.
 - [ ] ph-practice-workflow — Research the complete PH estate settlement process: client intake → computation → BIR filing → court petition → distribution. Map where software touches each stage.
 - [ ] competitive-landscape — Search 8+ queries for estate planning calculators, succession tools, PH legal tech, estate tax SaaS. Deep-dive top 5 competitors with feature matrices.
@@ -37,6 +37,7 @@
 - [ ] spec-decedent-header — Add decedent name and date of death to ResultsHeader for professional report context. Reads: codebase-audit. [Discovered: codebase-audit]
 - [ ] spec-represents-display — Show "representing [deceased parent name]" label when inherits_by === Representation. Reads: codebase-audit. [Discovered: codebase-audit]
 - [ ] spec-donation-summary-in-results — Display the input donations list in results view (advances on inheritance transparency). Reads: codebase-audit. [Discovered: codebase-audit]
+- [ ] spec-case-export-zip — Export all case files (input JSON, output JSON, PDF) as a ZIP for offline archival. Legal obligation for PH lawyers. Depends: spec-pdf-export, spec-auth-persistence. [Discovered: auth-persistence-patterns]
 
 ### Wave 3: Synthesis (depends: ALL Wave 2 complete)
 
