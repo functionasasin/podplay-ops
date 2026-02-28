@@ -5,9 +5,9 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 25 |
-| Analyzed | 4 |
-| Pending | 21 |
-| Convergence | 16% |
+| Analyzed | 5 |
+| Pending | 20 |
+| Convergence | 20% |
 
 ---
 
@@ -17,7 +17,7 @@
 - [x] `audit-backend-services` — Read Gmail/SMTP/thread services: exact class names, method signatures, Candidate object, DI patterns
 - [x] `audit-temporal-workflows` — Read all workflow/activity files: exact names, branching logic, input/output types, coordinator elif pattern
 - [x] `audit-api-routes` — Read all relevant FastAPI routers: exact route paths, methods, request/response models, auth patterns
-- [ ] `audit-frontend-types` — Read TypeScript types: GmailThread, GmailMessage, API client functions, TanStack Query hooks
+- [x] `audit-frontend-types` — Read TypeScript types: GmailThread, GmailMessage, API client functions, TanStack Query hooks
 - [ ] `audit-frontend-components` — Read inbox components: mail list, mail display, reply composer, account settings, email-hardcoded logic
 - [ ] `audit-ai-drafting` — Read LLM/drafting services: exact methods, Langfuse prompt names, RAG tables, thread context XML generation
 
