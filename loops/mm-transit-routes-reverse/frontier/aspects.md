@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 91
-- Analyzed: 75
-- Pending: 16
-- Convergence: 82%
+- Analyzed: 76
+- Pending: 15
+- Convergence: 84%
 
 ---
 
@@ -108,7 +108,7 @@
 - [x] Coastal/Roxas Boulevard corridor — all routes along Manila Bay coast
 
 ### By NCR City/Municipality
-- [ ] Manila (city proper) — validate all routes within/through Manila
+- [x] Manila (city proper) — validate all routes within/through Manila
 - [ ] Quezon City — validate all routes within/through QC
 - [ ] Makati — validate all routes within/through Makati
 - [ ] Pasig — validate all routes within/through Pasig
