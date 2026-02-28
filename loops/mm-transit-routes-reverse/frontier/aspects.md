@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 91
-- Analyzed: 73
-- Pending: 18
-- Convergence: 80%
+- Analyzed: 74
+- Pending: 17
+- Convergence: 81%
 
 ---
 
@@ -104,7 +104,7 @@
 - [x] Marcos Highway corridor — all routes from Masinag to Cubao/Santolan
 - [x] Ortigas Avenue corridor — all routes from Pasig to Manila via Ortigas
 - [x] Shaw Boulevard corridor — all routes along Shaw from Mandaluyong to Pasig
-- [ ] Rizal Avenue/Marikina corridor — routes through Caloocan, Malabon, into Marikina
+- [x] Rizal Avenue/Marikina corridor — routes through Caloocan, Malabon, into Marikina
 - [ ] Coastal/Roxas Boulevard corridor — all routes along Manila Bay coast
 
 ### By NCR City/Municipality
