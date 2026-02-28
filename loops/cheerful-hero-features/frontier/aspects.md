@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total aspects**: 36
-- **Analyzed**: 24
-- **Pending**: 12
-- **Convergence**: 67%
+- **Analyzed**: 25
+- **Pending**: 11
+- **Convergence**: 69%
 
 ## Wave 1: Feature Category Research + Discovery
 
@@ -47,7 +47,7 @@ gets added here as an unchecked aspect._
 - [x] aspire — Creator communities + ambassador programs; hybrid SaaS + managed; long-term relationship focus
 - [x] later-influence — Fmr Mavrck; end-to-end automation; Shopify gifting; Mavely affiliate links; 10M profiles; $28.5K+/yr
 - [x] neoreach — Predictive analytics; 40+ search filters; automation; custom list import
-- [ ] influencer-hero — All-in-one; fraud detection + centralized dashboard; e-commerce focus
+- [x] influencer-hero — All-in-one; fraud detection + centralized dashboard; e-commerce focus
 
 ### SMB / Prosumer Tier
 
