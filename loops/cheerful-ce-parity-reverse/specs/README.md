@@ -2,13 +2,13 @@
 
 ## Status
 
-Wave 2 tool design complete. All 8 domains designed: Campaigns (31), Email (24), Creators (27), Integrations (18), Users & Team (13), Analytics (1), Search & Discovery (4), Workflows (8). Total: 126 tools (7 existing + 119 new). Wave 3 (full OpenAPI-level specs) pending.
+Wave 2 tool design complete. Wave 3 in progress. All 8 domains designed: Campaigns (31), Email (24), Creators (27), Integrations (18), Users & Team (13), Analytics (1), Search & Discovery (4), Workflows (8). Total: 126 tools (7 existing + 119 new). **Wave 3 progress**: Campaigns CRUD (6 tools) fully specified with OpenAPI-level detail.
 
 ## Domains
 
 | Domain | Spec File | Existing Tools | New Tools | Total | Status |
 |--------|-----------|---------------|-----------|-------|--------|
-| Campaigns | `campaigns.md` | 1 | 30 | 31 | Wave 2 complete |
+| Campaigns | `campaigns.md` | 1 | 30 | 31 | Wave 3: CRUD complete (6/31 tools fully specified) |
 | Email | `email.md` | 3 | 21 | 24 | Wave 2 complete |
 | Creators | `creators.md` | 3 | 24 | 27 | Wave 2 complete |
 | Integrations | `integrations.md` | 0 | 18 | 18 | Wave 2 complete |

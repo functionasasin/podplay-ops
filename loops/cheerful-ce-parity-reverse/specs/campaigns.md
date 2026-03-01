@@ -3,13 +3,13 @@
 **Domain**: Campaigns
 **Spec file**: `specs/campaigns.md`
 **Wave 2 status**: Tool design complete
-**Wave 3 status**: Pending (full OpenAPI-level specs)
+**Wave 3 status**: In progress — CRUD section complete (w3-campaigns-crud)
 
 ---
 
 ## Table of Contents
 
-1. [Campaign Core CRUD](#campaign-core-crud) (6 tools)
+1. [Campaign Core CRUD](#campaign-core-crud) (6 tools) — **Wave 3 COMPLETE**
 2. [Campaign Draft / Wizard](#campaign-draft--wizard) (5 tools)
 3. [Campaign Recipients](#campaign-recipients) (4 tools)
 4. [Campaign Senders](#campaign-senders) (2 tools)
@@ -27,6 +27,89 @@
 
 ---
 
+## Enums (Verified from Source)
+
+### CampaignType (`src/models/database/campaign.py` lines 22-27)
+
+| Enum Value | String Value |
+|------------|-------------|
+| `PAID_PROMOTION` | `"paid_promotion"` |
+| `CREATOR` | `"creator"` |
+| `GIFTING` | `"gifting"` |
+| `SALES` | `"sales"` |
+| `OTHER` | `"other"` |
+
+### CampaignStatus (`src/models/database/campaign.py` lines 30-34)
+
+| Enum Value | String Value |
+|------------|-------------|
+| `ACTIVE` | `"active"` |
+| `PAUSED` | `"paused"` |
+| `DRAFT` | `"draft"` |
+| `COMPLETED` | `"completed"` |
+
+### CampaignOutboxQueueStatus (`src/models/database/campaign.py` lines 309-314)
+
+| Enum Value | String Value |
+|------------|-------------|
+| `PENDING` | `"pending"` |
+| `PROCESSING` | `"processing"` |
+| `SENT` | `"sent"` |
+| `FAILED` | `"failed"` |
+| `CANCELLED` | `"cancelled"` |
+
+---
+
+## Shared Sub-Schemas (Campaign Domain)
+
+### FollowUpTemplate (`src/models/api/campaign.py` lines 34-69)
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `index` | integer | yes | `ge=0` | 0-based sequence position (0=first follow-up, 1=second, etc.) |
+| `body_template` | string | yes | `min_length=1` | Email body template with `{placeholders}` for personalization. Available placeholders: `{name}`, `{email}`, any custom_fields keys |
+| `hours_since_last_email` | integer | yes | `gt=0` | Hours to wait after previous email in sequence. Cumulative: follow-up 0 waits N hours after initial, follow-up 1 waits N hours after follow-up 0, etc. |
+
+**Validation**: Indices in the array must be sequential 0-based integers with no gaps or duplicates. Max 10 follow-up templates per campaign.
+
+### DiscoveryConfig (`src/models/api/campaign.py` lines 72-94)
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `seed_profiles` | string[] | no | `[]` | Instagram handles to find lookalike creators for |
+| `search_keywords` | string[] | no | `[]` | Keywords to search for creators |
+| `follower_min` | integer | no | `1000` | Minimum follower count filter |
+| `follower_max` | integer | no | `100000` | Maximum follower count filter |
+| `platform` | string | no | `"instagram"` | Platform to search on |
+
+### CampaignSenderCreate
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `gmail_account_id` | uuid | conditional | Gmail account ID. Exactly one of `gmail_account_id` or `smtp_account_id` must be provided. |
+| `smtp_account_id` | uuid | conditional | SMTP account ID. Exactly one of `gmail_account_id` or `smtp_account_id` must be provided. |
+
+**Validation**: `validate_exactly_one_account_type` — providing both or neither raises `ValueError`.
+
+### CampaignRecipientCreate
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `email` | EmailStr | yes | — | Validated email format |
+| `name` | string | no | `null` | Recipient display name |
+| `custom_fields` | object | no | `{}` | Key-value pairs for template merge tags |
+
+### CampaignSenderDetailResponse
+
+| Field | Type | Nullable | Description |
+|-------|------|----------|-------------|
+| `id` | uuid | no | Sender record ID |
+| `sender_email` | string | no | Email address of the sender |
+| `thread_count` | integer | no | Number of threads for this sender in the campaign |
+| `account_name` | string | no | Derived from email (local part before @) |
+
+---
+
 ## Campaign Core CRUD
 
 ### `cheerful_list_campaigns`
@@ -37,25 +120,173 @@
 
 **Maps to**: `GET /api/service/campaigns`
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: authenticated (returns only user's own campaigns).
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: authenticated (returns user's own campaigns + campaigns they are assigned to via `campaign_member_assignment`).
 
-**Current implementation gaps** (to be addressed in Wave 3):
-- Existing tool takes NO parameters — `ListCampaignsInput` is an empty model
-- Service route filters to only ACTIVE/PAUSED — no DRAFT or COMPLETED campaigns
-- Response includes `status` and `slack_channel_id` but XML formatter drops them (only outputs id, name, type, gmail_account_id, created_at)
-- Main API endpoint supports `include_stats` and `campaign_ids` params — not exposed in service route
+**Current implementation (bugs/gaps)**:
+- `ListCampaignsInput` is an empty model — tool takes zero user-facing parameters
+- Service route (`GET /api/service/campaigns`) accepts only `user_id` query param
+- Service route hardcodes filter to `ACTIVE` and `PAUSED` only — no DRAFT or COMPLETED campaigns returned
+- `ServiceCampaignResponse` returns 6 fields: `id` (str), `name`, `campaign_type`, `status`, `slack_channel_id`, `created_at`
+- XML formatter (`_fmt_campaign`) reads `campaign.get("type")` but backend returns `campaign_type` — **always falls back to "unknown"**
+- XML formatter reads `gmail_account_id` which doesn't exist in `ServiceCampaignResponse` — **always empty string**
+- XML formatter drops `status` and `slack_channel_id` from output
+- Main API endpoint supports `include_stats`, `campaign_ids` — not exposed in service route
+- Main API includes team-accessible campaigns (via `CampaignMemberAssignmentRepository.get_accessible_campaign_ids`) — service route uses `get_by_user_id` which is owner-only
 
-**Proposed parameters**:
+**Parameters** (proposed — requires service route update):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| include_stats | boolean | no | false | Include per-campaign stats (sent_count, thread_count, pending_count, failed_count, total_recipients) |
-| statuses | string[] | no | ["active", "paused"] | Filter by status. Values: "active", "paused", "draft", "completed" |
-| campaign_ids | uuid[] | no | — | Filter to specific campaign IDs |
+| include_stats | boolean | no | `false` | Include per-campaign stats: `sent_count`, `thread_count`, `pending_count`, `failed_count`, `total_recipients`. Stats come from outbox queue aggregation + unified recipient count + campaign thread count. |
+| statuses | string[] | no | `["active", "paused"]` | Filter by campaign status. Valid values: `"active"`, `"paused"`, `"draft"`, `"completed"`. Pass all four to get all campaigns. |
+| campaign_ids | uuid[] | no | `null` | Filter to specific campaign IDs. Results are intersected with user's accessible campaigns (owned + assigned). |
 
-**Returns**: Array of campaign objects with id, name, campaign_type, status, slack_channel_id, created_at, and optionally stats.
+**Parameter Validation Rules**:
+- `statuses` values must each be one of: `"active"`, `"paused"`, `"draft"`, `"completed"`. Invalid values return 422 Unprocessable Entity.
+- `campaign_ids` must be valid UUID format. Invalid UUIDs return 422 Unprocessable Entity.
 
-**Service route changes needed**: Update `GET /api/service/campaigns` to accept `include_stats`, `statuses[]`, `campaign_ids[]` query params. Remove hardcoded ACTIVE/PAUSED filter.
+**Return Schema**:
+```json
+[
+  {
+    "id": "uuid — Campaign ID",
+    "user_id": "uuid — Campaign owner's user ID",
+    "product_id": "uuid | null — Primary product ID",
+    "product_ids": ["uuid — Additional product IDs (from campaign_product junction table)"],
+    "name": "string — Campaign name",
+    "campaign_type": "string — One of: paid_promotion, creator, gifting, sales, other",
+    "status": "string — One of: active, paused, draft, completed",
+    "is_external": "boolean — Whether campaign is external",
+    "automation_level": "string | null — Automation level setting",
+    "image_url": "string | null — Campaign image URL",
+    "brand_logo_url": "string | null — Brand logo URL (from brand table via brand_id FK)",
+    "brand_name": "string | null — Brand name (from brand table via brand_id FK)",
+    "subject_template": "string — Email subject template with {merge_tags}",
+    "body_template": "string — Email body template with {merge_tags}",
+    "agent_name_for_llm": "string — Agent display name for AI drafting (default: empty string)",
+    "rules_for_llm": "string — Rules/constraints for AI drafting (default: empty string)",
+    "goal_for_llm": "string — Campaign goal for AI drafting context (default: empty string)",
+    "frequently_asked_questions_for_llm": "list[dict] | null — FAQ entries for AI drafting",
+    "sample_emails_for_llm": "dict | null — Sample email data for AI tone matching",
+    "is_follow_up_enabled": "boolean — Whether automated follow-ups are enabled",
+    "follow_up_gap_in_days": "integer — Days between follow-ups (default: 3)",
+    "max_follow_ups": "integer — Maximum number of follow-ups (default: 3)",
+    "follow_up_templates": "list[FollowUpTemplate] | null — Follow-up email templates",
+    "is_lookalike_suggestions_enabled": "boolean — Whether lookalike creator suggestions are enabled",
+    "post_tracking_enabled": "boolean — Whether post tracking is enabled (default: false)",
+    "discovery_enabled": "boolean — Whether auto-discovery is enabled (default: false)",
+    "discovery_config": "dict | null — Auto-discovery configuration object",
+    "slack_channel_id": "string | null — Slack channel ID for notifications",
+    "google_sheet_url": "string | null — Google Sheet URL for recipient import",
+    "google_sheet_tab_name": "string | null — Sheet tab name",
+    "google_sheet_data_instructions": "string | null — Instructions for sheet data parsing",
+    "google_sheet_columns_to_skip": "string[] — Columns to exclude from import (default: [])",
+    "google_sheet_error": "string | null — Last sheet validation error message",
+    "google_sheet_error_at": "datetime | null — Timestamp of last sheet validation error",
+    "recipient_emails": ["string — Email addresses of all campaign recipients"],
+    "sender_emails": ["string — Email addresses of all campaign senders"],
+    "created_at": "datetime — ISO 8601 creation timestamp",
+    "updated_at": "datetime — ISO 8601 last update timestamp",
+    "sent_count": "integer | null — Outbox entries with status=sent (only when include_stats=true)",
+    "thread_count": "integer | null — CampaignThread records count (only when include_stats=true)",
+    "pending_count": "integer | null — Outbox entries with status=pending (only when include_stats=true)",
+    "failed_count": "integer | null — Outbox entries with status=failed (only when include_stats=true)",
+    "total_recipients": "integer | null — Unified participant count (only when include_stats=true)",
+    "sender_details": "null — Not populated on list endpoint (only on get-by-ID)"
+  }
+]
+```
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Invalid status values | "value is not a valid enumeration member..." | 422 |
+| Invalid UUID format in campaign_ids | "value is not a valid uuid" | 422 |
+
+**Pagination**: No pagination — returns all matching campaigns. The main API list endpoint has no limit/offset parameters.
+
+**Example Request**:
+```
+cheerful_list_campaigns()
+cheerful_list_campaigns(include_stats=true)
+cheerful_list_campaigns(statuses=["active", "draft"], include_stats=true)
+cheerful_list_campaigns(campaign_ids=["550e8400-e29b-41d4-a716-446655440000"])
+```
+
+**Example Response** (with `include_stats=true`):
+```json
+[
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "user_id": "83a3177e-0307-4e5f-ae4e-4bc823db56e9",
+    "product_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "product_ids": ["a1b2c3d4-e5f6-7890-abcd-ef1234567890"],
+    "name": "Summer Gifting 2026",
+    "campaign_type": "gifting",
+    "status": "active",
+    "is_external": false,
+    "automation_level": null,
+    "image_url": null,
+    "brand_logo_url": "https://cdn.brandfetch.io/example.png",
+    "brand_name": "Example Brand",
+    "subject_template": "Hi {name}, free product from Example Brand!",
+    "body_template": "Hey {name},\n\nWe love your content and would like to send you...",
+    "agent_name_for_llm": "Sarah",
+    "rules_for_llm": "Keep it casual and friendly. Don't mention competitors.",
+    "goal_for_llm": "Get creators to accept a free product for an Instagram post",
+    "frequently_asked_questions_for_llm": [{"q": "What sizes?", "a": "S, M, L, XL"}],
+    "sample_emails_for_llm": {"reply_example": "Thanks so much! I'd love to try it..."},
+    "is_follow_up_enabled": true,
+    "follow_up_gap_in_days": 3,
+    "max_follow_ups": 2,
+    "follow_up_templates": [
+      {"index": 0, "body_template": "Hi {name}, just following up...", "hours_since_last_email": 72}
+    ],
+    "is_lookalike_suggestions_enabled": true,
+    "post_tracking_enabled": false,
+    "discovery_enabled": false,
+    "discovery_config": null,
+    "slack_channel_id": "C0123456789",
+    "google_sheet_url": null,
+    "google_sheet_tab_name": null,
+    "google_sheet_data_instructions": null,
+    "google_sheet_columns_to_skip": [],
+    "google_sheet_error": null,
+    "google_sheet_error_at": null,
+    "recipient_emails": ["creator1@example.com", "creator2@example.com"],
+    "sender_emails": ["outreach@example.com"],
+    "created_at": "2026-01-15T10:30:00Z",
+    "updated_at": "2026-02-20T14:45:00Z",
+    "sent_count": 45,
+    "thread_count": 42,
+    "pending_count": 5,
+    "failed_count": 2,
+    "total_recipients": 50,
+    "sender_details": null
+  }
+]
+```
+
+**Slack Formatting Notes**:
+- Default (no stats): Present as a numbered list: `1. Summer Gifting 2026 (gifting, active) — created Jan 15`
+- With stats: Add inline stats: `1. Summer Gifting 2026 (gifting, active) — 45 sent, 5 pending, 2 failed, 50 recipients`
+- If >10 campaigns, summarize by status: "12 campaigns: 8 active, 2 paused, 1 draft, 1 completed"
+- Include campaign IDs in a code block for easy reference
+
+**Edge Cases**:
+- User with no campaigns: Returns empty array `[]`
+- Team member access: Returns campaigns owned by user + campaigns assigned to user via `campaign_member_assignment`
+- `campaign_ids` with IDs user can't access: Those IDs are silently filtered out (intersection with accessible IDs)
+- Stats for campaign with no outbox entries: `sent_count=0`, `pending_count=0`, `failed_count=0`; `total_recipients` comes from unified participant count (independent of outbox)
+
+**Service Route Changes Needed**:
+1. Update `GET /api/service/campaigns` to accept `include_stats` (bool), `statuses` (string[]), `campaign_ids` (uuid[]) query params
+2. Replace `repo.get_by_user_id(user_id)` with `CampaignMemberAssignmentRepository.get_accessible_campaign_ids(user_id)` for team access support
+3. Remove Python-level ACTIVE/PAUSED filter; use `statuses` param instead
+4. Return full `CampaignResponse` instead of `ServiceCampaignResponse` (6 fields → full model)
+5. Fix XML formatter: read `campaign_type` not `type`; remove `gmail_account_id`; add `status`, `slack_channel_id`
 
 ---
 
@@ -63,22 +294,179 @@
 
 **Status**: NEW
 
-**Purpose**: Get a single campaign by ID with full details and optional sender breakdown.
+**Purpose**: Get a single campaign by ID with full details and optional per-sender thread count breakdown.
 
 **Maps to**: `GET /api/service/campaigns/{campaign_id}` (new service route needed; main route: `GET /campaigns/{campaign_id}`)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner or assigned team member (via `campaign_member_assignment`).
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: owner or assigned team member (verified via `CampaignMemberAssignmentRepository.can_access_campaign(user_id, campaign_id)`).
 
 **Parameters**:
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| campaign_id | uuid | yes | — | Campaign ID |
-| include_sender_details | boolean | no | false | Include per-sender thread counts |
+| campaign_id | uuid | yes | — | Campaign ID to retrieve |
+| include_sender_details | boolean | no | `false` | When `true`, includes `sender_details` array with per-sender thread counts and account names |
 
-**Returns**: Full campaign object including all configuration fields (name, campaign_type, status, is_external, automation_level, subject_template, body_template, LLM config fields, follow-up config, discovery config, Google Sheet config, cc_emails, slack_channel_id, image_url, created_at, updated_at). When `include_sender_details=true`, includes sender array with per-sender thread_count.
+**Parameter Validation Rules**:
+- `campaign_id` must be a valid UUID. Invalid format returns 422 Unprocessable Entity.
 
-**Error responses**: Campaign not found (404), access denied (403).
+**Return Schema**:
+```json
+{
+  "id": "uuid — Campaign ID",
+  "user_id": "uuid — Campaign owner's user ID",
+  "product_id": "uuid | null — Primary product ID (null for external campaigns or when no product set)",
+  "product_ids": ["uuid — All associated product IDs from campaign_product junction table"],
+  "name": "string — Campaign name",
+  "campaign_type": "string — One of: paid_promotion, creator, gifting, sales, other",
+  "status": "string — One of: active, paused, draft, completed",
+  "is_external": "boolean — Whether campaign is external (no product/recipients required)",
+  "automation_level": "string | null — Automation level setting",
+  "image_url": "string | null — Campaign image URL",
+  "brand_logo_url": "string | null — Brand logo URL (resolved from brand table via campaign.brand_id)",
+  "brand_name": "string | null — Brand name (resolved from brand table via campaign.brand_id)",
+  "subject_template": "string — Email subject template with {merge_tags}",
+  "body_template": "string — Email body template with {merge_tags}",
+  "agent_name_for_llm": "string — Agent display name for AI drafting",
+  "rules_for_llm": "string — Rules/constraints for AI drafting",
+  "goal_for_llm": "string — Campaign goal for AI drafting context",
+  "frequently_asked_questions_for_llm": "list[dict] | null — FAQ entries for AI drafting",
+  "sample_emails_for_llm": "dict | null — Sample email data for AI tone matching",
+  "is_follow_up_enabled": "boolean — Whether automated follow-ups are enabled",
+  "follow_up_gap_in_days": "integer — Days between follow-ups",
+  "max_follow_ups": "integer — Maximum number of follow-ups",
+  "follow_up_templates": "list[FollowUpTemplate] | null — Validated via model_validate on read",
+  "is_lookalike_suggestions_enabled": "boolean",
+  "post_tracking_enabled": "boolean",
+  "discovery_enabled": "boolean",
+  "discovery_config": "dict | null — Raw dict (not DiscoveryConfig model) on response",
+  "slack_channel_id": "string | null",
+  "google_sheet_url": "string | null",
+  "google_sheet_tab_name": "string | null",
+  "google_sheet_data_instructions": "string | null",
+  "google_sheet_columns_to_skip": "string[]",
+  "google_sheet_error": "string | null — Last sheet validation error message",
+  "google_sheet_error_at": "datetime | null — When the last sheet error occurred",
+  "recipient_emails": ["string — All campaign recipient email addresses"],
+  "sender_emails": ["string — All campaign sender email addresses"],
+  "created_at": "datetime — ISO 8601",
+  "updated_at": "datetime — ISO 8601",
+  "sent_count": "null — Not populated on single-get (use cheerful_list_campaigns with include_stats for this)",
+  "thread_count": "null",
+  "pending_count": "null",
+  "failed_count": "null",
+  "total_recipients": "null",
+  "sender_details": [
+    {
+      "id": "uuid — CampaignSender record ID",
+      "sender_email": "string — Email address",
+      "thread_count": "integer — Number of threads for this sender",
+      "account_name": "string — Local part of email (before @)"
+    }
+  ]
+}
+```
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Campaign not found | "Campaign not found" | 404 |
+| User does not own and is not assigned to campaign | "Not authorized" | 403 |
+| Invalid campaign_id format | "value is not a valid uuid" | 422 |
+
+**Example Request**:
+```
+cheerful_get_campaign(campaign_id="550e8400-e29b-41d4-a716-446655440000")
+cheerful_get_campaign(campaign_id="550e8400-e29b-41d4-a716-446655440000", include_sender_details=true)
+```
+
+**Example Response** (with `include_sender_details=true`, abbreviated):
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "user_id": "83a3177e-0307-4e5f-ae4e-4bc823db56e9",
+  "product_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "product_ids": ["a1b2c3d4-e5f6-7890-abcd-ef1234567890"],
+  "name": "Summer Gifting 2026",
+  "campaign_type": "gifting",
+  "status": "active",
+  "is_external": false,
+  "automation_level": null,
+  "image_url": null,
+  "brand_logo_url": "https://cdn.brandfetch.io/example.png",
+  "brand_name": "Example Brand",
+  "subject_template": "Hi {name}, free product from Example Brand!",
+  "body_template": "Hey {name},\n\nWe love your content...",
+  "agent_name_for_llm": "Sarah",
+  "rules_for_llm": "Keep it casual.",
+  "goal_for_llm": "Get creators to accept free product",
+  "frequently_asked_questions_for_llm": null,
+  "sample_emails_for_llm": null,
+  "is_follow_up_enabled": true,
+  "follow_up_gap_in_days": 3,
+  "max_follow_ups": 2,
+  "follow_up_templates": [
+    {"index": 0, "body_template": "Just following up...", "hours_since_last_email": 72}
+  ],
+  "is_lookalike_suggestions_enabled": false,
+  "post_tracking_enabled": false,
+  "discovery_enabled": false,
+  "discovery_config": null,
+  "slack_channel_id": "C0123456789",
+  "google_sheet_url": null,
+  "google_sheet_tab_name": null,
+  "google_sheet_data_instructions": null,
+  "google_sheet_columns_to_skip": [],
+  "google_sheet_error": null,
+  "google_sheet_error_at": null,
+  "recipient_emails": ["creator1@example.com", "creator2@example.com"],
+  "sender_emails": ["outreach@example.com", "outreach2@example.com"],
+  "created_at": "2026-01-15T10:30:00Z",
+  "updated_at": "2026-02-20T14:45:00Z",
+  "sent_count": null,
+  "thread_count": null,
+  "pending_count": null,
+  "failed_count": null,
+  "total_recipients": null,
+  "sender_details": [
+    {
+      "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+      "sender_email": "outreach@example.com",
+      "thread_count": 28,
+      "account_name": "outreach"
+    },
+    {
+      "id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+      "sender_email": "outreach2@example.com",
+      "thread_count": 14,
+      "account_name": "outreach2"
+    }
+  ]
+}
+```
+
+**Slack Formatting Notes**:
+- Present as a structured block:
+  ```
+  *Summer Gifting 2026* (gifting, active)
+  Product: Example Brand Product
+  Senders: outreach@example.com (28 threads), outreach2@example.com (14 threads)
+  Recipients: 50 total
+  Follow-ups: enabled (max 2, every 3 days)
+  Created: Jan 15, 2026
+  ```
+- If `include_sender_details=true`, show per-sender breakdown
+- Omit null/empty fields from display
+- For AI config fields (`agent_name_for_llm`, `rules_for_llm`, etc.), only show if explicitly asked
+
+**Edge Cases**:
+- Campaign exists but user has no access: Returns 403 "Not authorized"
+- Campaign with no senders: `sender_emails` is `[]`, `sender_details` is `[]` (if requested)
+- Campaign with no recipients: `recipient_emails` is `[]`
+- Campaign with no brand: `brand_logo_url` and `brand_name` are both `null`
+- `follow_up_templates` stored as raw JSONB: Re-validated via `FollowUpTemplate.model_validate()` on read — if data is corrupt, may raise validation error
 
 ---
 
@@ -86,50 +474,141 @@
 
 **Status**: NEW
 
-**Purpose**: Create a new campaign with full configuration.
+**Purpose**: Create a new campaign with full configuration. This is the direct-create path — most users will use the draft/wizard flow (`cheerful_save_campaign_draft` → `cheerful_launch_campaign`) instead. The Slack agent may use this for quick campaign creation with minimal config.
 
 **Maps to**: `POST /api/service/campaigns` (new service route needed; main route: `POST /campaigns/`)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: authenticated (any user can create campaigns).
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: authenticated (any user can create campaigns).
 
 **Parameters**:
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| name | string | yes | — | Campaign name |
-| campaign_type | enum | yes | — | One of: "gifting", "paid_promotion", "sales", "creator", "other" |
-| status | enum | no | "active" | One of: "active", "paused", "draft", "completed" |
-| product_id | uuid | no | — | Primary product ID |
-| product_ids | uuid[] | no | — | Additional product IDs |
-| is_external | boolean | no | false | External campaign flag |
-| automation_level | string | no | — | Automation level setting |
-| subject_template | string | no | — | Email subject template (supports merge tags) |
-| body_template | string | no | — | Email body template (supports merge tags) |
-| agent_name_for_llm | string | no | — | Agent display name for AI drafting |
-| rules_for_llm | string | no | — | Rules/constraints for AI drafting |
-| goal_for_llm | string | no | — | Campaign goal for AI drafting context |
-| frequently_asked_questions_for_llm | string | no | — | FAQ context for AI drafting |
-| sample_emails_for_llm | string | no | — | Example emails for AI tone matching |
-| senders | object[] | no | — | Sender accounts (gmail_account_id or smtp_account_id per entry) |
-| recipients | object[] | no | — | Initial recipients (email, name, custom_fields per entry) |
-| is_follow_up_enabled | boolean | no | false | Enable automated follow-ups |
-| follow_up_gap_in_days | integer | no | — | Days between follow-ups |
-| max_follow_ups | integer | no | — | Maximum follow-up count |
-| follow_up_templates | object[] | no | — | Follow-up email templates |
-| is_lookalike_suggestions_enabled | boolean | no | false | Enable lookalike creator suggestions |
-| discovery_enabled | boolean | no | false | Enable auto-discovery |
-| discovery_config | object | no | — | Auto-discovery configuration |
-| google_sheet_url | string | no | — | Google Sheet URL for recipient import |
-| google_sheet_tab_name | string | no | — | Sheet tab name |
-| google_sheet_data_instructions | string | no | — | Instructions for sheet data parsing |
-| google_sheet_columns_to_skip | string[] | no | — | Columns to exclude from import |
-| cc_emails | string[] | no | — | CC email addresses |
-| slack_channel_id | string | no | — | Slack channel for notifications |
-| image_url | string | no | — | Campaign image URL |
+| name | string | yes | — | Campaign name. No length limit enforced at API level (DB column is `Text`). |
+| campaign_type | enum | yes | — | One of: `"gifting"`, `"paid_promotion"`, `"sales"`, `"creator"`, `"other"` |
+| subject_template | string | yes | — | Email subject template. Supports `{merge_tags}` from recipient custom_fields. |
+| body_template | string | yes | — | Email body template. Supports `{merge_tags}` from recipient custom_fields. |
+| product_id | uuid | conditional | `null` | Primary product ID. Required when `is_external=false` AND `product_ids` is empty. Must be owned by the authenticated user. |
+| product_ids | uuid[] | no | `[]` | Additional product IDs. All must be owned by authenticated user. |
+| senders | object[] | yes | — | Sender accounts. Array of `CampaignSenderCreate` objects. `min_length=1` — at least one sender required. Each entry must have exactly one of `gmail_account_id` or `smtp_account_id`. All accounts must be owned by authenticated user. |
+| recipients | object[] | conditional | — | Array of `CampaignRecipientCreate` objects. `min_length=0`. Must be non-empty when `is_external=false`. Idempotent by `(campaign_id, email)` — duplicates within the array are skipped. |
+| status | enum | no | `"active"` | One of: `"active"`, `"paused"`, `"draft"`, `"completed"` |
+| is_external | boolean | no | `false` | When `true`, `recipients` can be empty and `product_id` is not required |
+| automation_level | string | no | `null` | Automation level setting |
+| image_url | string | no | `null` | Campaign image URL |
+| agent_name_for_llm | string | no | `""` | Agent display name for AI drafting |
+| rules_for_llm | string | no | `""` | Rules/constraints for AI drafting |
+| goal_for_llm | string | no | `""` | Campaign goal for AI drafting context |
+| frequently_asked_questions_for_llm | list[dict] | no | `null` | FAQ entries for AI drafting |
+| sample_emails_for_llm | dict | no | `null` | Sample email data for AI tone matching |
+| is_follow_up_enabled | boolean | no | `false` | Enable automated follow-ups |
+| follow_up_gap_in_days | integer | no | `3` | Days between follow-ups |
+| max_follow_ups | integer | no | `3` | Maximum follow-up count |
+| follow_up_templates | FollowUpTemplate[] | no | `null` | Follow-up email templates. Max 10 entries. Indices must be sequential starting from 0 with no gaps or duplicates. |
+| is_lookalike_suggestions_enabled | boolean | no | `false` | Enable lookalike creator suggestions |
+| discovery_enabled | boolean | no | `false` | Enable auto-discovery |
+| discovery_config | DiscoveryConfig | no | `null` | Auto-discovery configuration (see DiscoveryConfig schema above) |
+| google_sheet_url | string | no | `null` | Google Sheet URL for recipient import. Must be provided with `google_sheet_tab_name` and `google_sheet_data_instructions` (all-or-nothing). |
+| google_sheet_tab_name | string | no | `null` | Sheet tab name. Part of all-or-nothing Google Sheet group. |
+| google_sheet_data_instructions | string | no | `null` | Instructions for sheet data parsing. Part of all-or-nothing Google Sheet group. |
+| google_sheet_columns_to_skip | string[] | no | `[]` | Columns to exclude from sheet import |
+| cc_emails | EmailStr[] | no | `[]` | CC email addresses for all outgoing campaign emails. Validated email format. |
+| slack_channel_id | string | no | `null` | Slack channel ID for campaign notifications |
 
-**Returns**: Full campaign response object with generated ID, timestamps, and all config fields.
+**Parameter Validation Rules**:
+- `campaign_type` must be one of the 5 enum values. Invalid value returns 422.
+- `senders` must have `min_length=1`. Empty array returns 422.
+- `recipients` must be non-empty when `is_external=false`. Violation returns 422: "Recipients cannot be empty for non-external campaigns."
+- `product_id` (or at least one entry in `product_ids`) is required when `is_external=false`. Violation returns 422: "Product is required for non-external campaigns."
+- Google Sheet fields: providing any one of `google_sheet_url`, `google_sheet_tab_name`, `google_sheet_data_instructions` without the others returns 422: "All Google Sheet fields must be provided together or none at all."
+- `follow_up_templates`: indices must be sequential 0-based integers. Gaps or duplicates return 422.
+- `follow_up_templates`: max 10 entries. Exceeding returns 422.
+- Each sender must have exactly one of `gmail_account_id` or `smtp_account_id`. Both or neither returns 422.
+- Each sender account must exist and be owned by authenticated user. Not found returns 404. Not owned returns 403: "Not authorized to use this Gmail account" / "Not authorized to use this SMTP account".
+- `product_id` must exist and be owned by authenticated user. Not found returns 404: "Product not found". Not owned returns 403: "Not authorized to use this product".
+- Each `product_ids` entry must exist and be owned by user. Same error messages as `product_id`.
+- `cc_emails` entries must be valid email format. Invalid returns 422.
 
-**Notes**: This is the direct-create path (bypasses wizard). Most users will use the draft/wizard flow (save draft → launch) instead. The Slack agent may use this for quick campaign creation with minimal config.
+**Return Schema**: Same as `cheerful_get_campaign` response (full `CampaignResponse`). Stats fields (`sent_count`, etc.) are `null` (not computed on create). `sender_details` is `null`. `recipient_emails` and `sender_emails` populated from newly created records.
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Missing name/campaign_type/subject_template/body_template | Pydantic validation error (field required) | 422 |
+| Non-external campaign with empty recipients | "Recipients cannot be empty for non-external campaigns" | 422 |
+| Non-external campaign with no product | "Product is required for non-external campaigns" | 422 |
+| Google Sheet fields partially provided | "All Google Sheet fields must be provided together or none at all" | 422 |
+| Product not found | "Product not found" | 404 |
+| Product not owned by user | "Not authorized to use this product" | 403 |
+| Gmail account not found | "Gmail account not found: {account_id}" | 404 |
+| Gmail account not owned by user | "Not authorized to use this Gmail account" | 403 |
+| SMTP account not found | "SMTP account not found: {account_id}" | 404 |
+| SMTP account not owned by user | "Not authorized to use this SMTP account" | 403 |
+| Sender with both gmail and smtp IDs | Pydantic: "Exactly one of gmail_account_id or smtp_account_id must be provided" | 422 |
+| Follow-up template index gaps/duplicates | Pydantic validation error | 422 |
+| DB constraint violation (e.g. duplicate campaign name?) | "Campaign creation failed due to constraint violation" | 409 |
+
+**Example Request**:
+```
+cheerful_create_campaign(
+  name="Holiday Gifting Q4",
+  campaign_type="gifting",
+  subject_template="Hi {name}, holiday gift from us!",
+  body_template="Hey {name},\n\nWe'd love to send you our new holiday collection...",
+  product_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  senders=[{"gmail_account_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479"}],
+  recipients=[
+    {"email": "creator@example.com", "name": "Jane Creator", "custom_fields": {"size": "M"}},
+    {"email": "influencer@example.com", "name": "John Influencer"}
+  ],
+  is_follow_up_enabled=true,
+  max_follow_ups=2,
+  follow_up_templates=[
+    {"index": 0, "body_template": "Hi {name}, just checking in...", "hours_since_last_email": 72}
+  ],
+  slack_channel_id="C0123456789"
+)
+```
+
+**Example Response**:
+```json
+{
+  "id": "new-campaign-uuid-here",
+  "user_id": "83a3177e-0307-4e5f-ae4e-4bc823db56e9",
+  "product_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "product_ids": ["a1b2c3d4-e5f6-7890-abcd-ef1234567890"],
+  "name": "Holiday Gifting Q4",
+  "campaign_type": "gifting",
+  "status": "active",
+  "is_external": false,
+  "subject_template": "Hi {name}, holiday gift from us!",
+  "body_template": "Hey {name},\n\nWe'd love to send you our new holiday collection...",
+  "recipient_emails": ["creator@example.com", "influencer@example.com"],
+  "sender_emails": ["outreach@example.com"],
+  "created_at": "2026-03-01T12:00:00Z",
+  "updated_at": "2026-03-01T12:00:00Z"
+}
+```
+
+**Slack Formatting Notes**:
+- On success: "Campaign *Holiday Gifting Q4* created successfully (ID: `{id}`). {N} recipients, {M} senders configured."
+- Remind user: "Run `cheerful_populate_campaign_outbox` to queue emails for sending."
+- If campaign created with `status=draft`: "Campaign saved as draft. Use `cheerful_update_campaign` to modify, then change status to `active` when ready."
+
+**Side Effects**:
+- Creates `campaign_recipient` records (idempotent by campaign_id + email)
+- Creates `campaign_sender` records (idempotent)
+- Creates `campaign_product` junction records (idempotent)
+- For Augmentum users (`@augmentumis.com`): triggers a Temporal `SyncSheetCreatorsWorkflow` if `google_sheet_url` is set
+- Does NOT automatically populate the outbox queue — user must call `cheerful_populate_campaign_outbox` separately
+
+**Edge Cases**:
+- Duplicate recipient emails in the array: Silently deduplicated (idempotent insert)
+- Creating campaign with status="draft": Valid — creates a draft that won't process emails
+- Creating campaign without recipients but is_external=true: Valid
+- Creating campaign with only SMTP senders (no Gmail): Valid — each sender needs exactly one of gmail_account_id or smtp_account_id
 
 ---
 
@@ -137,29 +616,118 @@
 
 **Status**: NEW
 
-**Purpose**: Update an existing campaign's configuration. All fields are optional — only provided fields are updated.
+**Purpose**: Update an existing campaign's configuration. All fields are optional — only provided fields are updated. Uses PATCH semantics (null = don't update, explicit value = set).
 
 **Maps to**: `PUT /api/service/campaigns/{campaign_id}` (new service route needed; main route: `PUT /campaigns/{campaign_id}`)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner or assigned team member.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: owner or assigned team member (verified via `CampaignMemberAssignmentRepository.can_access_campaign(user_id, campaign_id)`).
 
 **Parameters**:
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | campaign_id | uuid | yes | — | Campaign ID to update |
-| name | string | no | — | Campaign name |
-| campaign_type | enum | no | — | One of: "gifting", "paid_promotion", "sales", "creator", "other" |
-| status | enum | no | — | One of: "active", "paused", "draft", "completed". Status transitions: ACTIVE→COMPLETED auto-cancels pending outbox/follow-ups; COMPLETED→ACTIVE reactivates |
-| *(all other fields from create)* | | no | — | Same optional fields as cheerful_create_campaign |
+| name | string | no | `null` (no change) | Campaign name |
+| campaign_type | enum | no | `null` (no change) | One of: `"gifting"`, `"paid_promotion"`, `"sales"`, `"creator"`, `"other"` |
+| status | enum | no | `null` (no change) | One of: `"active"`, `"paused"`, `"draft"`, `"completed"`. See side effects for status transitions. |
+| is_external | boolean | no | `null` (no change) | External campaign flag |
+| automation_level | string | no | `null` (no change) | Automation level setting |
+| image_url | string | no | `null` (no change) | Campaign image URL |
+| product_id | uuid | no | `null` (no change) | Primary product ID. Must be owned by campaign owner (checked against `campaign.user_id`, not the requesting user). |
+| product_ids | uuid[] | no | `null` (no change) | Replaces ALL product associations via junction table (`campaign_product_repo.replace_for_campaign`). All must be owned by campaign owner. |
+| subject_template | string | no | `null` (no change) | Email subject template |
+| body_template | string | no | `null` (no change) | Email body template |
+| agent_name_for_llm | string | no | `null` (no change) | Agent display name for AI drafting |
+| rules_for_llm | string | no | `null` (no change) | Rules/constraints for AI drafting |
+| goal_for_llm | string | no | `null` (no change) | Campaign goal for AI drafting context |
+| frequently_asked_questions_for_llm | list[dict] | no | `null` (no change) | FAQ entries for AI drafting |
+| sample_emails_for_llm | dict | no | `null` (no change) | Sample email data for AI tone matching |
+| is_follow_up_enabled | boolean | no | `null` (no change) | Enable automated follow-ups |
+| follow_up_gap_in_days | integer | no | `null` (no change) | Days between follow-ups |
+| max_follow_ups | integer | no | `null` (no change) | Maximum follow-up count |
+| follow_up_templates | FollowUpTemplate[] | no | `null` (no change) | Follow-up email templates. Max 10. `null` = don't update, `[]` = clear all templates (stored as `null` in DB). |
+| is_lookalike_suggestions_enabled | boolean | no | `null` (no change) | Enable lookalike creator suggestions |
+| post_tracking_enabled | boolean | no | `null` (no change) | Enable post tracking (not in create — update only) |
+| discovery_enabled | boolean | no | `null` (no change) | Enable auto-discovery |
+| discovery_config | DiscoveryConfig | no | `null` (no change) | Auto-discovery configuration |
+| slack_channel_id | string | no | `null` (no change) | Slack channel ID. Setting to empty string `""` clears the value (stored as `null`). |
+| google_sheet_url | string | no | `null` (no change) | Google Sheet URL. Changing clears `google_sheet_error` and `google_sheet_error_at`. All-or-nothing with tab_name and data_instructions. |
+| google_sheet_tab_name | string | no | `null` (no change) | Sheet tab name. Changing clears `google_sheet_error` and `google_sheet_error_at`. |
+| google_sheet_data_instructions | string | no | `null` (no change) | Instructions for sheet data parsing. Part of all-or-nothing group. |
+| google_sheet_columns_to_skip | string[] | no | `null` (no change) | Columns to exclude from sheet import |
 
-**Returns**: Updated campaign response object.
+**Parameter Validation Rules**:
+- `campaign_type` must be valid enum value if provided. Invalid returns 422.
+- `status` must be valid enum value if provided. Invalid returns 422.
+- Google Sheet fields: partial update rejected — must provide all three (`google_sheet_url`, `google_sheet_tab_name`, `google_sheet_data_instructions`) or none. Violation returns 422.
+- `follow_up_templates`: same sequential 0-based index validation as create. Max 10.
+- `product_id` ownership is checked against `campaign.user_id` (the campaign owner), NOT the requesting user. This means a team member updating the campaign must reference products owned by the campaign owner.
+- `product_ids` replaces ALL product associations — not additive. Omitting `product_ids` (null) leaves existing associations unchanged.
 
-**Error responses**: Campaign not found (404), access denied (403).
+**Return Schema**: Same as `cheerful_get_campaign` response (full `CampaignResponse`). Stats and `sender_details` are `null`.
 
-**Side effects**:
-- Setting status to "completed" cancels all pending outbox entries and follow-ups
-- Setting status back to "active" reactivates the campaign
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Campaign not found | "Campaign not found" | 404 |
+| User not authorized | "Not authorized" | 403 |
+| Product not found | "Product not found" | 404 |
+| Product not owned by campaign owner | "Not authorized to use this product" | 403 |
+| Google Sheet fields partially provided | "All Google Sheet fields must be provided together or none at all" | 422 |
+| Follow-up template validation failure | Pydantic validation error | 422 |
+| DB constraint violation | "Campaign update failed due to constraint violation" | 409 |
+
+**Example Request**:
+```
+cheerful_update_campaign(
+  campaign_id="550e8400-e29b-41d4-a716-446655440000",
+  name="Summer Gifting 2026 — Updated",
+  status="paused"
+)
+
+cheerful_update_campaign(
+  campaign_id="550e8400-e29b-41d4-a716-446655440000",
+  status="completed"
+)
+
+cheerful_update_campaign(
+  campaign_id="550e8400-e29b-41d4-a716-446655440000",
+  follow_up_templates=[]
+)
+```
+
+**Example Response** (abbreviated):
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "name": "Summer Gifting 2026 — Updated",
+  "status": "paused",
+  "updated_at": "2026-03-01T15:30:00Z"
+}
+```
+
+**Slack Formatting Notes**:
+- On success: "Campaign *{name}* updated. Changed: {list of changed fields}"
+- On status change to "completed": "Campaign *{name}* marked as completed. All pending emails and follow-ups have been cancelled."
+- On status change to "active" from "completed": "Campaign *{name}* reactivated."
+- On pause: "Campaign *{name}* paused. No new emails will be sent until reactivated."
+
+**Side Effects**:
+- **Status → `completed`**: Sets `completed_at` timestamp. Cancels ALL pending outbox entries (`status=pending` → `status=cancelled`, `error_message="Campaign marked as completed"`). Cancels ALL pending follow-ups (same status/message change). Logs count of cancelled items.
+- **Status → `active` from `completed`**: Clears `completed_at` (set to `null`). Does NOT re-queue cancelled items — those remain cancelled.
+- **`google_sheet_url` or `google_sheet_tab_name` changed**: Clears `google_sheet_error` and `google_sheet_error_at` (error was for old sheet config).
+- **`google_sheet_url` changed (for Augmentum users)**: Triggers `SyncSheetCreatorsWorkflow` Temporal workflow.
+- **`product_ids` provided**: Replaces ALL campaign_product junction records via `replace_for_campaign()`.
+- **`slack_channel_id` set to `""`**: Stored as `null` in DB (cleared).
+- **`follow_up_templates` set to `[]`**: Stored as `null` in DB (cleared).
+
+**Edge Cases**:
+- Updating a campaign you're assigned to (not owner): Works for most fields. Product ownership is validated against campaign owner, not requesting user.
+- Setting status to same value: No-op for the cancellation logic (only triggers on actual transition to/from completed).
+- Updating only `product_ids` without `product_id`: `product_ids` replaces junction table; `product_id` column unchanged.
+- Empty update (no fields provided): Returns current campaign state unchanged (no DB modifications).
 
 ---
 
@@ -167,25 +735,77 @@
 
 **Status**: NEW
 
-**Purpose**: Permanently delete a campaign and all associated data.
+**Purpose**: Permanently delete a campaign and all associated data. This is destructive and irreversible.
 
 **Maps to**: `DELETE /api/service/campaigns/{campaign_id}` (new service route needed; main route: `DELETE /campaigns/{campaign_id}`)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner-only.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: owner or assigned team member (verified via `CampaignMemberAssignmentRepository.can_access_campaign(user_id, campaign_id)`).
+
+> **Note**: The main API endpoint uses `can_access_campaign` which allows assigned team members. The CE tool may want to restrict to owner-only for safety. This should be decided during implementation.
 
 **Parameters**:
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| campaign_id | uuid | yes | — | Campaign ID to delete |
+| campaign_id | uuid | yes | — | Campaign ID to permanently delete |
 
-**Returns**: Success confirmation (204 No Content from backend).
+**Parameter Validation Rules**:
+- `campaign_id` must be a valid UUID. Invalid format returns 422.
 
-**Error responses**: Campaign not found (404), access denied — not owner (403).
+**Return Schema**:
+```json
+null
+```
+Backend returns HTTP 204 No Content. Tool should return a confirmation message string.
 
-**Side effects**: Cascading delete of recipients, senders, threads, creators, thread_links, outbox entries, workflows, workflow executions, and all related data.
+**Error Responses**:
 
-**Slack formatting notes**: Agent should confirm the campaign name before deletion and warn about cascade. Recommend a confirmation step in conversation.
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Campaign not found | "Campaign not found" | 404 |
+| User not authorized | "Not authorized" | 403 |
+
+**Example Request**:
+```
+cheerful_delete_campaign(campaign_id="550e8400-e29b-41d4-a716-446655440000")
+```
+
+**Example Response**:
+```
+"Campaign 550e8400-e29b-41d4-a716-446655440000 deleted successfully."
+```
+
+**Slack Formatting Notes**:
+- Agent MUST confirm before deleting: "Are you sure you want to delete campaign *{name}*? This will permanently remove all recipients, threads, emails, workflows, and analytics. This cannot be undone."
+- On success: "Campaign *{name}* has been permanently deleted along with all associated data."
+- Agent should retrieve campaign name via `cheerful_get_campaign` before deleting so it can display the name in confirmation.
+
+**Side Effects — Cascading Deletions**:
+
+The following data is deleted (in order):
+
+1. **Manual deletions** (no DB CASCADE):
+   - `campaign_recipient` — All recipients
+   - `campaign_sender` — All senders
+   - `campaign_thread` — All thread associations
+   - `campaign_creator` — All creator associations
+   - `thread_review_queue.linked_thread_link_id` — Set to `NULL` for affected thread_links
+   - `thread_link` — All thread links
+   - `campaign_rule_suggestion_analytics` — All analytics records
+
+2. **CASCADE deletions** (triggered by `db.delete(campaign)`):
+   - `campaign_outbox_queue` — All outbox entries
+   - `campaign_follow_up_outbox_queue` — All follow-up entries (cascades from outbox_queue)
+   - `campaign_workflow` — All workflows
+   - `campaign_workflow_execution` — All workflow executions
+   - `campaign_lookalike_suggestion` — All lookalike suggestions
+   - `campaign_product` — All product associations
+
+**Edge Cases**:
+- Deleting a campaign with active/pending emails in outbox: Emails are deleted, not sent. Any in `processing` state may still be sent if the email worker has already picked them up.
+- Deleting a campaign with running Temporal workflows: The campaign record is deleted but Temporal workflows may still be running. They will fail gracefully when they can't find the campaign.
+- Deleting a draft campaign: Works the same — all associated draft data is deleted.
 
 ---
 
@@ -193,11 +813,11 @@
 
 **Status**: NEW
 
-**Purpose**: Create a copy of an existing campaign with DRAFT status. Copies configuration, senders, workflows, and signature but not recipients or threads.
+**Purpose**: Create a copy of an existing campaign with DRAFT status. Copies configuration, senders (owner only), workflows, products (owner only), and email signature, but does NOT copy recipients, threads, outbox entries, or analytics.
 
 **Maps to**: `POST /api/service/campaigns/{campaign_id}/duplicate` (new service route needed; main route: `POST /campaigns/{campaign_id}/duplicate`)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner or assigned team member.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: owner or assigned team member (verified via `CampaignMemberAssignmentRepository.can_access_campaign(user_id, campaign_id)`).
 
 **Parameters**:
 
@@ -205,9 +825,87 @@
 |-----------|------|----------|---------|-------------|
 | campaign_id | uuid | yes | — | Source campaign ID to duplicate |
 
-**Returns**: New campaign response object (status = "draft") with copied configuration.
+**Parameter Validation Rules**:
+- `campaign_id` must be a valid UUID. Invalid format returns 422.
+- Source campaign must exist. Not found returns 404.
+- User must have access (owner or assigned member). Unauthorized returns 403.
 
-**Notes**: The new campaign has a fresh ID, DRAFT status, and copied config/senders/workflows/signature. Recipients and threads are NOT copied. The user can then modify the draft and launch it.
+**Return Schema**: Same as `cheerful_get_campaign` response (full `CampaignResponse`) representing the NEW campaign. Key differences from source:
+- `id`: New UUID (not the source campaign ID)
+- `user_id`: The requesting user's ID (which may differ from source campaign owner for team members)
+- `name`: `"Copy of {source_name}"`
+- `status`: Always `"draft"`
+- `product_id`: Copied only if duplicator is the campaign owner; `null` for team members
+- `product_ids`: Copied only if duplicator is the campaign owner; `[]` for team members
+- `sender_emails`: Copied only if duplicator is the campaign owner; `[]` for team members
+- `recipient_emails`: Always `[]` (recipients are never copied)
+- `slack_channel_id`: `null` (not copied — source has a specific channel binding)
+- `sender_details`: `null`
+- All stats fields: `null`
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Campaign not found | "Campaign not found" | 404 |
+| User not authorized | "Not authorized" | 403 |
+
+**Example Request**:
+```
+cheerful_duplicate_campaign(campaign_id="550e8400-e29b-41d4-a716-446655440000")
+```
+
+**Example Response** (abbreviated):
+```json
+{
+  "id": "new-duplicate-uuid",
+  "user_id": "83a3177e-0307-4e5f-ae4e-4bc823db56e9",
+  "product_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "product_ids": ["a1b2c3d4-e5f6-7890-abcd-ef1234567890"],
+  "name": "Copy of Summer Gifting 2026",
+  "campaign_type": "gifting",
+  "status": "draft",
+  "is_external": false,
+  "subject_template": "Hi {name}, free product from Example Brand!",
+  "body_template": "Hey {name},\n\nWe love your content...",
+  "recipient_emails": [],
+  "sender_emails": ["outreach@example.com"],
+  "created_at": "2026-03-01T16:00:00Z",
+  "updated_at": "2026-03-01T16:00:00Z"
+}
+```
+
+**Slack Formatting Notes**:
+- On success: "Campaign duplicated! New draft *Copy of {source_name}* created (ID: `{new_id}`). Status: draft. Add recipients and configure as needed, then launch."
+- If team member duplicated: "Note: Senders and products were not copied because you are not the campaign owner. You'll need to add your own senders."
+
+**Side Effects — What Gets Copied**:
+
+| Data | Copied? | Notes |
+|------|---------|-------|
+| Campaign config (name, type, templates, LLM settings, follow-ups, discovery, sheet config) | Yes | Name prefixed with "Copy of ". Status always DRAFT. |
+| Brand association (brand_id) | Yes | Same brand_id reference |
+| Campaign senders | Owner only | Team members get no senders — they must add their own accounts |
+| Campaign products (junction table) | Owner only | Team members get no products |
+| Campaign workflows (enabled only) | Yes | All enabled workflows from source are copied with same config |
+| Email signature | Yes | Content copied; new EmailSignature record created with `is_default=false` |
+| Discovery config (discovery_enabled, discovery_config) | Yes | Copied from source |
+| Post tracking config (post_tracking_enabled) | Yes | Copied from source |
+| Recipients | No | `recipient_emails` is always `[]` |
+| Threads | No | — |
+| Outbox entries | No | — |
+| Workflow executions | No | — |
+| Analytics | No | — |
+| Lookalike suggestions | No | — |
+| Slack channel | No | `slack_channel_id` is `null` in the duplicate |
+
+**Edge Cases**:
+- Duplicating a draft campaign: Works — creates another draft from the draft
+- Duplicating a completed campaign: Works — new campaign is DRAFT regardless of source status
+- Team member duplicating: New campaign is owned by the team member. Senders, products NOT copied (they belong to the original owner). Signature content IS copied (it's just HTML text).
+- Source campaign with disabled workflows: Only enabled workflows (`is_enabled=True`) are copied
+- Source campaign with no email signature: No signature created for the duplicate
 
 ---
 

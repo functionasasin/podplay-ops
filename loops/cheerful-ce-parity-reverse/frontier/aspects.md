@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total Aspects**: 36
-- **Analyzed**: 16
-- **Pending**: 20
-- **Convergence**: 44%
+- **Analyzed**: 17
+- **Pending**: 19
+- **Convergence**: 47%
 
 ---
 
@@ -39,7 +39,7 @@ Take Wave 1 capability lists and design tool signatures per domain. **Every tool
 
 Flesh each tool to exhaustive detail. Verify every parameter, type, and enum against actual source code.
 
-- [ ] **w3-campaigns-crud** — Full specs for campaign create/read/update/delete tools. Verify all Pydantic models, enum values, validation rules against `projects/cheerful/apps/backend/src/api/route/campaigns.py`
+- [x] **w3-campaigns-crud** — Full specs for campaign create/read/update/delete tools. Verify all Pydantic models, enum values, validation rules against `projects/cheerful/apps/backend/src/api/route/campaigns.py`
 - [ ] **w3-campaigns-wizard** — Full specs for campaign wizard tools: draft save/load, product management, sender management, email sequence config. Verify against `campaign_draft.py`, `campaign_launch.py`
 - [ ] **w3-campaigns-recipients** — Full specs for recipient tools: single add, bulk upsert, CSV upload, Google Sheet import, outbox population. Verify against recipient-related routes
 - [ ] **w3-email-threads** — Full specs for thread listing (all filter params, pagination), thread detail, status marking (all status values). Verify against `threads.py`
