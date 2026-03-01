@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total Aspects**: 36
-- **Analyzed**: 30
-- **Pending**: 6
-- **Convergence**: 83.3%
+- **Analyzed**: 31
+- **Pending**: 5
+- **Convergence**: 86.1%
 
 ---
 
@@ -58,7 +58,7 @@ Shared schemas, conventions, parity matrix, and completeness audit.
 
 - [x] **w4-shared-schemas** — Define all shared types used across domains: Campaign, Thread, Creator, EmailMessage, Draft, Workflow, User, Team. Write to `specs/shared-conventions.md`
 - [x] **w4-auth-model** — Document the full per-user authentication model as it actually works in the codebase. **CE identity injection**: `RequestContext` created in `entrypoints/slack/handlers.py` with `cheerful_user_id` from hardcoded `SLACK_USER_MAPPING` in `constants.py` → threaded through execution pipeline → every tool calls `_resolve_user_id(request_context)` → `user_id` sent as query param to `/api/service/*` routes. **Frontend**: Supabase Auth login (email/password + Google OAuth), middleware route protection, session cookies. **Backend two-path auth**: JWT validation (`get_current_user`) for webapp requests, `X-Service-Api-Key` (`verify_service_api_key`) for CE/service requests. **Permission tiers**: owner-only (campaign CRUD, launch, integrations), assigned-member (view/edit campaign data via `campaign_member_assignment`), authenticated (own profile/settings). **RLS defense-in-depth**: DB-level row isolation, `SECURITY DEFINER` functions (`is_campaign_owner`, `can_access_campaign`), credential isolation (team members cannot SELECT `user_gmail_account`/`user_smtp_account`). 10 corrections/additions: (1) service_auth.py uses simple `!=` not constant-time comparison (returns 401 not 403), (2) full 10-step pipeline via meta_tools.py/sdk_tools.py documented, (3) webapp protected routes include `/onboarding` and `/` in addition to /mail /settings /dashboard /campaigns, (4) middleware forwards `x-cheerful-user` + `x-user-logged-in` headers, (5) onboarding cookie cache (1-year), (6) JWT dual-algorithm HS256+ES256 with JWKS, (7) dev-only impersonation system, (8) SLACK_USER_MAPPING exact sizes (staging=9, production=8), (9) ToolContext.deploy_environment purpose documented, (10) get_optional_user() variant documented. Analysis: `analysis/w4-auth-model.md`. Spec updated: `specs/shared-conventions.md` sections 1.2-1.8.
-- [ ] **w4-error-conventions** — Standard error handling: error response format, retry logic, how tools surface errors to Claude agent. Common error patterns across all tools
+- [x] **w4-error-conventions** — Standard error handling: 9 subsections added to specs/shared-conventions.md Section 2. Covers: 5 error response formats (ToolError/FastAPI 422/business/Pydantic/ToolNotFoundError), error tiers table (13 rows with retry guidance), 8-step propagation chain, backend-proxied vs CE-native tool categories, standard handler template, standard api.py template, per-domain common error messages (campaigns/email/creators/integrations/team/workflows/search), retry decision matrix (11 rows), and Slack error surfacing guide with 8 translation examples and permission error handling. CORRECTIONS: (1) service_auth.py uses `!=` not constant-time comparison (401 not 403), (2) 401 tier was missing from error tiers table. Sources verified: registry.py, tools.py, api.py, meta_tools.py, sdk_tools.py, execution.py, handlers.py, service_auth.py, campaign_launch.py, creator_search.py, youtube.py
 - [ ] **w4-pagination-conventions** — Standard pagination: limit/offset patterns, default/max values, how paginated results should be presented in Slack threads
 - [ ] **w4-parity-matrix** — Build the complete parity matrix: every frontend page, every user action, mapped to a context engine tool. Flag any gaps. Write to `specs/parity-matrix.md`
 - [ ] **w4-readme-index** — Write `specs/README.md` with complete tool index: every tool name, domain, one-line description, status (exists/new)

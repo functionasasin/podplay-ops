@@ -1,7 +1,7 @@
 # Shared Conventions — Cheerful Context Engine
 
 **Spec file**: `specs/shared-conventions.md`
-**Wave 4 status**: Complete — w4-shared-schemas
+**Wave 4 status**: In progress — w4-shared-schemas ✓, w4-auth-model ✓, w4-error-conventions ✓
 
 This document defines cross-cutting conventions: the authentication model, error handling, pagination, rate limiting, and canonical shared schemas referenced by all domain specs.
 
@@ -19,6 +19,15 @@ This document defines cross-cutting conventions: the authentication model, error
    - 1.7 [Backend JWT Verification Details](#17-backend-jwt-verification-details)
    - 1.8 [Dev-Only Impersonation](#18-dev-only-impersonation)
 2. [Error Handling Conventions](#2-error-handling-conventions)
+   - 2.1 [Error Response Formats](#21-error-response-formats) — 5 formats (ToolError, FastAPI 422, business error, Pydantic ValidationError, ToolNotFoundError)
+   - 2.2 [Error Tiers and Retry Behavior](#22-error-tiers-and-retry-behavior) — complete table with all tiers
+   - 2.3 [Error Propagation Chain](#23-error-propagation-chain) — 8-step path from tool to Claude
+   - 2.4 [Two Categories of Tools](#24-two-categories-of-tools-error-behavior-differs) — backend-proxied vs CE-native
+   - 2.5 [Tool Handler Error Pattern](#25-tool-handler-error-pattern-standard-template) — required try/except pattern
+   - 2.6 [API Client Error Pattern](#26-api-client-error-pattern-standard-template) — api.py standard pattern
+   - 2.7 [Common Error Messages by Domain](#27-common-error-messages-by-domain) — exact messages from source
+   - 2.8 [Retry Logic](#28-retry-logic) — decision matrix and rules
+   - 2.9 [Slack Error Surfacing Guide](#29-slack-error-surfacing-guide) — natural language translation
 3. [Pagination Conventions](#3-pagination-conventions)
 4. [Rate Limiting](#4-rate-limiting)
 5. [Shared Schemas](#5-shared-schemas)
@@ -321,70 +330,424 @@ The backend supports developer impersonation via `x-impersonate-user` header. Th
 
 ## 2. Error Handling Conventions
 
-### 2.1 Error Response Format
+### 2.1 Error Response Formats
 
-The CE raises `ToolError` for user-facing errors. FastAPI returns JSON for validation failures.
+There are **four distinct error formats** that tools produce. The format depends on where in the pipeline the error originates.
 
-**`ToolError` format** — string message surfaced directly to Claude agent:
+---
+
+#### Format A: `ToolError` — Pre-request or API-layer failure (most common)
+
+`ToolError` is a plain Python `Exception` subclass defined in `src_v2/mcp/registry.py`. It carries a single string message and is the standard error type for all user-facing errors from CE tools.
+
+**Source**: Raised by `tools.py` helper functions, `api.py` API client, or tool handler catch-all.
+
+**What Claude sees** (as error tool result content):
 ```
-ToolError: "<message string>"
-```
-
-**FastAPI 422 validation error format** — returned from backend when query params fail Pydantic validation:
-```json
-{
-  "detail": [
-    {
-      "loc": ["query", "limit"],
-      "msg": "ensure this value is less than or equal to 100",
-      "type": "value_error.number.not_le"
-    }
-  ]
-}
+<error message string>
 ```
 
-**FastAPI application error format** — returned for 400/403/404 business logic errors:
+The message is a raw string — no JSON, no structure. Examples:
+- `"Could not resolve Cheerful user. Ensure user mapping exists."`
+- `"Cheerful API URL not configured (CHEERFUL_API_URL)"`
+- `"Thread 'abc123' not found"`
+- `"Failed to list campaigns (500): Internal server error"`
+- `"Email search failed (422): [{\"loc\":[\"query\",\"limit\"],\"msg\":\"ensure this value...\"}]"`
+
+---
+
+#### Format B: FastAPI business logic error — surfaced inside ToolError message
+
+When the backend returns a 400, 401, 403, 404, or 409, the `api.py` client reads the response body and embeds it in the ToolError message. The underlying FastAPI error format is:
+
 ```json
 {
   "detail": "<error message string>"
 }
 ```
 
-### 2.2 Error Tiers
+The ToolError wraps this as: `"Operation failed (404): {\"detail\": \"Campaign not found\"}"`
 
-| Tier | When | Example | Retry? |
-|------|------|---------|--------|
-| Pre-request — user not resolved | `_resolve_user_id` fails (user not in mapping) | `"Could not resolve Cheerful user. Ensure user mapping exists."` | No — must add user to SLACK_USER_MAPPING |
-| Pre-request — config missing | `cheerful_api_url` or `cheerful_api_key` not set | `"Cheerful API URL not configured (CHEERFUL_API_URL)"` | No — env config issue |
-| 400 Bad Request | Business logic validation failed | `"Campaign already exists"`, `"State ID doesn't match thread"` | No — client error |
-| 403 Forbidden | User does not have permission | `"Not authorized to access this campaign"` | No — permission error |
-| 404 Not Found | Resource does not exist | `"Campaign not found"`, `"Thread not found"` | No — wrong ID |
-| 409 Conflict | Unique constraint violation | `"Workflow with this ID already exists"` | No — client error |
-| 422 Unprocessable Entity | Pydantic/query validation failure | `"value is not a valid uuid"` | No — fix parameter |
-| 5xx Server Error | Backend infrastructure error | `"Failed to list campaigns (500): ..."` | Yes — transient |
-| Timeout | Request exceeded 30s | httpx `ReadTimeout` | Yes — retry once |
+The `resp.text[:500]` truncation applies — so very long backend error bodies are cut to 500 characters.
 
-### 2.3 How Tools Surface Errors
+---
 
-The CE API client (`api.py`) wraps all non-200 responses in `ToolError` with the format:
+#### Format C: FastAPI 422 Pydantic validation error — surfaced inside ToolError message
+
+When the backend returns 422 (Pydantic validation failure on query params), the response body has a list of error objects:
+
+```json
+{
+  "detail": [
+    {
+      "loc": ["query", "field_name"],
+      "msg": "<human readable message>",
+      "type": "<pydantic error type>"
+    }
+  ]
+}
 ```
-"{operation} ({status_code}): {response_body[:500]}"
+
+Common `type` values from backend validation:
+- `"type_error.uuid"` — field expected UUID format
+- `"value_error.number.not_le"` — number exceeds maximum
+- `"value_error.number.not_ge"` — number below minimum
+- `"value_error.missing"` — required field not provided
+- `"value_error"` — general value validation failure
+
+This entire JSON blob is truncated to 500 chars and embedded in the ToolError message as `"Operation (422): {full 422 body truncated to 500 chars}"`.
+
+---
+
+#### Format D: Pydantic `ValidationError` from registry parameter validation
+
+When Claude passes parameters that fail the Pydantic `BaseModel` schema for a tool's `params` argument, `registry.py`'s `model_validate(params)` raises a Pydantic `ValidationError`. This is **not** a `ToolError`. It propagates directly to the `claude_agent_sdk`, which returns it as an error tool result.
+
+**Format** (verbose Pydantic error repr):
+```
+1 validation error for ListThreadsInput
+limit
+  Input should be less than or equal to 100 [type=less_than_equal, input_value=200, input_url=...]
 ```
 
-Examples from existing tools:
-- `"Failed to list campaigns (500): Internal server error"`
-- `"Email search failed (422): value is not a valid uuid"`
-- `"Thread 'abc123' not found"` (special-cased 404 in `get_thread`)
-- `"Creator 'uuid' not found in campaign 'uuid'"` (special-cased 404 in `get_campaign_creator`)
+This can be multi-line and verbose. The Claude agent sees this as the raw Pydantic error and should interpret it as: "a parameter I passed was invalid — fix the value."
 
-**Error escalation rule**: ToolErrors propagate directly to the Claude agent as error content. The agent should surface the message to the user in Slack in plain language (not the raw ToolError string).
+This error type occurs at the CE registry layer, before any backend call is made.
 
-### 2.4 Retry Logic
+---
 
-Tools have NO automatic retry logic — all errors are raised immediately. The Claude agent is responsible for deciding whether to retry. Guidelines for the agent:
-- **Do retry**: 5xx errors, timeout errors (only once — exponential backoff not available)
-- **Do NOT retry**: 4xx errors (they indicate client errors that won't resolve on retry)
-- **Ask user**: 403 permission errors (user may need the owner to assign them)
+#### Format E: `ToolNotFoundError` from registry dispatch
+
+When `execute_tool` is called with a tool name that doesn't exist in the registry, `registry.py` raises `ToolNotFoundError(name, list(self._tools.keys()))`. Message format:
+
+```
+Tool '{name}' not found. Available: ['cheerful_list_campaigns', 'cheerful_search_emails', ...]
+```
+
+This should never happen in normal operation (Claude discovers tools via `discover_tools` first), but can occur if the tool registry is incomplete or the agent tries a non-existent tool name.
+
+---
+
+### 2.2 Error Tiers and Retry Behavior
+
+| Tier | Origin | ToolError message format | Retry? | Root cause action |
+|------|--------|--------------------------|--------|------------------|
+| **User not resolved** | `_resolve_user_id()` | `"Could not resolve Cheerful user. Ensure user mapping exists."` | Never | Add Slack user ID to `SLACK_USER_MAPPING` in `constants.py` |
+| **Config missing** | `_creds()` | `"Cheerful API URL not configured (CHEERFUL_API_URL)"` or `"...API_KEY"` | Never | Fix deployment environment variables |
+| **Pre-call validation** | `api.py` before HTTP | `"Either query or thread_id is required for similarity search"` | No | Fix tool call parameters |
+| **Schema validation** | `registry.model_validate` | Pydantic `ValidationError` (Format D above) | No | Fix parameter type/value |
+| **401 Unauthorized** | Backend auth check | `"Operation (401): {\"detail\":\"Invalid service API key\"}"` | Never | Fix CHEERFUL_API_KEY env var |
+| **400 Bad Request** | Backend business logic | `"Operation (400): {\"detail\":\"<message>\"}"` | No — client error | Fix parameters; message usually explains the issue |
+| **403 Forbidden** | Backend permission check | `"Operation (403): {\"detail\":\"<message>\"}"` | No — permission issue | User needs access (campaign ownership or assignment) |
+| **404 Not Found** | Backend: resource missing | `"Operation (404): {\"detail\":\"<message>\"}"` OR special-cased `"Thread '{id}' not found"` | No — wrong ID | Verify the UUID is correct and user has access |
+| **409 Conflict** | Backend: constraint violation | `"Operation (409): {\"detail\":\"<message>\"}"` | No — duplicate | Resource already exists |
+| **422 Validation** | Backend Pydantic validation | `"Operation (422): {\"detail\":[{\"loc\":[...],\"msg\":\"...\"}]}"` | No — fix params | Fix parameter type/value |
+| **429 Rate Limited** | External API (Apify, IC) | `"Operation (429): {\"detail\":\"Service rate limit exceeded. Please try again later.\"}"` | Yes — wait 5s | Retry once; if still 429, report to user |
+| **500 Server Error** | Backend unhandled exception | `"Operation (500): {\"detail\":\"<message>\"}"` | Yes — once | Infrastructure issue; report if persists |
+| **Timeout** | httpx after 30s | `"Failed to {op}: ReadTimeout"` (wrapped by handler) | Yes — once | Long-running operation; try again |
+| **Connection Error** | httpx network failure | `"Failed to {op}: ConnectError"` (wrapped by handler) | Yes — once | Network issue; try again |
+| **Tool not found** | `registry.call_tool()` | `ToolNotFoundError: "Tool '{name}' not found. Available: [...]"` | No | Bug; use `discover_tools` to find correct name |
+
+---
+
+### 2.3 Error Propagation Chain
+
+**CRITICAL**: `ToolError` is NOT caught anywhere in the CE pipeline before reaching the Claude Agent SDK. The full propagation:
+
+```
+Step 1: Tool handler raises ToolError
+        (in src_v2/mcp/tools/cheerful/tools.py)
+        ↓
+Step 2: registry.call_tool() — NO try/except — propagates
+        (in src_v2/mcp/registry.py:108)
+        ↓
+Step 3: meta_tools._execute_tool() — NO try/except — propagates
+        (in src_v2/mcp/meta_tools.py:54)
+        ↓
+Step 4: meta_tools closure execute_fn() — NO try/except — propagates
+        (in src_v2/mcp/meta_tools.py:76)
+        ↓
+Step 5: sdk_tools.execute_tool_sdk() — NO try/except — propagates
+        (in src_v2/services/agent/sdk_tools.py:101)
+        ↓
+Step 6: claude_agent_sdk (create_sdk_mcp_server) — CATCHES exception
+        Returns error content block: {"is_error": true, "content": "<ToolError.args[0]>"}
+        ↓
+Step 7: Claude Agent receives error tool result
+        Claude sees: the raw ToolError message string
+        ↓
+Step 8: Claude decides how to respond in Slack
+```
+
+**What this means for implementors**:
+- Every tool must follow the `try/except ToolError: raise; except Exception as e: raise ToolError(f"...: {e}") from e` pattern
+- Unhandled Python exceptions (AttributeError, KeyError, etc.) from anywhere in the tool handler WILL be wrapped by the catch-all `except Exception`
+- Network errors (httpx ReadTimeout, ConnectError) are caught by the tool handler's catch-all
+
+**Note on handlers.py**: The outer `handle_message()` function in `entrypoints/slack/handlers.py` does NOT catch exceptions from `execute_message()`. If `execute_message` raises an unhandled exception, the bot silently fails without responding to the Slack message. This is a known limitation.
+
+---
+
+### 2.4 Two Categories of Tools (Error Behavior Differs)
+
+#### Category A: Backend-Proxied Tools
+
+Tools that call `/api/service/*` endpoints via `api.py`. Error behavior:
+
+1. `api.py` makes HTTP request with 30s timeout
+2. Non-200 response → `ToolError(f"<op> ({status_code}): {resp.text[:500]}")`
+3. Special-case 404s: `get_thread` and `get_campaign_creator` return descriptive `ToolError` without status code
+4. Timeout → httpx raises exception → caught by handler's `except Exception` → wrapped as `ToolError(f"Failed to {op}: ReadTimeout")`
+
+All domain tools (campaigns, email, creators, integrations, users-team, analytics, workflows, search) are Category A.
+
+#### Category B: CE-Native Tools
+
+Tools that perform all logic within the CE process, making no calls to the Cheerful backend:
+
+| Tool | CE-internal dependencies | Error patterns |
+|------|------------------------|---------------|
+| `cheerful_improve_email` | Internal LLM call via Claude Anthropic API | LLM errors, content policy errors |
+| `cheerful_summarize_thread` | Internal `ThreadSummarizer` RAG service | RAG errors, embedding failures |
+
+For Category B tools:
+- No HTTP status codes in error messages
+- Errors are CE-internal exceptions wrapped as `ToolError`
+- No 403/404 from backend (access is pre-validated by the CE)
+
+---
+
+### 2.5 Tool Handler Error Pattern (Standard Template)
+
+Every tool MUST implement this error handling pattern (verified against existing 7 tools in `tools.py`):
+
+```python
+async def cheerful_some_tool(
+    tool_context: ToolContext,
+    db_context: DatabaseContext | None,
+    request_context: RequestContext | None,
+    params: SomeInput,
+) -> str:
+    try:
+        # 1. Validate credentials and user identity (pre-request)
+        base_url, api_key = _creds(tool_context)     # raises ToolError if config missing
+        user_id = _resolve_user_id(request_context)  # raises ToolError if user not mapped
+
+        # 2. Call API client (may raise ToolError for HTTP errors)
+        result = await api.some_operation(base_url, api_key, user_id, ...)
+
+        # 3. Format and return
+        return _fmt_result(result)
+
+    except ToolError:
+        raise  # Re-raise ToolErrors as-is (don't double-wrap)
+
+    except Exception as e:
+        # Catch-all: wrap any unexpected exception as ToolError
+        raise ToolError(f"Failed to {operation_description}: {e}") from e
+```
+
+**Rule**: `except ToolError: raise` MUST come BEFORE `except Exception as e`. Otherwise, ToolErrors would be caught by the catch-all and their messages double-wrapped.
+
+---
+
+### 2.6 API Client Error Pattern (Standard Template)
+
+Every function in `api.py` MUST follow this pattern:
+
+```python
+async def some_operation(
+    base_url: str,
+    api_key: str,
+    user_id: str,
+    # ... other params
+) -> dict[str, Any]:
+    url = build_url(base_url, "/api/service/some/path")
+    params: dict[str, Any] = {"user_id": user_id}
+
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(
+            url,
+            headers=auth_headers(api_key),
+            params=params,
+            timeout=_TIMEOUT,  # Always 30 seconds
+        )
+        # Optional: special-case 404
+        if resp.status_code == 404:
+            raise ToolError(f"Resource '{id}' not found")
+        # Generic non-200 handler
+        if resp.status_code != 200:
+            raise ToolError(f"Operation description ({resp.status_code}): {resp.text[:500]}")
+        return resp.json()
+```
+
+**Rules**:
+- Always use `timeout=_TIMEOUT` (30 seconds)
+- Always use `auth_headers(api_key)` — produces `{"X-Service-Api-Key": api_key}`
+- Always send `user_id` as a query param
+- Body truncation is `[:500]` to prevent oversized error messages
+- 404s MAY be special-cased for better UX; all others use the generic format
+
+---
+
+### 2.7 Common Error Messages by Domain
+
+The following are the **exact error messages** from the backend source code, organized by domain. These appear inside ToolError messages after the status code prefix.
+
+#### Campaign Errors
+
+| Condition | HTTP Status | Detail message |
+|-----------|------------|----------------|
+| Draft campaign not found | 404 | `"Draft campaign not found: {campaign_id}"` |
+| Not authorized to launch | 403 | `"Not authorized to launch this campaign"` |
+| Campaign not a draft | 400 | `"Campaign is not a draft"` |
+| No valid senders | 400 | `"No valid sender accounts found. Check that the email addresses exist and are active."` |
+| No recipients (non-creator campaign) | 400 | `"Non-creator, non-external campaigns require at least one recipient."` |
+| Invalid campaign data (Pydantic) | 422 | `"Invalid campaign data: {pydantic error string}"` |
+| Personalization template failure | 400 | `"Personalization failed: {error}. Check that all template placeholders have matching recipient fields."` |
+| Product not found | 404 | `"Product not found: {product_id}"` |
+| Not authorized for product | 403 | `"Not authorized to use this product"` |
+| Sender account not found | 400 | `"Sender account not found or inactive: {email}"` |
+| Not authorized for sender | 403 | `"Not authorized to use sender account: {email}"` |
+| CSV missing email column | 400 | `"CSV must contain an 'email' column. Found columns: {col1}, {col2}, ..."` |
+| Invalid image type | 400 | `"Invalid image type '{content_type}'. Allowed: jpeg, jpg, png, gif, webp"` |
+| Image upload failed | 500 | `"Failed to upload campaign image: {error}"` |
+| Email signature too long | 400 | `"Email signature exceeds maximum length of 10,000 characters"` |
+
+#### Email / Thread Errors
+
+| Condition | HTTP Status | Detail message |
+|-----------|------------|----------------|
+| Thread not found | 404 | `"Thread '{gmail_thread_id}' not found"` (special-cased — no status prefix) |
+| Draft version mismatch (conflict) | 409 | `"State ID doesn't match thread"` |
+| Draft not found | 404 | `"Draft not found"` |
+| Email dispatch validation | 422 | `"Either gmail_account_id or smtp_account_id must be provided, but not both"` |
+| Dispatch time validation | 422 | `"dispatch_at must be in the future"` |
+| Team member send restriction | 403 | `"Team members cannot send emails for campaigns they don't own"` |
+
+#### Creator Errors
+
+| Condition | HTTP Status | Detail message |
+|-----------|------------|----------------|
+| Creator not found | 404 | `"Creator '{creator_id}' not found in campaign '{campaign_id}'"` (special-cased) |
+| Creator not in campaign | 400 | `"Creator {creator_id} is not in campaign {campaign_id}"` |
+| Duplicate creator email | 409 | `"Creator with email {email} already exists in campaign"` |
+| Enrichment not found | 404 | `"Enrichment attempt not found"` |
+| Creator list not found | 404 | `"Creator list not found"` |
+| Not authorized to add to campaign | 403 | `"Not authorized to add creators to this campaign"` |
+
+#### Integration Errors
+
+| Condition | HTTP Status | Detail message |
+|-----------|------------|----------------|
+| Gmail account not connected | 400 | `"No Gmail account connected"` |
+| SMTP account not found | 404 | `"SMTP account not found"` |
+| SMTP duplicate email | 409 | `"SMTP account with email {email} already exists"` |
+| IMAP verification failed | 400 | `"Failed to verify IMAP connection: {error}"` |
+| Sheet not found | 404 | `"Sheet not found or access denied"` |
+| Invalid Shopify key | 400 | `"Invalid GoAffPro API key"` |
+| Instantly not connected | 400 | `"Instantly not connected. Please connect via the webapp."` |
+
+#### Team / User Errors
+
+| Condition | HTTP Status | Detail message |
+|-----------|------------|----------------|
+| Not a team member | 403 | `"Not a member of this team"` |
+| Already a team member | 400 | `"User is already a member of this team"` |
+| Member not found | 404 | `"Member not found"` |
+| Supabase invite error | 400 | `"Could not invite user: {supabase_error_message}"` |
+| Campaign doesn't belong to team | 400 | `"Campaign does not belong to this team's owner"` |
+| Creator already assigned | 400 | `"Creator is already assigned to this campaign"` (campaign assignment) |
+| Invalid service API key | 401 | `"Invalid service API key"` |
+
+#### Workflow Errors
+
+| Condition | HTTP Status | Detail message |
+|-----------|------------|----------------|
+| Workflow not found | 404 | `"Workflow not found"` |
+| Workflow already exists | 409 | `"Workflow with this ID already exists"` |
+| Execution not found | 404 | `"Execution not found"` |
+| Tool not found (registry) | 404 | `"Tool {slug} not found"` |
+| Invalid workflow config | 422 | `"Invalid workflow configuration: {pydantic error}"` |
+
+#### Search / Discovery Errors
+
+| Condition | HTTP Status | Detail message |
+|-----------|------------|----------------|
+| IC API error | 400/500 | `"Influencer Club API error: {error}"` |
+| Apify rate limited | 429 | `"Service rate limit exceeded. Please try again later."` |
+| YouTube rate limited | 429 | `"Service rate limit exceeded. Please try again later."` |
+| IC profile not found | 404 | `"Profile not found for handle: {handle}"` |
+| Similarity search: no query or thread | Pre-call | `"Either query or thread_id is required for similarity search"` |
+
+---
+
+### 2.8 Retry Logic
+
+Tools have **NO automatic retry logic**. All errors are raised immediately on first failure. The Claude agent is responsible for deciding whether to retry.
+
+#### Agent Retry Decision Matrix
+
+| Error type | Should retry? | Wait before retry | Max retries | Agent action if still failing |
+|-----------|--------------|-------------------|-------------|-------------------------------|
+| 5xx Server Error | Yes | 0s (immediate) | 1 | Report: "The Cheerful backend returned a server error. Please try again in a moment." |
+| Timeout (ReadTimeout) | Yes | 0s (immediate) | 1 | Report: "The request timed out after 30 seconds. This operation may be too slow to run from Slack." |
+| Connection error | Yes | 0s (immediate) | 1 | Report: "Could not connect to Cheerful backend. Check if the service is running." |
+| 429 Rate limited | Yes | 5 seconds | 1 | Report: "The external service is rate-limited. Please try again in a few minutes." |
+| 400 Bad Request | No | — | 0 | Parse detail message; fix parameters or report the business logic error to user |
+| 401 Unauthorized | No | — | 0 | Report: "Authentication failed. The service API key may be misconfigured." |
+| 403 Forbidden | No | — | 0 | Report: "You don't have permission to perform this action. The campaign owner may need to grant you access." |
+| 404 Not Found | No | — | 0 | Report: "The resource was not found. Verify the ID is correct." |
+| 409 Conflict | No | — | 0 | Report the specific conflict (e.g., "This creator is already in the campaign.") |
+| 422 Validation | No | — | 0 | Fix the parameter that failed validation |
+| User not resolved | No | — | 0 | Report: "Your Slack account is not linked to a Cheerful account. Contact the workspace admin." |
+| Config missing | No | — | 0 | Report: "The Cheerful integration is not configured. Contact the workspace admin." |
+| Pydantic ValidationError (Format D) | No | — | 0 | Fix the parameter type/value |
+| Tool not found | No | — | 0 | Use `discover_tools` to find the correct tool name |
+
+#### Agent Retry Rules
+- Never retry the same parameters that caused a 4xx error — the same parameters will produce the same error
+- For 5xx and timeouts: retry exactly **once**, immediately, with identical parameters
+- For 429: wait **5 seconds** before retrying once
+- Never retry more than once automatically — surface the error to the user for manual resolution
+- Do NOT retry if the error message says the user has a permission issue (403) — retrying won't help
+
+---
+
+### 2.9 Slack Error Surfacing Guide
+
+When the Claude agent receives an error from a tool, it should translate it into natural language for the Slack user. Rules:
+
+1. **Never show raw ToolError strings** like `"Failed to list campaigns (500): Internal server error"` — this is confusing to non-technical users
+2. **Parse the error** to understand the category (auth, permission, not-found, validation, server)
+3. **Translate to plain English** with actionable guidance when possible
+4. **Include the key detail** from the error message — don't lose the specific campaign ID, email, or constraint that failed
+
+#### Error Translation Examples
+
+| Raw ToolError message | Slack-formatted response |
+|-----------------------|--------------------------|
+| `"Could not resolve Cheerful user. Ensure user mapping exists."` | "Your Slack account isn't linked to Cheerful. Ask your admin to add you to the Cheerful user mapping." |
+| `"Thread 'abc123' not found"` | "I couldn't find that email thread. The thread ID may be incorrect or the thread may have been deleted." |
+| `"Failed to list campaigns (401): {\"detail\":\"Invalid service API key\"}"` | "The Cheerful integration isn't configured correctly. Please contact your workspace admin." |
+| `"Failed to launch campaign (400): {\"detail\":\"No valid sender accounts found...\"}"` | "The campaign can't be launched yet — no sender Gmail accounts are configured. Add sender accounts in the campaign settings first." |
+| `"Failed to launch campaign (403): {\"detail\":\"Not authorized to launch this campaign\"}"` | "Only the campaign owner can launch campaigns. Ask the owner to launch it, or have them assign you." |
+| `"Failed to send email (422): {\"detail\":\"dispatch_at must be in the future\"}"` | "The scheduled send time you specified has already passed. Please choose a future time." |
+| `"Creator search failed: ReadTimeout"` | "The search timed out after 30 seconds. Try a more specific search query, or try again in a moment." |
+| `"Failed to list campaigns (429): {\"detail\":\"Service rate limited...\"}"` | "The discovery service is temporarily rate-limited. I'll try again in a moment." (then retry after 5s) |
+
+#### When to Ask for Clarification
+
+If a 400 error message is ambiguous (e.g., `"Personalization failed: {error}. Check template placeholders..."`), the agent should:
+1. Quote the specific error detail to the user
+2. Ask: "Which creator fields are you trying to reference in the email template? I can help you check that the placeholders match."
+
+#### Permission Errors (403) — Special Handling
+
+403 errors require explaining the permission model to the user:
+- **Owner-only operations** (launch, integrations, team management): "This action requires campaign ownership. [Tool X] can only be performed by the person who created the campaign."
+- **Assignment-required operations** (viewing campaign data): "You need to be assigned to this campaign to access it. Ask the campaign owner to assign you."
+- **User-scoped operations** (profile, settings): Should not produce 403 unless there's a bug
 
 ---
 
