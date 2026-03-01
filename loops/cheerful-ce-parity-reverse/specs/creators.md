@@ -3,13 +3,13 @@
 **Domain**: Creators
 **Spec file**: `specs/creators.md`
 **Wave 2 status**: Tool design complete
-**Wave 3 status**: Pending (full OpenAPI-level specs)
+**Wave 3 status**: COMPLETE — full OpenAPI-level specs verified against source
 
 ---
 
 ## Table of Contents
 
-1. [Campaign Creator Listing & Detail](#campaign-creator-listing--detail) (3 existing tools)
+1. [Campaign Creator Listing & Detail](#campaign-creator-listing--detail) (3 existing tools — audited)
 2. [Standalone Creator Enrichment](#standalone-creator-enrichment) (2 new tools)
 3. [Creator Search & Discovery (Influencer Club)](#creator-search--discovery-influencer-club) (4 new tools)
 4. [Creator Lists — CRUD](#creator-lists--crud) (5 new tools)
@@ -24,53 +24,114 @@
 
 > **Cross-reference — Search & Discovery**: The `specs/search-and-discovery.md` spec covers YouTube lookalike search and lookalike suggestion management. Creator search via Influencer Club (IC) is documented here because it's part of the core creator lifecycle: discover → enrich → add to list → add to campaign → track posts.
 
-> **Note on existing tools**: The 3 existing CE tools all need audit in Wave 3 — the capability extraction found: `cheerful_list_campaign_creators` missing `offset` parameter, `cheerful_search_campaign_creators` service endpoint may lack user_id ownership validation (security gap), and existing XML formatter drops `status`+`slack_channel_id` fields.
-
 ---
 
 ## Campaign Creator Listing & Detail
 
 ### `cheerful_list_campaign_creators`
 
-**Status**: EXISTS — needs audit
+**Status**: EXISTS — audited and corrected
 
 **Purpose**: List creators in a campaign with optional filtering by gifting status and role.
 
 **Maps to**: `GET /api/service/campaigns/{campaign_id}/creators`
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: owner-or-assigned (user must own or be assigned to the campaign).
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: owner-or-assigned (user must own or be assigned to the campaign via `campaign_member_assignment`).
 
-**Current parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| campaign_id | uuid | yes | — | Campaign to list creators from |
-| gifting_status | string | no | — | Filter by gifting status value |
-| role | enum | no | — | Filter by creator role. One of: "creator", "talent_manager", "agency_staff", "internal", "unknown" |
+| campaign_id | string (uuid) | yes | — | Campaign to list creators from |
+| gifting_status | string | no | null | Filter by gifting status value (any valid gifting status string) |
+| role | string | no | null | Filter by creator role. One of: "creator", "talent_manager", "agency_staff", "internal", "unknown" |
 | limit | integer | no | 50 | Max results. Range: 1-100 |
 
-**Known issues (Wave 3 audit)**:
-- Missing `offset` parameter — the service endpoint supports it (`offset: int, min 0, default 0`) but `ListCampaignCreatorsInput` model doesn't expose it. Needs to be added for pagination.
-- Existing XML formatter drops `status` and `slack_channel_id` fields from the response — needs correction.
-- Consider adding `paid_promotion_status` filter (exists in the data model but not as a filter param).
+**Parameter Validation Rules**:
+- `campaign_id` must be a valid UUID
+- `limit` must be between 1 and 100
 
-**Returns**: Array of campaign creator summary objects:
-- id: uuid
-- name: string (nullable)
-- email: string (nullable)
-- role: string
-- gifting_status: string (nullable)
-- paid_promotion_status: string (nullable)
-- latest_interaction_at: datetime (nullable)
-- social_media_handles: SocialMediaHandleAndUrl[] (platform, handle, url)
+**AUDIT FINDINGS — Issues in current implementation**:
+1. **Missing `offset` parameter**: The service endpoint at `service.py` line 215 accepts `offset: int` (default 0, min 0) but the tool's `ListCampaignCreatorsInput` model does NOT expose it. **Pagination is broken** — only the first page of results can be fetched. Must add `offset: int = Field(default=0, ge=0)` to the Input model and pass through to the API call.
+2. **Missing `paid_promotion_status` filter**: The data model supports this field but there is no filter parameter for it. Consider adding for parity.
+3. **XML formatter drops fields**: The formatter drops `status` and `slack_channel_id` fields from the response.
 
-**Slack formatting notes**: Agent should present as a numbered list: `{name} ({email}) — {role}, gifting: {status}`. For large lists, summarize: "42 creators: 30 enriched, 8 pending, 4 not found".
+**Return Schema**:
+```json
+{
+  "creators": [
+    {
+      "id": "uuid — campaign creator ID",
+      "name": "string | null — creator's display name",
+      "email": "string | null — email address (null if not yet enriched)",
+      "role": "string — one of: creator, talent_manager, agency_staff, internal, unknown",
+      "gifting_status": "string | null — gifting pipeline status",
+      "paid_promotion_status": "string | null — paid promotion pipeline status",
+      "latest_interaction_at": "datetime | null — last email interaction timestamp",
+      "social_media_handles": [
+        {
+          "platform": "string — one of: instagram, twitter, facebook, youtube, tiktok, linkedin, other",
+          "handle": "string — e.g., john_doe",
+          "url": "string | null — explicit URL (not inferred from handle)"
+        }
+      ]
+    }
+  ],
+  "total": "integer — total count matching filters"
+}
+```
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| Campaign not found or user cannot access | Backend returns error | 404 or 403 |
+
+**Pagination**: Offset-based (once `offset` bug is fixed). Default limit: 50, max: 100. Response includes `total` count.
+
+**Example Request**:
+```
+cheerful_list_campaign_creators(campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890", gifting_status="sent", limit=25)
+```
+
+**Example Response**:
+```json
+{
+  "creators": [
+    {
+      "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+      "name": "Sarah Chen",
+      "email": "sarah@example.com",
+      "role": "creator",
+      "gifting_status": "sent",
+      "paid_promotion_status": null,
+      "latest_interaction_at": "2026-02-28T14:30:00Z",
+      "social_media_handles": [
+        {"platform": "instagram", "handle": "sarahchen_style", "url": null},
+        {"platform": "tiktok", "handle": "sarahchen", "url": null}
+      ]
+    }
+  ],
+  "total": 42
+}
+```
+
+**Slack Formatting Notes**:
+- Present as a numbered list: `{name} ({email}) — {role}, gifting: {status}`
+- For large lists, summarize: "42 creators: 30 enriched, 8 pending, 4 not found"
+- If `total` exceeds `limit`, indicate: "Showing {limit} of {total} — ask for next page"
+
+**Edge Cases**:
+- Campaign with zero creators returns `{"creators": [], "total": 0}`
+- Filtering by gifting_status that no creator has returns empty list
+- Social media handles array can be empty `[]`
 
 ---
 
 ### `cheerful_get_campaign_creator`
 
-**Status**: EXISTS — needs audit
+**Status**: EXISTS — audited and verified
 
 **Purpose**: Get full detail for a specific campaign creator including enrichment data, addresses, discount codes, talent manager info, and notes history.
 
@@ -78,72 +139,205 @@
 
 **Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner-or-assigned (via campaign access check).
 
-**Current parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| campaign_id | uuid | yes | — | Campaign the creator belongs to |
-| creator_id | uuid | yes | — | Campaign creator ID |
+| campaign_id | string (uuid) | yes | — | Campaign the creator belongs to |
+| creator_id | string (uuid) | yes | — | Campaign creator ID |
 
-**Returns**: Full campaign creator detail object:
-- id: uuid
-- name: string (nullable)
-- email: string (nullable)
-- role: enum — "creator", "talent_manager", "agency_staff", "internal", "unknown"
-- gifting_status: string (nullable)
-- paid_promotion_status: string (nullable)
-- enrichment_status: enum — "pending", "enriching", "enriched", "not_found"
-- source: enum — "email", "csv", "search", "sheet", "list", "api"
-- social_media_handles: SocialMediaHandleAndUrl[]
-- gifting_address: object (nullable — shipping address fields)
-- discount_code: string (nullable)
-- talent_manager_name: string (nullable)
-- talent_manager_email: string (nullable)
-- confidence_score: float (nullable)
-- manually_verified: boolean
-- notes_history: array of notes (timestamp, content, author)
-- latest_interaction_at: datetime (nullable)
-- post_opt_in_follow_up_status: enum (nullable) — "PENDING", "PROCESSING", "SENT", "FAILED", "CANCELLED"
-- created_at: datetime
-- updated_at: datetime
+**Parameter Validation Rules**:
+- Both must be valid UUIDs
 
-**Slack formatting notes**: Agent should present as a structured profile card: name, email, role, enrichment status, social handles (as links), and key status fields. Notes history as a threaded reply if long.
+**Return Schema**:
+```json
+{
+  "id": "uuid — campaign creator ID",
+  "campaign_id": "uuid — campaign this creator belongs to",
+  "name": "string | null — creator display name",
+  "email": "string | null — email address",
+  "role": "string — one of: creator, talent_manager, agency_staff, internal, unknown",
+  "gifting_status": "string | null — gifting pipeline status",
+  "paid_promotion_status": "string | null — paid promotion pipeline status",
+  "paid_promotion_rate": "string | null — paid promotion rate/pricing",
+  "enrichment_status": "string — one of: pending, enriching, enriched, not_found",
+  "source": "string — one of: email, csv, search, sheet, list, api",
+  "social_media_handles": [
+    {
+      "platform": "string — one of: instagram, twitter, facebook, youtube, tiktok, linkedin, other",
+      "handle": "string",
+      "url": "string | null"
+    }
+  ],
+  "gifting_address": "string | null — shipping address (free-form text or structured JSON)",
+  "gifting_discount_code": "string | null — discount code assigned to creator",
+  "talent_manager_name": "string | null — talent manager's name",
+  "talent_manager_email": "string | null — talent manager's email",
+  "talent_agency": "string | null — talent agency name",
+  "confidence_score": "float | null — email confidence score from enrichment",
+  "manually_verified": "boolean — whether email was manually verified",
+  "notes_history": [
+    {
+      "content": "string — note text",
+      "timestamp": "datetime — when note was added",
+      "author": "string | null — who wrote the note"
+    }
+  ],
+  "latest_interaction_at": "datetime | null — last email interaction",
+  "post_opt_in_follow_up_status": "string | null — one of: PENDING, PROCESSING, SENT, FAILED, CANCELLED",
+  "created_at": "datetime — when creator was added to campaign",
+  "updated_at": "datetime — last modification timestamp"
+}
+```
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| Creator not found in campaign | Backend returns 404 | 404 |
+| User cannot access campaign | Backend returns error | 403 |
+
+**Example Request**:
+```
+cheerful_get_campaign_creator(campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890", creator_id="f47ac10b-58cc-4372-a567-0e02b2c3d479")
+```
+
+**Example Response**:
+```json
+{
+  "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+  "campaign_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "name": "Sarah Chen",
+  "email": "sarah@example.com",
+  "role": "creator",
+  "gifting_status": "sent",
+  "paid_promotion_status": null,
+  "paid_promotion_rate": null,
+  "enrichment_status": "enriched",
+  "source": "search",
+  "social_media_handles": [
+    {"platform": "instagram", "handle": "sarahchen_style", "url": null}
+  ],
+  "gifting_address": "123 Main St, Los Angeles, CA 90001",
+  "gifting_discount_code": "SARAH20",
+  "talent_manager_name": null,
+  "talent_manager_email": null,
+  "talent_agency": null,
+  "confidence_score": 0.95,
+  "manually_verified": false,
+  "notes_history": [
+    {"content": "Confirmed interest in gifting collab", "timestamp": "2026-02-15T10:00:00Z", "author": "agent"}
+  ],
+  "latest_interaction_at": "2026-02-28T14:30:00Z",
+  "post_opt_in_follow_up_status": "SENT",
+  "created_at": "2026-02-01T09:00:00Z",
+  "updated_at": "2026-02-28T14:30:00Z"
+}
+```
+
+**Slack Formatting Notes**:
+- Present as a structured profile card: name, email, role, enrichment status, social handles (as links)
+- Key status fields in a summary line: "Gifting: {status} | Enrichment: {status} | Follow-up: {status}"
+- Notes history as a threaded reply if more than 2 notes
+
+**Edge Cases**:
+- `notes_history` can be empty `[]`
+- `social_media_handles` can be empty `[]`
+- All nullable fields may be null simultaneously for newly-added creators
+- `confidence_score` is 0.0-1.0 range (null if not enriched)
 
 ---
 
 ### `cheerful_search_campaign_creators`
 
-**Status**: EXISTS — needs audit
+**Status**: EXISTS — audited, security gap documented
 
 **Purpose**: Search campaign creators across all campaigns by name, email, or social media handle.
 
 **Maps to**: `GET /api/service/creators/search`
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: authenticated (searches across all user's campaigns).
+**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: authenticated (searches across all user's campaigns). **SECURITY GAP**: The service endpoint sends `user_id` as a query param but the backend may not validate it — the search may return creators from ALL campaigns globally. This must be verified and fixed in the service route.
 
-**Current parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | query | string | yes | — | Search query — matches against name, email, social media handle |
-| campaign_id | uuid | no | — | Optional: limit search to a specific campaign |
+| campaign_id | string (uuid) | no | null | Optional: limit search to a specific campaign |
 | limit | integer | no | 20 | Max results. Range: 1-50 |
 
-**Known issues (Wave 3 audit)**:
-- **Security gap**: The service endpoint may not filter results by `user_id` — needs verification against `service.py`. If unscoped, a user could potentially see creators from other users' campaigns.
-- Missing `offset` parameter for pagination.
+**Parameter Validation Rules**:
+- `query` must be non-empty
+- `limit` range: 1-50 (clamped at service endpoint level)
+- `campaign_id` must be valid UUID if provided
 
-**Returns**: Array of cross-campaign creator search results:
-- id: uuid (campaign creator ID)
-- campaign_id: uuid
-- campaign_name: string
-- name: string (nullable)
-- email: string (nullable)
-- role: string
-- gifting_status: string (nullable)
-- social_media_handles: SocialMediaHandleAndUrl[]
+**AUDIT FINDINGS — Issues in current implementation**:
+1. **Missing `offset` parameter**: Service endpoint likely supports it but the Input model doesn't expose it. No pagination beyond first page.
+2. **Security gap**: Service endpoint may not filter by `user_id` — need to verify that results are scoped to user's campaigns only.
 
-**Slack formatting notes**: Agent should group results by campaign: "In campaign X: creator1, creator2. In campaign Y: creator3".
+**Return Schema**:
+```json
+{
+  "results": [
+    {
+      "id": "uuid — campaign creator ID",
+      "campaign_id": "uuid — which campaign this creator is in",
+      "campaign_name": "string — name of the campaign",
+      "name": "string | null — creator display name",
+      "email": "string | null — email address",
+      "role": "string — one of: creator, talent_manager, agency_staff, internal, unknown",
+      "gifting_status": "string | null — gifting pipeline status",
+      "social_media_handles": [
+        {
+          "platform": "string",
+          "handle": "string",
+          "url": "string | null"
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+
+**Example Request**:
+```
+cheerful_search_campaign_creators(query="sarah", limit=10)
+```
+
+**Example Response**:
+```json
+{
+  "results": [
+    {
+      "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+      "campaign_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "campaign_name": "Summer Skincare 2026",
+      "name": "Sarah Chen",
+      "email": "sarah@example.com",
+      "role": "creator",
+      "gifting_status": "sent",
+      "social_media_handles": [
+        {"platform": "instagram", "handle": "sarahchen_style", "url": null}
+      ]
+    }
+  ]
+}
+```
+
+**Slack Formatting Notes**:
+- Group results by campaign: "In campaign 'Summer Skincare': Sarah Chen (sarah@example.com), ..."
+- Show match context when possible
+
+**Edge Cases**:
+- Empty query string behavior: returns empty results
+- Same creator in multiple campaigns appears as multiple results (one per campaign)
 
 ---
 
@@ -155,29 +349,59 @@
 
 **Status**: NEW
 
-**Purpose**: Start an asynchronous email enrichment workflow for a batch of creators. Finds email addresses via multiple data providers. Returns a workflow ID for polling.
+**Purpose**: Start an asynchronous email enrichment workflow for a batch of creators. Finds email addresses via multiple data providers (cache, Apify bio crawl, Influencer Club). Returns a workflow ID for polling.
 
 **Maps to**: `POST /api/service/enrich-creators` (new service route needed; main route: `POST /v1/enrich-creators`)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: authenticated. The workflow ID is namespaced to the user (`enrich-user-{user_id}-...`) for ownership enforcement on status polling.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: authenticated. The workflow ID is namespaced to the user (`enrich-user-{user_id}-{8-char-hex}`) for ownership enforcement on status polling.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| creator_ids | uuid[] | yes | — | List of creator IDs to enrich. Min: 1, max: 500 |
+| creator_ids | uuid[] | yes | — | List of creator IDs to enrich. Min: 1, max: 500. Validated by Pydantic `max_length=500` |
 
-**Returns**: `StartEnrichmentResponse`:
-- workflow_id: string — Temporal workflow ID for polling via `cheerful_get_enrichment_workflow_status`
+**Parameter Validation Rules**:
+- `creator_ids` must contain at least 1 UUID
+- `creator_ids` must contain at most 500 UUIDs (Pydantic `max_length=500`)
+- Each element must be a valid UUID
 
-**Error responses**:
-- User not resolved: ToolError "Could not resolve Cheerful user..."
-- Empty creator_ids (422): "At least one creator_id is required"
-- Too many creator_ids (422): "Maximum 500 creators per enrichment batch"
+**Return Schema**:
+```json
+{
+  "workflow_id": "string — Temporal workflow ID in format: enrich-user-{user_id}-{hex8}"
+}
+```
 
-**Side effects**: Starts a Temporal `EnrichForCampaignWorkflow`. The workflow enriches each creator asynchronously — may take 1-6 minutes depending on batch size.
+**Error Responses**:
 
-**Slack formatting notes**: Agent should confirm: "Started enrichment for {N} creators. Use the workflow ID to check progress." Follow up with status check after ~30 seconds.
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| Empty creator_ids | Pydantic validation error | 422 |
+| Too many creator_ids (>500) | Pydantic validation error | 422 |
+
+**Side Effects**: Starts a Temporal `EnrichForCampaignWorkflow` with params `EnrichForCampaignParams(campaign_id=None, creator_ids=creator_ids)`. The workflow enriches each creator asynchronously — may take 1-6 minutes depending on batch size. Each creator is enriched via multiple providers: database cache, Apify bio crawl, Influencer Club API.
+
+**Example Request**:
+```
+cheerful_start_creator_enrichment(creator_ids=["f47ac10b-58cc-4372-a567-0e02b2c3d479", "b23dc10b-48aa-4372-b567-1a02c3d4e580"])
+```
+
+**Example Response**:
+```json
+{
+  "workflow_id": "enrich-user-550e8400-e29b-41d4-a716-446655440000-a1b2c3d4"
+}
+```
+
+**Slack Formatting Notes**:
+- Agent should confirm: "Started enrichment for {N} creators. I'll check on progress shortly."
+- Follow up with status check after ~10 seconds (Slack latency makes faster polling pointless)
+
+**Edge Cases**:
+- Creators already enriched will be re-checked (workflow is idempotent)
+- Some creator IDs may not exist in the database — the workflow handles this gracefully per-creator
 
 ---
 
@@ -189,39 +413,103 @@
 
 **Maps to**: `GET /api/service/enrich-creators/{workflow_id}/status` (new service route needed; main route: `GET /v1/enrich-creators/{workflow_id}/status`)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner-only — enforced by checking `workflow_id.startswith(f"enrich-user-{user_id}")`.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner-only — enforced by checking `workflow_id.startswith(f"enrich-user-{user_id}")`. Returns 403 if the workflow ID prefix doesn't match the authenticated user.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | workflow_id | string | yes | — | Workflow ID returned by `cheerful_start_creator_enrichment` |
 
-**Returns**: `EnrichmentStatusResponse`:
-- status: enum — "running" or "completed"
-- results: array (nullable — null while running, populated when completed):
-  - creator_id: uuid
-  - email: string (nullable — null if enrichment failed)
-  - enrichment_status: string — "enriched" or "not_found"
+**Parameter Validation Rules**:
+- `workflow_id` must be a non-empty string
+- Must start with `enrich-user-{user_id}` where `user_id` is the authenticated user's ID
 
-**Error responses**:
-- User not resolved: ToolError "Could not resolve Cheerful user..."
-- Workflow not found (404): "Enrichment workflow not found"
-- Not owner (403): "Not authorized to view this workflow" (workflow_id doesn't match user)
+**Return Schema**:
+```json
+{
+  "status": "string — one of: running, completed",
+  "results": "array | null — null while status is 'running', populated when 'completed'",
+  "results[].creator_id": "uuid — the creator that was enriched",
+  "results[].handle": "string — creator's social media handle",
+  "results[].platform": "string — platform of the handle (e.g., instagram, youtube)",
+  "results[].status": "string — one of: success, no_email_found, profile_not_found, failed",
+  "results[].email": "string | null — found email address (null if status is not 'success')",
+  "results[].source": "string | null — where the email was found. One of: cache, apify, bio_crawl, influencer_club (null if no email found)"
+}
+```
 
-**Polling model**: Frontend polls every 2-3 seconds, max ~180 attempts (6 minute timeout). If status is "running", keep polling. If "completed", results array contains per-creator outcomes.
+**Error Responses**:
 
-**Slack formatting notes**: Agent should check every ~10 seconds (not 2-3s — Slack latency makes faster polling pointless). When complete: "Enrichment complete: {N} found, {M} not found." List the found emails.
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| Workflow not owned by user | "Forbidden" | 403 |
+| Workflow failed | "Workflow failed: {status}" (where status is Temporal workflow status name) | 500 |
+| Result retrieval failed | "Failed to retrieve workflow result" | 500 |
+
+**Polling Model**: Frontend polls every 2-3 seconds, max ~180 attempts (6 minute timeout). CE agent should poll every ~10 seconds (Slack latency makes faster polling pointless). If `status` is `"running"`, `results` is null — keep polling. If `status` is `"completed"`, `results` array contains per-creator outcomes.
+
+**Example Request**:
+```
+cheerful_get_enrichment_workflow_status(workflow_id="enrich-user-550e8400-e29b-41d4-a716-446655440000-a1b2c3d4")
+```
+
+**Example Response (running)**:
+```json
+{
+  "status": "running",
+  "results": null
+}
+```
+
+**Example Response (completed)**:
+```json
+{
+  "status": "completed",
+  "results": [
+    {
+      "creator_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+      "handle": "sarahchen_style",
+      "platform": "instagram",
+      "status": "success",
+      "email": "sarah@example.com",
+      "source": "influencer_club"
+    },
+    {
+      "creator_id": "b23dc10b-48aa-4372-b567-1a02c3d4e580",
+      "handle": "mikejones_fit",
+      "platform": "instagram",
+      "status": "no_email_found",
+      "email": null,
+      "source": null
+    }
+  ]
+}
+```
+
+**Slack Formatting Notes**:
+- When running: "Enrichment still in progress..."
+- When complete: "Enrichment complete: {N} emails found, {M} not found."
+- List found emails: "@{handle} → {email} (via {source})"
+- List failures: "@{handle} — {status}"
+
+**Edge Cases**:
+- Workflow that was started but Temporal server is unavailable: returns 500
+- Workflow ID from a different user: returns 403 immediately
+- Completed workflow with all `no_email_found`: returns `status: "completed"` with empty email fields
 
 ---
 
 ## Creator Search & Discovery (Influencer Club)
 
-> These tools search for and discover NEW creators via the Influencer Club (IC) external API. They are distinct from `cheerful_search_campaign_creators` which searches creators already in your campaigns.
+> These tools search for and discover NEW creators via the Influencer Club (IC) external API at `https://api-dashboard.influencers.club`. They are distinct from `cheerful_search_campaign_creators` which searches creators already in your campaigns.
 
 > **Rate limiting**: IC API has rate limits. Tools return 429 "Search service rate limit exceeded" when hit. The agent should wait and retry.
 
 > **Search page size**: Hardcoded at 10 results per page (`_SEARCH_LIMIT = 10`). Pagination is page-based (`page=1, 2, 3...`), not offset-based.
+
+> **IC API authentication**: Bearer token via `INFLUENCER_CLUB_API_KEY` env var. Service is lazily initialized — returns None if key is not set (resulting in 503 error).
 
 ### `cheerful_search_similar_creators`
 
@@ -231,46 +519,112 @@
 
 **Maps to**: `POST /api/service/creator-search/similar` (new service route needed; main route: `POST /v1/creator-search/similar`)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: authenticated.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: authenticated. Backend uses JWT auth via `get_current_user` — new service route needs `verify_service_api_key` + `user_id` query param.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| handle | string | yes | — | Instagram or YouTube handle to find similar creators for. Length: 1-50 chars |
+| handle | string | yes | — | Instagram or YouTube handle to find similar creators for. Length: 1-50 chars. Without @ prefix |
 | platform | string | no | "instagram" | Platform to search. One of: "instagram", "youtube" |
 | page | integer | no | 1 | Page number for pagination. Min: 1 |
-| followers | object | no | null | Follower count range filter: `{ "min": int, "max": int }`. Both fields optional |
-| engagement_rate | object | no | null | Engagement rate range filter: `{ "min": float, "max": float }`. Both fields optional |
-| location | string[] | no | null | Location filter — list of location strings |
-| gender | string | no | null | Gender filter |
-| profile_language | string[] | no | null | Profile language filter — list of language codes |
+| followers | object | no | null | Follower count range filter: `{"min": integer, "max": integer}`. Both fields optional within the object |
+| engagement_rate | object | no | null | Engagement rate range filter: `{"min": float, "max": float}`. Both fields optional within the object |
+| location | string[] | no | null | Location filter — list of location name strings (passed directly to IC API) |
+| gender | string | no | null | Gender filter string (passed directly to IC API) |
+| profile_language | string[] | no | null | Profile language filter — list of language code strings |
 
-**Returns**: `CreatorSearchResponse`:
-- creators: array of `SearchedCreatorResponse`:
-  - id: string
-  - username: string
-  - full_name: string (nullable)
-  - profile_pic_url: string (nullable)
-  - follower_count: integer (nullable)
-  - is_verified: boolean (default false)
-  - biography: string (nullable)
-  - email: string (nullable)
-  - engagement_rate: float (nullable)
-- total: integer (nullable — total results across all pages)
-- provider: string — "influencer_club"
-- page: integer — current page number
-- has_more: boolean — `total > page * 10`
+**Parameter Validation Rules**:
+- `handle`: min 1 char, max 50 chars (Pydantic `Field(..., min_length=1, max_length=50)`)
+- `page`: min 1 (Pydantic `Field(default=1, ge=1)`)
+- `followers.min`, `followers.max`: both optional within the `RangeFilter` object
+- `engagement_rate.min`, `engagement_rate.max`: both optional within the `RangeFilter` object
 
-**Error responses**:
-- User not resolved: ToolError "Could not resolve Cheerful user..."
-- IC not configured (503): "Creator search service is not configured."
-- IC rate limit (429): "Search service rate limit exceeded. Try again later."
-- IC auth failure (503): "Search service is not properly configured."
-- IC other error (502): "Search service returned an error."
-- Unexpected (500): "Search failed unexpectedly."
+**Return Schema**:
+```json
+{
+  "creators": [
+    {
+      "id": "string — IC user ID or fallback 'ic-{index}'",
+      "username": "string — Instagram/YouTube handle",
+      "full_name": "string | null — display name",
+      "profile_pic_url": "string | null — profile picture URL",
+      "follower_count": "integer | null — follower/subscriber count",
+      "is_verified": "boolean — verification badge status (default: false)",
+      "biography": "string | null — bio text",
+      "email": "string | null — email if available from IC",
+      "engagement_rate": "float | null — engagement rate percentage"
+    }
+  ],
+  "total": "integer | null — total results across all pages (may be null if IC doesn't return it)",
+  "provider": "string — always 'influencer_club'",
+  "page": "integer — current page number",
+  "has_more": "boolean — true if total > page * 10"
+}
+```
 
-**Slack formatting notes**: Agent should present results as a numbered list: `@{username} — {full_name} | {follower_count} followers | {engagement_rate}% ER`. Show `has_more` status and offer to load next page.
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| IC API key not configured | "Creator search service is not configured." | 503 |
+| IC rate limit hit | "Search service rate limit exceeded. Try again later." | 429 |
+| IC auth failure (401/403) | "Search service is not properly configured." | 503 |
+| Other IC API error | "Search service returned an error." | 502 |
+| Unexpected exception | "Search failed unexpectedly." | 500 |
+
+**Pagination**: Page-based. Fixed page size of 10 results. `has_more` = `(total or 0) > page * 10`. Next page: `page + 1`.
+
+**Example Request**:
+```
+cheerful_search_similar_creators(handle="sarahchen_style", platform="instagram", page=1, followers={"min": 10000, "max": 500000})
+```
+
+**Example Response**:
+```json
+{
+  "creators": [
+    {
+      "id": "ic-123456",
+      "username": "jennabeauty",
+      "full_name": "Jenna Kim",
+      "profile_pic_url": "https://cdn.influencers.club/profiles/jennabeauty.jpg",
+      "follower_count": 125000,
+      "is_verified": true,
+      "biography": "Beauty & skincare content creator | LA based",
+      "email": "jenna@example.com",
+      "engagement_rate": 3.2
+    },
+    {
+      "id": "ic-789012",
+      "username": "skincare_guru",
+      "full_name": "Alex Torres",
+      "profile_pic_url": null,
+      "follower_count": 45000,
+      "is_verified": false,
+      "biography": "Esthetician sharing skincare tips",
+      "email": null,
+      "engagement_rate": 5.1
+    }
+  ],
+  "total": 87,
+  "provider": "influencer_club",
+  "page": 1,
+  "has_more": true
+}
+```
+
+**Slack Formatting Notes**:
+- Present results as a numbered list: `@{username} — {full_name} | {follower_count} followers | {engagement_rate}% ER`
+- If email available, append: `(email: {email})`
+- Show pagination: "Page {page} of ~{ceil(total/10)} — {total} total results"
+- Offer to load next page
+
+**Edge Cases**:
+- `total` may be null if IC API doesn't return it — `has_more` will be false
+- `id` field may be `"ic-0"`, `"ic-1"`, etc. if IC doesn't return `user_id`
+- Empty results: `{"creators": [], "total": 0, "provider": "influencer_club", "page": 1, "has_more": false}`
 
 ---
 
@@ -278,32 +632,72 @@
 
 **Status**: NEW
 
-**Purpose**: Search for creators by keyword/topic. Finds creators whose content, bio, or audience matches the keyword.
+**Purpose**: Search for creators by keyword/topic. Finds creators whose content, bio, or audience matches the keyword using IC's AI search.
 
 **Maps to**: `POST /api/service/creator-search/keyword` (new service route needed; main route: `POST /v1/creator-search/keyword`)
 
 **Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: authenticated.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| keyword | string | yes | — | Search keyword or topic. Length: 1-200 chars |
+| keyword | string | yes | — | Search keyword or topic. Length: 1-200 chars. Sent as `ai_search` filter to IC API |
 | platform | string | no | "instagram" | Platform to search. One of: "instagram", "youtube" |
 | page | integer | no | 1 | Page number. Min: 1 |
-| followers | object | no | null | Follower count range: `{ "min": int, "max": int }` |
-| engagement_rate | object | no | null | Engagement rate range: `{ "min": float, "max": float }` |
+| followers | object | no | null | Follower count range: `{"min": integer, "max": integer}` |
+| engagement_rate | object | no | null | Engagement rate range: `{"min": float, "max": float}` |
 | location | string[] | no | null | Location filter |
 | gender | string | no | null | Gender filter |
 | profile_language | string[] | no | null | Language filter |
-| sort_by | string | no | null | Sort field — available values TBD in Wave 3 (verify against IC API) |
-| sort_order | string | no | null | Sort direction — "asc" or "desc" |
+| sort_by | string | no | "relevancy" | Sort field. IC API accepts any string; defaults to "relevancy" if null |
+| sort_order | string | no | "desc" | Sort direction. Defaults to "desc" if null. Typically "asc" or "desc" |
 
-**Returns**: `CreatorSearchResponse` (same schema as `cheerful_search_similar_creators`).
+**Parameter Validation Rules**:
+- `keyword`: min 1 char, max 200 chars (Pydantic `Field(..., min_length=1, max_length=200)`)
+- `page`: min 1 (Pydantic `Field(default=1, ge=1)`)
+- `sort_by` and `sort_order` are optional strings with no enum validation — passed directly to IC API
 
-**Error responses**: Same as `cheerful_search_similar_creators`.
+**Return Schema**: Same as `cheerful_search_similar_creators` — `CreatorSearchResponse`.
 
-**Slack formatting notes**: Same as similar search. Agent should present keyword used and page info.
+**Error Responses**: Same as `cheerful_search_similar_creators`.
+
+**Example Request**:
+```
+cheerful_search_creators_by_keyword(keyword="sustainable fashion", platform="instagram", page=1, followers={"min": 5000}, sort_by="relevancy", sort_order="desc")
+```
+
+**Example Response**:
+```json
+{
+  "creators": [
+    {
+      "id": "ic-345678",
+      "username": "eco_fashionista",
+      "full_name": "Maya Green",
+      "profile_pic_url": "https://cdn.influencers.club/profiles/eco_fashionista.jpg",
+      "follower_count": 89000,
+      "is_verified": false,
+      "biography": "Sustainable fashion advocate | Thrift queen | NYC",
+      "email": "maya@ecofashion.co",
+      "engagement_rate": 4.7
+    }
+  ],
+  "total": 42,
+  "provider": "influencer_club",
+  "page": 1,
+  "has_more": true
+}
+```
+
+**Slack Formatting Notes**:
+- Same as similar search
+- Prepend with keyword context: "Results for keyword '{keyword}':"
+- Show page info and offer to load next page
+
+**Edge Cases**:
+- Very broad keywords may return many results — remind user to use filters
+- `sort_by` values are not validated — invalid values may cause IC API errors (returned as 502)
 
 ---
 
@@ -311,47 +705,107 @@
 
 **Status**: NEW
 
-**Purpose**: Enrich a single creator by handle — retrieves email address and basic profile data from Influencer Club. Supports both Instagram and YouTube (separate enrichment paths).
+**Purpose**: Enrich a single creator by handle — retrieves email address and basic profile data from Influencer Club. Supports both Instagram and YouTube (separate enrichment paths with different field mappings). This is a synchronous operation — returns immediately.
 
 **Maps to**: `POST /api/service/creator-search/enrich` (new service route needed; main route: `POST /v1/creator-search/enrich`)
 
 **Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: authenticated.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | handle | string | yes | — | Creator's handle (without @). Length: 1-50 chars |
-| platform | string | no | "instagram" | Platform. One of: "instagram", "youtube". YouTube uses a separate IC enrichment path (`enrich_creator_youtube`) with different field mapping |
+| platform | string | no | "instagram" | Platform. One of: "instagram", "youtube". YouTube uses a separate IC enrichment path with different field mapping |
 
-**Returns**: `EnrichedCreatorResponse`:
-- handle: string
-- platform: string
-- email: string (nullable — null if enrichment can't find email)
-- full_name: string (nullable)
-- biography: string (nullable)
-- follower_count: integer (nullable)
-- following_count: integer (nullable)
-- profile_pic_url: string (nullable)
-- is_verified: boolean
-- category: string (nullable)
-- city_name: string (nullable)
-- external_url: string (nullable)
-- engagement_rate: float (nullable)
+**Parameter Validation Rules**:
+- `handle`: min 1 char, max 50 chars (Pydantic `Field(..., min_length=1, max_length=50)`)
+- No explicit `@` stripping — user should provide handle without `@`
 
-**Error responses**:
-- User not resolved: ToolError "Could not resolve Cheerful user..."
-- IC not configured (503): "Creator search service is not configured."
-- IC rate limit (429): "Search service rate limit exceeded. Try again later."
-- IC auth failure (503): "Search service is not properly configured."
-- Unexpected (500): "Enrichment failed unexpectedly."
+**Return Schema**:
+```json
+{
+  "handle": "string — the handle that was enriched",
+  "platform": "string — platform used for enrichment",
+  "email": "string | null — found email address (null if IC couldn't find one)",
+  "full_name": "string | null — display name (YouTube: maps from IC 'first_name' field)",
+  "biography": "string | null — bio text (YouTube: maps from IC 'description' field)",
+  "follower_count": "integer | null — followers (YouTube: maps from IC 'subscriber_count' field)",
+  "following_count": "integer | null — following count (Instagram only — null for YouTube)",
+  "profile_pic_url": "string | null — profile picture URL (YouTube: maps from IC 'picture' field)",
+  "is_verified": "boolean — verification status (default: false; Instagram only — always false for YouTube)",
+  "category": "string | null — content category (YouTube: maps from IC 'niche_class' field)",
+  "city_name": "string | null — city/location (Instagram only — null for YouTube)",
+  "external_url": "string | null — website URL (Instagram only — null for YouTube)",
+  "engagement_rate": "float | null — engagement rate (YouTube: maps from IC 'engagement_percent' field)"
+}
+```
+
+**Platform-specific field mapping**:
+
+| Response Field | Instagram IC Source | YouTube IC Source |
+|----------------|--------------------|--------------------|
+| full_name | `full_name` | `first_name` |
+| biography | `biography` | `description` |
+| follower_count | `follower_count` | `subscriber_count` |
+| following_count | `following_count` | *(not available)* |
+| profile_pic_url | `profile_pic_url` (alias: `profile_picture`) | `picture` |
+| is_verified | `is_verified` | *(always false)* |
+| category | `category` | `niche_class` |
+| city_name | `city_name` | *(not available)* |
+| external_url | `external_url` | *(not available)* |
+| engagement_rate | `engagement_rate` (alias: `engagement_percent`) | `engagement_percent` |
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| IC API key not configured | "Creator search service is not configured." | 503 |
+| IC rate limit hit | "Search service rate limit exceeded. Try again later." | 429 |
+| IC auth failure (401/403) | "Search service is not properly configured." | 503 |
+| Other IC API error | "Search service returned an error." | 502 |
+| Unexpected exception | "Enrichment failed unexpectedly." | 500 |
 
 **Notes**:
-- YouTube enrichment maps fields differently from Instagram (IC returns different field names for YT creators).
-- This returns enrichment data immediately (synchronous) — unlike `cheerful_start_creator_enrichment` which is async/batch.
-- No caching — each call queries IC API fresh.
+- IC API calls use `email_required: "must_have"`, `include_lookalikes: false`, `include_audience_data: false`
+- IC response nests platform data under a key matching the platform name; email may be at the top level and is merged into platform data if missing
+- This returns enrichment data immediately (synchronous) — unlike `cheerful_start_creator_enrichment` which is async/batch
+- No caching — each call queries IC API fresh
 
-**Slack formatting notes**: Agent should present enrichment results as a profile card: name, email (highlighted if found), followers, engagement rate. If email is null, suggest trying standalone batch enrichment which may use additional providers.
+**Example Request**:
+```
+cheerful_enrich_creator(handle="sarahchen_style", platform="instagram")
+```
+
+**Example Response**:
+```json
+{
+  "handle": "sarahchen_style",
+  "platform": "instagram",
+  "email": "sarah@example.com",
+  "full_name": "Sarah Chen",
+  "biography": "Skincare & beauty content creator | LA based",
+  "follower_count": 125000,
+  "following_count": 890,
+  "profile_pic_url": "https://cdn.example.com/sarahchen.jpg",
+  "is_verified": true,
+  "category": "Beauty",
+  "city_name": "Los Angeles",
+  "external_url": "https://sarahchen.com",
+  "engagement_rate": 3.2
+}
+```
+
+**Slack Formatting Notes**:
+- Present as a profile card: name, email (highlighted if found), followers, engagement rate
+- If email is null: "No email found. Try batch enrichment (`cheerful_start_creator_enrichment`) which uses additional data providers."
+- Indicate platform: "Instagram profile" or "YouTube channel"
+
+**Edge Cases**:
+- YouTube enrichment returns fewer fields (no following_count, city_name, external_url)
+- Handle not found on IC: returns all-null fields with the handle echoed back
+- IC has email at top level but not in platform data: email is merged correctly
 
 ---
 
@@ -359,76 +813,153 @@
 
 **Status**: NEW
 
-**Purpose**: Get a detailed creator profile including bio links and latest posts. Uses 24-hour cache with multiple fallback sources (cache → Apify scrape → Influencer Club).
+**Purpose**: Get a detailed creator profile including bio links and latest posts. Uses 24-hour cache with multiple fallback sources: fresh cache → Apify scrape → stale cache → IC enrichment fallback.
 
 **Maps to**: `POST /api/service/creator-search/profile` (new service route needed; main route: `POST /v1/creator-search/profile`)
 
 **Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: authenticated.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| handle | string | yes | — | Creator's handle (without @). Length: 1-50 chars |
+| handle | string | yes | — | Creator's handle (without @). Length: 1-50 chars. Leading `@` is automatically stripped by the backend |
 | platform | string | no | "instagram" | Platform. One of: "instagram", "youtube" |
-| refresh | boolean | no | false | Force bypass 24h cache and fetch fresh data from Apify |
+| refresh | boolean | no | false | Force bypass 24h cache and fetch fresh data from Apify (Instagram) or IC (YouTube) |
 
-**Returns**: `CreatorProfileResponse`:
-- handle: string
-- platform: string
-- full_name: string (nullable)
-- biography: string (nullable)
-- follower_count: integer (nullable)
-- following_count: integer (nullable)
-- media_count: integer (nullable)
-- profile_pic_url: string (nullable)
-- profile_pic_url_hd: string (nullable)
-- is_verified: boolean
-- email: string (nullable)
-- category: string (nullable)
-- city_name: string (nullable)
-- external_url: string (nullable)
-- phone_number: string (nullable)
-- is_business: boolean
-- bio_links: array of `CreatorProfileBioLink`:
-  - title: string (nullable)
-  - url: string
-  - link_type: string (nullable)
-- latest_posts: array of `CreatorProfilePost`:
-  - id: string
-  - shortcode: string (nullable)
-  - url: string (nullable)
-  - caption: string (nullable)
-  - post_type: string (nullable)
-  - display_url: string (nullable)
-  - video_url: string (nullable)
-  - like_count: integer (default 0)
-  - comment_count: integer (default 0)
-  - view_count: integer (nullable)
-  - timestamp: string (nullable)
-  - is_sponsored: boolean (default false)
-- source: enum — "cache", "stale_cache", "apify", "influencer_club"
+**Parameter Validation Rules**:
+- `handle`: min 1 char, max 50 chars (Pydantic `Field(..., min_length=1, max_length=50)`)
+- Handle is auto-normalized: `handle = request.handle.lstrip("@")`
 
-**Error responses**:
-- User not resolved: ToolError "Could not resolve Cheerful user..."
-- Profile not found (404): "Profile not found for @{handle}."
-- YouTube not found (404): "YouTube profile not found for @{handle}."
-- IC not configured (503): "Creator search service is not configured."
-- Unexpected (500): "Profile fetch failed unexpectedly."
+**Return Schema**:
+```json
+{
+  "handle": "string — normalized handle (@ stripped)",
+  "platform": "string — instagram or youtube",
+  "full_name": "string | null — display name (YouTube: from profile_data.channel_name)",
+  "biography": "string | null — bio text (YouTube: from profile_data.description, Instagram: from profile_data.bio)",
+  "follower_count": "integer | null — follower/subscriber count",
+  "following_count": "integer | null — following count (Instagram only)",
+  "media_count": "integer | null — total posts/videos (YouTube: from profile_data.video_count)",
+  "profile_pic_url": "string | null — profile picture URL (YouTube: from profile_data.avatar_url)",
+  "profile_pic_url_hd": "string | null — HD profile picture (Instagram only)",
+  "is_verified": "boolean — verification badge (default: false)",
+  "email": "string | null — email address if available",
+  "category": "string | null — content category (YouTube: from profile_data.category)",
+  "city_name": "string | null — city/location from Creator.location field",
+  "external_url": "string | null — website URL (Instagram only)",
+  "phone_number": "string | null — contact phone (Instagram only, from profile_data.contact_phone_number)",
+  "is_business": "boolean — whether account is a business account (default: false, Instagram only)",
+  "bio_links": [
+    {
+      "title": "string | null — link display text",
+      "url": "string — the URL",
+      "link_type": "string | null — type of link"
+    }
+  ],
+  "latest_posts": [
+    {
+      "id": "string — post ID",
+      "shortcode": "string | null — Instagram shortcode",
+      "url": "string | null — post URL",
+      "caption": "string | null — post caption text",
+      "post_type": "string | null — type of post",
+      "display_url": "string | null — image URL",
+      "video_url": "string | null — video URL (for reels/videos)",
+      "like_count": "integer — like count (default: 0)",
+      "comment_count": "integer — comment count (default: 0)",
+      "view_count": "integer | null — view count (for videos/reels)",
+      "timestamp": "string | null — post timestamp (ISO format)",
+      "is_sponsored": "boolean — whether post is sponsored (default: false)"
+    }
+  ],
+  "source": "string — one of: cache, stale_cache, apify, influencer_club"
+}
+```
 
-**Notes**:
-- Data source priority: fresh cache (< 24h) → Apify scrape → stale cache → IC enrichment fallback.
-- The `source` field tells the agent where data came from. "stale_cache" means data is older than 24h.
-- Setting `refresh=true` bypasses cache entirely and always fetches from Apify (slower, more up-to-date).
-- Latest posts include engagement metrics — useful for evaluating creator fit.
+**Data source priority logic**:
+1. If `refresh=false` and cache exists and `last_updated_at >= (now - 24h)`: return with `source="cache"`
+2. If `refresh=false` and cache exists but stale: continue to fetch fresh, but keep stale as fallback
+3. **YouTube**: Fetch via IC enrichment → save to Creator table → return with `source="influencer_club"`
+4. **Instagram**: Fetch via Apify profile scraper → parse with `_parse_apify_profile()` → save to Creator table → return with `source="apify"`
+5. If fresh fetch fails but stale cache exists: return stale cache with `source="cache"` (graceful degradation)
+6. If no cache and fetch fails: return 404
 
-**Slack formatting notes**: Agent should present as a rich profile card: name, handle, followers/following, engagement data. Show bio links as clickable URLs. Summarize recent posts: "{N} recent posts, avg {X} likes, {Y} comments". Indicate data freshness via source.
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| Instagram profile not found (no cache, no Apify result) | "Profile not found for @{handle}." | 404 |
+| YouTube profile not found (no cache, IC enrichment failed) | "YouTube profile not found for @{handle}." | 404 |
+| IC not configured (YouTube only) | "Creator search service is not configured." | 503 |
+| Unexpected exception | "Profile fetch failed unexpectedly." | 500 |
+
+**Example Request**:
+```
+cheerful_get_creator_profile(handle="sarahchen_style", platform="instagram", refresh=false)
+```
+
+**Example Response**:
+```json
+{
+  "handle": "sarahchen_style",
+  "platform": "instagram",
+  "full_name": "Sarah Chen",
+  "biography": "Skincare & beauty content creator | LA based | collab@sarahchen.com",
+  "follower_count": 125000,
+  "following_count": 890,
+  "media_count": 342,
+  "profile_pic_url": "https://cdn.example.com/sarahchen.jpg",
+  "profile_pic_url_hd": "https://cdn.example.com/sarahchen_hd.jpg",
+  "is_verified": true,
+  "email": "sarah@example.com",
+  "category": "Beauty",
+  "city_name": "Los Angeles",
+  "external_url": "https://sarahchen.com",
+  "phone_number": null,
+  "is_business": true,
+  "bio_links": [
+    {"title": "Shop My Faves", "url": "https://linktree.com/sarahchen", "link_type": "linktree"},
+    {"title": null, "url": "https://sarahchen.com", "link_type": null}
+  ],
+  "latest_posts": [
+    {
+      "id": "3456789012",
+      "shortcode": "CxYz123",
+      "url": "https://www.instagram.com/p/CxYz123/",
+      "caption": "My morning skincare routine ✨ #skincare #beauty",
+      "post_type": "reel",
+      "display_url": "https://cdn.instagram.com/v/display.jpg",
+      "video_url": "https://cdn.instagram.com/v/video.mp4",
+      "like_count": 4523,
+      "comment_count": 89,
+      "view_count": 45000,
+      "timestamp": "2026-02-25T10:30:00Z",
+      "is_sponsored": false
+    }
+  ],
+  "source": "cache"
+}
+```
+
+**Slack Formatting Notes**:
+- Present as a rich profile card: name, handle, followers/following, engagement data
+- Show bio links as clickable URLs
+- Summarize recent posts: "{N} recent posts, avg {X} likes, {Y} comments"
+- Indicate data freshness: "Data from {source}" — "stale_cache" means older than 24h, suggest refresh
+
+**Edge Cases**:
+- YouTube profiles return fewer fields (no following_count, profile_pic_url_hd, external_url, phone_number, is_business, bio_links, latest_posts may differ)
+- `latest_posts` array can be empty
+- `bio_links` array can be empty
+- `source="stale_cache"` indicates data may be outdated — suggest `refresh=true`
 
 ---
 
 ## Creator Lists — CRUD
 
-> Creator lists are user-owned collections for organizing creators before adding them to campaigns. All list operations are owner-only — no team sharing.
+> Creator lists are user-owned collections for organizing creators before adding them to campaigns. All list operations are owner-only — no team sharing. Ownership is verified by `creator_list.user_id != user_id` check.
 
 ### `cheerful_list_creator_lists`
 
@@ -438,22 +969,72 @@
 
 **Maps to**: `GET /api/service/lists` (new service route needed; main route: `GET /v1/lists/`)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: authenticated (returns only user's own lists).
+**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: authenticated (returns only user's own lists via `repo.get_by_user_id_with_counts(user_id)`).
 
 **Parameters**: None user-facing — returns all lists for the authenticated user.
 
-**Returns**: `CreatorListsResponse`:
-- items: array of `CreatorListWithCountResponse`:
-  - id: uuid
-  - user_id: uuid
-  - title: string
-  - creator_count: integer — total creators in list
-  - creators_without_email_count: integer — creators missing email
-  - created_at: datetime
-  - updated_at: datetime
-- total: integer — total number of lists
+**Return Schema**:
+```json
+{
+  "items": [
+    {
+      "id": "uuid — list ID",
+      "user_id": "uuid — list owner's user ID",
+      "title": "string — list name",
+      "creator_count": "integer — total creators in list",
+      "creators_without_email_count": "integer — creators missing email (default: 0)",
+      "created_at": "datetime — when list was created",
+      "updated_at": "datetime — last modification timestamp"
+    }
+  ],
+  "total": "integer — total number of lists"
+}
+```
 
-**Slack formatting notes**: Agent should present as a summary table: `{title} — {creator_count} creators ({creators_without_email_count} missing email)`.
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+
+**Example Request**:
+```
+cheerful_list_creator_lists()
+```
+
+**Example Response**:
+```json
+{
+  "items": [
+    {
+      "id": "d1e2f3a4-b5c6-7890-abcd-ef1234567890",
+      "user_id": "550e8400-e29b-41d4-a716-446655440000",
+      "title": "Summer 2026 Skincare Creators",
+      "creator_count": 45,
+      "creators_without_email_count": 12,
+      "created_at": "2026-02-01T09:00:00Z",
+      "updated_at": "2026-02-28T14:30:00Z"
+    },
+    {
+      "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+      "user_id": "550e8400-e29b-41d4-a716-446655440000",
+      "title": "Fitness Influencers",
+      "creator_count": 23,
+      "creators_without_email_count": 5,
+      "created_at": "2026-01-15T10:00:00Z",
+      "updated_at": "2026-02-20T11:00:00Z"
+    }
+  ],
+  "total": 2
+}
+```
+
+**Slack Formatting Notes**:
+- Present as a summary table: `{title} — {creator_count} creators ({creators_without_email_count} missing email)`
+- If no lists: "You have no creator lists. Create one with `cheerful_create_creator_list`."
+
+**Edge Cases**:
+- User with no lists: `{"items": [], "total": 0}`
 
 ---
 
@@ -467,24 +1048,51 @@
 
 **Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: authenticated.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| title | string | yes | — | List name. Length: 1-255 chars |
+| title | string | yes | — | List name. Length: 1-255 chars (Pydantic `min_length=1, max_length=255`) |
 
-**Returns**: `CreatorListResponse` (201 Created):
-- id: uuid
-- user_id: uuid
-- title: string
-- created_at: datetime
-- updated_at: datetime
+**Parameter Validation Rules**:
+- `title` must be between 1 and 255 characters
 
-**Error responses**:
-- User not resolved: ToolError "Could not resolve Cheerful user..."
-- Title too short/long (422): validation error
+**Return Schema** (201 Created):
+```json
+{
+  "id": "uuid — newly created list ID",
+  "user_id": "uuid — owner's user ID",
+  "title": "string — list name",
+  "created_at": "datetime — creation timestamp",
+  "updated_at": "datetime — same as created_at initially"
+}
+```
 
-**Slack formatting notes**: Agent should confirm: "Created list '{title}'. Add creators with search, CSV, or by ID."
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| Title too short/long | Pydantic validation error | 422 |
+
+**Example Request**:
+```
+cheerful_create_creator_list(title="Summer 2026 Skincare Creators")
+```
+
+**Example Response**:
+```json
+{
+  "id": "d1e2f3a4-b5c6-7890-abcd-ef1234567890",
+  "user_id": "550e8400-e29b-41d4-a716-446655440000",
+  "title": "Summer 2026 Skincare Creators",
+  "created_at": "2026-03-01T10:00:00Z",
+  "updated_at": "2026-03-01T10:00:00Z"
+}
+```
+
+**Slack Formatting Notes**:
+- Agent should confirm: "Created list '{title}'. Add creators with search, CSV, or by ID."
 
 ---
 
@@ -496,25 +1104,37 @@
 
 **Maps to**: `GET /api/service/lists/{list_id}` (new service route needed; main route: `GET /v1/lists/{list_id}`)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner-only (403 "Not authorized" if not list owner).
+**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner-only — checks `creator_list.user_id != user_id`, returns 403 if mismatch.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| list_id | uuid | yes | — | Creator list ID |
+| list_id | string (uuid) | yes | — | Creator list ID |
 
-**Returns**: `CreatorListResponse`:
-- id: uuid
-- user_id: uuid
-- title: string
-- created_at: datetime
-- updated_at: datetime
+**Return Schema**:
+```json
+{
+  "id": "uuid — list ID",
+  "user_id": "uuid — owner's user ID",
+  "title": "string — list name",
+  "created_at": "datetime — creation timestamp",
+  "updated_at": "datetime — last modification timestamp"
+}
+```
 
-**Error responses**:
-- User not resolved: ToolError "Could not resolve Cheerful user..."
-- List not found (404): "List not found"
-- Not owner (403): "Not authorized"
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| List not found | "List not found" | 404 |
+| Not owner | "Not authorized" | 403 |
+
+**Example Request**:
+```
+cheerful_get_creator_list(list_id="d1e2f3a4-b5c6-7890-abcd-ef1234567890")
+```
 
 ---
 
@@ -528,19 +1148,34 @@
 
 **Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner-only.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| list_id | uuid | yes | — | Creator list ID |
-| title | string | no | — | New title. Length: 1-255 chars. Omit to keep existing |
+| list_id | string (uuid) | yes | — | Creator list ID |
+| title | string | no | null | New title. Length: 1-255 chars if provided. If null/omitted, title is unchanged |
 
-**Returns**: `CreatorListResponse` (updated).
+**Parameter Validation Rules**:
+- `title`: if provided, must be 1-255 chars (Pydantic `min_length=1, max_length=255`)
+- `title`: if null, no update is made to the title field
 
-**Error responses**:
-- List not found (404): "List not found"
-- Not owner (403): "Not authorized"
-- Title too long (422): validation error
+**Return Schema**: Same as `cheerful_get_creator_list` (updated `CreatorListResponse`).
+
+**Side Effects**: Updates `creator_list.updated_at = func.now()`.
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| List not found | "List not found" | 404 |
+| Not owner | "Not authorized" | 403 |
+| Title too long | Pydantic validation error | 422 |
+
+**Example Request**:
+```
+cheerful_update_creator_list(list_id="d1e2f3a4-b5c6-7890-abcd-ef1234567890", title="Winter 2026 Skincare Creators")
+```
 
 ---
 
@@ -548,25 +1183,36 @@
 
 **Status**: NEW
 
-**Purpose**: Delete a creator list and all its items.
+**Purpose**: Delete a creator list and all its items (cascading delete via `CreatorListItem` FK).
 
 **Maps to**: `DELETE /api/service/lists/{list_id}` (new service route needed; main route: `DELETE /v1/lists/{list_id}`)
 
 **Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner-only.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| list_id | uuid | yes | — | Creator list ID |
+| list_id | string (uuid) | yes | — | Creator list ID |
 
-**Returns**: 204 No Content (success confirmation).
+**Return Schema**: 204 No Content (success confirmation).
 
-**Error responses**:
-- List not found (404): "List not found"
-- Not owner (403): "Not authorized"
+**Error Responses**:
 
-**Slack formatting notes**: Agent should confirm with list title for context: "Deleted list '{title}' and all {N} creators in it."
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| List not found | "List not found" | 404 |
+| Not owner | "Not authorized" | 403 |
+
+**Side Effects**: Deletes all `CreatorListItem` records associated with the list (cascading FK delete).
+
+**Slack Formatting Notes**: Agent should confirm with list title for context: "Deleted list '{title}' and all its creators."
+
+**Example Request**:
+```
+cheerful_delete_creator_list(list_id="d1e2f3a4-b5c6-7890-abcd-ef1234567890")
+```
 
 ---
 
@@ -582,33 +1228,97 @@
 
 **Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner-only (list must belong to user).
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| list_id | uuid | yes | — | Creator list ID |
-| limit | integer | no | 50 | Results per page. Range: 1-100 |
-| offset | integer | no | 0 | Pagination offset. Min: 0 |
+| list_id | string (uuid) | yes | — | Creator list ID |
+| limit | integer | no | 50 | Results per page. Range: 1-100 (Pydantic `Query(default=50, ge=1, le=100)`) |
+| offset | integer | no | 0 | Pagination offset. Min: 0 (Pydantic `Query(default=0, ge=0)`) |
 
-**Returns**: `CreatorListItemsResponse`:
-- items: array of `CreatorInListResponse`:
-  - id: uuid — list item ID
-  - creator_id: uuid — global creator ID
-  - platform: string
-  - handle: string
-  - email: string (nullable)
-  - email_status: enum — "has_email" or "no_email"
-  - follower_count: integer
-  - is_verified: boolean
-  - location: string (nullable)
-  - profile_data: object — full profile data dict
-  - profile_image_url: string (nullable) — Supabase Storage public URL
-  - added_at: datetime
-- total: integer — total creators in list
+**Return Schema**:
+```json
+{
+  "items": [
+    {
+      "id": "uuid — CreatorListItem ID (the join table record ID)",
+      "creator_id": "uuid — global Creator ID",
+      "platform": "string — platform name (e.g., instagram, youtube, tiktok)",
+      "handle": "string — creator's handle on the platform",
+      "email": "string | null — email address (null if not found yet)",
+      "email_status": "string — one of: has_email, no_email (computed from email field presence)",
+      "follower_count": "integer — follower count",
+      "is_verified": "boolean — verification badge status",
+      "location": "string | null — creator's location",
+      "profile_data": "object — full platform-specific profile data dict (JSONB). Contains profile_pic_url, profile_url, full_name for search-added creators; varies by source",
+      "profile_image_url": "string | null — Supabase Storage public URL of stored profile image (computed via image_service.get_public_url if profile_image_path exists)",
+      "added_at": "datetime — when creator was added to this list (CreatorListItem.created_at)"
+    }
+  ],
+  "total": "integer — total creators in list"
+}
+```
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| List not found | "List not found" | 404 |
+| Not owner | "Not authorized" | 403 |
 
 **Pagination**: Offset-based. Default limit: 50, max: 100. Response includes `total` count.
 
-**Slack formatting notes**: Agent should present as: `@{handle} ({platform}) — {email_status}, {follower_count} followers`. Summarize: "{total} creators, {N} with email, {M} without".
+**Example Request**:
+```
+cheerful_list_creator_list_items(list_id="d1e2f3a4-b5c6-7890-abcd-ef1234567890", limit=25, offset=0)
+```
+
+**Example Response**:
+```json
+{
+  "items": [
+    {
+      "id": "c1d2e3f4-a5b6-7890-cdef-123456789012",
+      "creator_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+      "platform": "instagram",
+      "handle": "sarahchen_style",
+      "email": "sarah@example.com",
+      "email_status": "has_email",
+      "follower_count": 125000,
+      "is_verified": true,
+      "location": "Los Angeles",
+      "profile_data": {"profile_pic_url": "https://cdn.example.com/sarah.jpg", "profile_url": "https://instagram.com/sarahchen_style", "full_name": "Sarah Chen"},
+      "profile_image_url": "https://myproject.supabase.co/storage/v1/object/public/creator-images/instagram/sarahchen_style.jpg",
+      "added_at": "2026-02-15T10:00:00Z"
+    },
+    {
+      "id": "d2e3f4a5-b6c7-8901-def0-234567890123",
+      "creator_id": "b23dc10b-48aa-4372-b567-1a02c3d4e580",
+      "platform": "instagram",
+      "handle": "mikejones_fit",
+      "email": null,
+      "email_status": "no_email",
+      "follower_count": 45000,
+      "is_verified": false,
+      "location": null,
+      "profile_data": {},
+      "profile_image_url": null,
+      "added_at": "2026-02-16T11:00:00Z"
+    }
+  ],
+  "total": 45
+}
+```
+
+**Slack Formatting Notes**:
+- Present as: `@{handle} ({platform}) — {email_status}, {follower_count} followers`
+- Summarize: "{total} creators, {N} with email, {M} without"
+
+**Edge Cases**:
+- Empty list: `{"items": [], "total": 0}`
+- `profile_data` structure varies by how the creator was added (search, CSV, or by ID)
+- `profile_image_url` is only populated for creators added via "from-search" endpoint (which downloads images)
 
 ---
 
@@ -616,29 +1326,55 @@
 
 **Status**: NEW
 
-**Purpose**: Add existing creators (by ID) to a creator list. Skips duplicates.
+**Purpose**: Add existing creators (by global Creator ID) to a creator list. Skips duplicates.
 
 **Maps to**: `POST /api/service/lists/{list_id}/creators` (new service route needed; main route: `POST /v1/lists/{list_id}/creators`)
 
 **Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner-only.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| list_id | uuid | yes | — | Creator list ID |
-| creator_ids | uuid[] | yes | — | List of creator IDs to add. Min: 1 |
+| list_id | string (uuid) | yes | — | Creator list ID |
+| creator_ids | uuid[] | yes | — | List of global Creator IDs to add. Min: 1 (Pydantic `min_length=1`) |
 
-**Returns**: `AddCreatorsToListResponse`:
-- added_count: integer — number of creators successfully added
-- skipped_count: integer — number skipped (already in list)
+**Parameter Validation Rules**:
+- `creator_ids` must contain at least 1 UUID
 
-**Error responses**:
-- List not found (404): "List not found"
-- Not owner (403): "Not authorized"
-- Empty creator_ids (422): validation error
+**Return Schema**:
+```json
+{
+  "added_count": "integer — number of creators successfully added",
+  "skipped_count": "integer — number skipped (already in list, duplicate)"
+}
+```
 
-**Slack formatting notes**: Agent should report: "Added {added_count} creators to '{list_title}'. {skipped_count} already in list."
+**Side Effects**: Updates `creator_list.updated_at = func.now()`.
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| List not found | "List not found" | 404 |
+| Not owner | "Not authorized" | 403 |
+| Empty creator_ids | Pydantic validation error | 422 |
+
+**Example Request**:
+```
+cheerful_add_creators_to_list(list_id="d1e2f3a4-b5c6-7890-abcd-ef1234567890", creator_ids=["f47ac10b-58cc-4372-a567-0e02b2c3d479", "b23dc10b-48aa-4372-b567-1a02c3d4e580"])
+```
+
+**Example Response**:
+```json
+{
+  "added_count": 2,
+  "skipped_count": 0
+}
+```
+
+**Slack Formatting Notes**: Agent should report: "Added {added_count} creators to list. {skipped_count} already in list."
 
 ---
 
@@ -646,44 +1382,80 @@
 
 **Status**: NEW
 
-**Purpose**: Add creators from Influencer Club search results to a list. Downloads and stores profile images with ETag-based deduplication.
+**Purpose**: Add creators from Influencer Club search results to a list. Downloads and stores profile images with ETag-based deduplication. Uses PostgreSQL UPSERT to handle creator records — preserves existing email (COALESCE), keeps higher follower count (GREATEST).
 
 **Maps to**: `POST /api/service/lists/{list_id}/creators/from-search` (new service route needed; main route: `POST /v1/lists/{list_id}/creators/from-search`)
 
 **Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner-only.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| list_id | uuid | yes | — | Creator list ID |
-| creators | object[] | yes | — | Array of creator data from search results. Min: 1. Each object: |
+| list_id | string (uuid) | yes | — | Creator list ID |
+| creators | object[] | yes | — | Array of creator data from search results. Min: 1 (Pydantic `min_length=1`) |
 
 **Creator object fields** (`CreatorFromSearchData`):
 
 | Field | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
 | platform | string | yes | — | One of: "instagram", "youtube" |
-| handle | string | yes | — | Creator handle. Min length: 1 |
+| handle | string | yes | — | Creator handle without @. Min length: 1 |
 | name | string | no | null | Creator display name |
-| email | string | no | null | Email address (if known from search) |
-| follower_count | integer | no | 0 | Follower count |
-| is_verified | boolean | no | false | Verification status |
-| avatar_url | string | no | null | Profile image URL (will be downloaded and stored in Supabase Storage) |
+| email | string | no | null | Email address (if known from search enrichment) |
+| follower_count | integer | no | 0 | Follower/subscriber count |
+| is_verified | boolean | no | false | Verification badge status |
+| avatar_url | string | no | null | Profile image URL (will be downloaded and stored in Supabase Storage with ETag dedup) |
 | profile_url | string | no | null | Profile page URL |
 
-**Returns**: `AddCreatorsToListResponse`:
-- added_count: integer
-- skipped_count: integer
+**Return Schema**:
+```json
+{
+  "added_count": "integer — creators successfully added to list",
+  "skipped_count": "integer — creators skipped (already in list)"
+}
+```
 
-**Error responses**:
-- List not found (404): "List not found"
-- Not owner (403): "Not authorized"
-- Empty creators (422): validation error
+**Side Effects**:
+1. **Creator UPSERT**: Each creator is upserted into the global `Creator` table using `INSERT ... ON CONFLICT DO UPDATE` on the `(platform, handle)` unique constraint:
+   - `email`: `COALESCE(existing_email, new_email)` — preserves existing email
+   - `follower_count`: `GREATEST(existing, new)` — keeps higher count
+   - `profile_image_path`: `COALESCE(new, existing)` — prefers newly downloaded image
+   - `profile_image_etag`: `COALESCE(new, existing)` — prefers new ETag
+   - `source`: set to `"search"` for new records
+   - `profile_data`: dict with `profile_pic_url`, `profile_url`, `full_name`
+2. **Profile image download**: For each creator with `avatar_url`, calls `image_service.download_and_store()` — downloads image and stores in Supabase Storage. Uses ETag for deduplication. Failures are logged as warnings and don't block the operation.
+3. **List item creation**: Adds `CreatorListItem` records linking creators to the list
+4. Updates `creator_list.updated_at = func.now()`
 
-**Side effects**: Profile images from `avatar_url` are downloaded and stored in Supabase Storage with ETag-based deduplication.
+**Error Responses**:
 
-**Slack formatting notes**: Agent should confirm: "Added {added_count} creators from search to '{list_title}'."
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| List not found | "List not found" | 404 |
+| Not owner | "Not authorized" | 403 |
+| Empty creators array | Pydantic validation error | 422 |
+
+**Example Request**:
+```
+cheerful_add_search_creators_to_list(list_id="d1e2f3a4-b5c6-7890-abcd-ef1234567890", creators=[{"platform": "instagram", "handle": "jennabeauty", "name": "Jenna Kim", "email": "jenna@example.com", "follower_count": 125000, "is_verified": true, "avatar_url": "https://cdn.influencers.club/profiles/jennabeauty.jpg"}])
+```
+
+**Example Response**:
+```json
+{
+  "added_count": 1,
+  "skipped_count": 0
+}
+```
+
+**Slack Formatting Notes**: Agent should confirm: "Added {added_count} creators from search to list."
+
+**Edge Cases**:
+- Image download failures are non-blocking — creator is still added, just without stored image
+- If creator already exists in Creator table with an email, the existing email is preserved (COALESCE)
+- If creator already in the list, they're counted as `skipped_count`
 
 ---
 
@@ -691,44 +1463,80 @@
 
 **Status**: NEW
 
-**Purpose**: Add creators from CSV data to a list. Accepts structured creator rows (platform, handle, email, follower count).
+**Purpose**: Add creators from CSV data to a list. Accepts structured creator rows with platform, handle, email, and optional follower count. Uses PostgreSQL UPSERT — overwrites email (unlike search import which preserves existing).
 
 **Maps to**: `POST /api/service/lists/{list_id}/creators/from-csv` (new service route needed; main route: `POST /v1/lists/{list_id}/creators/from-csv`)
 
 **Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner-only.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| list_id | uuid | yes | — | Creator list ID |
-| creators | object[] | yes | — | Array of CSV creator rows. Min: 1, max: 500. Each object: |
+| list_id | string (uuid) | yes | — | Creator list ID |
+| creators | object[] | yes | — | Array of CSV creator rows. Min: 1, max: 500 (Pydantic `min_length=1, max_length=500`) |
 
 **CSV creator row fields** (`CsvCreatorRow`):
 
 | Field | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
-| platform | string | yes | — | One of: "instagram", "tiktok", "youtube" |
+| platform | string | yes | — | One of: "instagram", "tiktok", "youtube". Note: TikTok is supported here but NOT in IC search |
 | handle | string | yes | — | Creator handle. Min length: 1 |
-| email | string | yes | — | Email address. Min length: 1 |
-| follower_count | integer | no | null | Follower count (optional) |
+| email | string | yes | — | Email address. Min length: 1. Required for CSV import (unlike search import) |
+| follower_count | integer | no | null | Follower count (optional). Stored as `follower_count or 0` |
 
-**Returns**: `AddCreatorsToListResponse`:
-- added_count: integer
-- skipped_count: integer
+**Parameter Validation Rules**:
+- `creators` array: min 1, max 500 items
+- `platform`: no enum validation in Pydantic — string value
+- `handle`: min 1 char
+- `email`: min 1 char
 
-**Error responses**:
-- List not found (404): "List not found"
-- Not owner (403): "Not authorized"
-- Too many creators (422): max 500 per batch
-- Invalid platform (422): must be instagram, tiktok, or youtube
+**Return Schema**:
+```json
+{
+  "added_count": "integer — creators successfully added",
+  "skipped_count": "integer — creators skipped (already in list)"
+}
+```
+
+**Side Effects**:
+1. **Creator UPSERT**: Each creator is upserted into global `Creator` table:
+   - `email`: takes new value (overwrites existing — different from search import!)
+   - `follower_count`: `GREATEST(existing, new)` — keeps higher count
+   - `source`: set to `"csv"` for new records
+   - No profile_data or image storage (CSV has no avatar info)
+2. **List item creation**: Adds `CreatorListItem` records
+3. Updates `creator_list.updated_at = func.now()`
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| List not found | "List not found" | 404 |
+| Not owner | "Not authorized" | 403 |
+| Too many creators (>500) | Pydantic validation error | 422 |
+| Empty creators array | Pydantic validation error | 422 |
 
 **Notes**:
-- CSV import supports TikTok as a platform (unlike IC search which only supports Instagram and YouTube).
-- Email is required for CSV import (unlike search import where email is optional).
-- The agent should accept CSV text from Slack, parse it into the structured format, then call this tool.
+- CSV import supports TikTok as a platform (unlike IC search which only supports Instagram and YouTube)
+- Email is required for CSV import (unlike search import where email is optional)
+- The agent should accept CSV text from Slack, parse it into the structured format, then call this tool
 
-**Slack formatting notes**: Agent should confirm: "Added {added_count} creators from CSV to '{list_title}'. {skipped_count} duplicates skipped."
+**Example Request**:
+```
+cheerful_add_csv_creators_to_list(list_id="d1e2f3a4-b5c6-7890-abcd-ef1234567890", creators=[{"platform": "instagram", "handle": "creator1", "email": "creator1@example.com", "follower_count": 50000}, {"platform": "tiktok", "handle": "creator2", "email": "creator2@example.com"}])
+```
+
+**Example Response**:
+```json
+{
+  "added_count": 2,
+  "skipped_count": 0
+}
+```
+
+**Slack Formatting Notes**: Agent should confirm: "Added {added_count} creators from CSV. {skipped_count} duplicates skipped."
 
 ---
 
@@ -742,19 +1550,30 @@
 
 **Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner-only.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| list_id | uuid | yes | — | Creator list ID |
-| creator_id | uuid | yes | — | Creator ID to remove |
+| list_id | string (uuid) | yes | — | Creator list ID |
+| creator_id | string (uuid) | yes | — | Global Creator ID to remove from the list |
 
-**Returns**: 204 No Content.
+**Return Schema**: 204 No Content.
 
-**Error responses**:
-- List not found (404): "List not found"
-- Not owner (403): "Not authorized"
-- Creator not in list (404): "Creator not found in list"
+**Side Effects**: Updates `creator_list.updated_at = func.now()`. The global `Creator` record is NOT deleted — only the `CreatorListItem` join record.
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| List not found | "List not found" | 404 |
+| Not owner | "Not authorized" | 403 |
+| Creator not in list | "Creator not found in list" | 404 |
+
+**Example Request**:
+```
+cheerful_remove_creator_from_list(list_id="d1e2f3a4-b5c6-7890-abcd-ef1234567890", creator_id="f47ac10b-58cc-4372-a567-0e02b2c3d479")
+```
 
 ---
 
@@ -768,43 +1587,77 @@
 
 **Maps to**: `POST /api/service/lists/{list_id}/add-to-campaign` (new service route needed; main route: `POST /v1/lists/{list_id}/add-to-campaign`)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner of BOTH the list AND the target campaign.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner of BOTH the list AND the target campaign. Dual ownership check: `creator_list.user_id != user_id` (403 "Not authorized") and `campaign.user_id != user_id` (403 "Not authorized for this campaign").
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| list_id | uuid | yes | — | Source creator list ID |
-| campaign_id | uuid | yes | — | Target campaign ID |
-| creator_ids | uuid[] | no | [] | Specific creator IDs to add. Empty array = add ALL creators from the list |
+| list_id | string (uuid) | yes | — | Source creator list ID |
+| campaign_id | string (uuid) | yes | — | Target campaign ID |
+| creator_ids | uuid[] | no | [] (empty) | Specific global Creator IDs to add. Empty array = add ALL creators from the list (Pydantic `default_factory=list`) |
 
-**Returns**: `AddToCampaignResponse`:
-- added_count: integer — creators successfully added to campaign
-- skipped_count: integer — creators skipped (already in campaign)
-- skipped_creators: string[] — names/handles of skipped creators
-- campaign_id: uuid — target campaign
-- enrichment_pending_count: integer — creators queued for email enrichment (had no email)
+**Return Schema**:
+```json
+{
+  "added_count": "integer — creators successfully added to campaign",
+  "skipped_count": "integer — creators skipped (already in campaign or no email + duplicate handle)",
+  "skipped_creators": "string[] — handles/names of skipped creators",
+  "campaign_id": "uuid — target campaign ID",
+  "enrichment_pending_count": "integer — creators queued for email enrichment (had no email, default: 0)"
+}
+```
 
-**Error responses**:
-- List not found (404): "List not found"
-- Not list owner (403): "Not authorized"
-- Campaign not found (404): "Campaign not found"
-- Not campaign owner (403): "Not authorized for this campaign"
-- User not resolved: ToolError "Could not resolve Cheerful user..."
+**Error Responses**:
 
-**Side effects** (critical — this is NOT just a data copy):
-1. Creators are added to `campaign_creator` table with source="list"
-2. For non-DRAFT campaigns: outbox queue is populated with initial emails for each added creator
-3. For creators without email: `EnrichForCampaignWorkflow` Temporal workflow is started to find emails
-4. The `enrichment_pending_count` tells the user how many creators need enrichment before emails can be sent
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| List not found | "List not found" | 404 |
+| Not list owner | "Not authorized" | 403 |
+| Campaign not found | "Campaign not found" | 404 |
+| Not campaign owner | "Not authorized for this campaign" | 403 |
 
-**Slack formatting notes**: Agent MUST warn about side effects: "Added {added_count} creators to campaign '{name}'. {enrichment_pending_count} need email enrichment. {skipped_count} already in campaign." If campaign is ACTIVE, additionally warn: "Outbox emails have been queued for the newly added creators."
+**Side Effects** (critical — this is NOT just a data copy):
+1. **Creator addition**: Creators WITH email are added to both `campaign_recipient` and `campaign_creator` tables (email-based dedup via idempotent insert). Creators WITHOUT email are added to `campaign_creator` only with `enrichment_status='pending'` (handle-based dedup).
+2. **Queue population**: For non-DRAFT campaigns (status is ACTIVE, PAUSED, or COMPLETED), calls `populate_queue_for_campaign(db, campaign_id)` to queue initial outreach emails. If this raises `ValueError`, it's caught, logged as warning, and doesn't fail the operation.
+3. **Enrichment workflow**: If any creators had no email (`enrichment_pending_ids` is non-empty), starts a Temporal `EnrichForCampaignWorkflow` **asynchronously after DB commit** with workflow ID format: `enrich-campaign-{campaign_id}-{hex8}`. Failures to start the workflow are caught and logged (don't fail the operation).
+4. The `enrichment_pending_count` in the response tells the user how many creators need enrichment before emails can be sent.
+
+**Example Request**:
+```
+cheerful_add_list_creators_to_campaign(list_id="d1e2f3a4-b5c6-7890-abcd-ef1234567890", campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890", creator_ids=[])
+```
+
+**Example Response**:
+```json
+{
+  "added_count": 38,
+  "skipped_count": 7,
+  "skipped_creators": ["@already_in_campaign", "@duplicate_handle"],
+  "campaign_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "enrichment_pending_count": 12
+}
+```
+
+**Slack Formatting Notes**:
+- Agent MUST warn about side effects: "Added {added_count} creators to campaign '{name}'. {enrichment_pending_count} need email enrichment. {skipped_count} already in campaign."
+- If campaign is non-DRAFT (ACTIVE), additionally warn: "Outbox emails have been queued for the newly added creators."
+- If `enrichment_pending_count > 0`: "Enrichment workflow started — emails will be found automatically."
+
+**Edge Cases**:
+- Empty `creator_ids` array means ALL creators from the list are added
+- Creators already in the campaign are silently skipped (counted in `skipped_count`)
+- If queue population fails, the creators are still added (operation is not rolled back)
+- If enrichment workflow fails to start, the creators are still added with `enrichment_status='pending'`
 
 ---
 
 ## Creator Posts (Content Verification)
 
-> Creator posts track whether gifted/sponsored creators have actually posted about the brand's product. Posts are detected via Apify Instagram scraping + LLM vision analysis.
+> Creator posts track whether gifted/sponsored creators have actually posted about the brand's product. Posts are detected via Apify Instagram scraping + LLM vision analysis (Claude Sonnet).
+
+> **CRITICAL CORRECTION from Wave 2**: Post types in the database are `"post"`, `"story"`, `"reel"` (lowercase, 3 values) — NOT `"REEL"`, `"POST"`, `"CAROUSEL"`, `"STORY"` as originally documented. Match methods are `"caption"`, `"llm"` (2 values) — NOT `"caption"`, `"vision"`, `"url"`.
 
 ### `cheerful_list_posts`
 
@@ -814,40 +1667,93 @@
 
 **Maps to**: `GET /api/service/posts` (new service route needed; main route: `GET /v1/posts`)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: authenticated (returns posts only from campaigns the user owns or is assigned to, via `get_accessible_campaign_ids`).
+**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: authenticated (returns posts only from campaigns the user owns or is assigned to, via `CampaignMemberAssignmentRepository.get_accessible_campaign_ids(user_id)` which returns UNION of owned + assigned campaigns).
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| limit | integer | no | 50 | Results per page. Range: 1-100 |
-| offset | integer | no | 0 | Pagination offset. Min: 0 |
-| sort | enum | no | "desc" | Sort by matched_at. One of: "asc", "desc" |
-| search | string | no | null | Text search across caption, creator name, campaign name |
+| limit | integer | no | 50 | Results per page. Range: 1-100 (Pydantic `Query(default=50, ge=1, le=100)`) |
+| offset | integer | no | 0 | Pagination offset. Min: 0 (Pydantic `Query(default=0, ge=0)`) |
+| sort | enum | no | "desc" | Sort by `matched_at` timestamp. One of: "asc", "desc" (Pydantic `Literal["asc", "desc"]`) |
+| search | string | no | null | Text search — filters by creator name using case-insensitive ILIKE (`CampaignCreator.name ILIKE %search%`). Does NOT search caption or campaign name |
 
-**Returns**: `PostLibraryResponse`:
-- posts: array of `PostLibraryItem`:
-  - id: uuid
-  - instagram_post_id: string
-  - post_type: enum — "REEL", "POST", "CAROUSEL", "STORY"
-  - post_url: string
-  - caption: string (nullable)
-  - media_url: string (nullable) — Supabase Storage path
-  - thumbnail_url: string (nullable)
-  - like_count: integer
-  - view_count: integer (nullable)
-  - comment_count: integer
-  - posted_at: datetime (nullable)
-  - matched_at: datetime — when the system detected the post
-  - match_method: enum — "caption", "vision", "url"
-  - creator_name: string (nullable)
-  - campaign_name: string (nullable)
-  - campaign_id: uuid
-- total: integer — total matching posts
+**Return Schema**:
+```json
+{
+  "posts": [
+    {
+      "id": "uuid — post record ID",
+      "instagram_post_id": "string — Instagram's post ID",
+      "post_type": "string — one of: post, story, reel",
+      "post_url": "string — Instagram post URL",
+      "caption": "string | null — post caption text",
+      "media_url": "string | null — Supabase Storage permanent URL for stored media",
+      "thumbnail_url": "string | null — thumbnail URL",
+      "like_count": "integer — like count (default: 0)",
+      "view_count": "integer | null — view count (for reels/videos, null for static posts)",
+      "comment_count": "integer — comment count (default: 0)",
+      "posted_at": "datetime | null — when the post was published on Instagram",
+      "matched_at": "datetime — when the system detected/matched the post",
+      "match_method": "string — one of: caption, llm",
+      "creator_name": "string | null — name of the campaign creator (joined from CampaignCreator)",
+      "campaign_name": "string | null — name of the campaign (joined from Campaign)",
+      "campaign_id": "uuid — campaign this post belongs to"
+    }
+  ],
+  "total": "integer — total matching posts across accessible campaigns"
+}
+```
 
-**Pagination**: Offset-based. Default limit: 50, max: 100.
+**Error Responses**:
 
-**Slack formatting notes**: Agent should present as: `{creator_name} posted a {post_type} for {campaign_name} — {like_count} likes, {comment_count} comments (matched via {match_method})`. Summarize large results: "{total} posts across {N} campaigns".
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+
+**Pagination**: Offset-based. Default limit: 50, max: 100. Response includes `total` count.
+
+**Example Request**:
+```
+cheerful_list_posts(limit=25, offset=0, sort="desc", search="sarah")
+```
+
+**Example Response**:
+```json
+{
+  "posts": [
+    {
+      "id": "e1f2a3b4-c5d6-7890-ef01-234567890abc",
+      "instagram_post_id": "3456789012",
+      "post_type": "reel",
+      "post_url": "https://www.instagram.com/reel/CxYz123/",
+      "caption": "Love this new serum from @brandname! My skin has never felt better ✨",
+      "media_url": "https://myproject.supabase.co/storage/v1/object/public/post-media/posts/3456789012/media.mp4",
+      "thumbnail_url": null,
+      "like_count": 4523,
+      "view_count": 45000,
+      "comment_count": 89,
+      "posted_at": "2026-02-25T10:30:00Z",
+      "matched_at": "2026-02-25T12:00:00Z",
+      "match_method": "caption",
+      "creator_name": "Sarah Chen",
+      "campaign_name": "Summer Skincare 2026",
+      "campaign_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+    }
+  ],
+  "total": 15
+}
+```
+
+**Slack Formatting Notes**:
+- Present as: `{creator_name} posted a {post_type} for '{campaign_name}' — {like_count} likes, {comment_count} comments (matched via {match_method})`
+- Summarize large results: "{total} posts across {N} campaigns"
+- Include post URL for context
+
+**Edge Cases**:
+- User with no accessible campaigns: returns `{"posts": [], "total": 0}`
+- `search` filter only matches `creator_name`, not caption or campaign name
+- `media_url` may be null if media download failed during refresh
 
 ---
 
@@ -859,41 +1765,94 @@
 
 **Maps to**: `GET /api/service/campaigns/{campaign_id}/creators/{creator_id}/posts` (new service route needed; main route: `GET /v1/campaigns/{campaign_id}/creators/{creator_id}/posts`)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner-or-assigned (via `can_access_campaign` check).
+**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner-or-assigned (via `CampaignMemberAssignmentRepository.can_access_campaign(user_id, campaign_id)` — returns true if user owns or is assigned to the campaign).
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| campaign_id | uuid | yes | — | Campaign ID |
-| creator_id | uuid | yes | — | Campaign creator ID |
+| campaign_id | string (uuid) | yes | — | Campaign ID |
+| creator_id | string (uuid) | yes | — | Campaign creator ID |
 
-**Returns**: `CreatorPostsResponse`:
-- posts: array of `CreatorPostResponse`:
-  - id: uuid
-  - instagram_post_id: string
-  - post_type: enum — "REEL", "POST", "CAROUSEL", "STORY"
-  - post_url: string
-  - caption: string (nullable)
-  - media_url: string (nullable)
-  - thumbnail_url: string (nullable)
-  - like_count: integer
-  - view_count: integer (nullable)
-  - comment_count: integer
-  - posted_at: datetime (nullable)
-  - matched_at: datetime
-  - match_method: enum — "caption", "vision", "url"
-  - match_reason: string (nullable) — explanation of why the post was matched
-- total: integer
-- last_checked_at: datetime (nullable) — when posts were last refreshed
-- tracking_ends_at: datetime (nullable) — when automatic tracking stops
+**Return Schema**:
+```json
+{
+  "posts": [
+    {
+      "id": "uuid — post record ID",
+      "instagram_post_id": "string — Instagram's post ID",
+      "post_type": "string — one of: post, story, reel",
+      "post_url": "string — Instagram post URL",
+      "caption": "string | null — post caption text",
+      "media_url": "string | null — Supabase Storage URL",
+      "thumbnail_url": "string | null — thumbnail URL",
+      "like_count": "integer — like count (default: 0)",
+      "view_count": "integer | null — view count (null for static posts)",
+      "comment_count": "integer — comment count (default: 0)",
+      "posted_at": "datetime | null — when published on Instagram",
+      "matched_at": "datetime — when system detected the post",
+      "match_method": "string — one of: caption, llm",
+      "match_reason": "string | null — explanation of why the post was matched (e.g., 'Product name found in caption' or LLM's reason)"
+    }
+  ],
+  "total": "integer — total posts for this creator",
+  "last_checked_at": "datetime | null — when posts were last refreshed (from CampaignCreator.post_last_checked_at)",
+  "tracking_ends_at": "datetime | null — when automatic tracking stops (from CampaignCreator.post_tracking_ends_at)"
+}
+```
 
-**Error responses**:
-- Campaign not found (404): "Campaign not found"
-- Not authorized (403): "Not authorized"
-- Creator not found (404): "Creator not found"
+**Error Responses**:
 
-**Slack formatting notes**: Agent should present posts and include tracking status: "Last checked: {date}. Tracking until: {date}." If no posts: "No posts detected yet for @{handle}. Last checked: {date}."
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| Campaign not found | "Campaign not found" | 404 |
+| Not authorized (user cannot access campaign) | "Not authorized" | 403 |
+| Creator not found (wrong ID or wrong campaign) | "Creator not found" | 404 |
+
+**Note**: Creator existence is verified via `CampaignCreatorRepository.get_by_id(creator_id)` which raises `ApplicationError` if not found, then additionally checks `creator.campaign_id == campaign_id`.
+
+**Example Request**:
+```
+cheerful_list_creator_posts(campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890", creator_id="f47ac10b-58cc-4372-a567-0e02b2c3d479")
+```
+
+**Example Response**:
+```json
+{
+  "posts": [
+    {
+      "id": "e1f2a3b4-c5d6-7890-ef01-234567890abc",
+      "instagram_post_id": "3456789012",
+      "post_type": "reel",
+      "post_url": "https://www.instagram.com/reel/CxYz123/",
+      "caption": "Love this serum from @brandname!",
+      "media_url": "https://myproject.supabase.co/storage/v1/object/public/post-media/posts/3456789012/media.mp4",
+      "thumbnail_url": null,
+      "like_count": 4523,
+      "view_count": 45000,
+      "comment_count": 89,
+      "posted_at": "2026-02-25T10:30:00Z",
+      "matched_at": "2026-02-25T12:00:00Z",
+      "match_method": "caption",
+      "match_reason": "Product name found in caption"
+    }
+  ],
+  "total": 3,
+  "last_checked_at": "2026-02-28T10:00:00Z",
+  "tracking_ends_at": "2026-04-01T00:00:00Z"
+}
+```
+
+**Slack Formatting Notes**:
+- Present posts with engagement metrics
+- Include tracking status: "Last checked: {date}. Tracking until: {date}."
+- If no posts: "No posts detected yet for this creator. Last checked: {date}."
+
+**Edge Cases**:
+- Creator with no posts: `{"posts": [], "total": 0, "last_checked_at": null, "tracking_ends_at": null}`
+- `last_checked_at` is null if posts have never been refreshed
+- `tracking_ends_at` is null if no tracking end date is set
 
 ---
 
@@ -901,39 +1860,80 @@
 
 **Status**: NEW
 
-**Purpose**: Manually trigger a post refresh for a creator. Fetches the last 10 Instagram posts via Apify, then analyzes each with LLM vision to detect product mentions. Synchronous — blocks until complete.
+**Purpose**: Manually trigger a post refresh for a creator. Fetches the last 10 Instagram posts via Apify, then analyzes each with a two-phase matching system: (1) caption match (fast, free), (2) Claude Sonnet LLM vision analysis (fallback). Synchronous — blocks until complete.
 
 **Maps to**: `POST /api/service/campaigns/{campaign_id}/creators/{creator_id}/refresh-posts` (new service route needed; main route: `POST /v1/campaigns/{campaign_id}/creators/{creator_id}/refresh-posts`)
 
 **Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner-or-assigned.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| campaign_id | uuid | yes | — | Campaign ID |
-| creator_id | uuid | yes | — | Campaign creator ID |
+| campaign_id | string (uuid) | yes | — | Campaign ID |
+| creator_id | string (uuid) | yes | — | Campaign creator ID |
 
-**Returns**: `RefreshPostsResponse`:
-- posts_found: integer — total posts scraped from Instagram
-- new_posts: integer — posts that matched the campaign product (newly detected)
-- last_checked_at: datetime — updated timestamp
+**Return Schema**:
+```json
+{
+  "posts_found": "integer — total posts for this creator after refresh (count from DB)",
+  "new_posts": "integer — new posts that matched the campaign product (newly detected in this refresh)",
+  "last_checked_at": "datetime — updated timestamp (set to current UTC time)"
+}
+```
 
-**Error responses**:
-- Campaign not found (404): "Campaign not found"
-- Not authorized (403): "Not authorized"
-- Creator not found (404): "Creator not found"
-- No Instagram handle (400): "Creator has no Instagram handle"
-- No product configured (400): "Campaign has no product for matching"
+**Error Responses**:
 
-**Notes**:
-- This is synchronous and may take 10-30 seconds (Apify scrape + LLM vision for each post).
-- Requires the creator to have an Instagram handle in `social_media_handles`.
-- Requires the campaign to have a `product_id` configured (the LLM uses product info for matching).
-- Scrapes last 10 posts; analyzes each with LLM vision model (looks for product in images/video frames).
-- Match methods: "caption" (product name in text), "vision" (LLM detected product in media), "url" (product URL in bio/post).
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| Campaign not found | "Campaign not found" | 404 |
+| Not authorized | "Not authorized" | 403 |
+| Creator not found (or wrong campaign) | "Creator not found" | 404 |
+| Creator has no Instagram handle in social_media_handles | "Creator has no Instagram handle" | 400 |
+| Campaign has no product_id configured | "Campaign has no product for matching" | 400 |
 
-**Slack formatting notes**: Agent should warn about processing time: "Refreshing posts for @{handle}... this may take 10-30 seconds." Then report: "Found {posts_found} posts, {new_posts} new matches detected."
+**Processing Pipeline** (synchronous, 10-30 seconds):
+1. Extract Instagram handle from `creator.social_media_handles`
+2. Fetch last 10 posts via Apify actor `"apify/instagram-profile-scraper"`
+3. Get product name and description from `ProductRepository.get_by_id(campaign.product_id)`
+4. For each post:
+   a. **Dedup check**: Skip if `instagram_post_id` already exists for this creator (composite unique constraint)
+   b. **Phase 1 — Caption match**: Check if `product_name.lower()` appears in `caption.lower()`. If yes: `match_method="caption"`
+   c. **Phase 2 — LLM vision**: If caption doesn't match, download post image/video, encode to base64, send to Claude Sonnet with analysis prompt asking "YES/NO does this post feature {product_name}?". If YES: `match_method="llm"`
+   d. If matched: download media to Supabase Storage, create `CreatorPost` record (caption capped at 500 chars), upsert to DB
+5. Update `CampaignCreator.post_last_checked_at = datetime.utcnow()`
+6. Return total count and new matches
+
+**Apify post type normalization**:
+- "story" in type → `"story"`
+- "video" or "reel" in type → `"reel"`
+- else → `"post"`
+
+**Example Request**:
+```
+cheerful_refresh_creator_posts(campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890", creator_id="f47ac10b-58cc-4372-a567-0e02b2c3d479")
+```
+
+**Example Response**:
+```json
+{
+  "posts_found": 5,
+  "new_posts": 2,
+  "last_checked_at": "2026-03-01T10:30:00Z"
+}
+```
+
+**Slack Formatting Notes**:
+- Agent should warn about processing time: "Refreshing posts for @{handle}... this may take 10-30 seconds."
+- Then report: "Found {posts_found} total posts, {new_posts} new matches detected."
+
+**Edge Cases**:
+- Apify scrape returns empty list (account private, deleted, etc.): `new_posts=0`, `posts_found` is previous count
+- LLM analysis errors: post is conservatively NOT matched (returns `matches=False`)
+- Media download failures: post is still created but `media_url` is null
+- All 10 posts already seen: `new_posts=0`
+- Post caption longer than 500 chars: truncated to 500 chars in storage
 
 ---
 
@@ -941,33 +1941,46 @@
 
 **Status**: NEW
 
-**Purpose**: Delete a tracked post (false positive removal). For cases where the LLM incorrectly matched a post as containing the brand's product.
+**Purpose**: Delete a tracked post (false positive removal). For cases where the matching system incorrectly flagged a post as containing the brand's product.
 
 **Maps to**: `DELETE /api/service/campaigns/{campaign_id}/posts/{post_id}` (new service route needed; main route: `DELETE /v1/campaigns/{campaign_id}/posts/{post_id}`)
 
 **Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner-or-assigned.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| campaign_id | uuid | yes | — | Campaign ID |
-| post_id | uuid | yes | — | Post ID to delete |
+| campaign_id | string (uuid) | yes | — | Campaign ID |
+| post_id | string (uuid) | yes | — | Post ID to delete |
 
-**Returns**: 204 No Content.
+**Return Schema**: 204 No Content.
 
-**Error responses**:
-- Campaign not found (404): "Campaign not found"
-- Not authorized (403): "Not authorized"
-- Post not found (404): "Post not found"
+**Error Responses**:
 
-**Slack formatting notes**: Agent should confirm with post context: "Deleted post by @{creator_handle} (matched via {method}). Marked as false positive."
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| Campaign not found | "Campaign not found" | 404 |
+| Not authorized | "Not authorized" | 403 |
+| Post not found (or belongs to different campaign) | "Post not found" | 404 |
+
+**Note**: Post ownership is verified by checking `post.campaign_id == campaign_id`. If the post exists but belongs to a different campaign, 404 "Post not found" is returned (not 403).
+
+**Example Request**:
+```
+cheerful_delete_post(campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890", post_id="e1f2a3b4-c5d6-7890-ef01-234567890abc")
+```
+
+**Slack Formatting Notes**: Agent should confirm with context: "Deleted post (matched via {method}). Marked as false positive."
 
 ---
 
 ## Public Creator Profiles (SEO)
 
-> These endpoints are public — no authentication required. They serve creator profile data from the "Creator Profile Scraping" workflow (Claude agent + Apify). While not user-scoped, they're useful for the CE agent to look up public creator information before adding them to campaigns.
+> These endpoints are public — no authentication required. They serve creator profile data from the "Creator Profile Scraping" workflow (Claude agent + Apify). While not user-scoped, they're useful for the CE agent to look up public creator information. Data is stored in `CampaignWorkflowExecution` records with `workflow.name == "Creator Profile Scraping"`.
+
+> **Note**: All Pydantic models for these endpoints are defined inline in `creator_profile.py`, not in a separate models file.
 
 ### `cheerful_list_public_creator_profiles`
 
@@ -977,27 +1990,61 @@
 
 **Maps to**: `GET /api/service/creators/profiles` (new service route needed; main route: `GET /v1/creators/profiles/`)
 
-**Auth**: None required — public endpoint. The CE still uses service auth for consistency.
+**Auth**: None required — public endpoint. The CE still uses service auth for routing consistency.
 
-**Parameters**:
+**Parameters** (user-facing):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| limit | integer | no | 50 | Results per page. Range: 1-100 |
-| offset | integer | no | 0 | Pagination offset. Min: 0 |
+| limit | integer | no | 50 | Results per page. Range: 1-100 (Pydantic `Query(50, ge=1, le=100)`) |
+| offset | integer | no | 0 | Pagination offset. Min: 0 (Pydantic `Query(0, ge=0)`) |
 
-**Returns**: Array of `CreatorProfileSummary`:
-- username: string
-- full_name: string
-- avatar_url: string (nullable)
-- is_verified: boolean (default false)
-- primary_category: string (nullable)
-- followers: integer (default 0)
-- engagement_rate: float (default 0.0)
-- engagement_band: string (default "unknown")
-- scraped_at: datetime
+**Return Schema**: Array of `CreatorProfileSummary`:
+```json
+[
+  {
+    "username": "string — Instagram username",
+    "full_name": "string — creator's full name",
+    "avatar_url": "string | null — profile picture URL",
+    "is_verified": "boolean — verification badge (default: false)",
+    "primary_category": "string | null — primary content category (e.g., 'Lifestyle', 'Beauty')",
+    "followers": "integer — follower count (default: 0)",
+    "engagement_rate": "float — engagement rate percentage (default: 0.0)",
+    "engagement_band": "string — engagement band level (default: 'unknown')",
+    "scraped_at": "datetime — when the profile was scraped"
+  }
+]
+```
 
-**Slack formatting notes**: Agent should present as a browse list: `@{username} ({full_name}) — {followers} followers, {engagement_rate}% ER, category: {primary_category}`.
+**Note**: Response is a bare `list[CreatorProfileSummary]`, NOT wrapped in an object. No `total` count is returned.
+
+**Database query**: Uses `DISTINCT ON (username)` to deduplicate by creator, returning only the latest scrape per creator. Filters to `workflow.name == "Creator Profile Scraping"` and `status == "completed"`. Skips records with null `output_data`.
+
+**Error Responses**: None — returns empty list `[]` if no profiles exist.
+
+**Example Request**:
+```
+cheerful_list_public_creator_profiles(limit=10, offset=0)
+```
+
+**Example Response**:
+```json
+[
+  {
+    "username": "sarahchen_style",
+    "full_name": "Sarah Chen",
+    "avatar_url": "https://cdn.example.com/sarah.jpg",
+    "is_verified": true,
+    "primary_category": "Beauty",
+    "followers": 125000,
+    "engagement_rate": 3.2,
+    "engagement_band": "high",
+    "scraped_at": "2026-02-25T10:00:00Z"
+  }
+]
+```
+
+**Slack Formatting Notes**: Present as a browse list: `@{username} ({full_name}) — {followers} followers, {engagement_rate}% ER, category: {primary_category}`
 
 ---
 
@@ -1005,36 +2052,82 @@
 
 **Status**: NEW
 
-**Purpose**: Get a single publicly available creator profile by Instagram handle. Returns rich profile data, metrics, sponsorships, and content analysis.
+**Purpose**: Get a single publicly available creator profile by Instagram handle. Returns rich profile data, metrics, sponsorships, and content analysis from the "Creator Profile Scraping" workflow output.
 
 **Maps to**: `GET /api/service/creators/profiles/{handle}` (new service route needed; main route: `GET /v1/creators/profiles/{handle}`)
 
 **Auth**: None required — public endpoint.
 
-**Parameters**:
+**Parameters** (user-facing):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | handle | string | yes | — | Instagram handle (without @) |
 
-**Returns**: `CreatorProfileDetail`:
-- profile: object — basic profile data
-- metrics: object — engagement metrics, growth data
-- sponsorships: object — detected brand partnerships
-- content: object — content analysis (themes, posting frequency)
-- scrape_metadata: object — scraping run details
-- execution_id: uuid — workflow execution ID
-- scraped_at: datetime
+**Return Schema**:
+```json
+{
+  "profile": "object — basic profile data from workflow output_data['profile']. Contains: username (str), full_name (str), avatar_url (str|null), is_verified (bool), primary_category (str|null)",
+  "metrics": "object — engagement metrics from output_data['metrics']. Contains: followers (int), engagement_rate (float), engagement_band (str). Default: {}",
+  "sponsorships": "object — detected brand partnerships from output_data['sponsorships']. Contains: sponsors (list[str]), total_sponsors_count (int). Default: {}",
+  "content": "object — content analysis from output_data['content']. Contains: recent_posts (list), other analysis fields. Default: {}",
+  "scrape_metadata": "object — scraping run details from output_data['scrape_metadata']. Contains: source (str), other context. Default: {}",
+  "execution_id": "uuid — workflow execution ID",
+  "scraped_at": "datetime — when the profile was scraped"
+}
+```
 
-**Error responses**:
-- Profile not found (404): "Creator profile not found for @{handle}"
+**Note**: The nested `profile`, `metrics`, `sponsorships`, `content`, and `scrape_metadata` fields are dicts (JSONB), not strongly typed. Their internal structure depends on the Claude agent's scraping workflow output. The fields listed above are typical but may vary.
 
-**Notes**:
-- Data comes from `CampaignWorkflowExecution` records produced by the "Creator Profile Scraping" workflow.
-- Not all creators have profiles — only those that have been scraped.
-- Profile data is point-in-time (as of `scraped_at`), not live.
+**Error Responses**:
 
-**Slack formatting notes**: Agent should present as a comprehensive profile card with metrics summary, content themes, and detected sponsorships.
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| Profile not found | "Creator profile not found for handle: {handle}" | 404 |
+
+**Note**: Error message uses `handle:` (no @ prefix), unlike the private profile endpoint which uses `@{handle}`.
+
+**Example Request**:
+```
+cheerful_get_public_creator_profile(handle="sarahchen_style")
+```
+
+**Example Response**:
+```json
+{
+  "profile": {
+    "username": "sarahchen_style",
+    "full_name": "Sarah Chen",
+    "avatar_url": "https://cdn.example.com/sarah.jpg",
+    "is_verified": true,
+    "primary_category": "Beauty"
+  },
+  "metrics": {
+    "followers": 125000,
+    "engagement_rate": 3.2,
+    "engagement_band": "high"
+  },
+  "sponsorships": {
+    "sponsors": ["BrandX", "SkincareCo", "BeautyLab"],
+    "total_sponsors_count": 3
+  },
+  "content": {
+    "recent_posts": []
+  },
+  "scrape_metadata": {
+    "source": "apify"
+  },
+  "execution_id": "c1d2e3f4-a5b6-7890-cdef-123456789012",
+  "scraped_at": "2026-02-25T10:00:00Z"
+}
+```
+
+**Slack Formatting Notes**: Present as a comprehensive profile card with metrics summary, content themes, and detected sponsorships.
+
+**Edge Cases**:
+- Not all creators have been scraped — only those with a completed "Creator Profile Scraping" workflow execution
+- Profile data is point-in-time (as of `scraped_at`), not live
+- Multiple scrapes of the same creator: returns the most recent (latest `executed_at`)
 
 ---
 
@@ -1042,30 +2135,61 @@
 
 **Status**: NEW
 
-**Purpose**: Trigger an asynchronous creator profile scrape. The system will scrape the creator's Instagram profile via Apify and analyze it with a Claude agent. Returns immediately with 202 Accepted.
+**Purpose**: Trigger an asynchronous creator profile scrape. The system will scrape the creator's Instagram profile via Apify and analyze it with a Claude agent. Returns immediately with 202 Accepted. Uses FastAPI `BackgroundTasks` (not Temporal).
 
 **Maps to**: `POST /api/service/creators/profiles/scrape` (new service route needed; main route: `POST /v1/creators/profiles/scrape`)
 
 **Auth**: None required — public endpoint. No auth means any service can trigger scrapes.
 
-**Parameters**:
+**Parameters** (user-facing):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | handle | string | yes | — | Instagram handle (without @) |
-| creator_data | object | no | null | Optional pre-provided context about the creator (passed to the Claude analysis agent) |
+| creator_data | object | no | null | Optional pre-provided context about the creator (passed to the Claude analysis agent to augment the scrape) |
 
-**Returns** (202 Accepted): `ScrapeResponse`:
-- status: string — "accepted"
-- message: string
-- handle: string
+**Return Schema** (202 Accepted):
+```json
+{
+  "status": "string — 'accepted'",
+  "message": "string — human-readable confirmation (e.g., 'Scrape triggered for @{handle}')",
+  "handle": "string — the requested handle"
+}
+```
+
+**Background Processing**:
+1. Loads "Creator Profile Scraping" workflow configuration from database
+2. Creates synthetic thread context with handle and optional `creator_data`
+3. Sets up MCP server with Apify tools: `apify_get_instagram_profile`, `apify_get_instagram_posts`
+4. Executes Claude agent with workflow, tools, and thread context
+5. Saves execution as `CampaignWorkflowExecution` with:
+   - `temporal_workflow_id`: `"api-scrape-{handle}-{hex8}"`
+   - `output_data`: structured data from Claude agent analysis
+   - `status`: from agent result
+   - `gmail_thread_state_id`: null (API-triggered, no email thread)
+
+**Error Responses**: None at request time (returns 202 immediately). Background failures are logged.
 
 **Notes**:
-- Asynchronous — the scrape runs in the background via a Temporal workflow.
-- No callback/polling endpoint for scrape status — use `cheerful_get_public_creator_profile` later to check if the profile has been populated.
-- The Claude agent analyzes the scraped profile data to produce structured metrics, sponsorship detection, and content analysis.
+- No callback/polling endpoint for scrape status — use `cheerful_get_public_creator_profile` later to check if the profile has been populated
+- The Claude agent analyzes the scraped data to produce structured metrics, sponsorship detection, and content analysis
+- Background task may return null if the workflow is not found in the database
 
-**Slack formatting notes**: Agent should confirm: "Scrape triggered for @{handle}. Check back in a few minutes for the profile."
+**Example Request**:
+```
+cheerful_trigger_creator_scrape(handle="sarahchen_style", creator_data={"known_brands": ["BrandX"]})
+```
+
+**Example Response**:
+```json
+{
+  "status": "accepted",
+  "message": "Scrape triggered for @sarahchen_style",
+  "handle": "sarahchen_style"
+}
+```
+
+**Slack Formatting Notes**: Agent should confirm: "Scrape triggered for @{handle}. Check back in a few minutes for the profile."
 
 ---
 
@@ -1100,20 +2224,23 @@
 | 23 | `GET /api/service/creators/profiles/{handle}` | GET | `cheerful_get_public_creator_profile` |
 | 24 | `POST /api/service/creators/profiles/scrape` | POST | `cheerful_trigger_creator_scrape` |
 
-### Key Enums
+### Key Enums (Verified Against Source)
 
-| Enum | Values | Source |
-|------|--------|--------|
-| CampaignCreator.role | creator, talent_manager, agency_staff, internal, unknown | `campaign_creator.py` |
-| CampaignCreator.enrichment_status | pending, enriching, enriched, not_found | `campaign_creator.py` |
-| CampaignCreator.source | email, csv, search, sheet, list, api | `campaign_creator.py` |
-| PostOptInFollowUpStatus | PENDING, PROCESSING, SENT, FAILED, CANCELLED | `campaign_creator.py` |
-| Post type | REEL, POST, CAROUSEL, STORY | `creator_post.py` |
-| Match method | caption, vision, url | `creator_post.py` |
-| Email status (list) | has_email, no_email | `creator_list.py` |
-| Profile source | cache, stale_cache, apify, influencer_club | `creator_search.py` |
+| Enum | Values | Source File |
+|------|--------|-------------|
+| CampaignCreator.role | creator, talent_manager, agency_staff, internal, unknown | `models/database/campaign_creator.py` |
+| CampaignCreator.enrichment_status | pending, enriching, enriched, not_found | `models/database/campaign_creator.py` |
+| CampaignCreator.source | email, csv, search, sheet, list, api | `models/database/campaign_creator.py` |
+| PostOptInFollowUpStatus | PENDING, PROCESSING, SENT, FAILED, CANCELLED | `models/database/campaign_creator.py` |
+| EnrichmentAttemptStatus | success, no_email_found, profile_not_found, failed | `models/enums/enrichment.py` |
+| Enrichment source | cache, apify, bio_crawl, influencer_club | `models/temporal/enrich_for_campaign.py` |
+| CreatorPost.post_type | post, story, reel | `models/database/creator_post.py` (Literal type) |
+| CreatorPost.match_method | caption, llm | `models/database/creator_post.py` (Literal type) |
+| Email status (list) | has_email, no_email | `models/api/creator_list.py` (computed) |
+| Profile source (search) | cache, stale_cache, apify, influencer_club | `models/api/influencer_club.py` |
 | SocialMediaHandle platform | instagram, twitter, facebook, youtube, tiktok, linkedin, other | shared schema |
-| CSV platform | instagram, tiktok, youtube | `creator_list.py` |
+| CSV platform | instagram, tiktok, youtube | `models/api/creator_list.py` |
+| Search platform | instagram, youtube | `models/api/influencer_club.py` |
 
 ### Domain Statistics
 
@@ -1128,3 +2255,16 @@
 | Creator Posts (Content Verification) | 0 | 4 | 4 |
 | Public Creator Profiles (SEO) | 0 | 3 | 3 |
 | **TOTAL** | **3** | **24** | **27** |
+
+### Key Corrections from Wave 2 Skeletons
+
+1. **Post types**: Database uses `"post"`, `"story"`, `"reel"` (lowercase, 3 values) — NOT `"REEL"`, `"POST"`, `"CAROUSEL"`, `"STORY"` (4 values). The "CAROUSEL" type does not exist in the database model.
+2. **Match methods**: Database uses `"caption"`, `"llm"` (2 values) — NOT `"caption"`, `"vision"`, `"url"` (3 values). The "vision" match is actually `"llm"` and "url" match does not exist as a separate method.
+3. **Enrichment results**: `EnrichmentStatusResponse.results` items have additional fields not in Wave 2 skeleton: `handle` (str), `platform` (str), `status` (EnrichmentAttemptStatus: success/no_email_found/profile_not_found/failed), `source` (str|null: cache/apify/bio_crawl/influencer_club).
+4. **Keyword search sort defaults**: `sort_by` defaults to `"relevancy"` (not null), `sort_order` defaults to `"desc"` (not null) — applied in the IC API client layer.
+5. **Public profile detail error message**: Uses `"Creator profile not found for handle: {handle}"` (no @ prefix) — different from private profile which uses `"@{handle}"`.
+6. **List response format**: `cheerful_list_public_creator_profiles` returns a bare `list[]`, not wrapped in an object with `total` count.
+7. **Post library search**: The `search` parameter on `cheerful_list_posts` only matches `creator_name` via ILIKE, not caption or campaign name.
+8. **Post type normalization**: Apify returns raw types that are normalized: "story"→"story", "video"/"reel"→"reel", else→"post".
+9. **Caption truncation**: Post captions are capped at 500 characters when stored in the database.
+10. **Add-to-campaign workflow ID**: Uses format `enrich-campaign-{campaign_id}-{hex8}` (different from standalone enrichment which uses `enrich-user-{user_id}-{hex8}`).
