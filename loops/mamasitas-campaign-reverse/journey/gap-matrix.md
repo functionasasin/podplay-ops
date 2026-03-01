@@ -1,7 +1,23 @@
 # Gap Matrix — Mama Sita's Campaign
 
 > Consolidated list of every missing feature discovered during stage analysis.
-> Sorted by build priority: P0 = blocks campaign, P1 = degrades experience, P2 = nice to have.
+> Ordered by stage of discovery. See `synthesis-gap-matrix.md` for priority-sorted build roadmap.
+
+## Summary
+
+| Priority | Count | Description |
+|----------|-------|-------------|
+| P0 buildable | 18 | Campaign blockers requiring code work |
+| P0 config-only | 2 | Env vars — INFLUENCER_CLUB_API_KEY, APIFY_API_TOKEN |
+| P0 external | 3 | Meta App Reviews (IG DM, mentions, hashtag) |
+| P0 architectural | 2 | Meta API constraints — cannot be built |
+| P1 | 28 | Experience degraders |
+| P2 | 13 | Nice to have |
+| **Total** | **66** | |
+
+For the sprint-by-sprint build roadmap, dependency graph, and campaign-runnable checklist, see: [`synthesis-gap-matrix.md`](synthesis-gap-matrix.md)
+
+---
 
 | # | Gap | Stage | Impact | Workaround | Priority | Effort | Spec Source |
 |---|-----|-------|--------|------------|----------|--------|-------------|
