@@ -1,10 +1,10 @@
 # Metro Manila Transit Routes — Frontier
 
 ## Statistics
-- Total aspects: 91
-- Analyzed: 90
-- Pending: 1
-- Convergence: 99%
+- Total aspects: 106
+- Analyzed: 92
+- Pending: 14
+- Convergence: 87%
 
 ---
 
@@ -127,7 +127,7 @@
 - [x] All shuttle/loop services — BGC, Makati, campus shuttles
 
 ### Transfer Points
-- [ ] Rail-to-road transfer mapping — every LRT/MRT/PNR station with connecting jeepney/bus routes
+- [x] Rail-to-road transfer mapping — every LRT/MRT/PNR station with connecting jeepney/bus routes
 - [ ] Terminal-to-terminal connections — how to transfer between major terminals
 - [ ] Fare integration analysis — where transfers require separate fares vs integrated payment
 
