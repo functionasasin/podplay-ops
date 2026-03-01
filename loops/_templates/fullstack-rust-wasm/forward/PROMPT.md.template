@@ -28,7 +28,7 @@ This is an **integrated** forward loop. You build the Rust engine, WASM bridge, 
    - Write comprehensive tests covering: happy path, edge cases, and any test vectors from the spec
    - For engine stages: use `BigRational` fractions for assertions — never floating-point
    - For frontend stages: test against real WASM engine (not mocks)
-   - Create stub implementations (`todo!()` in Rust, empty components in React) so tests compile
+   - Create MINIMAL stub implementations (`todo!()` in Rust, empty components in React) so tests compile — these are **TEMPORARY** scaffolding that MUST be fully replaced by Priority 3 (IMPLEMENT). They are never acceptable in the final product.
    - Commit: `forward: stage {N} - write tests`
    - Exit
 
@@ -47,6 +47,9 @@ This is an **integrated** forward loop. You build the Rust engine, WASM bridge, 
    - Exit
 
    **Priority 5 — DONE** (if ALL tests for current stage pass):
+   - **BEFORE declaring done**, perform a stub scan on all source files modified in this stage:
+     - Search for: `todo!()`, `unimplemented!()`, `// TODO`, `// STUB`, `// PLACEHOLDER`, `// FIXME`, `// HACK`, `/* TODO */`, empty function bodies (`{}`), components that render nothing or only a placeholder string, functions that return hardcoded dummy values
+     - If ANY stubs are found in production code (not test helpers): you are NOT done. Replace the stubs with full implementations per the spec, then re-run tests.
    - This shouldn't happen (the runner detects convergence externally)
    - But if you see it: write `status/stage-{N}-complete.txt`
    - Exit
@@ -107,6 +110,48 @@ Apply design system and responsive styling. Tests must continue passing + CSS bu
 | P5-1 | Design System Setup | Install component library, configure palette, add fonts, verify tests + CSS > 20KB | §Design System |
 | P5-2 | Component Restyle | Apply design system to all components (shared → wizard → results) | §Design System, §Component Patterns |
 | P5-3 | Responsive + Polish | Mobile breakpoints, spacing audit, typography audit, focus states, empty states | §Design System |
+
+### Phase 6: Completeness Verification (HARD GATE)
+**No product ships without passing Phase 6.** This phase exists because stubs that compile and pass tests still produce a broken, unusable product.
+
+| Stage | Name | Work | Gate |
+|-------|------|------|------|
+| P6-1 | Stub Scan | Scan ALL source files (engine + frontend) for banned stub patterns. MUST find ZERO matches in production code. | HARD GATE — blocks P6-2 |
+| P6-2 | Functional Completeness Audit | For EVERY feature in the spec: verify it is fully implemented, wired to real data, handles edge cases, and renders correctly. Walk through every user flow end-to-end. | HARD GATE — blocks convergence |
+| P6-3 | Build Verification | `cargo test` (all pass) + `npm run build` (clean build, no warnings, CSS > 20KB) + manual feature walkthrough | Final gate |
+
+**Phase 6 Analysis Methods:**
+
+#### P6-1: Stub Scan
+Search ALL files in `engine/src/` and `frontend/src/` for these banned patterns:
+- **Rust**: `todo!()`, `unimplemented!()`, `panic!("not implemented")`, `// TODO`, `// FIXME`, `// STUB`, `// HACK`, `// PLACEHOLDER`, `0 // placeholder`, `Default::default() // placeholder`
+- **TypeScript/React**: `// TODO`, `// FIXME`, `// STUB`, `// PLACEHOLDER`, `// HACK`, `throw new Error("not implemented")`, `console.log("TODO")`, empty component bodies (`return null`/`return <></>`/`return <div/>`), functions returning hardcoded dummy values, `as any` type assertions hiding incomplete types
+- **Both**: Empty function bodies, functions that ignore their parameters and return constants, commented-out logic blocks with TODO annotations
+
+**Exclusions** (NOT counted as stubs):
+- Test helper files (files ending in `.test.ts`, `.test.tsx`, `_test.rs`)
+- Legitimate `Default` trait implementations
+- Intentional `unreachable!()` for exhaustive match arms
+- HTML placeholder attributes (`placeholder="Enter amount"`) — these are UI strings, not code stubs
+
+Write results to `status/stub-scan.txt`. If ANY banned pattern is found: create a new stage to fix each stub, do NOT mark P6-1 complete.
+
+#### P6-2: Functional Completeness Audit
+For EVERY feature described in the spec:
+1. **Is the feature implemented?** (not just typed — actually wired and functional)
+2. **Does it handle the happy path?** (correct output for standard input)
+3. **Does it handle edge cases?** (empty input, boundary values, nulls)
+4. **Does it display results correctly?** (formatting, labels, conditional visibility)
+5. **Does it handle errors?** (validation messages, WASM errors, network issues)
+
+Write results to `status/completeness-audit.txt` with per-feature PASS/FAIL. If ANY feature fails: create stages to fix, do NOT mark P6-2 complete.
+
+#### P6-3: Build Verification
+1. Run `cargo test` in engine/ — ALL tests must pass
+2. Run `wasm-pack build` — must produce valid .wasm artifact
+3. Run `npm run build` in frontend/ — must succeed with zero warnings, CSS bundle > 20KB
+4. All vitest tests pass
+5. Write final status to `status/build-verification.txt`
 
 ## Phase Transitions
 
@@ -173,6 +218,39 @@ z.optional()         // produces undefined → serde crash
 - If a test contradicts the spec, fix the test AND note it in your commit message.
 - **No mocks.** From Phase 3 Stage P3-3 onward, all frontend tests hit the real WASM engine.
 - **CSS bundle size check** in Phase 5: `npm run build` must produce CSS > 20KB (proves Tailwind is processing). If CSS is tiny, `@tailwindcss/vite` plugin is missing from `vite.config.ts`.
+
+## HARD CONSTRAINT: Zero Stubs in Production Code
+
+**Stubs are the #1 cause of broken, unusable products from forward loops.** A stub that compiles and passes tests still produces a product where users click a button and nothing happens, or see "TODO" instead of real data.
+
+### The Stub Lifecycle (understand this)
+
+1. **Priority 2 (WRITE TESTS)** creates stubs so tests compile. This is the ONLY time stubs are acceptable.
+2. **Priority 3 (IMPLEMENT)** MUST replace every stub with a full implementation. If you finish an implementation pass and stubs remain, you are not done — keep implementing.
+3. **Priority 4 (FIX FAILURES)** fixes failing tests. If the failure is caused by a stub that was never replaced, the fix is to IMPLEMENT the feature, not to modify the test.
+4. **Priority 5 (DONE)** runs a stub scan. If stubs exist, you are NOT done.
+5. **Phase 6 (COMPLETENESS)** is the final gate. The product does not ship with stubs.
+
+### What Counts as a Stub
+
+Any code that exists only to make the compiler/bundler happy but does not implement the actual feature:
+
+- `todo!()`, `unimplemented!()`, `panic!("not implemented")`
+- Empty function bodies or functions returning hardcoded dummy values
+- Components that render `null`, `<></>`, `<div/>`, or only a placeholder string
+- Functions that ignore their parameters and return constants
+- `// TODO: implement` comments next to missing logic
+- `as any` type assertions hiding incomplete implementations
+- Commented-out blocks of logic that were supposed to be implemented
+- `0`, `""`, `false`, `[]`, `{}` used as return values where real computation should exist
+
+### What Does NOT Count as a Stub
+
+- Legitimate default values (e.g., `Default::default()` in a builder pattern)
+- `unreachable!()` in exhaustive match arms
+- HTML `placeholder="..."` attributes (UI strings)
+- Test helper utilities that construct simplified test data
+- `todo!()` in test files (acceptable — tests are scaffolding)
 
 ## Commit Convention
 

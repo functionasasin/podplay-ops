@@ -47,10 +47,12 @@ Depends on Wave 3 data model and Wave 4 bridge contract.
 - [ ] design-system — Choose palette, typography, component library, spacing, visual direction
 
 ### Wave 6: Synthesis
-Depends on all previous waves.
-- [ ] spec-draft — Assemble all findings into docs/plans/{{SPEC_FILENAME}}.md
+Depends on all previous waves. **Strict internal dependency order — do NOT skip ahead.**
+- [ ] spec-draft — Assemble all findings into docs/plans/{{SPEC_FILENAME}}.md with every section fully written (no empty sections, no placeholder content)
+- [ ] placeholder-validation — **HARD GATE.** Scan entire spec line-by-line for banned patterns (TODO, TBD, FIXME, XXX, bracket placeholders, empty sections, deferral phrases). MUST return PASS (zero matches) before proceeding. If FAIL: create new aspects to resolve each gap.
+- [ ] completeness-audit — Verify every feature/component/algorithm has implementation-ready detail: exact types, exact behavior, exact edge cases, exact error handling. Per-feature PASS/FAIL. If any FAIL: create aspects to fill gaps.
 - [ ] cross-layer-consistency — Verify field names, types, enums, nullability match across Rust ↔ JSON ↔ TypeScript ↔ Zod
-- [ ] spec-review — Self-review: can a developer build the entire product from this spec alone?
+- [ ] spec-review — Final review: can a developer build the ENTIRE product — every feature fully functional, every UI element wired, every edge case handled — from this spec alone without asking a single clarifying question?
 
 ## Recently Analyzed
 (Empty — loop hasn't started yet)

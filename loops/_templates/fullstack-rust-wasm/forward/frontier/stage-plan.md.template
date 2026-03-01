@@ -9,6 +9,7 @@
 | 3 | Frontend Foundation | frontend/ (vitest + real WASM) | P3-1, P3-2, P3-3 | pending |
 | 4 | Frontend Components | frontend/ (vitest + real WASM) | P4-1 — P4-N | pending |
 | 5 | UI Polish | frontend/ (vitest + CSS check) | P5-1, P5-2, P5-3 | pending |
+| 6 | Completeness Verification | all (HARD GATE) | P6-1, P6-2, P6-3 | pending |
 
 ## Current Stage
 
@@ -33,3 +34,4 @@ Not started. Run `./forward-ralph.sh auto` to begin.
 - Phase 3-5 tests: `npx vitest run {filter}` in frontend/ — all hit real WASM engine
 - No mocks anywhere. Phase 3 Stage P3-3 wires real WASM before any components are built.
 - CSS bundle size check in Phase 5: `npm run build` must produce CSS > 20KB
+- **Phase 6 is a HARD GATE**: Product does not ship until P6-1 (stub scan), P6-2 (completeness audit), and P6-3 (build verification) all pass. The runner's stub_scan() function mechanically blocks convergence if stubs are detected in source files at any stage.

@@ -113,6 +113,72 @@ stage_complete() {
     [ -f "$WORK_DIR/status/stage-${1}-complete.txt" ]
 }
 
+# Scan source files for stub/placeholder patterns that indicate incomplete implementations.
+# Returns 0 if clean, 1 if stubs found. Writes results to status/stub-scan.txt.
+stub_scan() {
+    local stage=$1
+    local workspace="${STAGE_WORKSPACE[$stage]:-engine}"
+    local scan_dir=""
+    local scan_patterns=""
+    local results_file="$WORK_DIR/status/stub-scan.txt"
+
+    mkdir -p "$WORK_DIR/status"
+
+    case "$workspace" in
+        engine|bridge)
+            scan_dir="$ENGINE_DIR/src"
+            # Rust stub patterns
+            scan_patterns='todo!\(\)|unimplemented!\(\)|panic!\("not implemented"\)|// TODO|// FIXME|// STUB|// PLACEHOLDER|// HACK|/\* TODO'
+            ;;
+        frontend)
+            scan_dir="$FRONTEND_DIR/src"
+            # TypeScript/React stub patterns
+            scan_patterns='// TODO|// FIXME|// STUB|// PLACEHOLDER|// HACK|throw new Error\("not implemented"\)|console\.log\("TODO|return null;?\s*$|return <><\/>;|return <div\s*\/>'
+            ;;
+        *)
+            echo "STUB_SCAN: unknown workspace $workspace, skipping"
+            return 0
+            ;;
+    esac
+
+    if [ ! -d "$scan_dir" ]; then
+        echo "STUB_SCAN: $scan_dir does not exist yet, skipping"
+        return 0
+    fi
+
+    # Exclude test files from the scan
+    local stub_matches
+    stub_matches=$(grep -rn --include='*.rs' --include='*.ts' --include='*.tsx' \
+        --exclude='*test*' --exclude='*_test*' --exclude='*.test.*' --exclude='*spec.*' \
+        -E "$scan_patterns" "$scan_dir" 2>/dev/null || true)
+
+    if [ -n "$stub_matches" ]; then
+        local match_count
+        match_count=$(echo "$stub_matches" | wc -l)
+        cat > "$results_file" << SCAN_EOF
+FAIL — $match_count stub(s) found in production code
+Stage: $stage (${STAGE_NAMES[$stage]})
+Timestamp: $(date -Iseconds)
+
+Matches:
+$stub_matches
+
+These must be replaced with full implementations before the stage can converge.
+SCAN_EOF
+        echo "STUB_SCAN: FAIL — $match_count stub(s) found:"
+        echo "$stub_matches"
+        return 1
+    else
+        cat > "$results_file" << SCAN_EOF
+PASS — zero stubs in production code
+Stage: $stage (${STAGE_NAMES[$stage]})
+Timestamp: $(date -Iseconds)
+SCAN_EOF
+        echo "STUB_SCAN: PASS — clean"
+        return 0
+    fi
+}
+
 check_dependencies() {
     local stage=$1
     local deps="${STAGE_DEPS[$stage]:-}"
@@ -269,6 +335,12 @@ update_frontier() {
     local existing_log
     existing_log=$(grep "^- iter" "$CURRENT_STAGE_FILE" 2>/dev/null || echo "(no iterations yet)")
 
+    # Include stub scan results if they exist
+    local stub_scan_status=""
+    if [ -f "$WORK_DIR/status/stub-scan.txt" ]; then
+        stub_scan_status=$(cat "$WORK_DIR/status/stub-scan.txt")
+    fi
+
     cat > "$CURRENT_STAGE_FILE" << FRONTIER_EOF
 # Current Stage: $stage (${STAGE_NAMES[$stage]})
 
@@ -279,6 +351,13 @@ update_frontier() {
 \`\`\`
 $test_output
 \`\`\`
+
+## Stub Scan Results
+\`\`\`
+${stub_scan_status:-Not yet run}
+\`\`\`
+
+**IMPORTANT**: If the stub scan shows FAIL, your priority is to REPLACE the listed stubs with full implementations from the spec. Do not just remove TODO comments — implement the actual feature logic.
 
 ## Work Log
 $existing_log
@@ -352,8 +431,15 @@ run_stage() {
             consecutive_passes=$((consecutive_passes + 1))
             echo "Tests pass ($consecutive_passes/$required_passes consecutive passes)"
             if [ "$consecutive_passes" -ge "$required_passes" ]; then
-                write_completion "$stage" "$test_output" "$iteration"
-                return 0
+                # HARD GATE: Stub scan must pass before declaring stage complete
+                if stub_scan "$stage"; then
+                    write_completion "$stage" "$test_output" "$iteration"
+                    return 0
+                else
+                    echo "Tests pass but stubs remain — not converged. Running Claude to replace stubs."
+                    consecutive_passes=0
+                    # Fall through to invoke Claude to fix the stubs
+                fi
             fi
             # For multi-pass stages, re-test without invoking Claude
             continue

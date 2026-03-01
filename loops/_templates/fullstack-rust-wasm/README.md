@@ -122,8 +122,18 @@ The forward loop builds in phases within a single directory:
 3. **Phase 3: Frontend Foundation** — Vite scaffold → TS types → Zod schemas → bridge.ts (real WASM, no mock)
 4. **Phase 4: Frontend Components** — shared components → wizard steps → results view (all tests hit real engine)
 5. **Phase 5: UI Polish** — design system → restyle → responsive
+6. **Phase 6: Completeness Verification** — stub scan → functional completeness audit → build verification
 
 Every frontend test calls the real WASM engine from Phase 3 onward. No mock. No conformance surprises.
+
+### Why Phase 6 exists (anti-stub backpressure)
+
+Tests can pass with stubs everywhere — a component that renders `<div/>` compiles and doesn't crash, but it's a broken product. Phase 6 adds two layers of backpressure:
+
+1. **Mechanical (runner-level)**: The `stub_scan()` function in `forward-ralph.sh` greps source files for banned patterns (`todo!()`, `// TODO`, `// STUB`, empty components, etc.) and blocks convergence if any are found. This runs at EVERY stage, not just Phase 6.
+2. **Semantic (prompt-level)**: Phase 6 stages require Claude to walk through every feature in the spec and verify it's fully implemented, wired to real data, and handles edge cases. A stub scan catches obvious patterns; the completeness audit catches features that exist but are hollow.
+
+The same principle applies to the reverse loop: the `placeholder-validation` aspect is a hard gate that scans the spec for banned patterns before convergence. Placeholders in the spec cascade directly into stubs in the product.
 
 ### Why strict Zod schemas
 

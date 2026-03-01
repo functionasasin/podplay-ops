@@ -123,16 +123,48 @@ Two sub-concerns that MUST be consistent:
 - Specify key component patterns (cards, badges, alerts, tables)
 
 ### Wave 6: Synthesis
-**Goal**: Assemble all wave findings into the final spec document.
+**Goal**: Assemble all wave findings into the final spec document. Every section must be implementation-ready with zero placeholders.
 
+**DEPENDENCY ORDER within Wave 6** (strict):
+1. `spec-draft` — Assemble all findings into the spec. Every section fully written.
+2. `placeholder-validation` — **HARD GATE.** Scan the entire spec for banned patterns (see Rules). MUST return PASS before any subsequent Wave 6 aspect can proceed. If FAIL: create new aspects to resolve each gap, loop back.
+3. `completeness-audit` — Verify every feature, component, algorithm, and UI element has implementation-ready detail. Check: could a developer implement EACH feature without asking a single clarifying question? If any section fails this test, create new aspects to fill the gaps.
+4. `cross-layer-consistency` — Verify field names, types, enums, nullability match across Rust ↔ JSON ↔ TypeScript ↔ Zod.
+5. `spec-review` — Final self-review after all gates pass.
+
+**For `spec-draft`**:
 - Compile `docs/plans/{{SPEC_FILENAME}}.md` from all analysis files
+- Every section must contain concrete, specific content — no section may be empty or contain only a heading
+- Every type must list all fields with exact names and types
+- Every algorithm must have step-by-step pseudocode with actual formulas
+- Every UI component must specify its props, behavior, conditional visibility, and error states
+- Every test vector must have concrete input values and expected output values
+
+**For `placeholder-validation`** (HARD GATE):
+- Scan every line of the spec for banned patterns listed in the Rules section
+- Scan for empty sections (heading followed immediately by another heading or end-of-file)
+- Scan for table rows with empty cells
+- Scan for code blocks that contain only comments
+- Write results to `analysis/placeholder-validation.md` with PASS/FAIL and line-by-line matches
+- If FAIL: add new aspects to Wave 5 or Wave 6 to fill each specific gap
+
+**For `completeness-audit`**:
+- For EACH component/feature mentioned in the spec, verify it has: types, behavior, edge cases, error handling
+- For EACH wizard step, verify: fields listed, validation rules specified, conditional visibility defined
+- For EACH results display element, verify: data source mapped, formatting specified, empty/error states defined
+- Write results to `analysis/completeness-audit.md` with per-feature PASS/FAIL
+
+**For `cross-layer-consistency`**:
 - Cross-reference consistency:
   - Rust type fields ↔ TypeScript interface fields ↔ Zod schema fields ↔ JSON wire format
   - Enum variant names match across all layers
   - Optional/nullable handling matches across all layers
 - Add a "Cross-Layer Consistency Checklist" section to the spec
+
+**For `spec-review`**:
 - Add integration test scenarios that exercise the full stack (form → JSON → WASM → result → display)
-- Self-review: "Could a developer build the entire product from this spec alone, without any type mismatches at integration time?"
+- Final self-review question: "Could a developer build the ENTIRE product from this spec alone — every feature fully functional, every UI element wired to real data, every edge case handled — without discovering any gaps, type mismatches, or missing behavior at implementation time?"
+- If the answer is no for ANY feature, DO NOT check off spec-review. Create aspects to fill gaps.
 
 ## Output: The Spec Document
 
@@ -174,6 +206,42 @@ Appendix B: Edge Cases + Known Limitations
 - Keep analysis files focused. One aspect = one file.
 - The spec is the artifact. Everything else (analysis files, frontier) is scaffolding.
 - **Cross-layer consistency is paramount.** A field name mismatch between Rust and TypeScript means a runtime crash. Catch these in Wave 6 synthesis, not during forward loop development.
+
+## HARD CONSTRAINT: Zero Placeholders in Final Spec
+
+The spec document is the SOLE input to the forward loop. Every placeholder, stub, or TODO in the spec becomes a broken feature in the final product. This is a non-negotiable convergence gate.
+
+### Banned Patterns (literal matches, case-insensitive)
+
+**Marker words**: `TODO`, `TBD`, `FIXME`, `XXX`, `HACK`, `PLACEHOLDER`, `STUB`
+
+**Deferral phrases**: "to be defined", "to be determined", "will be specified later", "needs further research", "details TBD", "see later", "coming soon", "not yet determined", "left as exercise", "implementation detail"
+
+**Bracket placeholders**: `[fill in]`, `[insert]`, `[TBD]`, `<placeholder>`, `{placeholder}`, `[TODO]`, `[...]`, `...` (as sole content of a section or table cell)
+
+**Empty structures**: Sections with only a heading and no content, table rows with empty cells, code blocks with only comments and no actual definitions, bulleted lists with no items
+
+**Generic sample values**: `example.com`, `lorem ipsum`, `foo`/`bar`/`baz` used as real values, `123` or `0` used as placeholder amounts, `"string"` used as a placeholder value
+
+### Convergence Gate: `placeholder-validation` Aspect
+
+The `placeholder-validation` aspect in Wave 6 is a **hard gate**. It MUST:
+1. Scan every line of `docs/plans/{{SPEC_FILENAME}}.md` for banned patterns
+2. Scan every file in `analysis/` for unresolved questions that weren't carried into the spec
+3. Return PASS (zero matches) or FAIL (with line numbers and matches listed)
+4. If FAIL: create new aspects to resolve each placeholder, do NOT check off placeholder-validation
+
+No other Wave 6 aspect can be checked off until `placeholder-validation` returns PASS.
+
+### What "Implementation-Ready" Means
+
+Every feature described in the spec must have ALL of the following — if any are missing, it is a placeholder:
+- **Exact types**: Field names, types, nullability — not "a struct with relevant fields"
+- **Exact algorithms**: Step-by-step computation with actual formulas — not "calculate the result"
+- **Exact UI behavior**: What component renders, what props it takes, conditional visibility rules — not "display the results"
+- **Exact validation rules**: Min/max, required fields, cross-field dependencies — not "validate the input"
+- **Exact error handling**: Error messages, recovery paths — not "handle errors appropriately"
+- **Test vectors**: Concrete input → expected output pairs — not "test with various inputs"
 
 ## Commit Convention
 
