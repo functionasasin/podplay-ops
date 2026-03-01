@@ -5,7 +5,7 @@ Implementation-ready specification for adding SSR (Semantic Similarity Rating) c
 ## Status
 
 Wave 1: Audit & Map — 5/5 complete
-Wave 2: Design — 6/7 complete
+Wave 2: Design — 7/7 complete
 Wave 3: Synthesis & Integration — 0/4 complete
 
 ---
@@ -59,7 +59,7 @@ Database schema and Python type definitions.
 |------|--------|----------|
 | [supabase-schema.md](data-model/supabase-schema.md) | ✅ Complete | All 6 tables (ssr_panel, ssr_persona, ssr_run, ssr_response, ssr_score, ssr_anchor_set): every column with type/nullable/default/constraint, FK graph, 14 indexes, 2 updated_at triggers, 6 query pattern examples, repository file list |
 | [migration.sql](data-model/migration.sql) | ✅ Complete | Ready-to-run Supabase migration: 6 CREATE TABLE, 14 indexes, 2 triggers, 50 anchor statement seed rows (NULL embeddings — populated by seed script) |
-| [pydantic-models.md](data-model/pydantic-models.md) | ⬜ Pending | Python type definitions (Pydantic v2) |
+| [pydantic-models.md](data-model/pydantic-models.md) | ✅ Complete | 22 types: 3 enums (`StimulusType`, `EvaluationDimension`, `ResponseFormat`); 7 Pydantic v2 input models (`PersonaDemographics`, `PersonaPsychographics`, `PanelCreateInput`, `PanelRunInput`, `PanelResultsInput`, `PanelListInput`, `PanelDeleteInput`); 11 pipeline/output dataclasses (`SsrPersonaSummary`, `CreatePanelResult`, `DimensionScore`, `PersonaResponse`, `HighlightQuote`, `AggregatedDimensionResult`, `PanelRunResult`, `AnchorPoint`, `AnchorSet`, `RetrievedRunResult`, `DimensionComparison`); 6 DB row dataclasses (`SsrPanelRow`, `SsrPersonaRow`, `SsrRunRecord`, `SsrResponseRecord`, `SsrScoreRecord`, `SsrAnchorSetRow`); 2 output/summary dataclasses (`SsrPanelSummary`, `SsrDeleteResult`). Includes type dependency graph and module-level import lists per file. |
 
 ---
 
