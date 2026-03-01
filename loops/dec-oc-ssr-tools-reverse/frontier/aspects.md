@@ -2,15 +2,15 @@
 
 ## Statistics
 - Total aspects discovered: 16
-- Analyzed: 0
-- Pending: 16
-- Convergence: 0%
+- Analyzed: 1
+- Pending: 15
+- Convergence: 6%
 
 ## Pending Aspects (ordered by dependency)
 
 ### Wave 1: Audit & Map
 Read the existing Daimon codebase and map what SSR tools need.
-- [ ] w1-tool-system — Read mcp/registry.py, catalog.py, understand @tool decorator, ToolDef, ToolError, tool organization
+- [x] w1-tool-system — Read mcp/registry.py, catalog.py, understand @tool decorator, ToolDef, ToolError, tool organization
 - [ ] w1-reference-tools — Study 2-3 existing tool implementations as reference patterns (signatures, validation, error handling, DB access)
 - [ ] w1-ssr-primitives — Map what tool functions the SSR pipeline requires, how they chain, what shared state they need
 - [ ] w1-embedding-options — Survey embedding models (cost, latency, quality) for the anchor mapping step, recommend one
@@ -34,4 +34,4 @@ Bring everything together into a cohesive implementation spec.
 - [ ] w3-examples — Write 3 end-to-end examples (ad copy, product concept, influencer fit)
 
 ## Recently Analyzed
-(Empty — loop hasn't started yet)
+- [x] w1-tool-system — `@tool` decorator, `ToolDef`, `ToolError`, `ToolRegistry`, `ToolContext`, `DatabaseContext`, `UserContext`, XML output helpers, tool organization, catalog registration pattern. Key finding: need to add `Platform.SSR` to `core/platforms.py`. `anthropic_api_key` already in `ToolContext`.
