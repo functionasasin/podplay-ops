@@ -2,7 +2,7 @@
 
 ## Status
 
-Wave 2 tool design in progress. Campaign, Email, Creators, Integrations, Users & Team, and Analytics domains complete. Search & Discovery and Workflows pending.
+Wave 2 tool design in progress. Campaign, Email, Creators, Integrations, Users & Team, Analytics, and Search & Discovery domains complete. Workflows pending.
 
 ## Domains
 
@@ -14,7 +14,7 @@ Wave 2 tool design in progress. Campaign, Email, Creators, Integrations, Users &
 | Integrations | `integrations.md` | 0 | 18 | 18 | Wave 2 complete |
 | Users & Team | `users-and-team.md` | 0 | 13 | 13 | Wave 2 complete |
 | Analytics | `analytics.md` | 0 | 1 | 1 | Wave 2 complete |
-| Search & Discovery | `search-and-discovery.md` | 0 | ~9 | ~9 | Wave 1 complete |
+| Search & Discovery | `search-and-discovery.md` | 0 | 4 | 4 | Wave 2 complete |
 | Workflows | `workflows.md` | 0 | ~7 | ~7 | Wave 1 complete |
 | Shared Conventions | `shared-conventions.md` | — | — | — | Pending |
 | Parity Matrix | `parity-matrix.md` | — | — | — | Pending |
@@ -170,6 +170,17 @@ Wave 2 tool design in progress. Campaign, Email, Creators, Integrations, Users &
 |---|-----------|------------|-------------|--------|
 | 114 | `cheerful_get_dashboard_analytics` | Dashboard | Comprehensive analytics: campaign counts, opt-in rates, email stats, pipelines, follow-ups, recent opt-ins | NEW |
 
+### New Tools — Search & Discovery Domain (4)
+
+| # | Tool Name | Sub-domain | Description | Status |
+|---|-----------|------------|-------------|--------|
+| 115 | `cheerful_list_lookalike_suggestions` | Suggestions | List AI-generated lookalike creator suggestions for a campaign | NEW |
+| 116 | `cheerful_update_lookalike_suggestion` | Suggestions | Accept/reject a single lookalike suggestion | NEW |
+| 117 | `cheerful_bulk_accept_lookalike_suggestions` | Suggestions | Bulk accept suggestions + add as campaign recipients | NEW |
+| 118 | `cheerful_bulk_reject_lookalike_suggestions` | Suggestions | Bulk reject suggestions | NEW |
+
 ### New Tools — Remaining Domains (pending design)
 
-*Tool designs for Search & Discovery and Workflows domains will be added as Wave 2 progresses. Onboarding status tool (`cheerful_get_onboarding_status`) listed in `specs/users-and-team.md` but not numbered here pending Wave 3 (requires new backend endpoint).*
+*Tool designs for Workflows domain will be added as Wave 2 progresses. Onboarding status tool (`cheerful_get_onboarding_status`) listed in `specs/users-and-team.md` but not numbered here pending Wave 3 (requires new backend endpoint).*
+
+> **Note on Search & Discovery tool count**: The w1-search extraction identified ~8-9 new tools needed, but during Wave 2 design, IC creator search/discovery tools (4) were placed in `creators.md` and YouTube lookalike (1) in `integrations.md` as they are integral to those domain workflows. The 4 tools here (lookalike suggestion management) are the search/discovery capabilities that don't naturally fit elsewhere. The total new search/discovery tool count across all domains is ~9 (4 here + 4 in creators + 1 in integrations).
