@@ -3,7 +3,7 @@
 **Domain**: Email
 **Spec file**: `specs/email.md`
 **Wave 2 status**: Tool design complete
-**Wave 3 status**: Thread Listing + Thread Operations + Attachments complete (7/24 tools fully specified)
+**Wave 3 status**: ALL 24 tools fully specified (w3-email-threads: 7/24 tools; w3-email-drafts: remaining 17/24 tools)
 
 ---
 
@@ -771,34 +771,95 @@ cheerful_list_message_attachments(message_id="c3d4e5f6-a7b8-9012-cdef-3456789012
 
 **Status**: NEW
 
-**Purpose**: Get the current email draft for a thread. Returns either the user-edited (human) draft or the LLM-generated draft, with human drafts taking priority.
+**Purpose**: Get the current email draft for a thread. Returns either the user-edited (human) draft or the LLM-generated draft, with human drafts taking priority. Returns 404 if no draft exists yet.
 
-**Maps to**: `GET /api/service/threads/{thread_id}/draft` (new service route needed; main route: `GET /threads/{gmail_thread_id}/draft`)
+**Maps to**: `GET /api/service/threads/{thread_id}/draft` (new service route needed; verified main route: `GET /threads/{gmail_thread_id}/draft` in `route/draft.py`)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner or assigned team member (via thread → campaign access check).
+**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: **owner-only** — verified in source: `thread_state.user_id != user_id` raises 403. Team members cannot read drafts for threads they didn't create.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| thread_id | string | yes | — | Thread ID (Gmail hex or SMTP angle-bracket format) |
+| thread_id | string | yes | — | Thread ID. Gmail threads: bare hex string (e.g., `18f3a2b4c5d6e7f8`). SMTP threads: angle-bracket Message-ID format (e.g., `<abc123@mail.domain.com>`). Auto-detected via `_is_smtp_thread_id()` which checks for `<` prefix and `>` suffix |
 
-**Returns**: `DraftResponse` object:
-- gmail_thread_state_id: uuid (used as version anchor for create/update operations)
-- internal_date: datetime
-- draft_subject: string (nullable)
-- draft_body_text: string (nullable)
-- source: string — "human" (user-edited draft) or "llm" (AI-generated draft)
-- alternative_drafts: list (nullable — only present when source="llm"; array of alternative draft options)
+**Parameter Validation Rules**:
+- `thread_id` must correspond to an existing thread state in the DB — 404 if not found
+- Thread state must be owned by the resolved user — 403 if `thread_state.user_id != user_id`
 
-**Error responses**: Thread not found (404), access denied (403), no draft exists (404 — thread has no draft yet).
+**Return Schema**:
+```json
+{
+  "gmail_thread_state_id": "uuid — Current thread state UUID. MUST be passed back to create/update operations as version anchor to prevent race conditions",
+  "internal_date": "datetime (ISO 8601) — Timestamp of the latest message in this thread state",
+  "draft_subject": "string | null — Subject line of the draft",
+  "draft_body_text": "string | null — Plain text body of the draft",
+  "source": "string — 'human' if this is a user-edited draft (from gmail_thread_ui_draft table), 'llm' if AI-generated (from gmail_thread_llm_draft table). Human drafts always take precedence.",
+  "alternative_drafts": "array | null — Only present when source='llm'. Array of {draft_subject: string|null, draft_body_text: string|null} objects. Null for human drafts. Null for LLM drafts that have no alternatives."
+}
+```
 
-**Notes**:
-- The `gmail_thread_state_id` is critical — it must be passed back to create/update calls as a version anchor
-- Human drafts always take precedence over LLM drafts
-- Alternative drafts are only available on LLM-generated drafts (the AI may produce multiple options)
+**Error Responses**:
 
-**Slack formatting notes**: Agent should show draft text, indicate source ("AI draft" vs "your draft"), and if alternatives exist, offer to show them.
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| Thread not found (no state exists) | HTTPException: "Thread not found" | 404 |
+| User does not own thread | HTTPException: "Not authorized" | 403 |
+| No draft exists for latest thread state | HTTPException: "No draft found" | 404 |
+
+**Priority Logic** (from source `draft.py`):
+1. Fetch latest thread state for `thread_id` (dispatches to Gmail or SMTP repo based on ID format)
+2. Check `gmail_thread_ui_draft` table for a human draft on that state → return if found with `source="human"`
+3. Check `gmail_thread_llm_draft` table for an AI draft on that state → return if found with `source="llm"`
+4. Neither found → raise 404 "No draft found"
+
+**Example Request**:
+```
+cheerful_get_thread_draft(thread_id="18f3a2b4c5d6e7f8")
+```
+
+**Example Response (human draft)**:
+```json
+{
+  "gmail_thread_state_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "internal_date": "2026-01-15T14:23:00Z",
+  "draft_subject": "Re: Partnership Opportunity",
+  "draft_body_text": "Hi Sarah,\n\nThank you for your interest! We'd love to send you our winter collection to review. I'll DM you our address form shortly.\n\nBest,\nAlex",
+  "source": "human",
+  "alternative_drafts": null
+}
+```
+
+**Example Response (LLM draft with alternatives)**:
+```json
+{
+  "gmail_thread_state_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "internal_date": "2026-01-15T14:23:00Z",
+  "draft_subject": "Re: Your Winter Collection Inquiry",
+  "draft_body_text": "Hi Sarah,\n\nThank you so much for reaching out! We'd love to collaborate and gift you our new winter line.\n\nWarmly,\nAlex",
+  "source": "llm",
+  "alternative_drafts": [
+    {
+      "draft_subject": "Re: Collaboration Follow-up",
+      "draft_body_text": "Hi Sarah,\n\nGreat to hear from you! Our winter collection would be perfect for your audience. Would love to send some pieces your way.\n\nBest,\nAlex"
+    }
+  ]
+}
+```
+
+**Slack Formatting Notes**:
+- Prefix with "🤖 AI draft:" if `source='llm'`, "📝 Your draft:" if `source='human'`
+- Show draft body in a quoted block (using `>` prefix in Slack markdown)
+- If `alternative_drafts` is non-null and non-empty: append "There are N alternative drafts available. Reply 'show alternatives' to see them."
+- Show `internal_date` as relative time: "Thread last updated 2 hours ago"
+- Show `draft_subject` only if it differs from the known thread subject
+
+**Edge Cases**:
+- SMTP thread: dispatch to `SmtpThreadStateRepository` + `get_by_smtp_thread_state_id_optional()` — logic otherwise identical
+- LLM draft with no alternatives: `alternative_drafts` is null (not `[]`)
+- Thread is in `READY_FOR_RESPONSE_DRAFT` status: LLM hasn't run yet → 404 "No draft found" is expected
+- Thread has a human draft from a previous state AND LLM draft for current state: only the LATEST state is consulted — the human draft from the old state is ignored
 
 ---
 
@@ -806,33 +867,82 @@ cheerful_list_message_attachments(message_id="c3d4e5f6-a7b8-9012-cdef-3456789012
 
 **Status**: NEW
 
-**Purpose**: Create a new email draft for a thread. Anchored to a specific thread state to prevent race conditions when new messages arrive.
+**Purpose**: Create a new human email draft for a thread. Anchored to a specific thread state to prevent race conditions when new messages arrive. Uses upsert semantics — if a human draft already exists for this state, it is overwritten (last write wins).
 
-**Maps to**: `POST /api/service/threads/{thread_id}/draft` (new service route needed; main route: `POST /threads/{gmail_thread_id}/draft`)
+**Maps to**: `POST /api/service/threads/{thread_id}/draft` (new service route needed; verified main route: `POST /threads/{gmail_thread_id}/draft` in `route/draft.py`)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner or assigned team member (via thread → campaign access check).
+**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: **owner-only** — verified in source: `thread_state.user_id != user_id` raises 403.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | thread_id | string | yes | — | Thread ID (Gmail hex or SMTP angle-bracket format) |
-| gmail_thread_state_id | uuid | yes | — | Thread state ID (version anchor — obtain from `cheerful_get_thread_draft` or `cheerful_list_threads` response) |
-| draft_subject | string | no | null | Email subject line |
-| draft_body_text | string | no | null | Email body text |
+| gmail_thread_state_id | uuid | yes | — | Thread state UUID used as version anchor. CRITICAL: obtain this from the `gmail_thread_state_id` field of `cheerful_get_thread_draft` or `cheerful_list_threads` response. If a new message arrives, this ID becomes stale → triggers 409 |
+| draft_subject | string | yes | — | Email subject line. Required (use empty string `""` to create a draft with no subject) |
+| draft_body_text | string | yes | — | Email body as plain text. Required (use empty string `""` to create a draft with no body) |
 
-**Returns**: `DraftResponse` (same schema as `cheerful_get_thread_draft`). Source will be "human".
+**Parameter Validation Rules**:
+- `gmail_thread_state_id` must match a real state record for `thread_id` — if state not found: 409 with latest state info
+- `gmail_thread_state_id` must belong to `thread_id` — if mismatch: 400 "State ID doesn't match thread"
+- Thread state must be owned by resolved user — if not: 403 "Not authorized"
 
-**Error responses**:
-- Thread not found (404)
-- Access denied (403)
-- Version mismatch (409): `{"error": "version_mismatch", "message": "Thread state updated. Please refresh.", "latest_gmail_thread_state_id": "uuid", "latest_internal_date": "ISO datetime"}` — occurs when a new message arrived since the state ID was obtained. The tool must re-fetch the thread state and retry.
+**Return Schema**: Same as `cheerful_get_thread_draft`. `source` is always `"human"`. `alternative_drafts` is always `null`.
 
-**Notes**:
-- Creating a human draft supersedes any existing LLM-generated draft
-- The 409 version mismatch is a critical race condition handler — the agent should automatically re-fetch and retry
+**Error Responses**:
 
-**Slack formatting notes**: Agent should confirm the draft was saved and show a preview snippet.
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| User does not own thread state | HTTPException: "Not authorized" | 403 |
+| State ID not found (race: new message arrived) | HTTPException 409: `{"error": "version_mismatch", "message": "Thread state updated. Please refresh.", "latest_gmail_thread_state_id": "<uuid or null>", "latest_internal_date": "<ISO datetime or null>"}` | 409 |
+| State ID doesn't match thread_id | HTTPException: "State ID doesn't match thread" | 400 |
+
+**Side Effects**:
+- Stores draft in `gmail_thread_ui_draft` table with upsert semantics (keyed on state_id — concurrent edits on same state use last-write-wins)
+- Does NOT delete the LLM draft from `gmail_thread_llm_draft` — both coexist, but `cheerful_get_thread_draft` always returns human draft first
+
+**Example Request**:
+```
+cheerful_create_thread_draft(
+  thread_id="18f3a2b4c5d6e7f8",
+  gmail_thread_state_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  draft_subject="Re: Partnership Opportunity",
+  draft_body_text="Hi Sarah,\n\nThanks for reaching out! We'd love to send you our new collection to review. I'll share our address form shortly.\n\nBest,\nAlex"
+)
+```
+
+**Example Response**:
+```json
+{
+  "gmail_thread_state_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "internal_date": "2026-01-15T14:23:00Z",
+  "draft_subject": "Re: Partnership Opportunity",
+  "draft_body_text": "Hi Sarah,\n\nThanks for reaching out! We'd love to send you our new collection to review. I'll share our address form shortly.\n\nBest,\nAlex",
+  "source": "human",
+  "alternative_drafts": null
+}
+```
+
+**Example 409 Response Body**:
+```json
+{
+  "error": "version_mismatch",
+  "message": "Thread state updated. Please refresh.",
+  "latest_gmail_thread_state_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+  "latest_internal_date": "2026-01-15T15:45:00Z"
+}
+```
+
+**Slack Formatting Notes**:
+- On success: "✅ Draft saved. Preview:\n> [first 200 chars of draft_body_text]"
+- On 409: "⚠️ A new message arrived on this thread since you last looked. Refreshing state and retrying..." — then auto-retry using `latest_gmail_thread_state_id` from error response
+- If `latest_gmail_thread_state_id` is null in 409 (thread deleted): "⚠️ Thread no longer exists."
+
+**Edge Cases**:
+- SMTP thread: `gmail_thread_state_id` parameter maps to `smtp_thread_state_id` internally; `gmail_account_id` lookup falls back to `smtp_account_id`; tool parameter name is unchanged
+- `latest_gmail_thread_state_id` in 409 may be null if no thread state exists at all (thread deleted)
+- If creating when only an LLM draft exists: human draft is stored separately; LLM draft remains but is shadowed
 
 ---
 
@@ -840,26 +950,67 @@ cheerful_list_message_attachments(message_id="c3d4e5f6-a7b8-9012-cdef-3456789012
 
 **Status**: NEW
 
-**Purpose**: Update an existing email draft. Supports partial updates — only provided fields are changed.
+**Purpose**: Update an existing email draft with partial field changes. Omitted fields retain their current values by merging with the existing draft. Uses the same version-anchoring mechanism as create.
 
-**Maps to**: `PUT /api/service/threads/{thread_id}/draft` (new service route needed; main route: `PUT /threads/{gmail_thread_id}/draft`)
+**Maps to**: `PUT /api/service/threads/{thread_id}/draft` (new service route needed; verified main route: `PUT /threads/{gmail_thread_id}/draft` in `route/draft.py`)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner or assigned team member.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: **owner-only** — verified from source: `thread_state.user_id != user_id` raises 403.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | thread_id | string | yes | — | Thread ID (Gmail hex or SMTP angle-bracket format) |
-| gmail_thread_state_id | uuid | yes | — | Thread state ID (version anchor) |
-| draft_subject | string | no | — | New subject (omit to keep existing) |
-| draft_body_text | string | no | — | New body text (omit to keep existing) |
+| gmail_thread_state_id | uuid | yes | — | Thread state UUID (version anchor — same semantics as create) |
+| draft_subject | string | no | — | New subject. Omit to retain existing subject. Provide empty string `""` to clear subject |
+| draft_body_text | string | no | — | New body text. Omit to retain existing body. Provide empty string `""` to clear body |
 
-**Returns**: `DraftResponse` (updated draft).
+**Parameter Validation Rules**:
+- Same race condition validation as `cheerful_create_thread_draft` (state must exist and match thread)
+- Thread state must be owned by the resolved user — 403 if not
 
-**Error responses**: Same as `cheerful_create_thread_draft` including 409 version mismatch.
+**Merge Logic** (from source `route/draft.py:257-266`):
+- Reads existing `gmail_thread_ui_draft` for this `gmail_thread_state_id`
+- For `draft_subject`: if provided (non-None) → use provided value; if omitted (None) → use existing subject (or `""` if no draft)
+- For `draft_body_text`: if provided (non-None) → use provided value; if omitted (None) → use existing body (or `""` if no draft)
+- Result is upserted as a human draft (same upsert logic as create)
 
-**Notes**: If updating an LLM draft, the source changes to "human" and alternative_drafts are cleared.
+**Return Schema**: Same as `cheerful_get_thread_draft`. `source` is always `"human"`. `alternative_drafts` is always `null`.
+
+**Error Responses**: Same as `cheerful_create_thread_draft` — see that section for the full error table including 409 version_mismatch format.
+
+**Side Effects**: If the thread only had an LLM draft (no human draft), this update creates a new human draft with the provided values; the LLM draft remains in the database but is now shadowed.
+
+**Example Request** (update body only, keep existing subject):
+```
+cheerful_update_thread_draft(
+  thread_id="18f3a2b4c5d6e7f8",
+  gmail_thread_state_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  draft_body_text="Hi Sarah,\n\nLove your content! We'd love to gift you our winter collection — would that work for you?\n\nWarmly,\nAlex"
+)
+```
+
+**Example Response** (subject retained from existing draft):
+```json
+{
+  "gmail_thread_state_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "internal_date": "2026-01-15T14:23:00Z",
+  "draft_subject": "Re: Partnership Opportunity",
+  "draft_body_text": "Hi Sarah,\n\nLove your content! We'd love to gift you our winter collection — would that work for you?\n\nWarmly,\nAlex",
+  "source": "human",
+  "alternative_drafts": null
+}
+```
+
+**Slack Formatting Notes**:
+- On success: "✅ Draft updated. Current version:\n> [first 200 chars of body]"
+- Same 409 auto-retry logic as `cheerful_create_thread_draft`
+- If only subject was updated: "✅ Subject updated to: [new subject]"
+
+**Edge Cases**:
+- Providing `draft_subject=null` explicitly (not omitting it): behavior is same as providing `None` in Python — treated as "omit" (retain existing). This is because `DraftUpdateRequest` has `draft_subject: str | None = None`.
+- If no existing draft for state: merge reads empty strings as fallbacks, so the result is the provided values or `""` for unprovided fields
+- After an update, if the user then re-fetches via `cheerful_get_thread_draft`, the result will always have `source="human"` regardless of whether an LLM draft also exists
 
 ---
 
@@ -893,28 +1044,74 @@ cheerful_list_message_attachments(message_id="c3d4e5f6-a7b8-9012-cdef-3456789012
 | gmail_thread_state_id | uuid | no | null | Thread state ID for tracking state transitions after send |
 | smtp_thread_state_id | uuid | no | null | SMTP thread state ID for tracking |
 
-**Parameter validation rules**:
-- `to` must contain at least one email: `"At least one recipient is required"`
-- At least one of `body_html` or `body_text` must be provided: `"Either body_html or body_text must be provided"`
+**Parameter Validation Rules**:
+- `to` must contain at least one email address: error `"At least one recipient is required"` (422)
+- At least one of `body_html` or `body_text` must be provided: error `"Either body_html or body_text must be provided"` (validated in `model_post_init`)
+- `account_email` must match an existing Gmail or SMTP account owned by (or accessible to) the user
 
-**Returns**: `SendEmailResponse`:
-- message_id: string (the email Message-ID)
-- thread_id: string (the thread this message belongs to)
-- sent_at: datetime
+**Return Schema**:
+```json
+{
+  "message_id": "string — The Gmail/SMTP Message-ID of the sent message. For Gmail this is the thread_id; for SMTP it is the SMTP message_id_header",
+  "thread_id": "string — The Gmail thread ID or SMTP thread ID this message belongs to. For new emails: same as message_id. For replies: the original thread_id",
+  "sent_at": "datetime (ISO 8601) — Timestamp when the email was sent (UTC)"
+}
+```
 
-**Error responses**:
-- User not resolved: ToolError "Could not resolve Cheerful user..."
-- Not authorized to send from account (403): "Not authorized to send from this account"
-- Not authorized for thread (403): "Not authorized to send on this thread" (team member not assigned to campaign)
-- Account not found (404): Gmail/SMTP account not found for the given email address
-- Validation errors (422): missing recipients, missing body
+**Error Responses**:
 
-**Side effects**:
-- Thread state updated to `NOT_LATEST` (prevents follow-up scheduling on old state)
-- Gmail sync detects the outbound message and creates a fresh `GmailThreadState`
-- `ThreadProcessingCoordinator` workflow handles `WAITING_FOR_INBOUND` transition
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| `to` is empty | "At least one recipient is required" | 422 |
+| Neither body_html nor body_text provided | "Either body_html or body_text must be provided" | 422 |
+| Account not found for account_email | "Account not found: {account_email}" | 404 |
+| User doesn't own Gmail account and not assigned to campaign | "Not authorized to send from this account" | 403 |
+| User not assigned to thread's campaign | "Not authorized to send on this thread" | 403 |
+| Gmail/SMTP send failure | "Failed to send email" | 500 |
 
-**Slack formatting notes**: Agent should confirm send with "Sent to [recipient] from [sender] at [time]" and summarize subject.
+**Permission Model** (from source `route/email.py`):
+- **Account owner**: no additional checks — can send freely
+- **Team member via campaign assignment**: must pass both `can_send_via_campaign_assignment(user_id, account_id)` AND (if `thread_id` provided) `can_access_thread(user_id, thread_id)` — otherwise 403
+
+**Side Effects**:
+- If `gmail_thread_state_id` provided: updates that Gmail thread state to `NOT_LATEST` status (prevents stale automated follow-up scheduling)
+- If `smtp_thread_state_id` provided: updates that SMTP thread state to `NOT_LATEST` status
+- Gmail sync will detect the outbound message → creates a fresh `GmailThreadState`
+- The `ThreadProcessingCoordinator` workflow handles `WAITING_FOR_INBOUND` transition for the new state
+
+**Example Request** (reply to existing Gmail thread):
+```
+cheerful_send_email(
+  account_email="alex@brand.com",
+  to=["sarah@creator.com"],
+  subject="Re: Partnership Opportunity",
+  body_text="Hi Sarah,\n\nExcited to work together! Here's the address form: [link]\n\nBest,\nAlex",
+  thread_id="18f3a2b4c5d6e7f8",
+  in_reply_to="<abc123@mail.gmail.com>",
+  references="<abc123@mail.gmail.com>",
+  gmail_thread_state_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+)
+```
+
+**Example Response**:
+```json
+{
+  "message_id": "18f3a2b4c5d6e7f8",
+  "thread_id": "18f3a2b4c5d6e7f8",
+  "sent_at": "2026-01-15T15:30:00Z"
+}
+```
+
+**Slack Formatting Notes**:
+- On success: "✅ Email sent to sarah@creator.com from alex@brand.com at 3:30 PM UTC\nSubject: Re: Partnership Opportunity"
+- If `thread_id` provided: "📧 Reply sent in thread"
+- If new email (no `thread_id`): "📧 New email sent"
+
+**Edge Cases**:
+- Gmail send: display name from SendAs settings is automatically applied (fetched via `service.list_send_as()`)
+- SMTP send: display_name from `UserSmtpAccount.display_name` is used
+- For SMTP threads, `thread_id` should be the SMTP email_thread_id (angle-bracket format); if not provided for a reply, thread is treated as a new email
 
 ---
 
@@ -924,44 +1121,92 @@ cheerful_list_message_attachments(message_id="c3d4e5f6-a7b8-9012-cdef-3456789012
 
 **Status**: NEW
 
-**Purpose**: Schedule an email to be sent at a specific future time. Supports timezone-aware scheduling.
+**Purpose**: Schedule an email to be sent at a specific future time. Supports timezone-aware scheduling. Verifies account ownership before creating the dispatch queue entry.
 
-**Maps to**: `POST /api/service/emails/scheduled` (new service route needed; main route: `POST /emails/scheduled`)
+**Maps to**: `POST /api/service/emails/scheduled` (new service route needed; verified main route: `POST /emails/scheduled` in `route/email_dispatch.py`)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: authenticated (owner of the sending account).
+**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: **owner-only** — user must own the Gmail or SMTP account specified (verified via DB lookup with `user_id` match).
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| gmail_account_id | uuid | no | — | Gmail account to send from (mutually exclusive with smtp_account_id — exactly one required) |
-| smtp_account_id | uuid | no | — | SMTP account to send from (mutually exclusive with gmail_account_id — exactly one required) |
-| recipient_email | string | yes | — | Recipient email address |
+| gmail_account_id | uuid | no | — | Gmail account UUID to send from. Mutually exclusive with `smtp_account_id` — exactly one required |
+| smtp_account_id | uuid | no | — | SMTP account UUID to send from. Mutually exclusive with `gmail_account_id` — exactly one required |
+| recipient_email | string (EmailStr) | yes | — | Recipient email address. Validated as valid email format |
 | subject | string | yes | — | Email subject line |
-| dispatch_at | datetime | yes | — | Scheduled send time (must be timezone-aware, must be in the future) |
-| recipient_name | string | no | null | Recipient display name |
-| cc_emails | string[] | no | null | CC email addresses |
-| bcc_emails | string[] | no | null | BCC email addresses |
-| body_text | string | no | null | Plain text body. At least one of body_text or body_html required |
-| body_html | string | no | null | HTML body. At least one of body_text or body_html required |
-| in_reply_to_message_id | string | no | null | Message-ID header for threading |
-| references_header | string | no | null | References header for threading |
-| gmail_thread_id | string | no | null | Thread ID for reply threading |
-| user_timezone | string | no | "UTC" | IANA timezone for dispatch_at interpretation. Validated via ZoneInfo |
+| dispatch_at | datetime | yes | — | Scheduled send time. Must be timezone-aware (include UTC offset or Z suffix). Must be in the future relative to UTC now |
+| recipient_name | string | no | null | Recipient display name for To: header |
+| cc_emails | string[] (EmailStr[]) | no | null | CC email addresses. Each validated as valid email |
+| bcc_emails | string[] (EmailStr[]) | no | null | BCC email addresses. Each validated as valid email |
+| body_text | string | no | null | Plain text email body. At least one of `body_text` or `body_html` required |
+| body_html | string | no | null | HTML email body. At least one of `body_text` or `body_html` required |
+| in_reply_to_message_id | string | no | null | Value of the Message-ID header of the email being replied to (for threading) |
+| references_header | string | no | null | Full References header string for email threading |
+| gmail_thread_id | string | no | null | Gmail thread ID for reply threading (ensures Gmail groups messages in the same thread) |
+| user_timezone | string | no | `"UTC"` | IANA timezone string for `dispatch_at` interpretation (e.g., `"America/New_York"`, `"Europe/London"`). Validated via `ZoneInfo(v)` |
 
-**Parameter validation rules**:
-- Exactly one of `gmail_account_id` or `smtp_account_id`: `"Exactly one of gmail_account_id or smtp_account_id is required"` (400)
-- At least one of `body_text` or `body_html`: `"At least one of body_text or body_html is required"` (422)
-- `dispatch_at` must be timezone-aware: `"dispatch_at must be timezone-aware"`
-- `dispatch_at` must be in the future: `"dispatch_at must be in the future"`
-- `user_timezone` must be valid IANA timezone: `"Invalid timezone: {value}"`
+**Parameter Validation Rules**:
+- Exactly one of `gmail_account_id` or `smtp_account_id` must be provided — error: `"Exactly one of gmail_account_id or smtp_account_id is required"` (400)
+- At least one of `body_text` or `body_html` must be provided — error: `"At least one of body_text or body_html is required"` (422)
+- `dispatch_at` must be timezone-aware — error: `"dispatch_at must be timezone-aware"` (422)
+- `dispatch_at` must be strictly in the future (`> datetime.now(UTC)`) — error: `"dispatch_at must be in the future"` (422)
+- `user_timezone` must be a valid IANA timezone string — error: `"Invalid timezone: {value}"` (422)
+- Gmail or SMTP account must exist AND be owned by the user — error: `"Gmail account not found or not owned by user"` or `"SMTP account not found or not owned by user"` (403)
 
-**Returns**: `ScheduleEmailResponse`:
-- id: uuid (dispatch ID)
-- dispatch_at: datetime
-- status: string ("pending")
+**Return Schema**:
+```json
+{
+  "id": "uuid — Dispatch queue entry ID (use for cancel/reschedule operations)",
+  "dispatch_at": "datetime (ISO 8601) — Scheduled send time as stored",
+  "status": "string — Always 'pending' on creation"
+}
+```
 
-**Slack formatting notes**: Agent should confirm with "Email to [recipient] scheduled for [time] ([timezone])".
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| Both or neither account_id provided | "Exactly one of gmail_account_id or smtp_account_id is required" | 400 |
+| Neither body_text nor body_html | "At least one of body_text or body_html is required" | 422 |
+| dispatch_at is not timezone-aware | "dispatch_at must be timezone-aware" | 422 |
+| dispatch_at is in the past | "dispatch_at must be in the future" | 422 |
+| Invalid user_timezone | "Invalid timezone: {value}" | 422 |
+| Gmail account not found or not owned | "Gmail account not found or not owned by user" | 403 |
+| SMTP account not found or not owned | "SMTP account not found or not owned by user" | 403 |
+
+**Example Request**:
+```
+cheerful_schedule_email(
+  gmail_account_id="c3d4e5f6-a7b8-9012-cdef-g12345678901",
+  recipient_email="sarah@creator.com",
+  subject="Following up on our collab",
+  body_text="Hi Sarah,\n\nJust checking in — did you get a chance to try the products?\n\nBest,\nAlex",
+  dispatch_at="2026-01-20T09:00:00-05:00",
+  user_timezone="America/New_York",
+  gmail_thread_id="18f3a2b4c5d6e7f8",
+  in_reply_to_message_id="<abc123@mail.gmail.com>"
+)
+```
+
+**Example Response**:
+```json
+{
+  "id": "d4e5f6a7-b8c9-0123-def0-g12345678902",
+  "dispatch_at": "2026-01-20T14:00:00Z",
+  "status": "pending"
+}
+```
+
+**Slack Formatting Notes**:
+- On success: "📅 Email to sarah@creator.com scheduled for January 20 at 9:00 AM Eastern (2:00 PM UTC)"
+- Include the dispatch `id` in case the user wants to cancel: "(ID: d4e5f6a7... — say 'cancel' to cancel this)"
+- Convert `dispatch_at` from UTC to user's local time for display using `user_timezone`
+
+**Edge Cases**:
+- `dispatch_at` at exactly `datetime.now(UTC)`: rejected as not strictly in the future
+- Email system polls the `email_dispatch_queue` table and dispatches when `dispatch_at` is reached — typically within 1 minute
 
 ---
 
@@ -969,23 +1214,66 @@ cheerful_list_message_attachments(message_id="c3d4e5f6-a7b8-9012-cdef-3456789012
 
 **Status**: NEW
 
-**Purpose**: List all scheduled (pending) emails for the current user.
+**Purpose**: List all scheduled (pending) emails for the current user. Only returns emails with `status="pending"` — sent, failed, and cancelled dispatches are excluded.
 
-**Maps to**: `GET /api/service/emails/scheduled` (new service route needed; main route: `GET /emails/scheduled`)
+**Maps to**: `GET /api/service/emails/scheduled` (new service route needed; verified main route: `GET /emails/scheduled` in `route/email_dispatch.py`)
 
 **Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: authenticated (user sees only their own scheduled emails).
 
-**Parameters**: None (user-scoped via injected context).
+**Parameters** (user-facing — `user_id` is injected, not listed here): None.
 
-**Returns**: `ScheduledEmailListResponse`:
-- emails: array of `ScheduleEmailResponse` objects:
-  - id: uuid
-  - dispatch_at: datetime
-  - status: string
-  - recipient_email: string (nullable)
-  - subject: string (nullable)
+**Return Schema**:
+```json
+{
+  "emails": [
+    {
+      "id": "uuid — Dispatch queue entry ID (use for cancel/reschedule)",
+      "dispatch_at": "datetime (ISO 8601) — Scheduled send time",
+      "status": "string — 'pending' (only pending emails are returned by this endpoint)",
+      "recipient_email": "string | null — Recipient email address",
+      "subject": "string | null — Email subject line"
+    }
+  ]
+}
+```
 
-**Slack formatting notes**: Agent should present as a table: subject, recipient, scheduled time, status.
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+
+**Example Request**:
+```
+cheerful_list_scheduled_emails()
+```
+
+**Example Response**:
+```json
+{
+  "emails": [
+    {
+      "id": "d4e5f6a7-b8c9-0123-def0-g12345678902",
+      "dispatch_at": "2026-01-20T14:00:00Z",
+      "status": "pending",
+      "recipient_email": "sarah@creator.com",
+      "subject": "Following up on our collab"
+    },
+    {
+      "id": "e5f6a7b8-c9d0-1234-ef01-h23456789012",
+      "dispatch_at": "2026-01-22T16:00:00Z",
+      "status": "pending",
+      "recipient_email": "mike@influencer.com",
+      "subject": "Partnership opportunity"
+    }
+  ]
+}
+```
+
+**Slack Formatting Notes**:
+- Present as a numbered list: "📅 Scheduled emails:\n1. sarah@creator.com — 'Following up...' — Jan 20 at 9 AM ET\n2. mike@influencer.com — 'Partnership...' — Jan 22 at 11 AM ET"
+- If empty: "No scheduled emails pending."
+- Note: only `pending` emails are shown — previously sent/cancelled dispatches are not listed
 
 ---
 
@@ -993,27 +1281,61 @@ cheerful_list_message_attachments(message_id="c3d4e5f6-a7b8-9012-cdef-3456789012
 
 **Status**: NEW
 
-**Purpose**: Cancel a pending scheduled email. Only works on emails with "pending" status.
+**Purpose**: Cancel a pending scheduled email. Only emails in `"pending"` status can be cancelled. Includes race condition handling for emails being dispatched concurrently.
 
-**Maps to**: `DELETE /api/service/emails/scheduled/{dispatch_id}` (new service route needed; main route: `DELETE /emails/scheduled/{dispatch_id}`)
+**Maps to**: `DELETE /api/service/emails/scheduled/{dispatch_id}` (new service route needed; verified main route: `DELETE /emails/scheduled/{dispatch_id}` in `route/email_dispatch.py`)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner-only (dispatch must belong to user).
+**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: **owner-only** — verified: `dispatch.user_id != user_id` raises 403.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| dispatch_id | uuid | yes | — | Scheduled email dispatch ID |
+| dispatch_id | uuid | yes | — | Scheduled email dispatch ID (obtained from `cheerful_schedule_email` or `cheerful_list_scheduled_emails`) |
 
-**Returns**: `{ status: "cancelled", id: "uuid" }`
+**Parameter Validation Rules**:
+- `dispatch_id` must exist in the DB — 404 if not found
+- Dispatch must be owned by the resolved user — 403 if not
+- Dispatch must be in `"pending"` status — 409 if already sent, cancelled, processing, or failed
 
-**Error responses**:
-- Dispatch not found (404): "Scheduled email not found"
-- Not authorized (403): "Not authorized to cancel this email"
-- Already sent/cancelled (409): "Email has already been sent or cancelled"
-- Race condition (409): "Email could not be cancelled (may have been sent)"
+**Return Schema**:
+```json
+{
+  "status": "string — 'cancelled'",
+  "id": "string (uuid) — The cancelled dispatch ID"
+}
+```
 
-**Notes**: Only emails in "pending" status can be cancelled. Emails in "processing", "sent", "failed", or "cancelled" status cannot be cancelled.
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| Dispatch not found | "Scheduled email not found" | 404 |
+| User does not own dispatch | "Not authorized to cancel this email" | 403 |
+| Not in pending status | "Email has already been sent or cancelled" | 409 |
+| Race condition (status changed between check and cancel) | "Email could not be cancelled (may have been sent)" | 409 |
+
+**Example Request**:
+```
+cheerful_cancel_scheduled_email(dispatch_id="d4e5f6a7-b8c9-0123-def0-g12345678902")
+```
+
+**Example Response**:
+```json
+{
+  "status": "cancelled",
+  "id": "d4e5f6a7-b8c9-0123-def0-g12345678902"
+}
+```
+
+**Slack Formatting Notes**:
+- On success: "✅ Scheduled email to sarah@creator.com has been cancelled."
+- On 409 race condition: "⚠️ Could not cancel — the email may have already been sent. Check your sent emails."
+
+**Edge Cases**:
+- Emails in `"processing"` status cannot be cancelled (dispatch worker has already picked it up)
+- Emails in `"sent"`, `"failed"`, or `"cancelled"` status return 409 (not 404)
 
 ---
 
@@ -1021,61 +1343,173 @@ cheerful_list_message_attachments(message_id="c3d4e5f6-a7b8-9012-cdef-3456789012
 
 **Status**: NEW
 
-**Purpose**: Change the dispatch time of a pending scheduled email.
+**Purpose**: Change the dispatch time of a pending scheduled email to a new future time. Includes race condition handling.
 
-**Maps to**: `PATCH /api/service/emails/scheduled/{dispatch_id}/reschedule` (new service route needed; main route: `PATCH /emails/scheduled/{dispatch_id}/reschedule`)
+**Maps to**: `PATCH /api/service/emails/scheduled/{dispatch_id}/reschedule` (new service route needed; verified main route: `PATCH /emails/scheduled/{dispatch_id}/reschedule` in `route/email_dispatch.py`)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner-only (dispatch must belong to user).
+**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: **owner-only** — verified: `dispatch.user_id != user_id` raises 403.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | dispatch_id | uuid | yes | — | Scheduled email dispatch ID |
-| dispatch_at | datetime | yes | — | New scheduled send time (must be timezone-aware, must be in the future) |
+| dispatch_at | datetime | yes | — | New scheduled send time. Must be timezone-aware. Must be strictly in the future relative to UTC now |
 
-**Returns**: `{ status: "rescheduled", id: "uuid", dispatch_at: "ISO datetime" }`
+**Parameter Validation Rules**:
+- `dispatch_id` must exist — 404 if not found
+- Dispatch must be owned by user — 403 if not
+- Dispatch must be in `"pending"` status — 409 if not
+- `dispatch_at` must be timezone-aware — error: `"dispatch_at must be timezone-aware"` (422)
+- `dispatch_at` must be in the future — error: `"dispatch_at must be in the future"` (422)
 
-**Error responses**: Same as `cheerful_cancel_scheduled_email` (404, 403, 409).
+**Return Schema**:
+```json
+{
+  "status": "string — 'rescheduled'",
+  "id": "string (uuid) — The rescheduled dispatch ID",
+  "dispatch_at": "string (ISO 8601 datetime) — New scheduled send time"
+}
+```
 
-**Parameter validation rules**: Same `dispatch_at` rules as `cheerful_schedule_email` (timezone-aware, future).
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| Dispatch not found | "Scheduled email not found" | 404 |
+| User does not own dispatch | "Not authorized to reschedule this email" | 403 |
+| Not in pending status | "Email has already been sent or cancelled" | 409 |
+| Race condition | "Email could not be rescheduled (may have been sent)" | 409 |
+| dispatch_at not timezone-aware | "dispatch_at must be timezone-aware" | 422 |
+| dispatch_at in the past | "dispatch_at must be in the future" | 422 |
+
+**Example Request**:
+```
+cheerful_reschedule_email(
+  dispatch_id="d4e5f6a7-b8c9-0123-def0-g12345678902",
+  dispatch_at="2026-01-21T14:00:00Z"
+)
+```
+
+**Example Response**:
+```json
+{
+  "status": "rescheduled",
+  "id": "d4e5f6a7-b8c9-0123-def0-g12345678902",
+  "dispatch_at": "2026-01-21T14:00:00+00:00"
+}
+```
+
+**Slack Formatting Notes**:
+- On success: "📅 Email rescheduled to January 21 at 2:00 PM UTC"
 
 ---
 
 ## Email Signatures
 
-> **Cross-reference**: The campaigns domain (`specs/campaigns.md`) has 3 campaign-oriented signature tools (`cheerful_get_campaign_signature`, `cheerful_update_campaign_signature`, `cheerful_list_campaign_signatures`) that map to proposed campaign-specific service routes. This section covers the full CRUD via the actual `/email-signatures` backend routes, which serve both user-level and campaign-specific signatures.
+> **Cross-reference**: The campaigns domain (`specs/campaigns.md`) has 3 campaign-oriented signature tools (`cheerful_get_campaign_signature`, `cheerful_update_campaign_signature`, `cheerful_list_campaign_signatures`) that map to proposed campaign-specific service routes. This section covers the full CRUD via the actual `/email-signatures` backend routes (verified: `route/email_signature.py`), which serve both user-level and campaign-specific signatures.
+
+> **Shared `EmailSignatureResponse` schema** (all GET/create/update operations return this structure):
+> ```json
+> {
+>   "id": "uuid",
+>   "user_id": "uuid — Owner of this signature",
+>   "name": "string — Display name for this signature (1-255 chars)",
+>   "content": "string — HTML signature content (1-10,000 chars; server-side sanitized via sanitize_signature_html())",
+>   "is_default": "boolean — True if this is the user's default signature. Only one user-level signature can be default at a time. Always false for campaign signatures",
+>   "campaign_id": "uuid | null — null for user-level signatures, UUID for campaign-specific signatures",
+>   "campaign_name": "string | null — Campaign name, populated via JOIN when campaign_id is set. Null for user-level signatures",
+>   "is_enabled": "boolean — For campaign signatures: if true, auto-appended to AI-generated outbound emails for this campaign. Always false for user-level signatures",
+>   "created_at": "datetime (ISO 8601)",
+>   "updated_at": "datetime (ISO 8601)"
+> }
+> ```
 
 ### `cheerful_list_email_signatures`
 
 **Status**: NEW
 
-**Purpose**: List all email signatures belonging to the current user, optionally filtered by campaign.
+**Purpose**: List all email signatures belonging to the current user. When `campaign_id` is provided, returns user-level signatures PLUS the specified campaign's signature (if it exists). When `campaign_id` is omitted, returns all user signatures (user-level and all campaign-specific ones).
 
-**Maps to**: `GET /api/service/email-signatures` (new service route needed; main route: `GET /email-signatures`)
+**Maps to**: `GET /api/service/email-signatures` (new service route needed; verified main route: `GET /email-signatures` in `route/email_signature.py`)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: authenticated (user sees only their own signatures).
+**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: authenticated (user sees only signatures they own).
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| campaign_id | uuid | no | — | Filter to signatures for a specific campaign. Omit to get all user signatures |
+| campaign_id | uuid | no | null | When provided: returns user-level signatures + the signature for this specific campaign (uses `get_signatures_for_manual_reply(user_id, campaign_id)`). When omitted: returns ALL user signatures via `get_all_for_user(user_id)` |
 
-**Returns**: `EmailSignatureListResponse`:
-- signatures: array of `EmailSignatureResponse` objects:
-  - id: uuid
-  - user_id: uuid
-  - name: string
-  - content: string (HTML)
-  - is_default: boolean
-  - campaign_id: uuid (nullable — null for user-level signatures)
-  - campaign_name: string (nullable — populated via join)
-  - is_enabled: boolean
-  - created_at: datetime
-  - updated_at: datetime
+**Parameter Validation Rules**: None beyond auth — if `campaign_id` is provided but user doesn't own it, the campaign signature simply won't be included.
 
-**Slack formatting notes**: Agent should list signatures with name, type (user-level vs campaign-specific), and default/enabled status.
+**Return Schema**:
+```json
+{
+  "signatures": [
+    {
+      "id": "uuid",
+      "user_id": "uuid",
+      "name": "string",
+      "content": "string (HTML)",
+      "is_default": "boolean",
+      "campaign_id": "uuid | null",
+      "campaign_name": "string | null",
+      "is_enabled": "boolean",
+      "created_at": "datetime",
+      "updated_at": "datetime"
+    }
+  ]
+}
+```
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+
+**Example Request**:
+```
+cheerful_list_email_signatures(campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890")
+```
+
+**Example Response**:
+```json
+{
+  "signatures": [
+    {
+      "id": "s1a2b3c4-d5e6-7890-abcd-ef1234567891",
+      "user_id": "u1a2b3c4-d5e6-7890-abcd-ef1234567892",
+      "name": "Default",
+      "content": "<p>Best,<br>Alex<br>Brand Manager</p>",
+      "is_default": true,
+      "campaign_id": null,
+      "campaign_name": null,
+      "is_enabled": false,
+      "created_at": "2026-01-01T10:00:00Z",
+      "updated_at": "2026-01-10T15:00:00Z"
+    },
+    {
+      "id": "s2a2b3c4-d5e6-7890-abcd-ef1234567893",
+      "user_id": "u1a2b3c4-d5e6-7890-abcd-ef1234567892",
+      "name": "Winter Campaign",
+      "content": "<p>Warmly,<br>Alex | Winter Collection 2026</p>",
+      "is_default": false,
+      "campaign_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "campaign_name": "Winter Gifting 2026",
+      "is_enabled": true,
+      "created_at": "2026-01-05T12:00:00Z",
+      "updated_at": "2026-01-05T12:00:00Z"
+    }
+  ]
+}
+```
+
+**Slack Formatting Notes**:
+- List each signature: "📝 [name] — [user-level | Campaign: campaign_name] — [default: ✓/✗] [auto-append: ✓/✗]"
+- Highlight the default signature and any enabled campaign signatures
 
 ---
 
@@ -1083,23 +1517,99 @@ cheerful_list_message_attachments(message_id="c3d4e5f6-a7b8-9012-cdef-3456789012
 
 **Status**: NEW
 
-**Purpose**: Get the appropriate signatures for composing a reply — returns both user-level signatures and the campaign-specific signature (if any). Designed for the reply composer dropdown.
+**Purpose**: Get the appropriate signatures for composing a reply — returns user-level signatures grouped separately from the campaign-specific signature. Designed for the reply composer.
 
-**Maps to**: `GET /api/service/email-signatures/for-reply` (new service route needed; main route: `GET /email-signatures/for-reply`)
+**Maps to**: `GET /api/service/email-signatures/for-reply` (new service route needed; verified main route: `GET /email-signatures/for-reply` in `route/email_signature.py`)
 
 **Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: authenticated.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| campaign_id | uuid | no | — | Campaign ID to include campaign-specific signature |
+| campaign_id | uuid | no | null | When provided: returns user-level signatures + campaign-specific signature (if any). When omitted: returns only user-level signatures with `campaign_signature: null` |
 
-**Returns**: `SignaturesForReplyResponse`:
-- user_signatures: EmailSignatureResponse[] (user-level signatures, campaign_id is null)
-- campaign_signature: EmailSignatureResponse (nullable — the campaign-specific signature if it exists and is enabled)
+**Return Schema**:
+```json
+{
+  "user_signatures": [
+    {
+      "id": "uuid",
+      "user_id": "uuid",
+      "name": "string",
+      "content": "string (HTML)",
+      "is_default": "boolean",
+      "campaign_id": "null — always null (these are user-level signatures)",
+      "campaign_name": "null — always null",
+      "is_enabled": "false — always false for user-level signatures",
+      "created_at": "datetime",
+      "updated_at": "datetime"
+    }
+  ],
+  "campaign_signature": {
+    "id": "uuid",
+    "user_id": "uuid",
+    "name": "string",
+    "content": "string (HTML)",
+    "is_default": "false — always false for campaign signatures",
+    "campaign_id": "uuid — the campaign this signature belongs to",
+    "campaign_name": "string | null — campaign name",
+    "is_enabled": "boolean",
+    "created_at": "datetime",
+    "updated_at": "datetime"
+  }
+}
+```
 
-**Slack formatting notes**: Agent should present the recommended signature (default user signature or campaign signature) and note alternatives are available.
+> Note: `campaign_signature` is `null` if no campaign_id was provided, or if the campaign has no associated signature.
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+
+**Example Request**:
+```
+cheerful_get_email_signatures_for_reply(campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890")
+```
+
+**Example Response**:
+```json
+{
+  "user_signatures": [
+    {
+      "id": "s1a2b3c4-d5e6-7890-abcd-ef1234567891",
+      "user_id": "u1a2b3c4-d5e6-7890-abcd-ef1234567892",
+      "name": "Default",
+      "content": "<p>Best,<br>Alex</p>",
+      "is_default": true,
+      "campaign_id": null,
+      "campaign_name": null,
+      "is_enabled": false,
+      "created_at": "2026-01-01T10:00:00Z",
+      "updated_at": "2026-01-10T15:00:00Z"
+    }
+  ],
+  "campaign_signature": {
+    "id": "s2a2b3c4-d5e6-7890-abcd-ef1234567893",
+    "user_id": "u1a2b3c4-d5e6-7890-abcd-ef1234567892",
+    "name": "Winter Campaign",
+    "content": "<p>Warmly,<br>Alex | Winter Collection 2026</p>",
+    "is_default": false,
+    "campaign_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "campaign_name": "Winter Gifting 2026",
+    "is_enabled": true,
+    "created_at": "2026-01-05T12:00:00Z",
+    "updated_at": "2026-01-05T12:00:00Z"
+  }
+}
+```
+
+**Slack Formatting Notes**:
+- Suggest the recommended signature: campaign signature if it exists and is enabled, otherwise the default user signature
+- "📝 Suggested signature: [name] — [preview of first 50 chars of content]"
+- "N other signatures available. Say 'list signatures' to see all."
 
 ---
 
@@ -1107,30 +1617,69 @@ cheerful_list_message_attachments(message_id="c3d4e5f6-a7b8-9012-cdef-3456789012
 
 **Status**: NEW
 
-**Purpose**: Create a new email signature. Can be user-level (no campaign_id) or campaign-specific (with campaign_id).
+**Purpose**: Create a new email signature. Can be user-level (no `campaign_id`) or campaign-specific (with `campaign_id`). Content is automatically sanitized server-side.
 
-**Maps to**: `POST /api/service/email-signatures` (new service route needed; main route: `POST /email-signatures`)
+**Maps to**: `POST /api/service/email-signatures` (new service route needed; verified main route: `POST /email-signatures` in `route/email_signature.py`)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: authenticated for user-level signatures; campaign owner for campaign-specific signatures.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: authenticated for user-level signatures; **campaign owner-only** for campaign-specific signatures (checked: `campaign.user_id != user_id` returns 404 "Campaign not found" — intentionally opaque).
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| name | string | yes | — | Signature display name |
-| content | string | yes | — | HTML signature content. Max 10,000 characters. Server-side sanitized via `sanitize_signature_html()` |
-| is_default | boolean | no | false | Set as default user-level signature. Only applies to user-level signatures (campaign signatures forced to false) |
-| campaign_id | uuid | no | null | Campaign ID — omit for user-level signature, set for campaign-specific |
-| is_enabled | boolean | no | false | Enable for automated emails. Only applies to campaign-specific signatures |
+| name | string | yes | — | Signature display name. Min 1 char, max 255 chars |
+| content | string | yes | — | HTML signature content. Min 1 char, max 10,000 chars. Sanitized server-side via `sanitize_signature_html()` to strip unsafe tags/attributes |
+| is_default | boolean | no | `false` | Set this as the default user-level signature. Ignored (forced to `false`) for campaign-specific signatures |
+| campaign_id | uuid | no | `null` | Omit for user-level signature; provide to create a campaign-specific signature |
+| is_enabled | boolean | no | `false` | For campaign-specific signatures: if `true`, auto-appended to AI-generated outbound campaign emails. Ignored for user-level signatures (forced to `false` in DB) |
 
-**Returns**: `EmailSignatureResponse` (201 Created).
+**Parameter Validation Rules**:
+- `name` must be 1-255 chars (Pydantic `Field(min_length=1, max_length=255)`)
+- `content` must be 1-10,000 chars — if `> 10,000`: error `"Signature content exceeds maximum length of 10,000 characters"` (400, from `validate_signature_length()`)
+- If `campaign_id` provided: campaign must exist and user must own it — error returns 404 "Campaign not found" (opaque 404 even for unauthorized access)
 
-**Side effects**: Setting `is_default=true` on a user-level signature clears `is_default` on all other user-level signatures.
+**Return Schema**: `EmailSignatureResponse` (see shared schema at top of Email Signatures section). HTTP 201 Created.
 
-**Error responses**:
-- Content exceeds 10,000 chars (422)
-- Campaign not found (404)
-- Not campaign owner (403) — for campaign-specific signatures
+**Side Effects**:
+- If `is_default=true` and this is a user-level signature (no `campaign_id`): calls `repo.clear_default_for_user(user_id)` to set `is_default=false` on all other user-level signatures first
+- Content is sanitized via `sanitize_signature_html()` before storage (strips dangerous HTML)
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| `content` > 10,000 chars | "Signature content exceeds maximum length of 10,000 characters" | 400 |
+| `campaign_id` provided but campaign not found or user doesn't own it | "Campaign not found" | 404 |
+
+**Example Request** (campaign-specific, auto-append enabled):
+```
+cheerful_create_email_signature(
+  name="Winter Campaign 2026",
+  content="<p>Warmly,<br>Alex<br>Brand Manager | Winter Collection</p>",
+  campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  is_enabled=true
+)
+```
+
+**Example Response**:
+```json
+{
+  "id": "s3a2b3c4-d5e6-7890-abcd-ef1234567894",
+  "user_id": "u1a2b3c4-d5e6-7890-abcd-ef1234567892",
+  "name": "Winter Campaign 2026",
+  "content": "<p>Warmly,<br>Alex<br>Brand Manager | Winter Collection</p>",
+  "is_default": false,
+  "campaign_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "campaign_name": "Winter Gifting 2026",
+  "is_enabled": true,
+  "created_at": "2026-01-15T10:00:00Z",
+  "updated_at": "2026-01-15T10:00:00Z"
+}
+```
+
+**Slack Formatting Notes**:
+- On success: "✅ Signature '[name]' created. [Campaign-specific for: campaign_name | User-level default: ✓/✗]"
 
 ---
 
@@ -1140,19 +1689,32 @@ cheerful_list_message_attachments(message_id="c3d4e5f6-a7b8-9012-cdef-3456789012
 
 **Purpose**: Get a single email signature by ID.
 
-**Maps to**: `GET /api/service/email-signatures/{signature_id}` (new service route needed; main route: `GET /email-signatures/{signature_id}`)
+**Maps to**: `GET /api/service/email-signatures/{signature_id}` (new service route needed; verified main route: `GET /email-signatures/{signature_id}` in `route/email_signature.py`)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner-only (user must own the signature).
+**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: **owner-only** — verified: `signature.user_id != user_id` raises 403.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| signature_id | uuid | yes | — | Signature ID |
+| signature_id | uuid | yes | — | Signature UUID |
 
-**Returns**: `EmailSignatureResponse`.
+**Return Schema**: `EmailSignatureResponse` (see shared schema at top of Email Signatures section).
 
-**Error responses**: Signature not found (404), access denied (403).
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| Signature not found | "Signature not found" | 404 |
+| User does not own signature | "Not authorized to access this signature" | 403 |
+
+**Example Request**:
+```
+cheerful_get_email_signature(signature_id="s1a2b3c4-d5e6-7890-abcd-ef1234567891")
+```
+
+**Example Response**: (see `EmailSignatureResponse` shared schema above with realistic values)
 
 ---
 
@@ -1160,27 +1722,53 @@ cheerful_list_message_attachments(message_id="c3d4e5f6-a7b8-9012-cdef-3456789012
 
 **Status**: NEW
 
-**Purpose**: Update an existing email signature. Partial update — only provided fields are changed.
+**Purpose**: Update an existing email signature. Partial update — only provided fields are changed; omitted fields retain current values.
 
-**Maps to**: `PATCH /api/service/email-signatures/{signature_id}` (new service route needed; main route: `PATCH /email-signatures/{signature_id}`)
+**Maps to**: `PATCH /api/service/email-signatures/{signature_id}` (new service route needed; verified main route: `PATCH /email-signatures/{signature_id}` in `route/email_signature.py`)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner-only.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: **owner-only** — verified: `signature.user_id != user_id` raises 403.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| signature_id | uuid | yes | — | Signature ID |
-| name | string | no | — | New name (omit to keep existing) |
-| content | string | no | — | New HTML content (omit to keep existing). Max 10,000 characters |
-| is_default | boolean | no | — | Set/unset as default |
-| is_enabled | boolean | no | — | Enable/disable for automated emails |
+| signature_id | uuid | yes | — | Signature UUID |
+| name | string | no | — | New display name. Min 1 char, max 255 chars. Omit to retain current |
+| content | string | no | — | New HTML content. Min 1 char, max 10,000 chars. Sanitized via `sanitize_signature_html()`. Omit to retain current |
+| is_default | boolean | no | — | Set/unset as default. Omit to retain current. Setting to `true` clears default on all other user-level signatures |
+| is_enabled | boolean | no | — | Enable/disable auto-append for campaign signatures. Omit to retain current |
 
-**Returns**: `EmailSignatureResponse` (updated).
+**Parameter Validation Rules**:
+- `content` if provided must be 1-10,000 chars — error: `"Signature content exceeds maximum length"` (400)
 
-**Error responses**: Signature not found (404), access denied (403), content exceeds 10,000 chars (422).
+**Return Schema**: `EmailSignatureResponse` (updated values). HTTP 200.
 
-**Side effects**: Setting `is_default=true` clears `is_default` on all other user-level signatures.
+**Side Effects**:
+- If `is_default=true`: calls `repo.clear_default_for_user(user_id)` before setting new default
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| Signature not found | "Signature not found" | 404 |
+| User does not own signature | "Not authorized to update this signature" | 403 |
+| `content` > 10,000 chars | "Signature content exceeds maximum length" | 400 |
+
+**Example Request**:
+```
+cheerful_update_email_signature(
+  signature_id="s1a2b3c4-d5e6-7890-abcd-ef1234567891",
+  content="<p>Best,<br>Alex<br>Head of Brand Partnerships</p>",
+  is_default=true
+)
+```
+
+**Example Response**: Updated `EmailSignatureResponse` with new content and `is_default: true`.
+
+**Slack Formatting Notes**:
+- On success: "✅ Signature '[name]' updated."
+- If `is_default` was set to true: "✅ '[name]' is now your default signature."
 
 ---
 
@@ -1188,21 +1776,42 @@ cheerful_list_message_attachments(message_id="c3d4e5f6-a7b8-9012-cdef-3456789012
 
 **Status**: NEW
 
-**Purpose**: Delete an email signature.
+**Purpose**: Permanently delete an email signature. Cannot be undone.
 
-**Maps to**: `DELETE /api/service/email-signatures/{signature_id}` (new service route needed; main route: `DELETE /email-signatures/{signature_id}`)
+**Maps to**: `DELETE /api/service/email-signatures/{signature_id}` (new service route needed; verified main route: `DELETE /email-signatures/{signature_id}` in `route/email_signature.py`)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner-only.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: **owner-only** — verified: `signature.user_id != user_id` raises 403.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| signature_id | uuid | yes | — | Signature ID |
+| signature_id | uuid | yes | — | Signature UUID to delete |
 
-**Returns**: 204 No Content (success confirmation).
+**Return Schema**: HTTP 204 No Content (empty response body on success).
 
-**Error responses**: Signature not found (404), access denied (403).
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| Signature not found | "Signature not found" | 404 |
+| User does not own signature | "Not authorized to delete this signature" | 403 |
+
+**Example Request**:
+```
+cheerful_delete_email_signature(signature_id="s1a2b3c4-d5e6-7890-abcd-ef1234567891")
+```
+
+**Example Response**: HTTP 204 (no body).
+
+**Slack Formatting Notes**:
+- On success: "🗑️ Signature '[name]' deleted."
+- Agent should confirm with the user before deleting: "Are you sure you want to delete the '[name]' signature? This cannot be undone."
+
+**Edge Cases**:
+- Deleting the default signature: no automatic reassignment of default — other signatures retain their `is_default=false` value
+- Deleting a campaign signature while it's `is_enabled=true`: the signature is deleted; campaigns will no longer auto-append it
 
 ---
 
@@ -1212,33 +1821,76 @@ cheerful_list_message_attachments(message_id="c3d4e5f6-a7b8-9012-cdef-3456789012
 
 **Status**: NEW
 
-**Purpose**: Batch edit all AI-generated drafts in a campaign using a natural language instruction. Starts an async Temporal workflow that rewrites matching drafts.
+**Purpose**: Batch edit all AI-generated drafts in a campaign using a natural language instruction. Starts an async Temporal workflow that rewrites matching drafts. Only LLM-generated drafts are affected — human-edited drafts are skipped by default.
 
-**Maps to**: `POST /api/service/bulk-draft-edit` (new service route needed; main route: `POST /bulk-draft-edit`)
+**Maps to**: `POST /api/service/bulk-draft-edit` (new service route needed; verified main route: `POST /bulk-draft-edit` in `route/bulk_draft_edit.py`)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: campaign owner-only.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: **campaign owner-only** — verified: `campaign.user_id != user_id` raises 403.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| campaign_id | uuid | yes | — | Campaign ID |
-| edit_instruction | string | yes | — | Natural language edit instruction (e.g., "make all drafts shorter and more casual") |
-| exclude_thread_ids | string[] | no | [] | Thread IDs to skip (exclude from bulk edit) |
-| save_as_rule | boolean | no | false | Save this edit instruction as a permanent campaign rule |
-| rule_text | string | no | null | Human-readable rule text (used if save_as_rule=true) |
+| campaign_id | uuid | yes | — | Campaign UUID to bulk-edit drafts for |
+| edit_instruction | string | yes | — | Natural language instruction for rewriting drafts (e.g., `"make all drafts shorter and more casual"`, `"add urgency — mention limited stock"`) |
+| exclude_thread_ids | string[] | no | `[]` | List of thread IDs to exclude from the bulk edit. Threads in this list are skipped |
+| save_as_rule | boolean | no | `false` | If `true`, the `edit_instruction` is also saved as a permanent campaign rule for future AI draft generation |
+| rule_text | string | no | `null` | Human-readable rule text to save when `save_as_rule=true`. If `null` when `save_as_rule=true`, the `edit_instruction` text is used as the rule |
 
-**Returns**: `BulkDraftEditResponse`:
-- workflow_id: string (Temporal workflow ID for tracking)
-- message: string ("Bulk draft edit started")
+**Parameter Validation Rules**:
+- `campaign_id` must exist and be owned by the user — 404 "Campaign not found" if not found, 403 "Not authorized for this campaign" if not owned
 
-**Error responses**:
-- Campaign not found (404)
-- Not campaign owner (403): "Not authorized for this campaign"
+**Return Schema**:
+```json
+{
+  "workflow_id": "string — Temporal workflow ID (format: 'bulk-draft-edit-{campaign_id}-{timestamp}'). Not used for polling (no polling endpoint exists)",
+  "message": "string — Always: 'Bulk draft edit started'"
+}
+```
 
-**Side effects**: Starts a Temporal `BulkDraftEditWorkflow` with 5-minute execution timeout. The workflow rewrites all matching drafts using the AI edit instruction. If `save_as_rule=true`, the instruction is saved as a campaign rule for future drafts.
+**Error Responses**:
 
-**Slack formatting notes**: Agent should confirm the bulk edit started and provide the workflow_id. The user can check back later — there's no polling endpoint for bulk edit progress (it's fire-and-forget).
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| Campaign not found | "Campaign not found" | 404 |
+| User does not own campaign | "Not authorized for this campaign" | 403 |
+
+**Side Effects**:
+- Starts a Temporal `BulkDraftEditWorkflow` (5-minute execution timeout)
+- The workflow iterates over all threads in the campaign that have LLM drafts (not human drafts) and applies `edit_instruction` via AI rewriting
+- Threads in `exclude_thread_ids` are skipped
+- If `save_as_rule=true`: appends the rule to `campaign.rules_for_llm` field (same format as existing rules)
+- No polling endpoint exists — the workflow runs asynchronously. Fire-and-forget from the caller's perspective.
+
+**Example Request**:
+```
+cheerful_bulk_edit_drafts(
+  campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  edit_instruction="Make all drafts shorter and end with a question to encourage a reply",
+  save_as_rule=true,
+  rule_text="Keep emails concise and end with an open question"
+)
+```
+
+**Example Response**:
+```json
+{
+  "workflow_id": "bulk-draft-edit-a1b2c3d4-e5f6-7890-abcd-ef1234567890-1705334400",
+  "message": "Bulk draft edit started"
+}
+```
+
+**Slack Formatting Notes**:
+- "🔄 Bulk draft edit started for [campaign_name]. All AI-generated drafts will be rewritten with: '[edit_instruction]'"
+- If `save_as_rule=true`: "📋 Rule also saved: '[rule_text]'"
+- "This runs in the background — check back in a few minutes to see the updated drafts."
+- No way to track progress or cancel once started
+
+**Edge Cases**:
+- Human-edited drafts (`source="human"`) are NOT affected — the bulk edit only rewrites LLM-generated drafts
+- If all threads in the campaign have human drafts, the workflow runs but effectively makes no changes
+- The 5-minute workflow timeout means campaigns with >100 threads may not complete all rewrites
 
 ---
 
@@ -1246,37 +1898,92 @@ cheerful_list_message_attachments(message_id="c3d4e5f6-a7b8-9012-cdef-3456789012
 
 ### `cheerful_improve_email_content`
 
-**Status**: NEW
+**Status**: NEW — **CE-native implementation** (verified: no backend endpoint exists)
 
-**Purpose**: Apply AI-powered text improvements to email content. Supports shortening, expanding, tone adjustment, and custom instructions.
+**Purpose**: Apply AI-powered text improvements to email body content using predefined or custom instructions. Supports shortening, expanding, tone adjustment, and arbitrary custom instructions.
 
-**Maps to**: Implementation TBD — the frontend uses Next.js API routes (`POST /api/improve-email-content-stream-send-textbox`) that proxy to Claude via SSE streaming. The context engine may implement this natively using its own Claude instance rather than calling a backend endpoint.
+**Maps to**: **CE-native** — implemented using the CE's own AI model. The frontend uses `POST /api/improve-email-content-stream-send-textbox` (webapp Next.js route at `app/api/improve-email-content-stream-send-textbox/route.ts`) which calls OpenAI directly with SSE streaming. The CE tool implements the equivalent logic synchronously using its own Claude instance without streaming.
 
 **Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: authenticated.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| content | string | yes | — | The email text to improve |
-| action | enum | yes | — | One of: "shorten", "expand", "friendly", "professional", "casual". Or a custom instruction string prefixed with "custom:" (e.g., "custom:add a call to action") |
+| content | string | yes | — | The email body text to improve. Passed as plain text (HTML stripped before processing — the frontend converts HTML to plain text via `getTextContent()`) |
+| action | string (enum or custom) | yes | — | Improvement type. One of the named actions: `"shorten"`, `"expand"`, `"friendly"`, `"professional"`, `"casual"`. Or a custom instruction prefixed with `"custom:"` (e.g., `"custom:add a call to action at the end"`) |
+| subject | string | no | `""` | Email subject line for context (helps AI preserve subject relevance in improvements) |
+| campaign_type | string | no | `"gifting"` | Campaign type for AI context. One of: `"gifting"`, `"paid_promotion"`. Affects AI system prompt context |
+| campaign_goal | string | no | `""` | Campaign goal text for AI context |
+| campaign_rules | string | no | `""` | Campaign rules (from `campaign.rules_for_llm`) for AI context — helps preserve merge tags and follow campaign guidelines |
+| merge_tags | string[] | no | `[]` | List of merge tag headers (e.g., `["first_name", "product_name"]`). Used to preserve `{merge_tag}` placeholders in the improved text |
 
-**Action descriptions**:
-- `shorten` — Make the email shorter and more concise
-- `expand` — Make the email longer with more detail
-- `friendly` — Adjust to a friendlier, warmer tone
-- `professional` — Adjust to a more formal, professional tone
-- `casual` — Adjust to a more casual, conversational tone
-- `custom:[instruction]` — Apply a custom instruction
+**Action Descriptions and Instructions** (exact text used as AI instructions, from source):
+- `"shorten"` → `"Make this email 30-40% shorter while keeping ALL key points. Remove redundancy and be more concise. Copy the same format and sender name."`
+- `"expand"` → `"Add more detail and context to this email. Expand on key points and add relevant information. Make it 30-40% longer. Copy the same sender name."`
+- `"friendly"` → `"Make this email more casual, friendly, and warm. Use conversational language and show genuine enthusiasm. Copy the same sender name."`
+- `"professional"` → `"Make this email more formal and professional. Use business language and maintain a respectful, corporate tone. Copy the same sender name."`
+- `"casual"` → `"Make this email more casual and relaxed. Use everyday language, contractions, and a laid-back tone while remaining professional. Copy the same sender name."`
+- `"custom:[instruction]"` → The text after `"custom:"` is used directly as the AI instruction
 
-**Returns**: `{ improved_content: string }`
+**Parameter Validation Rules**:
+- `action` must be one of `"shorten"`, `"expand"`, `"friendly"`, `"professional"`, `"casual"`, or start with `"custom:"` — unknown actions default to "Improve this email to be more effective."
+- `content` must be non-empty (empty content is a no-op — tool may refuse or return content unchanged)
 
-**Notes**:
-- The frontend uses SSE streaming for real-time token display. The CE tool returns the complete improved text (no streaming).
-- The frontend also has `classify-edit` and `rules-suggestion` endpoints that analyze edits for potential campaign rule creation. These are follow-up actions, not primary tools — the agent can suggest rule creation after observing a pattern of similar edits.
-- If implemented natively, the CE uses its own Claude instance with the campaign's LLM config (agent_name, rules, goal, FAQs, sample_emails) as context.
+**Return Schema**:
+```json
+{
+  "improved_content": "string — The AI-improved email body text (plain text, not HTML). Merge tags are preserved exactly as they appeared in the original content (CE must enforce this). Never uses hyphens or em dashes. Ends with a simple closing without placeholder signatures."
+}
+```
 
-**Slack formatting notes**: Agent should show the improved text and ask if the user wants to apply it to the draft.
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| AI model error | ToolError: "Failed to improve email content" | N/A (CE-internal) |
+
+**CE Implementation Notes**:
+- **AI critical rules** (must be enforced in CE implementation, from webapp source):
+  1. MERGE TAG PRESERVATION: Extract all `{merge_tag}` patterns from `content`; they MUST appear verbatim in the output
+  2. FORMATTING: Maintain paragraph structure with double newlines between paragraphs
+  3. PLACEHOLDER RULES: Do NOT add `[Your Name]`, `[Company]`, or similar bracketed placeholders
+  4. STYLE: NEVER use hyphens or em dashes. End with simple closings like "Best," or "Thanks,"
+  5. OUTPUT FORMAT: Return ONLY the improved body text — no explanations, no JSON, no commentary
+- The frontend proxies to an OpenAI endpoint (`gpt-4.1-mini`) with SSE streaming. CE uses Claude synchronously.
+- Custom analytics tracking (saving to `campaign_rule_suggestion_analytics` table) is a frontend-only concern — CE does not implement this
+
+**Related Webapp Routes** (not CE tools — context only):
+- `POST /api/rules-suggestion` — After a user edits a draft, webapp suggests rules to add to the campaign. CE agents can replicate this by asking "Want to save this edit as a campaign rule?" after applying an improvement.
+- `PUT /api/rules-suggestion` — Accepts and saves a rule suggestion to `campaign.rules_for_llm`. CE agents use `cheerful_update_campaign` for this instead.
+
+**Example Request**:
+```
+cheerful_improve_email_content(
+  content="Hi Sarah,\n\nWe would like to offer you a partnership opportunity with our brand. We sell skincare products. Please let us know if you are interested.\n\nBest,\nAlex",
+  action="friendly",
+  subject="Partnership Opportunity"
+)
+```
+
+**Example Response**:
+```json
+{
+  "improved_content": "Hi Sarah,\n\nI'd love to chat about partnering with us — we're a skincare brand and your content is such a perfect fit! Would you be open to hearing more?\n\nWarmly,\nAlex"
+}
+```
+
+**Slack Formatting Notes**:
+- Show the improved text in a code block or formatted quote
+- Ask: "Does this look good? Reply 'apply' to save it as your draft, or 'undo' to revert."
+- If the user has made multiple improvements in sequence: track the pre-improvement version so the agent can undo the last step
+- After applying an improvement: offer "Want to save this style as a campaign rule so future drafts match? (e.g., 'Always use a warm, friendly tone')"
+
+**Edge Cases**:
+- `action="custom:some instruction"`: the CE splits on the first `:` to extract the instruction (`"some instruction"`)
+- If the content contains HTML entities: strip HTML tags and decode entities before passing to AI
+- If `merge_tags` is empty but content contains `{tags}`: CE should auto-detect `{lowercase_word}` patterns and instruct AI to preserve them
 
 ---
 
@@ -1284,28 +1991,71 @@ cheerful_list_message_attachments(message_id="c3d4e5f6-a7b8-9012-cdef-3456789012
 
 ### `cheerful_get_thread_summary`
 
-**Status**: NEW — needs source code verification in Wave 3
+**Status**: NEW — **CE-native implementation** (verified: no backend endpoint exists; no webapp summary route for threads)
 
-**Purpose**: Get an AI-generated summary of an email thread conversation. Summarizes key points, decisions, and action items from the thread.
+**Purpose**: Get an AI-generated summary of an email thread conversation. Summarizes the conversation context, key points, creator's tone/intent, and any next steps or decisions made. Implemented natively in the CE by fetching the thread and running Claude summarization.
 
-**Maps to**: `GET /api/service/threads/{thread_id}/summary` (new service route needed; referenced in spec-backend-api.md — needs source verification; may be a Next.js route)
+**Maps to**: **CE-native** — no backend endpoint. The CE calls `cheerful_get_thread(thread_id)` internally to get all messages, then summarizes using its own Claude instance. (Note: `POST /api/campaigns/{id}/generate-summary` exists in webapp but is a campaign-level aggregate summary, not a thread summary — different tool.)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner or assigned team member (via thread → campaign access check).
+**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner-only (enforced via the internal `cheerful_get_thread` call which checks thread ownership).
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | thread_id | string | yes | — | Thread ID (Gmail hex or SMTP angle-bracket format) |
 
-**Returns**: `{ summary: string }` — AI-generated summary text.
+**Return Schema**:
+```json
+{
+  "thread_id": "string — The thread ID that was summarized",
+  "summary": "string — AI-generated summary of the thread. Plain text, 2-5 sentences. Covers: what was discussed, creator's interest level, any commitments made, what needs to happen next",
+  "message_count": "integer — Number of messages in the thread that were summarized",
+  "latest_message_date": "datetime (ISO 8601) | null — Timestamp of the most recent message in the thread"
+}
+```
 
-**Notes**:
-- If this endpoint doesn't exist in the backend, the CE can implement it natively: fetch thread via `cheerful_get_thread`, then summarize using its own Claude instance.
-- May implement caching: if the thread hasn't changed since the last summary, return cached version.
-- Wave 3 must verify whether this is a backend endpoint or webapp-only route.
+**Error Responses**:
 
-**Slack formatting notes**: Agent should present the summary directly in the conversation.
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| Thread not found | Propagated from `cheerful_get_thread` — "Thread not found" | 404 |
+| User does not own thread | Propagated from `cheerful_get_thread` — "Not authorized" | 403 |
+| Thread has no messages | ToolError: "Thread has no messages to summarize" | N/A (CE-internal) |
+
+**CE Implementation Notes**:
+- Call `cheerful_get_thread(thread_id)` first to fetch messages with permission checks enforced
+- Build a conversation text from all messages (direction, sender, date, body)
+- Truncate individual message bodies to 1,500 chars to avoid token limits (same as webapp `formatThreadConversation()`)
+- Strip quoted-reply headers (e.g., "On [date], [name] wrote:") from message bodies before summarizing
+- Summarization prompt focus: creator's interest level (enthusiastic/neutral/declining), any explicit commitments or questions, what the sender's last action was, what next step is needed
+- No caching required (the CE context window persists within a Slack conversation)
+
+**Example Request**:
+```
+cheerful_get_thread_summary(thread_id="18f3a2b4c5d6e7f8")
+```
+
+**Example Response**:
+```json
+{
+  "thread_id": "18f3a2b4c5d6e7f8",
+  "summary": "You reached out to Sarah (sarah@creator.com) about your winter gifting campaign on Jan 10. She replied positively on Jan 12 saying she loves your brand and would be interested in receiving products. You sent her an address form on Jan 14 but haven't received a response yet. Next step: follow up on the address form.",
+  "message_count": 3,
+  "latest_message_date": "2026-01-14T16:00:00Z"
+}
+```
+
+**Slack Formatting Notes**:
+- Present summary as a short paragraph directly in the conversation
+- Append the message count and last activity: "_(3 messages, last: Jan 14)_"
+- If the summary indicates a next step, offer to take action: "Want me to draft a follow-up email?"
+
+**Edge Cases**:
+- Thread with a single outbound message and no replies: summary focuses on what was sent
+- Very long threads (50+ messages): truncate to last 20 messages for summarization (most recent context is most relevant)
+- SMTP threads: same behavior — `cheerful_get_thread` handles SMTP routing transparently
 
 ---
 
