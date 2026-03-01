@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 54
-- Analyzed: 25
-- Pending: 29
-- Convergence: 46%
+- Analyzed: 26
+- Pending: 28
+- Convergence: 48%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -38,7 +38,7 @@ Extract every computation rule, decision tree, and lookup table from source mate
 - [x] bir-form-1701-field-mapping — Every field on BIR Form 1701, what feeds it, computation source
 - [x] bir-form-1701a-field-mapping — Every field on BIR Form 1701A (simplified), what feeds it
 - [x] scenario-enumeration — Code every scenario: low-income freelancer, high-income professional, mixed-income employee+freelancer, VAT-registered, non-VAT, with/without expenses, etc.
-- [ ] edge-cases — Catalog: first-year taxpayer mid-year, switching regimes, exceeding ₱3M mid-year, zero-expense freelancer, foreign-sourced income
+- [x] edge-cases — Catalog: first-year taxpayer mid-year, switching regimes, exceeding ₱3M mid-year, zero-expense freelancer, foreign-sourced income
 
 ### Wave 3: Engine Design
 Design the computation engine from the extracted domain rules.

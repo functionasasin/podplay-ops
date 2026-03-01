@@ -1,6 +1,6 @@
 # Edge Cases — Philippine Freelance & Self-Employed Income Tax Optimizer
 
-**Status:** COMPLETE — all Wave 2 edge cases written (edge-cases aspect 2026-03-01)
+**Status:** COMPLETE — all Wave 2 edge cases written including EC-ZE (zero-expense) and EC-FSI (foreign-sourced income) groups, 2026-03-01
 **Last updated:** 2026-03-01
 
 Every edge case is numbered, described, and resolved. The engine must handle all of these without fallback to "consult a professional" — those belong in [manual-review-flags.md](manual-review-flags.md) instead.
@@ -2902,4 +2902,306 @@ There is no overpayment. The ₱5,000 claimed is invalid.
 4. The ₱12,000 carry-over should be stored in the engine's user data for pre-population of the following year's return.
 
 **Legal basis:** NIRC Sec. 76 (Commissioner of Internal Revenue v. ACCRA Investments, G.R. No. 96322, December 20, 1991, and subsequent jurisprudence confirming irrevocability); CR-054.3.
+
+---
+
+## Group EC-ZE: Zero-Expense Freelancer Edge Cases
+
+These cases address a freelancer who has **zero documented business expenses** eligible for itemized deductions — for example, a pure service provider who works from a client's office, uses client-provided equipment, and has no overhead costs. The key insight is that with zero expenses, Path A (Itemized) is always strictly the worst option and the ordering Path C < Path B < Path A always holds (except in the ₱400K–₱437.5K window for B vs C, which does not apply to zero-expense because there are no actual expenses at all — the user would claim OSD instead).
+
+---
+
+### EC-ZE01: Zero-Expense Freelancer at ₱500,000 Gross Receipts
+
+**Scenario:** An itinerant IT consultant earns ₱500,000 gross. She works entirely from client sites using client equipment. She has zero documented business expenses: no rent, no depreciation, no supplies, no utilities. She is a purely self-employed taxpayer, non-VAT, TY2025 (Schedule 2 rates apply).
+
+**Path A (Itemized, ₱0 expenses):**
+- NTI = 500,000 − 0 = ₱500,000
+- IT = ₱22,000 + (500,000 − 400,000) × 0.20 = 22,000 + 20,000 = **₱42,000**
+- PT = 500,000 × 0.03 = **₱15,000**
+- Total burden = ₱57,000
+
+**Path B (OSD):**
+- OSD = 500,000 × 0.40 = ₱200,000
+- NTI = 500,000 − 200,000 = ₱300,000
+- IT = (300,000 − 250,000) × 0.15 = **₱7,500**
+- PT = 500,000 × 0.03 = **₱15,000**
+- Total burden = ₱22,500
+
+**Path C (8%):**
+- IT = (500,000 − 250,000) × 0.08 = **₱20,000**
+- PT = ₱0 (waived under 8%)
+- Total burden = **₱20,000**
+
+**Engine behavior:**
+- Recommended path: **Path C (8%)**. Savings vs Path B = ₱2,500. Savings vs Path A = ₱37,000.
+- Note: Path A with ₱0 expenses is NEVER beneficial — OSD always produces a lower NTI than ₱0 expenses because OSD deducts 40% of gross while ₱0 expenses deducts nothing. Engine must NOT present Path A as a valid recommendation when itemized_total = 0.
+- Display warning: "You have entered ₱0 in business expenses. If you have any deductible expenses (professional dues, software subscriptions, internet costs, etc.), entering them under the Itemized Deductions path may further reduce your tax. Even at ₱0 expenses, the 8% option produces the lowest tax in your income range."
+
+**Invariant confirmed:** When `itemized_total_expenses = 0` and `gross_receipts > 437,500`: Path C < Path B < Path A (strict ordering). Engine must flag Path A as non-recommended without displaying a savings vs Path C figure (since Path A is already dominated by Path B which is dominated by Path C).
+
+---
+
+### EC-ZE02: Zero-Expense Freelancer at ₱1,000,000 Gross Receipts
+
+**Scenario:** Same profile as EC-ZE01 but at ₱1,000,000 gross receipts. Non-VAT, purely self-employed, TY2025.
+
+**Path A (Itemized, ₱0 expenses):**
+- NTI = ₱1,000,000
+- IT = ₱102,500 + (1,000,000 − 800,000) × 0.25 = 102,500 + 50,000 = **₱152,500**
+- PT = 1,000,000 × 0.03 = **₱30,000**
+- Total burden = **₱182,500**
+
+**Path B (OSD):**
+- OSD = 1,000,000 × 0.40 = ₱400,000
+- NTI = ₱600,000
+- IT = ₱22,000 + (600,000 − 400,000) × 0.20 = 22,000 + 40,000 = **₱62,000**
+- PT = 1,000,000 × 0.03 = **₱30,000**
+- Total burden = **₱92,000**
+
+**Path C (8%):**
+- IT = (1,000,000 − 250,000) × 0.08 = **₱60,000**
+- PT = ₱0
+- Total burden = **₱60,000**
+
+**Engine behavior:**
+- Recommended path: **Path C (8%)**
+- Savings vs Path B = ₱32,000
+- Savings vs Path A = ₱122,500
+- **Expense ratio needed for Path A to tie Path C:** At ₱1M, Path C = ₱60,000 (IT only, no PT). Path A total = graduated_tax(1,000,000 − E) + 30,000 = 60,000 → graduated_tax(1,000,000 − E) = 30,000. Solving: at NTI = 400,000: IT = 22,000; at NTI = 500,000: IT = 42,000; ≈ interpolation gives NTI ≈ 430,000; so E ≈ 570,000 = 57% of gross. Thus Path A beats Path C only if expenses ≥ 57% of gross. With ₱0 expenses, Path C wins by ₱122,500.
+- Engine does NOT display the break-even expense percentage as a default UI element (too complex for most users), but it is computed internally for the "what-if" savings explanation.
+
+---
+
+### EC-ZE03: Zero-Expense Freelancer at ₱2,000,000 Gross Receipts
+
+**Scenario:** High-income consultant, ₱2,000,000 gross, zero documented expenses, purely self-employed, non-VAT, TY2025.
+
+**Path A (Itemized, ₱0 expenses):**
+- NTI = ₱2,000,000
+- IT = ₱102,500 + (2,000,000 − 800,000) × 0.25 = 102,500 + 300,000 = **₱402,500**
+- PT = 2,000,000 × 0.03 = **₱60,000**
+- Total burden = **₱462,500**
+
+**Path B (OSD):**
+- OSD = 2,000,000 × 0.40 = ₱800,000
+- NTI = ₱1,200,000
+- IT = ₱102,500 + (1,200,000 − 800,000) × 0.25 = 102,500 + 100,000 = **₱202,500**
+- PT = 2,000,000 × 0.03 = **₱60,000**
+- Total burden = **₱262,500**
+
+**Path C (8%):**
+- IT = (2,000,000 − 250,000) × 0.08 = **₱140,000**
+- PT = ₱0
+- Total burden = **₱140,000**
+
+**Engine behavior:**
+- Recommended path: **Path C (8%)**
+- Savings vs Path B = ₱122,500
+- Savings vs Path A = ₱322,500
+- Display: "The 8% option saves you ₱122,500 compared to OSD and ₱322,500 compared to filing with no deductions. At your income level, the 8% flat rate provides the maximum tax efficiency for service providers with low business expenses."
+- **Break-even expense ratio for Path A vs Path C at ₱2M:** Path C total = ₱140,000; Path A total = graduated_tax(2,000,000 − E) + 60,000 = 140,000 → graduated_tax(2,000,000 − E) = 80,000. Solving: NTI ≈ ₱726,000; E ≈ ₱1,274,000 = 63.7% of gross. Path A beats Path C only if expenses ≥ 63.7% of ₱2M. At ₱0 expenses, Path C wins by a wide margin.
+
+---
+
+### EC-ZE04: Zero-Expense Freelancer — Engine Validation and MRF-003 Interaction
+
+**Scenario:** A freelancer enters ₱0 in every itemized expense field and attempts to file Path A. The engine should not silently allow a Path A computation with ₱0 deductions (which would result in the worst possible outcome).
+
+**Engine behavior:**
+1. When user is on the Itemized Deductions wizard step and all expense fields total ₱0:
+   - Show inline warning: "You have not entered any business expenses. The Itemized Deductions option requires at least some documented business expenses to be worth using. With ₱0 expenses, the Optional Standard Deduction (OSD) or the 8% option will always produce a lower tax."
+   - Do NOT prevent the user from computing Path A — they may want to see all three paths compared for educational purposes.
+   - Still run all three paths and show comparison table.
+2. In the regime comparison output, mark Path A with label: "Not Recommended (highest tax when expenses = ₱0)".
+3. Do NOT trigger MRF-003 when itemized_total = 0 — MRF-003 is for expenses that are ambiguous or undocumented. Zero expenses is a valid declared input, not an ambiguous one. MRF-003 is only triggered for non-standard expense types.
+
+**Invariant:** `itemized_total_expenses = 0` → `path_a.total_burden ≥ path_b.total_burden` always. This is guaranteed because OSD (40% of gross) is always ≥ ₱0 of expenses.
+
+**Legal basis:** NIRC Sec. 34(L) (OSD always available as alternative, no documentation required); CR-026, CR-027.
+
+---
+
+## Group EC-FSI: Foreign-Sourced Income for Resident Self-Employed Freelancers
+
+These cases address Filipino citizen freelancers who are **resident in the Philippines** and earn income billed in foreign currency (USD, EUR, GBP, AUD, etc.) from **foreign clients** — either through online platforms (Upwork, Fiverr, Toptal) or directly via wire transfer, PayPal, or other payment channels. These taxpayers are **NOT non-resident citizens** (MRF-026 and MRF-027 cover non-residents, who are out of scope). Resident citizen freelancers earning foreign-sourced income ARE in scope for this tool because:
+
+- **NIRC Sec. 23(A):** Resident citizens are taxed on **worldwide income**, including income earned from foreign clients for services performed in the Philippines.
+- **NIRC Sec. 42(A)(3):** Income from personal services is sourced where the services are performed. A Filipino programmer working from Manila for a US client → Philippine-sourced income.
+- All three tax paths (A, B, C) apply normally. The only complication is **currency conversion** and **absence of Philippine CWT** from foreign non-withholding-agent clients.
+
+---
+
+### EC-FSI01: Resident Self-Employed Freelancer — 100% USD Income from Foreign Clients (No Platform CWT)
+
+**Scenario:** Ara is a Filipino graphic designer living in Quezon City. She earns all income from US clients via direct PayPal transfers. Total 2025 earnings: USD 18,000. She has no Philippine clients and no corporate clients that would issue a Form 2307. She is non-VAT (gross PHP equivalent < ₱3M), purely self-employed.
+
+**Step 1 — Currency conversion (user responsibility):**
+- Engine does NOT perform currency conversion. The user must convert to Philippine Pesos before entry.
+- Engine displays at gross receipts input: "If you received income in foreign currency (USD, EUR, etc.), convert to Philippine Pesos using the Bangko Sentral ng Pilipinas (BSP) Reference Exchange Rate at the date each payment was received. For practical purposes, you may use the BSP annual average rate if income was spread evenly throughout the year. The BSP Reference Exchange Rate is available at bsp.gov.ph. Do NOT use commercial bank rates, credit card rates, or PayPal conversion rates — use the BSP rate."
+- Example: If BSP average USD/PHP rate for 2025 = ₱57.00/USD, then gross_receipts = 18,000 × 57.00 = **₱1,026,000**.
+
+**Step 2 — CWT determination:**
+- Foreign individual clients: NOT withholding agents under Philippine law (NIRC Sec. 57 — withholding obligation applies to Philippine payors). No Form 2307 will be issued. `cwt_entries = []`.
+- PayPal as payment channel: PayPal is NOT a BIR-designated DFSP under RR 16-2023 for purposes of e-marketplace withholding IF the transaction is a direct payment from a foreign individual client (not a marketplace). However, if PayPal is used as the payment mechanism of a qualifying e-marketplace (e.g., Fiverr's payment gateway), the marketplace platform may be the withholding agent, not PayPal. Prompt user: "Did you receive this payment through an e-marketplace platform (Upwork, Fiverr, Freelancer.com) or directly from your client?" If direct → no CWT. If platform → check EC-FSI02.
+
+**Step 3 — Tax computation (gross_receipts = ₱1,026,000, expenses = ₱0 for this example):**
+
+Path C (8%):
+- IT = (1,026,000 − 250,000) × 0.08 = **₱62,080**
+- PT = ₱0 (waived under 8%)
+- Total = **₱62,080**
+
+Path B (OSD):
+- NTI = 1,026,000 × 0.60 = ₱615,600
+- IT = ₱22,000 + (615,600 − 400,000) × 0.20 = 22,000 + 43,120 = **₱65,120**
+- PT = 1,026,000 × 0.03 = **₱30,780**
+- Total = **₱95,900**
+
+Path A (Itemized, ₱0 expenses):
+- NTI = ₱1,026,000
+- IT = ₱102,500 + (1,026,000 − 800,000) × 0.25 = 102,500 + 56,500 = **₱159,000**
+- PT = **₱30,780**
+- Total = **₱189,780**
+
+Engine recommendation: **Path C (8%)** — savings ₱33,820 vs Path B, ₱127,700 vs Path A.
+
+**Step 4 — Filing obligations:**
+- Quarterly: Form 1701Q (Path C — 8% Schedule II) per quarter based on cumulative USD income converted to PHP.
+- Annual: Form 1701A (Path C — Part IV-B, 8% option).
+- Percentage tax: Form 2551Q is NOT required if 8% elected.
+- No Form 2307 attachments (no CWT received).
+- SAWT (Summary Alphalist of Withholding Tax at Source): Not required when CWT = ₱0.
+
+**Step 5 — BIR registration requirement:**
+- Must have valid Certificate of Registration (COR, BIR Form 2303) listing professional/freelance income as registered activity.
+- Must issue BIR-registered receipts/invoices to clients (or use e-invoicing). For foreign clients, PHP-denominated official receipts in the equivalent PHP amount are standard practice. Some CPAs use English-language official receipts showing the USD amount and PHP equivalent.
+- Engine displays: "Even if your clients are abroad, you must issue BIR-registered official receipts (or electronic invoices) for services rendered. The receipt should state the amount in Philippine Pesos at the BSP rate on the date of service."
+
+**Engine behavior summary:**
+- `gross_receipts_php = user_entered_php_amount`
+- `cwt_entries = []`  (no 2307 for direct foreign clients)
+- `is_vat_registered = false` (gross < ₱3M)
+- `eight_percent_eligible = true`
+- Run all three paths and show comparison.
+- Display informational banner (blue): "Your income from foreign clients is fully taxable in the Philippines as a resident citizen. We've treated it as Philippine-sourced income from self-employment (NIRC Sec. 23(A)). Make sure you have converted your earnings to Philippine Pesos using BSP rates."
+
+**Legal basis:** NIRC Sec. 23(A) (worldwide income for resident citizens); Sec. 42(A)(3) (services sourced where performed); RR 8-2018 (8% option); RR 16-2023 (e-marketplace withholding — NOT applicable to direct foreign client payments).
+
+---
+
+### EC-FSI02: Resident Freelancer via Upwork → Payoneer — Combined RR 16-2023 CWT + Foreign Income
+
+**Scenario:** Rico is a Filipino software developer in Cebu. He earns through Upwork only. Upwork routes payment through Payoneer (a BIR-designated DFSP per RR 16-2023). His 2025 Upwork earnings: USD 30,000. He submitted a Sworn Declaration (SD) to Payoneer in January 2025. BSP annual average rate 2025 = ₱57.00/USD. Gross PHP equivalent = ₱1,710,000.
+
+**CWT determination under RR 16-2023:**
+- Combined gross remittances from all platforms = ₱1,710,000 > ₱500,000 SD threshold.
+- Even though SD was submitted, the ₱500,000 threshold is exceeded, so Payoneer WITHHOLDS despite the SD.
+- CWT amount = 1% × (₱1,710,000 / 2) = 0.01 × ₱855,000 = **₱17,100** (ATC WI760).
+- Payoneer issues Form 2307 for ₱17,100 within 20 days after each quarter end.
+- Quarterly 2307 amounts (assumed evenly distributed): Q1 ₱4,275, Q2 ₱4,275, Q3 ₱4,275, Q4 ₱4,275.
+
+**Note on SD threshold recalculation:** If Rico had submitted the SD AND his combined remittances stayed below ₱500,000, no withholding would occur. Here they exceeded the threshold, so withholding applies for the entire year (SD only creates an exemption for remittances below ₱500,000, not a cap at ₱500,000).
+
+**Tax computation (Path C, 8% option):**
+- IT = (1,710,000 − 250,000) × 0.08 = **₱116,800**
+- PT = ₱0 (waived)
+- Total IT burden before credits = ₱116,800
+
+**Credits:**
+- CWT (WI760 from Payoneer 2307s): ₱17,100
+- Quarterly 1701Q payments (assuming ₱0 if no advance payments made): ₱0
+- Total credits = ₱17,100
+
+**Annual balance payable:** 116,800 − 17,100 = **₱99,700**
+
+**Engine behavior:**
+- User enters: gross_receipts_php = ₱1,710,000; cwt_entries = [{atc: "WI760", amount: 17100, source: "Payoneer"}]
+- classify_2307_entry("WI760") → "INCOME_TAX_CWT" (correct — credits against income tax)
+- Run all three paths with cwt_total = ₱17,100.
+- Recommend Path C (8%), show balance payable at each quarter after crediting CWT.
+- Display: "Your Upwork payments via Payoneer are subject to 1% BIR withholding (ATC WI760) on half your gross remittances. The ₱17,100 withheld by Payoneer counts as a credit against your income tax. It does NOT reduce your obligation to file quarterly 1701Q returns."
+
+**Quarterly filing mechanics:**
+- Q1: Cumulative gross = ₱427,500; IT = (427,500 − 250,000) × 0.08 = ₱14,200; CWT = ₱4,275; Balance Q1 = ₱9,925
+- Q2: Cumulative gross = ₱855,000; IT = (855,000 − 250,000) × 0.08 = ₱48,400; less prior IT paid (₱9,925); less Q2 CWT (₱4,275); Balance Q2 = 48,400 − 9,925 − 4,275 = ₱34,200
+- Q3: Cumulative gross = ₱1,282,500; IT = (1,282,500 − 250,000) × 0.08 = ₱82,600; less prior IT paid (9,925 + 34,200 = 44,125); less Q3 CWT (₱4,275); Balance Q3 = 82,600 − 44,125 − 4,275 = ₱34,200
+- Annual: total IT = ₱116,800; total paid quarterly = 9,925 + 34,200 + 34,200 = ₱78,325; total CWT (all quarters) = ₱17,100; annual balance = 116,800 − 78,325 − 17,100 + 17,100 (Q4 CWT already in credits) — see CR-037 for exact annual credit sequencing. Net balance at annual = 116,800 − 78,325 − 17,100 = **₱21,375** (balance on April 15 annual filing).
+
+**Legal basis:** NIRC Sec. 23(A) (worldwide income); RR 16-2023 Sec. 5 (1% DFSP withholding); CR-019 (platform CWT computation); CR-037 (annual CWT credit reconciliation).
+
+---
+
+### EC-FSI03: Resident Freelancer with Both Foreign and Local Clients — Mixing CWT Sources
+
+**Scenario:** Diane is a copywriter earning from two sources in 2025:
+- Source A: Direct PayPal transfers from a UK content agency (foreign, no CWT, no 2307). Annual total: USD 12,000 = ₱684,000 (BSP rate ₱57.00/USD).
+- Source B: Local Philippine business client (corporation) paying ₱480,000 for content services. Client withholds 10% EWT (ATC WI011) = ₱48,000. Client issues quarterly 2307s.
+
+Total gross PHP receipts = 684,000 + 480,000 = **₱1,164,000**. Non-VAT. Purely self-employed.
+
+**CWT entries:**
+- Source A (UK agency via PayPal): No 2307 issued. cwt_amount = ₱0.
+  - PayPal is not an e-marketplace platform under RR 16-2023 in this context (direct client payment, not marketplace). No withholding applies.
+- Source B (Philippine corporation): 2307 issued with ATC WI011, cwt_amount = ₱48,000.
+
+**Aggregate CWT = ₱48,000** (from Source B only).
+
+**Tax computation (Path C, 8% option):**
+- IT base = 1,164,000 − 250,000 = ₱914,000
+- IT = 914,000 × 0.08 = **₱73,120**
+- PT = ₱0 (waived under 8%)
+- Credits = ₱48,000 CWT
+- Balance payable = 73,120 − 48,000 = **₱25,120**
+
+**Engine behavior:**
+- User enters total gross as PHP (their own conversion for Source A + ₱480,000 for Source B).
+- User enters one 2307 entry: {atc: "WI011", payor: "Local Corp", amount: 48000}.
+- Engine correctly applies ₱48,000 credit against income tax (WI011 is income tax CWT).
+- No MRF triggered for Source A — the fact that Source A produces no 2307 is correct and expected for foreign individual clients.
+- Engine asks at CWT entry: "Did you receive any BIR Form 2307s from your clients?" User says "Yes, one from local corp." User says "No" for the UK agency. Engine sets cwt for UK agency = ₱0 with no flag.
+- Display: "Your income from the UK agency is taxable in the Philippines as worldwide income of a resident citizen (NIRC Sec. 23(A)). Since the UK agency is not a Philippine withholding agent, no CWT was deducted from those payments. Your credit of ₱48,000 comes from your local corporate client's withholding."
+
+**Key computation note:** The gross receipts base for the 8% option and PT threshold includes BOTH foreign and local income (aggregated). Engine computes threshold check: 1,164,000 < 3,000,000 → non-VAT, 8% eligible.
+
+**Legal basis:** NIRC Sec. 23(A) (resident citizen worldwide income); Sec. 57 (Philippine withholding agent requirements — foreign individuals and entities are NOT Philippine withholding agents); RR 16-2023 (e-marketplace DFSP withholding — not applicable to direct foreign client payments); CR-019, CR-039.
+
+---
+
+### EC-FSI04: BSP Exchange Rate — Which Rate to Use and When
+
+**Scenario:** A freelancer receives USD payments on specific dates. They want to know which BSP rate to use for each payment.
+
+**BIR-accepted exchange rate rules:**
+1. **Date of receipt (primary rule):** For cash-basis taxpayers (the majority of freelancers), income is recognized when received. Use the BSP Reference Exchange Rate published for the date the payment was received (credited to PayPal, Payoneer, or bank account).
+2. **BSP Reference Rate vs. Buying Rate vs. Selling Rate:** BIR Revenue Memorandum Circular 32-2015 and general BIR practice accept the BSP **Reference Exchange Rate** (also called the Bankers Association of the Philippines weighted average rate). Use the SELLING rate for foreign income received in foreign currency being converted to PHP for tax purposes (per generally accepted BIR practice and CPA guidance).
+3. **Annual average (simplification):** For practical filing purposes, many CPAs use the BSP annual average selling rate for the tax year. This is widely accepted by BIR auditors for small amounts and is a conservative approximation. For amounts above ₱1M PHP equivalent, using transaction-date rates is recommended to avoid audit risk.
+4. **BSP rate source:** Available at bsp.gov.ph → Statistics → Exchange Rates → Reference Rates (daily). Historical rates are archived.
+
+**Engine behavior:**
+- Engine does NOT compute currency conversion. User enters total in PHP.
+- At gross receipts input, if user indicates "income received in foreign currency," engine displays:
+  > "Enter your total earnings in Philippine Pesos. For USD income: multiply each payment by the BSP Reference Selling Rate on the date it was credited to your account (available at bsp.gov.ph/statistics/efs/efs_sros.asp). For a simpler approach, use the BSP annual average selling rate for [tax year] and multiply by total USD earnings. Current BSP annual average USD/PHP selling rate for [prior year]: ₱[rate_from_lookup_table]."
+- Engine stores the rate used in the computation notes for audit trail purposes (user can input it).
+- Engine does NOT look up live BSP rates via API — the rate is entered or confirmed by the user.
+
+**Pre-loaded annual average USD/PHP selling rates (for wizard pre-population):**
+
+| Tax Year | BSP Annual Average USD/PHP Selling Rate |
+|----------|----------------------------------------|
+| 2020 | ₱49.62 |
+| 2021 | ₱50.99 |
+| 2022 | ₱54.49 |
+| 2023 | ₱55.63 |
+| 2024 | ₱57.34 |
+| 2025 | ₱57.80 (preliminary; update when BIR publishes final) |
+
+**Note on other currencies:**
+- EUR/PHP, GBP/PHP, AUD/PHP, SGD/PHP: Same rule applies — use BSP Reference Rate at date of receipt.
+- Engine displays the USD/PHP rate as an example and notes that the user should look up their specific currency's rate.
+- Engine does not store rates for all currency pairs — users with non-USD foreign income must perform their own conversion and enter the PHP equivalent.
+
+**Legal basis:** NIRC Sec. 43 (accounting methods); BIR RMC 32-2015 (exchange rate for tax purposes); BSP Circular 641 (Reference Exchange Rate System); general BIR audit practice as documented in CPA firm guidance.
+
+---
 
