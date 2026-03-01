@@ -1,7 +1,7 @@
 # Shared Conventions — Cheerful Context Engine
 
 **Spec file**: `specs/shared-conventions.md`
-**Wave 4 status**: In progress — w4-shared-schemas ✓, w4-auth-model ✓, w4-error-conventions ✓
+**Wave 4 status**: In progress — w4-shared-schemas ✓, w4-auth-model ✓, w4-error-conventions ✓, w4-pagination-conventions ✓
 
 This document defines cross-cutting conventions: the authentication model, error handling, pagination, rate limiting, and canonical shared schemas referenced by all domain specs.
 
@@ -29,6 +29,11 @@ This document defines cross-cutting conventions: the authentication model, error
    - 2.8 [Retry Logic](#28-retry-logic) — decision matrix and rules
    - 2.9 [Slack Error Surfacing Guide](#29-slack-error-surfacing-guide) — natural language translation
 3. [Pagination Conventions](#3-pagination-conventions)
+   - 3.1 [Three Pagination Models](#31-three-pagination-models) — offset-based, page-based, no-pagination
+   - 3.2 [Verified Parameters per Endpoint](#32-verified-pagination-parameters-per-endpoint) — service routes + new routes needed
+   - 3.3 [Corrections to Prior Skeleton](#33-corrections-to-prior-skeleton-important) — 2 verified errors fixed
+   - 3.4 [Per-Tool Pagination Summary](#34-per-tool-pagination-summary) — every paginated tool
+   - 3.5 [Slack Presentation Guide](#35-slack-presentation-of-paginated-results) — general rules + per-domain formatting
 4. [Rate Limiting](#4-rate-limiting)
 5. [Shared Schemas](#5-shared-schemas)
    - 5.1 [Campaign](#51-campaign)
@@ -753,47 +758,205 @@ If a 400 error message is ambiguous (e.g., `"Personalization failed: {error}. Ch
 
 ## 3. Pagination Conventions
 
-### 3.1 Standard Pagination Model
+The Cheerful backend uses three distinct pagination models depending on the endpoint. Every tool spec must state which model applies and document all constraints verified from source code.
 
-Most list tools use **offset-based pagination**:
+### 3.1 Three Pagination Models
 
-| Parameter | Type | Default | Max | Description |
-|-----------|------|---------|-----|-------------|
-| `limit` | integer | 50 | varies by endpoint | Max items per page |
-| `offset` | integer | 0 | unlimited | Skip first N results |
+#### Model A: Offset-Based (most list endpoints)
 
-**Standard paginated response shape**:
+Parameters are sent as query params:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `limit` | integer | Max items to return. Has a per-endpoint default and maximum (verified from `Query(default=N, le=M, ge=1)` in route source). |
+| `offset` | integer | Skip first N results. Default 0. All offset params have `ge=0`. |
+
+**Important**: Not every `limit` parameter has a `ge=` (minimum) constraint. If the route uses `Query(20, le=50)` with no `ge=`, FastAPI does not enforce a minimum — the CE should not pass `limit=0` but the backend will not reject it.
+
+Response shapes vary by endpoint (see Section 3.4 for per-endpoint details):
+- Some return a **flat list** (no wrapper): `[{...}, {...}]`
+- Some return a **wrapped object**: `{"items": [...], "total": N}` or `{"creators": [...], "total": N}`
+- Some return a **wrapped object without total**: `{"results": [...]}`
+
+When `total` is present, it represents the **unfiltered count** for the resource (not the count after applying optional filters). See the creator listing endpoint (Section 3.4) for a critical caveat.
+
+#### Model B: Page-Based (Influencer Club search)
+
+Used exclusively by the IC keyword and similar creator discovery endpoints:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `page` | integer | 1-indexed page number. Default 1. |
+
+Page size is **hardcoded at 10** (`_SEARCH_LIMIT = 10` in `creator_search.py`) — it cannot be changed by the caller.
+
+Response shape:
 ```json
 {
-  "items": [...],
-  "total": 142
+  "results": [...],
+  "total": 847,
+  "page": 1,
+  "has_more": true
 }
 ```
 
-Note: Not all endpoints use a generic wrapper. Some return `{"campaigns": [...], "total": N}`, `{"creators": [...], "total": N}`, etc. The exact shape is documented per-tool.
+`has_more` computation: `(total or 0) > page * 10`
 
-### 3.2 Per-Domain Pagination Defaults
+When `total` is null (IC API sometimes returns null), `has_more` is `False`.
 
-| Domain | Default Limit | Max Limit | Notes |
-|--------|--------------|-----------|-------|
-| Campaigns | 50 | 100 | `list_campaigns` returns all (no pagination in service route) |
-| Threads | 50 | 100 | `list_threads` — 12 filter params |
-| Creators (campaign) | 50 | 100 | `list_campaign_creators` — offset bug in existing tool |
-| Creators (search) | 20 | 50 | `search_campaign_creators` |
-| Email search | 20 | 50 | `search_emails` — max 50 |
-| Similar emails | 5 | 20 | `find_similar_emails` — min similarity 0.3 |
-| Workflow executions | 50 | 1000 | `list_workflow_executions` — only `le=1000` |
-| SMTP accounts | no pagination | — | returns full list |
-| Team members | no pagination | — | returns full list |
-| Email signatures | no pagination | — | returns full list |
+#### Model C: No Pagination (returns full list)
 
-### 3.3 Slack Presentation of Paginated Results
+Several endpoints return all matching records without any limit/offset. The CE tool docs must state "returns full list" explicitly:
 
-When presenting paginated results in Slack:
-- If `total` > `limit`, always state: `"Showing X of Y results. Use offset=N to see more."`
-- For large lists (>20 items), use a numbered list or table, not inline prose
-- For campaign/creator lists, always include the most relevant identifier (campaign_id, creator name + email) so the user can make follow-up requests
-- When paginating, suggest the next `offset` value explicitly
+| Endpoint | Returns |
+|----------|---------|
+| `GET /api/service/campaigns` | All active+paused campaigns for user |
+| `GET /api/v1/campaigns` | All campaigns (all statuses) for user |
+| `GET /api/v1/smtp-accounts` | All SMTP accounts for user |
+| `GET /api/v1/email-signatures` | All email signatures for user |
+| `GET /api/v1/creator-lists` | All creator lists for user with counts |
+| `GET /api/v1/campaign-workflows/{id}` (list) | All enabled workflows for a campaign |
+| `GET /api/v1/tools` | All 13 available workflow tool slugs |
+| `GET /api/v1/team` (get team) | Team + all members |
+| `GET /api/v1/team/assignments` (list mine) | All campaigns assigned to current user |
+| `GET /api/v1/team/assignments` (list for owner) | All assignments for owner's campaigns |
+
+For these tools, the Slack agent should always show the full result set. If the list is large (>20 items), use a compact table format.
+
+---
+
+### 3.2 Verified Pagination Parameters per Endpoint
+
+These values are verified from `Query(default=N, le=M, ge=K)` declarations in the actual backend source code. Any tool spec that disagrees with this table has a bug.
+
+#### Existing Service Routes (`/api/service/*`)
+
+These are the routes the CE currently calls. Verified from `service.py`.
+
+| Service Route | Default Limit | Max Limit | Min Limit | Has Offset? | Returns Total? | Response Wrapper |
+|--------------|--------------|-----------|-----------|-------------|---------------|-----------------|
+| `GET /api/service/campaigns` | N/A | N/A | N/A | No | No | flat list |
+| `GET /api/service/threads/search` | 20 | 50 | No constraint | No | No | flat list |
+| `GET /api/service/threads/{id}` | N/A | N/A | N/A | No | No | single object |
+| `GET /api/service/rag/similar` | 5 | 10 | No constraint | No | No | flat list |
+| `GET /api/service/campaigns/{id}/creators` | 50 | 100 | No constraint | Yes (ge=0) | Yes (unfiltered) | `{creators, total}` |
+| `GET /api/service/campaigns/{id}/creators/{cid}` | N/A | N/A | N/A | No | No | single object |
+| `GET /api/service/creators/search` | 20 | 50 | No constraint | No | No | `{results}` |
+
+**Critical detail — `GET /api/service/campaigns/{id}/creators`**: The `total` field is the **unfiltered total** count for the entire campaign (all creators, ignoring `gifting_status` and `role` filters). It does NOT reflect the count of filtered results. This is because the backend calls `repo.get_by_campaign_id()` for the total AFTER applying filters with `repo.get_by_campaign_id_paginated(limit+1, offset)`. If `gifting_status=OPTED_IN` returns 3 results but the campaign has 50 creators total, `total` will be 50.
+
+**The limit+1 trick**: `GET /api/service/campaigns/{id}/creators` fetches `limit + 1` rows from the DB. If the response contains more than `limit` items, it means there are more pages. However, the endpoint does NOT expose `has_more` — it trims to `limit` before returning. The CE must detect "more pages available" by comparing `offset + len(returned_items)` to `total`.
+
+#### New Service Routes Needed (currently JWT-only `/api/v1/*`)
+
+These routes must be wrapped in new `/api/service/*` endpoints before CE tools can use them. The pagination parameters listed are from the existing v1 handler (the service wrapper must preserve them).
+
+| v1 Route (needs service wrapper) | Default Limit | Max Limit | Min Limit | Has Offset? | Returns Total? | Response Wrapper |
+|----------------------------------|--------------|-----------|-----------|-------------|---------------|-----------------|
+| `GET /api/v1/campaigns/{id}/threads` | 50 | 100 | 1 (ge=1) | Yes (ge=0) | No | flat list |
+| `GET /api/v1/campaigns/{id}/outbox-table` | 100 | 1000 | 1 (ge=1) | Yes (ge=0) | Yes | `{columns, rows, total}` |
+| `GET /api/v1/campaigns/{id}/unified-recipients` | 50 | 10000 | 1 (ge=1) | Yes (ge=0) | Yes | `{items, total}` |
+| `GET /api/v1/creator-lists/{id}/items` | 50 | 100 | 1 (ge=1) | Yes (ge=0) | Yes | `{items, total}` |
+| `GET /api/v1/campaign-workflows/{id}/executions` | 100 | 1000 | No constraint | No | No | flat list |
+| `GET /api/v1/creator-search/keyword` | 10 (fixed) | 10 (fixed) | N/A | page-based | Yes | `{results, total, page, has_more}` |
+| `GET /api/v1/creator-search/similar` | 10 (fixed) | 10 (fixed) | N/A | page-based | Yes | `{results, total, page, has_more}` |
+
+**Important note on thread listing (`/api/v1/campaigns/{id}/threads`)**: The `offset` parameter is applied **only to Gmail threads**. SMTP threads are fetched without offset (all SMTP threads for the campaign are retrieved, then merged, then the combined list is trimmed to `limit`). This means for campaigns with mixed Gmail+SMTP threads, offset-based pagination is **approximate** — it may skip or duplicate threads at page boundaries when SMTP threads are present. The Slack agent should warn users about this when paginating mixed-provider campaigns.
+
+---
+
+### 3.3 Corrections to Prior Skeleton (Important)
+
+The earlier skeleton in this section contained two verified errors:
+
+1. **Similar emails max was wrong**: Listed as 20, **actual max is 10** (`limit: int = Query(5, le=10)` in `service.py`). The CE tool currently enforces `le=10` in its Pydantic model.
+
+2. **Workflow executions default was wrong**: Listed as 50, **actual default is 100** (`limit: int = Query(default=100, le=1000)` in `campaign_workflow_execution.py`). Max is 1000. No minimum constraint.
+
+---
+
+### 3.4 Per-Tool Pagination Summary
+
+| Tool | Model | Default | Max | Offset? | Total? | Notes |
+|------|-------|---------|-----|---------|--------|-------|
+| `cheerful_list_campaigns` | C (no pagination) | — | — | No | No | Returns all active+paused campaigns |
+| `cheerful_get_campaign` | N/A | — | — | No | No | Single campaign |
+| `cheerful_list_threads` | A | 50 | 100 | Yes | No | Offset approximate for mixed Gmail+SMTP campaigns |
+| `cheerful_search_emails` | A | 20 | 50 | No | No | Merged Gmail+SMTP results, sorted by latest_date |
+| `cheerful_get_thread` | N/A | — | — | No | No | Single thread with all messages |
+| `cheerful_find_similar_emails` | A | 5 | 10 | No | No | Also accepts `min_similarity` float (default 0.3) |
+| `cheerful_list_campaign_creators` | A | 50 | 100 | Yes | Yes (unfiltered) | `total` = campaign total, not filtered count |
+| `cheerful_get_campaign_creator` | N/A | — | — | No | No | Single creator with full profile |
+| `cheerful_search_campaign_creators` | A | 20 | 50 | No | No | Results only, no total |
+| `cheerful_list_recipients` | A | 50 | 10000 | Yes | Yes | Very high max for export-style queries |
+| `cheerful_list_outbox` | A | 100 | 1000 | Yes | Yes | Includes column definitions |
+| `cheerful_list_creator_list_items` | A | 50 | 100 | Yes | Yes | Per creator-list |
+| `cheerful_list_workflow_executions` | A | 100 | 1000 | No | No | Ordered by executed_at DESC |
+| `cheerful_discover_creators_keyword` | B | 10 (fixed) | 10 (fixed) | page-based | Yes | `has_more` flag in response |
+| `cheerful_discover_creators_similar` | B | 10 (fixed) | 10 (fixed) | page-based | Yes | `has_more` flag in response |
+| `cheerful_list_creator_lists` | C (no pagination) | — | — | No | Yes | Returns all lists with counts |
+| `cheerful_list_smtp_accounts` | C (no pagination) | — | — | No | No | Returns all SMTP accounts |
+| `cheerful_list_email_signatures` | C (no pagination) | — | — | No | No | Returns all signatures |
+| `cheerful_list_workflows` | C (no pagination) | — | — | No | No | Returns all enabled workflows |
+| `cheerful_get_dashboard_analytics` | N/A | — | — | No | No | Single analytics snapshot |
+
+---
+
+### 3.5 Slack Presentation of Paginated Results
+
+#### General Rules
+
+1. **Always disclose total and current page range** when `total` is available:
+   > "Showing creators 1–50 of 147. To see more, use `offset=50`."
+
+2. **When no `total` is available** (search results, similar emails, thread search):
+   > "Showing top 20 results. To retrieve more, increase `limit` (max 50) or refine your query."
+
+3. **For page-based results** (IC creator discovery):
+   > "Page 1 of results (10 shown, ~847 total). Use `page=2` for more."
+   If `has_more` is false: "All results shown."
+
+4. **Large lists (>10 items)**: Use a compact table or numbered list. Do not render prose descriptions for each item.
+
+5. **No results**: State clearly with the filter context. Example: "No creators found with status `OPTED_IN` in campaign 'Summer Launch'."
+
+6. **Mixed-provider campaigns (thread listing pagination warning)**: If a campaign has both Gmail and SMTP threads and the user requests pagination (offset > 0), add a note: "Note: pagination may be approximate for campaigns with both Gmail and SMTP threads."
+
+#### Per-Domain Formatting Guidance
+
+**Campaign list** (Model C — full list):
+- Render as a table: `| Name | Type | Status | ID |`
+- Include campaign_id so user can reference it in follow-up requests
+- Flag DRAFT and COMPLETED campaigns with a note (not returned by the service route, only active/paused)
+
+**Thread list / Thread search** (Model A — flat list):
+- Render as a numbered list with sender, subject (truncated to 60 chars), and date
+- Include thread_id for follow-up `cheerful_get_thread` calls
+- Group by status if status is in the filter
+
+**Creator list** (Model A — wrapped):
+- Render as a table: `| Name | Email | Status | Role | Handles |`
+- The `total` field is the unfiltered campaign total — use `offset + len(results) < total` to determine if more pages exist (NOT `len(results) < limit`, which would be wrong when filters reduce results)
+- When filters are active (`gifting_status`, `role`), note that the total reflects all campaign creators, not just filtered ones
+
+**Creator search** (Model A — no total):
+- Render as a table: `| Name | Email | Campaign | Status |`
+- No total available — if `len(results) == limit`, suggest narrowing the query
+
+**IC Creator Discovery** (Model B — page-based):
+- Render as a table: `| Handle | Followers | Engagement | Platform |`
+- Always show: "Page N — Found ~M creators total. Use `page=N+1` for more."
+- If `has_more` is false: "End of results."
+
+**Similar emails** (Model A — flat list):
+- Render as a numbered list with thread summary and reply snippet
+- The `similarity` score (0.0–1.0) can be shown as a percentage
+- For small result sets (≤3), render each result in full; for larger, use compact table
+
+**Workflow executions** (Model A — flat list):
+- Render as a table: `| Executed At | Status | Output Preview |`
+- Status values: `completed`, `error`, `skipped`, `schema_validation_failed`
+- For large result sets (>20), show most recent 20 and note how to page
 
 ---
 
