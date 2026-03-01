@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 54
-- Analyzed: 31
-- Pending: 23
-- Convergence: 57%
+- Analyzed: 32
+- Pending: 22
+- Convergence: 59%
 
 ## Pending Aspects (ordered by dependency)
 
