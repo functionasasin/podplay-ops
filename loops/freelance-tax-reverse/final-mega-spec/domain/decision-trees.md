@@ -1089,3 +1089,201 @@ The following decision trees are planned but not yet written. They will be added
 |------|---------------------------|-------------------|
 | DT-14: CWT Credit Application | creditable-withholding-tax | How to apply 2307 credits at quarterly and annual level |
 | DT-15: Quarterly vs Annual Filing Sequence | quarterly-filing-rules | Order of operations, cumulative method, installment payment decision |
+
+---
+
+## DT-14: Quarterly Filing Sequence and Form Selection
+
+**Root question:** For a given quarter and taxpayer profile, which forms must be filed and in what order?
+
+**Legal basis:** NIRC Secs. 74–76, 116; BIR Form 1701Q, 2551Q instructions; RA 11976 (EOPT Act)
+
+**When to apply:** At the start of each quarter to determine the taxpayer's filing obligations.
+
+```
+START: What is the taxpayer's registration status this quarter?
+│
+├── Registered BIR (has active COR) AND quarter is Q1, Q2, or Q3 of taxable year
+│   │
+│   ├── What is the taxpayer's income tax regime?
+│   │   │
+│   │   ├── 8% INCOME TAX RATE (elected on Q1 1701Q or COR)
+│   │   │   │
+│   │   │   ├── Q1 AND regime NOT yet locked (first return of the year)
+│   │   │   │   → [ACTION: FILE Form 1701Q Q1 with Schedule II, Item 16 = 8%.
+│   │   │   │     Do NOT file Form 2551Q. The 8% election waives percentage tax.
+│   │   │   │     Due: May 15. Attach 2307s and SAWT if CWT credits claimed.
+│   │   │   │     NOTE: Q1 is the ONLY time 8% can be elected. After Q1, regime is locked.
+│   │   │   │     Ref: NIRC Sec. 24(A)(2)(b); RR 8-2018 Sec. 2(B); CR-044]
+│   │   │   │
+│   │   │   ├── Q2 (regime already locked as 8%)
+│   │   │   │   → [ACTION: FILE Form 1701Q Q2 with Schedule II.
+│   │   │   │     Do NOT file Form 2551Q.
+│   │   │   │     Item 50 = Item 51 from prior Q1 Form 1701Q.
+│   │   │   │     Due: August 15. Ref: CR-044]
+│   │   │   │
+│   │   │   └── Q3 (regime locked as 8%)
+│   │   │       → [ACTION: FILE Form 1701Q Q3 with Schedule II.
+│   │   │         Do NOT file Form 2551Q.
+│   │   │         Item 50 = Item 51 from Q2 Form 1701Q.
+│   │   │         Due: November 15. Ref: CR-044]
+│   │   │
+│   │   ├── GRADUATED RATES + OSD
+│   │   │   │
+│   │   │   ├── Q1
+│   │   │   │   → Step 1: [ACTION: FILE Form 2551Q Q1.
+│   │   │   │     Percentage tax = Q1 gross receipts × 3%.
+│   │   │   │     Due: APRIL 25 (before 1701Q!).
+│   │   │   │     Ref: NIRC Sec. 116; CR-034]
+│   │   │   │   → Step 2: [ACTION: FILE Form 1701Q Q1 with Schedule I, Item 16A = OSD.
+│   │   │   │     Due: May 15.
+│   │   │   │     Ref: CR-042]
+│   │   │   │
+│   │   │   ├── Q2
+│   │   │   │   → Step 1: [ACTION: FILE Form 2551Q Q2. Due: July 25.]
+│   │   │   │   → Step 2: [ACTION: FILE Form 1701Q Q2 with Schedule I. Due: August 15.]
+│   │   │   │
+│   │   │   └── Q3
+│   │   │       → Step 1: [ACTION: FILE Form 2551Q Q3. Due: October 25.]
+│   │   │       → Step 2: [ACTION: FILE Form 1701Q Q3 with Schedule I. Due: November 15.]
+│   │   │
+│   │   ├── GRADUATED RATES + ITEMIZED DEDUCTIONS
+│   │   │   │
+│   │   │   │   (Same filing sequence as Graduated+OSD but Form 1701Q uses Itemized computation)
+│   │   │   │
+│   │   │   ├── Q1 → FILE 2551Q Q1 (Apr 25) THEN 1701Q Q1 (May 15, Schedule I, Itemized)
+│   │   │   ├── Q2 → FILE 2551Q Q2 (Jul 25) THEN 1701Q Q2 (Aug 15, Schedule I, Itemized)
+│   │   │   └── Q3 → FILE 2551Q Q3 (Oct 25) THEN 1701Q Q3 (Nov 15, Schedule I, Itemized)
+│   │   │         [Ref: CR-043]
+│   │   │
+│   │   └── VAT-REGISTERED (>₱3M, Graduated rates only)
+│   │       │
+│   │       ├── Q1 → FILE Form 2550Q Q1 (May 25) THEN 1701Q Q1 (May 15)
+│   │       │     [NOTE: 2550Q Q1 due May 25 is AFTER 1701Q Q1 due May 15.
+│   │       │      File income tax first, then VAT return.]
+│   │       ├── Q2 → FILE 1701Q Q2 (Aug 15) AND 2550Q Q2 (Aug 25)
+│   │       └── Q3 → FILE 1701Q Q3 (Nov 15) AND 2550Q Q3 (Nov 25)
+│   │           [Ref: CR-031, CR-033; No Form 2551Q (VAT-registered)]
+│
+├── Registered BUT this is Q4 of the taxable year
+│   │
+│   ├── Graduated + OSD or Itemized (non-VAT)
+│   │   → [ACTION: FILE Form 2551Q Q4. Due: January 25 of NEXT YEAR.
+│   │     This is the ONLY Q4 quarterly obligation. No 1701Q for Q4.
+│   │     The annual 1701 / 1701A due April 15 covers Q4 income.
+│   │     Ref: NIRC Sec. 116; CR-032]
+│   │
+│   ├── 8% rate
+│   │   → [ACTION: No Q4 quarterly filings. Annual 1701A due April 15 of next year.
+│   │     No Form 2551Q for Q4 (percentage tax waived). Ref: CR-044]
+│   │
+│   └── VAT-registered
+│       → [ACTION: FILE Form 2550Q Q4. Due: February 25 of next year.
+│         No 1701Q for Q4. Annual 1701 due April 15. Ref: CR-031]
+│
+├── Registered but this is the ANNUAL PERIOD (prior year filing)
+│   │
+│   ├── 8% rate OR Graduated+OSD, purely self-employed, non-VAT
+│   │   → [ACTION: FILE Form 1701A. Due: April 15.
+│   │     Attach: all 2307s, SAWT, prior year carry-over schedule if applicable.
+│   │     Ref: CR-011, CR-037]
+│   │
+│   ├── Graduated+Itemized, OR mixed-income, OR VAT-registered
+│   │   → [ACTION: FILE Form 1701. Due: April 15.
+│   │     Attach: financial statements if GR ≥ ₱3M (or if required by RDO),
+│   │     Schedule of itemized deductions, NOLCO schedule, all 2307s, SAWT.
+│   │     Ref: CR-011, CR-037, CR-027]
+│   │
+│   └── Annual balance payable > ₱2,000 AND taxpayer elects installment
+│       → [ACTION: Pay 50% of balance by April 15. Pay remaining 50% by October 15.
+│         Elect installment on the return (Item 25 on Form 1701/1701A).
+│         Ref: CR-011 Installment Payment Rule]
+│
+├── First-year taxpayer registered DURING the year
+│   │
+│   ├── Registered Q1 (Jan–Mar) → Normal filing obligations from Q1 onward
+│   ├── Registered Q2 (Apr–Jun) → First quarterly return is the Q2 1701Q
+│   │   [Q2 is the election quarter for 8%. Due: August 15.
+│   │    First 2551Q is Q2 (if graduated). Due: July 25.]
+│   ├── Registered Q3 (Jul–Sep) → First quarterly return is Q3 1701Q
+│   │   [Q3 is the election quarter. Due: November 15.
+│   │    First 2551Q is Q3. Due: October 25.]
+│   └── Registered Q4 (Oct–Dec) → No quarterly returns this year
+│       [Only obligation: Annual 1701/1701A due April 15 of next year.
+│        For graduated: Q4 2551Q due January 25 of next year.
+│        Ref: CR-047]
+│
+└── NOT registered (no active BIR COR) → [ACTION: REGISTRATION_REQUIRED.
+    Taxpayer must register with BIR (Form 1901) before any filing obligations arise.
+    Ref: NIRC Sec. 236; RA 11976 EOPT registration rules]
+```
+
+---
+
+## DT-15: Quarterly Installment and Overpayment at Quarter Level
+
+**Root question:** At the end of a quarterly computation, is the quarter-level tax payable positive, zero, or negative (overpayment)?
+
+**Legal basis:** NIRC Sec. 74–75; BIR Form 1701Q Schedule III Item 63
+
+```
+START: Compute Item 63 = Item 46 or 54 (cumulative tax due) − Item 62 (total credits)
+│
+├── Item 63 > ₱0 (tax payable this quarter)
+│   │
+│   └── → [ACTION: PAY Item 63 by the quarterly due date.
+│           File 1701Q showing this amount in Part III, Item 28.
+│           Actual payment = Item 63.
+│           This amount becomes "tax paid prior quarters" (Item 56) on the NEXT quarter's return.]
+│
+├── Item 63 = ₱0 (tax due fully covered by credits, no excess)
+│   │
+│   └── → [ACTION: FILE NIL quarterly return (still required).
+│           No payment needed. Tax payable = ₱0.
+│           Proceed to annual reconciliation at year-end.
+│           This quarter contributes ₱0 to Item 56 of next quarter.]
+│
+└── Item 63 < ₱0 (overpayment at quarterly level)
+    │
+    ├── Is this Q1 or Q2?
+    │   │
+    │   └── → [ACTION: FILE quarterly return showing ₱0 payable (Item 28 shows ₱0, not negative).
+    │           Actual payment = ₱0.
+    │           The overpayment is NOT refunded at the quarterly level.
+    │           It is implicitly absorbed: next quarter's credits (Item 56) will include only
+    │           actual cash paid (₱0 this quarter), so the cumulative structure naturally
+    │           prevents double-counting. The overpayment "disappears" — the next quarter's
+    │           cumulative tax due will still be offset by the growing CWT aggregate.]
+    │
+    └── Is this Q3 (last quarterly return)?
+        │
+        └── → [ACTION: FILE Q3 return showing ₱0 payable.
+               Overpayment at Q3 level will flow through to annual reconciliation.
+               At annual: balance = (annual IT − annual CWT − total Q1+Q2+Q3 payments).
+               Since Q3 payment = ₱0, the Q3 overpayment simply means the annual credits
+               are large — annual balance = negative = overpayment.
+               See DT for annual overpayment disposition (disposition of excess at CR-038).]
+```
+
+---
+
+## Updated Trees Summary
+
+| Tree | Description | Status |
+|------|-------------|--------|
+| DT-01 | 8% Option Eligibility | Complete |
+| DT-02 | 8% Election Procedure | Complete |
+| DT-03 | Mid-Year ₱3M Breach | Complete |
+| DT-04 | Annual Form Selection (1701 vs 1701A) | Complete |
+| DT-05 | ₱250K Deduction Applicability | Complete |
+| DT-06 | Form 2551Q Obligation | Complete |
+| DT-07 | Regime Recommendation (best path) | Complete |
+| DT-08 | Mixed Income Annual Tax | Complete (DT-09 covers mixed income flow) |
+| DT-09 | Mixed Income Computation Flow | Complete |
+| DT-10 | ₱250K Deduction Decision for Mixed Income | Complete |
+| DT-11 | VAT vs OPT Obligation | Complete |
+| DT-12 | VAT Registration Timing | Complete |
+| DT-13 | Quarter-Level PT Filing Check | Complete |
+| DT-14 | Quarterly Filing Sequence and Form Selection | Complete (this document) |
+| DT-15 | Quarterly Installment and Overpayment | Complete (this document) |
+| DT-16 | VAT-Registered Regime Selection (OSD vs Itemized) | Complete |

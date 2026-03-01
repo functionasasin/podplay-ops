@@ -5155,3 +5155,909 @@ If the SAWT is not submitted with the return, BIR may disallow the CWT credit. T
 
 Engine must display the following notice whenever CWT credits are non-zero:
 > "⚠️ SAWT REQUIRED: You are claiming ₱{total_cwt:,.2f} in creditable withholding tax. You must submit the Summary Alphalist of Withholding Taxes (SAWT) electronically via eBIRForms when filing your return. Failure to submit the SAWT may result in BIR disallowing your CWT credits. Download your SAWT file from the Export section."
+
+---
+
+## CR-041: Quarterly Filing Obligations Matrix
+
+**Legal basis:** NIRC Sec. 74–76; BIR Form 1701Q, 2551Q; RA 11976 (EOPT Act); RR 3-2024, RR 4-2024
+
+Every self-employed individual and professional registered with the BIR must file quarterly tax returns. The following matrix specifies exactly which forms to file each quarter, for every taxpayer type:
+
+### CR-041.1: Filing Obligations by Taxpayer Type and Quarter
+
+| Taxpayer Type | Q1 (due May 15) | Q2 (due Aug 15) | Q3 (due Nov 15) | Annual (due Apr 15 next year) |
+|---|---|---|---|---|
+| Purely self-employed, graduated+OSD, non-VAT, ≤₱3M | 1701Q (Sched I) + 2551Q | 1701Q (Sched I) + 2551Q | 1701Q (Sched I) + 2551Q | 1701A |
+| Purely self-employed, graduated+Itemized, non-VAT, ≤₱3M | 1701Q (Sched I) + 2551Q | 1701Q (Sched I) + 2551Q | 1701Q (Sched I) + 2551Q | 1701 |
+| Purely self-employed, 8% rate, non-VAT, ≤₱3M | 1701Q (Sched II, 8% elected) — NO 2551Q | 1701Q (Sched II) — NO 2551Q | 1701Q (Sched II) — NO 2551Q | 1701A |
+| Mixed income earner, graduated+OSD, non-VAT | 1701Q (Sched I, business only) + 2551Q | 1701Q (Sched I) + 2551Q | 1701Q (Sched I) + 2551Q | 1701 |
+| Mixed income earner, graduated+Itemized, non-VAT | 1701Q (Sched I, business only) + 2551Q | 1701Q (Sched I) + 2551Q | 1701Q (Sched I) + 2551Q | 1701 |
+| Mixed income earner, 8% on business, non-VAT | 1701Q (Sched II, 8% elected) — NO 2551Q | 1701Q (Sched II) — NO 2551Q | 1701Q (Sched II) — NO 2551Q | 1701 |
+| VAT-registered, graduated+OSD, >₱3M | 1701Q (Sched I) + VAT return (BIR 2550Q) | 1701Q (Sched I) + 2550Q | 1701Q (Sched I) + 2550Q | 1701 |
+| VAT-registered, graduated+Itemized, >₱3M | 1701Q (Sched I) + 2550Q | 1701Q (Sched I) + 2550Q | 1701Q (Sched I) + 2550Q | 1701 |
+| Partner in GPP — distributive share | 1701Q (Sched I, graduated only) — NO 8% option | 1701Q (Sched I) | 1701Q (Sched I) | 1701 |
+
+**Key rules:**
+- "NO 2551Q" means the percentage tax obligation is waived as part of the 8% election. No quarterly percentage tax return is filed for any quarter of the taxable year.
+- 8% election on Q1 1701Q (Item 16) is the official record of the election. Once Q1 is filed marking 8%, all subsequent 1701Qs for the year use Schedule II.
+- Mixed income earners ALWAYS file Form 1701 at annual (never 1701A), regardless of method.
+- Purely self-employed 8% filers use Form 1701A at annual.
+- Purely self-employed graduated+OSD filers use Form 1701A at annual.
+- Purely self-employed graduated+Itemized filers use Form 1701 at annual.
+
+### CR-041.2: NIL Return Obligation
+
+Even if the taxpayer has ZERO income for a quarter, they must still file a return:
+
+```
+function nil_return_required(taxpayer: TaxpayerProfile, quarter: int) -> bool:
+  // If BIR registration is active for the entire quarter → NIL return required
+  if registration_active_at_any_point_during_quarter(taxpayer, quarter):
+    return true
+  // If taxpayer deregistered BEFORE the start of the quarter → no return required
+  if deregistration_effective_before_quarter_start(taxpayer, quarter):
+    return false
+  // If taxpayer registered AFTER the end of the quarter → no return required
+  if registration_date > quarter_end_date(quarter):
+    return false
+  return true
+```
+
+**NIL return content:** Fill in all header fields. All income and deduction items are ₱0. Tax due = ₱0. Schedule IV penalties = ₱0 (if on time). Still requires signature.
+
+**Penalty for not filing a NIL return:**
+- MICRO/SMALL tier: ₱500 compromise penalty (RR 8-2024 implementing EOPT)
+- MEDIUM/LARGE tier: ₱1,000 compromise penalty
+- No surcharge or interest if no tax was due (zero income)
+- However, non-filing is still recorded on BIR's system and may trigger audit flags
+
+### CR-041.3: Filing Platform Options (EOPT Act, RA 11976)
+
+Under the EOPT Act (effective January 22, 2024), all taxpayers may file and pay anywhere regardless of RDO:
+
+| Platform | Description | Available to |
+|---|---|---|
+| eBIRForms (offline) | Free BIR desktop application, Windows only, supports 1701Q, 2551Q | All taxpayers |
+| eBIRForms (online) | Web-based version at efiling.bir.gov.ph | All taxpayers |
+| eFPS | Electronic Filing and Payment System (for large taxpayers enrolled) | Enrolled eFPS taxpayers only |
+| Authorized Agent Banks (AABs) | Major banks: BDO, BPI, Metrobank, PNB, Security Bank, UnionBank, RCBC, Chinabank, EastWest, Landbank, DBP | All taxpayers |
+| GCash / Maya | Mobile payment for BIR tax payments | All taxpayers (payment only; still file via eBIRForms) |
+| Revenue Collection Officers (RCOs) | BIR district offices — for municipalities with no AAB | Taxpayers in affected areas |
+| e-Pay (BIR online) | BIR's own online payment channel | All taxpayers |
+
+**EOPT change:** Under prior law, taxpayers had to file with their registered RDO. Under EOPT, a taxpayer registered in Makati RDO 47 may file at a BDO branch in Cebu. The RDO assignment is still maintained for administrative purposes but is not a physical filing constraint.
+
+### CR-041.4: Required Attachments for Quarterly Returns
+
+| Return | Attachment Required | When Required |
+|---|---|---|
+| 1701Q (any schedule) | Copies of BIR Form 2307 | When CWT credits are claimed in Schedule III Items 57 or 58 |
+| 1701Q (any schedule) | SAWT (Summary Alphalist of Withholding Taxes) — electronic via eBIRForms | When CWT credits ≥ ₱1 are claimed; mandatory per RMC 57-2011 |
+| 1701Q Schedule I (Itemized) | Itemized deduction schedule / list | When itemized deductions are claimed |
+| 1701Q | No financial statements required | FS not attached to quarterly returns (only at annual if required) |
+| 2551Q | No attachments required | Standard — no attachments for percentage tax quarterly return |
+
+---
+
+## CR-042: Form 1701Q Schedule I — Graduated+OSD Quarterly Computation (Full Algorithm)
+
+**Legal basis:** NIRC Sec. 74; BIR Form 1701Q Schedule I (Items 36–46, 55–63)
+**Applies to:** Purely self-employed and mixed-income earners who elected Graduated+OSD
+
+This CR expands CR-010 with complete field-level mapping and pseudocode for all three quarterly filings.
+
+### CR-042.1: Input Struct (Quarterly OSD)
+
+```
+struct QuarterlyOSDInput:
+  taxpayer_id:              str
+  taxable_year:             int            // e.g., 2025
+  quarter:                  int            // 1, 2, or 3 (no Q4 quarterly return)
+  is_mixed_income:          bool           // true if has compensation income too
+  is_trader:                bool           // true if business sells goods (COGS applies)
+  
+  // Cumulative YTD figures (January 1 through end of this quarter)
+  cumulative_gross_receipts: Decimal       // Item 36: net of sales returns/discounts
+  cumulative_cost_of_sales:  Decimal       // Item 37: only for traders; 0 for service providers
+  cumulative_non_op_income:  Decimal       // Item 43: non-operating income not in Item 36
+  
+  // From prior quarterly returns (within the same taxable year)
+  prior_year_excess_credits: Decimal       // Item 55: overpayment from prior year's annual return
+  tax_paid_prior_quarters:   Decimal       // Item 56: sum of actual 1701Q payments Q1..Q(n-1)
+  cwt_claimed_prior_quarters: Decimal      // Item 57: CWT from 2307s already credited in prior 1701Qs
+  cwt_new_this_quarter:      Decimal       // Item 58: CWT from 2307s first claimed this quarter
+  prior_year_amended_payment: Decimal      // Item 59: only if this is an amended return
+  foreign_tax_credits:       Decimal       // Item 60: usually 0 for typical PH freelancer
+  other_credits:             Decimal       // Item 61: TDM or other credits
+```
+
+### CR-042.2: Computation Function (Graduated+OSD)
+
+```
+function compute_1701Q_graduated_osd(input: QuarterlyOSDInput) -> QuarterlyOSDOutput:
+  // SCHEDULE I computation
+  
+  // Item 36: Cumulative gross sales/receipts (already in input, net of returns/discounts)
+  gross = input.cumulative_gross_receipts
+  
+  // Item 37: Cost of Sales/Services (traders only)
+  cogs = input.cumulative_cost_of_sales if input.is_trader else Decimal("0")
+  
+  // Item 38: Gross Income from Operations
+  gross_income = gross - cogs
+  
+  // Item 39 (blank — not applicable for OSD): 0
+  itemized_deductions = Decimal("0")
+  
+  // Item 40: OSD = 40% of gross receipts (full gross, not gross_income)
+  // NOTE: For service providers: OSD = 40% of gross receipts (Item 36)
+  // NOTE: For traders: BIR Form 1701A uses "gross income" as OSD base (Item 36 − COGS)
+  //       but quarterly 1701Q Schedule I uses "gross sales/receipts" (Item 36) directly
+  //       because it mirrors the annual 1701A structure. Use gross receipts for consistency.
+  osd_deduction = round(gross * Decimal("0.40"), 2)
+  
+  // Item 41: Net Income this quarter/period
+  net_income_this_period = gross_income - osd_deduction
+  // For OSD service providers: gross − 0 − (0.40 × gross) = gross × 0.60
+  // For OSD traders: (gross − COGS) − (0.40 × gross) = gross × 0.60 − COGS
+  
+  // Item 42: Taxable income from previous quarters
+  // Q1: always 0 (no prior quarterly returns in the taxable year)
+  // Q2: enter the "Net Income this period" from the Q1 return
+  // Q3: enter the sum of "Net Income this period" from Q1 + Q2 returns
+  // This is provided by the caller via prior_quarter_nti (see note below)
+  // NOTE: The form uses an ADDITIVE approach: current-quarter net income + prior
+  // quarter net income = cumulative taxable income. This is equivalent to computing
+  // cumulative YTD gross × 0.60 because:
+  //   Q1 cumulative NTI = GR_Q1 × 0.60
+  //   Q2 net income this period = (GR_Q1+Q2 × 0.60) − (GR_Q1 × 0.60) = GR_Q2 × 0.60
+  //   Item 42 in Q2 = Q1 net income = GR_Q1 × 0.60
+  //   Item 41 in Q2 = GR_Q2 × 0.60
+  //   Item 45 in Q2 = GR_Q2 × 0.60 + GR_Q1 × 0.60 = (GR_Q1 + GR_Q2) × 0.60 ✓
+  prior_quarters_nti = input.prior_quarters_net_taxable_income  // sum from prior 1701Qs
+  
+  // Item 43: Non-operating income (cumulative)
+  non_op = input.cumulative_non_op_income
+  
+  // Item 44: Other adjustments (0 for typical freelancer)
+  other_adj = Decimal("0")
+  
+  // Item 45: Total taxable income as of this quarter (cumulative YTD)
+  total_taxable_income = net_income_this_period + prior_quarters_nti + non_op + other_adj
+  
+  // Item 46: Income tax due (apply graduated rate table to cumulative NTI)
+  graduated_table = select_graduated_table(input.taxable_year)  // Schedule 1 or 2
+  cumulative_it_due = graduated_table(total_taxable_income)
+  
+  // SCHEDULE III: Tax Credits
+  // Item 55: Prior year excess credits
+  item_55 = input.prior_year_excess_credits
+  
+  // Item 56: Tax paid in prior quarters this year (actual cash payments on prior 1701Qs)
+  item_56 = input.tax_paid_prior_quarters
+  
+  // Item 57: CWT already claimed in prior quarterly returns
+  item_57 = input.cwt_claimed_prior_quarters
+  
+  // Item 58: CWT newly claimed this quarter (from 2307s received in this quarter period)
+  item_58 = input.cwt_new_this_quarter
+  
+  // Item 59: Prior payment if amended (0 if original filing)
+  item_59 = input.prior_year_amended_payment
+  
+  // Item 60: Foreign tax credits
+  item_60 = input.foreign_tax_credits
+  
+  // Item 61: Other credits/payments
+  item_61 = input.other_credits
+  
+  // Item 62: Total credits
+  total_credits = item_55 + item_56 + item_57 + item_58 + item_59 + item_60 + item_61
+  
+  // Item 63: Tax payable / (overpayment)
+  // NOTE: Negative means overpayment. Overpayment at quarterly level is NOT refunded;
+  // it carries forward to the next quarter's Item 56 as an implicit credit,
+  // because the overpayment is captured in Item 56 of the next quarter's return.
+  tax_payable_raw = cumulative_it_due - total_credits
+  
+  // Actual payment made = max(0, tax_payable_raw)
+  // If tax_payable_raw < 0: tax_payable = ₱0, but note overpayment for engine display
+  tax_payable = max(Decimal("0"), tax_payable_raw)
+  overpayment_at_quarter = max(Decimal("0"), -tax_payable_raw)
+  
+  // NOTE: Overpayment at quarterly level does NOT trigger a refund request.
+  // The overpayment reduces future quarterly payments automatically because
+  // the next quarter's Item 56 includes the actual amount PAID (which was max(0,...)),
+  // so the overpayment gets "absorbed" through the cumulative structure.
+  // The only exception: if Q3 shows overpayment, it flows to annual reconciliation.
+  
+  return QuarterlyOSDOutput {
+    // Schedule I items
+    item_36_gross_receipts:         gross,
+    item_37_cost_of_sales:          cogs,
+    item_38_gross_income:           gross_income,
+    item_40_osd_deduction:          osd_deduction,
+    item_41_net_income_this_period: net_income_this_period,
+    item_42_prior_quarters_nti:     prior_quarters_nti,
+    item_43_non_op_income:          non_op,
+    item_45_total_taxable_income:   total_taxable_income,
+    item_46_income_tax_due:         cumulative_it_due,
+    
+    // Schedule III items
+    item_55_prior_year_credits:     item_55,
+    item_56_prior_quarter_payments: item_56,
+    item_57_cwt_prior_quarters:     item_57,
+    item_58_cwt_this_quarter:       item_58,
+    item_59_amended_prior_payment:  item_59,
+    item_60_foreign_tax_credits:    item_60,
+    item_61_other_credits:          item_61,
+    item_62_total_credits:          total_credits,
+    item_63_tax_payable_overpayment: tax_payable_raw,  // signed; negative = overpayment
+    
+    // Summary (Part III)
+    part3_item_26_tax_due:          cumulative_it_due,
+    part3_item_27_total_credits:    total_credits,
+    part3_item_28_tax_payable:      tax_payable_raw,   // signed
+    
+    // Engine output
+    actual_payment_this_quarter:    tax_payable,        // cash to remit; never negative
+    overpayment_this_quarter:       overpayment_at_quarter,
+    cumulative_nti_ytd:             total_taxable_income,
+    
+    // For next quarter's inputs
+    nti_this_period_for_item42:     net_income_this_period  // pass to next quarter's Item 42
+  }
+```
+
+### CR-042.3: Worked Example — Graduated+OSD, Service Provider, Q1/Q2/Q3
+
+**Taxpayer profile:** Freelance writer, graduated+OSD, non-VAT, non-mixed income, ₱2M annual gross projected.
+
+**Q1 (January–March):**
+- Q1 gross receipts: ₱400,000
+- CWT received from 2307s in Q1: ₱20,000 (5% × ₱400,000)
+- Prior year excess credits: ₱0
+- Prior quarter payments: ₱0
+- CWT prior quarters: ₱0
+
+```
+Item 36 = ₱400,000
+Item 37 = ₱0 (service provider)
+Item 38 = ₱400,000
+Item 40 = ₱400,000 × 40% = ₱160,000
+Item 41 = ₱400,000 − ₱160,000 = ₱240,000
+Item 42 = ₱0 (Q1 — no prior quarters)
+Item 45 = ₱240,000
+Item 46 = graduated_table(₱240,000) = ₱0 (below ₱250K zero bracket)
+Item 57 = ₱0 | Item 58 = ₱20,000 | Item 62 = ₱20,000
+Item 63 = ₱0 − ₱20,000 = −₱20,000 (overpayment of ₱20,000)
+Actual payment Q1 = ₱0 (CWT covered all; excess ₱20,000 not refunded at quarterly level)
+```
+
+**Q2 (January–June cumulative):**
+- Q2 additional gross receipts: ₱600,000 (cumulative YTD = ₱1,000,000)
+- CWT received in Q2: ₱30,000 (5% × ₱600,000)
+- Prior quarter payments (Q1 actual payment): ₱0
+- CWT prior quarters (claimed in Q1): ₱20,000
+- Prior quarters NTI (from Q1 Item 41): ₱240,000
+
+```
+Item 36 = ₱1,000,000 (cumulative YTD)
+Item 37 = ₱0
+Item 38 = ₱1,000,000
+Item 40 = ₱400,000 (40% of ₱1,000,000)
+Item 41 = ₱600,000 (Q2 net income this period = ₱1,000,000 × 0.60 − ₱240,000 = ₱360,000)
+  WAIT: Item 41 = Item 38 − Item 40 = ₱1,000,000 − ₱400,000 = ₱600,000
+  But this is the current quarter's portion in the additive structure.
+  Actually: Item 41 = (cumulative gross − cumulative OSD) − (prior quarters NTI)
+  = (₱1,000,000 × 0.60) − ₱240,000 = ₱600,000 − ₱240,000 = ₱360,000
+  CORRECTION: Item 36 at Q2 = Q2's gross only (₱600,000), NOT cumulative.
+  The cumulative approach works as: current quarter's receipts + prior quarter carryforward.
+  
+  CORRECT approach (matching actual 1701Q form structure):
+  Item 36 = ₱600,000 (Q2 gross receipts only — April through June)
+  Item 40 = ₱240,000 (40% of ₱600,000)
+  Item 41 = ₱360,000 (₱600,000 × 0.60)
+  Item 42 = ₱240,000 (from Q1 Item 41)
+  Item 45 = ₱360,000 + ₱240,000 = ₱600,000
+  Item 46 = graduated_table(₱600,000, year=2025) = ₱22,500 + (₱600,000−₱400,000) × 0.20
+           = ₱22,500 + ₱40,000 = ₱62,500 [using Schedule 2]
+  Item 56 = ₱0 (Q1 actual payment was ₱0)
+  Item 57 = ₱20,000 (CWT claimed in Q1)
+  Item 58 = ₱30,000 (new Q2 CWT)
+  Item 62 = ₱0 + ₱20,000 + ₱30,000 = ₱50,000
+  Item 63 = ₱62,500 − ₱50,000 = ₱12,500 (payable)
+  Actual payment Q2 = ₱12,500
+```
+
+**IMPORTANT CLARIFICATION on Q2 Item 36:**
+The 1701Q form at Item 36 says "Sales/Revenues/Receipts/Fees" — this is the CURRENT QUARTER'S receipts, and Item 42 adds the prior quarter's taxable income. This is an ADDITIVE structure that reaches the same cumulative result as a direct cumulative calculation. Both approaches yield the same Item 45.
+
+**Q3 (July–September quarterly receipts only):**
+- Q3 additional gross receipts: ₱500,000
+- CWT received in Q3: ₱25,000 (5% × ₱500,000)
+- Prior quarter payments: Q2 payment ₱12,500 (Q1 paid ₱0)
+- CWT prior quarters: ₱50,000 (Q1 ₱20K + Q2 ₱30K)
+- Prior quarters NTI (Q1+Q2 Items 41): ₱240,000 + ₱360,000 = ₱600,000
+
+```
+Item 36 = ₱500,000 (Q3 receipts)
+Item 40 = ₱200,000 (40% × ₱500,000)
+Item 41 = ₱300,000 (₱500,000 × 0.60)
+Item 42 = ₱600,000 (Q1+Q2 NTIs)
+Item 45 = ₱900,000 (cumulative YTD NTI)
+Item 46 = ₱102,500 + (₱900,000 − ₱800,000) × 0.25 = ₱102,500 + ₱25,000 = ₱127,500 [Schedule 2]
+Item 56 = ₱12,500 (Q2 payment; Q1 payment = ₱0)
+Item 57 = ₱50,000 (CWT already claimed in Q1+Q2)
+Item 58 = ₱25,000 (new Q3 CWT)
+Item 62 = ₱12,500 + ₱50,000 + ₱25,000 = ₱87,500
+Item 63 = ₱127,500 − ₱87,500 = ₱40,000 (payable)
+Actual payment Q3 = ₱40,000
+```
+
+**Annual summary for Form 1701A:**
+- Total Q1+Q2+Q3 quarterly IT payments: ₱0 + ₱12,500 + ₱40,000 = ₱52,500
+- Q4 receipts: ₱500,000 (for annual total ₱2,000,000)
+- Annual NTI: ₱2,000,000 × 0.60 = ₱1,200,000
+- Annual IT (Schedule 2): ₱102,500 + (₱1,200,000 − ₱800,000) × 0.25 = ₱102,500 + ₱100,000 = ₱202,500
+- Annual CWT total: ₱100,000 (5% × ₱2,000,000)
+- Balance at annual: ₱202,500 − ₱100,000 − ₱52,500 = ₱50,000 due April 15
+
+---
+
+## CR-043: Form 1701Q Schedule I — Graduated+Itemized Quarterly Computation
+
+**Legal basis:** NIRC Sec. 74; BIR Form 1701Q Schedule I (Items 36–46)
+**Applies to:** Taxpayers who elected Graduated+Itemized Deductions
+
+### CR-043.1: Key Differences from OSD
+
+| Item | OSD | Itemized |
+|---|---|---|
+| Item 36 | Gross receipts (service) or gross sales (trader) | Same |
+| Item 37 | ₱0 (leave blank) | Cost of Sales/Services (for traders and service corps; typically ₱0 for sole proprietors) |
+| Item 38 | Gross income = Item 36 | Gross income = Item 36 − Item 37 |
+| Item 39 | BLANK | Total allowable itemized deductions (cumulative YTD) |
+| Item 40 | OSD = 40% × Item 36 | BLANK |
+| Item 41 | Net income = Item 38 − Item 40 | Net income = Item 38 − Item 39 |
+
+### CR-043.2: Computation Function (Graduated+Itemized)
+
+```
+function compute_1701Q_graduated_itemized(
+  quarter:                         int,           // 1, 2, or 3
+  taxable_year:                    int,
+  gross_receipts_this_quarter:     Decimal,       // Item 36: current quarter's receipts
+  cost_of_sales_this_quarter:      Decimal,       // Item 37: current quarter's COGS (0 for services)
+  allowable_deductions_this_qtr:   Decimal,       // Item 39: current quarter's itemized deductions
+  non_op_income_this_quarter:      Decimal,       // Item 43: current quarter non-operating income
+  prior_quarters_nti:              Decimal,       // Item 42: sum of net incomes from prior 1701Qs
+  prior_year_excess_credits:       Decimal,       // Item 55
+  tax_paid_prior_quarters:         Decimal,       // Item 56
+  cwt_claimed_prior_quarters:      Decimal,       // Item 57
+  cwt_new_this_quarter:            Decimal,       // Item 58
+  foreign_tax_credits:             Decimal,       // Item 60
+  other_credits:                   Decimal,       // Item 61
+) -> QuarterlyItemizedOutput:
+
+  // Schedule I computation
+  item_36 = gross_receipts_this_quarter
+  item_37 = cost_of_sales_this_quarter
+  item_38 = item_36 - item_37  // gross income this quarter
+  item_39 = allowable_deductions_this_qtr  // cumulative YTD deductions
+  
+  // Item 41: net income from this quarter's period
+  // = (this quarter's gross income) − (this quarter's deductions)
+  item_41 = item_38 - item_39
+  
+  // Item 42: carryforward from prior quarters
+  item_42 = prior_quarters_nti
+  
+  // Item 43: non-operating income
+  item_43 = non_op_income_this_quarter
+  
+  // Item 45: cumulative NTI YTD
+  item_45 = item_41 + item_42 + item_43
+  
+  // Item 46: apply graduated rate to cumulative NTI
+  graduated_table = select_graduated_table(taxable_year)
+  item_46 = graduated_table(item_45)
+  
+  // Schedule III: same as OSD version
+  item_55 = prior_year_excess_credits
+  item_56 = tax_paid_prior_quarters
+  item_57 = cwt_claimed_prior_quarters
+  item_58 = cwt_new_this_quarter
+  item_60 = foreign_tax_credits
+  item_61 = other_credits
+  item_62 = item_55 + item_56 + item_57 + item_58 + item_60 + item_61
+  item_63 = item_46 - item_62  // signed; negative = overpayment
+  
+  actual_payment = max(Decimal("0"), item_63)
+  
+  return QuarterlyItemizedOutput {
+    item_36_gross_receipts:              item_36,
+    item_37_cost_of_sales:               item_37,
+    item_38_gross_income:                item_38,
+    item_39_itemized_deductions:         item_39,
+    item_41_net_income_this_period:      item_41,
+    item_42_prior_quarters_nti:          item_42,
+    item_43_non_op_income:               item_43,
+    item_45_total_taxable_income:        item_45,
+    item_46_income_tax_due:              item_46,
+    item_55_prior_year_credits:          item_55,
+    item_56_prior_quarter_payments:      item_56,
+    item_57_cwt_prior_quarters:          item_57,
+    item_58_cwt_this_quarter:            item_58,
+    item_60_foreign_tax_credits:         item_60,
+    item_61_other_credits:               item_61,
+    item_62_total_credits:               item_62,
+    item_63_tax_payable_overpayment:     item_63,    // signed
+    actual_payment_this_quarter:         actual_payment,
+    nti_this_period_for_item42:          item_41     // pass to next quarter
+  }
+```
+
+### CR-043.3: NOLCO Quarterly Handling
+
+NOLCO (Net Operating Loss Carryover) from prior years is an itemized-deduction-only benefit.
+
+**Quarterly treatment:**
+- Each quarter, NOLCO is included as part of the allowable itemized deductions.
+- It is applied proportionally across quarters (not all in Q1).
+- The engine tracks NOLCO usage per quarter to ensure the three-year carryover does not exceed the available balance.
+- At annual reconciliation, the total NOLCO applied must match the annual Form 1701 NOLCO schedule.
+
+```
+function apply_nolco_quarterly(
+  quarter: int,
+  nti_before_nolco: Decimal,     // cumulative NTI for this quarter before NOLCO
+  available_nolco_balance: Decimal  // remaining NOLCO not yet consumed this year
+) -> tuple[Decimal, Decimal]:   // (nolco_applied, remaining_nolco)
+  
+  // NOLCO can only reduce NTI to ₱0; cannot create additional loss
+  nolco_applicable = min(max(Decimal("0"), nti_before_nolco), available_nolco_balance)
+  nti_after_nolco = nti_before_nolco - nolco_applicable
+  remaining_nolco = available_nolco_balance - nolco_applicable
+  return (nolco_applicable, remaining_nolco)
+```
+
+---
+
+## CR-044: Form 1701Q Schedule II — 8% Rate Quarterly Computation (Full Algorithm)
+
+**Legal basis:** NIRC Sec. 24(A)(2)(b); BIR Form 1701Q Schedule II (Items 47–54)
+**Applies to:** Purely self-employed and mixed-income taxpayers who elected 8% rate on Q1
+
+### CR-044.1: Key Rules for 8% Quarterly Computation
+
+1. **₱250,000 deduction per quarter:** The ₱250K deduction (for purely self-employed only) is applied at every quarter because the form computes CUMULATIVE tax but Item 52 always shows the FULL ₱250K. This is correct because the credits (Item 56) from prior quarter actual payments offset the "over-deduction" effect.
+
+2. **No ₱250K for mixed income:** Item 52 is always ₱0 for mixed-income earners. The ₱250K deduction does not apply at all per RMC 50-2018.
+
+3. **Non-operating income:** Item 48 includes other non-operating income subject to the 8% rate. It is cumulative YTD (same as gross receipts).
+
+4. **Carryforward structure:** Item 50 receives Item 51 from the prior quarter's return (NOT Item 54 — it passes the gross income base forward, not the tax amount).
+
+### CR-044.2: Computation Function (8% Rate)
+
+```
+function compute_1701Q_eight_percent(
+  quarter:                    int,          // 1, 2, or 3
+  taxable_year:               int,
+  is_purely_self_employed:    bool,         // false = mixed income earner
+  
+  // Item 47: gross receipts for the current quarter period only (not cumulative)
+  gross_receipts_this_quarter: Decimal,
+  
+  // Item 48: non-operating income this quarter (current period only)
+  non_op_income_this_quarter:  Decimal,
+  
+  // Item 50: Item 51 from the PRIOR quarter's Form 1701Q
+  // (Q1: 0. Q2: Item 51 from Q1. Q3: Item 51 from Q2.)
+  prior_cumulative_gross:      Decimal,
+  
+  // Schedule III inputs
+  prior_year_excess_credits:  Decimal,
+  tax_paid_prior_quarters:    Decimal,
+  cwt_claimed_prior_quarters: Decimal,
+  cwt_new_this_quarter:       Decimal,
+  foreign_tax_credits:        Decimal,
+  other_credits:              Decimal,
+) -> QuarterlyEightPctOutput:
+
+  // Item 47: current quarter's gross receipts (current period)
+  item_47 = gross_receipts_this_quarter
+  
+  // Item 48: current quarter's non-operating income
+  item_48 = non_op_income_this_quarter
+  
+  // Item 49: total income this quarter = 47 + 48 (current period total)
+  item_49 = item_47 + item_48
+  
+  // Item 50: cumulative gross from prior quarters (Item 51 of previous 1701Q)
+  item_50 = prior_cumulative_gross  // Q1: 0
+  
+  // Item 51: cumulative gross income YTD
+  item_51 = item_49 + item_50
+  
+  // Item 52: ₱250,000 deduction (purely SE only; ₱0 for mixed income)
+  item_52 = Decimal("250000") if is_purely_self_employed else Decimal("0")
+  
+  // Item 53: taxable income to date
+  item_53 = max(Decimal("0"), item_51 - item_52)
+  
+  // Item 54: income tax due = cumulative taxable base × 8%
+  item_54 = round(item_53 * Decimal("0.08"), 2)
+  
+  // Schedule III: credits
+  item_55 = prior_year_excess_credits
+  item_56 = tax_paid_prior_quarters
+  item_57 = cwt_claimed_prior_quarters
+  item_58 = cwt_new_this_quarter
+  item_60 = foreign_tax_credits
+  item_61 = other_credits
+  item_62 = item_55 + item_56 + item_57 + item_58 + item_60 + item_61
+  item_63 = item_54 - item_62  // signed
+  
+  actual_payment = max(Decimal("0"), item_63)
+  
+  return QuarterlyEightPctOutput {
+    item_47_gross_receipts:            item_47,
+    item_48_non_op_income:             item_48,
+    item_49_total_income_this_qtr:     item_49,
+    item_50_prior_cumulative_gross:    item_50,
+    item_51_cumulative_gross_ytd:      item_51,
+    item_52_deduction_250k:            item_52,
+    item_53_taxable_income_to_date:    item_53,
+    item_54_income_tax_due:            item_54,
+    item_55_prior_year_credits:        item_55,
+    item_56_prior_quarter_payments:    item_56,
+    item_57_cwt_prior_quarters:        item_57,
+    item_58_cwt_this_quarter:          item_58,
+    item_60_foreign_tax_credits:       item_60,
+    item_61_other_credits:             item_61,
+    item_62_total_credits:             item_62,
+    item_63_tax_payable_overpayment:   item_63,   // signed
+    actual_payment_this_quarter:       actual_payment,
+    item_51_for_next_quarter_item_50:  item_51    // pass forward to next quarter's Item 50
+  }
+```
+
+### CR-044.3: Worked Example — 8% Rate, Purely Self-Employed, Three Quarters
+
+**Taxpayer profile:** IT consultant, 8% rate, non-VAT, purely self-employed, ₱1.2M annual gross projected. No CWT.
+
+**Q1 (Jan–Mar):**
+- Gross receipts: ₱300,000 | Non-op income: ₱0 | No prior credits
+
+```
+Item 47 = ₱300,000
+Item 48 = ₱0
+Item 49 = ₱300,000
+Item 50 = ₱0 (Q1 — no prior cumulative)
+Item 51 = ₱300,000
+Item 52 = ₱250,000 (purely SE)
+Item 53 = ₱50,000
+Item 54 = ₱50,000 × 8% = ₱4,000
+Item 62 = ₱0 (no credits)
+Item 63 = ₱4,000
+Actual payment Q1 = ₱4,000
+Item 51 passes ₱300,000 to Q2 Item 50
+```
+
+**Q2 (Apr–Jun):**
+- Q2 gross receipts: ₱400,000 | No CWT
+
+```
+Item 47 = ₱400,000
+Item 48 = ₱0
+Item 49 = ₱400,000
+Item 50 = ₱300,000 (from Q1 Item 51)
+Item 51 = ₱700,000 (cumulative Jan–Jun)
+Item 52 = ₱250,000
+Item 53 = ₱450,000
+Item 54 = ₱450,000 × 8% = ₱36,000
+Item 56 = ₱4,000 (Q1 actual payment)
+Item 62 = ₱4,000
+Item 63 = ₱36,000 − ₱4,000 = ₱32,000
+Actual payment Q2 = ₱32,000
+Item 51 passes ₱700,000 to Q3 Item 50
+```
+
+**Q3 (Jul–Sep):**
+- Q3 gross receipts: ₱300,000 | CWT received: ₱5,000 (via Form 2307)
+
+```
+Item 47 = ₱300,000
+Item 48 = ₱0
+Item 49 = ₱300,000
+Item 50 = ₱700,000 (from Q2 Item 51)
+Item 51 = ₱1,000,000
+Item 52 = ₱250,000
+Item 53 = ₱750,000
+Item 54 = ₱750,000 × 8% = ₱60,000
+Item 56 = ₱4,000 + ₱32,000 = ₱36,000
+Item 57 = ₱0 (no CWT in prior quarters)
+Item 58 = ₱5,000 (new Q3 CWT)
+Item 62 = ₱36,000 + ₱5,000 = ₱41,000
+Item 63 = ₱60,000 − ₱41,000 = ₱19,000
+Actual payment Q3 = ₱19,000
+```
+
+**Annual reconciliation (Form 1701A, April 15 next year):**
+- Q4 gross receipts: ₱200,000 (Oct–Dec)
+- Total annual gross: ₱300K + ₱400K + ₱300K + ₱200K = ₱1,200,000
+- Annual IT: (₱1,200,000 − ₱250,000) × 8% = ₱950,000 × 8% = ₱76,000
+- Total CWT: ₱5,000
+- Total quarterly payments: ₱4,000 + ₱32,000 + ₱19,000 = ₱55,000
+- Balance at annual: ₱76,000 − ₱5,000 − ₱55,000 = ₱16,000 due April 15
+
+---
+
+## CR-045: Quarterly Filing for Mixed Income Earners
+
+**Legal basis:** NIRC Sec. 74; BIR Form 1701Q Instructions; RMC 50-2018
+
+### CR-045.1: What Goes on the Mixed Income Earner's 1701Q
+
+Mixed income earners file Form 1701Q for their BUSINESS income ONLY. Compensation income is excluded from the quarterly return. Key rules:
+
+1. **1701Q covers only business/professional income** — compensation (salaries, wages) is handled entirely by the employer's payroll system (employer withholds via BIR Form 2316).
+2. **Item 36 (or Item 47 for 8%)** = business/professional gross receipts only. Compensation income is NOT added.
+3. **ATC code on 1701Q** = II013 (Mixed Income – Graduated IT Rates) or II016 (Mixed Income – 8% IT Rate).
+4. **Annual reconciliation** requires Form 1701 (never 1701A) where BOTH income streams are combined.
+
+### CR-045.2: Quarterly Computation Function (Mixed Income)
+
+```
+function compute_1701Q_mixed_income(
+  quarter:                     int,
+  taxable_year:                int,
+  regime:                      Enum["GRADUATED_OSD", "GRADUATED_ITEMIZED", "EIGHT_PCT"],
+  business_gross_receipts:     Decimal,  // current quarter business receipts only
+  prior_quarters_business_nti: Decimal,  // NTI from business portion of prior 1701Qs
+  prior_cumulative_gross:      Decimal,  // for 8% only: Item 51 from prior quarter
+  business_deductions_this_qtr: Decimal, // for itemized: current quarter's deductions
+  tax_paid_prior_quarters:     Decimal,
+  cwt_claimed_prior_quarters:  Decimal,
+  cwt_new_this_quarter:        Decimal,
+  prior_year_excess_credits:   Decimal,
+) -> QuarterlyOutput:
+
+  // KEY RULE: For mixed income, ₱250,000 deduction in 8% is NEVER applied on 1701Q
+  // (Item 52 = ₱0). Mixed income earner gets the ₱250K zero bracket from the
+  // graduated table applied to compensation income at annual reconciliation.
+  
+  if regime == "EIGHT_PCT":
+    return compute_1701Q_eight_percent(
+      is_purely_self_employed = false,  // FORCES Item 52 = ₱0
+      gross_receipts_this_quarter = business_gross_receipts,
+      prior_cumulative_gross = prior_cumulative_gross,
+      ... // other fields
+    )
+  
+  elif regime == "GRADUATED_OSD":
+    return compute_1701Q_graduated_osd(
+      cumulative_gross_receipts = business_gross_receipts,  // current quarter
+      prior_quarters_nti = prior_quarters_business_nti,
+      ... // other fields
+    )
+  
+  elif regime == "GRADUATED_ITEMIZED":
+    return compute_1701Q_graduated_itemized(
+      gross_receipts_this_quarter = business_gross_receipts,
+      allowable_deductions_this_qtr = business_deductions_this_qtr,
+      prior_quarters_nti = prior_quarters_business_nti,
+      ... // other fields
+    )
+```
+
+**NOTE ON ANNUAL RECONCILIATION (MIXED INCOME):**
+At annual (Form 1701), the business NTI from 1701Q is combined with compensation NTI to compute the COMBINED graduated tax. The quarterly 1701Q payments (business-only) are then credited against this combined annual tax. See CR-029 (mixed income) and CR-037 (annual reconciliation) for the annual function.
+
+---
+
+## CR-046: Amended Quarterly Returns
+
+**Legal basis:** NIRC Sec. 267; RR 8-2018 Sec. 2(B); BIR FAQs on amended returns
+
+### CR-046.1: Rules for Amending Quarterly Returns
+
+1. **Q1 amendment and election irrevocability:** If the Q1 original return marked 8% rate, the ELECTION is irrevocable. An amended Q1 return CANNOT switch from 8% to graduated or vice versa. The amendment can only correct income amounts, CWT credits, or deductions within the elected regime.
+
+2. **Q1 amendment and deduction method:** Similarly, if Q1 was filed with OSD election (Item 16A), an amendment cannot switch to Itemized. The deduction method election is also irrevocable for the taxable year.
+
+3. **Filing an amended return:**
+   - Mark Item 3 (Amended Return?) = "Yes"
+   - Item 59 (Tax Paid in Return Previously Filed): Enter the amount ACTUALLY PAID on the original return
+   - Compute all items afresh with corrected figures
+   - New tax payable = new tax due − all credits (including Item 59)
+   - If new payable > 0: pay the deficiency + penalties (surcharge + interest from original due date)
+   - If new payable < 0: overpayment — apply for refund or TCC or carry over
+
+4. **Cascading amendments:** If Q1 is amended, the corrected figures MUST cascade to Q2 and Q3 because of the cumulative structure. Q2 and Q3 must also be amended to reflect:
+   - Updated Item 42 (prior quarters NTI) or Item 50 (prior cumulative gross for 8%)
+   - Updated Item 56 (prior quarter payments, which now includes amended Q1 payment)
+
+### CR-046.2: Amendment Cascade Algorithm
+
+```
+function cascade_amendment(
+  amended_quarter: int,                  // 1, 2, or 3
+  prior_year_corrections: YearlyData,    // corrected quarterly data
+  subsequent_quarters: List[int]         // [2,3] if Q1 amended; [3] if Q2 amended
+) -> List[AmendmentRequired]:
+  
+  amendments_needed = []
+  
+  for q in subsequent_quarters:
+    if q > amended_quarter:
+      amendments_needed.append(
+        AmendmentRequired(
+          quarter = q,
+          reason = f"Cascading amendment required: Q{amended_quarter} was amended. "
+                   f"Q{q} Item {42 if graduated else 50} and Item 56 must be updated.",
+          updated_prior_nti = recalculate_prior_nti(prior_year_corrections, up_to_quarter=q-1),
+          updated_prior_payments = recalculate_prior_payments(prior_year_corrections, up_to_quarter=q-1)
+        )
+      )
+  
+  return amendments_needed
+```
+
+---
+
+## CR-047: First-Year / Mid-Year Registrant Quarterly Returns
+
+**Legal basis:** NIRC Sec. 74; RR 11-2018; BIR RMO for new registrants
+
+### CR-047.1: Registration Date and Quarterly Obligations
+
+When a taxpayer registers with the BIR mid-year, their quarterly filing obligations begin from the quarter of registration:
+
+| Registration Date | First 1701Q | First 2551Q (if graduated) |
+|---|---|---|
+| January 1 – March 31 | Q1 (due May 15) | Q1 (due April 25) |
+| April 1 – June 30 | Q2 (due August 15) — this IS the "Q1" for election purposes | Q2 (due July 25) |
+| July 1 – September 30 | Q3 (due November 15) — this IS the "Q1" for election purposes | Q3 (due October 25) |
+| October 1 – December 31 | No quarterly returns for the year; annual only (due April 15) | Q4 2551Q (due January 25 next year) |
+
+**Key rule:** The "first quarterly return" for election purposes is whichever quarter the taxpayer first registers. If registered in April, the Q2 1701Q is the "first" return for the 8% election. The deadline for electing 8% is the due date of that first quarterly return.
+
+### CR-047.2: Mid-Year Registrant First Return Computation
+
+```
+function compute_first_quarter_mid_year_registrant(
+  registration_date:          Date,
+  quarter_of_registration:    int,       // 1, 2, or 3
+  receipts_from_registration: Decimal,   // income from registration date to quarter end
+  regime:                     Enum["GRADUATED_OSD", "GRADUATED_ITEMIZED", "EIGHT_PCT"],
+  is_purely_se:               bool,
+) -> QuarterlyOutput:
+  
+  // For a mid-year registrant, the first quarterly return covers only from registration
+  // date to the end of the quarter (not the full quarter period).
+  // However, the FORM still covers the period January 1 to quarter end in principle.
+  // In practice, the income and deductions are only those from registration date onward.
+  // The prior quarters NTI (Item 42) = ₱0 (no prior returns).
+  
+  // If Q2 registrant filing a "Q2" return:
+  // Item 36 (or 47) = gross receipts from registration date to June 30 (NOT Jan 1)
+  // Item 42 (or 50) = ₱0 (no prior quarterly return in this taxable year)
+  // Item 52 = ₱250,000 if purely SE on 8% (NOTE: this ₱250K is the ANNUAL deduction;
+  //           by claiming it in Q2, the taxpayer effectively deducts from the partial-year income)
+  //           This is correct — the full ₱250K applies even for partial years per BIR practice
+  
+  // IMPORTANT: A mid-year registrant does NOT need to prorate the ₱250K deduction
+  // The ₱250K is a FIXED annual deduction, not pro-rated for registration date.
+  // This means a September registrant with ₱300K gross gets: (₱300K − ₱250K) × 8% = ₱4,000
+  // (Not (₱300K − ₱250K × 3/12) × 8%)
+  
+  // Return the appropriate quarterly computation based on regime
+  if regime == "EIGHT_PCT":
+    return compute_1701Q_eight_percent(
+      quarter = quarter_of_registration,
+      taxable_year = current_year,
+      is_purely_self_employed = is_purely_se,
+      gross_receipts_this_quarter = receipts_from_registration,
+      non_op_income_this_quarter = 0,
+      prior_cumulative_gross = 0,  // No prior returns
+      prior_year_excess_credits = 0,
+      tax_paid_prior_quarters = 0,
+      cwt_claimed_prior_quarters = 0,
+      cwt_new_this_quarter = sum_cwt_since_registration,
+      foreign_tax_credits = 0,
+      other_credits = 0,
+    )
+  else:
+    // Similar for graduated paths with ₱0 prior NTI and ₱0 prior payments
+    ...
+```
+
+### CR-047.3: Short Taxable Year Flag
+
+For a new registrant in Q4 (October–December), they file NO quarterly return; only an annual return is due on April 15. The annual return covers only the registration-date-to-December-31 period.
+
+```
+function requires_quarterly_return(registration_date: Date, quarter: int) -> bool:
+  reg_quarter = get_quarter_for_date(registration_date)  // 1, 2, 3, or 4
+  
+  if reg_quarter == 4:
+    return false  // Q4 registrant: no quarterly returns at all this year
+  elif quarter < reg_quarter:
+    return false  // Quarter before registration: no return
+  elif quarter == 4:
+    return false  // Q4 is covered by annual return (not 1701Q)
+  else:
+    return true   // Quarter during or after registration, and Q1/Q2/Q3
+```
+
+---
+
+## CR-048: Quarterly Return Late Filing Penalties
+
+**Legal basis:** NIRC Secs. 248–249; RA 11976 (EOPT); RR 8-2024
+
+Late filing of a quarterly 1701Q incurs the same three-component penalty as all other BIR returns. The computation uses the tier-based surcharge and interest rates per the EOPT Act:
+
+```
+function compute_quarterly_late_penalty(
+  tax_due_on_return:    Decimal,    // from Item 46 or 54 (cumulative tax due)
+  actual_tax_payable:   Decimal,    // Item 63 (what would be owed after credits)
+  due_date:             Date,       // May 15, Aug 15, or Nov 15
+  payment_date:         Date,       // actual date of filing/payment
+  taxpayer_tier:        Enum["MICRO", "SMALL", "MEDIUM", "LARGE"],
+  is_nil_return:        bool,       // true if tax_due_on_return == ₱0
+) -> PenaltyBreakdown:
+
+  days_late = (payment_date - due_date).days
+  if days_late <= 0:
+    return PenaltyBreakdown { surcharge: 0, interest: 0, compromise: 0, total: 0 }
+  
+  // Surcharge (applies only if tax is actually due)
+  if is_nil_return or actual_tax_payable == 0:
+    surcharge = Decimal("0")
+  else:
+    if taxpayer_tier in ["MICRO", "SMALL"]:
+      surcharge_rate = Decimal("0.10")  // EOPT reduced rate for small taxpayers
+    else:
+      surcharge_rate = Decimal("0.25")  // Standard rate for Medium/Large
+    surcharge = round(actual_tax_payable * surcharge_rate, 2)
+  
+  // Interest (on actual tax payable, from due date to payment date)
+  if is_nil_return or actual_tax_payable == 0:
+    interest = Decimal("0")
+  else:
+    if taxpayer_tier in ["MICRO", "SMALL"]:
+      annual_interest_rate = Decimal("0.06")  // EOPT reduced rate
+    else:
+      annual_interest_rate = Decimal("0.12")  // Standard rate
+    interest = round(actual_tax_payable * annual_interest_rate * (days_late / 365), 2)
+  
+  // Compromise penalty (schedule lookup — RMO 7-2015 as amended by RR 8-2024)
+  compromise = lookup_compromise_penalty(
+    tax_due = actual_tax_payable,
+    is_nil_return = is_nil_return,
+    tier = taxpayer_tier
+  )
+  
+  total_penalty = surcharge + interest + compromise
+  
+  return PenaltyBreakdown {
+    surcharge:  surcharge,
+    interest:   interest,
+    compromise: compromise,
+    total:      total_penalty,
+    computation_basis: f"Tax payable ₱{actual_tax_payable}, {days_late} days late"
+  }
+```
+
+**NIL return late filing:**
+- No surcharge (no tax due)
+- No interest (no tax due)
+- Compromise only: ₱500 (MICRO/SMALL) or ₱1,000 (MEDIUM/LARGE) per RR 8-2024
+
+**Important — cumulative tax vs. incremental payable:**
+The surcharge and interest apply to the INCREMENTAL tax payable on the return (Item 63's positive value), NOT to the full cumulative tax due (Item 46/54). If Item 46 = ₱100,000 but Item 62 (credits) = ₱90,000, then Item 63 = ₱10,000. Penalties apply to ₱10,000, not ₱100,000.

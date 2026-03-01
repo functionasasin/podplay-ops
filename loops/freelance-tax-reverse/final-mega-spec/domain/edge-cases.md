@@ -2321,3 +2321,230 @@ All are from the same taxable year Q2.
 
 **Engine input:** Allow `quarter_covered = "ANNUAL"` as a special value. Treat it as Q4 for quarterly data entry (aggregation only), but flag as annual-issuance for the display warning. The annual crediting still works correctly.
 
+
+---
+
+## Group QF: Quarterly Filing Edge Cases
+
+**Source aspect:** quarterly-filing-rules
+**Legal basis:** NIRC Secs. 74–76; RR 8-2018; BIR Form 1701Q instructions; RA 11976 (EOPT)
+
+---
+
+### EC-QF01: Q1 Filed Without 8% Election — Cannot Retroactively Switch
+
+**Scenario:** A freelancer (₱1.2M projected annual gross) files Q1 Form 1701Q by May 15 but marks "Graduated Rates" (not 8%). In June, they realize they would save ₱38,000+ by using the 8% option.
+
+**Rule:** The deduction method election (OSD vs. Itemized) AND the 8% vs. graduated election are both irrevocable once the first quarterly return for the taxable year is filed. An amended Q1 return cannot change the election.
+
+**Engine behavior:**
+1. Engine detects regime as GRADUATED (from user's Q1 filing data).
+2. Engine computes all three paths for informational display.
+3. Engine shows the tax savings the user WOULD HAVE saved if they had elected 8%.
+4. Engine displays: "⚠️ REGIME LOCKED: Your Q1 return was filed with [Graduated+OSD/Itemized] rates. You cannot switch to the 8% option for this tax year. The 8% rate is available next year if you elect it on your Q1 return by [May 15, next year]."
+5. Engine shows projected annual savings display for next year's planning.
+
+**Resolution:** Pay the higher tax this year. For next year, set a reminder to elect 8% on Q1 1701Q.
+
+**Regulatory basis:** RR 8-2018 Sec. 2(B)(2): "Once signified, the irrevocability rule shall cover the taxable year in which the choice was made."
+
+---
+
+### EC-QF02: Q2 Return After Q1 Showed ₱0 Payable (Overpayment Carried Implicitly)
+
+**Scenario:** In Q1, a freelancer had ₱250,000 gross receipts and CWT of ₱15,000. Q1 8% tax = (₱250,000 − ₱250,000) × 8% = ₱0. Q1 Item 63 = ₱0 − ₱15,000 = −₱15,000 (overpayment). Actual payment Q1 = ₱0.
+
+In Q2, the freelancer earns ₱400,000 more. Does the ₱15,000 Q1 overpayment carry to Q2?
+
+**Rule:** The ₱15,000 Q1 CWT IS carried to Q2 implicitly through the cumulative 8% structure:
+- Q2 Item 47 = ₱400,000 (Q2 receipts)
+- Q2 Item 50 = ₱250,000 (Q1 Item 51)
+- Q2 Item 51 = ₱650,000 (cumulative)
+- Q2 Item 52 = ₱250,000
+- Q2 Item 53 = ₱400,000
+- Q2 Item 54 = ₱32,000 (tax due)
+- Q2 Item 56 = ₱0 (Q1 actual payment was ₱0)
+- Q2 Item 57 = ₱15,000 (Q1 CWT already claimed in Q1)
+- Q2 Item 58 = ₱20,000 (Q2 new CWT, 5% × ₱400K)
+- Q2 Item 62 = ₱35,000
+- Q2 Item 63 = ₱32,000 − ₱35,000 = −₱3,000 (still overpaid, ₱0 due)
+
+**Engine behavior:**
+1. Track CWT per quarter (claimed vs. not yet claimed).
+2. Item 57 = CWT from all prior 2307s ALREADY claimed in prior quarterly returns.
+3. Item 58 = new CWT from current quarter's 2307s.
+4. The CWT is "carried" through Items 57+58, not through Item 56 (which only shows cash payments).
+5. Engine display: "Q2 tax due: ₱0 (your CWT credits exceed your tax due. Overpayment of ₱3,000 will be addressed at annual reconciliation.)"
+
+---
+
+### EC-QF03: All Three Quarterly Returns Show ₱0 Due — Annual Shows Large Balance
+
+**Scenario:** A freelancer has heavy CWT during Q1–Q3 (multiple high-value clients each withholding 5%). Q1, Q2, Q3 all show ₱0 payable. But Q4 has a large contract with NO withholding. Annual gross = ₱3M, total CWT = ₱50,000 (applied only against Q1–Q3), Q4 contract ₱800,000 with no 2307.
+
+**Rule:** The Q4 income is taxable but has no CWT to offset it. At annual:
+- Annual gross = ₱3,000,000 (at the 8% ceiling)
+- Annual IT (8%) = (₱3,000,000 − ₱250,000) × 8% = ₱220,000
+- Total CWT = ₱50,000 (all in Q1–Q3 2307s)
+- Quarterly payments = ₱0 (all three quarters showed ₱0 due)
+- Annual balance = ₱220,000 − ₱50,000 = ₱170,000 due April 15
+
+**Engine behavior:**
+1. Annual computation correctly aggregates all CWT regardless of which quarter it was claimed.
+2. Engine shows warning during Q4 data entry: "You have ₱0 withholding on this Q4 contract. Based on your projected annual income, you will owe approximately ₱[amount] at annual filing on April 15. Consider setting aside [%] of this payment."
+3. Engine shows installment option if balance > ₱2,000.
+
+---
+
+### EC-QF04: Filing Q2 Before Q1 (Missed Q1 Deadline)
+
+**Scenario:** Freelancer missed Q1 1701Q deadline (May 15). Now it is June 20 and they need to file Q1 (late) before filing Q2.
+
+**Rule:** Filing Q2 without first filing Q1 is technically not allowed. The Q2 return requires Item 42 (prior quarter NTI) and Item 56 (Q1 payment), which depend on the Q1 filing. The BIR expects Q1 to be filed first.
+
+**Procedure:**
+1. File Q1 1701Q late — incur penalties: surcharge + interest + compromise (see CR-048).
+2. Then file Q2 1701Q.
+3. On Q2, Item 42 (or Item 50 for 8%) = Q1's NTI/gross as computed.
+4. On Q2, Item 56 = Q1 actual payment made (including any penalty payment).
+5. Note: penalties on Q1 are in Q1's Schedule IV, not carried to Q2.
+
+**Engine behavior:**
+1. If today > Q1 due date and Q1 is not marked as filed: engine flags "Q1 OVERDUE."
+2. Engine computes Q1 penalty automatically.
+3. Engine prompts: "You must file Q1 before Q2. Here is your Q1 return with penalties."
+4. After Q1 is "filed" in the tool (user confirms): Q2 becomes available.
+5. Item 56 on Q2 = Q1 payment (what was actually remitted, post-penalty).
+
+---
+
+### EC-QF05: Regime Election Conflict Between 2551Q and 1701Q
+
+**Scenario:** A confused freelancer files a Q1 Form 2551Q (percentage tax return, paying ₱15,000 = 3% of ₱500,000) AND ALSO marks Item 16 = 8% on their Q1 Form 1701Q.
+
+**Rule:** These are contradictory elections. If 8% is elected on 1701Q, the Form 2551Q should not have been filed (percentage tax is waived). If graduated is elected on 2551Q, it suggests percentage tax obligation (graduated rates, not 8%).
+
+**Resolution per RR 8-2018 and BIR FAQs:**
+- The BIR considers the election on Form 1701Q Item 16 as the binding income tax election.
+- The Form 2551Q filed erroneously can be refunded or carried as tax credit.
+- The ₱15,000 PT payment may be credited against the income tax due on the annual return via the "Other Tax Credits" line (not as CWT, since it's OPT not EWT).
+- BIR may audit the discrepancy.
+
+**Engine behavior:**
+1. Engine prevents this scenario: if 8% is elected, do not show Form 2551Q entry.
+2. If user enters data inconsistently (manually overriding), engine flags: "⚠️ CONFLICT: 8% income tax rate is elected (percentage tax waived) but a Form 2551Q payment was entered. This is inconsistent. Either: (a) you filed 2551Q in error and should request a refund, or (b) your actual election was graduated rates (seek CPA guidance)."
+3. Engine does not include the PT payment in the income tax computation automatically. Requires user confirmation.
+
+---
+
+### EC-QF06: Quarterly Return for a Business With Annual Accounting Period (Fiscal Year)
+
+**Scenario:** A freelancer is registered with a fiscal year ending September 30 (non-calendar year).
+
+**Rule:** Individual taxpayers almost universally use the calendar year (January 1 – December 31). Fiscal year accounting periods are permitted for individuals but very rare. BIR Form 1701Q for a fiscal year taxpayer would use the fiscal year quarters:
+- Q1: October 1 – December 31
+- Q2: January 1 – March 31
+- Q3: April 1 – June 30
+- Annual: July 1 – September 30 (the fiscal year end)
+
+**Engine scope:** This tool is scoped to CALENDAR YEAR taxpayers only. Fiscal year individual taxpayers are flagged as out of scope.
+
+**Engine behavior:**
+1. Engine checks: Is the taxpayer's registered fiscal year a calendar year? If yes: proceed.
+2. If fiscal year is non-calendar (user explicitly indicates): display "⚠️ OUT OF SCOPE: This tool supports calendar-year taxpayers (January 1 – December 31) only. Fiscal-year individual taxpayers have different quarterly deadlines and computation periods. Please consult a CPA for fiscal-year returns."
+3. For 99%+ of target users (freelancers, professionals, sole proprietors), this is never triggered.
+
+---
+
+### EC-QF07: Q3 Return Shows Tax Due But Annual (Q4 Data Added) Shows Overpayment
+
+**Scenario:** Q3 cumulative tax: ₱80,000. Q3 CWT: ₱60,000. Q3 payments: ₱5,000. Q3 tax payable: ₱15,000. Freelancer pays ₱15,000 on November 15.
+
+Then Q4 comes in with a very large client who withheld ₱40,000 via 2307. Annual:
+- Annual IT = ₱90,000
+- Total CWT = ₱60,000 + ₱40,000 = ₱100,000
+- Total quarterly payments = ₱5,000 + ₱15,000 = ₱20,000 (from Q2 and Q3)
+- Annual balance = ₱90,000 − ₱100,000 − ₱20,000 = −₱30,000 (overpayment)
+
+**Rule:** Overpayment at annual is the final reconciliation point. The freelancer elects to:
+- REFUND: file BIR Form 2312/2314 to request cash refund (slow, 2+ years typically)
+- TCC (Tax Credit Certificate): apply overpayment against future tax obligations
+- CARRY OVER: apply against Q1 of next year's 1701Q (fastest, most practical)
+
+**Engine behavior:**
+1. At annual reconciliation, if balance < 0: show overpayment disposition screen.
+2. Display three options with explanation of each (speed, process, pros/cons).
+3. Default recommendation: CARRY OVER (fastest and least friction for most freelancers).
+4. See CR-038 for full disposition algorithm.
+
+---
+
+### EC-QF08: Mid-Year COR Cancellation — How to Handle Remaining Quarterly Returns
+
+**Scenario:** A freelancer registered in BIR since 2022 decides to stop freelancing and deregisters (cancels their COR) effective July 1, 2025. They had filed Q1 and Q2 2025 1701Q returns. Do they file Q3?
+
+**Rule:**
+- The BIR deregistration procedure requires filing a final annual return (Form 1701/1701A) and settling all outstanding obligations.
+- If deregistration is effective July 1, the business period is January 1 – June 30.
+- Q3 (July–September) is outside the business period — no Q3 1701Q required.
+- The "annual" return for the short taxable year covers January 1 – June 30 and is due April 15 of the following year (or earlier per BIR deregistration instructions).
+- Q4 2551Q for July–December: not required (business ceased July 1; no Q3 or Q4 receipts after cessation).
+
+**Engine behavior:**
+1. If user enters cessation date: engine flags remaining quarterly returns as "Not Required (business ceased [date])."
+2. Engine recomputes the annual return as a "short taxable year" return.
+3. Remaining quarterly return deadlines are removed from the deadline tracker.
+4. Engine displays: "Business cessation recorded (July 1, 2025). Q3 1701Q and Q4 2551Q are not required. Your final annual return (covering January 1 – June 30, 2025) is due April 15, 2026."
+
+---
+
+### EC-QF09: Quarterly Return Where Prior Quarter Showed Overpayment That Was NOT Refunded
+
+**Scenario:** Q2 Form 1701Q shows Item 63 = −₱12,000 (overpayment). Actual payment Q2 = ₱0. For Q3, how does the engine handle this?
+
+**Rule:** The quarterly overpayment is NOT a separate credit line on Q3. It is handled through the cumulative structure:
+- Q3 Item 56 = Q2 actual payment = ₱0 (because Q2 actual payment was ₱0)
+- Q3 Item 57 = Q1 CWT + Q2 CWT (CWT already claimed in Q1+Q2)
+- Q3 Item 58 = Q3 new CWT
+- The Q2 "overpayment" does NOT appear as a separate line on Q3
+
+This is correct because the Q2 overpayment already consisted of excess CWT credits that accumulated — and those same CWT amounts are included in Item 57 of Q3. The cumulative tax due (Item 46/54) naturally accounts for the lower-than-expected Q3 balance because:
+- Q3 cumulative tax due (Item 46/54) = total tax for 9 months
+- Item 57 = all CWT claimed in Q1+Q2 (large, because Q2 CWT was large)
+- The math works out without a separate "carry-over" line
+
+**Engine validation invariant:**
+```
+// For any quarter q, the following must hold:
+assert(
+  item_63[q] ==
+  item_46_or_54[q] -
+  (item_55 + item_56 + item_57 + item_58 + item_60 + item_61)
+)
+// And:
+assert(actual_payment[q] == max(0, item_63[q]))
+// NOT:
+// assert(actual_payment[q] == item_63[q])  // WRONG: can be negative
+```
+
+---
+
+### EC-QF10: Quarterly Filing in Year of Transition from 8% to Graduated (Regime Change at Year Boundary)
+
+**Scenario:** A freelancer used the 8% rate in 2024. In 2025, they have large deductible expenses (home office renovation, new computer equipment) and expect their expense ratio to exceed 60% of gross. They want to switch to Graduated+Itemized for 2025.
+
+**Rule:** Regime is re-elected each year. There is no "locked-in" multi-year election. For 2025:
+- The Q1 2025 Form 1701Q marks Graduated+Itemized (NOT 8%).
+- The Q1 2025 Form 2551Q is now required (percentage tax obligation returns).
+- The deduction method election (Itemized) must be consistent throughout 2025.
+- Prior year 2024 taxes are unaffected.
+
+**Engine behavior:**
+1. Engine asks at start of each tax year: "What tax regime did you elect for [year]?"
+2. Options: 8% Rate | Graduated+OSD | Graduated+Itemized
+3. Engine does not carry forward prior year's election — it requires the user to confirm each year.
+4. If user switches from 8% to Graduated, engine shows:
+   - New 2551Q obligation (₱X in percentage tax per quarter)
+   - Whether the switch is beneficial based on entered expenses
+   - Reminder: election must be made on Q1 return by [May 15 deadline]
+5. Transition year has no special computation — just follow the newly elected regime from Q1.
