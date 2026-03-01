@@ -9,9 +9,9 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 24 |
-| Analyzed | 19 |
-| Pending | 5 |
-| Convergence | 79% |
+| Analyzed | 20 |
+| Pending | 4 |
+| Convergence | 83% |
 
 ---
 
@@ -42,7 +42,7 @@
 - [x] `spec-send-reply` — IgDmSendReplyWorkflow: 24h window check, Meta send API, state update, error handling
 - [x] `spec-ce-ig-dm-tools` — 8 context engine MCP tools: list/get/search DM threads, send reply, approve draft, connect/list IG accounts, campaign DM summary
 - [x] `spec-ce-ig-dm-notifications` — Proactive Slack notifications: new inbound DM, 24h window expiring, AI draft ready, creator matched, window expired
-- [ ] `spec-ai-drafting` — 9 Langfuse prompts, ig_dm_reply_examples RAG table, DM context XML, window-reopener prompt
+- [x] `spec-ai-drafting` — 9 Langfuse prompts, ig_dm_reply_examples RAG table, DM context XML, window-reopener prompt
 
 ## Wave 4: Integration, Phasing & Synthesis
 
