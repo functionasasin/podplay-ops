@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 36
-- Analyzed: 31
-- Pending: 5
-- Convergence: 86%
+- Analyzed: 32
+- Pending: 4
+- Convergence: 89%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -44,7 +44,7 @@
 - [x] spec-deadline-tracker — Per-case deadline timeline: BIR 1-year filing deadline, 3-week newspaper publication window, eCAR receipt, RD filing window. Color-coded status (green/yellow/red). Depends: spec-auth-persistence. [Discovered: ph-practice-workflow]
 - [x] spec-timeline-report — Visual settlement timeline (milestone list or Gantt) generated from case facts showing all stages a lawyer can share with clients. Depends: spec-auth-persistence. [Discovered: competitive-landscape]
 - [x] spec-document-checklist — Per-case document checklist (PSA death cert, TCT/CCT, ITR, bank certs) with check-off status tracking. Depends: spec-auth-persistence. [Discovered: competitive-landscape]
-- [ ] spec-estate-tax-inputs-wizard — Detailed multi-tab wizard UI for estate tax inputs: Schedules 1/1A/2/2A/3/4 (assets) + Schedules 5A-5H/6 (deductions) + amnesty/filing flags. Depends: spec-auth-persistence. Reads: estate-tax-integration. [Discovered: estate-tax-integration]
+- [x] spec-estate-tax-inputs-wizard — Detailed multi-tab wizard UI for estate tax inputs: Schedules 1/1A/2/2A/3/4 (assets) + Schedules 5A-5H/6 (deductions) + amnesty/filing flags. Depends: spec-auth-persistence. Reads: estate-tax-integration. [Discovered: estate-tax-integration]
 
 ### Wave 3: Synthesis (depends: ALL Wave 2 complete)
 
