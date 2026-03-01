@@ -65,6 +65,40 @@ PodPlay is a hybrid cloud + on-premises system. See [[PodPlay Asia Infrastructur
 - Migration from V1 is straightforward
 - ~70 live locations currently on V1
 
+### Hardware Installation
+
+Full installation guide: [[PodPlay Hardware Installation Guide]]
+Source: https://gist.github.com/clsandoval/94a2bd5b2aa8c651b2e721e2bb74fdef
+
+**Product Tiers:**
+- **Pro**: Display + kiosk (iPad) + replay camera per court. 3 Cat6 drops + 1 duplex outlet per court.
+- **Autonomous**: Pro + automated door access control (Kisi or UniFi Access) + security cameras per court.
+
+**Per-Court Hardware:**
+- 65" TV display (VESA 400x300) at 8'9" AFF, center court
+- iPad kiosk at 4'8" AFF, center court (PoE powered)
+- Apple TV (HDMI 1 connection)
+- Replay camera: EmpireTech IPC-T54IR-ZE, 16-20' behind baseline at 11' AFF
+- 2x Bluetooth scoring/replay buttons (behind baseline)
+
+**Network Rack (7-12U):**
+- Mac Mini, ISP Modem, Gateway (UDM), Patch Panel, Switch, NVR (Autonomous+), UPS, PDU
+- Requires dedicated 20A circuit
+- Static IP or port 4000 forwarding required
+- Not compatible with Starlink
+
+**Front Desk:**
+- Stripe terminal: BBPOS WisePOS E (Admin PIN: 07139)
+- QR code scanner, webcam
+
+**Internet Requirements:**
+- Fiber recommended (symmetrical). Cable acceptable. 5G backup only.
+- 1-4 courts: 50-100/100 Mbps fiber
+- 5-11 courts: 150/150 Mbps fiber
+- 12-19 courts: 200/200 Mbps fiber
+- 20-24 courts: 300/300 Mbps fiber
+- 25+ courts: 400/400 Mbps fiber
+
 ### Key People (Technical)
 
 | Person | Role |
