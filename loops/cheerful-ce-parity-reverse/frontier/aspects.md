@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total Aspects**: 36
-- **Analyzed**: 28
-- **Pending**: 8
-- **Convergence**: 77.8%
+- **Analyzed**: 29
+- **Pending**: 7
+- **Convergence**: 80.6%
 
 ---
 
@@ -56,7 +56,7 @@ Flesh each tool to exhaustive detail. Verify every parameter, type, and enum aga
 
 Shared schemas, conventions, parity matrix, and completeness audit.
 
-- [ ] **w4-shared-schemas** — Define all shared types used across domains: Campaign, Thread, Creator, EmailMessage, Draft, Workflow, User, Team. Write to `specs/shared-conventions.md`
+- [x] **w4-shared-schemas** — Define all shared types used across domains: Campaign, Thread, Creator, EmailMessage, Draft, Workflow, User, Team. Write to `specs/shared-conventions.md`
 - [ ] **w4-auth-model** — Document the full per-user authentication model as it actually works in the codebase. **CE identity injection**: `RequestContext` created in `entrypoints/slack/handlers.py` with `cheerful_user_id` from hardcoded `SLACK_USER_MAPPING` in `constants.py` → threaded through execution pipeline → every tool calls `_resolve_user_id(request_context)` → `user_id` sent as query param to `/api/service/*` routes. **Frontend**: Supabase Auth login (email/password + Google OAuth), middleware route protection, session cookies. **Backend two-path auth**: JWT validation (`get_current_user`) for webapp requests, `X-Service-Api-Key` (`verify_service_api_key`) for CE/service requests. **Permission tiers**: owner-only (campaign CRUD, launch, integrations), assigned-member (view/edit campaign data via `campaign_member_assignment`), authenticated (own profile/settings). **RLS defense-in-depth**: DB-level row isolation, `SECURITY DEFINER` functions (`is_campaign_owner`, `can_access_campaign`), credential isolation (team members cannot SELECT `user_gmail_account`/`user_smtp_account`). Reference: `tools.py`, `api.py`, `constants.py`, `handlers.py`, `auth-permissions.md` from cheerful-reverse, `auth.py`, `service_auth.py`, `middleware.ts`
 - [ ] **w4-error-conventions** — Standard error handling: error response format, retry logic, how tools surface errors to Claude agent. Common error patterns across all tools
 - [ ] **w4-pagination-conventions** — Standard pagination: limit/offset patterns, default/max values, how paginated results should be presented in Slack threads
