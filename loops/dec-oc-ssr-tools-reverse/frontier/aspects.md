@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 16
-- Analyzed: 2
-- Pending: 14
-- Convergence: 13%
+- Analyzed: 3
+- Pending: 13
+- Convergence: 19%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -12,7 +12,7 @@
 Read the existing Daimon codebase and map what SSR tools need.
 - [x] w1-tool-system — Read mcp/registry.py, catalog.py, understand @tool decorator, ToolDef, ToolError, tool organization
 - [x] w1-reference-tools — Study 2-3 existing tool implementations as reference patterns (signatures, validation, error handling, DB access)
-- [ ] w1-ssr-primitives — Map what tool functions the SSR pipeline requires, how they chain, what shared state they need
+- [x] w1-ssr-primitives — Map what tool functions the SSR pipeline requires, how they chain, what shared state they need
 - [ ] w1-embedding-options — Survey embedding models (cost, latency, quality) for the anchor mapping step, recommend one
 - [ ] w1-supabase-patterns — Read existing migrations for table naming, column patterns, RLS, indexes
 
@@ -36,3 +36,4 @@ Bring everything together into a cohesive implementation spec.
 ## Recently Analyzed
 - [x] w1-tool-system — `@tool` decorator, `ToolDef`, `ToolError`, `ToolRegistry`, `ToolContext`, `DatabaseContext`, `UserContext`, XML output helpers, tool organization, catalog registration pattern. Key finding: need to add `Platform.SSR` to `core/platforms.py`. `anthropic_api_key` already in `ToolContext`.
 - [x] w1-reference-tools — Studied `discord/read.py` (HTTP tools, pagination, error translation, XML formatters), `bluedot/read.py` + `api.py` (DB split-file pattern, session management, not-found errors), `github/tools.py` (credential-gated, subprocess, timeout), `acp/tools.py` (JSON parsing, manual validation). Key finding: SSR must use split-file pattern (`tools.py` + `api.py` + `models.py`). DB check `if db_context is None` at top of every handler. Formatters are private `_fmt_*()` pure functions.
+- [x] w1-ssr-primitives — 5 tools: `ssr_panel_create`, `ssr_panel_run`, `ssr_panel_results`, `ssr_panel_list`, `ssr_panel_delete`. Full internal pipeline decomposed: `create_panel_with_personas` → `_generate_all_personas` → `_generate_single_persona`; `run_ssr_pipeline` → `_run_all_personas` → `_elicit_response` + `_embed_text` + `_score_response`. 6 DB tables mapped. Key decisions: eager persona generation, synchronous blocking execution, asyncio.gather concurrency, haiku model for both steps, softmax-based scoring, discord_id ownership. File structure: `mcp/tools/ssr/{__init__,tools,api,models}.py` + 6 repository files.

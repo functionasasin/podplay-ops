@@ -4,7 +4,7 @@ Implementation-ready specification for adding SSR (Semantic Similarity Rating) c
 
 ## Status
 
-Wave 1: Audit & Map — 2/5 complete
+Wave 1: Audit & Map — 3/5 complete
 Wave 2: Design — 0/7 complete
 Wave 3: Synthesis & Integration — 0/4 complete
 
@@ -18,6 +18,7 @@ Audit of the existing Daimon codebase — patterns a developer must understand b
 |------|--------|----------|
 | [tool-system.md](existing-patterns/tool-system.md) | ✅ Complete | `@tool` decorator, `ToolDef`, `ToolError`, `ToolRegistry`, `ToolContext`, `DatabaseContext`, `UserContext`, registration in `catalog.py`, XML output helpers |
 | [reference-tools.md](existing-patterns/reference-tools.md) | ✅ Complete | Patterns from `discord/read.py`, `bluedot/read.py`+`api.py`, `github/tools.py`, `acp/tools.py` — split-file structure, DB access, formatters, error handling, pagination, credential gates |
+| [ssr-primitives.md](existing-patterns/ssr-primitives.md) | ✅ Complete | 5 tools, full pipeline decomposition (persona gen → elicitation → embed → score → aggregate), 6 DB tables, design decisions (eager personas, sync blocking, asyncio.gather, haiku model, softmax scoring) |
 | [db-patterns.md](existing-patterns/db-patterns.md) | ⬜ Pending | Supabase schema patterns, migrations, RLS, indexes |
 | [embedding-options.md](existing-patterns/embedding-options.md) | ⬜ Pending | Embedding model survey — cost, latency, quality |
 
@@ -29,10 +30,10 @@ MCP-compatible tool definitions for the SSR panel tools.
 
 | File | Status | Contents |
 |------|--------|----------|
-| [panel-create.md](tools/panel-create.md) | ⬜ Pending | `panel_create` tool — full spec |
-| [panel-run.md](tools/panel-run.md) | ⬜ Pending | `panel_run` tool — full spec |
-| [panel-results.md](tools/panel-results.md) | ⬜ Pending | `panel_results` tool — full spec |
-| [panel-manage.md](tools/panel-manage.md) | ⬜ Pending | `panel_list`, `panel_delete` tools |
+| [panel-create.md](tools/panel-create.md) | 🔶 Stub | `ssr_panel_create` — call chain, design decisions, Wave 2 checklist |
+| [panel-run.md](tools/panel-run.md) | 🔶 Stub | `ssr_panel_run` — full pipeline call chain, scoring algorithm outline, Wave 2 checklist |
+| [panel-results.md](tools/panel-results.md) | 🔶 Stub | `ssr_panel_results` — retrieval + comparison call chain, Wave 2 checklist |
+| [panel-manage.md](tools/panel-manage.md) | 🔶 Stub | `ssr_panel_list`, `ssr_panel_delete` — call chains, design notes, Wave 2 checklists |
 
 ---
 
