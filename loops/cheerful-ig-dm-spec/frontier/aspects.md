@@ -9,9 +9,9 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 24 |
-| Analyzed | 20 |
-| Pending | 4 |
-| Convergence | 83% |
+| Analyzed | 21 |
+| Pending | 3 |
+| Convergence | 87% |
 
 ---
 
@@ -46,7 +46,7 @@
 
 ## Wave 4: Integration, Phasing & Synthesis
 
-- [ ] `spec-phase-plan` — 3-4 shippable phases (backend infra → backend features → CE tools → polish): exact file lists, acceptance criteria, effort estimates
+- [x] `spec-phase-plan` — 3-4 shippable phases (backend infra → backend features → CE tools → polish): exact file lists, acceptance criteria, effort estimates
 - [ ] `spec-test-plan` — Unit/integration/E2E test strategy, webhook simulator, CE tool tests, test data factories, exact test file paths
 - [ ] `spec-migration-safety` — Backward compat, CHECK expansion safety, feature flag gating, rollback SQL, zero-downtime plan
 - [ ] `synthesis-implementation-spec` — Master handoff doc: TOC, architecture diagram (Meta → webhook → Temporal → DB → API → CE/Slack), file manifest by phase, env vars, Meta app checklist
