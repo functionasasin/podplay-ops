@@ -253,6 +253,24 @@ Classification rules: Existing taxpayers (registered before 2023) classified by 
   - Large: ₱1,000,000,000 and above
   - Classification determines penalty rates (Sec. 248), interest rates (Sec. 249), and compliance simplifications
 
+### 2.11 RR No. 16-2023 (December 27, 2023)
+- **Title:** Imposing Withholding Tax on Gross Remittances by E-Marketplace Operators and Digital Financial Services Providers (DFSPs) to Sellers/Merchants
+- **Effective:** January 11, 2024 (15 days after publication)
+- **Amends:** RR No. 2-98 (adds new creditable withholding tax category)
+- **Key provisions:**
+  - Imposes **1% creditable withholding tax on one-half (½) of gross remittances** by e-marketplace operators and DFSPs to sellers/merchants for goods and services sold through the platform
+  - **Effective rate: 0.5% of gross remittances** (1% applied to ½ the base)
+  - **ATC codes:** WI760 (individual sellers), WC760 (corporate sellers)
+  - **Threshold:** Withholding is EXEMPT if seller's combined annual gross remittances from ALL platforms/DFSPs do not exceed **₱500,000**
+  - **Sworn Declaration (SD):** Sellers claiming exemption must submit BIR-received SD by January 20 of each year; failure to submit = automatic withholding regardless of income level
+  - **Multi-channel rule:** When payment passes through multiple intermediaries, the **last facility** with control before final remittance to seller is the withholding agent
+  - **Gross remittance exclusions:** sales returns/discounts, shipping fees, VAT, platform service/usage fees
+  - **Withholding agent filing:** BIR Form 0619-E (months 1 and 2 of quarter) + BIR Form 1601-EQ (month 3 of quarter)
+  - **Certificate issuance:** Platforms issue BIR Form 2307 (WI760) to sellers within 20 days after end of each quarter
+  - **Seller registration:** Platforms PROHIBITED from allowing unregistered sellers; must collect BIR Form 2303 (Certificate of Registration) from all sellers
+  - **DFSPs covered:** includes Payoneer, PayPal, GCash, Maya, PayMongo, Xendit, and similar payment and money transmission service providers
+- **Full source:** See [rr-16-2023-emarketplace.md](../../../input/sources/rr-16-2023-emarketplace.md)
+
 ---
 
 ## 3. Revenue Memorandum Orders
@@ -329,6 +347,19 @@ Classification rules: Existing taxpayers (registered before 2023) classified by 
   - Updated registration procedures for self-employed individuals under EOPT
   - Online sellers (e-commerce) registration requirements
   - Invoice issuance requirements for digital/online transactions
+
+### 4.8 RMC No. 8-2024 (January 15, 2024)
+- **Title:** Prescribing the Timelines and Implementing Procedures for RR No. 16-2023 (E-Marketplace and DFSP Withholding)
+- **Key provisions:**
+  - Provided 90-day grace period from January 15, 2024 for platforms to achieve compliance (deadline: April 14, 2024)
+  - Prescribed format of Sworn Declaration (Annex "A") for sellers claiming ₱500,000 threshold exemption
+  - Confirms the three triggers for withholding obligation:
+    1. SD received from seller showing combined gross remittances exceeded ₱500,000
+    2. Seller fails to submit SD within prescribed period
+    3. Platform determines its own remittances to the seller have exceeded ₱500,000
+  - Confirms ATC codes WI760 (individual) and WC760 (corporate)
+  - Specifies that sellers may not receive payments through personal (non-business) accounts
+  - Mandates that platforms verify BIR Certificate of Registration (Form 2303) for all sellers
 
 ---
 

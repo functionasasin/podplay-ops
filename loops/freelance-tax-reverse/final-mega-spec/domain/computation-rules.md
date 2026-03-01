@@ -764,11 +764,206 @@ total_due  = 500_000 + 125_000 + 14,794.52 = ₱639,794.52
 
 ---
 
+---
+
+## CR-019: E-Marketplace & DFSP Creditable Withholding Tax (RR 16-2023)
+
+**Legal basis:** BIR Revenue Regulations No. 16-2023 (December 27, 2023); RMC No. 8-2024 (January 15, 2024)
+**Effective:** January 11, 2024
+**Relevance:** Affects freelancers receiving payments via Payoneer, PayPal, GCash, Maya, Shopee, Lazada, Upwork, Fiverr, and other e-marketplace or DFSP platforms
+
+### 19.1 Withholding Rate Formula
+
+```
+# Withholding applied by the platform (Payoneer, GCash, Maya, etc.)
+taxable_base_for_withholding = gross_remittance_from_platform * 0.50
+platform_cwt_amount          = taxable_base_for_withholding * 0.01
+                             = gross_remittance_from_platform * 0.005
+
+# Effective rate: 0.5% of gross remittances (NOT 1%)
+# This is because 1% applies only to half the gross remittance
+```
+
+**ATC Code:** WI760 (for individual sellers); appears on BIR Form 2307 issued by platform
+
+### 19.2 Gross Remittance Definition
+
+```
+gross_remittance = total_amount_remitted_to_seller_by_platform
+                   EXCLUDING:
+                   - sales_returns_and_discounts
+                   - shipping_fees
+                   - VAT
+                   - platform_service_fees_charged_to_seller
+```
+
+**For Upwork→Payoneer freelancers:**
+```
+contract_amount             = amount client pays on Upwork
+upwork_service_fee          = contract_amount * upwork_fee_rate  # 20%, 10%, or 5%
+gross_remittance_to_payoneer = contract_amount - upwork_service_fee
+platform_cwt_amount          = gross_remittance_to_payoneer * 0.005
+```
+
+### 19.3 Threshold: ₱500,000 Combined Annual
+
+```
+# Withholding does NOT apply if:
+total_combined_gross_remittances_all_platforms < 500_000
+  AND seller has submitted valid Sworn Declaration by January 20
+
+# Withholding DOES apply when any of:
+condition_1 = (seller submits SD acknowledging combined total > 500_000)
+condition_2 = (seller FAILS to submit SD by January 20)
+condition_3 = (single platform's cumulative remittances to seller > 500_000)
+
+# When triggered mid-year (condition_3):
+#   Withholding applies from the transaction that CAUSES the breach
+#   NOT retroactive to January 1
+#   Transactions below threshold: no withholding
+#   Transactions from breach point onward: withholding applies
+```
+
+**The ₱500,000 threshold is COMBINED across all e-marketplace and DFSP platforms.** If a freelancer earns ₱300,000 via Payoneer and ₱250,000 via GCash (total ₱550,000), they cannot claim the exemption even though neither platform alone exceeded ₱500,000.
+
+### 19.4 Multi-Channel Rule
+
+```
+# Payment chain: Platform A → Payment Intermediary B → Freelancer's Bank
+# Withholding responsibility: LAST facility before final remittance to freelancer
+
+# Typical Philippine freelancer flow:
+# Upwork (payer) → Payoneer (DFSP, last facility) → BDO/BPI (bank, pass-through)
+# Result: Payoneer is the withholding agent
+
+# Upwork → GCash (DFSP, last facility) → Freelancer's GCash wallet
+# Result: GCash is the withholding agent
+```
+
+### 19.5 How the CWT Credit Flows to the Annual ITR
+
+```
+# Step 1: Collect all BIR Form 2307 (WI760) from all platforms for the year
+cwt_from_payoneer   = 2307_payoneer.tax_withheld  # example: ₱7,500
+cwt_from_gcash      = 2307_gcash.tax_withheld      # example: ₱2,000
+cwt_from_clients    = SUM(all_client_2307s)        # professional fee withholding (WI/WC010, WI/WC011, etc.)
+
+total_cwt_credits   = cwt_from_payoneer + cwt_from_gcash + cwt_from_clients
+
+# Step 2: Apply credits against income tax due from regime computation
+income_tax_due      = result of Path A, B, or C computation
+balance_payable     = MAX(0, income_tax_due - total_cwt_credits)
+refundable_excess   = MAX(0, total_cwt_credits - income_tax_due)
+
+# Note: refundable excess may be carried forward or claimed as refund
+```
+
+### 19.6 Interaction with Regime Optimization
+
+The RR 16-2023 CWT does NOT change the regime comparison math. The income tax amounts for Paths A, B, and C are computed WITHOUT considering CWT credits. CWT credits reduce the **balance payable at filing** but do NOT affect which regime produces the lowest tax liability.
+
+However, for **cash flow planning**, the tool should display:
+```
+for each path [A, B, C]:
+  income_tax_due            = path.tax_due
+  less_cwt_from_platforms   = total_platform_cwt_credits
+  less_cwt_from_clients     = total_client_cwt_credits
+  less_quarterly_payments   = total_1701q_payments
+  balance_payable_at_filing = income_tax_due - cwt_from_platforms - cwt_from_clients - quarterly_payments
+```
+
+### 19.7 Worked Examples
+
+**Example A: High-volume Payoneer freelancer (above threshold)**
+```
+Gross receipts from Upwork (all via Payoneer): ₱1,200,000
+Upwork service fee (10% rate): ₱120,000
+Net remitted by Payoneer to freelancer: ₱1,080,000
+
+# Platform CWT (RR 16-2023):
+taxable_base = ₱1,080,000 × 0.50 = ₱540,000
+CWT_payoneer = ₱540,000 × 0.01   = ₱5,400
+Effective rate: ₱5,400 / ₱1,200,000 = 0.45% of contract gross
+
+# On Form 2307 (WI760) from Payoneer:
+Income Payment: ₱540,000
+Tax Withheld: ₱5,400
+
+# Regime 8% (elected, threshold check: ₱1,200,000 ≤ ₱3,000,000 ✓)
+Income tax due = (₱1,200,000 - ₱250,000) × 0.08 = ₱76,000
+Less CWT (Payoneer WI760): ₱5,400
+Balance payable at annual filing: ₱76,000 - ₱5,400 = ₱70,600
+```
+
+**Example B: Below-threshold freelancer (no withholding)**
+```
+Gross receipts from client via Payoneer: ₱400,000/year
+Annual combined gross from all platforms: ₱400,000 < ₱500,000
+
+# Freelancer submits Sworn Declaration by January 20
+# Payoneer does NOT withhold
+CWT_payoneer = ₱0
+
+# Regime 8%:
+Income tax due = (₱400,000 - ₱250,000) × 0.08 = ₱12,000
+Less CWT: ₱0
+Balance payable: ₱12,000
+```
+
+**Example C: Threshold breached mid-year**
+```
+Payoneer remittances Jan-Sep: ₱480,000 (below ₱500K — no withholding yet)
+Payoneer remittance October: ₱80,000 (cumulative = ₱560,000 — threshold breached)
+
+# Withholding starts from the October transaction:
+# October breach amount (₱80,000) treated as: below-threshold portion ₱20,000 (₱500K - ₱480K) + above-threshold ₱60,000
+# Conservative engine approach: apply withholding to full October amount
+CWT_October = ₱80,000 × 0.005 = ₱400
+
+Payoneer remittances Nov-Dec: ₱150,000
+CWT_Nov_Dec = ₱150,000 × 0.005 = ₱750
+
+Total CWT for year from Payoneer = ₱400 + ₱750 = ₱1,150
+# (or ₱60,000 × 0.005 = ₱300 for the strict above-threshold amount in October, + ₱750 = ₱1,050)
+# For simplicity, engine uses total platform remittances where threshold confirmed exceeded × 0.005
+```
+
+### 19.8 Engine Input for RR 16-2023 CWT
+
+The engine requires the following inputs from the user:
+
+```
+# User inputs (RR 16-2023 section of the wizard):
+receives_platform_payments: boolean
+  # True if user receives payments via Payoneer, GCash, Maya, Shopee, Lazada, etc.
+
+platform_cwt_received: [
+  {
+    platform_name: string,      # "Payoneer", "GCash", "Maya", "Shopee", etc.
+    form_2307_atc: "WI760",    # confirmed from 2307 certificate
+    income_payment: decimal,    # ½ of gross remittance (from 2307 box)
+    tax_withheld: decimal,      # from 2307 box
+    quarter: Q1 | Q2 | Q3 | Q4
+  }
+]
+
+# Engine computes:
+total_platform_cwt = SUM(item.tax_withheld for item in platform_cwt_received)
+```
+
+The tool must also allow users to enter the 2307 total as a single aggregate (for users who don't track per-quarter breakdowns):
+```
+aggregate_platform_cwt_for_year: decimal  # sum of all WI760 2307s for the year
+```
+
+---
+
 ## Cross-References
 
 - For lookup tables: See [lookup-tables/](lookup-tables/)
   - [lookup-tables/taxpayer-classification-tiers.md](lookup-tables/taxpayer-classification-tiers.md) — complete tier table with all implications
 - For decision trees covering regime selection: See [decision-trees.md](decision-trees.md) (PENDING)
-- For edge cases (mid-year threshold crossing, first-year filers, tier boundaries, etc.): See [edge-cases.md](edge-cases.md)
+- For edge cases (mid-year threshold crossing, first-year filers, tier boundaries, e-marketplace withholding): See [edge-cases.md](edge-cases.md)
 - For test vectors validating these computations: See [../engine/test-vectors/basic.md](../engine/test-vectors/basic.md) (PENDING)
 - For full legal text behind each rule: See [legal-basis.md](legal-basis.md)
+- For RR 16-2023 source material: See [../../../input/sources/rr-16-2023-emarketplace.md](../../../input/sources/rr-16-2023-emarketplace.md)

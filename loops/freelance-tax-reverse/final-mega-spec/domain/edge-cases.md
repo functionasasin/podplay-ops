@@ -170,4 +170,155 @@ interest_rate_if_late = 0.06               // SMALL → 6%/yr (same as MICRO)
 
 ---
 
-*Additional edge cases to be added in Wave 2 edge-cases aspect (EC-E: eligibility edge cases, EC-M: mixed income edge cases, EC-Q: quarterly filing edge cases, EC-C: CWT edge cases, EC-F: filing form edge cases)*
+---
+
+## Group EC-EM: E-Marketplace & DFSP Withholding Edge Cases (RR 16-2023)
+
+**Legal basis:** RR No. 16-2023 (December 27, 2023); RMC No. 8-2024 (January 15, 2024)
+
+### EC-EM01: Freelancer Below ₱500,000 Threshold — No Sworn Declaration Submitted
+**Scenario:** A freelancer earns ₱350,000 via Payoneer in the year. They do not know about the Sworn Declaration requirement and fail to submit it by January 20.
+
+**What happens:**
+- Payoneer is legally obligated to withhold (trigger 2: failure to submit SD)
+- CWT amount: ₱350,000 × 0.005 = ₱1,750 withheld (even though below threshold)
+- Freelancer receives ₱348,250 net from Payoneer
+- Payoneer issues 2307 (WI760) showing income payment ₱175,000, tax withheld ₱1,750
+
+**Engine behavior:**
+- If user reports receiving a 2307 from Payoneer with WI760 ATC: accept and credit ₱1,750 against tax due
+- Warn user: "You may have had ₱1,750 withheld unnecessarily. If your combined annual gross remittances from ALL platforms were below ₱500,000, you were eligible to submit a Sworn Declaration to avoid this withholding. The withheld amount still offsets your income tax."
+- Engine cannot reverse the withheld amount — user must claim it as CWT credit
+
+**Resolution:** No adjustment to computation. Credit the 2307 amount as normal CWT.
+
+---
+
+### EC-EM02: Multiple Platforms — Combined Total Exceeds ₱500,000 But No Single Platform Does
+**Scenario:** A freelancer earns:
+- Via Payoneer (from Upwork): ₱280,000
+- Via GCash (from local clients): ₱260,000
+- Combined: ₱540,000
+
+Freelancer submits a Sworn Declaration to both platforms claiming "my total from all platforms is below ₱500,000" (which is false).
+
+**What happens:**
+- The SD is a false declaration — this is a criminal tax fraud offense
+- If neither platform independently tracks across all DFSPs, they may not withhold (each platform sees only its own ₱280K or ₱260K)
+- The freelancer still owes income tax on ₱540,000; the withholding is merely a collection mechanism
+- BIR cross-matching of 2307s from both platforms will reveal the true combined amount
+
+**Engine behavior:**
+- Engine asks: "What are your combined gross remittances from ALL e-marketplace and DFSP platforms?"
+- If user enters ₱540,000 combined (honest): engine flags that they were NOT eligible for exemption
+- Engine cannot validate whether user actually submitted a false SD; it computes based on actual income declared
+- If user declares ₱540,000 income, the income tax computation is on ₱540,000 regardless of whether platforms withheld
+
+**Resolution:** Engine computes income tax on declared income. If user enters 2307s showing ₱0 CWT (because platforms didn't withhold), no CWT credit is applied. If platforms did withhold, credit is applied.
+
+---
+
+### EC-EM03: Upwork→Payoneer→GCash Chain — Who Withholds?
+**Scenario:** Freelancer receives payment: Upwork (collects from client) → Payoneer (USD wallet) → GCash (PHP conversion and final credit).
+
+**What happens:**
+- Upwork is NOT the withholding agent (it is upstream; Payoneer is the last facility controlling payment before remittance)
+- Payoneer is the intermediate DFSP, but if it remits to GCash rather than directly to the freelancer's bank:
+  - If Payoneer → GCash → Freelancer: GCash may be the "last facility" (the one that credits the freelancer's account)
+  - Practical reality (as of 2024-2026): Payoneer typically settles in the freelancer's bank account directly (not via GCash). GCash-Payoneer transfers go through bank intermediaries.
+  - The platform actually converting and sending final funds to the freelancer is the withholding agent.
+
+**Engine behavior:**
+- Engine does not need to resolve the Payoneer vs. GCash determination
+- Engine asks: "Did you receive a BIR Form 2307 from Payoneer, GCash, Maya, or any other platform for ATC WI760?"
+- Whatever 2307s the user actually received: credit those amounts
+- If the user received no 2307 despite having income above ₱500K: flag as potential compliance issue (platform may not have been BIR-compliant yet) but still compute income tax normally
+
+**Resolution:** Credit whatever 2307s the user presents. Engine does not adjudicate which platform was legally required to withhold.
+
+---
+
+### EC-EM04: Platform CWT Exceeds Income Tax Due — Refundable Excess
+**Scenario:** A freelancer has low taxable income (near ₱250K threshold) but received substantial CWT from platforms:
+- Gross receipts: ₱400,000
+- Income tax under 8%: (₱400,000 − ₱250,000) × 0.08 = ₱12,000
+- Platform CWT (from ₱400,000 via Payoneer): ₱400,000 × 0.005 = ₱2,000
+- Professional fee CWT from clients (5% on some contracts): ₱8,000
+- Total CWT: ₱10,000
+- Balance payable: ₱12,000 − ₱10,000 = ₱2,000 (still payable)
+
+**Alternative scenario with excess:**
+- Gross receipts: ₱300,000
+- Income tax under 8%: (₱300,000 − ₱250,000) × 0.08 = ₱4,000
+- Platform CWT: ₱300,000 × 0.005 = ₱1,500
+- Professional fee CWT: ₱5,000
+- Total CWT: ₱6,500
+- Excess CWT: ₱6,500 − ₱4,000 = ₱2,500 refundable
+
+**Engine behavior:**
+```
+balance_payable = MAX(0, income_tax_due - total_cwt_credits)
+cwt_excess      = MAX(0, total_cwt_credits - income_tax_due)
+
+if cwt_excess > 0:
+  display: "You have ₱{cwt_excess} in excess CWT credits. This may be:
+            (a) Applied as tax credit to next year's income tax return, OR
+            (b) Claimed as refund (BIR Form 1914 refund application)"
+  flag: MANUAL_REVIEW_CWT_EXCESS
+```
+
+**Resolution:** Engine computes and displays excess CWT. Notifies user of options (carry-forward or refund claim). Refund application itself is out of scope for the tool.
+
+---
+
+### EC-EM05: Platform Issues 2307 With Incorrect ATC — WI160 vs. WI760
+**Scenario:** A platform issues a 2307 with ATC WI160 (which is the general EWT code for professional fees, not the e-marketplace code) instead of WI760.
+
+**What happens:**
+- This is a platform compliance error
+- The 2307 amount is still a valid creditable withholding tax regardless of the ATC code
+- BIR cross-matching may flag a discrepancy, but the freelancer's credit is still valid
+
+**Engine behavior:**
+- Engine accepts 2307 entries regardless of ATC code (user enters total CWT amount)
+- Engine does NOT validate ATC codes on 2307s (out of scope)
+- For the optimizer, any creditable withholding tax from 2307 reduces the balance payable
+
+**Resolution:** Engine accepts and credits the amount. No special handling needed beyond the general CWT credit computation.
+
+---
+
+### EC-EM06: Freelancer Not Registered With BIR — Cannot Use Payoneer
+**Scenario:** Under RR 16-2023, platforms are PROHIBITED from allowing unregistered sellers. A freelancer who uses Payoneer/GCash must have their BIR Certificate of Registration (Form 2303) submitted to the platform.
+
+**What happens:**
+- Technically, if a freelancer is using Payoneer without submitting Form 2303, both the freelancer and Payoneer are in violation of RR 16-2023
+- BIR enforcement is actively targeting unregistered online freelancers
+
+**Engine behavior:**
+- Engine is NOT a registration tool; it computes tax for people who ARE already filing
+- If the user is not BIR-registered, the engine should display a pre-computation notice: "To use this tool and to legally receive payments via Payoneer, GCash, or similar platforms, you must first register with BIR (Form 1901). Penalty for late registration: ₱1,000 compromise penalty. Click here to learn how to register."
+- Engine proceeds with computation if user indicates they will register (tool helps them understand their tax obligation)
+
+**Resolution:** Registration prompt displayed. Computation proceeds normally if user confirms or ignores the notice.
+
+---
+
+### EC-EM07: Annual vs. Quarterly 2307 Timing — Platform Issues Annual 2307
+**Scenario:** Some platforms may issue a single annual 2307 instead of quarterly 2307s. The BIR rules require quarterly issuance within 20 days after each quarter end.
+
+**What happens:**
+- For the ANNUAL ITR computation: whether quarterly or annual 2307, the total CWT for the year is the same
+- For QUARTERLY 1701Q computation: if the user doesn't have quarterly 2307s, they cannot properly credit CWT on 1701Q
+
+**Engine behavior:**
+- Engine asks for CWT breakdown by quarter when computing quarterly payments
+- If user only has annual total (from one 2307): engine distributes proportionally or allows user to allocate quarterly amounts manually
+- For annual ITR computation: total annual CWT is entered regardless of quarter breakdown
+- Flag: "Your platform should issue BIR Form 2307 within 20 days after each quarter end. If you're only receiving an annual certificate, request quarterly certificates from your platform."
+
+**Resolution:** For annual computation, accept total annual 2307 amount. For quarterly computation, if no quarterly breakdown available, allow user to enter estimate or distribute evenly across quarters.
+
+---
+
+*Additional edge cases to be added in Wave 2 edge-cases aspect (EC-E: eligibility edge cases, EC-M: mixed income edge cases, EC-Q: quarterly filing edge cases, EC-C: CWT edge cases from professional fee withholding, EC-F: filing form edge cases)*
