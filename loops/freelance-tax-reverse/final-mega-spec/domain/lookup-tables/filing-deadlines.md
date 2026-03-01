@@ -59,7 +59,16 @@ function adjusted_due_date(base_date: Date) -> Date:
 
 **Note on movable holidays:** Eid al-Fitr and Eid al-Adha dates are proclaimed annually by the President. The engine must use the proclaimed date for the relevant year. If the proclaimed date is not yet available (e.g., computing for a future year), the engine should display: "Deadline: November 15, [YEAR] (subject to adjustment for public holidays — verify proclamation before filing)."
 
-### 1.3 2026 Quarterly 1701Q Filing Dates
+### 1.3 2027 Quarterly 1701Q Filing Dates
+
+| Quarter | Standard Due Date | Day of Week | Adjusted Due Date | Note |
+|---|---|---|---|---|
+| Q1 2027 | May 15, 2027 | Saturday | May 17, 2027 | Moves to Monday |
+| Q2 2027 | August 15, 2027 | Sunday | August 16, 2027 | Moves to Monday |
+| Q3 2027 | November 15, 2027 | Monday | November 15, 2027 | No adjustment |
+| Annual 2026 (due 2027) | April 15, 2027 | Thursday | April 15, 2027 | No adjustment |
+
+### 1.5 2026 Quarterly 1701Q Filing Dates
 
 | Quarter | Standard Due Date | Day of Week | Adjusted Due Date | Note |
 |---|---|---|---|---|
@@ -68,7 +77,7 @@ function adjusted_due_date(base_date: Date) -> Date:
 | Q3 2026 | November 15, 2026 | Sunday | November 16, 2026 | Moves to Monday |
 | Annual 2025 (due 2026) | April 15, 2026 | Wednesday | April 15, 2026 | No adjustment |
 
-### 1.4 2025 Quarterly 1701Q Filing Dates
+### 1.6 2025 Quarterly 1701Q Filing Dates
 
 | Quarter | Standard Due Date | Day of Week | Adjusted Due Date | Note |
 |---|---|---|---|---|
@@ -77,7 +86,7 @@ function adjusted_due_date(base_date: Date) -> Date:
 | Q3 2025 | November 15, 2025 | Saturday | November 17, 2025 | Moves to Monday |
 | Annual 2024 (due 2025) | April 15, 2025 | Tuesday | April 15, 2025 | No adjustment |
 
-### 1.5 2024 Quarterly 1701Q Filing Dates
+### 1.7 2024 Quarterly 1701Q Filing Dates
 
 | Quarter | Standard Due Date | Day of Week | Adjusted Due Date | Note |
 |---|---|---|---|---|
@@ -120,6 +129,24 @@ function adjusted_due_date(base_date: Date) -> Date:
 | Q2 2025 | July 25, 2025 | Friday | July 25, 2025 |
 | Q3 2025 | October 25, 2025 | Saturday | October 27, 2025 |
 | Q4 2025 | January 25, 2026 | Sunday | January 26, 2026 |
+
+### 2.4 2024 Quarterly 2551Q Filing Dates
+
+| Quarter | Standard Due Date | Day of Week | Adjusted Due Date | Note |
+|---|---|---|---|---|
+| Q1 2024 | April 25, 2024 | Thursday | April 25, 2024 | No adjustment |
+| Q2 2024 | July 25, 2024 | Thursday | July 25, 2024 | No adjustment |
+| Q3 2024 | October 25, 2024 | Friday | October 25, 2024 | No adjustment |
+| Q4 2024 | January 25, 2025 | Saturday | January 27, 2025 | Moves to Monday |
+
+### 2.5 2027 Quarterly 2551Q Filing Dates
+
+| Quarter | Standard Due Date | Day of Week | Adjusted Due Date | Note |
+|---|---|---|---|---|
+| Q1 2027 | April 25, 2027 | Sunday | April 26, 2027 | Moves to Monday |
+| Q2 2027 | July 25, 2027 | Sunday | July 26, 2027 | Moves to Monday |
+| Q3 2027 | October 25, 2027 | Monday | October 25, 2027 | No adjustment |
+| Q4 2027 | January 25, 2028 | Tuesday | January 25, 2028 | No adjustment |
 
 ---
 
@@ -469,6 +496,233 @@ Large taxpayers enrolled in the BIR's Electronic Filing and Payment System (eFPS
 
 ---
 
+## Part 10: VAT Form 2550Q Quarterly Deadline Specifications
+
+**Applies to:** VAT-registered taxpayers (annual gross sales/receipts exceeding ₱3,000,000, or voluntarily VAT-registered). Does NOT apply to percentage tax (non-VAT) filers or 8% rate taxpayers.
+
+**Legal basis:** NIRC Section 114(A) as amended by TRAIN Law (RA 10963): "filed not later than the twenty-fifth (25th) day following the close of each taxable quarter." Monthly VAT return (Form 2550M) abolished effective January 1, 2023 (RR 13-2018).
+
+### 10.1 Standard Filing Deadlines
+
+| Quarter | Period Covered | Due Date | BIR Form |
+|---|---|---|---|
+| Q1 | January 1 – March 31 | April 25 of current year | 2550Q |
+| Q2 | April 1 – June 30 | July 25 of current year | 2550Q |
+| Q3 | July 1 – September 30 | October 25 of current year | 2550Q |
+| Q4 | October 1 – December 31 | January 25 of FOLLOWING year | 2550Q |
+
+**Identical pattern to 2551Q:** The 2550Q deadlines use the same 25th-day-after-quarter-end rule as Form 2551Q. The same holiday/weekend adjustment function applies (see Part 1.2).
+
+### 10.2 2027 VAT Form 2550Q Filing Dates
+
+| Quarter | Standard Due Date | Day of Week | Adjusted Due Date | Note |
+|---|---|---|---|---|
+| Q1 2027 | April 25, 2027 | Sunday | April 26, 2027 | Moves to Monday |
+| Q2 2027 | July 25, 2027 | Sunday | July 26, 2027 | Moves to Monday |
+| Q3 2027 | October 25, 2027 | Monday | October 25, 2027 | No adjustment |
+| Q4 2027 | January 25, 2028 | Tuesday | January 25, 2028 | No adjustment |
+
+### 10.3 2026 VAT Form 2550Q Filing Dates
+
+| Quarter | Standard Due Date | Day of Week | Adjusted Due Date | Note |
+|---|---|---|---|---|
+| Q1 2026 | April 25, 2026 | Saturday | April 27, 2026 | Moves to Monday |
+| Q2 2026 | July 25, 2026 | Saturday | July 27, 2026 | Moves to Monday |
+| Q3 2026 | October 25, 2026 | Sunday | October 26, 2026 | Moves to Monday |
+| Q4 2026 | January 25, 2027 | Monday | January 25, 2027 | No adjustment |
+
+### 10.4 2025 VAT Form 2550Q Filing Dates
+
+| Quarter | Standard Due Date | Day of Week | Adjusted Due Date | Note |
+|---|---|---|---|---|
+| Q1 2025 | April 25, 2025 | Friday | April 25, 2025 | No adjustment |
+| Q2 2025 | July 25, 2025 | Friday | July 25, 2025 | No adjustment |
+| Q3 2025 | October 25, 2025 | Saturday | October 27, 2025 | Moves to Monday |
+| Q4 2025 | January 25, 2026 | Sunday | January 26, 2026 | Moves to Monday |
+
+### 10.5 2024 VAT Form 2550Q Filing Dates
+
+| Quarter | Standard Due Date | Day of Week | Adjusted Due Date | Note |
+|---|---|---|---|---|
+| Q1 2024 | April 25, 2024 | Thursday | April 25, 2024 | No adjustment |
+| Q2 2024 | July 25, 2024 | Thursday | July 25, 2024 | No adjustment |
+| Q3 2024 | October 25, 2024 | Friday | October 25, 2024 | No adjustment |
+| Q4 2024 | January 25, 2025 | Saturday | January 27, 2025 | Moves to Monday |
+
+### 10.6 VAT 2550Q vs OPT 2551Q Side-by-Side
+
+The engine must route VAT-registered taxpayers to 2550Q and non-VAT taxpayers to 2551Q (or neither if 8% elected). The two forms share identical filing deadline patterns.
+
+| Parameter | BIR Form 2550Q (VAT) | BIR Form 2551Q (OPT) |
+|---|---|---|
+| Who files | VAT-registered taxpayers | Non-VAT, graduated rate, non-8% |
+| Tax base | Net VAT (output VAT − input VAT) | Gross quarterly sales × 3% |
+| Q1 due | April 25 | April 25 |
+| Q2 due | July 25 | July 25 |
+| Q3 due | October 25 | October 25 |
+| Q4 due | January 25 next year | January 25 next year |
+| NIL return required | Yes — must file even if net VAT = 0 | Yes — must file even if gross = 0 |
+| In scope for this product | Informational only (shown for Profile E/G) | Full computation support |
+
+**Product scope note:** This optimizer computes income tax (1701/1701A/1701Q) and percentage tax (2551Q). It does NOT compute VAT (2550Q) beyond informational deadline display. Taxpayers earning over ₱3M are shown their 2550Q filing deadlines as a reminder, but the VAT computation itself is out of scope (see [manual-review-flags.md](../manual-review-flags.md) for VAT-specific MRF entries).
+
+---
+
+## Part 11: NIL Return Obligations
+
+A NIL return is a return filed with zero taxable income, zero gross receipts, or zero tax due. Philippine BIR regulations require filing even when there is nothing to pay.
+
+### 11.1 NIL Return Requirements by Form
+
+| Form | NIL Return Required? | Consequence of Non-Filing | Note |
+|---|---|---|---|
+| BIR Form 1701Q (quarterly IT) | Yes — every quarter without exception | Compromise penalty (₱1,000 per return, first offense; ₱5,000 second; ₱10,000 third; criminal prosecution for 4th+) | Even if income was zero, a return must be filed by the deadline |
+| BIR Form 2551Q (quarterly OPT) | Yes — every quarter Q1–Q4 | Compromise penalty (₱1,000 first offense, same escalation) | For Q1, can substitute NIL 2551Q with 8% election notation (different form obligation) |
+| BIR Form 2550Q (quarterly VAT) | Yes — every quarter | Compromise penalty + potential VAT audit trigger | Zero net VAT still requires filing (zero input = zero output = NIL) |
+| BIR Form 1701 (annual IT) | Yes — even if income is zero | Compromise penalty; BIR flags as non-filer (triggers enforcement notice) | Registered taxpayers must always file annual return |
+| BIR Form 1701A (annual IT simplified) | Yes — even if income is zero | Same as 1701 | Use 1701A if 8% or graduated+OSD purely self-employed |
+
+### 11.2 NIL Return Penalty Escalation
+
+Compromise penalties for NIL late filing use the nil-return offense counter, NOT the tax-due-based compromise bracket. The offense counter is per taxpayer TIN, not per form:
+
+| Offense | Compromise Penalty | Criminal Risk |
+|---|---|---|
+| 1st NIL late filing | ₱1,000 | None |
+| 2nd NIL late filing | ₱5,000 | None |
+| 3rd NIL late filing | ₱10,000 | None |
+| 4th and subsequent | BIR refers to DOJ for criminal prosecution | Imprisonment 6 months–2 years |
+
+**EOPT reduction:** For MICRO and SMALL taxpayers, the NIL return penalty schedule above is not reduced (EOPT reductions apply only to interest and surcharge on unpaid tax, not to compromise penalties on nil returns). However, per RMO 7-2015 as amended by RR 6-2024, the BIR may offer abatement for first-time offenders with no prior violations.
+
+### 11.3 Engine Behavior for NIL Returns
+
+The engine must generate a filing reminder whenever the taxpayer is registered (has a TIN and active COR) even if inputs show zero income for the period:
+
+```
+function check_nil_return_obligation(
+  taxpayer_regime:   Enum["EIGHT_PCT", "GRADUATED_OSD", "GRADUATED_ITEMIZED", "VAT_REGISTERED"],
+  quarter:           int,        // 1, 2, or 3 for quarterly returns
+  gross_for_period:  Decimal,
+) -> NilReturnAlert | None:
+
+  if gross_for_period > 0:
+    return None  // Normal return, not a NIL return
+
+  // Gross = 0: always a NIL return
+  forms_due = []
+
+  if quarter in [1, 2, 3]:
+    forms_due.append("BIR Form 1701Q")
+    if taxpayer_regime in ["GRADUATED_OSD", "GRADUATED_ITEMIZED"]:
+      forms_due.append("BIR Form 2551Q")
+    if taxpayer_regime == "VAT_REGISTERED":
+      forms_due.append("BIR Form 2550Q")
+
+  return NilReturnAlert {
+    forms: forms_due,
+    message: "You had no income this quarter but you are still required to file NIL returns. "
+             + "Failure to file incurs a ₱1,000 compromise penalty per return (first offense).",
+    filing_required: True,
+    penalty_if_missed: Decimal("1000") * len(forms_due)
+  }
+```
+
+### 11.4 Zero-Income Quarterly Example
+
+A freelancer registered as 8% rate taxpayer who had no clients in Q2:
+- Q2 1701Q must still be filed by August 15 (adjusted for weekends/holidays)
+- Form 1701Q Schedule II, Item 47 = ₱0, Item 48 = ₱0, Item 50 = ₱0 (prior quarter credit = Q1 payable, which is already zero in this example), all items = ₱0
+- Mark NIL checkbox on the form
+- No payment due
+- Failure to file: ₱1,000 compromise penalty
+
+---
+
+## Part 12: BIR Payment Channels
+
+Taxpayers must remit tax payments through authorized channels simultaneously with or before filing the return.
+
+### 12.1 Authorized Agent Banks (AABs)
+
+The following banks are currently accredited as BIR AABs. Payment is made directly over the counter, online banking, or via the bank's e-payment portal.
+
+| Bank | Payment Methods |
+|---|---|
+| Land Bank of the Philippines (LBP) | Over-the-counter branch, LBP Link.BizPortal (online) |
+| Development Bank of the Philippines (DBP) | Over-the-counter branch, DBP PayTax (online) |
+| BDO Unibank | Over-the-counter, BDO Online Banking |
+| Bank of the Philippine Islands (BPI) | Over-the-counter, BPI Online Banking |
+| Metropolitan Bank and Trust Company (Metrobank) | Over-the-counter, Metrobank Online |
+| Philippine National Bank (PNB) | Over-the-counter, PNB e-banking |
+| EastWest Bank | Over-the-counter branch |
+| China Banking Corporation (China Bank) | Over-the-counter branch |
+| Rizal Commercial Banking Corporation (RCBC) | Over-the-counter, RCBC Bankard e-payment |
+| Security Bank | Over-the-counter branch |
+| UnionBank of the Philippines | Over-the-counter, UnionBank Online (tax payment feature) |
+| Philippine Veterans Bank | Over-the-counter branch |
+| Robinsons Bank | Over-the-counter branch |
+| Sterling Bank of Asia | Over-the-counter branch |
+
+### 12.2 Electronic Payment Channels (ePay)
+
+BIR accepts payment through the following e-payment platforms integrated with its eFPS/eBIRForms system:
+
+| Channel | Platform Type | Notes |
+|---|---|---|
+| GCash | Mobile wallet | GCash app → Pay Bills → Government → BIR. Enter TIN, form type, amount, taxable period. Generates BIR payment confirmation number. |
+| Maya (formerly PayMaya) | Mobile wallet | Maya app → Bills → BIR. Same fields as GCash. |
+| UnionBank Online | Internet banking | Integrated BIR tax payment module within the UnionBank app. |
+| LBP Link.BizPortal | Internet banking | For Land Bank account holders; direct tax payment to BIR. |
+| DBP PayTax | Internet banking | For DBP account holders. |
+| PayMongo | Payment gateway | For businesses with PayMongo-integrated invoicing; supports BIR tax payment. |
+
+### 12.3 eBIRForms Payment Integration
+
+When filing via eBIRForms (offline software or web-based eBIRForms):
+1. Complete the return in eBIRForms
+2. Click "Submit" — return is transmitted electronically to BIR
+3. BIR generates a Filing Reference Number (FRN)
+4. Proceed to payment at any AAB or e-payment channel using the FRN
+5. Retain the BIR payment receipt (BIR Form 0605 or AAB-stamped payment form) as proof
+
+### 12.4 EOPT File-and-Pay-Anywhere Rule
+
+Effective January 22, 2024 (RA 11976 EOPT Act, implementing RR 3-2024):
+- Self-employed taxpayers may file and pay at ANY AAB nationwide, regardless of which Revenue District Office (RDO) the taxpayer is registered under.
+- Prior rule (before EOPT): payment required at the AAB accredited to the taxpayer's RDO.
+- Current rule (from January 22, 2024): no RDO restriction on payment venue.
+- E-payment channels (GCash, Maya, etc.) are available regardless of this change.
+
+### 12.5 Payment Validation
+
+The engine generates a payment summary for each return that includes:
+
+```
+struct PaymentSummary {
+  form_type:             String,   // "1701Q", "2551Q", "1701A", "1701"
+  taxable_period:        String,   // e.g., "Q1 2026 (January 1 – March 31, 2026)"
+  tax_due:               Decimal,
+  tax_due_label:         String,   // "Income Tax Due" or "Percentage Tax Due"
+  less_credits:          Decimal,  // CWT + prior quarterly payments
+  balance_payable:       Decimal,  // max(0, tax_due - credits)
+  is_nil_return:         bool,     // balance_payable = 0 AND tax_due = 0
+  has_balance:           bool,     // balance_payable > 0
+  suggested_channel:     String,   // "GCash or any AAB" for amounts < ₱50,000; "AAB branch" for larger
+  payment_instructions:  String,   // Human-readable instructions
+  filing_deadline:       Date,     // Adjusted deadline
+  days_until_deadline:   int,      // Negative = overdue
+}
+```
+
+**Suggested channel logic:**
+- If balance_payable = 0: "No payment required. File NIL return by [deadline]."
+- If balance_payable ≤ ₱50,000: "Pay via GCash or Maya for convenience, or at any authorized agent bank."
+- If balance_payable > ₱50,000 and ≤ ₱500,000: "Pay at any authorized agent bank (AAB) over-the-counter or online. GCash/Maya may have transaction limits — verify with your e-wallet provider."
+- If balance_payable > ₱500,000: "Pay at an authorized agent bank (AAB) branch. Large-value transactions require in-person or online banking payment. E-wallets are not recommended for this amount."
+
+---
+
 **Cross-references:**
 - Quarterly computation functions: [computation-rules.md](../computation-rules.md) CR-042, CR-043, CR-044
 - Annual reconciliation: [computation-rules.md](../computation-rules.md) CR-011, CR-037
@@ -476,3 +730,4 @@ Large taxpayers enrolled in the BIR's Electronic Filing and Payment System (eFPS
 - Penalty computation: [computation-rules.md](../computation-rules.md) CR-048, CR-020
 - Penalty schedule tables: [bir-penalty-schedule.md](bir-penalty-schedule.md)
 - Decision tree for filing sequence: [decision-trees.md](../decision-trees.md) DT-14
+- NIL return penalty escalation: [bir-penalty-schedule.md](bir-penalty-schedule.md) Part 3 (Nil Return Compromise Penalties)
