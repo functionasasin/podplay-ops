@@ -58,7 +58,7 @@
   "total_contacts": "integer — total creators across all user campaigns (unfiltered count)",
 
   "opt_in_rate": "float | null — round((total_opted_in / total_contacts) * 100, 1). Percentage 0-100. Null if total_contacts is 0.",
-  "response_rate": "float | null — round((internal_responded / internal_emails_sent) * 100, 1). Only for internal campaigns (is_external=false). Percentage 0-100. Null if no internal campaigns or no emails sent.",
+  "response_rate": "float | null — round((internal_responded / internal_emails_sent) * 100, 1). Only for internal campaigns (is_external=false). internal_responded counts creators in GIFTING_OPTED_IN_STATUSES+OPTED_OUT OR PAID_PROMOTION_OPTED_IN_STATUSES+OPTED_OUT (DECLINED is excluded). Percentage 0-100. Null if no internal campaigns or no emails sent.",
 
   "email_stats": {
     "emails_sent": "integer — total sent emails (initial outreach + follow-ups + AI-drafted emails actually sent)",
@@ -109,7 +109,7 @@
     "ready_to_ship": "integer — creators with gifting_status='READY_TO_SHIP'",
     "ordered": "integer — creators with gifting_status IN ('ORDERED', 'SHIPPED', 'DELIVERED') (folded together)",
     "opted_out": "integer — creators with gifting_status='OPTED_OUT'",
-    "total": "integer — sum of all above stages"
+    "total": "integer — count of ALL creators in gifting campaigns regardless of status; may exceed sum of named stages if creators have 'DECLINED' or 'UNRESPONSIVE' status (those statuses are counted in total but not in any named stage)"
   },
 
   "paid_promotion_pipeline": {
@@ -124,7 +124,7 @@
     "awaiting_payment": "integer — creators with paid_promotion_status='AWAITING_PAYMENT'",
     "paid": "integer — creators with paid_promotion_status='PAID'",
     "opted_out": "integer — creators with paid_promotion_status='OPTED_OUT'",
-    "total": "integer — sum of all above stages"
+    "total": "integer — count of ALL creators in paid_promotion campaigns regardless of status; may exceed sum of named stages if creators have 'AWAITING_CONTRACT' or 'DECLINED' status (those statuses are counted in total but not in any named stage)"
   },
 
   "follow_up_stats": {
@@ -161,7 +161,7 @@
 
 **Calculated field details**:
 - `opt_in_rate`: `round((total_opted_in / total_contacts) * 100, 1)`. Returns `null` when `total_contacts` is 0 (division by zero guard).
-- `response_rate`: `round((internal_responded / internal_emails_sent) * 100, 1)`. Only counts campaigns where `is_external=false`. `internal_emails_sent` = outbox queue items with status="sent" for internal campaigns. `internal_responded` = creators in internal campaigns where status is in replied statuses (opted-in + opted-out). Returns `null` when there are no internal campaigns or no emails sent.
+- `response_rate`: `round((internal_responded / internal_emails_sent) * 100, 1)`. Only counts campaigns where `is_external=false`. `internal_emails_sent` = outbox queue items with status="sent" for internal campaigns. `internal_responded` = creators in internal campaigns where gifting_status IN (GIFTING_OPTED_IN_STATUSES + ["OPTED_OUT"]) OR paid_promotion_status IN (PAID_PROMOTION_OPTED_IN_STATUSES + ["OPTED_OUT"]). Note: DECLINED is intentionally excluded from this count (uses a custom list, not the full GIFTING_REPLIED_STATUSES/PAID_PROMOTION_REPLIED_STATUSES constants). Returns `null` when there are no internal campaigns or no emails sent.
 - `cancellation_rate`: `round((cancelled_count / total_follow_ups) * 100, 1)`. Returns `null` when `total_follow_ups` is 0.
 - `conversion_rate` (per campaign type): `round((converted / total_creators) * 100, 1)`. Returns `null` when `total_creators` is 0.
 
@@ -423,12 +423,12 @@ cheerful_get_dashboard_analytics(recent_optins_days=14)
 
 **Edge Cases**:
 - **New user with no campaigns**: All counts are 0, rates are `null`, pipeline sections are `null`, arrays are empty. Agent should suggest creating a campaign.
-- **User with only external campaigns**: `response_rate` will be `null` because it only counts internal campaigns (`is_external=false`). The agent should explain this if the user asks about response rate.
+- **User with only external campaigns**: `response_rate` will be `null` because it only counts internal campaigns (`is_external=false`). The agent should explain this if the user asks about response rate. Note: DECLINED creators are also excluded from `internal_responded` — only OPTED_OUT (not DECLINED) is counted as a "response" for rate purposes.
 - **User with only gifting campaigns**: `paid_promotion_pipeline` will be `null`. Agent should not display the paid promotion pipeline section.
 - **User with only paid_promotion campaigns**: `gifting_pipeline` will be `null`. Agent should not display the gifting pipeline section.
 - **Recent opt-ins max 20**: Even if more than 20 creators opted in during the lookback window, only the 20 most recent are returned (ordered by `updated_at` DESC).
 - **Active campaigns max 10**: Only the 10 most recently created active campaigns are returned. If the user has more than 10 active campaigns, older ones are omitted.
-- **AI-drafted email count**: Emails drafted by the AI (LLM) that have been sent (thread state is NOT `WAITING_FOR_DRAFT_REVIEW`) are counted in `emails_sent`. This means the sent count includes human-sent AND AI-sent emails.
+- **AI-drafted email count**: Emails drafted by the AI (LLM) that have been sent are counted in `emails_sent`. The code checks `GmailThreadLlmDraft` rows for this user where `COALESCE(GmailThreadState.status, SmtpThreadState.status) != WAITING_FOR_DRAFT_REVIEW`. Both Gmail and SMTP AI drafts are included. This means `emails_sent` counts human-sent AND AI-sent emails combined.
 - **Gifting pipeline `ordered` field folds together**: `ORDERED` + legacy `SHIPPED` + `DELIVERED` statuses are all counted under the `ordered` stage in the pipeline.
 - **`order_sent_count` in active campaigns**: This field is included for backward compatibility. It represents creators with `gifting_status='ORDER_SENT'` and is already a subset of `opted_in_count`. Do not double-count.
 - **`conversions_by_follow_up_number` keys are strings**: The dictionary keys are follow-up position numbers (1-indexed) as strings. Key `"1"` means the first follow-up, `"2"` means the second, etc. The value is the count of sent emails at that follow-up position.
