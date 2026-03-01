@@ -3,7 +3,7 @@
 This directory contains the complete product specification. A forward loop can build the entire platform by reading ONLY this directory.
 
 **Last updated:** 2026-03-01
-**Convergence status:** IN PROGRESS (25/54 aspects analyzed; scenario-enumeration completed)
+**Convergence status:** IN PROGRESS (27/54 aspects analyzed; pipeline-design completed)
 
 ---
 
@@ -35,7 +35,7 @@ This directory contains the complete product specification. A forward loop can b
 
 | File | Status | Description |
 |------|--------|-------------|
-| engine/pipeline.md | PENDING | Step-by-step computation flow with typed inputs/outputs |
+| [engine/pipeline.md](engine/pipeline.md) | COMPLETE | 17-step pipeline (PL-01 to PL-17): input validation (20 rules, 5 soft warnings), taxpayer classification (EOPT tier, income type), gross aggregates (threshold base, PT base, OSD base per class), eligibility check (Path A/B/C gates, ineligibility reasons), itemized deductions (19 categories with caps, EAR cap, interest arbitrage, NOLCO), OSD computation (service vs. trader base), CWT aggregation (IT vs. PT classification), Path A/B/C tax computation (full pseudocode with ₱250K logic, mixed income routing), percentage tax (3%/1% rate, EOPT accrual basis shift, PT waiver for Path C), quarterly payments aggregation, regime comparison (total burden sort, C>B>A tie-break), balance computation (installment rule, disposition), form selection (1701 vs 1701A vs 1701Q), penalty computation (EOPT-aware), result assembly; dependency graph; quarterly vs. annual differences table; precision/rounding rules (R-01 to R-08) |
 | engine/data-model.md | PENDING | Every struct, enum, type — complete definitions |
 | engine/invariants.md | PENDING | What must always be true about outputs |
 | engine/error-states.md | PENDING | Every invalid input and engine response |
