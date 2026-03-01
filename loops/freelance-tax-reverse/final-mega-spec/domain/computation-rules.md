@@ -396,35 +396,46 @@ payable_this_quarter[q] = max(
 
 ---
 
-## CR-011: Annual Reconciliation (Form 1701 / 1701A)
+## CR-011: Annual Reconciliation Overview (Superseded by CR-049 through CR-054)
 
-### For OSD Taxpayers (Pure Business, Form 1701A):
-```
-annual_gross_receipts = sum(all quarterly gross receipts)
-annual_osd = annual_gross_receipts * 0.40
-annual_net_taxable = annual_gross_receipts * 0.60
-annual_IT = graduated_tax(annual_net_taxable)
-total_annual_CWT = sum(all 2307 amounts received in the year)
-total_quarterly_paid = sum(1701Q payments Q1 + Q2 + Q3)
-balance_payable = max(annual_IT - total_annual_CWT - total_quarterly_paid, 0)
-overpayment = max(total_annual_CWT + total_quarterly_paid - annual_IT, 0)
-```
+**Note:** CR-011 contains a brief summary for reference. Full detail is in CR-049 (Form 1701A OSD),
+CR-050 (Form 1701A 8%), CR-051 (Form 1701 itemized), CR-052 (Form 1701 mixed income),
+CR-053 (tax credits section), and CR-054 (balance/installment/overpayment).
 
-### For 8% Taxpayers (Pure Business, Form 1701A):
+### Summary for OSD Taxpayers (Pure Business, Form 1701A):
 ```
-annual_gross_receipts = sum(all quarterly gross receipts)
-// ₱250,000 exemption applied HERE at annual level
-annual_IT = max(annual_gross_receipts - 250_000, 0) * 0.08
-total_annual_CWT = sum(all 2307 amounts for the year)
-total_quarterly_paid = sum(1701Q payments for Q1 + Q2 + Q3)
-balance_payable = max(annual_IT - total_annual_CWT - total_quarterly_paid, 0)
+annual_net_receipts = annual_gross_receipts - annual_sales_returns
+annual_osd = annual_net_receipts * 0.40
+annual_nti = annual_net_receipts * 0.60 + non_op_income
+annual_IT = graduated_tax(annual_nti)  // CR-002 or CR-003
+total_annual_CWT = sum(all Q1+Q2+Q3+Q4 Form 2307 amounts for the year)
+total_quarterly_paid = sum(actual cash payments from Q1+Q2+Q3 Form 1701Q)
+balance_payable_raw = annual_IT - total_annual_CWT - total_quarterly_paid - prior_year_excess
+balance_payable = max(balance_payable_raw, 0)
+overpayment = max(-balance_payable_raw, 0)
 ```
 
-### Installment Payment Rule
-If annual balance payable > ₱2,000:
-- First installment: 50% of balance, due April 15
-- Second installment: 50% of balance, due July 15
-- (If balance ≤ ₱2,000: full payment by April 15)
+### Summary for 8% Taxpayers (Pure Business, Form 1701A):
+```
+annual_net_receipts = annual_gross_receipts - annual_sales_returns
+total_base = annual_net_receipts + non_op_income
+annual_IT = max(total_base - 250_000, 0) * 0.08  // ₱250K deduction applied ONCE annually
+total_annual_CWT = sum(all Q1+Q2+Q3+Q4 Form 2307 amounts)
+total_quarterly_paid = sum(actual cash payments from Q1+Q2+Q3 Form 1701Q)
+balance_payable_raw = annual_IT - total_annual_CWT - total_quarterly_paid - prior_year_excess
+balance_payable = max(balance_payable_raw, 0)
+overpayment = max(-balance_payable_raw, 0)
+```
+
+### Installment Payment Rule (CORRECTED — second installment is October 15)
+If annual gross income tax due (before credits) > ₱2,000:
+- First installment: up to 50% of balance payable, due April 15
+- **Second installment: remaining balance, due October 15 of the SAME year**
+- Legal basis: NIRC Sec. 56(A)(2) as amended by RA 10963 (TRAIN Law)
+- (If gross IT due ≤ ₱2,000: full payment by April 15; installment option not available)
+
+**ERROR CORRECTION:** A prior version of this entry erroneously stated July 15 for the second
+installment. The correct date per TRAIN-amended NIRC Sec. 56(A)(2) is October 15.
 
 ---
 
@@ -6061,3 +6072,1316 @@ function compute_quarterly_late_penalty(
 
 **Important — cumulative tax vs. incremental payable:**
 The surcharge and interest apply to the INCREMENTAL tax payable on the return (Item 63's positive value), NOT to the full cumulative tax due (Item 46/54). If Item 46 = ₱100,000 but Item 62 (credits) = ₱90,000, then Item 63 = ₱10,000. Penalties apply to ₱10,000, not ₱100,000.
+
+---
+
+## CR-049: Annual Income Tax Reconciliation — Form 1701A, Path B (OSD, Purely Self-Employed)
+
+**Legal basis:** NIRC Sec. 34(L); RR 16-2008; BIR Form 1701A (January 2018 ENCS), Part IV-A, Items 36–46; Tax Credits Items 57–65
+**Applies to:** Non-VAT registered individual taxpayers, purely self-employed (no compensation income), who elected OSD for the taxable year. Form 1701A is filed.
+**Filing deadline:** April 15 of the year following the taxable year.
+
+### CR-049.1: Input Parameters
+
+```
+struct Annual1701A_OSD_Input {
+  taxable_year:             int,             // e.g., 2025
+  
+  // Form Part I
+  tin:                      String,          // 12-digit TIN
+  rdo_code:                 String,          // 3-digit RDO
+  taxpayer_type:            Enum["SINGLE_PROPRIETOR", "PROFESSIONAL"],
+  atc_code:                 Enum["II012", "II014"],  // business or profession
+  name:                     String,
+  registered_address:       String,
+  date_of_birth:            Date,
+  citizenship:              Enum["RESIDENT_CITIZEN", "NON_RESIDENT_CITIZEN",
+                                 "RESIDENT_ALIEN", "NON_RESIDENT_ALIEN_ETB"],
+  is_amended_return:        bool,
+  is_short_period_return:   bool,           // true if taxable year < 12 months
+  
+  // Schedule computation inputs (all in PHP, positive decimals)
+  gross_sales_receipts_fees: Decimal,       // Item 36: total gross income for the year
+  sales_returns_allowances:  Decimal,       // Item 37: defaults to 0 if none
+  non_op_income_items:      List[Tuple[String, Decimal]], // up to 4 items (description, amount)
+  
+  // Tax credits inputs
+  prior_year_excess_credits: Decimal,       // Item 57: carry-over from prior year return
+  quarterly_payments:       Tuple[Decimal, Decimal, Decimal], // (Q1, Q2, Q3) actual payments made
+  cwt_q1_to_q3:             Decimal,       // Item 59: total CWT from 2307s for Jan–Sep
+  cwt_q4:                   Decimal,       // Item 60: CWT from 2307s for Oct–Dec
+  tax_paid_prior_return:    Decimal,       // Item 61: for amended returns only (0 if original)
+  foreign_tax_credits:      Decimal,       // Item 62: rarely applicable; 0 if not applicable
+  other_credits:            Decimal,       // Item 63: e.g., Tax Debit Memo amount
+  
+  // Installment election
+  elect_installment:        bool,          // true = split payment Apr 15 + Oct 15
+  
+  // Metadata
+  taxpayer_tier:            Enum["MICRO", "SMALL", "MEDIUM", "LARGE"],
+  filing_date:              Date,          // actual date filed; used for late penalty computation
+}
+```
+
+### CR-049.2: Computation Function
+
+```
+function compute_annual_1701a_osd(input: Annual1701A_OSD_Input) -> Annual1701A_OSD_Output:
+
+  // ---- Part IV-A: OSD Computation (Items 36–46) ----
+
+  // Item 36: Gross sales/revenues/receipts/fees
+  item_36 = input.gross_sales_receipts_fees
+  
+  // Item 37: Sales returns, allowances, and discounts
+  item_37 = input.sales_returns_allowances  // ≥ 0
+  
+  // Item 38: Net sales/revenues/receipts/fees
+  item_38 = item_36 - item_37
+  validate: item_38 >= 0  // Error EC-AR02 if negative
+  
+  // Item 39: OSD = 40% of net receipts (no receipts required — statutory deduction)
+  item_39 = round(item_38 * Decimal("0.40"), 2)
+  
+  // Item 40: Net income from business/profession
+  item_40 = item_38 - item_39  // = item_38 × 0.60
+  
+  // Items 41–44: Other non-operating income (up to 4 line items)
+  // OSD applies ONLY to gross sales/receipts (Item 38), NOT to non-operating income.
+  // Non-operating income is added AFTER OSD deduction.
+  non_op_total = sum(amount for (description, amount) in input.non_op_income_items)
+  
+  // Item 45: Total taxable income
+  item_45 = item_40 + non_op_total
+  // If negative: item_45 = 0 (no net operating loss carry-over available under OSD)
+  item_45 = max(item_45, Decimal("0"))
+  
+  // Item 46: Tax due (apply graduated rate table to total taxable income)
+  if input.taxable_year <= 2022:
+    item_46 = graduated_tax_2018(item_45)  // CR-003 function
+  else:
+    item_46 = graduated_tax_2023(item_45)  // CR-002 function
+  item_46 = round(item_46, 2)
+  
+  // ---- Tax Credits/Payments Section (Items 57–65) ----
+  // Full algorithm in CR-053. Summary here:
+  item_57 = input.prior_year_excess_credits
+  item_58 = sum(input.quarterly_payments)  // Q1 + Q2 + Q3 actual cash payments
+  item_59 = input.cwt_q1_to_q3
+  item_60 = input.cwt_q4
+  item_61 = input.tax_paid_prior_return
+  item_62 = input.foreign_tax_credits
+  item_63 = input.other_credits
+  item_64 = item_57 + item_58 + item_59 + item_60 + item_61 + item_62 + item_63
+  
+  // ---- Part II: Balance Payable / Overpayment ----
+  // Item 20: Tax due
+  item_20 = item_46
+  // Item 21: Total credits
+  item_21 = item_64
+  // Item 22: Tax payable / (overpayment)
+  item_22_signed = item_20 - item_21   // positive = payable; negative = overpayment
+  
+  // Installment payment election (see CR-054 for full logic)
+  if item_22_signed > 0 and item_20 > Decimal("2000") and input.elect_installment:
+    max_second = round(item_20 * Decimal("0.50"), 2)
+    actual_second = min(max_second, item_22_signed)
+    item_23 = actual_second
+    item_24 = item_22_signed - item_23  // amount due April 15
+  else:
+    item_23 = Decimal("0")
+    item_24 = max(item_22_signed, Decimal("0"))  // if negative, ₱0 payable April 15
+  
+  // If overpayment (item_22_signed < 0):
+  overpayment_amount = max(-item_22_signed, Decimal("0"))
+  
+  // ATC code selection
+  atc = "II012" if input.taxpayer_type == "SINGLE_PROPRIETOR" else "II014"
+  
+  return Annual1701A_OSD_Output {
+    // Form Part IV-A field values
+    item_36_gross_sales:           item_36,
+    item_37_sales_returns:         item_37,
+    item_38_net_sales:             item_38,
+    item_39_osd:                   item_39,
+    item_40_net_income:            item_40,
+    non_op_income_items:           input.non_op_income_items,
+    non_op_income_total:           non_op_total,
+    item_45_total_taxable_income:  item_45,
+    item_46_tax_due:               item_46,
+    // Tax credits section
+    item_57_prior_year_excess:     item_57,
+    item_58_quarterly_payments:    item_58,
+    item_59_cwt_q1_q3:             item_59,
+    item_60_cwt_q4:                item_60,
+    item_61_prior_return_payment:  item_61,
+    item_62_foreign_tax_credits:   item_62,
+    item_63_other_credits:         item_63,
+    item_64_total_credits:         item_64,
+    // Part II
+    item_20_tax_due:               item_20,
+    item_21_total_credits:         item_21,
+    item_22_signed_balance:        item_22_signed,
+    item_23_second_installment:    item_23,
+    item_24_first_installment_due: item_24,
+    overpayment_amount:            overpayment_amount,
+    // ATC / form identification
+    form_atc:                      atc,
+    regime_elected:                "GRADUATED_OSD",
+    applicable_form:               "1701A",
+  }
+```
+
+### CR-049.3: Worked Example — Annual OSD Reconciliation
+
+**Taxpayer:** Web designer, purely self-employed, non-VAT, TY2025.
+- Annual gross receipts: ₱1,200,000
+- Sales returns: ₱0
+- Non-operating income: ₱10,000 (interest income not subject to FWT)
+- Quarterly payments: Q1 = ₱18,000, Q2 = ₱36,000, Q3 = ₱30,000 (total: ₱84,000)
+- CWT Q1–Q3: ₱15,000 | CWT Q4: ₱3,000 (from client 2307s)
+- Prior year excess credits: ₱0
+
+```
+Item 36 = ₱1,200,000
+Item 37 = ₱0
+Item 38 = ₱1,200,000
+Item 39 = ₱1,200,000 × 40% = ₱480,000
+Item 40 = ₱720,000
+Non-op (Item 41): ₱10,000 (interest, non-FWT)
+Item 45 = ₱720,000 + ₱10,000 = ₱730,000
+Item 46 = graduated_tax_2023(₱730,000)
+        = ₱22,500 + (₱730,000 − ₱400,000) × 20%
+        = ₱22,500 + ₱66,000 = ₱88,500
+
+Tax Credits:
+Item 57 = ₱0
+Item 58 = ₱18,000 + ₱36,000 + ₱30,000 = ₱84,000
+Item 59 = ₱15,000
+Item 60 = ₱3,000
+Item 61–63 = ₱0
+Item 64 = ₱84,000 + ₱15,000 + ₱3,000 = ₱102,000
+
+Item 20 = ₱88,500
+Item 21 = ₱102,000
+Item 22 = ₱88,500 − ₱102,000 = −₱13,500 (OVERPAYMENT)
+
+Overpayment = ₱13,500
+Item 20 (₱88,500) > ₱2,000 → installment option was available but moot (overpayment)
+Taxpayer must elect: REFUND, TCC, or CARRY-OVER for the ₱13,500 overpayment.
+```
+
+---
+
+## CR-050: Annual Income Tax Reconciliation — Form 1701A, Path C (8% Flat Rate, Purely Self-Employed)
+
+**Legal basis:** NIRC Sec. 24(A)(2)(b); RR 8-2018 Part I; BIR Form 1701A Part IV-B, Items 47–56; Tax Credits Items 57–65
+**Applies to:** Non-VAT registered, purely self-employed (no compensation income), 8% rate elected at Q1.
+**Prerequisite:** Annual gross sales/receipts and non-operating income ≤ ₱3,000,000 (else mid-year breach occurred; see DT-03).
+
+### CR-050.1: Input Parameters
+
+```
+struct Annual1701A_EightPct_Input {
+  taxable_year:             int,
+  
+  // Form Part I (same fields as CR-049.1 except ATC)
+  tin:                      String,
+  rdo_code:                 String,
+  taxpayer_type:            Enum["SINGLE_PROPRIETOR", "PROFESSIONAL"],
+  atc_code:                 Enum["II015", "II017"],  // 8% business or 8% profession
+  name:                     String,
+  registered_address:       String,
+  date_of_birth:            Date,
+  citizenship:              Enum["RESIDENT_CITIZEN", "NON_RESIDENT_CITIZEN",
+                                 "RESIDENT_ALIEN", "NON_RESIDENT_ALIEN_ETB"],
+  is_amended_return:        bool,
+  is_short_period_return:   bool,
+  
+  // Schedule computation inputs
+  gross_sales_receipts_fees: Decimal,       // Item 47: total annual gross receipts
+  sales_returns_allowances:  Decimal,       // Item 48: reduce gross before applying 8%
+  non_op_income_items:      List[Tuple[String, Decimal]], // Items 50–52 (up to 3 items)
+  
+  // Note: ₱250,000 deduction (Item 54) is always ₱250,000 for purely SE.
+  // It is NOT an input — it is a constant per NIRC Sec. 24(A)(2)(b).
+  
+  // Tax credits inputs (same structure as CR-049)
+  prior_year_excess_credits: Decimal,       // Item 57
+  quarterly_payments:       Tuple[Decimal, Decimal, Decimal], // Q1, Q2, Q3 actual payments
+  cwt_q1_to_q3:             Decimal,       // Item 59
+  cwt_q4:                   Decimal,       // Item 60
+  tax_paid_prior_return:    Decimal,       // Item 61 (amended returns only)
+  foreign_tax_credits:      Decimal,       // Item 62
+  other_credits:            Decimal,       // Item 63
+  
+  elect_installment:        bool,
+  taxpayer_tier:            Enum["MICRO", "SMALL", "MEDIUM", "LARGE"],
+  filing_date:              Date,
+}
+```
+
+### CR-050.2: Computation Function
+
+```
+function compute_annual_1701a_eight_pct(input: Annual1701A_EightPct_Input) -> Annual1701A_EightPct_Output:
+
+  // ---- Part IV-B: 8% Flat Rate Computation (Items 47–56) ----
+
+  // Item 47: Gross sales/revenues/receipts/fees for the year
+  item_47 = input.gross_sales_receipts_fees
+  
+  // Item 48: Sales returns, allowances, discounts
+  item_48 = input.sales_returns_allowances  // ≥ 0
+  
+  // Item 49: Net sales/revenues/receipts/fees
+  item_49 = item_47 - item_48
+  validate: item_49 >= 0
+  
+  // Items 50–52: Non-operating income (up to 3 separate line items on the form)
+  // These are included in the 8% tax base per RR 8-2018 Sec. 3.
+  non_op_total = sum(amount for (description, amount) in input.non_op_income_items)
+  
+  // Item 53: Total gross sales/receipts and other non-operating income
+  item_53 = item_49 + non_op_total
+  
+  // ANNUAL THRESHOLD CHECK (must be done before computing tax):
+  validate: item_53 <= Decimal("3_000_000")
+  // If item_53 > 3,000,000: mid-year breach should have been detected in DT-03.
+  // If not detected earlier and first discovered here, output error flag:
+  // EIGHT_PCT_BREACH_DETECTED_AT_ANNUAL — trigger retroactive graduated computation.
+  
+  // Item 54: ₱250,000 deduction — for PURELY self-employed only (this function only applies
+  // to purely SE; mixed income uses CR-052 which applies ₱0 deduction here).
+  item_54 = Decimal("250000")
+  
+  // Item 55: Taxable income at 8% rate
+  item_55 = max(item_53 - item_54, Decimal("0"))
+  // If item_53 < ₱250,000: item_55 = 0, item_56 = 0 (no tax due; still required to file)
+  
+  // Item 56: Tax due at 8%
+  item_56 = round(item_55 * Decimal("0.08"), 2)
+  
+  // ---- Tax Credits/Payments (Items 57–65) — same structure as Form 1701A OSD ----
+  item_57 = input.prior_year_excess_credits
+  item_58 = sum(input.quarterly_payments)  // Q1 + Q2 + Q3 actual payments
+  item_59 = input.cwt_q1_to_q3
+  item_60 = input.cwt_q4
+  item_61 = input.tax_paid_prior_return
+  item_62 = input.foreign_tax_credits
+  item_63 = input.other_credits
+  item_64 = item_57 + item_58 + item_59 + item_60 + item_61 + item_62 + item_63
+  
+  // ---- Part II ----
+  item_20 = item_56
+  item_21 = item_64
+  item_22_signed = item_20 - item_21
+  
+  if item_22_signed > 0 and item_20 > Decimal("2000") and input.elect_installment:
+    max_second = round(item_20 * Decimal("0.50"), 2)
+    actual_second = min(max_second, item_22_signed)
+    item_23 = actual_second
+    item_24 = item_22_signed - item_23
+  else:
+    item_23 = Decimal("0")
+    item_24 = max(item_22_signed, Decimal("0"))
+  
+  overpayment_amount = max(-item_22_signed, Decimal("0"))
+  atc = "II015" if input.taxpayer_type == "SINGLE_PROPRIETOR" else "II017"
+  
+  return Annual1701A_EightPct_Output {
+    item_47_gross_sales:           item_47,
+    item_48_sales_returns:         item_48,
+    item_49_net_sales:             item_49,
+    non_op_income_items:           input.non_op_income_items,
+    non_op_income_total:           non_op_total,
+    item_53_total_base:            item_53,
+    item_54_deduction_250k:        item_54,
+    item_55_taxable_base:          item_55,
+    item_56_tax_due:               item_56,
+    // Tax credits section
+    item_57_prior_year_excess:     item_57,
+    item_58_quarterly_payments:    item_58,
+    item_59_cwt_q1_q3:             item_59,
+    item_60_cwt_q4:                item_60,
+    item_61_prior_return_payment:  item_61,
+    item_62_foreign_tax_credits:   item_62,
+    item_63_other_credits:         item_63,
+    item_64_total_credits:         item_64,
+    // Part II
+    item_20_tax_due:               item_20,
+    item_21_total_credits:         item_21,
+    item_22_signed_balance:        item_22_signed,
+    item_23_second_installment:    item_23,
+    item_24_first_installment_due: item_24,
+    overpayment_amount:            overpayment_amount,
+    form_atc:                      atc,
+    regime_elected:                "EIGHT_PERCENT",
+    applicable_form:               "1701A",
+  }
+```
+
+### CR-050.3: Worked Example — Annual 8% Reconciliation (Continuing CR-044.3 Example)
+
+**Taxpayer:** IT consultant, 8% rate, non-VAT, purely SE, TY2025.
+**Quarterly context from CR-044.3:** Q1 paid ₱4,000; Q2 paid ₱32,000; Q3 paid ₱19,000; Q3 CWT ₱5,000.
+**Q4 data:** Q4 gross receipts ₱200,000; Q4 CWT ₱3,000.
+
+```
+Item 47 = ₱300,000 + ₱400,000 + ₱300,000 + ₱200,000 = ₱1,200,000 (full year gross)
+Item 48 = ₱0
+Item 49 = ₱1,200,000
+Non-op income = ₱0
+Item 53 = ₱1,200,000
+Annual threshold check: ₱1,200,000 ≤ ₱3,000,000 ✓
+Item 54 = ₱250,000 (purely SE)
+Item 55 = ₱1,200,000 − ₱250,000 = ₱950,000
+Item 56 = ₱950,000 × 8% = ₱76,000
+
+Tax Credits:
+Item 57 = ₱0 (no prior year carry-over)
+Item 58 = ₱4,000 + ₱32,000 + ₱19,000 = ₱55,000 (Q1+Q2+Q3 actual payments)
+Item 59 = ₱5,000 (Q3 CWT — first claimed in Q3 1701Q)
+Item 60 = ₱3,000 (Q4 CWT — first claimed here at annual)
+Item 61–63 = ₱0
+Item 64 = ₱55,000 + ₱5,000 + ₱3,000 = ₱63,000
+
+Item 20 = ₱76,000
+Item 21 = ₱63,000
+Item 22 = ₱76,000 − ₱63,000 = ₱13,000 (BALANCE PAYABLE)
+
+Item 20 (₱76,000) > ₱2,000 → installment option available.
+If taxpayer does NOT elect installment: Pay ₱13,000 by April 15, 2026.
+If taxpayer elects installment:
+  max_second = ₱76,000 × 50% = ₱38,000; actual_second = min(₱38,000, ₱13,000) = ₱13,000
+  → Pay ₱0 on April 15, ₱13,000 on October 15, 2026.
+  (Or pay ₱6,500 on April 15 and ₱6,500 on October 15 — any split up to 50%/50%)
+```
+
+**Note on quarterly over-deduction of ₱250K:**
+During Q1–Q3, the quarterly form applied ₱250K as a cumulative deduction (Item 52 = ₱250K each
+quarter). This was applied against cumulative gross, so in Q1: taxable base = max(₱300K−₱250K, 0) = ₱50K.
+In Q2: taxable base = max(₱700K−₱250K, 0) = ₱450K. By the cumulative nature of the quarterly method,
+the ₱250K deduction self-corrects at annual: annual taxable = ₱950K × 8% = ₱76K, and quarterly
+payments of ₱55K were correct (not over-stated). The ₱250K deduction in the quarterly method correctly
+models the ₱250K-once-per-year economic treatment when applied cumulatively.
+
+---
+
+## CR-051: Annual Income Tax Reconciliation — Form 1701, Path A (Graduated + Itemized Deductions)
+
+**Legal basis:** NIRC Sec. 34(A)-(J); BIR Form 1701 (January 2018 ENCS), Schedule 3.A, Schedule 4, Schedule 5, Schedule 6, Part V, Part VI
+**Applies to:** Non-VAT or VAT-registered taxpayers who use itemized deductions, purely self-employed (no compensation income).
+**Required form:** BIR Form 1701 (not 1701A). Form 1701A cannot accommodate itemized deductions. See DT-04 correction.
+
+### CR-051.1: Input Parameters
+
+```
+struct Annual1701_Itemized_Input {
+  taxable_year:             int,
+  
+  // Form header / Part I (same as CR-049.1 for personal info fields)
+  tin:                      String,
+  rdo_code:                 String,
+  taxpayer_type:            Enum["SINGLE_PROPRIETOR", "PROFESSIONAL"],
+  atc_code:                 Enum["II012", "II014"],  // business or profession (graduated)
+  name:                     String,
+  registered_address:       String,
+  date_of_birth:            Date,
+  citizenship:              Enum["RESIDENT_CITIZEN", "NON_RESIDENT_CITIZEN",
+                                 "RESIDENT_ALIEN", "NON_RESIDENT_ALIEN_ETB"],
+  is_amended_return:        bool,
+  
+  // Schedule 3.A inputs
+  gross_sales_receipts:     Decimal,       // Sched 3.A Item 1
+  sales_returns:            Decimal,       // Sched 3.A Item 2
+  cost_of_sales_services:   Decimal,       // Sched 3.A Item 4
+  other_non_op_income:      Decimal,       // Sched 3.A Item 6
+  
+  // Schedule 4 — Ordinary Allowable Itemized Deductions (17 line items)
+  deductions: ItemizedDeductions,          // struct from lookup-tables/itemized-deductions.md
+  
+  // Schedule 5 — Special Allowable Deductions
+  special_deductions: SpecialDeductions,   // struct from lookup-tables/itemized-deductions.md
+  
+  // Schedule 6 — NOLCO (if claiming)
+  nolco_entries: List[NOLCOEntry],         // FIFO list; see CR-027 for NOLCOEntry struct
+  
+  // Tax credits (Part VI) — different item numbering on Form 1701 vs 1701A
+  prior_year_excess_credits: Decimal,      // Part VI Item 1
+  quarterly_payments:       Tuple[Decimal, Decimal, Decimal], // Part VI Items 2, 3, 4 (Q1, Q2, Q3)
+  cwt_q1:                   Decimal,       // Part VI Item 5
+  cwt_q2:                   Decimal,       // Part VI Item 6
+  cwt_q3:                   Decimal,       // Part VI Item 7
+  cwt_q4:                   Decimal,       // Part VI Item 8
+  tax_withheld_compensation: Decimal,      // Part VI Item 9 (0 for purely SE)
+  tax_paid_prior_return:    Decimal,       // Part VI Item 10 (amended only)
+  foreign_tax_credits:      Decimal,       // Part VI Item 11
+  other_credits:            Decimal,       // Part VI Item 12
+  
+  elect_installment:        bool,
+  taxpayer_tier:            Enum["MICRO", "SMALL", "MEDIUM", "LARGE"],
+  filing_date:              Date,
+}
+```
+
+### CR-051.2: Computation Function
+
+```
+function compute_annual_1701_itemized(input: Annual1701_Itemized_Input) -> Annual1701_Itemized_Output:
+
+  // ---- Schedule 3.A Computation ----
+
+  // Item 1: Gross sales/revenues/receipts/fees
+  sched3a_item_1 = input.gross_sales_receipts
+  
+  // Item 2: Less sales returns, allowances, discounts
+  sched3a_item_2 = input.sales_returns
+  
+  // Item 3: Net sales/revenues/receipts/fees
+  sched3a_item_3 = sched3a_item_1 - sched3a_item_2
+  validate: sched3a_item_3 >= 0
+  
+  // Item 4: Cost of sales/services (0 for pure service providers with no direct costs)
+  sched3a_item_4 = input.cost_of_sales_services
+  
+  // Item 5: Gross income from operations
+  sched3a_item_5 = sched3a_item_3 - sched3a_item_4
+  
+  // Item 6: Other non-operating income
+  sched3a_item_6 = input.other_non_op_income
+  
+  // Item 7: Total gross income
+  sched3a_item_7 = sched3a_item_5 + sched3a_item_6
+  
+  // Item 8: Allowable deductions (from Schedule 4 + Schedule 5)
+  // Use compute_total_allowable_deductions() from lookup-tables/itemized-deductions.md
+  sched4_total = compute_total_allowable_deductions(
+    deductions         = input.deductions,
+    gross_receipts     = sched3a_item_3,    // for EAR cap computation
+    business_type      = input.taxpayer_type,
+  )
+  sched5_total = input.special_deductions.total_special_deductions
+  sched3a_item_8 = sched4_total + sched5_total
+  
+  // Item 9: Net income / (loss) from business/profession
+  sched3a_item_9 = sched3a_item_7 - sched3a_item_8
+  
+  // Item 10: Less NOLCO (from Schedule 6 — FIFO algorithm per CR-027)
+  if len(input.nolco_entries) > 0:
+    nolco_applied, updated_nolco_entries = apply_nolco(
+      current_net_income = sched3a_item_9,
+      nolco_entries      = input.nolco_entries,
+      current_year       = input.taxable_year
+    )
+    sched3a_item_10 = nolco_applied
+  else:
+    sched3a_item_10 = Decimal("0")
+    updated_nolco_entries = []
+  
+  // Item 11: Taxable income / (loss) from business/profession
+  sched3a_item_11 = sched3a_item_9 - sched3a_item_10
+  // If sched3a_item_9 is negative and no NOLCO: net loss, sched3a_item_11 < 0
+  // Engine records the loss for potential future NOLCO (if elected as itemized again next year)
+  
+  // Item 12: Add taxable compensation income (₱0 for purely SE; see CR-052 for mixed)
+  sched3a_item_12 = Decimal("0")
+  
+  // Item 13: Total taxable income
+  sched3a_item_13 = sched3a_item_11 + sched3a_item_12
+  if sched3a_item_13 < 0:
+    sched3a_item_13 = Decimal("0")  // Cannot have negative total taxable income on the form
+    // The business loss is noted in NOLCO schedule if the NET INCOME (Item 9) before NOLCO was negative
+  
+  // Item 14: Income tax due (graduated rate)
+  if input.taxable_year <= 2022:
+    sched3a_item_14 = graduated_tax_2018(sched3a_item_13)
+  else:
+    sched3a_item_14 = graduated_tax_2023(sched3a_item_13)
+  sched3a_item_14 = round(sched3a_item_14, 2)
+  
+  // Item 15: Less tax withheld on compensation (₱0 for purely SE)
+  sched3a_item_15 = Decimal("0")
+  
+  // Item 16: Tax due on business income (net of comp withholding)
+  sched3a_item_16 = sched3a_item_14 - sched3a_item_15
+  
+  // ---- Part V: Tax Due (consolidated) ----
+  part_v_item_1 = Decimal("0")            // Tax due on compensation (₱0 for purely SE)
+  part_v_item_2 = sched3a_item_16        // Tax due on business (from Sched 3.A)
+  part_v_item_3 = part_v_item_1 + part_v_item_2
+  part_v_item_4 = Decimal("0")            // Special tax due (not applicable for standard filers)
+  part_v_item_5 = part_v_item_3 + part_v_item_4  // Total income tax due → Part II Item 22
+  
+  // ---- Part VI: Tax Credits/Payments ----
+  part_vi_item_1  = input.prior_year_excess_credits
+  part_vi_item_2  = input.quarterly_payments[0]   // Q1 actual payment
+  part_vi_item_3  = input.quarterly_payments[1]   // Q2 actual payment
+  part_vi_item_4  = input.quarterly_payments[2]   // Q3 actual payment
+  part_vi_item_5  = input.cwt_q1
+  part_vi_item_6  = input.cwt_q2
+  part_vi_item_7  = input.cwt_q3
+  part_vi_item_8  = input.cwt_q4
+  part_vi_item_9  = input.tax_withheld_compensation   // ₱0 for purely SE
+  part_vi_item_10 = input.tax_paid_prior_return
+  part_vi_item_11 = input.foreign_tax_credits
+  part_vi_item_12 = input.other_credits
+  part_vi_total   = sum(part_vi_item_1 through part_vi_item_12)
+  
+  // ---- Part II: Balance ----
+  part_ii_item_22 = part_v_item_5   // Tax due
+  part_ii_item_23 = part_vi_total   // Total credits
+  item_24_signed  = part_ii_item_22 - part_ii_item_23
+  
+  if item_24_signed > 0 and part_ii_item_22 > Decimal("2000") and input.elect_installment:
+    max_second = round(part_ii_item_22 * Decimal("0.50"), 2)
+    actual_second = min(max_second, item_24_signed)
+    part_ii_item_25 = actual_second   // 2nd installment amount (Oct 15)
+    part_ii_item_26 = item_24_signed - part_ii_item_25  // Amount due Apr 15
+  else:
+    part_ii_item_25 = Decimal("0")
+    part_ii_item_26 = max(item_24_signed, Decimal("0"))
+  
+  overpayment_amount = max(-item_24_signed, Decimal("0"))
+  
+  return Annual1701_Itemized_Output {
+    // Schedule 3.A
+    sched_3a: {
+      item_1_gross_sales:           sched3a_item_1,
+      item_2_sales_returns:         sched3a_item_2,
+      item_3_net_sales:             sched3a_item_3,
+      item_4_cost_of_sales:         sched3a_item_4,
+      item_5_gross_income_ops:      sched3a_item_5,
+      item_6_non_op_income:         sched3a_item_6,
+      item_7_total_gross_income:    sched3a_item_7,
+      item_8_deductions:            sched3a_item_8,
+      item_9_net_income_loss:       sched3a_item_9,
+      item_10_nolco:                sched3a_item_10,
+      item_11_taxable_biz_income:   sched3a_item_11,
+      item_12_taxable_comp:         sched3a_item_12,
+      item_13_total_taxable:        sched3a_item_13,
+      item_14_income_tax_due:       sched3a_item_14,
+      item_15_comp_withholding:     sched3a_item_15,
+      item_16_tax_due_biz:          sched3a_item_16,
+    },
+    sched_4_total:                  sched4_total,
+    sched_5_total:                  sched5_total,
+    sched_6_updated_nolco:          updated_nolco_entries,
+    // Part V
+    part_v_total_tax_due:           part_v_item_5,
+    // Part VI
+    part_vi_total_credits:          part_vi_total,
+    // Part II
+    item_22_tax_due:                part_ii_item_22,
+    item_23_total_credits:          part_ii_item_23,
+    item_24_signed_balance:         item_24_signed,
+    item_25_second_installment:     part_ii_item_25,
+    item_26_amount_due_april_15:    part_ii_item_26,
+    overpayment_amount:             overpayment_amount,
+    // Form identification
+    form_atc:                       input.atc_code,
+    regime_elected:                 "GRADUATED_ITEMIZED",
+    applicable_form:                "1701",
+  }
+```
+
+### CR-051.3: Worked Example — Annual Itemized Reconciliation
+
+**Taxpayer:** Architect, purely SE, non-VAT, TY2025.
+- Annual gross receipts: ₱2,000,000; Sales returns: ₱0; Cost of services: ₱0 (no employees)
+- Other non-operating income: ₱0
+- Itemized deductions (Schedule 4):
+  - Rental (office): ₱180,000
+  - Depreciation (computer equipment): ₱40,000
+  - Utilities (business use 70%): ₱36,000
+  - Professional dues/licenses: ₱15,000
+  - Business materials/supplies: ₱65,000
+  - Others (internet, subscriptions): ₱24,000
+  - Total deductions: ₱360,000
+- No NOLCO
+- Q1 paid ₱18,750; Q2 paid ₱62,500; Q3 paid ₱62,500 (total: ₱143,750)
+- CWT Q1–Q3: ₱50,000; CWT Q4: ₱25,000
+
+```
+Sched 3.A:
+Item 1 = ₱2,000,000
+Item 2 = ₱0
+Item 3 = ₱2,000,000
+Item 4 = ₱0 (no CoGS/cost of services)
+Item 5 = ₱2,000,000
+Item 6 = ₱0
+Item 7 = ₱2,000,000
+Item 8 = ₱360,000 (total itemized deductions per Schedule 4)
+Item 9 = ₱2,000,000 − ₱360,000 = ₱1,640,000
+Item 10 = ₱0 (no NOLCO)
+Item 11 = ₱1,640,000
+Item 12 = ₱0 (purely SE)
+Item 13 = ₱1,640,000
+Item 14 = graduated_tax_2023(₱1,640,000)
+        = ₱102,500 + (₱1,640,000 − ₱800,000) × 25%
+        = ₱102,500 + ₱210,000 = ₱312,500
+Item 15 = ₱0
+Item 16 = ₱312,500
+
+Part V: Total tax due = ₱312,500
+
+Part VI Credits:
+Item 1 = ₱0
+Items 2+3+4 = ₱18,750 + ₱62,500 + ₱62,500 = ₱143,750
+Items 5+6+7 = ₱50,000 (Q1–Q3 CWT)
+Item 8 = ₱25,000 (Q4 CWT)
+Total credits = ₱143,750 + ₱75,000 = ₱218,750
+
+Item 22 = ₱312,500
+Item 23 = ₱218,750
+Balance = ₱312,500 − ₱218,750 = ₱93,750 (PAYABLE)
+
+Item 22 (₱312,500) > ₱2,000 → installment option available.
+If installment elected: max 2nd = ₱312,500 × 50% = ₱156,250.
+  actual_second = min(₱156,250, ₱93,750) = ₱93,750.
+  Item 25 = ₱93,750 (pay October 15)
+  Item 26 = ₱0 due April 15 (all balance deferred to October 15)
+```
+
+---
+
+## CR-052: Annual Income Tax Reconciliation — Form 1701 (Mixed Income Earner, All Paths)
+
+**Legal basis:** NIRC Sec. 24(A)(2)(a)-(b); RMC 50-2018; BIR Form 1701, Schedule 1, Schedule 2, Schedule 3.A/3.B, Part V, Part VI
+**Applies to:** Any taxpayer with BOTH compensation income and business/professional income.
+**Required form:** ALWAYS BIR Form 1701 (never 1701A for mixed income). See DT-04.
+**Quarterly note:** The quarterly 1701Q covers ONLY business income; compensation withholding is handled by the employer. The annual 1701 brings both streams together for final reconciliation.
+
+### CR-052.1: Paths for Mixed Income Annual Reconciliation
+
+**Path A (Graduated + Itemized):**
+- Combined NTI = taxable_compensation + business_NTI_after_itemized
+- Single graduated tax on combined NTI
+- Then less: tax withheld on compensation (from Form 2316, Sched 1 Item 3A Col F)
+- = Tax due on business only (Sched 3.A Item 16)
+- Add compensation tax (Schedule 2 computation) → Part V
+
+**Path B (Graduated + OSD):**
+- business_NTI = (gross_receipts − sales_returns) × 0.60 + non_op_income
+- Combined NTI = taxable_compensation + business_NTI
+- Single graduated tax on combined NTI
+- Less: tax withheld on compensation
+- = Tax due on business portion
+
+**Path C (8% Flat Rate, Mixed Income):**
+- Business tax = gross_business_receipts × 8% (NO ₱250K deduction — per RMC 50-2018)
+- Compensation tax computed SEPARATELY using graduated rates on taxable_compensation
+- Total IT due = compensation_tax_graduated + business_tax_8pct
+- (Two separate computations, not combined into one NTI)
+
+### CR-052.2: Schedule 1 and Schedule 2 Computation (Compensation Portion)
+
+```
+function compute_compensation_portion(
+  employers:   List[EmployerRecord],  // from BIR Form 2316; see CR-030
+  taxable_year: int,
+) -> CompensationTaxResult:
+
+  // Schedule 1: sum up all employers
+  total_gross_comp      = sum(e.gross_compensation for e in employers)
+  total_non_taxable     = sum(e.non_taxable_compensation for e in employers)
+  total_taxable_comp    = total_gross_comp - total_non_taxable
+  total_comp_withholding = sum(e.tax_withheld for e in employers)
+  // Note: for multiple employers, the combined taxable comp may push the
+  // taxpayer into a higher bracket than any single employer computed for.
+  // The annual 1701 reconciles this — potential underpayment at employer level.
+  
+  return CompensationTaxResult {
+    total_gross_comp:        total_gross_comp,
+    total_non_taxable_comp:  total_non_taxable,
+    taxable_comp:            max(total_taxable_comp, Decimal("0")),
+    total_comp_withholding:  total_comp_withholding,
+  }
+```
+
+### CR-052.3: Full Mixed Income Annual Computation Function
+
+```
+function compute_annual_1701_mixed(
+  input:           Annual1701_Mixed_Input,   // includes all fields from CR-049+CR-051+compensation
+  elected_regime:  Enum["PATH_A", "PATH_B", "PATH_C"],
+) -> Annual1701_Mixed_Output:
+
+  // --- Compensation portion (Schedules 1 & 2) ---
+  comp = compute_compensation_portion(input.employers, input.taxable_year)
+  
+  // --- Business portion ---
+  net_business_receipts = input.gross_biz_receipts - input.sales_returns
+  
+  if elected_regime == "PATH_B":
+    // Graduated + OSD
+    biz_osd = round(net_business_receipts * Decimal("0.40"), 2)
+    biz_nti = net_business_receipts - biz_osd + input.non_op_income  // = 60% + non-op
+    combined_nti = comp.taxable_comp + biz_nti
+    combined_nti = max(combined_nti, Decimal("0"))
+    if input.taxable_year <= 2022:
+      total_it = graduated_tax_2018(combined_nti)
+    else:
+      total_it = graduated_tax_2023(combined_nti)
+    total_it = round(total_it, 2)
+    // Tax attributable to compensation vs business must be split on the form
+    // Form 1701 Schedule 3.A Item 14 = total_it (on combined NTI)
+    // Item 15 = comp_withholding (to determine net business tax)
+    // Item 16 = total_it − comp.total_comp_withholding
+    biz_tax_after_comp_wh = total_it - comp.total_comp_withholding
+    // Note: Item 16 may be negative if comp withholding exceeds total IT
+    // In that case, taxpayer has over-withheld on compensation — refundable
+    form_output = {
+      taxable_comp:     comp.taxable_comp,
+      biz_osd:          biz_osd,
+      biz_nti:          biz_nti,
+      combined_nti:     combined_nti,
+      total_it:         total_it,
+      biz_tax:          biz_tax_after_comp_wh,
+    }
+    
+  elif elected_regime == "PATH_A":
+    // Graduated + Itemized
+    // compute_total_allowable_deductions returns total Schedule 4+5 deductions
+    total_deductions = compute_total_allowable_deductions(
+      deductions=input.deductions, gross_receipts=net_business_receipts,
+      business_type=input.taxpayer_type
+    )
+    biz_gross_income = (net_business_receipts - input.cost_of_sales) + input.non_op_income
+    biz_nti = biz_gross_income - total_deductions
+    biz_nti_after_nolco = biz_nti - apply_nolco(biz_nti, input.nolco_entries, input.taxable_year)
+    combined_nti = comp.taxable_comp + biz_nti_after_nolco
+    combined_nti = max(combined_nti, Decimal("0"))
+    if input.taxable_year <= 2022:
+      total_it = graduated_tax_2018(combined_nti)
+    else:
+      total_it = graduated_tax_2023(combined_nti)
+    total_it = round(total_it, 2)
+    biz_tax_after_comp_wh = total_it - comp.total_comp_withholding
+    form_output = {
+      taxable_comp:     comp.taxable_comp,
+      total_deductions: total_deductions,
+      biz_nti:          biz_nti_after_nolco,
+      combined_nti:     combined_nti,
+      total_it:         total_it,
+      biz_tax:          biz_tax_after_comp_wh,
+    }
+    
+  elif elected_regime == "PATH_C":
+    // 8% rate on business (Schedule 3.B) + graduated on compensation (separate)
+    // ₱250K deduction is PROHIBITED for mixed income (RMC 50-2018)
+    biz_tax_8pct = round(net_business_receipts + input.non_op_income, 2) * Decimal("0.08")
+    biz_tax_8pct = round(biz_tax_8pct, 2)
+    // Compensation tax: graduated rate applied to taxable compensation alone
+    if input.taxable_year <= 2022:
+      comp_tax = graduated_tax_2018(comp.taxable_comp)
+    else:
+      comp_tax = graduated_tax_2023(comp.taxable_comp)
+    comp_tax = round(comp_tax, 2)
+    // Part V Item 1 = comp_tax (from Schedule 2 standalone computation)
+    // Part V Item 2 = biz_tax_8pct (from Schedule 3.B Item 30)
+    total_it = comp_tax + biz_tax_8pct
+    // Tax withheld on compensation reduces the COMPENSATION PORTION only
+    biz_tax_after_comp_wh = biz_tax_8pct  // business tax unchanged by comp withholding
+    comp_net = comp_tax - comp.total_comp_withholding
+    form_output = {
+      taxable_comp:   comp.taxable_comp,
+      comp_tax:       comp_tax,
+      biz_tax_8pct:   biz_tax_8pct,
+      total_it:       total_it,
+      comp_net:       comp_net,     // may be negative if comp withholding > comp tax
+      biz_tax:        biz_tax_8pct,
+    }
+  
+  // --- Part VI: Tax Credits (Form 1701, 12 line items) ---
+  // Full detail in CR-053 — summarized here:
+  total_credits = (
+    input.prior_year_excess
+    + sum(input.quarterly_payments)                    // Q1+Q2+Q3 business 1701Q payments
+    + input.cwt_q1 + input.cwt_q2 + input.cwt_q3 + input.cwt_q4  // business CWT
+    + comp.total_comp_withholding                      // compensation withholding from 2316
+    + input.tax_paid_prior_return
+    + input.foreign_tax_credits
+    + input.other_credits
+  )
+  
+  // Part II: Balance
+  item_22_tax_due = total_it
+  item_23_credits = total_credits
+  item_24_signed  = item_22_tax_due - item_23_credits
+  
+  if item_24_signed > 0 and item_22_tax_due > Decimal("2000") and input.elect_installment:
+    max_second = round(item_22_tax_due * Decimal("0.50"), 2)
+    item_25    = min(max_second, item_24_signed)
+    item_26    = item_24_signed - item_25
+  else:
+    item_25    = Decimal("0")
+    item_26    = max(item_24_signed, Decimal("0"))
+  
+  overpayment = max(-item_24_signed, Decimal("0"))
+  
+  return Annual1701_Mixed_Output {
+    comp_result:                  comp,
+    form_output:                  form_output,
+    total_it:                     total_it,
+    total_credits:                total_credits,
+    item_22_tax_due:              item_22_tax_due,
+    item_23_total_credits:        item_23_credits,
+    item_24_signed_balance:       item_24_signed,
+    item_25_second_installment:   item_25,
+    item_26_apr_15_amount:        item_26,
+    overpayment_amount:           overpayment,
+    applicable_form:              "1701",
+    regime_elected:               elected_regime,
+  }
+```
+
+### CR-052.4: Worked Example — Mixed Income, Path C (8% Business + Graduated Compensation)
+
+**Taxpayer:** HR manager at a corporation (₱780,000 taxable compensation, ₱52,000 employer withheld)
+  + freelance consultant business (₱1,500,000 gross receipts, no CWT from business)
+
+```
+Compensation portion:
+  taxable_comp = ₱780,000
+  comp_tax (TY2025) = graduated_tax_2023(₱780,000)
+                    = ₱22,500 + (₱780,000 − ₱400,000) × 20% = ₱22,500 + ₱76,000 = ₱98,500
+
+Business portion (Path C, 8%, NO ₱250K deduction — mixed income):
+  biz_gross = ₱1,500,000
+  biz_tax_8pct = ₱1,500,000 × 8% = ₱120,000
+
+Total income tax due = ₱98,500 + ₱120,000 = ₱218,500
+
+Tax Credits:
+  Comp withholding (from 2316): ₱52,000
+  Q1+Q2+Q3 1701Q business payments: ₱0 (taxpayer paid none quarterly — shows risk of large balance)
+  CWT on business: ₱0
+  Total credits = ₱52,000
+
+Balance = ₱218,500 − ₱52,000 = ₱166,500 PAYABLE
+
+Installment (₱218,500 > ₱2,000):
+  max_second = ₱218,500 × 50% = ₱109,250
+  actual_second = min(₱109,250, ₱166,500) = ₱109,250
+  April 15 payment = ₱166,500 − ₱109,250 = ₱57,250
+  October 15 payment = ₱109,250
+```
+
+---
+
+## CR-053: Tax Credits / Payments Section — Complete Algorithm (Form 1701 and Form 1701A)
+
+**Legal basis:** BIR Form 1701 Part VI Items 1–12; BIR Form 1701A Items 57–65; NIRC Secs. 57, 58(A), 76
+**Applies to:** All annual ITR filers — determines total credits to offset annual IT due.
+
+### CR-053.1: Form 1701A Tax Credits (Items 57–65)
+
+```
+struct Form1701A_TaxCredits_Input {
+  item_57_prior_year_excess:     Decimal,  // Carry-over from prior year 1701A/1701 overpayment
+  item_58_quarterly_payments:    Decimal,  // Sum of Q1+Q2+Q3 Form 1701Q actual payments (cash paid)
+  item_59_cwt_q1_to_q3:         Decimal,  // Sum of 2307 CWT received for Jan–Sep
+  item_60_cwt_q4:               Decimal,  // Sum of 2307 CWT received for Oct–Dec
+  item_61_prior_return_payment: Decimal,  // Tax paid on original return (amended returns only)
+  item_62_foreign_tax_credits:  Decimal,  // For resident citizens only; 0 otherwise
+  item_63_other_credits:        Decimal,  // Tax Debit Memo, etc.; specify and attach
+}
+
+function compute_1701a_credits(input: Form1701A_TaxCredits_Input) -> Decimal:
+  item_64 = (
+    input.item_57_prior_year_excess     // prior year carry-over
+    + input.item_58_quarterly_payments  // Q1+Q2+Q3 quarterly IT payments (actual cash only)
+    + input.item_59_cwt_q1_to_q3       // Q1–Q3 business CWT from Form 2307
+    + input.item_60_cwt_q4             // Q4 business CWT from Form 2307
+    + input.item_61_prior_return_payment
+    + input.item_62_foreign_tax_credits
+    + input.item_63_other_credits
+  )
+  return item_64
+
+IMPORTANT RULES FOR item_58 (quarterly payments):
+  - Use ACTUAL CASH PAID from each 1701Q, NOT the cumulative tax due shown.
+  - For each quarter: amount = max(0, item_63_on_that_quarterly_form)
+  - If a quarter had zero payable (credits exceeded tax due), that quarter contributes ₱0.
+  - Over-credited quarters do NOT produce a negative entry here — the overpayment was
+    automatically credited at the NEXT quarter via the cumulative method.
+  - Q4 has no quarterly return — Q4 gross and Q4 CWT are captured at annual level only.
+
+IMPORTANT RULES FOR items 59–60 (CWT):
+  - CWT from Q1–Q3 quarterly 1701Q forms (Items 57–58 on 1701Q Schedule III) is already included
+    in the quarterly computation. It must NOT be double-counted here.
+  - Instead: items 59–60 should contain ONLY CWT that was NOT yet claimed in any quarterly return.
+  - In practice: 
+    • CWT received Jan–Mar (Q1): first claimed in Q1 1701Q (Item 58); amount passes to Q2 as Item 57.
+    • CWT received Apr–Jun (Q2): first claimed in Q2 1701Q; passes to Q3 as Item 57.
+    • CWT received Jul–Sep (Q3): claimed in Q3 1701Q.
+    • CWT received Oct–Dec (Q4): ONLY claimable at annual return (Item 60 of 1701A).
+  - Therefore: at annual time, items 59–60 should represent ONLY the cumulative annual CWT,
+    adjusted for what was already credited in quarterly payments.
+  - ALTERNATIVE APPROACH (simpler and avoids double-counting): Re-claim ALL annual CWT on the
+    annual return, and ensure item_58 reflects ONLY cash payments (not credit offsets used in
+    quarterly). The quarterly 1701Q cash payments (item_58) already net out the CWT that was
+    applied in quarterly computations. This approach treats annual credits as a fresh slate.
+  - ENGINE MUST USE the "fresh slate" approach: compute annual credits independently.
+    item_58 = sum of actual cash payments Q1+Q2+Q3.
+    item_59+60 = ALL CWT from 2307s received Jan–Dec (full year, both Q1–Q3 and Q4).
+    This avoids the complexity of tracking which CWT was already offset quarterly.
+  - The "fresh slate" approach always yields the same result as the cumulative approach because
+    the quarterly payments (item_58) already account for CWT credits applied quarterly.
+    The annual return sees: item_56 − (cash_payments + all_cwt) = annual_balance.
+    This is identical to: item_56 − [(item_56_q3 − credits_q3) + ... ] = correct.
+```
+
+### CR-053.2: Form 1701 Part VI Tax Credits (Items 1–12)
+
+```
+struct Form1701_TaxCredits_Input {
+  item_1_prior_year_excess:      Decimal,  // Carry-over from prior year annual return
+  item_2_q1_payment:             Decimal,  // Actual Q1 1701Q payment
+  item_3_q2_payment:             Decimal,  // Actual Q2 1701Q payment
+  item_4_q3_payment:             Decimal,  // Actual Q3 1701Q payment
+  item_5_cwt_q1:                 Decimal,  // BIR 2307 received for Q1 (Jan–Mar)
+  item_6_cwt_q2:                 Decimal,  // BIR 2307 received for Q2 (Apr–Jun)
+  item_7_cwt_q3:                 Decimal,  // BIR 2307 received for Q3 (Jul–Sep)
+  item_8_cwt_q4:                 Decimal,  // BIR 2307 received for Q4 (Oct–Dec)
+  item_9_comp_withholding:       Decimal,  // Total EWT from all employer Form 2316s
+  item_10_prior_return_payment:  Decimal,  // Tax paid on original return (amended only)
+  item_11_foreign_tax_credits:   Decimal,  // Resident citizens only
+  item_12_other_credits:         Decimal,  // TDM, etc.
+}
+
+function compute_1701_credits(input: Form1701_TaxCredits_Input) -> Decimal:
+  total = (
+    input.item_1_prior_year_excess
+    + input.item_2_q1_payment
+    + input.item_3_q2_payment
+    + input.item_4_q3_payment
+    + input.item_5_cwt_q1
+    + input.item_6_cwt_q2
+    + input.item_7_cwt_q3
+    + input.item_8_cwt_q4
+    + input.item_9_comp_withholding
+    + input.item_10_prior_return_payment
+    + input.item_11_foreign_tax_credits
+    + input.item_12_other_credits
+  )
+  return total
+
+NOTE: Form 1701 separates CWT by quarter (items 5–8) whereas Form 1701A groups Q1–Q3 together
+(item 59) and Q4 separately (item 60). The totals are equivalent.
+
+NOTE: item_9 (compensation withholding) is only non-zero for mixed income earners. For purely
+SE taxpayers using Form 1701, item_9 = ₱0.
+
+NOTE: The "fresh slate" approach applies equally to Form 1701 — items 5–8 capture ALL 2307
+CWT for the year, and items 2–4 capture actual Q1/Q2/Q3 1701Q cash payments only.
+```
+
+---
+
+## CR-054: Balance Payable, Installment Election, and Overpayment Disposition
+
+**Legal basis:** NIRC Sec. 56(A)(2) (as amended by TRAIN); NIRC Sec. 76 (overpayment refund/TCC/carry-over); RR 8-2018; RA 11976 (EOPT)
+
+### CR-054.1: Balance Payable / Overpayment Determination
+
+```
+function determine_annual_balance(
+  annual_it_due:     Decimal,   // from Part V (Form 1701) or Item 20 (Form 1701A)
+  total_credits:     Decimal,   // from Part VI (Form 1701) or Item 64 (Form 1701A)
+) -> BalanceResult:
+  
+  signed_balance = annual_it_due - total_credits
+  
+  if signed_balance > 0:
+    result_type = "BALANCE_PAYABLE"
+    amount = signed_balance
+  elif signed_balance == 0:
+    result_type = "ZERO_BALANCE"
+    amount = Decimal("0")
+  else:
+    result_type = "OVERPAYMENT"
+    amount = -signed_balance   // positive overpayment amount
+  
+  return BalanceResult {
+    result_type:      result_type,
+    amount:           amount,
+    signed_balance:   signed_balance,
+  }
+```
+
+### CR-054.2: Installment Payment Election
+
+```
+function compute_installment_election(
+  annual_it_due:     Decimal,   // gross IT due (before credits; used for threshold test)
+  balance_payable:  Decimal,   // amount actually owed after credits (>= 0)
+  taxpayer_elect:   bool,      // true = taxpayer chooses installment; false = lump sum
+  filing_year:      int,       // the calendar year the return is FILED (e.g., 2026 for TY2025)
+) -> InstallmentResult:
+
+  // Installment only available if gross IT due > ₱2,000 (threshold on Item 22, not balance)
+  installment_available = (annual_it_due > Decimal("2000")) and (balance_payable > 0)
+  
+  if not installment_available or not taxpayer_elect:
+    return InstallmentResult {
+      installment_elected:       false,
+      first_installment_amount:  balance_payable,   // full balance due April 15
+      first_installment_date:    Date(filing_year, 4, 15),
+      second_installment_amount: Decimal("0"),
+      second_installment_date:   None,
+      note: "Full amount due on April 15."
+    }
+  
+  // Maximum second installment = 50% of Item 22 (gross IT due, not balance payable)
+  max_second = round(annual_it_due * Decimal("0.50"), 2)
+  // Second installment cannot exceed balance payable
+  actual_second = min(max_second, balance_payable)
+  first_due = balance_payable - actual_second
+  
+  return InstallmentResult {
+    installment_elected:       true,
+    first_installment_amount:  first_due,          // due April 15 (may be ₱0)
+    first_installment_date:    Date(filing_year, 4, 15),
+    second_installment_amount: actual_second,       // due October 15
+    second_installment_date:   Date(filing_year, 10, 15),
+    note: "Second installment due October 15. Must be elected on the April 15 return via Item 25 (1701) or Item 23 (1701A). Election is irrevocable once filed."
+  }
+```
+
+**Rules for installment:**
+- The threshold of ₱2,000 applies to gross income tax DUE (Items 22/20 on the form), not the net balance after credits.
+- The maximum deferred to October 15 is 50% of gross IT due (not 50% of balance payable).
+- If balance payable < max_second, the entire balance is deferred to October 15 and April 15 payment = ₱0.
+- Election is made by filling in Items 25/23 on the return. Once filed with installment elected, it is irrevocable.
+- Missing the October 15 second installment triggers late payment penalties starting October 16: 25%/10% surcharge + 12%/6% interest per annum (EOPT-tiered rates) on the missed amount.
+
+### CR-054.3: Overpayment Disposition Options
+
+```
+function determine_overpayment_disposition(
+  overpayment_amount:    Decimal,       // must be > 0 (else not applicable)
+  taxpayer_preference:   Enum["REFUND", "TCC", "CARRY_OVER"],
+) -> OverpaymentDisposition:
+
+  validate: overpayment_amount > 0
+
+  if taxpayer_preference == "REFUND":
+    return OverpaymentDisposition {
+      option:                  "REFUND",
+      amount:                  overpayment_amount,
+      action:                  "File BIR refund claim. Amounts ≤ ₱1,000,000 may qualify for automatic refund under EOPT Act. Amounts > ₱1,000,000 require full audit process.",
+      timeline:                "90 days from filing per RA 11976 for auto-processable refunds; 120 days for full-process refunds.",
+      irrevocable:             true,   // election made on the return cannot be changed after filing
+      required_on_form:        "Mark 'To be Refunded' checkbox on Item 24 of Form 1701 or Item 22 of Form 1701A."
+    }
+  
+  elif taxpayer_preference == "TCC":
+    return OverpaymentDisposition {
+      option:                  "TCC",
+      amount:                  overpayment_amount,
+      action:                  "BIR issues a Tax Credit Certificate. Usable to pay future BIR tax liabilities (income tax, VAT, percentage tax, etc.). Cannot be transferred except to wholly-owned subsidiaries.",
+      timeline:                "Same processing time as refund. Must apply via BIR Form 1926 after filing ITR.",
+      irrevocable:             true,
+      required_on_form:        "Mark 'To be Issued a Tax Credit Certificate (TCC)' checkbox."
+    }
+  
+  elif taxpayer_preference == "CARRY_OVER":
+    return OverpaymentDisposition {
+      option:                  "CARRY_OVER",
+      amount:                  overpayment_amount,
+      action:                  "Excess credits carried forward to next taxable year. Applied as Item 1 on next year's Form 1701 Part VI (or Item 57 on Form 1701A). No separate application required.",
+      timeline:                "Immediate — recorded on current year return; applied at next year's annual filing.",
+      irrevocable:             true,   // once elected carry-over on the return, cannot switch to refund
+      required_on_form:        "Mark 'To be Carried Over as Tax Credit for Next Year/Quarter' checkbox.",
+      next_year_item:          "Prior Year's Excess Credits — Form 1701 Part VI Item 1; Form 1701A Item 57."
+    }
+```
+
+**Important rule — irrevocability of overpayment election:**
+Once the annual ITR is filed and the overpayment disposition is marked (Refund, TCC, or Carry-Over),
+the election is irrevocable under NIRC Sec. 76. The taxpayer cannot change from Carry-Over to Refund
+after the return is filed, even if they later need the cash. This is a critical advisory point for the UI.
+
+---
+
+## CR-055: Annual Return Attachments Requirements
+
+**Legal basis:** BIR Form 1701 / 1701A instructions; RR 12-2007 (external auditors); RA 11976 EOPT Act (simplified requirements)
+
+### CR-055.1: Required Attachments Decision Function
+
+```
+function determine_required_attachments(
+  form_type:               Enum["1701", "1701A"],
+  has_compensation_income: bool,
+  gross_quarterly_sales:   Decimal,          // highest single quarter gross
+  is_claiming_cwt:         bool,             // has any Form 2307
+  is_carrying_prior_excess: bool,            // prior year carry-over > ₱0
+  is_amended_return:       bool,
+  deduction_method:        Enum["OSD", "ITEMIZED", "EIGHT_PCT"],
+  is_vat_registered:       bool,
+  has_foreign_income:      bool,
+) -> List[RequiredAttachment]:
+
+  required = []
+  
+  // Statement of Management's Responsibility (SMR) — always required for Form 1701
+  if form_type == "1701":
+    required.append(RequiredAttachment {
+      document: "Statement of Management's Responsibility (SMR)",
+      reason: "Required for all Form 1701 filers",
+      form_or_doc: "SMR — signed by taxpayer/authorized representative",
+    })
+  
+  // CPA Certificate and Financial Statements — if gross quarterly sales > ₱150,000
+  if gross_quarterly_sales > Decimal("150000"):
+    required.append(RequiredAttachment {
+      document: "Certificate of Independent CPA (BIR-accredited)",
+      reason: "Gross quarterly sales exceed ₱150,000",
+      form_or_doc: "CPA certificate with TIN, accreditation number, issuance date, expiry date",
+    })
+    required.append(RequiredAttachment {
+      document: "Account Information Form (AIF) or Financial Statements",
+      reason: "Gross quarterly sales exceed ₱150,000",
+      form_or_doc: "Balance Sheet, Income Statement, Notes (Schedules on Taxes and Licenses)",
+    })
+  // Exception: Under EOPT Act (RA 11976), MICRO taxpayers (annual gross < ₱3M) may file
+  // simplified FS. The CPA requirement still applies above ₱150K/quarter even for Micro tier.
+  
+  // Form 2307 copies — if claiming CWT
+  if is_claiming_cwt:
+    required.append(RequiredAttachment {
+      document: "BIR Form 2307 — all copies received for the taxable year",
+      reason: "Creditable withholding tax is being claimed",
+      form_or_doc: "Original copies of all Form 2307 certificates issued by withholding agents",
+    })
+    required.append(RequiredAttachment {
+      document: "SAWT — Summary Alphalist of Withholding Tax at Source",
+      reason: "Required when claiming CWT credits (all 2307 holders must submit SAWT)",
+      form_or_doc: "Electronic SAWT file (DAT format) submitted to BIR electronically",
+    })
+  
+  // Form 2316 — for mixed income earners
+  if has_compensation_income:
+    required.append(RequiredAttachment {
+      document: "BIR Form 2316 — one per employer",
+      reason: "Compensation income from employer is reported",
+      form_or_doc: "Original Form 2316 from each employer (or each employer for the year)",
+    })
+  
+  // Prior year excess credits proof
+  if is_carrying_prior_excess:
+    required.append(RequiredAttachment {
+      document: "Copy of prior year Annual ITR showing overpayment",
+      reason: "Prior year excess credits being carried over",
+      form_or_doc: "Photocopy of prior year 1701 or 1701A showing the overpayment amount",
+    })
+  
+  // Amended return — prior payment proof
+  if is_amended_return:
+    required.append(RequiredAttachment {
+      document: "BIR Official Receipt or bank confirmation of prior tax payment",
+      reason: "Amended return claiming credit for prior payment",
+      form_or_doc: "BIR Form 0605 or bank payment confirmation showing prior payment",
+    })
+  
+  // Itemized deductions — Schedule 4 supporting docs
+  if deduction_method == "ITEMIZED":
+    required.append(RequiredAttachment {
+      document: "Schedule 4 Summary — Ordinary Allowable Itemized Deductions",
+      reason: "Itemized deductions elected",
+      form_or_doc: "Completed Schedule 4 on Form 1701; supporting receipts/invoices must be available for BIR examination (not submitted, but retained for 5 years per EOPT)",
+    })
+  
+  // Foreign income — tax credit
+  if has_foreign_income:
+    required.append(RequiredAttachment {
+      document: "Foreign tax credit documentation",
+      reason: "Foreign tax credits being claimed",
+      form_or_doc: "Official tax receipts or assessments from foreign tax authority; CPA-translated if not in English",
+    })
+  
+  return required
+```
+
+---
+
+## CR-056: Annual Return Late Filing and Late Payment Penalties
+
+**Legal basis:** NIRC Secs. 248–249; RA 11976 (EOPT); RR 8-2024; see CR-048 for quarterly version
+**Applies to:** Annual returns (Form 1701 or 1701A) filed after April 15 deadline.
+
+### CR-056.1: Late Annual Return Penalty Computation
+
+```
+function compute_annual_late_penalty(
+  annual_it_due:      Decimal,   // Item 22 (1701) or Item 20 (1701A) — gross tax due
+  total_credits:      Decimal,   // Total credits (used to determine actual balance payable)
+  due_date:           Date,      // Always April 15 of the filing year
+  payment_date:       Date,      // Actual date of late payment/filing
+  taxpayer_tier:      Enum["MICRO", "SMALL", "MEDIUM", "LARGE"],
+  is_nil_return:      bool,      // true if annual_it_due == 0
+  installment_elected: bool,     // if second installment was elected and missed
+  second_installment_date: Date, // Only relevant if installment_elected = true
+) -> AnnualPenaltyBreakdown:
+
+  balance_payable = max(annual_it_due - total_credits, Decimal("0"))
+  days_late_first  = (payment_date - due_date).days
+  
+  if days_late_first <= 0 and not (installment_elected and payment_date > second_installment_date):
+    return AnnualPenaltyBreakdown { total: Decimal("0"), note: "Filed and paid on time." }
+  
+  // Penalty on first installment (or full amount if no installment elected)
+  if days_late_first > 0:
+    if taxpayer_tier in ["MICRO", "SMALL"]:
+      surcharge_rate = Decimal("0.10")
+      interest_rate  = Decimal("0.06")
+    else:
+      surcharge_rate = Decimal("0.25")
+      interest_rate  = Decimal("0.12")
+    
+    if is_nil_return or balance_payable == 0:
+      surcharge = Decimal("0")
+      interest  = Decimal("0")
+    else:
+      surcharge = round(balance_payable * surcharge_rate, 2)
+      interest  = round(balance_payable * interest_rate * (days_late_first / Decimal("365")), 2)
+    
+    // Compromise penalty lookup (same function as CR-020)
+    compromise = lookup_compromise_penalty(
+      tax_due   = balance_payable,
+      is_nil    = (balance_payable == 0),
+      tier      = taxpayer_tier,
+    )
+    
+    return AnnualPenaltyBreakdown {
+      surcharge:       surcharge,
+      interest:        interest,
+      compromise:      compromise,
+      total:           surcharge + interest + compromise,
+      note:            f"Annual ITR filed {days_late_first} days late. Penalties on balance ₱{balance_payable}.",
+    }
+  
+  // Penalty on second installment only (first was paid on time, second missed)
+  elif installment_elected and payment_date > second_installment_date:
+    second_due_amount = input.installment_result.second_installment_amount
+    days_late_second  = (payment_date - second_installment_date).days
+    if taxpayer_tier in ["MICRO", "SMALL"]:
+      interest_rate = Decimal("0.06")
+    else:
+      interest_rate = Decimal("0.12")
+    interest = round(second_due_amount * interest_rate * (days_late_second / Decimal("365")), 2)
+    // No surcharge on second installment if taxpayer elected installment in good faith
+    // and paid first installment on time; only interest and compromise apply.
+    compromise = lookup_compromise_penalty(tax_due=second_due_amount, is_nil=false, tier=taxpayer_tier)
+    return AnnualPenaltyBreakdown {
+      surcharge:  Decimal("0"),
+      interest:   interest,
+      compromise: compromise,
+      total:      interest + compromise,
+      note:       f"Second installment {days_late_second} days late. Surcharge waived (first installment paid on time).",
+    }
+```
+

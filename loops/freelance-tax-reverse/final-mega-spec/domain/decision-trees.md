@@ -317,22 +317,20 @@ START: Did the taxpayer earn ANY compensation income from employment this taxabl
           │     Ref: BIR Form 1701A (January 2018 ENCS) instructions.]
           │
           └── GRADUATED + ITEMIZED DEDUCTIONS (Path A) →
-               Does the taxpayer wish to attach Audited Financial Statements?
-               (Required when gross > ₱3M; for below ₱3M, attachment is optional under EOPT)
-               │
-               ├── YES (attaching AFS) →
-               │    [ACTION: ANNUAL_FORM = "1701A" or "1701" (either acceptable).
-               │     Form 1701A can accommodate itemized deductions.
-               │     Form 1701 provides more detailed schedule for itemized items.
-               │     BIR accepts either; recommend 1701A for simplicity.
-               │     Ref: BIR form instructions; EOPT simplifications.]
-               │
-               └── NO (not attaching AFS) →
-                    [ACTION: ANNUAL_FORM = "1701A".
-                     For non-AFS filers on itemized: use Form 1701A.
-                     Schedule 3 (Itemized Deductions) is available within 1701A for
-                     the detailed deduction breakdown.
-                     Ref: BIR Form 1701A instructions; RR 8-2018.]
+               [ACTION: ANNUAL_FORM = "1701".
+                CORRECTION: Form 1701A CANNOT be used for itemized deductions.
+                BIR Form 1701A explicitly states it is ONLY for purely self-employed individuals
+                using EITHER (a) graduated income tax rates with OSD, OR (b) 8% flat rate.
+                Itemized deductions require BIR Form 1701 (Annual Income Tax Return for
+                Self-Employed Individuals, Estates, and Trusts Including Those With Mixed Income).
+                Form 1701 provides Schedule 3.A (business income), Schedule 4 (ordinary
+                allowable itemized deductions, 17 line items), Schedule 5 (special deductions),
+                and Schedule 6 (NOLCO).
+                AFS attachment rule: Required if gross quarterly sales > ₱150,000 per RR 4-2019.
+                For gross ≤ ₱150,000/quarter: AFS not required by BIR (EOPT simplification).
+                Supporting receipts/invoices must be retained for 5 years per EOPT.
+                Ref: BIR Form 1701A instructions (explicitly excludes itemized deduction filers);
+                     BIR Form 1701 instructions; RR 4-2019; RA 11976 EOPT Act.]
 ```
 
 ---
