@@ -1,6 +1,6 @@
 # Edge-Case Test Vectors — Philippine Freelance Tax Optimizer
 
-**Status:** COMPLETE — 12 edge-case test vectors
+**Status:** COMPLETE — 16 edge-case test vectors (TV-EDGE-001 through TV-EDGE-016)
 **Last updated:** 2026-03-01
 **Cross-references:**
 - Basic test vectors: [engine/test-vectors/basic.md](basic.md)
@@ -1295,3 +1295,436 @@ Wait — correcting the tier. ₱1,200,000 < ₱3,000,000 → MICRO tier, NOT SM
 **Critical architecture note:** For TRADER taxpayers, the engine must compute `gross_income = gross_receipts − cost_of_goods_sold` BEFORE applying OSD. The 8% Path C base remains gross sales (not gross income). This difference is the entire reason OSD can dominate for traders — the OSD reduces a smaller base (gross income, after COGS) while 8% applies to the full gross sales amount.
 
 **Legal basis:** NIRC Sec. 34(L) — OSD = 40% of "gross income" (which for trading businesses = gross sales − COGS per Sec. 32(A)); CR-005 (Path B) and CR-006 (Path C) in computation-rules.md
+
+---
+
+## TV-EDGE-013: SC-AT-250K-EXACT — Exactly ₱250,000 Gross; 8% Base Floored to Zero
+
+**Scenario code:** SC-AT-250K-EXACT
+**Edge case:** A service provider's gross receipts are exactly ₱250,000. The 8% base = gross − ₱250,000 = ₱0. Path C income tax = ₱0 × 0.08 = ₱0. The 8% election simultaneously waives the 3% percentage tax obligation. Paths A and B also produce ₱0 income tax (NTI < ₱250K threshold), but still owe ₱7,500 PT. Path C wins with ₱0 total tax.
+**Description:** An online English tutor earns exactly ₱250,000 gross receipts with no expenses. This is the minimum gross where Path C's superiority over Paths A/B is maximized (PT savings = ₱7,500, the largest possible PT savings because the 8% IT is simultaneously ₱0).
+
+**Tax year:** 2025
+**Filing period:** ANNUAL
+
+### Input (TaxpayerInput)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `taxpayer_type` | `PURELY_SE` | No compensation income |
+| `taxpayer_class` | `SERVICE_PROVIDER` | Pure service, no COGS |
+| `taxpayer_tier` | `MICRO` | ₱250,000 < ₱3,000,000 |
+| `tax_year` | `2025` | |
+| `filing_period` | `ANNUAL` | |
+| `gross_receipts` | `250_000.00` | Exactly ₱250,000 |
+| `cost_of_goods_sold` | `0.00` | |
+| `gross_other_income` | `0.00` | |
+| `taxable_compensation` | `0.00` | |
+| `compensation_cwt` | `0.00` | |
+| `itemized_deductions` | `0.00` | No documented expenses |
+| `is_vat_registered` | `false` | |
+| `elected_regime` | `null` | Optimizer mode |
+| `prior_quarter_payments` | `0.00` | |
+| `cwt_credits_income_tax` | `0.00` | |
+| `cwt_credits_percentage_tax` | `0.00` | |
+| `filing_date` | `2026-04-15` | On time |
+| `is_first_year_registrant` | `false` | |
+| `registration_quarter` | `null` | |
+| `nolco_carryover` | `0.00` | |
+
+### Expected Intermediate Values
+
+**PL-03 Path C:**
+- `eight_pct_base = max(250_000 − 250_000, 0) = max(0, 0) = 0`
+- `income_tax_path_c = 0 × 0.08 = 0.00`
+- `pct_tax_path_c = 0.00` (8% election waives PT obligation even when base = ₱0)
+- `total_tax_path_c = 0.00`
+
+**PL-03 Path B:**
+- `nti_path_b = 250_000 × 0.60 = 150_000`
+- `income_tax_path_b = graduated_tax(150_000) = 0.00` (below ₱250,000 threshold)
+- `pct_tax_path_b = 250_000 × 0.03 = 7_500.00`
+- `total_tax_path_b = 0 + 7_500 = 7_500.00`
+
+**PL-03 Path A:**
+- `nti_path_a = 250_000 − 0 = 250_000`
+- `income_tax_path_a = graduated_tax(250_000) = 0.00` (₱250,000 is the floor of the 15% bracket; income AT exactly ₱250,000 → tax = (250,000 − 250,000) × 0.15 = ₱0)
+- `pct_tax_path_a = 250_000 × 0.03 = 7_500.00`
+- `total_tax_path_a = 0 + 7_500 = 7_500.00`
+
+**PL-04 Comparison:**
+- Totals: A=7,500 | B=7,500 | C=0
+- **Path C recommended** — only path with ₱0 total tax obligation
+- `savings_vs_next_best = 7_500 − 0 = 7_500`
+- `next_best_path = PATH_B` (tie-break: PATH_B > PATH_A per INV-RC-05)
+
+### Expected Final Output (TaxComputationResult)
+
+| Field | Value |
+|-------|-------|
+| `recommended_path` | `PATH_C` |
+| `savings_vs_next_best` | `7_500.00` |
+| `next_best_path` | `PATH_B` |
+| `path_c.eight_pct_base` | `0.00` |
+| `path_c.income_tax` | `0.00` |
+| `path_c.percentage_tax` | `0.00` |
+| `path_c.total_tax` | `0.00` |
+| `path_b.nti` | `150_000.00` |
+| `path_b.income_tax` | `0.00` |
+| `path_b.percentage_tax` | `7_500.00` |
+| `path_b.total_tax` | `7_500.00` |
+| `path_a.nti` | `250_000.00` |
+| `path_a.income_tax` | `0.00` |
+| `path_a.percentage_tax` | `7_500.00` |
+| `path_a.total_tax` | `7_500.00` |
+| `income_tax_due` | `0.00` |
+| `pct_tax_due` | `0.00` |
+| `balance_payable` | `0.00` |
+| `balance_disposition` | `ZERO_BALANCE` |
+| `recommended_form` | `Form 1701A Part IV-B` |
+| **Warnings:** | `[WARN-006]` (low income; noting 8% yields ₱0 total tax obligation) |
+
+### Verification
+
+**Key rule:** The graduated bracket table starts at ₱250,001; at exactly ₱250,000 the taxable income equals the floor of the first taxable bracket — income tax = (250,000 − 250,000) × 0.15 = **₱0**. This is NOT below the floor; the floor IS ₱250,000.
+
+**Path C:** max(250,000 − 250,000, 0) = 0; IT = 0 × 0.08 = **₱0**; PT waived = **₱0 total** ✓
+**Path B:** NTI = 150,000 < 250,000 → IT = ₱0; PT = 250,000 × 0.03 = **₱7,500** ✓
+**Path A:** NTI = 250,000 → IT = ₱0 (at bracket floor); PT = **₱7,500** ✓
+**Path C savings:** 7,500 − 0 = **₱7,500** ✓
+
+**Critical implementation note:** The engine must handle `eight_pct_base = max(gross_receipts − 250_000, 0)` with the floor at ₱0. A negative result must be clamped to ₱0; the computed IT is then ₱0 × 0.08 = ₱0. The 8% ELECTION is still valid and still waives the PT obligation even when the resulting IT is ₱0.
+
+**Legal basis:** NIRC Sec. 24(A)(2)(b); NIRC Sec. 24(A)(1) graduated bracket table — ₱250,000 floor is the threshold, not a ₱0.01 trigger
+
+---
+
+## TV-EDGE-014: SC-BE-OSD-8-HI — Exact Tie at ₱437,500 — Upper Boundary of OSD-Wins Window
+
+**Scenario code:** SC-BE-OSD-8-HI
+**Edge case:** At exactly ₱437,500 gross receipts, Path C (8%) and Path B (OSD + PT) produce exactly equal total tax of ₱15,000. This is the UPPER boundary of the OSD-wins window (₱400,001–₱437,499). At this exact amount, the two paths re-converge and the tie-break rule applies (Path C preferred).
+**Description:** A freelance content writer earns exactly ₱437,500. Path C: (437,500 − 250,000) × 0.08 = ₱15,000. Path B: NTI = 262,500; IT = (262,500 − 250,000) × 0.15 = ₱1,875; PT = 437,500 × 0.03 = ₱13,125; total = ₱15,000. TIE → Path C wins.
+
+**Tax year:** 2025
+**Filing period:** ANNUAL
+
+### Input (TaxpayerInput)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `taxpayer_type` | `PURELY_SE` | |
+| `taxpayer_class` | `SERVICE_PROVIDER` | |
+| `taxpayer_tier` | `MICRO` | |
+| `tax_year` | `2025` | |
+| `filing_period` | `ANNUAL` | |
+| `gross_receipts` | `437_500.00` | Upper tie boundary |
+| `cost_of_goods_sold` | `0.00` | |
+| `gross_other_income` | `0.00` | |
+| `taxable_compensation` | `0.00` | |
+| `compensation_cwt` | `0.00` | |
+| `itemized_deductions` | `0.00` | |
+| `is_vat_registered` | `false` | |
+| `elected_regime` | `null` | Optimizer mode |
+| `prior_quarter_payments` | `0.00` | |
+| `cwt_credits_income_tax` | `0.00` | |
+| `cwt_credits_percentage_tax` | `0.00` | |
+| `filing_date` | `2026-04-15` | |
+| `is_first_year_registrant` | `false` | |
+| `registration_quarter` | `null` | |
+| `nolco_carryover` | `0.00` | |
+
+### Expected Intermediate Values
+
+**PL-03 Path C:**
+- `eight_pct_base = 437_500 − 250_000 = 187_500`
+- `income_tax_path_c = 187_500 × 0.08 = 15_000.00`
+- `pct_tax_path_c = 0.00`
+- `total_tax_path_c = 15_000.00`
+
+**PL-03 Path B:**
+- `nti_path_b = 437_500 × 0.60 = 262_500`
+- `income_tax_path_b = graduated_tax(262_500) = (262_500 − 250_000) × 0.15 = 12_500 × 0.15 = 1_875.00`
+- `pct_tax_path_b = 437_500 × 0.03 = 13_125.00`
+- `total_tax_path_b = 1_875 + 13_125 = 15_000.00`
+
+**PL-03 Path A:**
+- `nti_path_a = 437_500` (no expenses)
+- `income_tax_path_a = graduated_tax(437_500) = (437_500 − 250_000) × 0.15 = 187_500 × 0.15 = 28_125.00`
+- `pct_tax_path_a = 437_500 × 0.03 = 13_125.00`
+- `total_tax_path_a = 28_125 + 13_125 = 41_250.00`
+
+**PL-04 Tie-Break:**
+- Path C total = ₱15,000; Path B total = ₱15,000 → TIE between C and B
+- Tie-break rule (INV-RC-05): Path C preferred over Path B
+- `recommended_path = PATH_C`
+- `savings_vs_next_best = 0.00`
+- `tie_exists = true`
+
+### Expected Final Output (TaxComputationResult)
+
+| Field | Value |
+|-------|-------|
+| `recommended_path` | `PATH_C` |
+| `savings_vs_next_best` | `0.00` |
+| `next_best_path` | `PATH_B` |
+| `tie_exists` | `true` |
+| `path_c.eight_pct_base` | `187_500.00` |
+| `path_c.income_tax` | `15_000.00` |
+| `path_c.percentage_tax` | `0.00` |
+| `path_c.total_tax` | `15_000.00` |
+| `path_b.nti` | `262_500.00` |
+| `path_b.income_tax` | `1_875.00` |
+| `path_b.percentage_tax` | `13_125.00` |
+| `path_b.total_tax` | `15_000.00` |
+| `path_a.total_tax` | `41_250.00` |
+| `income_tax_due` | `15_000.00` |
+| `balance_payable` | `15_000.00` |
+| `balance_disposition` | `BALANCE_PAYABLE` |
+| `recommended_form` | `Form 1701A Part IV-B` |
+
+### Verification
+
+**OSD-wins window derivation:** Between ₱400,000 (lower boundary) and ₱437,500 (upper boundary), Path B total tax < Path C total tax. At both exact boundary values, the totals are equal (₱12,000 at lower, ₱15,000 at upper). At ₱437,501 (one peso above), Path C becomes cheaper again and Path B no longer wins.
+
+**Path C:** (437,500 − 250,000) × 0.08 = 187,500 × 0.08 = **₱15,000** ✓
+**Path B:** NTI = 437,500 × 0.60 = 262,500; IT = (262,500 − 250,000) × 0.15 = **₱1,875**; PT = 437,500 × 0.03 = **₱13,125**; total = **₱15,000** ✓
+**Tie confirmed:** ₱15,000 = ₱15,000 ✓
+**Tie-break:** Path C wins per INV-RC-05 ✓
+
+**Paired test:** This vector must be tested together with TV-EDGE-002 (gross = ₱420,000, where Path B wins) and TV-EDGE-003 (gross = ₱400,000, lower boundary). The three vectors together prove the OSD-wins window is exactly ₱400,001–₱437,499, with ties at both boundaries resolving to Path C.
+
+**Legal basis:** CR-014 breakeven table (regime-comparison-logic.md); CR-005 (Path B); CR-006 (Path C); INV-RC-05 (tie-break ordering)
+
+---
+
+## TV-EDGE-015: SC-NOLCO — NOLCO Carryover Makes Itemized Path Win Over 8%
+
+**Scenario code:** SC-NOLCO
+**Edge case:** A sole proprietor with a prior year Net Operating Loss Carry-Over (NOLCO) under itemized deductions (Path A only). NOLCO is NOT available under OSD (Path B) or 8% flat rate (Path C). The NOLCO deduction is large enough to make Path A produce lower total tax than Path C, reversing the typical recommendation.
+**Description:** An architect earns ₱1,500,000 gross receipts in TY2025, with ₱800,000 in documented business expenses. They have a ₱200,000 NOLCO carryover from TY2024 (within the 3-year window, not yet expired). Under Path A (itemized): NTI = 1,500,000 − 800,000 − 200,000 = ₱500,000; IT = ₱42,500; PT = ₱45,000; total = **₱87,500**. Under Path C (8%): no NOLCO available; IT = (1,500,000 − 250,000) × 0.08 = ₱100,000; total = **₱100,000**. Path A wins by ₱12,500 — NOLCO makes the difference.
+
+**Tax year:** 2025
+**Filing period:** ANNUAL
+
+### Input (TaxpayerInput)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `taxpayer_type` | `PURELY_SE` | |
+| `taxpayer_class` | `SERVICE_PROVIDER` | Architectural professional services |
+| `taxpayer_tier` | `MICRO` | ₱1.5M < ₱3M |
+| `tax_year` | `2025` | |
+| `filing_period` | `ANNUAL` | |
+| `gross_receipts` | `1_500_000.00` | Professional fees received |
+| `cost_of_goods_sold` | `0.00` | Service provider — no COGS |
+| `gross_other_income` | `0.00` | |
+| `taxable_compensation` | `0.00` | |
+| `compensation_cwt` | `0.00` | |
+| `itemized_deductions` | `800_000.00` | Office rent ₱360K + salary/benefits ₱240K + utilities ₱80K + depreciation ₱120K |
+| `is_vat_registered` | `false` | |
+| `elected_regime` | `null` | Optimizer mode |
+| `prior_quarter_payments` | `0.00` | Simplified: no quarterly payments |
+| `cwt_credits_income_tax` | `0.00` | |
+| `cwt_credits_percentage_tax` | `0.00` | |
+| `filing_date` | `2026-04-15` | |
+| `is_first_year_registrant` | `false` | |
+| `registration_quarter` | `null` | |
+| `nolco_carryover` | `200_000.00` | TY2024 net operating loss; expires TY2027; fully applied this year |
+
+### Expected Intermediate Values
+
+**PL-02 Classification:**
+- `income_type = PURELY_SE`
+- `taxpayer_class = SERVICE_PROVIDER`
+- `nolco_available = true` (nolco_carryover = ₱200,000 > ₱0)
+- `nolco_deductible_under_path_a = true`
+- `nolco_deductible_under_path_b = false` (OSD replaces all deductions; NOLCO not applicable)
+- `nolco_deductible_under_path_c = false` (8% flat rate; no deductions of any kind)
+
+**PL-03 Path A (Itemized + NOLCO):**
+- `gross_income_a = 1_500_000` (service provider; gross_income = gross_receipts)
+- `itemized_deductions_allowed = 800_000`
+- `nolco_applied = 200_000` (full carryover applied, remaining NOLCO = ₱0 after this year)
+- `nti_path_a = 1_500_000 − 800_000 − 200_000 = 500_000`
+- `income_tax_path_a = graduated_tax(500_000) = 22_500 + (500_000 − 400_000) × 0.20 = 22_500 + 20_000 = 42_500.00`
+- `pct_tax_path_a = 1_500_000 × 0.03 = 45_000.00`
+- `total_tax_path_a = 42_500 + 45_000 = 87_500.00`
+
+**PL-03 Path B (OSD — NOLCO NOT available):**
+- `nti_path_b = 1_500_000 × 0.60 = 900_000`
+- `income_tax_path_b = graduated_tax(900_000) = 102_500 + (900_000 − 800_000) × 0.25 = 102_500 + 25_000 = 127_500.00`
+- `pct_tax_path_b = 45_000.00`
+- `total_tax_path_b = 127_500 + 45_000 = 172_500.00`
+
+**PL-03 Path C (8% — NOLCO NOT available):**
+- `eight_pct_base = 1_500_000 − 250_000 = 1_250_000`
+- `income_tax_path_c = 1_250_000 × 0.08 = 100_000.00`
+- `pct_tax_path_c = 0.00`
+- `total_tax_path_c = 100_000.00`
+
+**PL-04 Comparison:**
+- Totals: A=87,500 | B=172,500 | C=100,000
+- `min(87_500, 172_500, 100_000) = 87_500` → **Path A recommended**
+- `savings_vs_next_best = 100_000 − 87_500 = 12_500` (vs Path C, the next-best)
+
+**MRF flags raised:**
+- `MRF-NOLCO-001` — "NOLCO carryover of ₱200,000 applied. Retain TY2024 ITR and financial statements showing the net operating loss as supporting documentation. NOLCO is deductible only under the Itemized Deduction method."
+
+### Expected Final Output (TaxComputationResult)
+
+| Field | Value |
+|-------|-------|
+| `recommended_path` | `PATH_A` |
+| `savings_vs_next_best` | `12_500.00` |
+| `next_best_path` | `PATH_C` |
+| `path_a.nti` | `500_000.00` |
+| `path_a.itemized_deductions_used` | `800_000.00` |
+| `path_a.nolco_applied` | `200_000.00` |
+| `path_a.income_tax` | `42_500.00` |
+| `path_a.percentage_tax` | `45_000.00` |
+| `path_a.total_tax` | `87_500.00` |
+| `path_b.nti` | `900_000.00` |
+| `path_b.income_tax` | `127_500.00` |
+| `path_b.total_tax` | `172_500.00` |
+| `path_c.eight_pct_base` | `1_250_000.00` |
+| `path_c.income_tax` | `100_000.00` |
+| `path_c.total_tax` | `100_000.00` |
+| `path_c.note` | `"NOLCO carryover not applicable under 8% option"` |
+| `income_tax_due` | `42_500.00` |
+| `pct_tax_due` | `45_000.00` |
+| `balance_payable` | `87_500.00` |
+| `balance_disposition` | `BALANCE_PAYABLE` |
+| `recommended_form` | `Form 1701 (Path A requires 1701, not 1701A)` |
+| **Warnings:** | `[WARN-003]` (Path A requires receipt/documentation; NOLCO documentation required) |
+| **Manual Review Flags:** | `[MRF-NOLCO-001]` (NOLCO carryover documentation required) |
+
+### Verification
+
+**NOLCO deduction impact:**
+- Without NOLCO: Path A NTI = 1,500,000 − 800,000 = 700,000; IT = (700,000 − 400,000) × 0.20 + 22,500 = 60,000 + 22,500 = **₱82,500**; PT = **₱45,000**; Total Path A (no NOLCO) = **₱127,500**
+- With NOLCO (₱200,000 carryover): NTI reduced by ₱200,000 → 500,000; IT = **₱42,500**; Total Path A (with NOLCO) = **₱87,500**
+- NOLCO benefit = ₱127,500 − ₱87,500 = **₱40,000 tax reduction**
+- Path C total (no NOLCO available): (1,500,000 − 250,000) × 0.08 = **₱100,000**
+- Path A with NOLCO (**₱87,500**) beats Path C (**₱100,000**) by **₱12,500** ✓
+
+**Key NOLCO rule confirmed:** NOLCO is deductible ONLY under itemized deductions (Path A). It does NOT apply under OSD (Path B) or the 8% option (Path C). This means a taxpayer with a NOLCO carryover might prefer Path A even when, absent NOLCO, Path C would be the better choice.
+
+**NOLCO expiry:** TY2024 NOLCO expires in TY2027 (3-year carryover period per NIRC Sec. 34(D)(3)). If not used by TY2027, the ₱200,000 is forfeited.
+
+**Legal basis:** NIRC Sec. 34(D)(3) — NOLCO; NIRC Sec. 34(L) — OSD replaces all itemized deductions including NOLCO; RR No. 14-2001 — NOLCO computation and carry-over rules; CR-027 (Path A pseudocode in computation-rules.md)
+
+---
+
+## TV-EDGE-016: SC-FIRST-MID-Q4 — Registered in Q4; No Quarterly Returns; Annual is First Filing
+
+**Scenario code:** SC-FIRST-MID-Q4
+**Edge case:** A taxpayer who registered with BIR in Q4 (October–December 2025). Since there are no quarterly income tax return obligations until Q1 of the following year (for 8% election) or until the first quarter of registration, the taxpayer has no Q1, Q2, or Q3 quarterly 1701Q returns for TY2025. The annual 1701A (or 1701) due April 15, 2026 is their FIRST and ONLY income tax filing for TY2025. The 8% election is made on the annual return (or on the first quarterly return in the following year if they want quarterly filing — but for the first tax year, the election is on the annual).
+**Description:** A freelance web developer registered with BIR on November 3, 2025 (Q4). They earned ₱220,000 from November 3 to December 31, 2025. Since gross < ₱250,000, Path C yields ₱0 income tax. Path B and A also yield ₱0 income tax (NTI below threshold). But Paths B and A owe ₱6,600 percentage tax. Path C (8% election at annual) wins with ₱0 total tax. No quarterly 1701Q was required for TY2025.
+
+**Tax year:** 2025
+**Filing period:** ANNUAL
+**Important note:** For a Q4 registrant under 8%, the election is signified on the annual 1701A itself (not on a 1701Q, since no quarterly return was due). For subsequent years, the election is signified on the Q1 1701Q.
+
+### Input (TaxpayerInput)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `taxpayer_type` | `PURELY_SE` | |
+| `taxpayer_class` | `SERVICE_PROVIDER` | |
+| `taxpayer_tier` | `MICRO` | First year — default MICRO |
+| `tax_year` | `2025` | |
+| `filing_period` | `ANNUAL` | |
+| `gross_receipts` | `220_000.00` | November 3 – December 31, 2025 |
+| `cost_of_goods_sold` | `0.00` | |
+| `gross_other_income` | `0.00` | |
+| `taxable_compensation` | `0.00` | |
+| `compensation_cwt` | `0.00` | |
+| `itemized_deductions` | `0.00` | |
+| `is_vat_registered` | `false` | |
+| `elected_regime` | `null` | Optimizer mode; election signified on annual 1701A |
+| `prior_quarter_payments` | `0.00` | No quarterly 1701Q was filed or due for TY2025 |
+| `cwt_credits_income_tax` | `0.00` | |
+| `cwt_credits_percentage_tax` | `0.00` | |
+| `filing_date` | `2026-04-15` | Annual 1701A due |
+| `is_first_year_registrant` | `true` | First year |
+| `registration_quarter` | `4` | Registered in Q4 (October–December) |
+| `nolco_carryover` | `0.00` | |
+
+### Expected Intermediate Values
+
+**PL-02 Classification:**
+- `is_first_year_registrant = true`
+- `registration_quarter = 4` → no quarterly 1701Q required for TY2025; no Q1/Q2/Q3 returns; annual is the only required IT return
+- `tier = MICRO` (default first year)
+- `eight_pct_eligible = true` (₱220,000 ≤ ₱3M)
+- Note output field: `no_quarterly_returns_required = true` (Q4 registrant for TY2025)
+- Note output field: `election_on_annual_return = true` (8% election signified on annual 1701A, not on a quarterly 1701Q)
+
+**PL-03 Path C:**
+- `eight_pct_base = max(220_000 − 250_000, 0) = max(−30_000, 0) = 0`
+- `income_tax_path_c = 0 × 0.08 = 0.00`
+- `pct_tax_path_c = 0.00` (8% election waives PT)
+- `total_tax_path_c = 0.00`
+
+**PL-03 Path B:**
+- `nti_path_b = 220_000 × 0.60 = 132_000`
+- `income_tax_path_b = graduated_tax(132_000) = 0.00` (< ₱250K)
+- `pct_tax_path_b = 220_000 × 0.03 = 6_600.00`
+- `total_tax_path_b = 0 + 6_600 = 6_600.00`
+
+**PL-03 Path A:**
+- `nti_path_a = 220_000`
+- `income_tax_path_a = graduated_tax(220_000) = 0.00` (< ₱250K)
+- `pct_tax_path_a = 6_600.00`
+- `total_tax_path_a = 6_600.00`
+
+**PL-04 Comparison:**
+- Totals: A=6,600 | B=6,600 | C=0
+- **Path C recommended** — only path with ₱0 total tax obligation
+- `savings_vs_next_best = 6_600`
+
+**PL-05 Annual Credits:**
+- `quarterly_payments_credited = 0.00` (no quarterly 1701Q filed)
+- `income_tax_due = 0.00`
+- `balance_payable = 0.00`
+- `balance_disposition = ZERO_BALANCE`
+
+### Expected Final Output (TaxComputationResult)
+
+| Field | Value |
+|-------|-------|
+| `taxpayer_type` | `PURELY_SE` |
+| `taxpayer_tier` | `MICRO` |
+| `is_first_year_registrant` | `true` |
+| `registration_quarter` | `4` |
+| `no_quarterly_returns_required_ty` | `true` |
+| `election_on_annual_return` | `true` |
+| `recommended_path` | `PATH_C` |
+| `savings_vs_next_best` | `6_600.00` |
+| `next_best_path` | `PATH_B` |
+| `path_c.eight_pct_base` | `0.00` |
+| `path_c.income_tax` | `0.00` |
+| `path_c.percentage_tax` | `0.00` |
+| `path_c.total_tax` | `0.00` |
+| `path_b.total_tax` | `6_600.00` |
+| `path_a.total_tax` | `6_600.00` |
+| `income_tax_due` | `0.00` |
+| `pct_tax_due` | `0.00` |
+| `quarterly_payments_credited` | `0.00` |
+| `balance_payable` | `0.00` |
+| `balance_disposition` | `ZERO_BALANCE` |
+| `recommended_form` | `Form 1701A Part IV-B` |
+| **Warnings:** | `[WARN-006]` (low gross income; 8% election yields ₱0 total tax) |
+| **Notes:** | `"No quarterly 1701Q was required for TY2025 (Q4 registrant). The 8% election is made on this annual 1701A. For TY2026, if continuing on 8%, signify election on Q1 1701Q (due May 15, 2026)."` |
+
+### Verification
+
+**Q4 registrant rule:** Under NIRC Sec. 74 and RR 8-2018, quarterly 1701Q returns are due 60 days after each quarter end. A Q4 registrant (October–December) would have their first quarterly obligation for Q1 of the FOLLOWING year (January–March 2026, due May 15, 2026). No quarterly return is required for TY2025 itself.
+
+**Path C with sub-₱250K gross:** (220,000 − 250,000) → negative → floored at **₱0**; IT = **₱0**; PT waived = **₱0 total** ✓
+**Path B:** NTI = 132,000 < 250,000 → IT = ₱0; PT = 220,000 × 0.03 = **₱6,600** ✓
+**Savings:** 6,600 − 0 = **₱6,600** ✓
+
+**Critical sequence for following year:** In TY2026, if this taxpayer wants to continue on 8%, they must signify the election on the Q1 TY2026 Form 1701Q (due May 15, 2026). The engine must note this in the output when `registration_quarter = 4` and `elected_regime = PATH_C`.
+
+**Legal basis:** NIRC Sec. 74 (quarterly returns); NIRC Sec. 24(A)(2)(b) (8% option); RR 8-2018 Sec. 3 (election procedure — first return of the taxable year); RR 8-2024 (EOPT tier classification for new registrants)

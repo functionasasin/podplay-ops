@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 54
-- Analyzed: 32
-- Pending: 22
-- Convergence: 59%
+- Analyzed: 33
+- Pending: 21
+- Convergence: 61%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -47,7 +47,7 @@ Design the computation engine from the extracted domain rules.
 - [x] invariants — Define what must always be true about outputs
 - [x] error-states — Define every invalid input state and the engine's response
 - [x] test-vectors-basic — Write happy-path test vectors (one per common scenario)
-- [ ] test-vectors-edge — Write edge-case test vectors
+- [x] test-vectors-edge — Write edge-case test vectors
 - [ ] test-vectors-exhaustive — Write one test vector per scenario code
 - [ ] fuzz-properties — Define invariants for randomized testing
 
