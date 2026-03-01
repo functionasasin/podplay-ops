@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total Aspects**: 12
-- **Analyzed**: 6
-- **Pending**: 6
-- **Convergence**: 50%
+- **Analyzed**: 7
+- **Pending**: 5
+- **Convergence**: 58%
 
 ---
 
@@ -24,7 +24,7 @@ Direct creator contact via Instagram DM. Read IG DM spec for send/receive flows 
 - [x] **stage-ig-outreach** — Initial IG DM outreach to 50+ creators: connect IG business account, compose personalized outreach template, bulk/sequential send, delivery tracking. The outreach message for Mama Sita's gifting offer.
 - [x] **stage-response-management** — Track creator responses: inbound DM webhook notifications, response categorization, 24h window management, follow-up scheduling, Slack notification flow.
 - [x] **stage-negotiation** — Agree on deliverables: content requirements (post type, hashtags #MamaSitas #HomeCooking, @mention, timeline), shipping address collection, opt-in confirmation tracking.
-- [ ] **stage-shipping-export** — Export opted-in creator table: shipping addresses, product assignments, CSV/sheets export, shipping status tracking back in Cheerful.
+- [x] **stage-shipping-export** — Export opted-in creator table: shipping addresses, product assignments, CSV/sheets export, shipping status tracking back in Cheerful.
 
 ## Wave 3: Content & Measurement (3 aspects)
 
