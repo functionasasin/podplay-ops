@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 91
-- Analyzed: 89
-- Pending: 2
-- Convergence: 98%
+- Analyzed: 90
+- Pending: 1
+- Convergence: 99%
 
 ---
 
@@ -124,7 +124,7 @@
 - [x] All provincial bus routes (NCR segments) — deduplicated list of NCR portions
 - [x] All UV Express routes — deduplicated master list
 - [x] All P2P premium bus routes — deduplicated master list
-- [ ] All shuttle/loop services — BGC, Makati, campus shuttles
+- [x] All shuttle/loop services — BGC, Makati, campus shuttles
 
 ### Transfer Points
 - [ ] Rail-to-road transfer mapping — every LRT/MRT/PNR station with connecting jeepney/bus routes
