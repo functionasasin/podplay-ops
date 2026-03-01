@@ -127,13 +127,14 @@ jobs:
               [ $FAILURES -ge 3 ] && echo "3 consecutive failures — stopping." && break
             fi
 
-            # Commit after each aspect
+            # Claude commits itself inside the prompt — just push whatever is unpushed
             git add -A
-            git diff --cached --quiet || {
-              git commit -m "loop(${{ matrix.loop }}): iteration"
+            git diff --cached --quiet || git commit -m "loop(${{ matrix.loop }}): iteration"
+            # Push any local commits (including those made by claude)
+            if git log origin/${{ github.ref_name }}..HEAD --oneline | grep -q .; then
               git pull --rebase origin "${{ github.ref_name }}" || true
               git push || echo "WARNING: Push failed, will retry next run"
-            }
+            fi
 
             sleep 5
           done
