@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 54
-- Analyzed: 18
-- Pending: 36
-- Convergence: 33%
+- Analyzed: 19
+- Pending: 35
+- Convergence: 35%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -31,7 +31,7 @@ Extract every computation rule, decision tree, and lookup table from source mate
 - [x] mixed-income-rules — How compensation + business income interact: compensation always graduated, business portion can choose 8%/OSD/itemized
 - [x] vat-vs-percentage-tax — ₱3M threshold: below = 3% percentage tax (Form 2551Q), above = 12% VAT. Impact on 8% option eligibility
 - [x] percentage-tax-computation — 3% percentage tax rules (Sec. 116), CREATE 1% temporary rate status, quarterly filing
-- [ ] creditable-withholding-tax — BIR 2307 mechanics: how CWT offsets tax due, excess CWT = refundable, quarterly crediting
+- [x] creditable-withholding-tax — BIR 2307 mechanics: how CWT offsets tax due, excess CWT = refundable, quarterly crediting
 - [ ] quarterly-filing-rules — Form 1701Q quarterly computation, cumulative method, crediting previous quarters
 - [ ] annual-reconciliation — Annual ITR (1701/1701A) vs. quarterly payments, how to compute balance payable/refundable
 - [ ] filing-calendar — All BIR deadlines: quarterly (April 15, Aug 15, Nov 15), annual (April 15), percentage tax, registration

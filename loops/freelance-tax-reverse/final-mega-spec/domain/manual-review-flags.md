@@ -297,6 +297,95 @@ Situations where the user clearly needs a CPA go into `legal/disclaimers.md`, no
 
 ---
 
+---
+
+## MRF-020: Client Did Not Issue Form 2307 — Income Earned With No CWT Certificate
+
+**Flag code:** MRF-020
+**Trigger:** User reports income from a corporate client or registered business but has no BIR Form 2307 for that payment.
+**Context:** Corporations and registered businesses are legally required to withhold EWT and issue Form 2307 to the payee. Failure to do so is the payor's violation, but the payee cannot claim CWT without the certificate.
+
+**Engine fallback behavior:**
+- Income is included in gross receipts (still taxable).
+- CWT credit for this income = ₱0 (no certificate = no credit).
+- Do NOT estimate or impute a CWT amount.
+
+**User-facing text:**
+> "You have indicated income from [Payor Name] without a BIR Form 2307. If this payor is a corporation or registered business, they are legally required to issue you a 2307. We've included this income in your gross receipts but applied ₱0 in CWT credit for this amount. To claim the credit, request a BIR Form 2307 from your client. If they refuse, you may file a complaint with the BIR — but you cannot claim the credit without the certificate."
+
+**Resolution:** User obtains the 2307 from client and enters it into the tool. Engine then includes the credit.
+
+---
+
+## MRF-021: Form 2307 Shows Lower Rate Than Expected — Possible Wrong ATC
+
+**Flag code:** MRF-021
+**Trigger:** User enters a Form2307Entry where the implied rate (tax_withheld / income_payment) is significantly lower than expected for the ATC code — OR — the ATC used is WI010 (5%) but the user is VAT-registered or the user's prior-year gross exceeded ₱3M.
+**Context:** Client may have applied 5% (WI010) when 10% (WI011) should apply, resulting in under-withholding.
+
+**Engine fallback behavior:**
+- Credit the ACTUAL amount withheld (as shown on the 2307). Do NOT credit the "should-have-been" amount.
+- Flag the discrepancy for user awareness.
+- The additional tax (the "missing" withholding) will be due at filing as part of balance payable.
+
+**User-facing text:**
+> "The Form 2307 from [Payor Name] uses ATC WI010 (5% withholding). Based on your profile (VAT-registered / prior-year gross > ₱3M), your clients should be using WI011 (10%). We have applied the actual ₱[amount] credit from your certificate. The difference (₱[estimated_difference]) will show as additional balance payable on your annual return. To correct this for future quarters, ask [Payor Name] to use ATC WI011 for future payments and provide a Sworn Declaration update."
+
+**Resolution:** For the current year, engine credits the actual amount. User notifies client to use the correct ATC going forward.
+
+---
+
+## MRF-022: Prior Year Excess Credits — Amount Uncertain (Lost Prior Year Return)
+
+**Flag code:** MRF-022
+**Trigger:** User says they elected "Carry Over" on their prior year return but cannot recall the exact overpayment amount (lost return, CPA prepared it, etc.).
+**Context:** The prior year carry-over is Item 55 on Form 1701Q and Item 1 on the annual 1701/1701A Tax Credits section. The exact amount matters for correct quarterly computation.
+
+**Engine fallback behavior:**
+- Default prior_year_excess_credits = ₱0.
+- Compute tax as if no carry-over exists (conservative — taxpayer may pay more now and correct later).
+- Display flag prompting user to find the exact amount.
+
+**User-facing text:**
+> "You mentioned having carry-over credits from last year, but the exact amount is unknown. We've computed your taxes without this credit (using ₱0). To include it, find your prior year annual ITR (BIR Form 1701/1701A) — the overpayment amount appears in Part II as the 'Overpayment' figure, and 'Carry Over' should be checked. You can also request a copy from your RDO or your CPA. Once you have the amount, enter it in the 'Prior Year Excess Credits' field."
+
+**Resolution:** User obtains prior year return and inputs the carry-over amount. Engine recomputes.
+
+---
+
+## MRF-023: Government Agency Withheld Percentage Tax (PT) — Separate from Income Tax CWT
+
+**Flag code:** MRF-023
+**Trigger:** User receives payments from a government agency and reports receiving a Form 2307 with ATC PT010 (percentage tax withholding, not income tax EWT).
+**Context:** Government agencies (DepEd, DOH, LGUs, GOCCs) sometimes withhold 3% percentage tax on payments to non-VAT registered service providers under Sec. 114(C) of the NIRC. This is a WITHHOLDING OF PERCENTAGE TAX, not income tax EWT. The ATC PT010 on the 2307 indicates percentage tax withholding.
+
+**Key distinction:**
+- WI/WC series ATCs (WI010, WI011, WI157, etc.) = Income tax EWT → credits against Form 1701Q/1701A income tax
+- PT010 on Form 2307 = Percentage tax withholding → credits against Form 2551Q percentage tax (Item 15), NOT against income tax
+
+**Engine fallback behavior:**
+- Do NOT credit PT010 2307 amounts against income tax due.
+- Credit PT010 amounts against the quarterly percentage tax (Form 2551Q Item 15).
+- Separate the user's 2307 entries into `income_tax_cwt_entries` (WI/WC ATCs) and `pt_cwt_entries` (PT ATCs).
+
+**User-facing text:**
+> "The Form 2307 from [Government Agency] uses ATC PT010, which represents PERCENTAGE TAX withheld (not income tax). This credit of ₱[amount] reduces your 3% percentage tax payable — not your income tax. We've applied it to your quarterly percentage tax return (Form 2551Q, Item 15). It does NOT reduce your income tax (Form 1701Q or 1701A)."
+
+**Engine implementation:**
+```
+function classify_2307_entry(atc: str) -> "INCOME_TAX_CWT" | "PT_CWT" | "UNKNOWN":
+  if atc starts with "WI" or atc starts with "WC":
+    return "INCOME_TAX_CWT"
+  elif atc starts with "PT":
+    return "PT_CWT"
+  else:
+    return "UNKNOWN"   // trigger validation warning
+```
+
+**Resolution:** Engine automatically classifies. User needs no action beyond entering the 2307 data correctly.
+
+---
+
 ## Cross-References
 
 - For edge cases where the engine CAN make a decision: See [edge-cases.md](edge-cases.md)
@@ -307,3 +396,5 @@ Situations where the user clearly needs a CPA go into `legal/disclaimers.md`, no
 - For mixed income computation rules: See [computation-rules.md](computation-rules.md) CR-029, CR-030
 - For VAT vs OPT decision trees: See [decision-trees.md](decision-trees.md) DT-11, DT-12, DT-13
 - For percentage tax rate history: See [lookup-tables/percentage-tax-rates.md](lookup-tables/percentage-tax-rates.md)
+- For CWT computation rules: See [computation-rules.md](computation-rules.md) CR-035 through CR-040
+- For EWT ATC code table: See [lookup-tables/cwt-ewt-rates.md](lookup-tables/cwt-ewt-rates.md)

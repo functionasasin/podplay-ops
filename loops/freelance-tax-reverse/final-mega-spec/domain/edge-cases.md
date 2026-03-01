@@ -2154,3 +2154,170 @@ If 8% elected:
 
 *Cross-references: [CR-034 (Form 2551Q engine)](../computation-rules.md) | [percentage-tax-rates.md Part 11](percentage-tax-rates.md) | [EC-VPT group (VAT/PT boundary)](edge-cases.md) | [CR-020 (penalty computation)](../computation-rules.md)*
 
+---
+
+## Group EC-CWT: Creditable Withholding Tax Edge Cases
+
+### EC-CWT01: 2307 Received Late — Issued in Q2 for Q1 Income
+
+**Scenario:** A freelance web developer invoiced ₱200,000 to a corporate client in March (Q1). The client did not issue the BIR Form 2307 by April 20 (the 20-day-after-quarter deadline). The 2307 was finally issued and received in June (Q2), after the developer had already filed their Q1 Form 1701Q without claiming the ₱10,000 CWT credit (WI010 at 5%).
+
+**Which quarter does the CWT belong to?**
+
+The Form 2307 header will say "Period: 01/01/2026 to 03/31/2026" — meaning Q1. Despite being received late, the CWT belongs to Q1 income.
+
+**Engine behavior:**
+
+1. User enters the 2307 with `quarter_covered = Q1` and `taxable_year_covered = 2026` (from the 2307 header, not the receipt date).
+2. Engine assigns `cwt_q1 = ₱10,000`.
+3. If Q1 1701Q has already been filed WITHOUT this credit: the user must file an AMENDED Q1 1701Q to claim it — OR — wait to claim it at the annual return.
+4. Engine displays: "This Form 2307 covers Q1 income. If you already filed your Q1 1701Q without this credit, you may (a) file an amended Q1 1701Q to claim it now, or (b) claim it on your annual ITR. Either way, the credit will be applied to your total annual income tax due."
+5. For computation purposes: the engine always includes ALL 2307 credits at the annual level regardless of whether they were claimed at quarterly level. The quarterly overpayment/underpayment reconciles at annual.
+
+**Key rule:** The PERIOD on the 2307 (not the receipt date) determines which quarter the CWT belongs to. Engine reads the user-entered quarter, not a date field.
+
+---
+
+### EC-CWT02: Client Applied Wrong EWT Rate — 5% Used When 10% Should Apply
+
+**Scenario:** A freelance lawyer grossed ₱4,000,000 in 2025 (VAT-registered). In 2026, a client withheld at WI010 (5%) on a ₱300,000 professional fee payment, because the lawyer did not notify the client of their VAT registration. The 2307 shows ₱15,000 withheld (5% × ₱300,000) when it should have been ₱30,000 (WI011, 10%).
+
+**Engine behavior:**
+
+1. User enters the 2307 with ATC = "WI010", income_payment = ₱300,000, tax_withheld = ₱15,000.
+2. Validation: `implied_rate = ₱15,000 / ₱300,000 = 0.05`. Expected rate for WI010 = 0.05. Match → no validation error.
+3. Engine credits ₱15,000 — the ACTUAL amount withheld.
+4. The taxpayer cannot claim ₱30,000; they can only claim what was actually withheld and documented on the 2307.
+5. The underpayment of ₱15,000 is NOT a penalty on the payee — it is a failure by the payor. The payee should notify the client to amend the 2307 and remit the additional ₱15,000.
+
+**Engine output:** Accepts ₱15,000 credit as-is. Does NOT auto-calculate "should have been" amounts. The CWT credit is always the ACTUAL amount withheld.
+
+**Manual review flag triggered:** MRF-021 — "Your 2307 from [Payor] shows WI010 (5%). As a VAT-registered professional, your clients should be using WI011 (10%). If you believe there is an error on this 2307, ask your client to issue an amended certificate."
+
+---
+
+### EC-CWT03: Client Is an Individual and Did Not Withhold — No 2307 Issued
+
+**Scenario:** A freelance graphic designer received ₱150,000 from an individual client (a small business owner) with no TIN-registered business. The client did not withhold EWT and did not issue Form 2307.
+
+**Who is required to withhold EWT?**
+
+Per RR No. 2-98, the withholding obligation applies to:
+- Juridical persons (corporations, partnerships)
+- Individuals engaged in trade or business who are REQUIRED to file VAT or percentage tax returns (i.e., self-employed individuals with registered businesses, including sole proprietors)
+- Government agencies and GOCCs
+
+**An individual client who is NOT a registered business (e.g., a homeowner hiring a freelancer for personal design work) is NOT required to withhold EWT.**
+
+**Engine behavior:**
+
+1. No 2307 exists for this payment.
+2. The ₱150,000 income is still TAXABLE — it goes into gross receipts.
+3. CWT credit for this payment = ₱0.
+4. Engine includes the income in gross_receipts but no CWT entry for this payor.
+5. Engine notes: "Income from non-business individual clients is taxable but no CWT withholding is required. Include the ₱150,000 in your gross receipts. No CWT credit applies."
+
+**Manual review flag triggered:** MRF-020 — "One or more income sources have no BIR Form 2307. This is acceptable if the payor is an individual who is not a registered business. If the payor IS a corporation or registered business, request a Form 2307 from them — you are entitled to it under BIR regulations."
+
+---
+
+### EC-CWT04: Two 2307s from the Same Client in the Same Quarter (Multiple Payments)
+
+**Scenario:** A freelance software developer received two separate payments from ABC Corp in Q2: ₱100,000 in April and ₱80,000 in June. ABC Corp issues two separate Form 2307 certificates (one per payment). Both show WI010 at 5%.
+
+**Engine behavior:**
+
+1. User enters two Form2307Entry records, both with `payor_tin = ABC Corp's TIN`, `quarter_covered = Q2`.
+2. The aggregation function (CR-035.2) sums them: cwt_q2 includes both ₱5,000 and ₱4,000 = ₱9,000.
+3. SAWT will have two rows for ABC Corp in Q2.
+4. Both 2307s are attached to the return.
+5. No consolidation is required — multiple 2307s from the same payor in the same quarter are all valid.
+
+**Engine output:** Total Q2 CWT = ₱9,000. SAWT export has 2 rows for this payor.
+
+**Note:** BIR may issue guidance consolidating 2307s per quarter per payor into one certificate. If the client issues ONE consolidated 2307 for Q2, user enters it as a single Form2307Entry with total_income_payment = ₱180,000 and total_tax_withheld = ₱9,000.
+
+---
+
+### EC-CWT05: Prior Year Carry-Over Credits — User Has an Overpayment from Last Year
+
+**Scenario:** A freelancer had ₱44,000 overpayment in TY2025 (excess CWT not covered by income tax). They elected "To be Carried Over" on their TY2025 annual return. In TY2026, they input this carry-over.
+
+**Engine behavior:**
+
+1. Input field: `prior_year_excess_credits = ₱44,000`
+2. This amount populates `AggregatedCWT.prior_year_excess_cwt = ₱44,000`
+3. At quarterly level: Item 55 of each 1701Q = ₱44,000 (applied to Q1 first; it counts in all subsequent cumulative computations)
+4. At annual level: Item 1 of Tax Credits = ₱44,000
+
+**Q1 2026 (with ₱44,000 carry-over):**
+```
+Q1 cumulative IT (example): ₱0 (gross < ₱250K in 8% method cumulative)
+Q1 CWT from 2307: ₱15,000
+Prior year carry: ₱44,000
+Total credits: ₱59,000
+Tax payable Q1: max(₱0 − ₱59,000, 0) = ₱0
+Remaining credits: ₱59,000 (carries forward through all quarters)
+```
+
+**Annual reconciliation:** The ₱44,000 reduces the annual balance payable or increases the overpayment.
+
+**Engine validation:** Prior year carry-over cannot exceed the prior year's annual income tax due (it's capped at the prior year's overpayment amount). Engine warns if the user enters a carry-over that appears unusually large.
+
+---
+
+### EC-CWT06: CWT Withheld but Payor Failed to Remit to BIR
+
+**Scenario:** A client withheld ₱30,000 from a freelance consultant's fees and issued a valid Form 2307. However, the client went bankrupt and never remitted the ₱30,000 to BIR. The freelancer presents the 2307 and claims the credit on their annual ITR.
+
+**Legal ruling:** Per BIR jurisprudence and Sec. 57(B) of the NIRC, the PAYEE can claim CWT credit based on the Form 2307 issued, REGARDLESS of whether the payor actually remitted the EWT to BIR. The obligation to remit is the PAYOR'S obligation — BIR collects from the payor for non-remittance, not from the payee.
+
+**Engine behavior:**
+
+1. User presents a valid Form 2307 → engine credits ₱30,000 as CWT.
+2. No flag needed — the legal basis is clear.
+3. Engine note (displayed as informational, not a warning): "BIR Form 2307 is prima facie proof of creditable withholding tax. Your credit is valid even if BIR has not yet collected the withheld amount from your client. If BIR questions the credit, present your original 2307 copies."
+
+---
+
+### EC-CWT07: Mixed 2307 Types — WI010 (Professional Fee) + WI157 (Government Agency) + WI760 (Platform)
+
+**Scenario:** A software developer has three sources of CWT:
+- ₱20,000 from WI010 at 5% (private corporate client)
+- ₱8,000 from WI157 at 2% (government agency project)
+- ₱3,000 from WI760 at 1% on ₱300,000 base (Payoneer, per RR 16-2023)
+
+All are from the same taxable year Q2.
+
+**Engine behavior:**
+
+1. Three Form2307Entry records entered: ATC WI010 (₱20,000 withheld), WI157 (₱8,000), WI760 (₱3,000).
+2. `cwt_q2 = ₱20,000 + ₱8,000 + ₱3,000 = ₱31,000`
+3. `cwt_from_clients_ewt = ₱28,000` (WI010 + WI157, both is_ewt_type = true)
+4. `cwt_from_platform_rr16 = ₱3,000` (WI760, is_platform_type = true)
+5. ALL three types credit against income tax due — they are all income tax CWT.
+6. SAWT has 3 rows.
+7. Display breakdown by type for transparency.
+
+**Validation check for WI760:**
+- `implied_rate = ₱3,000 / ₱300,000 = 0.01` (1% of the income_payment field)
+- For WI760, income_payment on the 2307 = ½ of gross remittance (per RR 16-2023 structure)
+- If gross Payoneer remittance was ₱600,000, then income_payment on 2307 = ₱300,000, tax_withheld = ₱3,000. Implied rate 1% matches WI760 expected rate → validation passes.
+
+---
+
+### EC-CWT08: 2307 Spanning Multiple Quarters (Annual 2307)
+
+**Scenario:** A small company (not following BIR quarterly issuance rules) issues a single annual BIR Form 2307 covering the full year (January–December). The 2307 header shows "Period: 01/01/2026 to 12/31/2026" with total income payment ₱800,000 and tax withheld ₱40,000 (WI010, 5%).
+
+**Engine behavior:**
+
+1. Engine cannot automatically split into quarters — the 2307 covers the full year.
+2. User enters this as a single Form2307Entry with `quarter_covered = Q4` (the last quarter of the annual period) as a workaround — OR — the engine allows "ANNUAL" as a quarter type.
+3. For quarterly 1701Q filing purposes (Q1, Q2, Q3): the user cannot use this annual 2307 at the quarterly level. They file Q1, Q2, Q3 returns WITHOUT this credit.
+4. At annual filing: the full ₱40,000 is claimed in the annual return Tax Credits section.
+5. Effect: taxpayer overpays quarterly installments (more cash out during the year) but gets the credit at annual reconciliation.
+6. Engine displays warning: "This 2307 covers the full year. You cannot apply it to quarterly returns. The ₱40,000 credit will be claimed on your annual ITR (due April 15). You may have overpaid quarterly — check your annual balance payable."
+
+**Engine input:** Allow `quarter_covered = "ANNUAL"` as a special value. Treat it as Q4 for quarterly data entry (aggregation only), but flag as annual-issuance for the display warning. The annual crediting still works correctly.
+

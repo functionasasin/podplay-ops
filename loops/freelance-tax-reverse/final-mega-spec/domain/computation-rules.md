@@ -4467,3 +4467,691 @@ function get_pt_rate_for_quarter(taxable_year: int, quarter: Quarter) -> Decimal
 // Q3 2023 (Jul-Sep 2023): 3%  ← 3% reversion begins Q3 2023
 // Q4 2023: 3%   Q1 2024+: 3%
 ```
+
+---
+
+## CR-035: Creditable Withholding Tax (CWT) — Data Model and 2307 Aggregation
+
+**Legal basis:** NIRC Sec. 57–58; RR No. 2-98 (consolidated EWT rules, as amended by RR 11-2018); BIR Form 2307
+**Expands:** CR-009 (brief summary written in initial pass)
+**See also:** [lookup-tables/cwt-ewt-rates.md](lookup-tables/cwt-ewt-rates.md) — complete ATC code and rate table
+
+### 35.1 Data Structures
+
+```
+// A single BIR Form 2307 certificate received by the taxpayer
+struct Form2307Entry {
+  payor_tin:              str       // 12-digit TIN of the withholding agent (client/payor)
+  payor_name:             str       // Registered name of the payor
+  quarter_covered:        Quarter   // Q1 | Q2 | Q3 | Q4 — from the "For the Period From/To" header
+  taxable_year_covered:   int       // Calendar year (e.g., 2025) — from the "For the Period" dates
+  atc_code:               str       // e.g., "WI010", "WI011", "WI160", "WI760"
+  nature_of_payment:      str       // From Column (1) of Part III (e.g., "Professional fees")
+  total_income_payment:   Decimal   // Column (9): Total income paid for the quarter
+  total_tax_withheld:     Decimal   // Column (10): Total EWT withheld for the quarter
+  is_ewt_type:            bool      // True for income tax CWT (WI/WC series)
+  is_platform_type:       bool      // True for RR 16-2023 platform CWT (WI760/WC760)
+  // Note: is_ewt_type and is_platform_type are mutually exclusive sub-types of CWT;
+  //       both types are credited against income tax due (not percentage tax).
+}
+
+// Aggregated CWT summary for the full year — computed from list of Form2307Entry
+struct AggregatedCWT {
+  entries:                    List[Form2307Entry]
+
+  // Aggregated by quarter (cumulative for 1701Q crediting)
+  cwt_q1:                     Decimal   // Sum of tax_withheld for all Q1 entries (taxable_year_covered matches)
+  cwt_q2:                     Decimal   // Sum for Q2 entries
+  cwt_q3:                     Decimal   // Sum for Q3 entries
+  cwt_q4:                     Decimal   // Sum for Q4 entries
+  cwt_full_year:              Decimal   // Sum of cwt_q1 + cwt_q2 + cwt_q3 + cwt_q4
+
+  // Cumulative sums — for quarterly 1701Q crediting (Schedule III Items 57 and 58)
+  cwt_cumulative_through_q1:  Decimal   // = cwt_q1
+  cwt_cumulative_through_q2:  Decimal   // = cwt_q1 + cwt_q2
+  cwt_cumulative_through_q3:  Decimal   // = cwt_q1 + cwt_q2 + cwt_q3
+  // (annual = cwt_full_year; no Q4 interim quarterly filing)
+
+  // Split by source type (for display purposes)
+  cwt_from_clients_ewt:        Decimal   // Sum where is_ewt_type == true (WI010/WI011/WI050/WI160 etc.)
+  cwt_from_platform_rr16:      Decimal   // Sum where is_platform_type == true (WI760/WC760)
+  cwt_total:                   Decimal   // = cwt_from_clients_ewt + cwt_from_platform_rr16 = cwt_full_year
+
+  // Prior year carry-over
+  prior_year_excess_cwt:       Decimal   // From prior year annual ITR overpayment elected as carry-over
+                                         // (user inputs this; engine cannot compute from prior returns)
+  total_cwt_and_carryover:     Decimal   // = cwt_full_year + prior_year_excess_cwt
+}
+```
+
+### 35.2 Aggregation Function
+
+```
+function aggregate_cwt(entries: List[Form2307Entry], taxable_year: int) -> AggregatedCWT:
+  """
+  Aggregates multiple Form 2307 certificates into quarterly and annual totals.
+  Only processes entries for the specified taxable_year.
+  Entries for other taxable years are ignored (they may belong to prior-year carry-overs,
+  which are handled separately as prior_year_excess_cwt).
+  """
+
+  // Filter to current taxable year only
+  current_year_entries = [e for e in entries if e.taxable_year_covered == taxable_year]
+
+  cwt_q1 = SUM(e.total_tax_withheld for e in current_year_entries if e.quarter_covered == Q1)
+  cwt_q2 = SUM(e.total_tax_withheld for e in current_year_entries if e.quarter_covered == Q2)
+  cwt_q3 = SUM(e.total_tax_withheld for e in current_year_entries if e.quarter_covered == Q3)
+  cwt_q4 = SUM(e.total_tax_withheld for e in current_year_entries if e.quarter_covered == Q4)
+
+  cwt_full_year = cwt_q1 + cwt_q2 + cwt_q3 + cwt_q4
+
+  cwt_from_clients_ewt  = SUM(e.total_tax_withheld for e in current_year_entries if e.is_ewt_type)
+  cwt_from_platform_rr16 = SUM(e.total_tax_withheld for e in current_year_entries if e.is_platform_type)
+
+  return AggregatedCWT(
+    entries                       = current_year_entries,
+    cwt_q1                        = cwt_q1,
+    cwt_q2                        = cwt_q2,
+    cwt_q3                        = cwt_q3,
+    cwt_q4                        = cwt_q4,
+    cwt_full_year                 = cwt_full_year,
+    cwt_cumulative_through_q1     = cwt_q1,
+    cwt_cumulative_through_q2     = cwt_q1 + cwt_q2,
+    cwt_cumulative_through_q3     = cwt_q1 + cwt_q2 + cwt_q3,
+    cwt_from_clients_ewt          = cwt_from_clients_ewt,
+    cwt_from_platform_rr16        = cwt_from_platform_rr16,
+    cwt_total                     = cwt_full_year,
+    prior_year_excess_cwt         = 0,  // caller injects this from user input
+    total_cwt_and_carryover       = cwt_full_year + 0  // updated after prior_year_excess_cwt set
+  )
+```
+
+### 35.3 Validation Rules for 2307 Entries
+
+```
+function validate_form2307_entry(e: Form2307Entry) -> List[ValidationError]:
+  errors = []
+
+  // Tax withheld must be positive
+  if e.total_tax_withheld < 0:
+    errors.append("CWT amount cannot be negative")
+
+  // Income payment must be positive
+  if e.total_income_payment <= 0:
+    errors.append("Income payment amount must be positive")
+
+  // Tax withheld cannot exceed income payment
+  if e.total_tax_withheld > e.total_income_payment:
+    errors.append("Tax withheld cannot exceed income payment amount")
+
+  // EWT rate implied by the 2307 must match known rates for the ATC
+  implied_rate = e.total_tax_withheld / e.total_income_payment
+  expected_rate = get_ewt_rate_for_atc(e.atc_code)
+  if expected_rate is not null:
+    if abs(implied_rate - expected_rate) > 0.001:  // tolerate 0.1% rounding difference
+      errors.append(
+        "Implied rate {implied_rate:.1%} does not match expected rate {expected_rate:.1%} "
+        "for ATC {e.atc_code}. Verify your 2307. If the payor applied the wrong rate, "
+        "you may still credit the ACTUAL amount withheld."
+      )
+
+  // ATC code must be a known WI or WC series code
+  if not is_valid_ewt_atc(e.atc_code):
+    errors.append("Unknown ATC code '{e.atc_code}'. Check your BIR Form 2307.")
+
+  // Quarter must be Q1–Q4
+  if e.quarter_covered not in [Q1, Q2, Q3, Q4]:
+    errors.append("Quarter must be Q1, Q2, Q3, or Q4")
+
+  return errors
+
+function get_ewt_rate_for_atc(atc: str) -> Decimal | null:
+  """Returns the expected EWT rate for a given ATC code, or null if rate is amount-dependent."""
+  rate_table = {
+    "WI010": 0.05,  "WI011": 0.10,  "WI020": 0.05,  "WI021": 0.10,
+    "WI030": 0.05,  "WI031": 0.10,  "WI040": 0.05,  "WI041": 0.10,
+    "WI050": 0.05,  "WI051": 0.10,  "WI060": 0.05,  "WI061": 0.10,
+    "WI070": 0.05,  "WI071": 0.10,  "WI080": 0.05,  "WI081": 0.10,
+    "WI090": 0.05,  "WI091": 0.10,  "WI100": 0.05,  "WI110": 0.05,
+    "WI120": 0.02,  "WI130": 0.15,  "WI139": 0.05,  "WI140": 0.10,
+    "WI150": 0.10,  "WI151": 0.05,  "WI152": 0.10,  "WI153": 0.15,
+    "WI157": 0.02,  "WI158": 0.01,  "WI159": 0.15,  "WI160": 0.02,
+    "WI515": 0.05,  "WI516": 0.10,  "WI530": 0.01,  "WI535": 0.01,
+    "WI540": 0.05,  "WI610": 0.01,  "WI630": 0.05,  "WI632": 0.01,
+    "WI640": 0.01,  "WI680": 0.05,  "WI710": 0.15,  "WI720": 0.01,
+    // WI760: platform CWT — rate is 1% of 50% of gross (= 0.5% effective); validation uses
+    //        implied_rate ≈ 0.005 relative to income_payment field (which is 50% of gross)
+    "WI760": 0.01,  // 1% of the ½-gross base shown in income_payment column of 2307
+    "WC010": 0.10,  "WC011": 0.15,  "WC020": 0.10,  "WC021": 0.15,
+    "WC030": 0.10,  "WC031": 0.15,  "WC040": 0.10,  "WC041": 0.15,
+    "WC050": 0.10,  "WC051": 0.15,  "WC060": 0.10,  "WC061": 0.15,
+    "WC070": 0.10,  "WC080": 0.10,  "WC081": 0.15,  "WC100": 0.05,
+    "WC110": 0.05,  "WC120": 0.02,  "WC139": 0.10,  "WC140": 0.15,
+    "WC150": 0.15,  "WC151": 0.10,  "WC157": 0.02,  "WC158": 0.01,
+    "WC160": 0.02,  "WC515": 0.05,  "WC516": 0.10,  "WC535": 0.01,
+    "WC540": 0.05,  "WC610": 0.01,  "WC630": 0.05,  "WC632": 0.01,
+    "WC640": 0.01,  "WC680": 0.05,  "WC710": 0.15,  "WC720": 0.01,
+    "WC760": 0.01,
+  }
+  return rate_table.get(atc, null)   // null = unknown ATC, cannot validate rate
+```
+
+---
+
+## CR-036: Quarterly CWT Crediting Engine (Form 1701Q Schedule III)
+
+**Legal basis:** NIRC Sec. 74–76; BIR Form 1701Q Schedule III (Items 55–63)
+**Applies to:** All quarterly 1701Q filers (Q1, Q2, Q3 only — Q4 covered by annual return)
+
+### 36.1 Schedule III Items Reference
+
+| Item | Description | Maps To |
+|------|-------------|---------|
+| Item 55 | Prior year's excess credits | prior_year_excess_cwt from AggregatedCWT |
+| Item 56 | Tax payments for PREVIOUS quarter/s | cumulative_quarterly_it_payments BEFORE this quarter |
+| Item 57 | CWT from 2307 for PREVIOUS quarter/s | cwt_cumulative from Jan to end of PRIOR quarter |
+| Item 58 | CWT from 2307 for THIS quarter | cwt_this_quarter (current quarter's new 2307 amounts) |
+| Item 59 | Tax paid on prior return (amended returns only) | 0 unless amending |
+| Item 60 | Foreign tax credits | 0 for most freelancers; user-inputted if applicable |
+| Item 61 | Other credits | 0 unless user specifies |
+| Item 62 | Total credits (sum of Items 55–61) | (computed) |
+| Item 63 | Tax payable / (overpayment) = Item 46 or 54 minus Item 62 | (computed) |
+
+### 36.2 Quarterly Tax Payable Function
+
+```
+struct QuarterlyITInput {
+  quarter:                    Quarter       // Q1, Q2, or Q3 (never Q4 — annual handles Q4)
+  taxable_year:               int
+  tax_rate_election:          TaxRateElection    // GRADUATED or EIGHT_PERCENT
+  deduction_method:           DeductionMethod    // ITEMIZED or OSD (only for GRADUATED)
+
+  // Graduated-method inputs (cumulative from Jan 1 to end of this quarter)
+  cumulative_gross_receipts:  Decimal       // Jan 1 to end of this quarter
+  cumulative_itemized_deductions: Decimal   // Only if deduction_method == ITEMIZED; else 0
+  // NOTE: For OSD, engine computes OSD from cumulative_gross_receipts × 0.40
+
+  // For mixed income earners: cumulative compensation taxable income
+  cumulative_taxable_compensation: Decimal  // 0 if pure self-employed
+
+  // CWT data
+  cwt_agg:                    AggregatedCWT
+
+  // Prior year carry-over
+  prior_year_excess_credits:  Decimal       // From prior year annual ITR overpayment
+
+  // Prior quarterly payments THIS YEAR (CASH actually paid, not credits)
+  quarterly_payments_this_year: List[QuarterlyPayment]
+    // QuarterlyPayment: { quarter: Q1|Q2|Q3, amount_paid: Decimal }
+    // Example: if filing Q3, this list has Q1 payment and Q2 payment amounts
+}
+
+struct QuarterlyPayment {
+  quarter:       Quarter
+  amount_paid:   Decimal   // Tax paid on that quarter's 1701Q (the actual cash payment, not tax due)
+}
+
+function compute_quarterly_it_payable(input: QuarterlyITInput) -> QuarterlyITOutput:
+
+  // STEP 1: Compute cumulative income tax due (year-to-date)
+  if input.tax_rate_election == GRADUATED:
+    if input.deduction_method == OSD:
+      cumulative_nti = input.cumulative_gross_receipts * 0.60
+    else:  // ITEMIZED
+      cumulative_nti = input.cumulative_gross_receipts - input.cumulative_itemized_deductions
+      cumulative_nti = max(cumulative_nti, 0)
+
+    // For mixed income: add compensation NTI
+    cumulative_total_nti = cumulative_nti + input.cumulative_taxable_compensation
+    cumulative_it_due = graduated_tax_2023(cumulative_total_nti)
+
+  else:  // EIGHT_PERCENT
+    // IMPORTANT: ₱250K deduction NOT applied at quarterly level — only at annual
+    // For mixed income 8% filers: ALSO no ₱250K deduction at quarterly or annual
+    // (RMC 50-2018: ₱250K exemption is only for PURELY self-employed choosing 8%)
+    if input.cumulative_taxable_compensation > 0:
+      // Mixed income 8%: tax = compensation_grad_tax + 8% × cumulative_gross_receipts
+      compensation_it_due = graduated_tax_2023(input.cumulative_taxable_compensation)
+      business_it_due = input.cumulative_gross_receipts * 0.08
+      cumulative_it_due = compensation_it_due + business_it_due
+    else:
+      // Purely self-employed 8%: full 8% on cumulative gross (no ₱250K at quarterly)
+      cumulative_it_due = input.cumulative_gross_receipts * 0.08
+
+  // STEP 2: Compute cumulative prior payments (Items 56 + 57)
+  // Item 56: cash paid on prior quarterly returns
+  q_before_this = [qp for qp in input.quarterly_payments_this_year if qp.quarter < input.quarter]
+  cumulative_q_payments = SUM(qp.amount_paid for qp in q_before_this)
+
+  // Item 57: CWT from 2307s for PRIOR quarters (already credited on prior 1701Q returns)
+  // NOTE: For Q1, Item 57 = 0 (no prior quarters)
+  // For Q2, Item 57 = cwt_q1 (already credited on Q1 return)
+  // For Q3, Item 57 = cwt_q1 + cwt_q2 (already credited on Q1 and Q2 returns)
+  cwt_prior_quarters = {
+    Q1: 0,
+    Q2: input.cwt_agg.cwt_cumulative_through_q1,
+    Q3: input.cwt_agg.cwt_cumulative_through_q2
+  }[input.quarter]
+
+  // Item 58: CWT from 2307s for THIS quarter (being credited for the first time)
+  cwt_this_quarter = {
+    Q1: input.cwt_agg.cwt_q1,
+    Q2: input.cwt_agg.cwt_q2,
+    Q3: input.cwt_agg.cwt_q3
+  }[input.quarter]
+
+  // Item 55: Prior year excess credits
+  prior_year_credits = input.prior_year_excess_credits
+
+  // STEP 3: Total credits (Item 62)
+  total_credits = (
+    prior_year_credits         // Item 55
+    + cumulative_q_payments    // Item 56
+    + cwt_prior_quarters       // Item 57
+    + cwt_this_quarter         // Item 58
+    + 0                        // Item 59: amendments only
+    + 0                        // Item 60: foreign tax credits (user input, default 0)
+    + 0                        // Item 61: other credits (user input, default 0)
+  )
+
+  // STEP 4: Tax payable / overpayment (Item 63)
+  tax_payable = cumulative_it_due - total_credits
+  // tax_payable > 0: amount due this quarter
+  // tax_payable ≤ 0: overpayment; ₱0 payable this quarter; excess carries forward
+  //   IMPORTANT: mid-year overpayment is NOT REFUNDED — it reduces future quarterly payable
+  //   If still excess at year-end annual return, it becomes an overpayment at annual level.
+  actual_payment_this_quarter = max(tax_payable, 0)
+
+  return QuarterlyITOutput(
+    quarter                      = input.quarter,
+    cumulative_it_due            = round(cumulative_it_due, 2),
+    item_55_prior_year_credits   = round(prior_year_credits, 2),
+    item_56_prior_q_payments     = round(cumulative_q_payments, 2),
+    item_57_cwt_prior_quarters   = round(cwt_prior_quarters, 2),
+    item_58_cwt_this_quarter     = round(cwt_this_quarter, 2),
+    item_62_total_credits        = round(total_credits, 2),
+    item_63_tax_payable          = round(tax_payable, 2),
+    actual_payment_this_quarter  = round(actual_payment_this_quarter, 2),
+    is_overpayment_this_quarter  = (tax_payable < 0),
+    overpayment_amount           = max(0, round(-tax_payable, 2))
+    // overpayment_amount: NOT refundable at quarterly level; carries to next quarter automatically
+  )
+```
+
+### 36.3 Worked Example — Q1, Q2, Q3 Quarterly Progression (OSD, CWT credits)
+
+**Profile:** Software developer, ₱400,000 gross per quarter, OSD, 2307 at WI010 (5% EWT). No prior year carry-over.
+
+**Q1 (January–March):**
+```
+cumulative_gross = ₱400,000
+cumulative_osd   = ₱160,000 (40%)
+cumulative_nti   = ₱240,000
+cumulative_it    = graduated_tax_2023(₱240,000) = ₱0 (below ₱250K threshold)
+cwt_q1           = ₱400,000 × 5% = ₱20,000
+total_credits    = ₱0 (prior year) + ₱0 (prior Q payments) + ₱0 (prior CWT) + ₱20,000 (this Q)
+tax_payable_Q1   = ₱0 − ₱20,000 = −₱20,000 → actual payment = ₱0
+overpayment Q1   = ₱20,000 (NOT refunded; excess CWT carries forward in Form 1701Q Q2)
+```
+
+**Q2 (January–June, cumulative):**
+```
+cumulative_gross = ₱800,000
+cumulative_nti   = ₱480,000 (60% of ₱800K)
+cumulative_it    = graduated_tax_2023(₱480,000)
+                 = ₱22,500 + (₱480,000 − ₱400,000) × 0.20
+                 = ₱22,500 + ₱16,000 = ₱38,500
+cwt_q2           = ₱20,000 (this quarter's new 2307)
+Item 56          = ₱0 (Q1 payment was ₱0)
+Item 57          = ₱20,000 (Q1 CWT, already claimed on Q1 return)
+Item 58          = ₱20,000 (Q2 CWT, being claimed now)
+total_credits    = ₱0 + ₱0 + ₱20,000 + ₱20,000 = ₱40,000
+tax_payable_Q2   = ₱38,500 − ₱40,000 = −₱1,500 → actual payment = ₱0
+overpayment Q2   = ₱1,500 (carries to Q3)
+```
+
+**Q3 (January–September, cumulative):**
+```
+cumulative_gross = ₱1,200,000
+cumulative_nti   = ₱720,000 (60% of ₱1.2M)
+cumulative_it    = graduated_tax_2023(₱720,000)
+                 = ₱22,500 + (₱720,000 − ₱400,000) × 0.20
+                 = ₱22,500 + ₱64,000 = ₱86,500
+cwt_q3           = ₱20,000 (this quarter's new 2307)
+Item 56          = ₱0 (Q1 and Q2 payments were both ₱0)
+Item 57          = ₱40,000 (Q1 CWT ₱20K + Q2 CWT ₱20K, both already claimed)
+Item 58          = ₱20,000 (Q3 CWT, being claimed now)
+total_credits    = ₱0 + ₱0 + ₱40,000 + ₱20,000 = ₱60,000
+tax_payable_Q3   = ₱86,500 − ₱60,000 = ₱26,500 → actual payment = ₱26,500
+```
+
+**Annual verification:**
+```
+annual_gross     = ₱1,600,000 (assuming ₱400K Q4 as well)
+annual_nti       = ₱960,000 (60%)
+annual_it        = graduated_tax_2023(₱960,000)
+                 = ₱102,500 + (₱960,000 − ₱800,000) × 0.25
+                 = ₱102,500 + ₱40,000 = ₱142,500
+total_annual_cwt = ₱80,000 (4 quarters × ₱20,000)
+q_payments       = ₱26,500 (Q3 only; Q1 and Q2 were ₱0)
+annual_balance   = ₱142,500 − ₱80,000 − ₱26,500 = ₱36,000 payable at annual filing
+```
+
+**Verification:** ₱0 (Q1) + ₱0 (Q2) + ₱26,500 (Q3) + ₱36,000 (annual) = ₱62,500 cash paid. Plus ₱80,000 CWT = ₱142,500 total income tax. ✓
+
+---
+
+## CR-037: Annual CWT Credit Reconciliation (Form 1701 / Form 1701A)
+
+**Legal basis:** NIRC Sec. 76; BIR Form 1701 Part VII; BIR Form 1701A Tax Credits section
+
+### 37.1 Annual Tax Credits Section — Field Mapping
+
+| Form Field | Description | Engine Source |
+|-----------|-------------|---------------|
+| 1701 Part VII Item 1 / 1701A Tax Credits Item 1 | Tax paid for previous year's excess credit (carry-over) | prior_year_excess_credits |
+| 1701 Part VII Item 2–5 / 1701A Items 2–5 | Quarterly IT payments (Forms 1701Q Q1, Q2, Q3) | QuarterlyITOutput.actual_payment_this_quarter for Q1, Q2, Q3 |
+| 1701 Part VII Item 6–9 / 1701A Items 6–9 (one per quarter) | CWT from 2307 per quarter | cwt_q1, cwt_q2, cwt_q3, cwt_q4 |
+| 1701 Part VII Item 9 / 1701A separate item | Tax withheld on compensation (Form 2316) | compensation_tax_withheld (mixed income only; 0 for pure self-employed) |
+| 1701 Part VII Item 10 / 1701A corresponding item | Tax paid in previously filed return (if amended) | 0 unless is_amended == true |
+| 1701 Part VII Item 11 | Foreign tax credits | foreign_tax_credits (0 for most; user-input) |
+| 1701 Part VII Item 12 | Other credits | other_credits (0 unless specified) |
+| Total Tax Credits/Payments | Sum of all items above | (computed) |
+
+### 37.2 Annual Balance Payable / Overpayment Function
+
+```
+struct AnnualITInput {
+  // Results from regime comparison
+  chosen_path:           TaxPath        // A, B, or C (user's elected regime)
+  annual_it_due:         Decimal        // Income tax due under chosen path
+
+  // Credits from quarterly filing
+  cwt_agg:               AggregatedCWT  // Has cwt_full_year, prior_year_excess_cwt
+  quarterly_payments:    List[QuarterlyPayment]  // Actual Q1, Q2, Q3 cash payments
+
+  // Mixed income additional credit
+  compensation_tax_withheld: Decimal    // Tax withheld by employer(s) on compensation (Form 2316)
+                                        // 0 for purely self-employed
+
+  // Other credits
+  foreign_tax_credits:   Decimal        // Default: 0
+  other_credits:         Decimal        // Default: 0
+  prior_amended_payment: Decimal        // Default: 0 (if this is an amended return)
+}
+
+function compute_annual_balance(input: AnnualITInput) -> AnnualITOutput:
+
+  // Total quarterly payments (Q1 + Q2 + Q3 cash paid)
+  total_q_payments = SUM(qp.amount_paid for qp in input.quarterly_payments)
+
+  // Total CWT from all 2307s for the year (Q1+Q2+Q3+Q4)
+  total_cwt = input.cwt_agg.cwt_full_year
+
+  // Prior year carry-over
+  prior_credits = input.cwt_agg.prior_year_excess_cwt
+
+  // Compensation tax withheld (TW from employer)
+  comp_tw = input.compensation_tax_withheld
+
+  // Total credits
+  total_credits = (
+    prior_credits           // Item 1
+    + total_q_payments      // Items 2–5 (combined Q1, Q2, Q3)
+    + total_cwt             // Items 6–9 (combined Q1, Q2, Q3, Q4 CWT)
+    + comp_tw               // Item 9 (compensation TW from 2316)
+    + input.prior_amended_payment   // Item 10
+    + input.foreign_tax_credits     // Item 11
+    + input.other_credits           // Item 12
+  )
+
+  // Balance payable / overpayment
+  balance = input.annual_it_due - total_credits
+  // balance > 0: amount due at annual filing (April 15)
+  // balance ≤ 0: overpayment (taxpayer gets refund or can carry over)
+
+  is_overpayment = (balance < 0)
+  balance_payable  = max(balance, 0)
+  overpayment_amt  = max(-balance, 0)
+
+  return AnnualITOutput(
+    annual_it_due            = round(input.annual_it_due, 2),
+    total_q_payments         = round(total_q_payments, 2),
+    total_cwt_credits        = round(total_cwt, 2),
+    prior_year_credits       = round(prior_credits, 2),
+    comp_tax_withheld        = round(comp_tw, 2),
+    total_credits            = round(total_credits, 2),
+    balance_payable          = round(balance_payable, 2),
+    is_overpayment           = is_overpayment,
+    overpayment_amount       = round(overpayment_amt, 2),
+    disposition_required     = is_overpayment   // True if user must elect refund disposition
+  )
+```
+
+### 37.3 Worked Example — 8% Taxpayer with High CWT
+
+**Profile:** Freelance accountant, ₱1,200,000 annual gross, 8% elected, four clients each issuing 2307 at WI010 (5%). No quarterly payments made (CWT exceeded IT each quarter).
+
+```
+annual_gross      = ₱1,200,000
+annual_it_8pct    = (₱1,200,000 − ₱250,000) × 0.08 = ₱76,000
+
+cwt_q1 = cwt_q2 = cwt_q3 = cwt_q4 = ₱300,000 × 0.05 = ₱15,000 each
+total_cwt = ₱60,000
+
+quarterly_payments = [₱0, ₱0, ₱0]   // CWT exceeded each quarter's IT, so ₱0 paid each quarter
+
+total_credits = ₱0 (prior yr) + ₱0 (Q payments) + ₱60,000 (CWT) = ₱60,000
+balance = ₱76,000 − ₱60,000 = ₱16,000 PAYABLE at annual filing (April 15)
+```
+
+### 37.4 Worked Example — 8% Taxpayer with EXCESS CWT (Overpayment)
+
+**Profile:** CPA with 3 clients at 10% EWT (WI011). Annual gross ₱1,200,000.
+
+```
+annual_gross      = ₱1,200,000
+annual_it_8pct    = (₱1,200,000 − ₱250,000) × 0.08 = ₱76,000
+
+total_cwt = ₱1,200,000 × 0.10 = ₱120,000
+
+total_credits = ₱120,000
+balance = ₱76,000 − ₱120,000 = −₱44,000
+
+OVERPAYMENT = ₱44,000
+Taxpayer must elect one of three dispositions (see CR-038).
+```
+
+---
+
+## CR-038: Excess CWT Disposition — Refund, TCC, or Carry-Over
+
+**Legal basis:** NIRC Sec. 76; BIR Form 1701 Item 26 overpayment election; BIR Form 1701A Item 24 overpayment election
+
+### 38.1 Three Disposition Options
+
+When the annual return shows an overpayment (balance < 0), the taxpayer must elect ONE of:
+
+| Option | Code | Description | How to Claim |
+|--------|------|-------------|--------------|
+| Refund | REFUND | Cash refund from BIR | File BIR claim for refund (separate BIR Form); takes months to process |
+| Tax Credit Certificate | TCC | Receive TCC document usable against future tax payments | File TCC application; takes weeks to process |
+| Carry-Over | CARRY | Apply overpayment as credit against NEXT year's quarterly tax returns | No additional filing; amount flows to next year's 1701Q Item 55 |
+
+**Election is IRREVOCABLE once the return is filed.** The taxpayer cannot change from Carry-Over to Refund or TCC after the annual return is submitted.
+
+### 38.2 Decision Tree — Which Option to Recommend
+
+```
+function recommend_cwt_disposition(
+  overpayment_amount: Decimal,
+  taxpayer_expects_income_next_year: bool,
+  taxpayer_needs_cash_now: bool
+) -> DispositionRecommendation:
+
+  if overpayment_amount == 0:
+    return DispositionRecommendation(option=null, reason="No overpayment — no disposition needed")
+
+  if overpayment_amount < 1_000:
+    // Small overpayments: carry-over is easiest (refund claims have minimum practical threshold)
+    return DispositionRecommendation(
+      option="CARRY",
+      reason="Overpayment of ₱{overpayment_amount:.2f} — carry-over recommended for small amounts. "
+             "Refund claims take 1–2 years to process for amounts this small."
+    )
+
+  if taxpayer_needs_cash_now and overpayment_amount >= 1_000:
+    return DispositionRecommendation(
+      option="REFUND",
+      reason="Large overpayment + immediate cash need: request refund. "
+             "Expected processing: 2–4 years (BIR processing backlogs). "
+             "Consider TCC as faster alternative if you have future tax obligations."
+    )
+
+  if taxpayer_expects_income_next_year:
+    return DispositionRecommendation(
+      option="CARRY",
+      reason="Carry-over to next year is fastest and simplest. No additional BIR filing needed. "
+             "The ₱{overpayment_amount:.2f} will appear in Item 55 of your Q1 Form 1701Q next year."
+    )
+
+  // Default: carry-over (most practical for continuing freelancers)
+  return DispositionRecommendation(
+    option="CARRY",
+    reason="Carry-over recommended. If you are ceasing business operations, switch to REFUND."
+  )
+```
+
+### 38.3 Engine Output for Overpayment
+
+```
+struct DispositionRecommendation {
+  option:             "REFUND" | "TCC" | "CARRY" | null
+  reason:             str      // User-facing explanation
+  refund_claim_form:  str      // "BIR Form 1701 (check 'To be Refunded' box)" if REFUND
+  carry_amount:       Decimal  // Amount that will appear in next year's Item 55
+  processing_warning: str      // If REFUND: "BIR refund processing typically takes 2–4 years."
+}
+```
+
+### 38.4 Cash Flow Display — Per-Path Overpayment/Balance
+
+The engine displays the balance payable (or overpayment) for each tax path, not just the recommended path:
+
+```
+for each path in [A, B, C] where path is applicable:
+  path_it_due       = result from regime comparison (CR-028)
+  path_total_cwt    = cwt_agg.cwt_full_year  // same for all paths
+  path_q_payments   = same quarterly payments for all paths
+  path_balance      = path_it_due - path_total_cwt - q_payments - comp_tw - prior_credits
+
+  display:
+    Path {path}: Income Tax ₱{path_it_due:,.2f}
+    Less CWT credits: ₱{path_total_cwt:,.2f}
+    Less quarterly payments: ₱{q_payments:,.2f}
+    Balance payable at filing: ₱{max(path_balance, 0):,.2f}
+    {if path_balance < 0: "Overpayment: ₱{abs(path_balance):,.2f}"}
+```
+
+**NOTE:** CWT does NOT change which path is recommended. Regime recommendation is based on income tax due BEFORE CWT. CWT only affects the cash flow at filing time.
+
+---
+
+## CR-039: EWT Rate Determination (Which Rate Did Client Apply?)
+
+**Legal basis:** RR No. 11-2018, Sec. 2.57.3; RMO No. 12-2013 (Top Withholding Agent list)
+
+### 39.1 EWT Rate Scenarios for Individual Professional Payees
+
+The EWT rate on the payee's 2307 depends on:
+1. Whether the payee submitted a Sworn Declaration of gross income to the payor
+2. Whether the payee's gross income crosses ₱3,000,000
+3. Whether the payee is VAT-registered
+4. Whether the payor is a Top Withholding Agent (TWA)
+
+| Scenario | ATC | Rate | Basis |
+|----------|-----|------|-------|
+| Payee non-VAT, income ≤₱3M, submitted Sworn Declaration | WI010 | 5% | RR 11-2018, normal professional fee rate |
+| Payee non-VAT, income >₱3M (or income ≤₱3M but no Sworn Declaration submitted) | WI011 | 10% | RR 11-2018: no declaration → conservative rate |
+| Payee is VAT-registered (any income level) | WI011 | 10% | RR 11-2018: VAT registration triggers WI011 |
+| Payor is a government agency or GOCC (ANY payee) | WI157 | 2% | Income payment by government/GOCC to service supplier |
+| Payor is a Top Withholding Agent (TWA), payee is service supplier | WI160 | 2% | TWA rule: 2% on services |
+| Platform/e-marketplace (Payoneer, GCash, etc.) | WI760 | 1% on ½ gross | RR 16-2023 (see CR-019) |
+
+**Implication for engine:** The engine does NOT compute which ATC should apply — it READS the ATC from the user-entered 2307 data. However, if the implied rate (tax_withheld / income_payment) does not match the ATC's expected rate, the engine raises a validation warning (see CR-035.3).
+
+### 39.2 When a TWA Client Applies 2% Instead of 5% or 10%
+
+A client that is a BIR-designated Top Withholding Agent (TWA) withholds at 2% (WI160) on ALL service payments, regardless of the payee's gross income. This 2% is still creditable against income tax.
+
+**Implication:** A TWA client issuing a 2307 with ATC WI160 at 2% means the freelancer gets LESS CWT credit than if the client had used WI010 at 5%. The freelancer will owe more at filing time.
+
+**Engine display:** When CWT rate is 2% (WI160), engine should note: "Your client is a Top Withholding Agent. The 2% withholding is correct and fully creditable against your income tax — it is lower than the normal professional fee rate."
+
+### 39.3 Determining TWA Status of a Client
+
+A client is a TWA if listed in BIR Revenue Memorandum Order No. 12-2013 (updated annually). Large corporations and conglomerates are typically TWAs. The tool CANNOT verify TWA status — this is the payor's responsibility. If the payee receives a 2307 with WI160, the engine accepts it as-is.
+
+---
+
+## CR-040: SAWT Export and CWT Filing Requirements
+
+**Legal basis:** BIR Revenue Memorandum Circular No. 13-2010 (SAWT); eBIRForms package
+
+### 40.1 SAWT Requirement
+
+The Summary Alphalist of Withholding Taxes (SAWT) must be submitted electronically when filing:
+- Annual return (1701 or 1701A) if ANY CWT credits are being claimed
+- Quarterly 1701Q if CWT credits are being claimed in that quarter
+
+The SAWT lists all Form 2307 certificates received, one row per certificate.
+
+### 40.2 SAWT Row Structure (Engine Export Format)
+
+```
+// One row per Form2307Entry in the user's input
+struct SAWTRow {
+  sequence_number:       int       // 1-based, sequential
+  payor_tin:             str       // Payor's 12-digit TIN
+  payor_name:            str       // Payor's registered name
+  income_payment:        Decimal   // Total income paid for the quarter (Column 9 of Form 2307)
+  atc_code:              str       // ATC code (e.g., "WI010")
+  tax_withheld:          Decimal   // Total EWT withheld (Column 10 of Form 2307)
+  quarter_covered:       Quarter   // Q1, Q2, Q3, or Q4
+  taxable_year:          int
+}
+```
+
+### 40.3 Engine SAWT Generation
+
+```
+function generate_sawt(cwt_agg: AggregatedCWT, taxable_year: int) -> List[SAWTRow]:
+  rows = []
+  seq = 1
+  for entry in cwt_agg.entries:
+    if entry.taxable_year_covered == taxable_year:
+      rows.append(SAWTRow(
+        sequence_number  = seq,
+        payor_tin        = entry.payor_tin,
+        payor_name       = entry.payor_name,
+        income_payment   = entry.total_income_payment,
+        atc_code         = entry.atc_code,
+        tax_withheld     = entry.total_tax_withheld,
+        quarter_covered  = entry.quarter_covered,
+        taxable_year     = entry.taxable_year_covered
+      ))
+      seq += 1
+  return rows
+
+// The engine exports this as CSV with column headers matching BIR eBIRForms SAWT format:
+// Sequence No. | Payor TIN | Payor Name | Income Payment | ATC | Tax Withheld | Quarter | Year
+```
+
+### 40.4 BIR Penalty for Non-Submission of SAWT
+
+If the SAWT is not submitted with the return, BIR may disallow the CWT credit. The disallowance results in:
+- The full income tax becoming due with no credit
+- Potential underpayment → surcharge (25%) + interest (12%/6%) + compromise
+
+Engine must display the following notice whenever CWT credits are non-zero:
+> "⚠️ SAWT REQUIRED: You are claiming ₱{total_cwt:,.2f} in creditable withholding tax. You must submit the Summary Alphalist of Withholding Taxes (SAWT) electronically via eBIRForms when filing your return. Failure to submit the SAWT may result in BIR disallowing your CWT credits. Download your SAWT file from the Export section."
