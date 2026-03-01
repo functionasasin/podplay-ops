@@ -5,9 +5,9 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 18 |
-| Analyzed | 10 |
-| Pending | 8 |
-| Convergence | 56% |
+| Analyzed | 11 |
+| Pending | 7 |
+| Convergence | 61% |
 
 ---
 
@@ -26,7 +26,7 @@
 ## Wave 2: Internal Landscape — Cheerful's Current Architecture
 
 - [x] `current-post-tracking` — `creator_post` table, `PostTrackingWorkflow`: current opt-in model, fields, reusable components
-- [ ] `current-ig-dm-overlap` — IG DM Messaging API webhook shared infrastructure: what Story capture gets for free vs new work
+- [x] `current-ig-dm-overlap` — IG DM Messaging API webhook shared infrastructure: what Story capture gets for free vs new work
 - [ ] `current-media-storage` — Media/asset storage patterns (Supabase Storage), bucket structure, UGC volume requirements
 - [ ] `current-campaign-ugc-link` — UGC attribution: how captured content links to campaigns/creators, brand-level vs campaign-level
 
