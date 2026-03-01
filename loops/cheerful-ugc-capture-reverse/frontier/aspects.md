@@ -5,9 +5,9 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 18 |
-| Analyzed | 15 |
-| Pending | 3 |
-| Convergence | 83% |
+| Analyzed | 16 |
+| Pending | 2 |
+| Convergence | 89% |
 
 ---
 
@@ -34,7 +34,7 @@
 
 - [x] `option-official-api-capture` — Full official API integration: mentions webhook + tags polling + Story capture (shared IG DM infra)
 - [x] `option-ai-radar` — AI detection pipeline: vision + audio + OCR + candidate discovery, compute cost model
-- [ ] `option-third-party-service` — Buy-not-build: use Archive or similar as managed UGC engine, API/webhook ingestion
+- [x] `option-third-party-service` — Buy-not-build: use Archive or similar as managed UGC engine, API/webhook ingestion
 - [ ] `option-hybrid-layered` — Layered approach: Layer 1 (official API, free) + Layer 2 (hashtags) + Layer 3 (AI radar, optional)
 
 ## Wave 4: Synthesis
