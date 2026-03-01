@@ -2,7 +2,7 @@
 
 ## Status
 
-Wave 2 tool design in progress. Campaign, Email, Creators, Integrations, and Users & Team domains complete. Other domains pending.
+Wave 2 tool design in progress. Campaign, Email, Creators, Integrations, Users & Team, and Analytics domains complete. Search & Discovery and Workflows pending.
 
 ## Domains
 
@@ -13,7 +13,7 @@ Wave 2 tool design in progress. Campaign, Email, Creators, Integrations, and Use
 | Creators | `creators.md` | 3 | 24 | 27 | Wave 2 complete |
 | Integrations | `integrations.md` | 0 | 18 | 18 | Wave 2 complete |
 | Users & Team | `users-and-team.md` | 0 | 13 | 13 | Wave 2 complete |
-| Analytics | `analytics.md` | 0 | ~1 | ~1 | Wave 1 complete |
+| Analytics | `analytics.md` | 0 | 1 | 1 | Wave 2 complete |
 | Search & Discovery | `search-and-discovery.md` | 0 | ~9 | ~9 | Wave 1 complete |
 | Workflows | `workflows.md` | 0 | ~7 | ~7 | Wave 1 complete |
 | Shared Conventions | `shared-conventions.md` | — | — | — | Pending |
@@ -164,6 +164,12 @@ Wave 2 tool design in progress. Campaign, Email, Creators, Integrations, and Use
 | 112 | `cheerful_unassign_campaign` | Assignments | Remove campaign assignment from member | NEW |
 | 113 | `cheerful_bulk_assign_campaigns` | Assignments | Bulk assign campaigns to member | NEW |
 
+### New Tools — Analytics Domain (1)
+
+| # | Tool Name | Sub-domain | Description | Status |
+|---|-----------|------------|-------------|--------|
+| 114 | `cheerful_get_dashboard_analytics` | Dashboard | Comprehensive analytics: campaign counts, opt-in rates, email stats, pipelines, follow-ups, recent opt-ins | NEW |
+
 ### New Tools — Remaining Domains (pending design)
 
-*Tool designs for Analytics, Search & Discovery, and Workflows domains will be added as Wave 2 progresses. Onboarding status tool (`cheerful_get_onboarding_status`) listed in `specs/users-and-team.md` but not numbered here pending Wave 3 (requires new backend endpoint).*
+*Tool designs for Search & Discovery and Workflows domains will be added as Wave 2 progresses. Onboarding status tool (`cheerful_get_onboarding_status`) listed in `specs/users-and-team.md` but not numbered here pending Wave 3 (requires new backend endpoint).*
