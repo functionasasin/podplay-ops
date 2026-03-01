@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total Aspects**: 36
-- **Analyzed**: 18
-- **Pending**: 18
-- **Convergence**: 50%
+- **Analyzed**: 19
+- **Pending**: 17
+- **Convergence**: 52.8%
 
 ---
 
@@ -41,7 +41,7 @@ Flesh each tool to exhaustive detail. Verify every parameter, type, and enum aga
 
 - [x] **w3-campaigns-crud** — Full specs for campaign create/read/update/delete tools. Verify all Pydantic models, enum values, validation rules against `projects/cheerful/apps/backend/src/api/route/campaigns.py`
 - [x] **w3-campaigns-wizard** — Full specs for campaign wizard tools: draft save/update/get/delete, launch (22-step orchestration), plus product CRUD (3 tools). Verified against `campaign_launch.py` (1396 lines — all 5 draft/launch endpoints), `models/api/campaign_launch.py` (425 lines — all request/response models with 3 validators), `product.py` (98 lines — 3 CRUD endpoints), `models/api/product.py`, `models/database/product.py`. Key findings: draft routes are in campaign_launch.py (not campaign_draft.py), campaign types use frontend strings mapped via CAMPAIGN_TYPE_MAP, dual-storage model (columns + draft_metadata JSONB), update has asymmetric overwrite behavior, launch has 22 orchestration steps in single transaction with resource_owner_id concept for team member launches, product_update.py is product changelog feed (not CRUD). 8 tools fully specified (5 wizard + 3 products).
-- [ ] **w3-campaigns-recipients** — Full specs for recipient tools: single add, bulk upsert, CSV upload, Google Sheet import, outbox population. Verify against recipient-related routes
+- [x] **w3-campaigns-recipients** — Full specs for 17 tools: add recipients (bulk + from search), CSV upload, unified recipient listing (all filter params), sender update/remove, outbox populate/get, signature get/update/list, merge tags, required columns, sheet validation, client summary generation, enrichment status, override email. All verified against `campaign.py` (2746 lines), `campaign_enrichment.py` (299 lines), Pydantic models in `models/api/campaign.py`, `models/api/unified_recipient.py`, `models/api/recipients_from_search.py`. Key findings: sender update/remove only support Gmail accounts (not SMTP), enrichment status endpoint is owner-only (not team-member), unified recipients have 40+ fields including LLM-extracted flags, CSV upload requires social profiles for gifting/paid_promotion types, queue population validates ALL template placeholders or fails entirely.
 - [ ] **w3-email-threads** — Full specs for thread listing (all filter params, pagination), thread detail, status marking (all status values). Verify against `threads.py`
 - [ ] **w3-email-drafts** — Full specs for draft CRUD, AI draft generation (tone, style, reply examples), draft sending. Verify against `gmail.py`, draft routes
 - [ ] **w3-creators-full** — Full specs for all creator tools: listing with filters, cross-campaign search, enrichment, email override, profile detail. Verify against creator routes + existing CE tool implementations

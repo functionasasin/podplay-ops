@@ -1541,22 +1541,113 @@ The launch endpoint executes the following steps in order, all within a single D
 
 **Status**: NEW
 
-**Purpose**: Bulk add recipients to a campaign by email/name. Idempotent by (campaign_id, email) — duplicates are skipped.
+**Purpose**: Bulk add recipients to a campaign by email/name. Idempotent by (campaign_id, email) — duplicates are silently skipped. Automatically populates the outbox queue for newly added recipients.
 
-**Maps to**: `POST /api/service/campaigns/{campaign_id}/recipients` (new service route needed; main route: `POST /campaigns/{campaign_id}/recipients`)
+**Maps to**: `POST /api/service/campaigns/{campaign_id}/recipients` (new service route needed; main route: `POST /campaigns/{campaign_id}/recipients` in `campaign.py` line 1106)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner or assigned team member.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: owner or assigned team member (checked via `CampaignMemberAssignmentRepository.can_access_campaign`).
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| campaign_id | uuid | yes | — | Campaign ID |
-| recipients | object[] | yes | — | Array of { email: string, name: string?, custom_fields: object? } |
+| campaign_id | uuid | yes | — | Campaign ID. Must exist and not be in COMPLETED status. |
+| recipients | object[] | yes (min 1) | — | Array of recipient objects. Each object has: `email` (string, required, valid email format), `name` (string, optional, nullable), `custom_fields` (object, optional, default `{}`). Custom fields are arbitrary key-value pairs used for template personalization (e.g., `{"company": "Acme", "first_name": "Jane"}`). |
 
-**Returns**: Array of created `CampaignRecipientResponse` objects (skips duplicates silently).
+**Parameter Validation Rules**:
+- `recipients` must contain at least 1 item (Pydantic `min_length=1` on Body). Empty array returns 422.
+- Each `email` must be a valid email address (`EmailStr` validation). Invalid format returns 422.
+- Duplicate emails within the request are each attempted — the first insert succeeds, subsequent ones are silently skipped via `idempotent_insert` (unique constraint on `(campaign_id, email)`).
+- Campaign must not be in COMPLETED status. If completed, returns 400: `"Cannot add recipients on a completed campaign. Reactivate it first."`
 
-**Side effects**: Auto-populates outbox queue for new recipients (round-robin sender assignment).
+**Return Schema**:
+```json
+[
+  {
+    "id": "uuid — Auto-generated recipient ID",
+    "campaign_id": "uuid — Campaign ID",
+    "email": "string — Recipient email (lowercase)",
+    "name": "string | null — Recipient name",
+    "custom_fields": "object — Custom fields dict (empty {} if none)",
+    "created_at": "datetime — ISO 8601 timestamp with timezone"
+  }
+]
+```
+Returns ONLY the newly added recipients. If all were duplicates, returns empty array `[]`.
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Campaign not found | "Campaign not found" | 404 |
+| User cannot access campaign | "Not authorized" | 403 |
+| Campaign is completed | "Cannot add recipients on a completed campaign. Reactivate it first." | 400 |
+| Empty recipients array | Pydantic validation error: "ensure this value has at least 1 items" | 422 |
+| Invalid email format | Pydantic validation error on `EmailStr` | 422 |
+
+**Pagination**: N/A — returns all newly added recipients in a single response.
+
+**Side Effects**:
+- After inserting recipients, automatically calls `populate_queue_for_campaign(db, campaign_id)` to create outbox queue entries.
+- Queue population uses round-robin sender distribution across campaign senders.
+- If queue population fails (e.g., no senders configured, personalization validation fails), the error is logged but **does not fail the recipient addition** — recipients are still added successfully.
+- Queue entries are created with status `PENDING`.
+- If campaign has `follow_up_templates`, follow-up queue entries are also created for each new outbox entry.
+
+**Example Request**:
+```
+cheerful_add_campaign_recipients(
+  campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  recipients=[
+    {"email": "creator@example.com", "name": "Jane Creator", "custom_fields": {"company": "Creator Co", "instagram": "@janecreator"}},
+    {"email": "influencer@gmail.com", "name": "Sam Influencer", "custom_fields": {"followers": "50000"}},
+    {"email": "brand@outlook.com"}
+  ]
+)
+```
+
+**Example Response**:
+```json
+[
+  {
+    "id": "f1e2d3c4-b5a6-7890-1234-567890abcdef",
+    "campaign_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "email": "creator@example.com",
+    "name": "Jane Creator",
+    "custom_fields": {"company": "Creator Co", "instagram": "@janecreator"},
+    "created_at": "2026-03-01T14:30:00+00:00"
+  },
+  {
+    "id": "a2b3c4d5-e6f7-8901-2345-678901bcdef0",
+    "campaign_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "email": "influencer@gmail.com",
+    "name": "Sam Influencer",
+    "custom_fields": {"followers": "50000"},
+    "created_at": "2026-03-01T14:30:00+00:00"
+  },
+  {
+    "id": "b3c4d5e6-f7a8-9012-3456-789012cdef01",
+    "campaign_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "email": "brand@outlook.com",
+    "name": null,
+    "custom_fields": {},
+    "created_at": "2026-03-01T14:30:00+00:00"
+  }
+]
+```
+
+**Slack Formatting Notes**:
+- On success: "Added *{count}* recipients to campaign. {skipped} duplicates skipped. Outbox queue updated."
+- If all duplicates: "All {count} recipients already exist in this campaign — no new additions."
+- List first few names/emails if count is small (<5).
+
+**Edge Cases**:
+- All recipients are duplicates: Returns empty array `[]`. Not an error — this is the idempotent behavior.
+- Campaign has no senders configured: Recipients are added but queue population is skipped (logged as warning). Recipients can be queued later via `cheerful_populate_campaign_outbox`.
+- Template placeholders reference custom_fields not provided by some recipients: Queue population fails with ValueError for that recipient. However, since `populate_queue_for_campaign` processes ALL recipients, a single mismatch fails the entire queue population. Recipients are still added to the campaign.
+- Very large batch (1000+ recipients): No explicit limit on array size. Performance depends on DB throughput.
+- `name` is null: Stored as null. Display name falls back to `first_name`/`last_name` from custom_fields, then "No name".
 
 ---
 
@@ -1564,24 +1655,113 @@ The launch endpoint executes the following steps in order, all within a single D
 
 **Status**: NEW
 
-**Purpose**: Add recipients discovered via creator search. Creates both campaign_recipient and campaign_creator records. Starts enrichment for creators without verified email.
+**Purpose**: Add recipients discovered via creator search (Influencer Club). Creates both `campaign_recipient` (for email queue) and `campaign_creator` (for social handles/enrichment) records. Automatically starts enrichment workflow for creators without a verified email.
 
-**Maps to**: `POST /api/service/campaigns/{campaign_id}/recipients-from-search` (new service route needed; main route: `POST /campaigns/{campaign_id}/recipients-from-search`)
+**Maps to**: `POST /api/service/campaigns/{campaign_id}/recipients-from-search` (new service route needed; main route: `POST /campaigns/{campaign_id}/recipients-from-search` in `campaign.py` line 1205)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner or assigned team member.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: owner or assigned team member (checked via `CampaignMemberAssignmentRepository.can_access_campaign`).
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| campaign_id | uuid | yes | — | Campaign ID |
-| recipients | object[] | yes | — | Array of { email: string?, name: string?, custom_fields: object?, social_media_handles: string[] } |
+| campaign_id | uuid | yes | — | Campaign ID. Must exist and not be in COMPLETED status. |
+| recipients | object[] | yes (min 1) | — | Array of recipient objects from search results. Each object has: `email` (string, optional — nullable if creator needs enrichment), `name` (string, optional), `social_media_handles` (array of `{platform: string, handle: string, url: string?}`, default `[]`), `custom_fields` (object, optional, default `{}`). |
 
-**Returns**: Array of `RecipientFromSearchResponse` objects (includes creator_id, enrichment_status).
+**Parameter Validation Rules**:
+- `recipients` must contain at least 1 item (Pydantic `min_length=1` on Body). Empty array returns 422.
+- `email` is optional (`EmailStr | None`). If provided, must be valid email format. If null/omitted, creator is created with `enrichment_status = "pending"` and enrichment workflow is triggered.
+- `social_media_handles` items must have `platform` (string, e.g. "instagram", "tiktok", "youtube") and `handle` (string, e.g. "@janecreator"). `url` is optional.
+- Campaign must not be in COMPLETED status. Returns 400 if completed.
 
-**Side effects**: Creates campaign_creator records, triggers enrichment workflow for creators without email.
+**Return Schema**:
+```json
+[
+  {
+    "recipient_id": "uuid | null — Campaign recipient ID (null if no email provided)",
+    "creator_id": "uuid — Campaign creator ID (always created)",
+    "email": "string | null — Creator email (null if pending enrichment)",
+    "name": "string | null — Creator name",
+    "queue_populated": "boolean — True if outbound queue entry was created for this recipient",
+    "already_existed": "boolean — True if recipient/creator already existed in campaign (skipped)"
+  }
+]
+```
 
-**Notes**: Unlike `add_campaign_recipients`, this creates the full creator record with social handles and triggers the enrichment pipeline. Used when adding creators found via Influencer Club search.
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Campaign not found | "Campaign not found" | 404 |
+| User cannot access campaign | "Not authorized" | 403 |
+| Campaign is completed | "Cannot add recipients on a completed campaign. Reactivate it first." | 400 |
+| Empty recipients array | Pydantic validation error | 422 |
+| Invalid email format | Pydantic validation error on `EmailStr` | 422 |
+
+**Pagination**: N/A — returns all results in a single response.
+
+**Side Effects**:
+1. **Dual record creation**: For each recipient with an email, creates BOTH a `campaign_recipient` record (for outbox queue) AND a `campaign_creator` record (for social handles, enrichment, status tracking). Idempotent — existing records are skipped.
+2. **Queue population**: After all inserts, calls `populate_queue_for_campaign(db, campaign_id)` to create outbox entries for recipients with emails. Queue population failure is non-fatal.
+3. **Enrichment workflow**: After DB commit, starts a Temporal enrichment workflow (`EnrichForCampaignWorkflow`) for any new creators that have no email. The workflow attempts to find emails via Apify scraping and Influencer Club API. Enrichment runs asynchronously — poll status via `cheerful_get_campaign_enrichment_status`.
+4. **Enrichment workflow ID format**: `enrich-campaign-{campaign_id}-{8-char-hex}`
+
+**Example Request**:
+```
+cheerful_add_campaign_recipients_from_search(
+  campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  recipients=[
+    {
+      "email": "jane@creator.com",
+      "name": "Jane Creator",
+      "social_media_handles": [
+        {"platform": "instagram", "handle": "@janecreator", "url": "https://instagram.com/janecreator"},
+        {"platform": "tiktok", "handle": "@janecreator"}
+      ]
+    },
+    {
+      "name": "Sam NoEmail",
+      "social_media_handles": [
+        {"platform": "instagram", "handle": "@samcreates"}
+      ]
+    }
+  ]
+)
+```
+
+**Example Response**:
+```json
+[
+  {
+    "recipient_id": "f1e2d3c4-b5a6-7890-1234-567890abcdef",
+    "creator_id": "a2b3c4d5-e6f7-8901-2345-678901bcdef0",
+    "email": "jane@creator.com",
+    "name": "Jane Creator",
+    "queue_populated": true,
+    "already_existed": false
+  },
+  {
+    "recipient_id": null,
+    "creator_id": "b3c4d5e6-f7a8-9012-3456-789012cdef01",
+    "email": null,
+    "name": "Sam NoEmail",
+    "queue_populated": false,
+    "already_existed": false
+  }
+]
+```
+
+**Slack Formatting Notes**:
+- On success: "Added *{new_count}* creators to campaign ({with_email} with email, {without_email} pending enrichment). {skipped} already existed."
+- If creators need enrichment: "Enrichment started for {count} creators without email. Use `cheerful_get_campaign_enrichment_status` to check progress."
+
+**Edge Cases**:
+- Creator has email → both `campaign_recipient` + `campaign_creator` created, outbox populated.
+- Creator has no email → only `campaign_creator` created with `enrichment_status = "pending"`, no outbox entry. Enrichment workflow started asynchronously.
+- Creator already exists (by email match) → `already_existed = true`, no duplicate created.
+- Enrichment workflow fails to start → logged as exception, does not fail the API response. Creators are still added.
+- Campaign has no senders → queue population silently skipped, recipients still added.
 
 ---
 
@@ -1589,25 +1769,125 @@ The launch endpoint executes the following steps in order, all within a single D
 
 **Status**: NEW
 
-**Purpose**: Upload a CSV file of recipients to a campaign. Requires an `email` column. Gifting/paid_promotion campaigns also require social profile columns.
+**Purpose**: Upload recipients from CSV data to a campaign. Requires an `email` column. For gifting and paid_promotion campaigns, each row must also have at least one social profile (Instagram, TikTok, or YouTube). Duplicate emails (within CSV or already in campaign) are silently skipped.
 
-**Maps to**: `POST /api/service/campaigns/{campaign_id}/recipients/csv` (new service route needed; main route: `POST /campaigns/{campaign_id}/recipients/csv`)
+**Maps to**: `POST /api/service/campaigns/{campaign_id}/recipients/csv` (new service route needed; main route: `POST /campaigns/{campaign_id}/recipients/csv` in `campaign.py` line 1378)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner or assigned team member.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: owner or assigned team member.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| campaign_id | uuid | yes | — | Campaign ID |
-| csv_content | string | yes | — | Raw CSV text content (with headers row) |
-| populate_queue | boolean | no | true | Whether to auto-populate outbox queue |
+| campaign_id | uuid | yes | — | Campaign ID. Must exist and not be in COMPLETED status. |
+| csv_content | string | yes | — | Raw CSV text content with headers row. Must contain an `email` column. Additional columns (e.g., `name`, `company`, `instagram_handle`) become custom_fields. The CE tool accepts CSV as text since Slack doesn't support file uploads — the service route parses text as CSV. |
+| populate_queue | boolean | no | true | Whether to auto-populate outbox queue after adding recipients. Set to `false` if you want to add recipients without immediately queueing emails. |
 
-**Returns**: `{ added_count: integer, skipped_count: integer, invalid_count: integer, recipients: CampaignRecipientResponse[] }`
+**Parameter Validation Rules**:
+- CSV must contain an `email` column (case-insensitive header matching after cleaning). Missing `email` column returns 400: `"CSV must contain an 'email' column. Found columns: {first_5_columns}"`.
+- CSV must contain at least one data row. Empty CSV returns 400: `"CSV file contains no data rows (only headers found)"`.
+- For GIFTING and PAID_PROMOTION campaigns (`campaign.campaign_type in (GIFTING, PAID_PROMOTION)`), social profile validation is enforced: each row must have at least one social profile from Instagram, TikTok, or YouTube. Social profiles can be provided as:
+  - Dedicated columns: `instagram_handle`, `tiktok_handle`, `youtube_handle` (with @username format)
+  - Full URLs in any column (auto-detected)
+- If social validation fails, the **entire upload is rejected** with 400 and detailed per-row errors:
+  ```json
+  {
+    "message": "CSV validation failed - missing required social profiles",
+    "errors": [{"row": 3, "email": "bad@example.com", "error": "Missing required social profile"}],
+    "help": "Each row must have a valid email AND at least one social profile (Instagram, TikTok, or YouTube)..."
+  }
+  ```
+- Invalid email rows are silently skipped during parsing (counted in `invalid_count`).
+- Duplicate emails within the CSV are skipped (counted in `skipped_count`).
+- Emails already in the campaign are skipped (counted in `skipped_count`).
 
-**Notes**: The main API endpoint accepts multipart file upload. The CE tool should accept CSV as a text parameter since Slack doesn't support file uploads in tool calls. The service route will need to parse the text as CSV.
+**Return Schema** (`CsvUploadResponse`):
+```json
+{
+  "added_count": "integer — Number of new recipients added",
+  "skipped_count": "integer — Number of duplicate emails skipped (in-file + already in campaign)",
+  "invalid_count": "integer — Number of rows with invalid emails skipped during pre-parsing",
+  "recipients": [
+    {
+      "id": "uuid — Recipient ID",
+      "campaign_id": "uuid — Campaign ID",
+      "email": "string — Recipient email (lowercase)",
+      "name": "string | null — From 'name' column, or null",
+      "custom_fields": "object — All non-email, non-name columns as key-value pairs",
+      "created_at": "datetime — ISO 8601 timestamp"
+    }
+  ]
+}
+```
 
-**Error responses**: Missing required `email` column, missing social profile columns for gifting/paid_promotion campaigns.
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Campaign not found | "Campaign not found" | 404 |
+| User cannot access campaign | "Not authorized" | 403 |
+| Campaign is completed | "Cannot upload recipients on a completed campaign. Reactivate it first." | 400 |
+| Missing email column | "CSV must contain an 'email' column. Found columns: {cols}" | 400 |
+| Empty CSV (no data rows) | "CSV file contains no data rows (only headers found)" | 400 |
+| Social validation failed (gifting/paid) | `{"message": "CSV validation failed - missing required social profiles", "errors": [...], "help": "..."}` | 400 |
+| Invalid emails + missing social | `{"message": "CSV validation failed - invalid emails and missing social profiles", "errors": [...], "help": "..."}` | 400 |
+
+**Pagination**: N/A
+
+**Side Effects**:
+- When `populate_queue = true` and new recipients were added, calls `populate_queue_for_campaign(db, campaign_id)`. Queue population failure is non-fatal — logged as warning.
+- For gifting/paid_promotion campaigns with valid social profiles, also creates `campaign_creator` records with `social_media_handles` for each new recipient.
+- Social handles are stored as `[{"platform": "instagram", "handle": "@user", "url": "https://..."}]`.
+
+**Example Request**:
+```
+cheerful_upload_campaign_recipients_csv(
+  campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  csv_content="email,name,company,instagram_handle\njane@example.com,Jane Doe,Acme Corp,@janedoe\nsam@example.com,Sam Smith,Widget Inc,@samsmith\njane@example.com,Jane Duplicate,Acme Corp,@janedoe",
+  populate_queue=true
+)
+```
+
+**Example Response**:
+```json
+{
+  "added_count": 2,
+  "skipped_count": 1,
+  "invalid_count": 0,
+  "recipients": [
+    {
+      "id": "f1e2d3c4-b5a6-7890-1234-567890abcdef",
+      "campaign_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "email": "jane@example.com",
+      "name": "Jane Doe",
+      "custom_fields": {"company": "Acme Corp", "instagram_handle": "@janedoe"},
+      "created_at": "2026-03-01T15:00:00+00:00"
+    },
+    {
+      "id": "a2b3c4d5-e6f7-8901-2345-678901bcdef0",
+      "campaign_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "email": "sam@example.com",
+      "name": "Sam Smith",
+      "custom_fields": {"company": "Widget Inc", "instagram_handle": "@samsmith"},
+      "created_at": "2026-03-01T15:00:00+00:00"
+    }
+  ]
+}
+```
+
+**Slack Formatting Notes**:
+- On success: "CSV upload complete: *{added_count}* added, {skipped_count} duplicates skipped, {invalid_count} invalid rows."
+- On social validation failure: Show the first 3 error rows with specific missing profile info.
+- Remind user: "Run `cheerful_get_campaign_outbox` to see queued emails."
+
+**Edge Cases**:
+- CSV with only headers, no data rows: Returns 400 "no data rows".
+- CSV with BOM (byte order mark): Handled by `parse_csv_file_with_cleaning` — BOM is stripped.
+- Mixed valid/invalid emails: Invalid rows are counted in `invalid_count`, valid ones are processed normally.
+- All rows are duplicates: Returns `added_count: 0, skipped_count: N`. Not an error.
+- Non-gifting/non-paid campaign: Social profile validation is NOT enforced. Any columns work.
+- `populate_queue = false`: Recipients added but no outbox entries created. Useful for staging recipients before configuring senders.
 
 ---
 
@@ -1615,36 +1895,191 @@ The launch endpoint executes the following steps in order, all within a single D
 
 **Status**: NEW
 
-**Purpose**: List campaign recipients with rich filtering, sorting, and unified view combining recipient + creator data.
+**Purpose**: List campaign recipients with rich filtering, sorting, and a unified view that merges `campaign_recipient` and `campaign_creator` data with deduplication. This is the primary "participants table" view.
 
-**Maps to**: `GET /api/service/campaigns/{campaign_id}/unified-recipients` (new service route needed; main route: `GET /campaigns/{campaign_id}/unified-recipients`)
+**Maps to**: `GET /api/service/campaigns/{campaign_id}/unified-recipients` (new service route needed; main route: `GET /campaigns/{campaign_id}/unified-recipients` in `campaign.py` line 2336)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner or assigned team member.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: owner or assigned team member. The `user_id` is also passed to the unified recipient repository for cross-campaign interaction lookups scoped to the user.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | campaign_id | uuid | yes | — | Campaign ID |
-| limit | integer | no | 50 | Results per page. Max: 10000 |
-| offset | integer | no | 0 | Pagination offset |
-| status | string[] | no | — | Filter by outbox status(es). Values: "pending", "processing", "sent", "failed", "cancelled" |
-| include_all_contacts | boolean | no | false | Include contacts without outbox entries |
-| search | string | no | — | Text search across name/email |
-| sort_by | string | no | "created_at" | Sort field |
-| sort_dir | enum | no | "desc" | One of: "asc", "desc" |
-| social_platforms | string[] | no | — | Filter by social platform presence |
-| interaction_period | string | no | — | Filter by recent interaction timeframe |
-| has_notes | boolean | no | — | Filter to recipients with notes |
-| post_status | string[] | no | — | Filter by post tracking status |
-| has_address | boolean | no | — | Filter to recipients with gifting address |
-| has_discount_code | boolean | no | — | Filter to recipients with discount code |
+| limit | integer | no | 50 | Results per page. Valid range: 1-10000. |
+| offset | integer | no | 0 | Pagination offset. Min: 0. |
+| status | string[] | no | — | Filter by display_status value(s). Accepts comma-separated values. Outbox statuses: `"pending"`, `"processing"`, `"sent"`, `"failed"`, `"cancelled"`. Gifting statuses: `"CONTACTED"`, `"UNRESPONSIVE"`, `"PENDING_DETAILS"`, `"READY_TO_SHIP"`, `"ORDERED"`, `"DECLINED"`. Paid promotion statuses: `"NEW"`, `"NEGOTIATING"`, `"AWAITING_CONTRACT"`, `"CONTRACT_SIGNED"`, `"CONTENT_IN_PROGRESS"`, `"AWAITING_REVIEW"`, `"CHANGES_REQUESTED"`, `"CONTENT_APPROVED"`, `"POSTED"`, `"AWAITING_PAYMENT"`, `"PAID"`, `"DECLINED"`. Outreach statuses: `"CONTACTED"`, `"REPLIED"`, `"IN_DISCUSSION"`, `"AGREED"`, `"COMPLETED"`, `"UNRESPONSIVE"`, `"DECLINED"`. |
+| include_all_contacts | boolean | no | false | If true, includes contacts that have a `campaign_creator` record but no `campaign_recipient` record (i.e., no outbox entry). |
+| search | string | no | — | Free-text search across name and email fields. |
+| sort_by | string | no | "created_at" | Sort field name. |
+| sort_dir | enum | no | "desc" | Sort direction. One of: `"asc"`, `"desc"`. |
+| social_platforms | string[] | no | — | Filter by social platform presence. Accepts comma-separated values (e.g., `"instagram,tiktok"`). |
+| interaction_period | string | no | — | Filter by recent interaction timeframe (e.g., `"7d"`, `"30d"`). |
+| has_notes | boolean | no | — | Filter to recipients with at least one note in `notes_history`. |
+| post_status | string[] | no | — | Filter by post tracking status. Accepts comma-separated values. |
+| has_address | boolean | no | — | Filter to recipients with a gifting address set. |
+| has_discount_code | boolean | no | — | Filter to recipients with a discount code set. |
 
-**Returns**: `{ rows: UnifiedRecipientResponse[], total: integer }`
+**Parameter Validation Rules**:
+- `limit` must be between 1 and 10000. Outside range returns 422.
+- `offset` must be >= 0. Negative returns 422.
+- `sort_dir` must be exactly `"asc"` or `"desc"`. Other values return 422 (Literal type).
+- Array parameters (`status`, `social_platforms`, `post_status`) accept both repeated query params and comma-separated values — the backend normalizes them by splitting on commas.
 
-**UnifiedRecipientResponse fields**: id, email, name, outbox_status, gifting_status, paid_promotion_status, outreach_status, enrichment_status, gifting_address, gifting_discount_code, sent_at, latest_email_at, social_media_handles[], custom_fields, notes_history[], source, recipient_id, creator_id, match_confidence, created_at, role, talent_manager_name, talent_manager_email, talent_agency, confidence_score, latest_interaction_at, latest_interaction_campaign_id, latest_interaction_campaign_name, post_count, post_last_checked_at, post_tracking_ends_at, flags (wants_paid, wants_paid_reason, has_question, has_question_reason, has_issue, has_issue_reason).
+**Return Schema** (`UnifiedRecipientsListResponse`):
+```json
+{
+  "rows": [
+    {
+      "id": "uuid — Unified row ID (recipient_id or creator_id)",
+      "email": "string | null — Recipient/creator email",
+      "name": "string | null — Recipient/creator name",
+      "outbox_status": "string | null — Queue status: 'pending', 'processing', 'sent', 'failed', 'cancelled'",
+      "gifting_status": "string | null — Gifting pipeline status (see enum below)",
+      "paid_promotion_status": "string | null — Paid promotion pipeline status (see enum below)",
+      "outreach_status": "string | null — Outreach pipeline status (see enum below)",
+      "enrichment_status": "string | null — 'pending', 'enriching', 'enriched', 'failed'",
+      "gifting_address": "string | null — Shipping address for gifting",
+      "gifting_discount_code": "string | null — Discount code assigned",
+      "sent_at": "datetime | null — When outbox email was sent",
+      "latest_email_at": "datetime | null — Latest email timestamp in thread (inbound or outbound)",
+      "social_media_handles": "array | null — [{platform, handle, url?}]",
+      "custom_fields": "object | null — Arbitrary key-value pairs from CSV/manual entry",
+      "notes_history": "array | null — [{note, created_at, author?}] ordered by date",
+      "source": "string — 'recipient', 'creator', or 'both' (ParticipantSource enum)",
+      "recipient_id": "uuid | null — campaign_recipient.id if exists",
+      "creator_id": "uuid | null — campaign_creator.id if exists",
+      "match_confidence": "string — 'email' (high), 'name' (lower), or 'none' (MatchConfidence enum)",
+      "created_at": "datetime — Earliest creation timestamp",
+      "display_status": "string — Computed: gifting_status > paid_promotion_status > outreach_status > outbox_status > 'pending'",
+      "role": "string | null — 'creator', 'talent_manager', 'agency_staff', 'internal', 'unknown'",
+      "talent_manager_name": "string | null — Name of creator's talent manager",
+      "talent_manager_email": "string | null — Email of creator's talent manager",
+      "talent_agency": "string | null — Talent agency name",
+      "confidence_score": "float | null — Role classification confidence (0.0-1.0)",
+      "latest_interaction_at": "datetime | null — Most recent interaction across all user's campaigns",
+      "latest_interaction_campaign_id": "uuid | null — Campaign of most recent interaction",
+      "latest_interaction_campaign_name": "string | null — Name of that campaign",
+      "post_count": "integer — Number of tracked posts (default 0)",
+      "post_last_checked_at": "datetime | null — When posts were last checked",
+      "post_tracking_ends_at": "datetime | null — When post tracking expires",
+      "flags": {
+        "wants_paid": "boolean — LLM-detected: creator wants paid collaboration",
+        "wants_paid_reason": "string | null — Explanation from LLM",
+        "has_question": "boolean — LLM-detected: creator has unanswered question",
+        "has_question_reason": "string | null — Explanation from LLM",
+        "has_issue": "boolean — LLM-detected: creator has an issue/complaint",
+        "has_issue_reason": "string | null — Explanation from LLM"
+      }
+    }
+  ],
+  "total": "integer — Total count matching filters (for pagination)"
+}
+```
 
-**Slack formatting notes**: Agent should present as a summary table (name, email, status, social handles) with drill-down available via `cheerful_get_campaign_creator`.
+**Status Enum Values** (all values that `display_status` / status filter can have):
+
+Gifting statuses: `"CONTACTED"`, `"UNRESPONSIVE"`, `"PENDING_DETAILS"`, `"READY_TO_SHIP"`, `"ORDERED"`, `"DECLINED"`
+
+Paid promotion statuses: `"NEW"`, `"NEGOTIATING"`, `"AWAITING_CONTRACT"`, `"CONTRACT_SIGNED"`, `"CONTENT_IN_PROGRESS"`, `"AWAITING_REVIEW"`, `"CHANGES_REQUESTED"`, `"CONTENT_APPROVED"`, `"POSTED"`, `"AWAITING_PAYMENT"`, `"PAID"`, `"DECLINED"`
+
+Outreach statuses: `"CONTACTED"`, `"REPLIED"`, `"IN_DISCUSSION"`, `"AGREED"`, `"COMPLETED"`, `"UNRESPONSIVE"`, `"DECLINED"`
+
+Outbox statuses: `"pending"`, `"processing"`, `"sent"`, `"failed"`, `"cancelled"`
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Campaign not found | "Campaign not found" | 404 |
+| User cannot access campaign | "Not authorized" | 403 |
+| Invalid limit/offset | Pydantic validation error | 422 |
+| Invalid sort_dir | Pydantic validation error (Literal) | 422 |
+
+**Pagination**:
+- Default limit: 50, max limit: 10000
+- Offset-based pagination
+- Response includes `total` count for calculating total pages
+- For large campaigns, use limit=100 with offset pagination
+
+**Example Request**:
+```
+cheerful_list_campaign_recipients(
+  campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  limit=20,
+  offset=0,
+  status=["sent", "PENDING_DETAILS"],
+  sort_by="created_at",
+  sort_dir="desc"
+)
+```
+
+**Example Response**:
+```json
+{
+  "rows": [
+    {
+      "id": "f1e2d3c4-b5a6-7890-1234-567890abcdef",
+      "email": "jane@creator.com",
+      "name": "Jane Creator",
+      "outbox_status": "sent",
+      "gifting_status": "PENDING_DETAILS",
+      "paid_promotion_status": null,
+      "outreach_status": null,
+      "enrichment_status": "enriched",
+      "gifting_address": null,
+      "gifting_discount_code": null,
+      "sent_at": "2026-02-28T10:00:00+00:00",
+      "latest_email_at": "2026-03-01T09:15:00+00:00",
+      "social_media_handles": [{"platform": "instagram", "handle": "@janecreator", "url": "https://instagram.com/janecreator"}],
+      "custom_fields": {"company": "Creator Co"},
+      "notes_history": [{"note": "Interested in gifting, needs address", "created_at": "2026-03-01T09:20:00+00:00"}],
+      "source": "both",
+      "recipient_id": "f1e2d3c4-b5a6-7890-1234-567890abcdef",
+      "creator_id": "c4d5e6f7-a8b9-0123-4567-890123456789",
+      "match_confidence": "email",
+      "created_at": "2026-02-28T08:00:00+00:00",
+      "display_status": "PENDING_DETAILS",
+      "role": "creator",
+      "talent_manager_name": null,
+      "talent_manager_email": null,
+      "talent_agency": null,
+      "confidence_score": 0.95,
+      "latest_interaction_at": "2026-03-01T09:15:00+00:00",
+      "latest_interaction_campaign_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "latest_interaction_campaign_name": "Spring Gifting Campaign",
+      "post_count": 0,
+      "post_last_checked_at": null,
+      "post_tracking_ends_at": null,
+      "flags": {
+        "wants_paid": false,
+        "wants_paid_reason": null,
+        "has_question": true,
+        "has_question_reason": "Creator asked about product sizes",
+        "has_issue": false,
+        "has_issue_reason": null
+      }
+    }
+  ],
+  "total": 45
+}
+```
+
+**Slack Formatting Notes**:
+- Present as a summary table: "Campaign has *{total}* recipients:\n| Name | Email | Status | Social |\n|---|---|---|---|\n| Jane Creator | jane@creator.com | PENDING_DETAILS | @janecreator |"
+- For large result sets, show summary counts by status first: "45 total: 20 sent, 15 PENDING_DETAILS, 5 CONTACTED, 5 pending"
+- Drill down: "Use `cheerful_get_campaign_creator` for full creator profile."
+- Flag alerts: "3 recipients have questions, 1 has an issue — may need attention."
+
+**Edge Cases**:
+- Campaign with no recipients: Returns `{"rows": [], "total": 0}`.
+- `include_all_contacts = false` (default): Only shows records with an outbox entry (campaign_recipient). Creators without email (pending enrichment) are excluded.
+- `include_all_contacts = true`: Shows ALL participants including creators without outbox entries.
+- `source = "both"`: Record exists in both `campaign_recipient` and `campaign_creator` tables (merged by email match).
+- `source = "recipient"`: Only in `campaign_recipient` (added via CSV without social handles).
+- `source = "creator"`: Only in `campaign_creator` (added from search, no email yet).
+- Post count is fetched in batch to avoid N+1 queries — efficient even for large campaigns.
 
 ---
 
@@ -1654,23 +2089,75 @@ The launch endpoint executes the following steps in order, all within a single D
 
 **Status**: NEW
 
-**Purpose**: Swap a sender email on a campaign. Replaces the Gmail/SMTP account assignment for one sender.
+**Purpose**: Swap a sender email on a campaign. Finds the campaign_sender record using the old email's Gmail account, then updates it to use the new email's Gmail account. Returns count of affected queued emails.
 
-**Maps to**: `PATCH /api/service/campaigns/{campaign_id}/senders` (new service route needed; main route: `PATCH /campaigns/{campaign_id}/senders`)
+**Maps to**: `PATCH /api/service/campaigns/{campaign_id}/senders` (new service route needed; main route: `PATCH /campaigns/{campaign_id}/senders` in `campaign.py` line 2145)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner-only.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: owner or assigned team member (checked via `can_access_campaign`). However, both old and new Gmail accounts must belong to the **campaign owner** (`campaign.user_id`), not the requesting user if they're an assigned team member.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | campaign_id | uuid | yes | — | Campaign ID |
-| old_sender_email | string | yes | — | Current sender email to replace |
-| new_sender_email | string | yes | — | New sender email to assign |
+| old_sender_email | string | yes | — | Current sender email to replace. Must be a valid email format (`EmailStr`). Must be a connected Gmail account belonging to the campaign owner. |
+| new_sender_email | string | yes | — | New sender email to assign. Must be a valid email format (`EmailStr`). Must be a connected Gmail account belonging to the campaign owner. Must differ from `old_sender_email`. |
 
-**Returns**: `{ success: boolean, affected_emails: integer, message: string }`
+**Parameter Validation Rules**:
+- Both emails must be valid format (`EmailStr`). Invalid returns 422.
+- `old_sender_email` and `new_sender_email` must be different. If same, returns 422: `"Old and new sender emails must be different"`.
+- `old_sender_email` must match a connected Gmail account owned by the campaign owner (`user_gmail_account.user_id == campaign.user_id`). If not found, returns 404: `"Old sender email not found in campaign owner's connected accounts"`.
+- `new_sender_email` must match a connected Gmail account owned by the campaign owner. If not found, returns 404: `"New sender email not found in campaign owner's connected accounts"`.
+- A `campaign_sender` record must exist linking the old account to this campaign. If not found, returns 404: `"No sender account found with the specified email for this campaign"`.
 
-**Error responses**: Campaign not found (404), old sender not found on campaign, new sender account not connected.
+**Return Schema** (`CampaignSenderUpdateResponse`):
+```json
+{
+  "success": "boolean — Always true on success",
+  "affected_emails": "integer — Number of queued outbox emails affected by the change",
+  "message": "string — Human-readable confirmation, e.g. 'Updated sender account from old@gmail.com to new@gmail.com'"
+}
+```
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Campaign not found | "Campaign not found" | 404 |
+| User cannot access campaign | "Not authorized to access this campaign" | 403 |
+| Same old and new email | "Old and new sender emails must be different" | 422 |
+| Old email not in owner's accounts | "Old sender email not found in campaign owner's connected accounts" | 404 |
+| New email not in owner's accounts | "New sender email not found in campaign owner's connected accounts" | 404 |
+| No campaign_sender for old email | "No sender account found with the specified email for this campaign" | 404 |
+
+**Pagination**: N/A
+
+**Example Request**:
+```
+cheerful_update_campaign_sender(
+  campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  old_sender_email="old.sender@gmail.com",
+  new_sender_email="new.sender@gmail.com"
+)
+```
+
+**Example Response**:
+```json
+{
+  "success": true,
+  "affected_emails": 23,
+  "message": "Updated sender account from old.sender@gmail.com to new.sender@gmail.com"
+}
+```
+
+**Slack Formatting Notes**:
+- On success: "Sender swapped: *old.sender@gmail.com* → *new.sender@gmail.com*. {affected_emails} queued emails affected."
+
+**Edge Cases**:
+- Campaign has SMTP senders: This endpoint currently only looks up Gmail accounts (`UserGmailAccount`). SMTP sender swaps are not supported through this endpoint.
+- Affected emails count may be 0 if no outbox entries exist for the old sender yet.
+- The swap updates the `campaign_sender.gmail_account_id` — existing outbox queue entries still reference the `campaign_sender.id`, so they automatically use the new account.
 
 ---
 
@@ -1678,24 +2165,79 @@ The launch endpoint executes the following steps in order, all within a single D
 
 **Status**: NEW
 
-**Purpose**: Remove a sender from a campaign. Validates that at least one sender remains.
+**Purpose**: Remove a sender from a campaign. Validates that at least one sender remains. Deletes all queued outbox entries for this sender.
 
-**Maps to**: `DELETE /api/service/campaigns/{campaign_id}/senders` (new service route needed; main route: `DELETE /campaigns/{campaign_id}/senders`)
+**Maps to**: `DELETE /api/service/campaigns/{campaign_id}/senders` (new service route needed; main route: `DELETE /campaigns/{campaign_id}/senders` in `campaign.py` line 2240)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner-only.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: owner or assigned team member (checked via `can_access_campaign`). Gmail account must belong to campaign owner.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | campaign_id | uuid | yes | — | Campaign ID |
-| sender_email | string | yes | — | Sender email to remove |
+| sender_email | string | yes | — | Email address of sender to remove. Must be a valid email format (`EmailStr`). |
 
-**Returns**: `{ success: boolean, deleted_emails_count: integer, remaining_senders: integer, message: string }`
+**Parameter Validation Rules**:
+- `sender_email` must be valid format (`EmailStr`). Invalid returns 422.
+- `sender_email` must match a connected Gmail account owned by the campaign owner. If not found, returns 404.
+- A `campaign_sender` record must exist for this account on this campaign. If not found, returns 404.
+- Campaign must have more than 1 sender. Removing the last sender returns 400: `"Cannot delete the only sender account. Campaign must have at least one sender."`
 
-**Error responses**: Campaign not found (404), sender not found on campaign, cannot remove last sender (must have at least 1).
+**Return Schema** (`CampaignSenderRemoveResponse`):
+```json
+{
+  "success": "boolean — Always true on success",
+  "deleted_emails_count": "integer — Number of queued outbox emails deleted",
+  "remaining_senders": "integer — Number of senders remaining on campaign after removal",
+  "message": "string — e.g. 'Removed sender account old@gmail.com and 15 associated email(s)'"
+}
+```
 
-**Side effects**: Deletes associated outbox entries for the removed sender.
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Campaign not found | "Campaign not found" | 404 |
+| User cannot access campaign | "Not authorized to access this campaign" | 403 |
+| Email not in owner's accounts | "Sender email not found in campaign owner's connected accounts" | 404 |
+| No campaign_sender record | "No sender account found with the specified email for this campaign" | 404 |
+| Last sender | "Cannot delete the only sender account. Campaign must have at least one sender." | 400 |
+
+**Pagination**: N/A
+
+**Side Effects**:
+- Deletes ALL outbox queue entries (`campaign_outbox_queue`) assigned to this sender. This includes pending, processing, and failed entries.
+- Deletes the `campaign_sender` record itself.
+- Follow-up outbox entries cascaded from deleted outbox entries are also deleted (DB CASCADE).
+
+**Example Request**:
+```
+cheerful_remove_campaign_sender(
+  campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  sender_email="old.sender@gmail.com"
+)
+```
+
+**Example Response**:
+```json
+{
+  "success": true,
+  "deleted_emails_count": 15,
+  "remaining_senders": 2,
+  "message": "Removed sender account old.sender@gmail.com and 15 associated email(s)"
+}
+```
+
+**Slack Formatting Notes**:
+- On success: "Removed sender *{email}*. {deleted_emails_count} queued emails deleted. {remaining_senders} sender(s) remaining."
+- On last-sender error: "Cannot remove — this is the only sender. Add another sender first, then remove this one."
+
+**Edge Cases**:
+- Removing sender with 0 queued emails: Works fine, `deleted_emails_count = 0`.
+- SMTP senders: Same limitation as update — only Gmail account lookup is implemented.
+- Deleting outbox entries that are in `PROCESSING` status: They are still deleted. The email dispatch worker will encounter a missing record and skip.
 
 ---
 
@@ -1705,24 +2247,84 @@ The launch endpoint executes the following steps in order, all within a single D
 
 **Status**: NEW
 
-**Purpose**: Populate the outbound email queue for a campaign. Idempotent — only creates entries for recipients not already queued. Distributes recipients across senders via round-robin.
+**Purpose**: Populate the outbound email queue for a campaign. Idempotent — only creates entries for recipients not already queued. Distributes recipients across senders via round-robin. Personalizes subject and body templates with recipient data and validates that all placeholders are resolved.
 
-**Maps to**: `POST /api/service/campaigns/{campaign_id}/outbound` (new service route needed; main route: `POST /campaigns/{campaign_id}/outbound`)
+**Maps to**: `POST /api/service/campaigns/{campaign_id}/outbound` (new service route needed; main route: `POST /campaigns/{campaign_id}/outbound` in `campaign.py` line 1026)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner or assigned team member.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: owner or assigned team member.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| campaign_id | uuid | yes | — | Campaign ID |
-| cc_emails | string[] | no | — | CC email addresses to include on all outbound emails |
+| campaign_id | uuid | yes | — | Campaign ID. Must exist, not completed, and have at least 1 sender and 1 recipient. |
+| cc_emails | string[] | no | `[]` | CC email addresses to include on ALL outgoing emails from this campaign. Each must be valid email format (`EmailStr`). |
 
-**Returns**: `{ status: string, message: string, entries_created: integer }`
+**Parameter Validation Rules**:
+- `cc_emails` entries must be valid emails (`EmailStr` validation). Invalid returns 422.
+- Campaign must not be in COMPLETED status. Returns 400.
+- Campaign must have at least 1 sender. Otherwise raises ValueError → 400: `"Campaign {id} has no senders"`.
+- Campaign must have at least 1 recipient. Otherwise raises ValueError → 400: `"Campaign {id} has no recipients"`.
+- If campaign status is PAUSED: endpoint succeeds but no queue entries are created (the pause check is in the queue populator).
+- Template personalization must succeed for ALL recipients. If any recipient has unreplaced `{placeholder}` tags in subject or body, the entire operation fails with 400: `"Personalization failed for recipient {email}: unreplaced tags {tags}. Available data: {keys}"`.
 
-**Error responses**: Campaign not found (404), no senders configured, template placeholder validation failure.
+**Return Schema**:
+```json
+{
+  "status": "string — Always 'success'",
+  "message": "string — e.g. 'Queue populated successfully - 25 emails queued'",
+  "entries_created": "integer — Number of new outbox entries created (0 if all already existed)"
+}
+```
 
-**Side effects**: Creates outbox queue entries in PENDING status. Validates template merge tags against recipient custom fields.
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Campaign not found | "Campaign not found" | 404 |
+| User cannot access campaign | "Not authorized" | 403 |
+| Campaign is completed | "Cannot populate outbox on a completed campaign. Reactivate it first." | 400 |
+| No senders configured | "Campaign {id} has no senders" | 400 |
+| No recipients | "Campaign {id} has no recipients" | 400 |
+| Personalization failure | "Personalization failed for recipient {email}: unreplaced tags ['{tag}']. Available data: ['name', 'email', ...]" | 400 |
+
+**Pagination**: N/A
+
+**Side Effects**:
+- Creates `campaign_outbox_queue` entries with status `PENDING` for each recipient that doesn't already have one (idempotent via unique constraint on `(campaign_sender_id, campaign_recipient_id)`).
+- Round-robin distribution: with 3 senders [A, B, C] and 7 recipients, A gets 3, B gets 2, C gets 2 (recipient index % sender count).
+- Each outbox entry contains the personalized `subject` and `body` (template placeholders replaced with recipient data: `{name}`, `{email}`, and all `custom_fields` keys).
+- `cc_emails` are stored on each outbox entry.
+- If campaign has `follow_up_templates`, also creates `campaign_follow_up_outbox_queue` entries for each new outbox entry, one per follow-up template. Follow-up entries have status `PENDING` and `scheduled_at = null` (calculated when initial email is sent).
+
+**Example Request**:
+```
+cheerful_populate_campaign_outbox(
+  campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  cc_emails=["manager@brand.com"]
+)
+```
+
+**Example Response**:
+```json
+{
+  "status": "success",
+  "message": "Queue populated successfully - 25 emails queued",
+  "entries_created": 25
+}
+```
+
+**Slack Formatting Notes**:
+- On success: "Outbox populated: *{entries_created}* emails queued for sending."
+- If 0 created: "All recipients are already queued — no new entries needed."
+- On personalization error: "Failed to populate outbox: template placeholder `{tag}` is missing for recipient *{email}*. Add the missing custom field or update the template."
+
+**Edge Cases**:
+- All recipients already queued: Returns `entries_created: 0`. Not an error.
+- Campaign is paused: Endpoint succeeds but queue populator may create 0 entries (pause check).
+- Follow-up template has unreplaced tags: Logged as warning, skipped (doesn't fail the entire operation). Initial email still queued.
+- Very large campaign (1000+ recipients): Processes synchronously. No timeout protection.
 
 ---
 
@@ -1730,25 +2332,132 @@ The launch endpoint executes the following steps in order, all within a single D
 
 **Status**: NEW
 
-**Purpose**: Get the outbox table showing all queued/sent/failed emails for a campaign.
+**Purpose**: Get the outbox table showing all queued/sent/failed emails for a campaign with dynamic column definitions for custom fields.
 
-**Maps to**: `GET /api/service/campaigns/{campaign_id}/outbox-table` (new service route needed; main route: `GET /campaigns/{campaign_id}/outbox-table`)
+**Maps to**: `GET /api/service/campaigns/{campaign_id}/outbox-table` (new service route needed; main route: `GET /campaigns/{campaign_id}/outbox-table` in `campaign.py` line 1913)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner or assigned team member.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: owner or assigned team member.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | campaign_id | uuid | yes | — | Campaign ID |
-| limit | integer | no | 100 | Results per page. Max: 1000 |
-| offset | integer | no | 0 | Pagination offset |
+| limit | integer | no | 100 | Results per page. Valid range: 1-1000. |
+| offset | integer | no | 0 | Pagination offset. Min: 0. |
 
-**Returns**: `{ rows: OutboxTableRow[], definitions: ColumnDefinition[], total: integer }`
+**Parameter Validation Rules**:
+- `limit` must be between 1 and 1000. Outside range returns 422.
+- `offset` must be >= 0. Negative returns 422.
 
-**OutboxTableRow fields**: id, email, recipient_name, status (pending/processing/sent/failed/cancelled), sent_at, error_message, sender_email, custom_fields, created_at, updated_at.
+**Return Schema** (`OutboxTableResponse`):
+```json
+{
+  "rows": [
+    {
+      "id": "uuid — Outbox queue entry ID",
+      "email": "string — Recipient email address",
+      "recipient_name": "string — Display name (falls back to first_name/last_name from custom_fields, then 'No name')",
+      "status": "string — One of: 'pending', 'processing', 'sent', 'failed', 'cancelled'",
+      "sent_at": "datetime | null — When email was sent (null if pending/failed)",
+      "error_message": "string | null — Error details if status is 'failed'",
+      "sender_email": "string — Gmail or SMTP email address of assigned sender (falls back to 'Unknown' if account deleted)",
+      "custom_fields": "object — Recipient's custom fields (empty {} if none)",
+      "created_at": "datetime — When outbox entry was created",
+      "updated_at": "datetime — Last status change timestamp"
+    }
+  ],
+  "definitions": [
+    {
+      "key": "string — Custom field key (e.g. 'company')",
+      "label": "string — Display label (e.g. 'Company', with underscores replaced by spaces and title-cased)",
+      "type": "string — Always 'text'"
+    }
+  ],
+  "total": "integer — Total outbox entries for this campaign (for pagination)"
+}
+```
 
-**Slack formatting notes**: Agent should present as a status summary (e.g., "15 sent, 3 pending, 1 failed") with option to drill into failed entries.
+**Outbox Status Values** (`CampaignOutboxQueueStatus` enum):
+
+| Value | Description |
+|-------|-------------|
+| `pending` | Queued, waiting to be sent |
+| `processing` | Currently being sent by dispatch worker |
+| `sent` | Successfully sent |
+| `failed` | Send attempt failed (see `error_message`) |
+| `cancelled` | Cancelled (e.g., campaign completed or sender removed) |
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Campaign not found | "Campaign not found" | 404 |
+| User cannot access campaign | "Not authorized" | 403 |
+
+**Pagination**:
+- Default limit: 100, max limit: 1000
+- Offset-based pagination
+- Response includes `total` count
+- Rows sorted by `created_at DESC, id ASC`
+
+**Example Request**:
+```
+cheerful_get_campaign_outbox(
+  campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  limit=50,
+  offset=0
+)
+```
+
+**Example Response**:
+```json
+{
+  "rows": [
+    {
+      "id": "e1f2a3b4-c5d6-7890-ef12-345678901234",
+      "email": "jane@creator.com",
+      "recipient_name": "Jane Creator",
+      "status": "sent",
+      "sent_at": "2026-02-28T10:05:00+00:00",
+      "error_message": null,
+      "sender_email": "outreach@brand.com",
+      "custom_fields": {"company": "Creator Co", "instagram": "@janecreator"},
+      "created_at": "2026-02-28T08:00:00+00:00",
+      "updated_at": "2026-02-28T10:05:00+00:00"
+    },
+    {
+      "id": "f2a3b4c5-d6e7-8901-f234-567890123456",
+      "email": "sam@influencer.com",
+      "recipient_name": "Sam Influencer",
+      "status": "failed",
+      "sent_at": null,
+      "error_message": "Gmail API rate limit exceeded",
+      "sender_email": "outreach@brand.com",
+      "custom_fields": {"company": "Influencer Inc"},
+      "created_at": "2026-02-28T08:00:00+00:00",
+      "updated_at": "2026-02-28T10:06:00+00:00"
+    }
+  ],
+  "definitions": [
+    {"key": "company", "label": "Company", "type": "text"},
+    {"key": "instagram", "label": "Instagram", "type": "text"}
+  ],
+  "total": 45
+}
+```
+
+**Slack Formatting Notes**:
+- Present as status summary first: "Outbox: *{total}* total — {sent} sent, {pending} pending, {failed} failed"
+- If failed > 0: "Failed emails:\n- sam@influencer.com: Gmail API rate limit exceeded"
+- For detailed view: show table of first 10 entries with name, email, status, sent_at.
+
+**Edge Cases**:
+- Campaign with no outbox entries: Returns `{"rows": [], "definitions": [], "total": 0}`.
+- `definitions` are dynamically generated from the custom_fields of the returned page's recipients — they may differ between pages.
+- Sender email shows "Unknown" if the Gmail/SMTP account has been disconnected since the outbox was created.
+- `recipient_name` fallback logic: `name` field → `first_name + last_name` from custom_fields → `first_name` → `last_name` → `"No name"`.
 
 ---
 
@@ -1758,21 +2467,60 @@ The launch endpoint executes the following steps in order, all within a single D
 
 **Status**: NEW
 
-**Purpose**: Get the email signature configured for a specific campaign.
+**Purpose**: Get the email signature configured for a specific campaign. The signature belongs to the campaign owner — team members see the owner's signature for this campaign.
 
-**Maps to**: `GET /api/service/campaigns/{campaign_id}/signature` (new service route needed; main route: `GET /campaigns/{campaign_id}/signature`)
+**Maps to**: `GET /api/service/campaigns/{campaign_id}/signature` (new service route needed; main route: `GET /campaigns/{campaign_id}/signature` in `campaign.py` line 2645)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner or assigned team member.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: owner or assigned team member.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | campaign_id | uuid | yes | — | Campaign ID |
 
-**Returns**: `{ signature: string | null, enabled: boolean }`
+**Parameter Validation Rules**:
+- `campaign_id` must be a valid UUID. Invalid returns 422.
 
-**Notes**: `signature` is HTML content. Null means no signature set for this campaign (may fall back to user-level default).
+**Return Schema** (`SignatureResponse`):
+```json
+{
+  "signature": "string | null — HTML email signature content. Null if no signature is set for this campaign.",
+  "enabled": "boolean — Whether the signature is appended to outgoing emails. False if no signature exists."
+}
+```
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Campaign not found | "Campaign not found" | 404 |
+| User cannot access campaign | "Not authorized" | 403 |
+
+**Pagination**: N/A
+
+**Example Request**:
+```
+cheerful_get_campaign_signature(campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890")
+```
+
+**Example Response**:
+```json
+{
+  "signature": "<p>Best regards,<br>Jane at Brand Co</p><p><a href='https://brand.co'>brand.co</a></p>",
+  "enabled": true
+}
+```
+
+**Slack Formatting Notes**:
+- If signature exists and enabled: "Campaign signature (enabled): {plain text version of HTML}"
+- If signature exists but disabled: "Campaign has a signature but it's currently *disabled*."
+- If no signature: "No signature configured for this campaign."
+
+**Edge Cases**:
+- No signature record exists for campaign: Returns `{"signature": null, "enabled": false}`.
+- Signature lookup uses `campaign.user_id` (campaign owner), not the requesting user's ID. This means team members see the campaign owner's signature.
 
 ---
 
@@ -1780,23 +2528,69 @@ The launch endpoint executes the following steps in order, all within a single D
 
 **Status**: NEW
 
-**Purpose**: Set or update the email signature for a specific campaign.
+**Purpose**: Set or update the email signature for a specific campaign. Signature HTML is server-side sanitized. Creates a new signature record if none exists, or updates the existing one.
 
-**Maps to**: `PUT /api/service/campaigns/{campaign_id}/signature` (new service route needed; main route: `PUT /campaigns/{campaign_id}/signature`)
+**Maps to**: `PUT /api/service/campaigns/{campaign_id}/signature` (new service route needed; main route: `PUT /campaigns/{campaign_id}/signature` in `campaign.py` line 2678)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner or assigned team member.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: owner or assigned team member.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | campaign_id | uuid | yes | — | Campaign ID |
-| signature | string | yes | — | HTML email signature content. Max 10000 characters. Server-side sanitized. |
-| enabled | boolean | yes | — | Whether to append signature to outgoing emails |
+| signature | string | no | null | HTML email signature content. Max 10,000 characters (validated before sanitization). Server-side sanitized via `sanitize_signature_html()`. Pass `null` to keep existing signature content unchanged (only update `enabled`). |
+| enabled | boolean | no | false | Whether to append signature to outgoing emails. |
 
-**Returns**: `{ signature: string, enabled: boolean }`
+**Parameter Validation Rules**:
+- `signature` length must not exceed 10,000 characters. Exceeding returns 400: `"Signature exceeds maximum length of 10,000 characters"`.
+- HTML is sanitized server-side after validation — dangerous tags/attributes are stripped.
+- If `signature` is null and no existing signature exists, no record is created (effectively a no-op unless `enabled` changes something).
 
-**Error responses**: Signature exceeds 10000 characters.
+**Return Schema** (`SignatureResponse`):
+```json
+{
+  "signature": "string | null — The sanitized HTML signature content (or existing content if null was passed)",
+  "enabled": "boolean — Updated enabled status"
+}
+```
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Campaign not found | "Campaign not found" | 404 |
+| User cannot access campaign | "Not authorized" | 403 |
+| Signature too long | "Signature exceeds maximum length of 10,000 characters" | 400 |
+
+**Pagination**: N/A
+
+**Example Request**:
+```
+cheerful_update_campaign_signature(
+  campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  signature="<p>Best regards,<br>Jane at Brand Co</p>",
+  enabled=true
+)
+```
+
+**Example Response**:
+```json
+{
+  "signature": "<p>Best regards,<br>Jane at Brand Co</p>",
+  "enabled": true
+}
+```
+
+**Slack Formatting Notes**:
+- On success: "Campaign signature updated and *{enabled ? 'enabled' : 'disabled'}*."
+
+**Edge Cases**:
+- First signature for campaign: Creates new `EmailSignature` record with `name = "{campaign_name} Signature"`, `is_default = false`.
+- Updating existing signature: Only updates `content` (if provided) and `is_enabled`.
+- Passing `signature = null, enabled = false`: Disables signature without changing content.
+- Signature is stored under `campaign.user_id` (campaign owner), not the requesting user. Team members updating the signature update the owner's record.
 
 ---
 
@@ -1804,17 +2598,72 @@ The launch endpoint executes the following steps in order, all within a single D
 
 **Status**: NEW
 
-**Purpose**: List all email signatures the user can use across campaigns (global signature index).
+**Purpose**: List all email signatures across the user's active campaigns that have enabled signatures. Returns campaign-signature pairs for the signature library view.
 
-**Maps to**: `GET /api/service/campaigns/signatures` (new service route needed; main route: `GET /campaigns/signatures`)
+**Maps to**: `GET /api/service/campaigns/signatures` (new service route needed; main route: `GET /campaigns/signatures` in `campaign.py` line 568)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: authenticated.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: authenticated (returns only requesting user's signatures).
 
-**Parameters**: None (user-scoped via injected context).
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
-**Returns**: Array of signature objects with campaign associations.
+None.
 
-**Notes**: This returns the user's signature library — signatures that can be applied to any campaign. See also `specs/users-and-team.md` for user-level signature CRUD.
+**Return Schema** (`CampaignSignatureListResponse`):
+```json
+{
+  "items": [
+    {
+      "campaign_id": "uuid — Campaign ID this signature belongs to",
+      "campaign_name": "string — Campaign name",
+      "signature": "string — HTML signature content",
+      "enabled": "boolean — Always true (only enabled signatures are returned)"
+    }
+  ]
+}
+```
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+
+**Pagination**: None — returns all matching signatures. Filtered to: `email_signature.user_id == user_id AND campaign_id IS NOT NULL AND is_enabled == true AND campaign.status == ACTIVE`.
+
+**Example Request**:
+```
+cheerful_list_campaign_signatures()
+```
+
+**Example Response**:
+```json
+{
+  "items": [
+    {
+      "campaign_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "campaign_name": "Spring Gifting Campaign",
+      "signature": "<p>Best regards,<br>Jane at Brand Co</p>",
+      "enabled": true
+    },
+    {
+      "campaign_id": "b2c3d4e5-f6a7-8901-bcde-f23456789012",
+      "campaign_name": "Summer Paid Promo",
+      "signature": "<p>Cheers,<br>The Brand Team</p>",
+      "enabled": true
+    }
+  ]
+}
+```
+
+**Slack Formatting Notes**:
+- Present as: "Your campaign signatures:\n1. *Spring Gifting Campaign* — 'Best regards, Jane at Brand Co'\n2. *Summer Paid Promo* — 'Cheers, The Brand Team'"
+- If empty: "No enabled signatures found across your active campaigns."
+
+**Edge Cases**:
+- Only returns signatures for ACTIVE campaigns (not DRAFT, PAUSED, COMPLETED).
+- Only returns enabled signatures (disabled ones are excluded).
+- Campaigns without signatures are not included.
+- User with no campaigns or no signatures: Returns `{"items": []}`.
 
 ---
 
@@ -1824,21 +2673,58 @@ The launch endpoint executes the following steps in order, all within a single D
 
 **Status**: NEW
 
-**Purpose**: Get available merge tags for a campaign's email templates. Returns all unique custom field keys from the campaign's recipients.
+**Purpose**: Get available merge tags for a campaign's email templates. Aggregates all unique custom field keys from all campaign recipients and returns them sorted alphabetically. These keys correspond to `{placeholder}` variables available in subject/body templates.
 
-**Maps to**: `GET /api/service/campaigns/{campaign_id}/merge-tags` (new service route needed; main route: `GET /campaigns/{campaign_id}/merge-tags`)
+**Maps to**: `GET /api/service/campaigns/{campaign_id}/merge-tags` (new service route needed; main route: `GET /campaigns/{campaign_id}/merge-tags` in `campaign.py` line 2048)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner or assigned team member.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: owner or assigned team member.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | campaign_id | uuid | yes | — | Campaign ID |
 
-**Returns**: `{ headers: string[] }` — sorted unique custom field keys (e.g., ["company", "first_name", "product_interest"]).
+**Parameter Validation Rules**:
+- `campaign_id` must be a valid UUID. Invalid returns 422.
 
-**Slack formatting notes**: Agent should present as a bullet list of available `{{merge_tag}}` placeholders the user can reference in their email templates.
+**Return Schema** (`MergeTagsResponse`):
+```json
+{
+  "headers": ["string — Sorted list of unique custom field keys from all campaign recipients"]
+}
+```
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Campaign not found | "Campaign not found" | 404 |
+| User cannot access campaign | "Not authorized" | 403 |
+
+**Pagination**: N/A
+
+**Example Request**:
+```
+cheerful_get_campaign_merge_tags(campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890")
+```
+
+**Example Response**:
+```json
+{
+  "headers": ["company", "first_name", "instagram", "last_name", "product_interest"]
+}
+```
+
+**Slack Formatting Notes**:
+- Present as: "Available merge tags for templates:\n- `{company}`\n- `{first_name}`\n- `{instagram}`\n- `{last_name}`\n- `{product_interest}`\n\nNote: `{name}` and `{email}` are always available (built-in)."
+
+**Edge Cases**:
+- Campaign with no recipients: Returns `{"headers": []}`.
+- Recipients with no custom_fields: Returns `{"headers": []}`.
+- Recipients with different custom fields: All unique keys are merged (union). A field present in only 1 recipient's custom_fields still appears.
+- Built-in fields `{name}` and `{email}` are NOT included in headers — they are always available for personalization but come from the recipient record, not custom_fields.
 
 ---
 
@@ -1846,21 +2732,60 @@ The launch endpoint executes the following steps in order, all within a single D
 
 **Status**: NEW
 
-**Purpose**: Get the CSV columns required for a campaign based on its email template placeholders.
+**Purpose**: Get the CSV columns required for a campaign based on `{placeholder}` macros in the campaign's `subject_template` and `body_template`. Always includes "Email" as a required column. Column names are formatted for display (underscores → spaces, title case).
 
-**Maps to**: `GET /api/service/campaigns/{campaign_id}/required-columns` (new service route needed; main route: `GET /campaigns/{campaign_id}/required-columns`)
+**Maps to**: `GET /api/service/campaigns/{campaign_id}/required-columns` (new service route needed; main route: `GET /campaigns/{campaign_id}/required-columns` in `campaign.py` line 2092)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner or assigned team member.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: owner or assigned team member.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | campaign_id | uuid | yes | — | Campaign ID |
 
-**Returns**: `{ required_columns: string[] }` — column names needed in CSV to satisfy template merge tags.
+**Parameter Validation Rules**:
+- `campaign_id` must be a valid UUID. Invalid returns 422.
 
-**Notes**: Useful before CSV upload to validate the file has all required columns.
+**Return Schema** (`RequiredColumnsResponse`):
+```json
+{
+  "required_columns": ["string — Formatted column names required in CSV, sorted alphabetically"]
+}
+```
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Campaign not found | "Campaign not found" | 404 |
+| User cannot access campaign | "Not authorized" | 403 |
+
+**Pagination**: N/A
+
+**Example Request**:
+```
+cheerful_get_campaign_required_columns(campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890")
+```
+
+**Example Response** (for a campaign with `subject_template = "Hi {name}, check out {product_name}"` and `body_template = "Dear {name}, from {company}..."`):
+```json
+{
+  "required_columns": ["Company", "Email", "Name", "Product Name"]
+}
+```
+
+**Slack Formatting Notes**:
+- Present as: "Required CSV columns: `Email`, `Company`, `Name`, `Product Name`"
+- Useful before CSV upload: "Make sure your CSV has these columns before uploading."
+
+**Edge Cases**:
+- Templates with no placeholders: Returns `["Email"]` (always included).
+- `{email}` placeholder in template: Adds "Email" to the list (which is already always included — no duplication since it's a set).
+- Formatting: `{product_name}` → "Product Name", `{first_name}` → "First Name".
+- Duplicate placeholders across subject and body: Deduplicated (uses set).
+- Column names are sorted alphabetically after formatting.
 
 ---
 
@@ -1870,23 +2795,71 @@ The launch endpoint executes the following steps in order, all within a single D
 
 **Status**: NEW
 
-**Purpose**: Validate that a campaign's configured Google Sheet is accessible and has valid data. Reads the `google_sheet_url` from the campaign config and checks connectivity + column structure.
+**Purpose**: Validate that a campaign's configured Google Sheet is accessible and has valid data. Uses the `google_sheet_url` and `google_sheet_tab_name` from the campaign config to attempt access via gspread. On success, clears any stored error state. On failure, sets error state on the campaign.
 
-**Maps to**: `POST /api/service/campaigns/{campaign_id}/validate-sheet` (new service route needed; main route: `POST /campaigns/{campaign_id}/validate-sheet`)
+**Maps to**: `POST /api/service/campaigns/{campaign_id}/validate-sheet` (new service route needed; main route: `POST /campaigns/{campaign_id}/validate-sheet` in `campaign.py` line 2483)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner or assigned team member.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: owner or assigned team member.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| campaign_id | uuid | yes | — | Campaign ID (must have google_sheet_url set) |
+| campaign_id | uuid | yes | — | Campaign ID. Must have `google_sheet_url` configured. |
 
-**Returns**: `{ success: boolean, message: string }`
+**Parameter Validation Rules**:
+- Campaign must have a `google_sheet_url` set. If null/empty, returns 400: `"No sheet URL configured"`.
 
-**Side effects**: On success, clears any previous sheet error on the campaign. On failure, sets error state on the campaign.
+**Return Schema** (`SheetValidationResponse`):
+```json
+{
+  "success": "boolean — true if sheet is accessible",
+  "message": "string — 'Sheet access verified' on success"
+}
+```
 
-**Error responses**: Campaign has no Google Sheet URL configured, sheet is inaccessible, sheet format invalid.
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Campaign not found | "Campaign not found" | 404 |
+| User cannot access campaign | "Not authorized" | 403 |
+| No sheet URL configured | "No sheet URL configured" | 400 |
+| Sheet permission denied | "Permission denied. Please share the sheet with the service account." | 403 |
+| Spreadsheet not found | "Spreadsheet not found" | 404 |
+| Other API error | "Failed to access sheet" | 500 |
+
+**Pagination**: N/A
+
+**Side Effects**:
+- On success: Calls `campaign_repo.clear_sheet_error(campaign_id)` — clears `google_sheet_error` and `google_sheet_error_at` fields.
+- On permission denied: Calls `campaign_repo.update_sheet_error(campaign_id, "permission_denied")`.
+- On not found: Calls `campaign_repo.update_sheet_error(campaign_id, "not_found")`.
+- Uses `google_sheet_tab_name` from campaign config (defaults to "Sheet1" if null).
+
+**Example Request**:
+```
+cheerful_validate_campaign_sheet(campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890")
+```
+
+**Example Response**:
+```json
+{
+  "success": true,
+  "message": "Sheet access verified"
+}
+```
+
+**Slack Formatting Notes**:
+- On success: "Google Sheet validated — access confirmed."
+- On permission error: "Google Sheet access denied. Please share the sheet with the Cheerful service account."
+- On not found: "Google Sheet not found. Check the URL in the campaign settings."
+
+**Edge Cases**:
+- Campaign has no Google Sheet URL: Returns 400 before attempting access.
+- Tab name doesn't exist: May result in gspread error → 500.
+- Sheet exists but tab is empty: Validation succeeds (only checks access, not content structure).
 
 ---
 
@@ -1896,23 +2869,98 @@ The launch endpoint executes the following steps in order, all within a single D
 
 **Status**: NEW
 
-**Purpose**: Generate an AI-powered client summary for a campaign. Summarizes campaign performance, creator engagement, and key metrics. Only available for non-external campaigns.
+**Purpose**: Generate an AI-powered client summary for a campaign. Aggregates creator statuses, notes, and email thread context, then uses an LLM to produce a formatted narrative summary suitable for sharing with clients. Only available for non-external (Cheerful-managed) campaigns.
 
-**Maps to**: `POST /api/service/campaigns/{campaign_id}/generate-summary` (new service route needed; main route: `POST /campaigns/{campaign_id}/generate-summary`)
+**Maps to**: `POST /api/service/campaigns/{campaign_id}/generate-summary` (new service route needed; main route: `POST /campaigns/{campaign_id}/generate-summary` in `campaign.py` line 2555)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner or assigned team member.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: owner or assigned team member.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| campaign_id | uuid | yes | — | Campaign ID. Must not be an external campaign. |
+| campaign_id | uuid | yes | — | Campaign ID. Must not be an external campaign (`is_external = false`). |
+| as_of_date | datetime | no | null (defaults to now) | Generate summary as of this date. ISO 8601 format. |
+| include_sections | string[] | no | null (all sections) | If provided, only include these status categories in the summary. |
 
-**Returns**: `{ campaign_id: uuid, campaign_name: string, generated_at: datetime, summary_text: string, total_creators: integer, stats: object }`
+**Parameter Validation Rules**:
+- Campaign must have `is_external = false`. External campaigns return 400.
+- Campaign must have at least 1 recipient/creator. No recipients returns 400.
 
-**Error responses**: Campaign not found (404), campaign is external (400), access denied (403).
+**Return Schema** (`GenerateClientSummaryResponse`):
+```json
+{
+  "campaign_id": "uuid — Campaign ID",
+  "campaign_name": "string — Campaign name",
+  "generated_at": "datetime — When the summary was generated (UTC)",
+  "summary_text": "string — LLM-generated formatted narrative summary",
+  "total_creators": "integer — Total number of creators in the campaign",
+  "stats": {
+    "total": "integer — Total creators",
+    "sent": "integer — Emails sent",
+    "pending": "integer — Emails pending",
+    "failed": "integer — Emails failed",
+    "CONTACTED": "integer — Gifting: contacted (example key)",
+    "PENDING_DETAILS": "integer — Gifting: pending details (example key)",
+    "ORDERED": "integer — Gifting: ordered (example key)"
+  }
+}
+```
+The `stats` dict keys vary based on campaign type and actual creator statuses. Keys are the status string values, values are counts.
 
-**Slack formatting notes**: Agent should present the summary text directly — it's already formatted as a readable narrative. Include campaign name and generated_at timestamp as context.
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Campaign not found | "Campaign not found" | 404 |
+| User cannot access campaign | "Not authorized" | 403 |
+| Campaign is external | "Summary generation is only available for campaigns managed through Cheerful (is_external = false)" | 400 |
+| No recipients found | "No recipients found for this campaign" | 400 |
+
+**Pagination**: N/A
+
+**Side Effects**:
+- Calls LLM (via `generate_client_summary_text`) to generate the summary. This is a synchronous call that may take 5-15 seconds.
+- Loads email thread context (up to 10 emails per thread) for each creator with a Gmail/SMTP thread.
+- LLM call is traced via Langfuse with the user's email as `langfuse_user_id`.
+
+**Example Request**:
+```
+cheerful_generate_campaign_summary(campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890")
+```
+
+**Example Response**:
+```json
+{
+  "campaign_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "campaign_name": "Spring Gifting Campaign",
+  "generated_at": "2026-03-01T16:00:00+00:00",
+  "summary_text": "## Spring Gifting Campaign Update\n\n**Overview**: 45 creators contacted, 20 have responded positively.\n\n### Opted In (12)\n- Jane Creator: Address collected, ready to ship\n- Sam Influencer: Expressed interest, waiting for sizing info\n...\n\n### Pending Response (15)\n- Follow-ups sent to 8 creators this week\n...",
+  "total_creators": 45,
+  "stats": {
+    "total": 45,
+    "CONTACTED": 15,
+    "PENDING_DETAILS": 12,
+    "READY_TO_SHIP": 5,
+    "ORDERED": 3,
+    "DECLINED": 5,
+    "UNRESPONSIVE": 5
+  }
+}
+```
+
+**Slack Formatting Notes**:
+- Present the `summary_text` directly — it's LLM-generated markdown ready for Slack.
+- Prepend with: "Summary for *{campaign_name}* (generated {generated_at}):"
+- Append stats: "Stats: {total_creators} total — {stats breakdown}"
+
+**Edge Cases**:
+- Campaign with 0 creators: Returns 400 "No recipients found".
+- LLM call failure: Returns 500.
+- Very large campaign (500+ creators): Thread context loading may be slow (up to 10 emails × 500 creators).
+- External campaign: Returns 400 with specific message about `is_external`.
+- `summary_text` format: Markdown with headers, bullet points, and creator details. Content varies based on campaign type (gifting vs paid vs outreach).
 
 ---
 
@@ -2145,27 +3193,83 @@ cheerful_get_product(product_id="b5c6d7e8-f9a0-1234-5678-90abcdef1234")
 
 ## Campaign Enrichment
 
-> **Cross-reference**: These tools operate on creators within a campaign context. See also `specs/creators.md` for creator-level tools.
+> **Cross-reference**: These tools operate on creators within a campaign context. See also `specs/creators.md` for creator-level tools (IC search, enrichment workflows, profiles).
 
 ### `cheerful_get_campaign_enrichment_status`
 
 **Status**: NEW
 
-**Purpose**: Get the enrichment status of creators in a campaign. Returns only creators in pending or enriching state (i.e., those still being processed).
+**Purpose**: Lightweight batch polling for creator enrichment status within a campaign. Returns ONLY creators with `enrichment_status` in `("pending", "enriching")` — i.e., those still being processed. Used by the frontend to poll every 3 seconds during enrichment.
 
-**Maps to**: `GET /api/service/v1/campaigns/{campaign_id}/creators/enrichment-status` (new service route needed; main route: `GET /v1/campaigns/{campaign_id}/creators/enrichment-status`)
+**Maps to**: `GET /api/service/v1/campaigns/{campaign_id}/creators/enrichment-status` (new service route needed; main route: `GET /v1/campaigns/{campaign_id}/creators/enrichment-status` in `campaign_enrichment.py` line 128)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner or assigned team member.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: campaign owner (checked via `CampaignRepository.get_by_id_for_user` which verifies `campaign.user_id == user_id`). Note: This endpoint uses owner-only access, not the team member pattern.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | campaign_id | uuid | yes | — | Campaign ID |
 
-**Returns**: Array of creators with pending/enriching enrichment status (id, name, email, enrichment_status, social handles).
+**Parameter Validation Rules**:
+- `campaign_id` must be a valid UUID. Invalid returns 422.
 
-**Slack formatting notes**: Agent should present as a progress summary (e.g., "3 creators still enriching, 12 completed"). Useful for checking status after adding creators from search.
+**Return Schema** (`CreatorEnrichmentStatusResponse`):
+```json
+{
+  "creators": [
+    {
+      "creator_id": "uuid — Campaign creator ID",
+      "enrichment_status": "string — One of: 'pending', 'enriching' (only these two values are returned)",
+      "email": "string | null — Current email (null if not yet found)"
+    }
+  ]
+}
+```
+Returns ONLY creators still in progress. Once enrichment completes (status changes to `"enriched"`, `"failed"`, or `"no_email_found"`), the creator no longer appears in this response.
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Campaign not found or not owned by user | (empty 404) | 404 |
+
+**Pagination**: N/A — returns all in-progress creators (typically a small set).
+
+**Example Request**:
+```
+cheerful_get_campaign_enrichment_status(campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890")
+```
+
+**Example Response** (3 creators still enriching):
+```json
+{
+  "creators": [
+    {"creator_id": "c1d2e3f4-a5b6-7890-cdef-012345678901", "enrichment_status": "pending", "email": null},
+    {"creator_id": "d2e3f4a5-b6c7-8901-def0-123456789012", "enrichment_status": "enriching", "email": null},
+    {"creator_id": "e3f4a5b6-c7d8-9012-ef01-234567890123", "enrichment_status": "enriching", "email": null}
+  ]
+}
+```
+
+**Example Response** (all enrichment complete):
+```json
+{
+  "creators": []
+}
+```
+
+**Slack Formatting Notes**:
+- If creators in progress: "Enrichment in progress: {count} creators still processing ({pending_count} pending, {enriching_count} enriching)."
+- If empty (all done): "All creator enrichment complete! Use `cheerful_list_campaign_recipients` to see results."
+- Useful after `cheerful_add_campaign_recipients_from_search` to monitor enrichment progress.
+
+**Edge Cases**:
+- All creators already enriched: Returns `{"creators": []}`.
+- Campaign with no creators: Returns `{"creators": []}`.
+- Enrichment status values that can appear on a campaign_creator (full list, but only first two are returned by this endpoint): `"pending"`, `"enriching"`, `"enriched"`, `"failed"`, `"no_email_found"`.
+- This endpoint is very lightweight (single SELECT with WHERE filter) — safe to poll frequently.
 
 ---
 
@@ -2173,23 +3277,81 @@ cheerful_get_product(product_id="b5c6d7e8-f9a0-1234-5678-90abcdef1234")
 
 **Status**: NEW
 
-**Purpose**: Manually override a creator's email address within a campaign. Useful when enrichment fails to find the correct email or finds the wrong one.
+**Purpose**: Manually set or override a creator's email address within a campaign. Sets the email on the `campaign_creator` record and marks enrichment as `"enriched"`. If the campaign is ACTIVE, also queues the creator into the outbound pipeline.
 
-**Maps to**: `POST /api/service/v1/campaigns/{campaign_id}/creators/{creator_id}/override-email` (new service route needed; main route: `POST /v1/campaigns/{campaign_id}/creators/{creator_id}/override-email`)
+**Maps to**: `POST /api/service/v1/campaigns/{campaign_id}/creators/{creator_id}/override-email` (new service route needed; main route: `POST /v1/campaigns/{campaign_id}/creators/{creator_id}/override-email` in `campaign_enrichment.py` line 191)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner or assigned team member.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: campaign owner (checked via `CampaignRepository.get_by_id_for_user`). Note: owner-only access.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | campaign_id | uuid | yes | — | Campaign ID |
-| creator_id | uuid | yes | — | Creator ID within the campaign |
-| email | string | yes | — | New email address to set |
+| creator_id | uuid | yes | — | Campaign creator ID |
+| email | string | yes | — | New email address. Must match pattern `.+@.+\..+` (basic email format validation via regex). |
 
-**Returns**: `{ creator_id: uuid, email: string, queued: boolean }` — `queued` indicates whether the outbox was updated with the new email.
+**Parameter Validation Rules**:
+- `email` must match regex `.+@.+\..+`. Invalid format returns 422.
+- Campaign must exist and be owned by the user. Not found returns 404.
+- Creator must exist in the campaign (`campaign_creator.id == creator_id AND campaign_creator.campaign_id == campaign_id`). Not found returns 404.
 
-**Error responses**: Campaign not found (404), creator not found in campaign (404), invalid email format (400), access denied (403).
+**Return Schema** (`OverrideEmailResponse`):
+```json
+{
+  "creator_id": "uuid — The creator ID",
+  "email": "string — The new email that was set",
+  "queued": "boolean — True if the creator was queued into the outbound pipeline"
+}
+```
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Campaign not found or not owned | (empty 404) | 404 |
+| Creator not found in campaign | (empty 404) | 404 |
+| Invalid email format | Pydantic validation error (regex) | 422 |
+
+**Pagination**: N/A
+
+**Side Effects**:
+1. Updates `campaign_creator.email = {new_email}` and `campaign_creator.enrichment_status = "enriched"` via direct SQL UPDATE.
+2. If `campaign.status == CampaignStatus.ACTIVE`: calls `queue_enriched_creator(db, campaign_id, email, name)` which:
+   - Creates a `campaign_recipient` record if one doesn't exist for this email
+   - Creates a `campaign_outbox_queue` entry (assigned to a sender via round-robin)
+   - Returns `True` if queued successfully
+3. If campaign is not ACTIVE (DRAFT, PAUSED, COMPLETED): `queued = false`.
+4. Queue failure is caught and logged — does not fail the API response.
+
+**Example Request**:
+```
+cheerful_override_creator_email(
+  campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  creator_id="c1d2e3f4-a5b6-7890-cdef-012345678901",
+  email="jane@realcreator.com"
+)
+```
+
+**Example Response**:
+```json
+{
+  "creator_id": "c1d2e3f4-a5b6-7890-cdef-012345678901",
+  "email": "jane@realcreator.com",
+  "queued": true
+}
+```
+
+**Slack Formatting Notes**:
+- On success with queue: "Email set to *jane@realcreator.com* for creator and queued for sending."
+- On success without queue: "Email set to *jane@realcreator.com* for creator. Campaign is not active — email will be queued when campaign is launched/activated."
+
+**Edge Cases**:
+- Creator already has an email: Overwritten with the new one. Previous email is lost.
+- Creator already has outbox entry (from previous email): A new outbox entry is created for the new email. The old entry remains (potentially with the old email's recipient).
+- Campaign is PAUSED: Email is set, enrichment marked complete, but not queued (`queued = false`).
+- Queue failure: Logged as exception, `queued = false` in response. Email is still set on the creator.
 
 ---
 
