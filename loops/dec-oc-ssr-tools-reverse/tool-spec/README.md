@@ -6,7 +6,7 @@ Implementation-ready specification for adding SSR (Semantic Similarity Rating) c
 
 Wave 1: Audit & Map — 5/5 complete
 Wave 2: Design — 7/7 complete
-Wave 3: Synthesis & Integration — 0/4 complete
+Wave 3: Synthesis & Integration — 1/4 complete
 
 ---
 
@@ -69,7 +69,7 @@ How SSR tools fit into Daimon.
 
 | File | Status | Contents |
 |------|--------|----------|
-| [catalog-registration.md](integration/catalog-registration.md) | ⬜ Pending | How tools register in `catalog.py` |
+| [catalog-registration.md](integration/catalog-registration.md) | ✅ Complete | 6 file changes with exact diffs: `platforms.py` (+`SSR`), `config.py` (`OpenAISettings` + `AppSettings.openai`), `context.py` (`ToolContext.openai_api_key`), `main.py` (constructor kwarg), `ssr/__init__.py` (new, re-exports 5 ToolDefs), `catalog.py` (SSR import block + 5 entries in `ALL_TOOLS`). Env var setup (`.env` + Fly.io). 4 verification scripts. Full file listing for 10 new files needed (4 in `ssr/`, 6 in `db/repositories/`). |
 | [workflow-design.md](integration/workflow-design.md) | ⬜ Pending | How SSR tools become Daimon workflows |
 | [discord-ux.md](integration/discord-ux.md) | 🔶 Partial | Discord UX — panel results rendering (message sizing, thread delivery thresholds, comparison format, character budget); full interactive flow pending w3-discord-ux |
 
