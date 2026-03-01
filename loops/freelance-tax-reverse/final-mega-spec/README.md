@@ -3,7 +3,7 @@
 This directory contains the complete product specification. A forward loop can build the entire platform by reading ONLY this directory.
 
 **Last updated:** 2026-03-01
-**Convergence status:** IN PROGRESS (10/53 aspects analyzed; bir-penalty-schedule completed)
+**Convergence status:** IN PROGRESS (11/53 aspects analyzed; graduated-rate-table completed)
 
 ---
 
@@ -16,7 +16,7 @@ This directory contains the complete product specification. A forward loop can b
 | domain/legal-basis.md | → see updated entry below |
 | [domain/computation-rules.md](domain/computation-rules.md) | PARTIAL | CR-001 to CR-022: both rate tables (2018-2022 + 2023+), 3 path formulas, OSD base clarification, 8% eligibility, quarterly cumulative method, CWT mechanics, installment rule, breakeven analysis, EOPT taxpayer tier classification (CR-015), surcharge computation (CR-016), interest computation (CR-017), total penalty computation (CR-018), e-marketplace DFSP withholding tax rule CR-019 (RR 16-2023), compromise penalty computation CR-020 (full table-based lookup for tax-due and nil returns, invoicing violations with EOPT 50% reduction, multi-return worked example), Section 250 info-return penalties CR-021 (₱500/₱1K per failure, ₱12.5K/₱25K annual cap), prescriptive period eligibility check CR-022 (3yr ordinary, 10yr extraordinary fraud/no-filing, waiver mechanics) |
 | domain/decision-trees.md | PENDING | Every branching path, fully expanded to leaf nodes |
-| domain/lookup-tables/graduated-rate-table.md | PARTIAL | Both rate schedules included in computation-rules.md; dedicated file pending |
+| [domain/lookup-tables/graduated-rate-table.md](domain/lookup-tables/graduated-rate-table.md) | COMPLETE | Both TRAIN schedules (2018-2022 and 2023+) fully tabulated with all 6 brackets each; boundary verification tables; Schedule 1 and Schedule 2 pseudocode functions; 7 Schedule 1 worked examples (one per bracket + boundaries); 9 Schedule 2 worked examples (one per bracket + boundaries + mixed income); effective tax rate table (25 income levels); quarterly cumulative method pseudocode + full 4-period example; mixed-income computation with non-taxable exclusion table; Schedule 1 vs 2 tax savings comparison (14 income levels); 7 edge cases (GRT-EC-01 to GRT-EC-07); 8 validation invariants (GRT-V01 to GRT-V08); legal basis summary |
 | domain/lookup-tables/percentage-tax-rates.md | PENDING | Section 116 rates by period |
 | domain/lookup-tables/filing-deadlines.md | PENDING | All BIR deadlines by form and period |
 | [domain/lookup-tables/taxpayer-classification-tiers.md](domain/lookup-tables/taxpayer-classification-tiers.md) | COMPLETE | 7 tables: tier thresholds, filing obligations by tier, penalty/interest rates by tier, classification rules and procedures, ₱3M triple coincidence boundary rules, EOPT filing simplifications, uniform deadline schedule |

@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 53
-- Analyzed: 10
-- Pending: 43
-- Convergence: 19%
+- Analyzed: 11
+- Pending: 42
+- Convergence: 21%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -23,7 +23,7 @@ Fetch and cache all primary source material before any analysis begins.
 
 ### Wave 2: Domain Rules Extraction
 Extract every computation rule, decision tree, and lookup table from source material.
-- [ ] graduated-rate-table — Extract TRAIN-era graduated rate table (Sec. 24A), all 6 brackets, with worked examples
+- [x] graduated-rate-table — Extract TRAIN-era graduated rate table (Sec. 24A), all 6 brackets, with worked examples
 - [ ] eight-percent-option — Extract 8% flat rate rules: eligibility (≤₱3M gross), election procedure (RR 8-2018), ₱250K exemption, interaction with percentage tax
 - [ ] osd-computation — Extract OSD rules (Sec. 34L): 40% of gross sales/receipts, no substantiation needed, when OSD is vs. isn't beneficial
 - [ ] itemized-deductions — Extract allowable business deductions for self-employed (Sec. 34), documentation requirements, disallowed expenses
