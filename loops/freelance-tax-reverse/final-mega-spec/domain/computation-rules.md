@@ -3827,3 +3827,643 @@ total_burden_b = ₱702,500 (no PT)
 // Note: Only worth choosing Path A if itemized > OSD of ₱2,000,000 (40% × ₱5M)
 // Breakeven: itemized > ₱2,000,000 → Path A wins; itemized ≤ ₱2,000,000 → Path B wins
 ```
+
+---
+
+## CR-034: Form 2551Q Per-Quarter Filing Engine
+
+**Legal basis:** NIRC Sec. 116; RMC No. 26-2018 (prescribing Form 2551Q January 2018 ENCS); RA 11976 (EOPT — changed from monthly 2551M to quarterly 2551Q effective January 2023)
+
+**Purpose:** Generate the complete field data for BIR Form 2551Q for a single quarter. Called once per applicable quarter. For the annual PT schedule, call four times (Q1–Q4) or generate via `generate_annual_pt_schedule()`.
+
+**When to call:** Only when `taxpayer.opm_obligation == true`. Do NOT call if:
+- Taxpayer is VAT-registered (`vat_registered == true`)
+- Taxpayer elected 8% income tax option AND declared election on Form 1701Q (no 2551Q needed at all)
+- Taxpayer has compensation income only (not self-employed)
+
+---
+
+### 34.1 Data Structures
+
+```
+// Quarter enum
+enum Quarter { Q1, Q2, Q3, Q4 }
+
+// Income tax rate election (applies ONLY to Q1 of the taxable year)
+enum IncomeTaxElection {
+  GRADUATED,       // Taxpayer is on graduated rates (Paths A or B)
+  EIGHT_PERCENT    // Taxpayer elects 8% flat rate (waives OPT for full year)
+}
+
+// Form 2551Q input — all fields required for generating a complete, fileable return
+struct Form2551QInput {
+  // Taxpayer identification
+  taxpayer_tin:     str       // 12-digit TIN (format: "###-###-###-###")
+  taxpayer_name:    str       // "LAST NAME, FIRST NAME MIDDLE NAME" for individuals
+  rdo_code:         str       // 3-character Revenue District Office code (e.g., "050")
+  registered_address: str    // Full street address as registered with BIR
+  zip_code:         str       // 4-digit ZIP code
+  line_of_business: str       // Nature of business (e.g., "IT Consultant", "Freelance Writer")
+  telephone_number: str       // Contact number with area code
+  email_address:    str       // Email address for eBIRForms records
+
+  // Return period
+  taxable_year:       int     // Calendar year (e.g., 2026)
+  is_calendar_year:   bool    // True for all individual taxpayers (always calendar year)
+  quarter:            Quarter // Q1, Q2, Q3, or Q4
+  is_amended:         bool    // True if this supersedes a previously filed return
+
+  // Tax computation input
+  quarterly_gross_sales: Decimal
+    // Gross sales/receipts for THIS quarter ONLY (not cumulative)
+    // Accrual basis (post-EOPT, effective October 27, 2024):
+    //   Include amounts INVOICED during the quarter, whether or not collected
+    // Exclude: sales returns and allowances, VAT if VAT-registered (not applicable here),
+    //          zero-rated transactions, amounts exempt from percentage tax
+    // For freelancers (service-only): gross_sales == gross_receipts_invoiced
+
+  // Item 13: Income tax rate election (Individual taxpayers ONLY)
+  //   Fill ONLY on Q1 of each taxable year
+  //   Leave null for Q2, Q3, Q4 (election is irrevocable; determined in Q1)
+  //   Leave null for non-individual taxpayers
+  income_tax_rate_election: IncomeTaxElection | null
+
+  // Item 15: Creditable percentage tax withheld by government agencies
+  //   Applies when a government agency (GOCC, DepEd, DOH, etc.) pays the taxpayer
+  //   and withholds 3% percentage tax before remitting payment.
+  //   Evidenced by BIR Form 2307 with ATC PT010 issued by the government agency.
+  //   For most private-sector freelancers: 0
+  government_cwt_pct_tax: Decimal    // Default: 0
+
+  // Item 16: Prior payment (for amended returns only)
+  prior_payment_on_original_return: Decimal    // Default: 0; only if is_amended == true
+
+  // Item 17: Other credits
+  other_credits:             Decimal    // Default: 0; specify description below
+  other_credits_description: str        // Default: "" (empty string)
+}
+
+// A single row in Schedule 1 of Form 2551Q
+struct Form2551QSchedule1Row {
+  row_number:      int       // 1 through 6 (Form has 6 rows; use row 1 for PT010)
+  atc:             str       // Alphanumeric Tax Code (e.g., "PT010")
+  description:     str       // Nature of business/transaction (human-readable)
+  taxable_amount:  Decimal   // Gross sales/receipts for the quarter (Column B)
+  tax_rate:        Decimal   // Applicable rate as a decimal (Column C)
+  tax_due:         Decimal   // taxable_amount × tax_rate (Column D)
+}
+
+// Complete Form 2551Q output — maps directly to form fields
+struct Form2551QOutput {
+  // Items 1-5: Header period information
+  item_1_calendar_year:  bool     // True (individual taxpayers always use calendar year)
+  item_2_year_ended:     str      // "12/2026" for calendar year 2026 Q4; same for all quarters
+  item_3_quarter:        str      // "1st" | "2nd" | "3rd" | "4th"
+  item_4_amended:        bool     // True if this is an amended return
+  item_5_sheets_attached: int     // 0 for standard single-activity freelancer (no SAWT for PT)
+
+  // Items 6-13: Part I — Background information
+  item_6_tin:             str     // 12-digit TIN
+  item_7_rdo_code:        str     // 3-digit RDO code
+  item_8_taxpayer_name:   str     // Last, First, Middle for individuals
+  item_9_registered_address: str  // Full registered address
+  item_9a_zip_code:       str     // 4-digit ZIP
+  item_10_line_of_business: str   // Nature of business
+  item_11_telephone:      str     // Contact number
+  item_12_email:          str     // Email address
+  item_13_income_tax_election: str | null
+    // Q1 only: "GRADUATED" or "EIGHT_PERCENT"
+    // Q2-Q4: null (leave blank on form)
+
+  // Schedule 1: Computation (Items 1-7 of Schedule)
+  schedule_1_rows:     List[Form2551QSchedule1Row]  // Items 1-6
+  schedule_1_item_7_total_tax_due: Decimal          // Sum of all row tax_due amounts
+
+  // Items 14-23: Part II — Total Tax Payable
+  item_14_total_tax_due:          Decimal   // Transfer from Schedule 1 Item 7
+  item_15_govt_cwt_pct_tax:       Decimal   // Creditable PT withheld by government agencies
+  item_16_prior_return_payment:   Decimal   // For amended returns only
+  item_17_other_credits:          Decimal   // Other applicable credits
+  item_18_total_credits:          Decimal   // Sum of Items 15 + 16 + 17
+  item_19_tax_still_payable:      Decimal   // Item 14 − Item 18 (may be negative = overpayment)
+  item_20_surcharge:              Decimal   // 10%/25% of unpaid tax if filed late (MICRO/SMALL: 10%)
+  item_21_interest:               Decimal   // 6%/12% per annum if filed late (MICRO/SMALL: 6%)
+  item_22_compromise:             Decimal   // BIR-assessed compromise penalty (from CR-020)
+  item_23_total_penalties:        Decimal   // Sum of Items 20 + 21 + 22
+  total_amount_payable:           Decimal   // Item 19 + Item 23 (if ≥ 0) or overpayment amount
+
+  // Metadata (not on form — engine use only)
+  filing_deadline:    date    // Exact deadline date (April 25 / July 25 / Oct 25 / Jan 25)
+  is_nil_return:      bool    // True if quarterly_gross_sales == 0 AND total_tax_due == 0
+  filing_required:    bool    // True unless taxpayer elected 8% via Form 1701Q (no 2551Q needed)
+  notes:              List[str]  // Engine flags and explanations
+}
+
+// Annual percentage tax filing schedule — all four quarters for one taxpayer-year
+struct AnnualPTFilingSchedule {
+  taxable_year:              int
+  income_tax_rate_election:  IncomeTaxElection    // As declared in Q1
+  election_declared_on:      str    // "FORM_1701Q" | "FORM_2551Q" | "COR"
+    //   FORM_1701Q: 8% elected on quarterly income tax return → no 2551Q needed at all
+    //   FORM_2551Q: election declared on the Q1 2551Q form → file Q1 with ₱0 PT
+    //   COR: new registrant elected 8% on Certificate of Registration → no 2551Q needed
+
+  quarters: [Form2551QOutput; 4]    // Indices 0-3 = Q1-Q4
+
+  annual_pt_total:                  Decimal   // Sum of all quarters' item_14 amounts
+  annual_pt_as_itemized_deduction:  Decimal   // Same as annual_pt_total (deductible under Sec. 34(C)(1) for Path A)
+}
+```
+
+---
+
+### 34.2 Core Function: generate_form_2551q
+
+```
+function generate_form_2551q(input: Form2551QInput) -> Form2551QOutput:
+  """
+  Generates complete Form 2551Q field data for a single quarter.
+
+  PRECONDITIONS:
+    input.quarterly_gross_sales >= 0
+    input.government_cwt_pct_tax >= 0
+    input.prior_payment_on_original_return >= 0
+    If input.is_amended == false: input.prior_payment_on_original_return must be 0
+    If input.quarter != Q1: input.income_tax_rate_election must be null
+    If input.quarter == Q1 and taxpayer is individual: income_tax_rate_election must be set
+
+  RAISES:
+    ValidationError("Q1 individual return must declare income tax rate election") if:
+      input.quarter == Q1 AND input.income_tax_rate_election == null
+    ValidationError("income_tax_rate_election must be null for Q2-Q4") if:
+      input.quarter in [Q2, Q3, Q4] AND input.income_tax_rate_election != null
+  """
+
+  // STEP 1: Determine applicable PT rate
+  pt_rate = 0.03
+  // Rate history: Pre-July 2020: 3%; July 2020 – June 2023: 1% (CREATE); July 2023+: 3%
+  // For taxable_year 2024 and later: always 3%
+  // For taxable_year 2022 or prior: use rate history table in percentage-tax-rates.md Part 1
+
+  // STEP 2: Determine if PT is waived by 8% election
+  eight_pct_waives_pt = (
+    input.income_tax_rate_election == EIGHT_PERCENT
+    // OR taxpayer declared 8% on 1701Q (handled by caller — don't call this function at all)
+  )
+
+  // STEP 3: Build Schedule 1 rows
+  if eight_pct_waives_pt:
+    // Q1 2551Q still filed (as election declaration document), but PT = ₱0
+    row_tax_due = 0
+  else:
+    row_tax_due = round(input.quarterly_gross_sales * pt_rate, 2)
+
+  schedule_1_rows = [
+    Form2551QSchedule1Row(
+      row_number    = 1,
+      atc           = "PT010",
+      description   = "Professional/service income — Persons exempt from VAT under Sec. 109(CC)",
+      taxable_amount = round(input.quarterly_gross_sales, 2),
+      tax_rate      = pt_rate,
+      tax_due       = row_tax_due
+    )
+  ]
+  // Rows 2-6 of Schedule 1 are left blank (not applicable for typical freelancer)
+  // Exception: see EC-PT04 for multiple ATC scenarios
+
+  total_tax_due_schedule_1 = row_tax_due    // Sum of all rows (₱0 for rows 2-6)
+
+  // STEP 4: Compute credits
+  prior_payment = (
+    input.prior_payment_on_original_return
+    if input.is_amended
+    else 0
+  )
+  total_credits = round(
+    input.government_cwt_pct_tax
+    + prior_payment
+    + input.other_credits
+    , 2
+  )
+
+  // STEP 5: Compute net tax still payable
+  // Can be negative (overpayment) — negative value = overpayment to be refunded or carried forward
+  tax_still_payable = round(total_tax_due_schedule_1 - total_credits, 2)
+
+  // STEP 6: Penalties — set to ₱0 for on-time filing
+  // For late filing: call compute_total_late_filing_penalty() from CR-020 and inject results here
+  surcharge  = 0
+  interest   = 0
+  compromise = 0
+  total_penalties = 0
+
+  // STEP 7: Total amount payable
+  total_payable = max(tax_still_payable + total_penalties, 0)
+  // Note: overpayment (negative tax_still_payable) is displayed separately as "(Overpayment)"
+  // It does NOT flow to next quarter automatically — taxpayer must claim refund or apply as credit
+
+  // STEP 8: Filing deadline
+  deadline_map = {
+    Q1: date(input.taxable_year, 4, 25),
+    Q2: date(input.taxable_year, 7, 25),
+    Q3: date(input.taxable_year, 10, 25),
+    Q4: date(input.taxable_year + 1, 1, 25)
+  }
+  filing_deadline = deadline_map[input.quarter]
+  // Holiday rule: if April 25 / July 25 / October 25 / January 25 falls on a Saturday, Sunday,
+  // or official Philippine public holiday, the deadline moves to the NEXT BANKING DAY.
+  // Engine must check holiday calendar. For simplicity, the engine defaults to the nominal date
+  // and notes: "Verify with BIR if deadline falls on a non-banking day."
+
+  // STEP 9: Nil return flag
+  is_nil_return = (input.quarterly_gross_sales == 0)
+  // A nil return has ₱0 gross and ₱0 tax due — still REQUIRED to be filed to avoid penalty
+
+  // STEP 10: Filing required flag
+  // If taxpayer elected 8% on Form 1701Q (not on 2551Q), caller should NOT call this function
+  // If taxpayer elected 8% on Form 2551Q (Q1 only), this function IS called for Q1 (₱0 PT)
+  // Q2-Q4 for 8% taxpayers: filing_required = false (should not be called)
+  filing_required = true    // Default; caller enforces exception
+
+  // STEP 11: Build notes
+  notes = []
+  if is_nil_return:
+    notes.append(
+      "NIL return: No gross sales/receipts this quarter. A NIL return (₱0 tax) must still "
+      "be filed on or before the deadline to avoid a failure-to-file compromise penalty "
+      "(₱1,000 for first offense, ₱5,000 for second, ₱10,000 for third, criminal for 4th+). "
+      "See CR-020.2 and EC-P05."
+    )
+  if input.income_tax_rate_election == EIGHT_PERCENT:
+    notes.append(
+      "8% income tax option elected. Percentage tax for this and all subsequent quarters "
+      "is waived by law (NIRC Sec. 24(A)(2)(b): '...in lieu of the percentage tax under "
+      "Section 116 of this Code'). This Q1 return serves as the formal election declaration. "
+      "Do NOT file Form 2551Q for Q2, Q3, or Q4 of this taxable year."
+    )
+  if input.income_tax_rate_election == GRADUATED:
+    notes.append(
+      "Graduated income tax rate elected. Percentage tax (3% of gross sales) applies for "
+      "all four quarters. File Form 2551Q for Q1, Q2, Q3, and Q4. The election is irrevocable "
+      "for this taxable year — you cannot switch to 8% once this Q1 return is filed."
+    )
+  if input.government_cwt_pct_tax > 0:
+    notes.append(
+      f"Creditable percentage tax withheld by government agency (Item 15): "
+      f"₱{input.government_cwt_pct_tax:,.2f}. Attach BIR Form 2307 (ATC PT010) from the "
+      f"government withholding agent. The withheld amount reduces your PT payable this quarter."
+    )
+  if input.is_amended:
+    notes.append(
+      f"Amended return. Prior payment on original return (Item 16): "
+      f"₱{prior_payment:,.2f}. Attach original return and proof of prior payment."
+    )
+
+  // STEP 12: Construct and return output
+  return Form2551QOutput(
+    item_1_calendar_year      = input.is_calendar_year,
+    item_2_year_ended         = f"12/{input.taxable_year}" if input.is_calendar_year else f"...",
+    item_3_quarter            = {Q1: "1st", Q2: "2nd", Q3: "3rd", Q4: "4th"}[input.quarter],
+    item_4_amended            = input.is_amended,
+    item_5_sheets_attached    = 0,
+
+    item_6_tin                = input.taxpayer_tin,
+    item_7_rdo_code           = input.rdo_code,
+    item_8_taxpayer_name      = input.taxpayer_name,
+    item_9_registered_address = input.registered_address,
+    item_9a_zip_code          = input.zip_code,
+    item_10_line_of_business  = input.line_of_business,
+    item_11_telephone         = input.telephone_number,
+    item_12_email             = input.email_address,
+    item_13_income_tax_election = (
+      {GRADUATED: "GRADUATED", EIGHT_PERCENT: "EIGHT_PERCENT"}[input.income_tax_rate_election]
+      if input.income_tax_rate_election is not null else null
+    ),
+
+    schedule_1_rows             = schedule_1_rows,
+    schedule_1_item_7_total_tax_due = total_tax_due_schedule_1,
+
+    item_14_total_tax_due       = total_tax_due_schedule_1,
+    item_15_govt_cwt_pct_tax    = round(input.government_cwt_pct_tax, 2),
+    item_16_prior_return_payment = round(prior_payment, 2),
+    item_17_other_credits       = round(input.other_credits, 2),
+    item_18_total_credits       = total_credits,
+    item_19_tax_still_payable   = tax_still_payable,
+    item_20_surcharge           = surcharge,
+    item_21_interest            = interest,
+    item_22_compromise          = compromise,
+    item_23_total_penalties     = total_penalties,
+    total_amount_payable        = total_payable,
+
+    filing_deadline   = filing_deadline,
+    is_nil_return     = is_nil_return,
+    filing_required   = filing_required,
+    notes             = notes
+  )
+```
+
+---
+
+### 34.3 Annual Schedule Function: generate_annual_pt_schedule
+
+```
+function generate_annual_pt_schedule(
+  taxpayer: TaxpayerInfo,
+  taxable_year:             int,
+  quarterly_gross_sales:    [Decimal; 4],    // [Q1, Q2, Q3, Q4]
+  income_tax_rate_election: IncomeTaxElection,
+  election_declared_on:     str,             // "FORM_1701Q" | "FORM_2551Q" | "COR"
+  govt_cwt_per_quarter:     [Decimal; 4] = [0, 0, 0, 0]
+) -> AnnualPTFilingSchedule:
+  """
+  Generates all four Form 2551Q returns and the annual PT total.
+
+  ELECTION LOGIC:
+    election_declared_on == "FORM_1701Q":
+      Taxpayer elected 8% on Form 1701Q. No Form 2551Q is required for ANY quarter.
+      All four Form2551QOutput objects have filing_required = false.
+
+    election_declared_on == "COR":
+      Taxpayer elected 8% on Certificate of Registration (new registrant).
+      No Form 2551Q required for ANY quarter.
+      All four Form2551QOutput objects have filing_required = false.
+
+    election_declared_on == "FORM_2551Q" AND income_tax_rate_election == EIGHT_PERCENT:
+      Q1 Form 2551Q filed (₱0 PT — election declaration).
+      Q2, Q3, Q4: filing_required = false (do not file).
+
+    election_declared_on == "FORM_2551Q" AND income_tax_rate_election == GRADUATED:
+      Q1, Q2, Q3, Q4: all four returns filed (₱X PT each quarter).
+  """
+
+  quarters_output = []
+
+  for q_index in range(4):
+    quarter = [Q1, Q2, Q3, Q4][q_index]
+
+    // Determine if this quarter requires a 2551Q filing
+    if election_declared_on in ["FORM_1701Q", "COR"]:
+      // No 2551Q for any quarter — add placeholder output
+      quarters_output.append(Form2551QOutput(
+        item_3_quarter      = {Q1:"1st",Q2:"2nd",Q3:"3rd",Q4:"4th"}[quarter],
+        filing_required     = false,
+        is_nil_return       = (quarterly_gross_sales[q_index] == 0),
+        total_amount_payable = 0,
+        item_14_total_tax_due = 0,
+        // All other items: 0 or null (not used)
+        notes = ["Form 2551Q not required: 8% income tax option was elected on Form 1701Q/COR. "
+                 "Percentage tax is waived for the entire year."]
+      ))
+      continue
+
+    if election_declared_on == "FORM_2551Q" AND income_tax_rate_election == EIGHT_PERCENT:
+      if quarter == Q1:
+        // Q1 is filed (₱0 PT) — election declaration
+        input = Form2551QInput(
+          taxable_year  = taxable_year,
+          quarter       = Q1,
+          quarterly_gross_sales = quarterly_gross_sales[0],
+          income_tax_rate_election = EIGHT_PERCENT,
+          government_cwt_pct_tax = govt_cwt_per_quarter[0],
+          // ... other taxpayer fields from taxpayer struct
+        )
+        quarters_output.append(generate_form_2551q(input))
+      else:
+        // Q2-Q4: not filed
+        quarters_output.append(Form2551QOutput(
+          item_3_quarter = {Q2:"2nd",Q3:"3rd",Q4:"4th"}[quarter],
+          filing_required = false,
+          is_nil_return  = (quarterly_gross_sales[q_index] == 0),
+          total_amount_payable = 0,
+          item_14_total_tax_due = 0,
+          notes = ["Form 2551Q not required: 8% option elected on Q1 Form 2551Q. "
+                   "No percentage tax returns for Q2, Q3, Q4."]
+        ))
+      continue
+
+    // Graduated rate: all four quarters filed
+    q1_election = income_tax_rate_election if quarter == Q1 else null
+    input = Form2551QInput(
+      taxable_year  = taxable_year,
+      quarter       = quarter,
+      quarterly_gross_sales = quarterly_gross_sales[q_index],
+      income_tax_rate_election = q1_election,
+      government_cwt_pct_tax = govt_cwt_per_quarter[q_index],
+      // ... other taxpayer fields from taxpayer struct
+    )
+    quarters_output.append(generate_form_2551q(input))
+
+  // Compute annual PT total
+  annual_pt_total = sum(
+    q.item_14_total_tax_due
+    for q in quarters_output
+    if q.filing_required
+  )
+
+  return AnnualPTFilingSchedule(
+    taxable_year              = taxable_year,
+    income_tax_rate_election  = income_tax_rate_election,
+    election_declared_on      = election_declared_on,
+    quarters                  = quarters_output,
+    annual_pt_total           = round(annual_pt_total, 2),
+    annual_pt_as_itemized_deduction = round(annual_pt_total, 2)
+      // Percentage tax paid is fully deductible under NIRC Sec. 34(C)(1) for Path A
+      // The deductible amount equals the total PT actually paid (computed, not estimated)
+  )
+```
+
+---
+
+### 34.4 Worked Examples
+
+**Example CR-034-WE-01: Graduated freelancer, regular Q2 return**
+```
+Input:
+  taxpayer_tin = "123-456-789-000"
+  taxpayer_name = "DELA CRUZ, JUAN CARLOS REYES"
+  rdo_code = "050"
+  registered_address = "123 Mapagkumbaba St., Brgy. Poblacion, Makati City"
+  zip_code = "1210"
+  line_of_business = "Software Developer / IT Consultant"
+  telephone_number = "(02) 8123-4567"
+  email_address = "jcdelacruz@email.com"
+  taxable_year = 2026
+  quarter = Q2
+  is_calendar_year = true
+  is_amended = false
+  quarterly_gross_sales = 350,000.00    // April-June gross invoices
+  income_tax_rate_election = null       // Q2: no election field
+  government_cwt_pct_tax = 0
+  prior_payment_on_original_return = 0
+  other_credits = 0
+
+Output:
+  item_1_calendar_year = true
+  item_2_year_ended = "12/2026"
+  item_3_quarter = "2nd"
+  item_4_amended = false
+  item_5_sheets_attached = 0
+
+  item_6_tin = "123-456-789-000"
+  item_7_rdo_code = "050"
+  item_8_taxpayer_name = "DELA CRUZ, JUAN CARLOS REYES"
+  item_9_registered_address = "123 Mapagkumbaba St., Brgy. Poblacion, Makati City"
+  item_9a_zip_code = "1210"
+  item_10_line_of_business = "Software Developer / IT Consultant"
+  item_11_telephone = "(02) 8123-4567"
+  item_12_email = "jcdelacruz@email.com"
+  item_13_income_tax_election = null    // Blank on form (Q2)
+
+  schedule_1_rows = [
+    { row_number: 1, atc: "PT010",
+      description: "Professional/service income — Sec. 109(CC)",
+      taxable_amount: 350,000.00, tax_rate: 0.03, tax_due: 10,500.00 }
+  ]
+  schedule_1_item_7_total_tax_due = 10,500.00
+
+  item_14_total_tax_due = 10,500.00
+  item_15_govt_cwt_pct_tax = 0
+  item_16_prior_return_payment = 0
+  item_17_other_credits = 0
+  item_18_total_credits = 0
+  item_19_tax_still_payable = 10,500.00
+  item_20_surcharge = 0
+  item_21_interest = 0
+  item_22_compromise = 0
+  item_23_total_penalties = 0
+  total_amount_payable = 10,500.00
+
+  filing_deadline = July 25, 2026
+  is_nil_return = false
+  filing_required = true
+  notes = []
+
+Verification: ₱350,000 × 0.03 = ₱10,500. Correct.
+```
+
+**Example CR-034-WE-02: Q1 return with 8% election declaration**
+```
+Input:
+  (taxpayer identification same as WE-01, different fields below)
+  taxable_year = 2026
+  quarter = Q1
+  quarterly_gross_sales = 280,000.00    // January-March gross invoices
+  income_tax_rate_election = EIGHT_PERCENT
+
+Output:
+  item_3_quarter = "1st"
+  item_13_income_tax_election = "EIGHT_PERCENT"    // Checked on form
+
+  schedule_1_rows = [
+    { row_number: 1, atc: "PT010",
+      description: "Professional/service income — Sec. 109(CC)",
+      taxable_amount: 280,000.00, tax_rate: 0.03, tax_due: 0.00 }
+      // tax_due = ₱0 because 8% election waives PT for the FULL year (including Q1)
+  ]
+  schedule_1_item_7_total_tax_due = 0.00
+
+  item_14_total_tax_due = 0.00
+  item_18_total_credits = 0
+  item_19_tax_still_payable = 0.00
+  total_amount_payable = 0.00
+
+  filing_deadline = April 25, 2026
+  is_nil_return = false    // Has gross sales; just ₱0 PT due (not the same as no income)
+  filing_required = true   // This Q1 return must be filed as the formal election document
+  notes = [
+    "8% income tax option elected. Percentage tax for this and all subsequent quarters is
+     waived by law (NIRC Sec. 24(A)(2)(b)). This Q1 return serves as the formal election
+     declaration. Do NOT file Form 2551Q for Q2, Q3, or Q4 of this taxable year."
+  ]
+```
+
+**Example CR-034-WE-03: NIL return — no income in Q3**
+```
+Input:
+  taxable_year = 2026
+  quarter = Q3
+  quarterly_gross_sales = 0.00    // No income July-September (e.g., sabbatical)
+  income_tax_rate_election = null // Q3; not applicable
+
+Output:
+  item_3_quarter = "3rd"
+  schedule_1_rows = [
+    { row_number: 1, atc: "PT010",
+      taxable_amount: 0.00, tax_rate: 0.03, tax_due: 0.00 }
+  ]
+  item_14_total_tax_due = 0.00
+  total_amount_payable = 0.00
+  filing_deadline = October 25, 2026
+  is_nil_return = true
+  filing_required = true    // NIL return must still be filed
+  notes = [
+    "NIL return: No gross sales/receipts this quarter. A NIL return (₱0 tax) must still be
+     filed on or before October 25, 2026 to avoid a failure-to-file compromise penalty
+     (₱1,000 for first offense). See CR-020.2 and EC-P05."
+  ]
+```
+
+**Example CR-034-WE-04: Full annual PT schedule — graduated taxpayer**
+```
+Input:
+  income_tax_rate_election = GRADUATED
+  election_declared_on = "FORM_2551Q"
+  quarterly_gross_sales = [300,000, 350,000, 280,000, 370,000]
+  govt_cwt_per_quarter = [0, 0, 0, 0]
+
+Output:
+  Q1: quarterly_gross_sales = 300,000  →  PT due = 300,000 × 0.03 = ₱9,000
+      filing_deadline = April 25, 2026;  item_13 = "GRADUATED"
+  Q2: quarterly_gross_sales = 350,000  →  PT due = 350,000 × 0.03 = ₱10,500
+      filing_deadline = July 25, 2026;   item_13 = null (Q2)
+  Q3: quarterly_gross_sales = 280,000  →  PT due = 280,000 × 0.03 = ₱8,400
+      filing_deadline = October 25, 2026; item_13 = null (Q3)
+  Q4: quarterly_gross_sales = 370,000  →  PT due = 370,000 × 0.03 = ₱11,100
+      filing_deadline = January 25, 2027; item_13 = null (Q4)
+
+  annual_pt_total = 9,000 + 10,500 + 8,400 + 11,100 = ₱39,000
+  annual_pt_as_itemized_deduction = ₱39,000
+
+  Verification: Annual gross = 300K+350K+280K+370K = ₱1,300,000
+               Annual PT = ₱1,300,000 × 0.03 = ₱39,000. Correct.
+```
+
+---
+
+### 34.5 PT Rate for Prior-Year Returns (Amended Returns / Audit Defense)
+
+When generating Form 2551Q for prior taxable years, the engine must apply the rate in effect for that year:
+
+```
+function get_pt_rate_for_quarter(taxable_year: int, quarter: Quarter) -> Decimal:
+  """
+  Returns the Section 116 percentage tax rate for a specific quarter.
+  """
+  // Convert to approximate date (start of quarter)
+  quarter_start_dates = {
+    (year, Q1): date(year, 1, 1),
+    (year, Q2): date(year, 4, 1),
+    (year, Q3): date(year, 7, 1),
+    (year, Q4): date(year, 10, 1)
+  }
+  q_start = quarter_start_dates[(taxable_year, quarter)]
+
+  CREATE_1PCT_START = date(2020, 7, 1)    // RA 11534 CREATE Act — 1% rate begins
+  CREATE_1PCT_END   = date(2023, 6, 30)   // CREATE — 1% rate ends (June 30, 2023)
+
+  if q_start >= CREATE_1PCT_START and q_start <= CREATE_1PCT_END:
+    return 0.01    // 1% during CREATE COVID-era relief period
+  else:
+    return 0.03    // 3% standard rate (before July 2020 and from July 2023 onwards)
+
+// Rate table for reference:
+// Q1 2020 (Jan-Mar 2020): 3%
+// Q2 2020 (Apr-Jun 2020): 3% (CREATE not yet effective)
+// Q3 2020 (Jul-Sep 2020): 1%  ← CREATE rate begins Q3 2020
+// Q4 2020 (Oct-Dec 2020): 1%
+// Q1 2021: 1%   Q2 2021: 1%   Q3 2021: 1%   Q4 2021: 1%
+// Q1 2022: 1%   Q2 2022: 1%   Q3 2022: 1%   Q4 2022: 1%
+// Q1 2023: 1%   Q2 2023: 1%   ← Last quarter at 1% (Apr-Jun 2023)
+// Q3 2023 (Jul-Sep 2023): 3%  ← 3% reversion begins Q3 2023
+// Q4 2023: 3%   Q1 2024+: 3%
+```

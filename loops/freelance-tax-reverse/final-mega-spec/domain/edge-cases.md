@@ -1948,3 +1948,209 @@ Key insight: For very low business gross receipts (near ₱250K) where the ₱25
 
 **Engine behavior:** For VAT-registered taxpayers, no OPT in total burden for either path. Breakeven analysis: `itemized_deductions > gross_income * 0.40` → Path A wins. This is the same breakeven as non-VAT taxpayers (the presence of OPT on both paths for non-VAT does not change the relative breakeven between A and B — only the A-vs-C and B-vs-C comparisons are affected by OPT presence/absence).
 
+---
+
+## Group EC-PT: Percentage Tax Filing Mechanics Edge Cases
+
+### EC-PT01: First-Year Registrant — Mid-Year Registration, PT Obligation Start Date
+
+**Scenario:** A graphic designer registers with BIR on March 15, 2026 (mid-Q1). She starts earning income immediately after registration. When is her first Form 2551Q due, and what is the taxable gross for Q1?
+
+**Resolution:**
+The percentage tax obligation begins on the DATE OF BIR REGISTRATION, not January 1 of the year. The taxpayer only has PT obligations for periods AFTER registration.
+
+- Q1 taxable period covered: March 15 – March 31, 2026 (16 days; not the full quarter)
+- Q1 gross sales for Form 2551Q: Only gross sales/receipts INVOICED from March 15 onwards
+- Q1 Form 2551Q deadline: April 25, 2026 (same deadline regardless of registration date)
+- Q1 Item 13 election: Must declare income tax rate election (GRADUATED or EIGHT_PERCENT) on this first Q1 return
+- Q1 is the first Q1 the taxpayer has registered; election declared here applies for the remainder of 2026
+
+**Engine behavior:**
+- Input: `registration_date = "2026-03-15"`, `taxable_year = 2026`
+- Q1 gross for PT computation: Only income from March 15 to March 31 (user must input this separately from Jan-Feb income, which is zero/pre-registration)
+- For Q1 Form 1701Q: Same rule — only income from registration date is included
+- Flag to user: "Your Q1 percentage tax and income tax returns cover only the period from your registration date (March 15, 2026) through March 31, 2026. Include only invoices issued from March 15 onwards."
+- No PT obligation arises for any period before registration date
+- For the annual income tax return (Form 1701A/1701), the full-year computation uses income from registration date only
+
+**Legal basis:** Registration creates the tax obligation from the date it is effective. BIR registration under Sec. 236 creates the obligation to file returns from the first applicable period after registration.
+
+---
+
+### EC-PT02: Graduated Declared on Q1 Form 2551Q — Taxpayer Now Wants 8%
+
+**Scenario:** An IT consultant filed her Q1 Form 2551Q on April 20, 2026 and checked "Graduated income tax rate" on Item 13. She paid ₱7,500 PT (3% × ₱250,000 Q1 gross). In May, her CPA tells her the 8% option would save her ₱38,000 for the year. Can she switch?
+
+**Resolution:**
+**No.** The income tax rate election on Q1 Form 2551Q is IRREVOCABLE for the taxable year. Once "Graduated income tax rate" is declared on Item 13 of the Q1 return, the taxpayer CANNOT switch to 8% for the same taxable year. This is explicitly stated in RR No. 8-2018 Sec. 2(A): "The election...shall be irrevocable and the taxpayer shall be bound to its application for the entire taxable year."
+
+**Engine behavior:**
+- Input: `has_filed_q1_with_graduated_election = true`, `taxable_year = 2026`
+- Output: 8% option shown as UNAVAILABLE with reason: "You already elected the graduated income tax rate on your Q1 Form 2551Q. This election is irrevocable for TY2026. The 8% option will become available again starting Q1 TY2027 if you elect it then."
+- Tool must show the potential savings the taxpayer is foregoing, as motivation to elect correctly for NEXT year
+- Do NOT compute or recommend Path C for this taxpayer for TY2026
+- Note in output: "For TY2027: elect 8% on Q1 Form 2551Q or Q1 Form 1701Q (whichever you file first) to avoid locking into graduated rates again."
+
+**What the taxpayer CAN do:**
+- File the remaining Q2, Q3, Q4 Form 2551Q returns (graduated rate; 3% PT applies each quarter)
+- File Form 1701A or 1701 at annual (graduated method)
+- Cannot amend Q1 2551Q to change the election (amendment only corrects errors in gross receipts or tax computation, not the rate election itself)
+
+---
+
+### EC-PT03: Government Agency as Withholding Agent — PT Withholding Credit (Item 15)
+
+**Scenario:** A freelance translator provides services to the Department of Foreign Affairs (DFA). DFA is a government withholding agent. DFA pays her ₱180,000 in professional fees for Q2 2026 and issues two documents: (1) BIR Form 2307 (ATC WI010, 5% EWT, ₱9,000) for income tax withholding, and (2) BIR Form 2307 (ATC PT010, 3% OPT, ₱5,400) for percentage tax withholding. How does she handle the PT withholding?
+
+**Correct handling:**
+```
+Q2 gross sales: ₱180,000
+Q2 PT due (3% × ₱180,000): ₱5,400
+
+Form 2551Q Q2 computation:
+  Item 14 (total tax due from Schedule 1): ₱5,400
+  Item 15 (government PT withholding per Form 2307 ATC PT010): ₱5,400
+  Item 18 (total credits): ₱5,400
+  Item 19 (tax still payable): ₱5,400 − ₱5,400 = ₱0
+
+  Total amount payable: ₱0
+  (The government already withheld and remitted the PT on her behalf)
+
+Separately, the EWT credit (₱9,000 from WI010 2307):
+  Goes into Form 1701Q Q2 as income tax credit (Item 15/16 of 1701Q)
+  NOT applied against PT (EWT is an income tax credit; PT is a separate tax)
+```
+
+**Engine behavior:**
+- User inputs `government_cwt_pct_tax = 5,400` for Q2
+- This value flows to Item 15 of Form 2551Q
+- Engine reduces Item 19 accordingly (₱0 payable in this case)
+- Engine shows the two 2307s separately:
+  - "Income tax credit (EWT, ATC WI010): ₱9,000 — applies to your quarterly income tax return (Form 1701Q)"
+  - "Percentage tax credit (OPT, ATC PT010): ₱5,400 — applies to your quarterly PT return (Form 2551Q)"
+- If government PT withholding > PT due: overpayment — user must file for refund or carry forward
+
+**When government PT withholding occurs:** Government agencies that are withholding agents (DepEd, DOH, DFA, DOST, LGUs, GOCCs) are required to withhold percentage tax (in addition to EWT) when paying non-VAT registered suppliers. Freelancers earning from government contracts must watch for this.
+
+**PT overpayment resolution:** An overpayment of percentage tax (Item 15 credits > Item 14 tax due) results in a negative Item 19. The excess is shown as "(Overpayment)". The taxpayer may:
+1. Carry forward the excess to the next quarter (apply as credit in Item 17 of next quarter's 2551Q with description "Excess OPT from prior quarter")
+2. File a formal refund claim with BIR (rare, given small amounts)
+
+---
+
+### EC-PT04: Freelancer with Multiple Lines of Business — Multiple ATC Rows
+
+**Scenario:** A self-employed individual has two business activities in 2026: (1) professional fees from freelance copywriting (₱600,000 Q2 gross), and (2) small retail sales of handmade crafts via Instagram (₱80,000 Q2 gross). Total Q2 gross = ₱680,000. Both activities are non-VAT (combined < ₱3M). How does the Form 2551Q Schedule 1 look?
+
+**Analysis:**
+Both professional fees and small retail sales by an individual with gross sales ≤ ₱3M fall under NIRC Sec. 116, which applies to "persons who are not VAT-registered." The ATC for both is **PT010** (Persons exempt from VAT under Sec. 109(CC)).
+
+For this taxpayer, the two activities do NOT require separate Schedule 1 rows because they both use the same ATC (PT010) and the same tax rate (3%). They are combined into a single PT010 row with the total gross from both activities.
+
+```
+Q2 Form 2551Q Schedule 1:
+  Row 1: ATC = PT010
+         Taxable Amount = ₱680,000    // ₱600,000 professional + ₱80,000 retail
+         Tax Rate = 3%
+         Tax Due = ₱680,000 × 0.03 = ₱20,400
+
+  Item 7 Total: ₱20,400
+  Item 14: ₱20,400
+  Total payable: ₱20,400
+```
+
+**When MULTIPLE ATC rows are genuinely needed:**
+If a taxpayer has activities under DIFFERENT ATC codes with different rates (e.g., a franchise holder paying 2% under PT060 AND professional services at 3% under PT010), they use separate rows. However, for this tool's target users (freelancers, professionals, sole proprietors in service industries), all income is typically PT010 at 3%. The engine should warn if a user enters activities that might carry different ATC codes.
+
+**Engine behavior:**
+- Aggregate all non-VAT, non-8%, non-exempt business income into a single quarterly_gross_sales figure
+- All income under Sec. 116 uses PT010 at 3%
+- Flag to user: "If you have activities subject to a different percentage tax rate (e.g., franchise under Sec. 119), consult a CPA — this tool covers PT010 (professional/service income) only."
+
+---
+
+### EC-PT05: Partial-Quarter PT After VAT Deregistration Takes Effect
+
+**Scenario:** A formerly VAT-registered architect's VAT deregistration was approved effective January 1, 2026. Her last VAT return was for Q4 2025. Starting January 2026, she is non-VAT and must file Form 2551Q. Her Q1 2026 gross sales are ₱450,000. This is also her first chance to elect 8% since deregistration.
+
+**Resolution:**
+Upon successful VAT deregistration (Form 1905 approved), the taxpayer reverts to percentage tax (Sec. 116) and becomes eligible for the 8% option if gross ≤ ₱3M. The transition is clean at the start of a quarter.
+
+```
+Q1 2026 — First quarter as non-VAT:
+  quarterly_gross_sales = ₱450,000
+  Item 13 election (Q1 only): Must elect NOW
+    → Option 1: Elect GRADUATED → 3% PT due = ₱450,000 × 0.03 = ₱13,500
+    → Option 2: Elect EIGHT_PERCENT → PT = ₱0 (waived by 8% election)
+
+  If electing 8% (Option 2):
+    Q1 2551Q: Filed with "8% income tax rate" checked; Tax due = ₱0
+    Q2-Q4 2551Q: Not filed
+    Annual ITR: Form 1701A (8% method); income tax = (gross - ₱250,000) × 8%
+
+  If electing graduated (Option 1):
+    Q1-Q4 2551Q: Filed quarterly (3% each quarter)
+    Annual ITR: Form 1701A or 1701 (OSD or itemized)
+```
+
+**Engine behavior:**
+- Input flag: `first_year_as_non_vat = true`
+- Output alert: "You have reverted from VAT to non-VAT status this taxable year. You must file Form 2551Q (percentage tax) for 2026 if you elect the graduated income tax rate, OR declare the 8% option on your Q1 Form 2551Q. Your Q1 Item 13 election is the critical first step — it determines your entire 2026 filing path."
+- Engine runs full three-path comparison to help the taxpayer choose the optimal election
+- Note: If prior year gross was > ₱3M (reason for VAT registration), and current year gross is estimated at ≤ ₱3M, 8% option is available for the current year
+
+**Prior-year CWT rate implication:** If the taxpayer's prior year (2025) gross was > ₱3M (when VAT-registered), clients in 2026 may initially withhold EWT at 10% (the higher rate for prior-year gross > ₱3M). However, since 2025 gross > ₱3M, the 10% rate is correct for 2026 regardless of VAT status. This affects the CWT credits computation but not the PT computation.
+
+---
+
+### EC-PT06: Q1 Form 2551Q Filed Late — PT Penalties vs. No PT Penalties Under 8%
+
+**Scenario:** A freelance videographer was uncertain about electing 8% and filed his Q1 Form 2551Q on May 30, 2026 (35 days late; deadline was April 25). He ultimately checked "Graduated income tax rate" on Item 13 and paid ₱12,000 PT (₱400,000 Q1 gross × 3%). What penalties apply?
+
+**Penalty computation (MICRO taxpayer):**
+```
+Basic tax due: ₱12,000
+Days late: 35 (April 26 to May 30, inclusive)
+Tier: MICRO (gross < ₱3M)
+
+Surcharge (CR-016):
+  MICRO tier, failure to pay: 10% of tax due
+  Surcharge = ₱12,000 × 0.10 = ₱1,200
+
+Interest (CR-017):
+  MICRO tier: 6% per annum
+  Interest = ₱12,000 × 0.06 × (35 / 365) = ₱12,000 × 0.005753 = ₱69.04 → ₱69.04
+
+Compromise (CR-020.1):
+  Tax due ₱12,000 falls in the ≤₱20,000 bracket → ₱5,000
+
+Total penalties: ₱1,200 + ₱69.04 + ₱5,000 = ₱6,269.04
+Total amount due: ₱12,000 + ₱6,269.04 = ₱18,269.04
+```
+
+**What if he had elected 8% instead?**
+```
+If 8% elected:
+  Q1 2551Q: ₱0 PT due (waived by 8%)
+  Filing deadline still April 25, 2026
+  If filed late (May 30):
+    Basic tax due: ₱0 (NIL return)
+    Compromise for late NIL return (first offense): ₱1,000
+    (No surcharge or interest on ₱0 tax due)
+
+  Savings from electing 8%: No PT liability → only ₱1,000 compromise for late NIL
+  vs. ₱18,269.04 total penalty on graduated path
+```
+
+**Engine behavior:**
+- When generating Form 2551Q with late filing: call `compute_total_late_filing_penalty()` (CR-020)
+- Populate Item 20 (surcharge), Item 21 (interest), Item 22 (compromise) with computed values
+- Flag: "This return is X days past the filing deadline. Penalties have been computed above. To minimize penalties, file and pay immediately."
+- Late NIL 2551Q penalties also computed (CR-020.2) for taxpayers who had zero income but filed late
+
+**Key distinction:**
+- Late 2551Q with tax due: THREE components (surcharge + interest + compromise)
+- Late 2551Q with ₱0 tax due (nil return): ONLY compromise penalty (₱1,000 / ₱5,000 / ₱10,000 by offense count), no surcharge or interest (₱0 × 10% = ₱0; ₱0 × 6% = ₱0)
+
+*Cross-references: [CR-034 (Form 2551Q engine)](../computation-rules.md) | [percentage-tax-rates.md Part 11](percentage-tax-rates.md) | [EC-VPT group (VAT/PT boundary)](edge-cases.md) | [CR-020 (penalty computation)](../computation-rules.md)*
+

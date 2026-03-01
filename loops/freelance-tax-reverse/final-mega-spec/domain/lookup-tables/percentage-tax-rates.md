@@ -269,4 +269,153 @@ The engine must compute and expose the following flags for every computation:
 
 ---
 
-*Cross-references: [computation-rules.md CR-031 through CR-033](../computation-rules.md) | [decision-trees.md DT-11 through DT-13](../decision-trees.md) | [edge-cases.md EC-VPT group](../edge-cases.md)*
+*Cross-references: [computation-rules.md CR-031 through CR-034](../computation-rules.md) | [decision-trees.md DT-11 through DT-13](../decision-trees.md) | [edge-cases.md EC-VPT group](../edge-cases.md)*
+
+---
+
+## Part 11: Form 2551Q Complete Field-by-Field Mapping
+
+This table maps every field on BIR Form 2551Q (January 2018 ENCS, per RMC No. 26-2018) to the engine data that populates it. A forward loop must be able to generate a fileable Form 2551Q by reading this table alone.
+
+### 11.1 Header Section (Period Information)
+
+| Field on Form | Item # | Data Type | Engine Source | Example Value |
+|---------------|--------|-----------|---------------|---------------|
+| Calendar Year checkbox | Item 1 | Boolean checkbox | `is_calendar_year = true` (all individuals) | ☑ Calendar Year |
+| Fiscal Year checkbox | Item 1 | Boolean checkbox | `is_calendar_year = false` | Unchecked for individuals |
+| Year Ended (MM/YYYY) | Item 2 | String "MM/YYYY" | `"12/" + taxable_year` | "12/2026" |
+| Quarter — 1st | Item 3 | Boolean checkbox | `quarter == Q1` | ☑ (if Q1) |
+| Quarter — 2nd | Item 3 | Boolean checkbox | `quarter == Q2` | ☑ (if Q2) |
+| Quarter — 3rd | Item 3 | Boolean checkbox | `quarter == Q3` | ☑ (if Q3) |
+| Quarter — 4th | Item 3 | Boolean checkbox | `quarter == Q4` | ☑ (if Q4) |
+| Amended Return — Yes | Item 4 | Boolean checkbox | `is_amended == true` | ☑ (if amended) |
+| Amended Return — No | Item 4 | Boolean checkbox | `is_amended == false` | ☑ (if original) |
+| Number of Sheets Attached | Item 5 | Integer | `0` for single-ATC freelancers; `1` if SAWT or supporting docs | 0 |
+
+### 11.2 Part I — Background Information
+
+| Field on Form | Item # | Data Type | Engine Source | Example Value |
+|---------------|--------|-----------|---------------|---------------|
+| Taxpayer Identification Number | Item 6 | String "###-###-###-###" | `taxpayer.tin` | "234-567-890-001" |
+| RDO Code | Item 7 | String (3 chars) | `taxpayer.rdo_code` | "050" |
+| Taxpayer's Name (individual) | Item 8 | String "LAST, FIRST MI." | `taxpayer.name_last + ", " + taxpayer.name_first + " " + taxpayer.name_middle` | "SANTOS, MARIA ELENA D." |
+| Registered Address | Item 9 | String | `taxpayer.registered_address` | "45 Rosal St., Brgy. Kapitolyo, Pasig City" |
+| ZIP Code | Item 9A | String (4 digits) | `taxpayer.zip_code` | "1603" |
+| Line of Business / Occupation | Item 10 | String (max 40 chars) | `taxpayer.line_of_business` | "Freelance Graphic Designer" |
+| Telephone Number | Item 11 | String | `taxpayer.telephone_number` | "(02) 8567-8901" |
+| Email Address | Item 12 | String | `taxpayer.email_address` | "santos.m@gmail.com" |
+
+**Item 13 — Income Tax Rate Election (Q1 returns only, individual taxpayers):**
+
+| Field on Form | Item # | When Used | Engine Source | Value |
+|---------------|--------|-----------|---------------|-------|
+| Graduated income tax rate — checkbox | Item 13 | Q1 only, if electing graduated | `income_tax_rate_election == GRADUATED` | ☑ |
+| 8% income tax rate — checkbox | Item 13 | Q1 only, if electing 8% | `income_tax_rate_election == EIGHT_PERCENT` | ☑ |
+| Item 13 blank | Item 13 | Q2, Q3, Q4 (election was Q1) | `quarter != Q1` | Leave blank |
+
+**Item 13 critical rule:** This field is ONLY completed on Q1 of each taxable year. For Q2, Q3, and Q4 returns, this field is left blank on the form (the election is irrevocable from Q1 and need not be re-declared). If a taxpayer marks "8% income tax rate" on Item 13, they should also file this Q1 return showing their Q1 gross sales with ₱0 PT due, and then cease filing 2551Q for Q2–Q4.
+
+### 11.3 Schedule 1 — Computation of Percentage Tax (Page 2)
+
+Schedule 1 has 6 data rows (Items 1–6) plus a total row (Item 7). For a typical freelancer with professional fees only, only Row 1 (PT010) is used; Rows 2–6 are left blank.
+
+| Schedule 1 Column | Label on Form | Data Type | Engine Source |
+|-------------------|---------------|-----------|---------------|
+| Column A | Alphanumeric Tax Code (ATC) | String | `"PT010"` for freelancers/professionals |
+| Column B | Taxable Amount (Gross Sales/Receipts) | Decimal | `quarterly_gross_sales` (accrual basis, ₱ pesos) |
+| Column C | Tax Rate (%) | Decimal | `0.03` for taxable years 2024+ (3%); `0.01` for Q3 2020–Q2 2023 |
+| Column D | Tax Due (Column B × Column C) | Decimal | `round(quarterly_gross_sales × tax_rate, 2)` |
+
+**Schedule 1 Row mapping for a typical freelancer (only Row 1 populated):**
+
+| Schedule 1 Row | Item # | ATC | Nature of Transaction | Tax Rate | When Used |
+|----------------|--------|-----|-----------------------|----------|-----------|
+| Row 1 | Item 1 | PT010 | Professional fees / service income under Sec. 109(CC) | 3% | All freelancers, professionals, sole proprietors on OPT |
+| Row 2 | Item 2 | (blank) | Not applicable | — | Leave blank for single-activity taxpayers |
+| Row 3 | Item 3 | (blank) | Not applicable | — | Leave blank |
+| Row 4 | Item 4 | (blank) | Not applicable | — | Leave blank |
+| Row 5 | Item 5 | (blank) | Not applicable | — | Leave blank |
+| Row 6 | Item 6 | (blank) | Not applicable | — | Leave blank |
+| Total | Item 7 | — | Sum of Rows 1–6, Column D | — | Always: transfer to Part II Item 14 |
+
+**Exception — Multiple ATC rows:** If a taxpayer has activities under different Sec. 116 categories (e.g., a franchise holder who also provides professional services), use additional rows with the appropriate ATC. Each row has its own taxable amount, rate, and tax due. Sum all rows in Item 7. For this tool's target users (freelancers and professionals), PT010 is the only applicable ATC in virtually all cases.
+
+### 11.4 Part II — Total Tax Payable
+
+| Field on Form | Item # | Data Type | Computation | Typical Freelancer Value |
+|---------------|--------|-----------|-------------|--------------------------|
+| Total Tax Due (from Schedule 1 Item 7) | Item 14 | Decimal | Transfer from Schedule 1 total | `quarterly_gross_sales × 0.03` |
+| Creditable PT Withheld per Form 2307 (government agencies) | Item 15 | Decimal | Sum of all Form 2307 (ATC PT010) from government withholding agents for the quarter | ₱0 for most freelancers; see EC-PT03 |
+| Tax Paid in Return Previously Filed (if amended) | Item 16 | Decimal | Amount paid on the original return being amended | ₱0 for original returns |
+| Other Tax Credit/Payment | Item 17 | Decimal | Any other applicable credits (specify in attached form) | ₱0 |
+| Total Tax Credits/Payments | Item 18 | Decimal | `Item 15 + Item 16 + Item 17` | Sum of above |
+| Tax Still Payable / (Overpayment) | Item 19 | Decimal | `Item 14 − Item 18` (negative = overpayment) | `quarterly_gross_sales × 0.03 − 0` |
+| Surcharge | Item 20 | Decimal | `compute_surcharge(Item 14, taxpayer_tier, violation_type)` | ₱0 if filed on time |
+| Interest | Item 21 | Decimal | `compute_interest(Item 14, taxpayer_tier, days_late)` | ₱0 if filed on time |
+| Compromise | Item 22 | Decimal | `compute_compromise_penalty_with_tax_due(Item 14)` | ₱0 if filed on time |
+| Total Penalties | Item 23 | Decimal | `Item 20 + Item 21 + Item 22` | ₱0 if filed on time |
+| **Total Amount Payable / (Overpayment)** | Summary | Decimal | `Item 19 + Item 23` | `quarterly_gross_sales × 0.03` |
+
+### 11.5 Payment Details Section
+
+| Field on Form | Data Type | Engine Source | Notes |
+|---------------|-----------|---------------|-------|
+| Name of Bank / Agency | String | Payment info from user | Required if paying via AAB |
+| Cash/Check/Bank Debit Memo — Date | Date (MM/DD/YYYY) | Payment date | Date taxpayer pays |
+| Cash/Check/Bank Debit Memo — Amount | Decimal | Amount paid = `Total Amount Payable` | Must equal the total due |
+| Check Number | String | From taxpayer's check if paying by check | Leave blank if paying cash or online |
+| Tax Debit Memo Reference | String | From BIR TDM if applicable | Leave blank if not applicable |
+
+**Accepted payment channels (engine must list these to the user):**
+- Accredited Agent Banks (AABs): major commercial banks (BDO, BPI, Metrobank, PNB, etc.)
+- GCash (via BIR eFPS or eBIRForms payment link)
+- Maya (formerly PayMaya) via BIR partner platform
+- Landbank e-Link (for Landbank account holders)
+- DBP Pay (for DBP account holders)
+- Revenue Collection Officer at RDO (cash, in person; applicable in areas with no AABs)
+- Revenue Official Receipt (ROR) via eFPS direct debit
+
+### 11.6 Signatory Section
+
+| Field on Form | Data Type | Engine Source |
+|---------------|-----------|---------------|
+| Taxpayer's Printed Name | String | `taxpayer.name_full` |
+| Taxpayer's Signature | Physical signature / e-signature | User action (outside engine) |
+| Date Signed | Date (MM/DD/YYYY) | Filing date |
+| Title / Position | String | For individuals: leave blank (self-filing) |
+| TIN of Authorized Representative | String | If filed by CPA/tax agent: CPA's TIN; if self-filed: taxpayer's own TIN |
+| Accreditation Number | String | If filed by accredited tax agent: accreditation number; if self-filed: leave blank |
+| Date of Issue / Valid Until | Dates | CPA accreditation dates; leave blank if self-filed |
+
+### 11.7 NIL Return Field Values
+
+When `quarterly_gross_sales == 0.00` (no income for the quarter), all Schedule 1 fields are ₱0.00 but the return MUST still be filed:
+
+| Field | NIL Return Value |
+|-------|-----------------|
+| Item 13 (Q1 only) | GRADUATED (or EIGHT_PERCENT if applicable) — must still be declared |
+| Schedule 1 Row 1 ATC | PT010 |
+| Schedule 1 Row 1 Taxable Amount | ₱0.00 |
+| Schedule 1 Row 1 Tax Rate | 0.03 |
+| Schedule 1 Row 1 Tax Due | ₱0.00 |
+| Schedule 1 Item 7 Total | ₱0.00 |
+| Item 14 Total Tax Due | ₱0.00 |
+| Item 18 Total Credits | ₱0.00 |
+| Item 19 Tax Still Payable | ₱0.00 |
+| Item 23 Total Penalties | ₱0.00 (if filed on time) |
+| Total Amount Payable | ₱0.00 |
+
+**Why file a NIL return?** Failure to file any required return — even a ₱0 return — constitutes a violation of Sec. 255 (failure to file a return), subject to compromise penalty (₱1,000 first offense). The BIR tracks filing compliance separately from payment compliance. A taxpayer who earned nothing in a quarter still has a FILING obligation under their Registration Certificate.
+
+### 11.8 8% Election — Which Q1 Return to File
+
+When a taxpayer chooses to declare their 8% election on Form 2551Q (as opposed to Form 1701Q or their Certificate of Registration), they must complete Q1 Form 2551Q as follows:
+
+| Scenario | Item 13 Value | Schedule 1 Tax Due | Q2-Q4 Form 2551Q |
+|----------|--------------|-------------------|-----------------|
+| Electing 8% on Q1 Form 2551Q | "8% income tax rate" checked | ₱0.00 (waived) | Not filed |
+| Electing graduated on Q1 Form 2551Q | "Graduated income tax rate" checked | `GR × 0.03` | Filed for all remaining quarters |
+| Electing 8% on Q1 Form 1701Q (not on 2551Q) | Not applicable — don't file 2551Q at all | — | Not filed |
+| Electing 8% on Certificate of Registration (new registrant) | Not applicable — don't file 2551Q at all | — | Not filed |
+
+**Irrevocability rule:** Once Q1 Form 2551Q (or Q1 Form 1701Q) is filed with a rate election declared, the election CANNOT be changed for that taxable year. A taxpayer who filed Q1 Form 2551Q with "Graduated income tax rate" checked cannot switch to 8% for the remainder of that year. They are locked in for all four quarters.
