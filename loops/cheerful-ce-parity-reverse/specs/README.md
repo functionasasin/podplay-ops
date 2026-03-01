@@ -2,7 +2,7 @@
 
 ## Status
 
-Wave 2 tool design in progress. Campaign, Email, and Creators domains complete. Other domains pending.
+Wave 2 tool design in progress. Campaign, Email, Creators, Integrations, and Users & Team domains complete. Other domains pending.
 
 ## Domains
 
@@ -11,8 +11,8 @@ Wave 2 tool design in progress. Campaign, Email, and Creators domains complete. 
 | Campaigns | `campaigns.md` | 1 | 30 | 31 | Wave 2 complete |
 | Email | `email.md` | 3 | 21 | 24 | Wave 2 complete |
 | Creators | `creators.md` | 3 | 24 | 27 | Wave 2 complete |
-| Integrations | `integrations.md` | 0 | ~12 | ~12 | Wave 1 complete |
-| Users & Team | `users-and-team.md` | 0 | ~16 | ~16 | Wave 1 complete |
+| Integrations | `integrations.md` | 0 | 18 | 18 | Wave 2 complete |
+| Users & Team | `users-and-team.md` | 0 | 13 | 13 | Wave 2 complete |
 | Analytics | `analytics.md` | 0 | ~1 | ~1 | Wave 1 complete |
 | Search & Discovery | `search-and-discovery.md` | 0 | ~9 | ~9 | Wave 1 complete |
 | Workflows | `workflows.md` | 0 | ~7 | ~7 | Wave 1 complete |
@@ -123,6 +123,47 @@ Wave 2 tool design in progress. Campaign, Email, and Creators domains complete. 
 | 81 | `cheerful_get_public_creator_profile` | Public SEO | Get single public creator profile | NEW |
 | 82 | `cheerful_trigger_creator_scrape` | Public SEO | Trigger async creator profile scrape | NEW |
 
-### New Tools — Other Domains (pending design)
+### New Tools — Integrations Domain (18)
 
-*Tool designs for Integrations, Users & Team, Analytics, Search & Discovery, and Workflows domains will be added as Wave 2 progresses.*
+| # | Tool Name | Sub-domain | Description | Status |
+|---|-----------|------------|-------------|--------|
+| 83 | `cheerful_list_gmail_accounts` | Gmail | List connected Gmail accounts and sync status | NEW |
+| 84 | `cheerful_get_gmail_sync_status` | Gmail | Get sync status for a specific Gmail account | NEW |
+| 85 | `cheerful_list_smtp_accounts` | SMTP | List all SMTP accounts | NEW |
+| 86 | `cheerful_get_smtp_account` | SMTP | Get single SMTP account by ID | NEW |
+| 87 | `cheerful_create_smtp_account` | SMTP | Create new SMTP account with IMAP config | NEW |
+| 88 | `cheerful_update_smtp_account` | SMTP | Update SMTP account settings (partial) | NEW |
+| 89 | `cheerful_delete_smtp_account` | SMTP | Delete SMTP account | NEW |
+| 90 | `cheerful_bulk_import_smtp_accounts` | SMTP | Bulk import SMTP accounts with IMAP verification | NEW |
+| 91 | `cheerful_get_google_sheet_tabs` | Google Sheets | Get tab names from a Google Sheet URL | NEW |
+| 92 | `cheerful_list_shopify_products` | Shopify | List Shopify products via GoAffPro proxy | NEW |
+| 93 | `cheerful_create_shopify_order` | Shopify | Create draft Shopify order for creator | NEW |
+| 94 | `cheerful_get_instantly_status` | Instantly | Get Instantly (Composio) connection status | NEW |
+| 95 | `cheerful_connect_instantly` | Instantly | Connect Instantly via Composio broker | NEW |
+| 96 | `cheerful_disconnect_instantly` | Instantly | Disconnect Instantly integration | NEW |
+| 97 | `cheerful_test_instantly_connection` | Instantly | Test Instantly connection health | NEW |
+| 98 | `cheerful_trigger_slack_digest` | Slack | Trigger Slack campaign digest | NEW |
+| 99 | `cheerful_find_youtube_lookalikes` | YouTube | Find similar YouTube channels via Apify + LLM | NEW |
+| 100 | `cheerful_lookup_brand` | Brand | Detect brand info from URL | NEW |
+
+### New Tools — Users & Team Domain (13)
+
+| # | Tool Name | Sub-domain | Description | Status |
+|---|-----------|------------|-------------|--------|
+| 101 | `cheerful_get_user_settings` | User Settings | Get user settings metadata | NEW |
+| 102 | `cheerful_list_connected_accounts` | Connected Accounts | List all connected accounts (Gmail + SMTP) unified view | NEW |
+| 103 | `cheerful_list_teams` | Team Management | List teams user belongs to | NEW |
+| 104 | `cheerful_create_team` | Team Management | Create new team (caller becomes owner) | NEW |
+| 105 | `cheerful_get_team` | Team Management | Get team details with full member list | NEW |
+| 106 | `cheerful_delete_team` | Team Management | Delete team (cascades to campaign assignments) | NEW |
+| 107 | `cheerful_add_team_member` | Team Management | Add member by email (auto-invites new users) | NEW |
+| 108 | `cheerful_remove_team_member` | Team Management | Remove member (cascades to campaign assignments) | NEW |
+| 109 | `cheerful_list_my_campaign_assignments` | Assignments | List campaigns assigned to current user | NEW |
+| 110 | `cheerful_list_campaign_assignments` | Assignments | List assignments for a specific campaign | NEW |
+| 111 | `cheerful_assign_campaign` | Assignments | Assign campaign to team member | NEW |
+| 112 | `cheerful_unassign_campaign` | Assignments | Remove campaign assignment from member | NEW |
+| 113 | `cheerful_bulk_assign_campaigns` | Assignments | Bulk assign campaigns to member | NEW |
+
+### New Tools — Remaining Domains (pending design)
+
+*Tool designs for Analytics, Search & Discovery, and Workflows domains will be added as Wave 2 progresses. Onboarding status tool (`cheerful_get_onboarding_status`) listed in `specs/users-and-team.md` but not numbered here pending Wave 3 (requires new backend endpoint).*
