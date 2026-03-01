@@ -1801,6 +1801,22 @@ cheerful_create_email_signature(
 cheerful_get_email_signature(signature_id="f1a2b3c4-d5e6-7890-abcd-ef1234567890")
 ```
 
+**Example Response**:
+```json
+{
+  "id": "f1a2b3c4-d5e6-7890-abcd-ef1234567890",
+  "user_id": "u1a2b3c4-d5e6-7890-abcd-ef1234567890",
+  "name": "Emily — Default",
+  "content": "<p>Best regards,<br>Emily Chen<br>Brand Partnerships @ BrandX</p>",
+  "is_default": true,
+  "campaign_id": null,
+  "campaign_name": null,
+  "is_enabled": false,
+  "created_at": "2026-01-15T10:00:00Z",
+  "updated_at": "2026-02-20T14:30:00Z"
+}
+```
+
 **Slack Formatting Notes**:
 - Display signature name, content preview (first 200 chars of HTML stripped to text), and metadata
 
@@ -1860,6 +1876,22 @@ cheerful_update_email_signature(
 )
 ```
 
+**Example Response**:
+```json
+{
+  "id": "f1a2b3c4-d5e6-7890-abcd-ef1234567890",
+  "user_id": "u1a2b3c4-d5e6-7890-abcd-ef1234567890",
+  "name": "Emily — Default",
+  "content": "<p>Cheers,<br>Emily Chen<br>Senior Brand Partnerships @ BrandX</p>",
+  "is_default": true,
+  "campaign_id": null,
+  "campaign_name": null,
+  "is_enabled": false,
+  "created_at": "2026-01-15T10:00:00Z",
+  "updated_at": "2026-03-01T09:45:00Z"
+}
+```
+
 **Slack Formatting Notes**:
 - Confirm: "Signature '[name]' updated"
 
@@ -1903,6 +1935,11 @@ cheerful_update_email_signature(
 **Example Request**:
 ```
 cheerful_delete_email_signature(signature_id="f2b3c4d5-e6f7-8901-bcde-f23456789012")
+```
+
+**Example Response**:
+```
+HTTP 204 No Content — empty response body
 ```
 
 **Slack Formatting Notes**:

@@ -1338,7 +1338,7 @@ This type appears in creator listings, creator detail, search results, and creat
 ```json
 {
   "id": "string (uuid) — creator.id (distinct from campaign_creator.id)",
-  "platform": "string — One of: instagram, youtube, tiktok, twitter, etc.",
+  "platform": "string — Known values in current implementation: `instagram`, `youtube`. Free-form text field with no DB constraint — historical data may contain other values. The `social_media_handles` JSONB on CampaignCreator supports: `instagram`, `twitter`, `facebook`, `youtube`, `tiktok`, `linkedin`, `other`.",
   "handle": "string — Platform username",
   "email": "string | null",
   "follower_count": "integer — Default 0",

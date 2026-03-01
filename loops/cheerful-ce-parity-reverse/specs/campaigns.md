@@ -459,7 +459,7 @@ cheerful_get_campaign(campaign_id="550e8400-e29b-41d4-a716-446655440000", includ
   ```
 - If `include_sender_details=true`, show per-sender breakdown
 - Omit null/empty fields from display
-- For AI config fields (`agent_name_for_llm`, `rules_for_llm`, etc.), only show if explicitly asked
+- For AI config fields (`agent_name_for_llm`, `rules_for_llm`, `goal_for_llm`, `frequently_asked_questions_for_llm`, `sample_emails_for_llm`), only show if explicitly asked
 
 **Edge Cases**:
 - Campaign exists but user has no access: Returns 403 "Not authorized"
@@ -529,7 +529,7 @@ cheerful_get_campaign(campaign_id="550e8400-e29b-41d4-a716-446655440000", includ
 - Each `product_ids` entry must exist and be owned by user. Same error messages as `product_id`.
 - `cc_emails` entries must be valid email format. Invalid returns 422.
 
-**Return Schema**: Same as `cheerful_get_campaign` response (full `CampaignResponse`). Stats fields (`sent_count`, etc.) are `null` (not computed on create). `sender_details` is `null`. `recipient_emails` and `sender_emails` populated from newly created records.
+**Return Schema**: Same as `cheerful_get_campaign` response (full `CampaignResponse`). Stats fields (`sent_count`, `thread_count`, `pending_count`, `failed_count`, `total_recipients`) are all `null` (not computed on create). `sender_details` is `null`. `recipient_emails` and `sender_emails` populated from newly created records.
 
 **Error Responses**:
 

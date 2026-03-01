@@ -135,10 +135,7 @@
     "cancelled_count": "integer — follow-ups with status='cancelled'",
     "failed_count": "integer — follow-ups with status='failed'",
     "cancellation_rate": "float | null — round((cancelled_count / total_follow_ups) * 100, 1). Percentage 0-100. Null if total_follow_ups is 0.",
-    "conversions_by_follow_up_number": {
-      "1": "integer — count of sent follow-ups at position 1",
-      "2": "integer — count of sent follow-ups at position 2 (etc.)"
-    }
+    "conversions_by_follow_up_number": "object (dynamic keys) — Keys are follow-up sequence numbers as strings (e.g., \"1\", \"2\", \"3\"). Values are integer counts of sent follow-ups at that sequence position. Only positions that have sent follow-ups appear as keys. Example: {\"1\": 34, \"2\": 18, \"3\": 7}"
   },
 
   "campaign_type_stats": [

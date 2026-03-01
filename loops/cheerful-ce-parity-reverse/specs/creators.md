@@ -240,7 +240,7 @@ cheerful_get_campaign_creator(campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890"
 - Present as a structured profile card: name, email, role, social handles (as links)
 - Key status fields in a summary line: "Gifting: {gifting_status} | Paid: {paid_promotion_status}"
 - Notes history as a threaded reply if more than 2 notes
-- Social handles with platforms shown as emoji: 📷 Instagram, 🎵 TikTok, ▶️ YouTube, etc.
+- Social handles with platforms shown as emoji: 📷 Instagram, 🎵 TikTok, ▶️ YouTube, 🐦 Twitter, 👔 LinkedIn, 📘 Facebook
 
 **Edge Cases**:
 - `notes_history` can be empty `[]`
