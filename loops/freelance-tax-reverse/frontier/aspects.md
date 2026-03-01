@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 54
-- Analyzed: 23
-- Pending: 31
-- Convergence: 43%
+- Analyzed: 24
+- Pending: 30
+- Convergence: 44%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -36,7 +36,7 @@ Extract every computation rule, decision tree, and lookup table from source mate
 - [x] annual-reconciliation — Annual ITR (1701/1701A) vs. quarterly payments, how to compute balance payable/refundable
 - [x] filing-calendar — All BIR deadlines: quarterly (April 15, Aug 15, Nov 15), annual (April 15), percentage tax, registration
 - [x] bir-form-1701-field-mapping — Every field on BIR Form 1701, what feeds it, computation source
-- [ ] bir-form-1701a-field-mapping — Every field on BIR Form 1701A (simplified), what feeds it
+- [x] bir-form-1701a-field-mapping — Every field on BIR Form 1701A (simplified), what feeds it
 - [ ] scenario-enumeration — Code every scenario: low-income freelancer, high-income professional, mixed-income employee+freelancer, VAT-registered, non-VAT, with/without expenses, etc.
 - [ ] edge-cases — Catalog: first-year taxpayer mid-year, switching regimes, exceeding ₱3M mid-year, zero-expense freelancer, foreign-sourced income
 
