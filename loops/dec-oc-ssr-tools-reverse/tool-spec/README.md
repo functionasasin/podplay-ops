@@ -6,7 +6,7 @@ Implementation-ready specification for adding SSR (Semantic Similarity Rating) c
 
 Wave 1: Audit & Map — 5/5 complete
 Wave 2: Design — 7/7 complete
-Wave 3: Synthesis & Integration — 3/4 complete
+Wave 3: Synthesis & Integration — 4/4 complete
 
 ---
 
@@ -81,6 +81,6 @@ End-to-end worked examples.
 
 | File | Status | Contents |
 |------|--------|----------|
-| [example-ad-copy-test.md](examples/example-ad-copy-test.md) | ⬜ Pending | Full walkthrough: ad copy → panel → results |
-| [example-product-concept.md](examples/example-product-concept.md) | ⬜ Pending | Full walkthrough: product concept → panel → results |
-| [example-influencer-fit.md](examples/example-influencer-fit.md) | ⬜ Pending | Full walkthrough: influencer fit → panel → results |
+| [example-ad-copy-test.md](examples/example-ad-copy-test.md) | ✅ Complete | Full A/B test walkthrough: Filipino moms panel, Lucky Me social captions Version A (emotional) vs B (practical), 3 dimensions (purchase_intent, message_clarity, personal_relevance), exact tool calls + XML outputs + Discord comparison post + optional detailed retrieval |
+| [example-product-concept.md](examples/example-product-concept.md) | ✅ Complete | Full product concept walkthrough: Metro Manila health millennials, plant-based Filipino protein bar, 4 dimensions (purchase_intent, value_perception, uniqueness, brand_favorability), exact tool calls + XML outputs + Discord results + follow-up segmentation Q&A |
+| [example-influencer-fit.md](examples/example-influencer-fit.md) | ✅ Complete | Full influencer fit walkthrough: Gen Z Filipino fitness panel, Agos Athletics × @markfit.ph partnership, 4 dimensions (personal_relevance, trust_credibility, emotional_response, share_worthiness), detailed format, Discord thread delivery with multi-message breakdown, comparison flow note |

@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 16
-- Analyzed: 15
-- Pending: 1
-- Convergence: 94%
+- Analyzed: 16
+- Pending: 0
+- Convergence: 100%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -32,9 +32,10 @@ Bring everything together into a cohesive implementation spec.
 - [x] w3-catalog-registration — Write exact code for registering SSR tools in Daimon's catalog
 - [x] w3-workflow-design — Design how SSR tools become Daimon workflows (trigger type, scoping)
 - [x] w3-discord-ux — Design Discord UX (progress indicators, result rendering, comparison views)
-- [ ] w3-examples — Write 3 end-to-end examples (ad copy, product concept, influencer fit)
+- [x] w3-examples — Write 3 end-to-end examples (ad copy, product concept, influencer fit)
 
 ## Recently Analyzed
+- [x] w3-examples — 3 end-to-end examples written to `tool-spec/examples/`. (1) `example-ad-copy-test.md`: Filipino moms panel (30–45), A/B test of Lucky Me social captions (emotional vs practical), 20 personas, 3 dimensions, includes exact tool call JSON, XML outputs for both runs, Discord comparison post, optional detailed retrieval via `ssr_panel_results` with `comparison_run_id`. (2) `example-product-concept.md`: Metro Manila health millennials panel (18–38, mixed), plant-based Filipino protein bar concept test, 4 dimensions, includes optional follow-up segmentation Q&A (answered from existing XML without new tool call). (3) `example-influencer-fit.md`: Gen Z Filipino fitness panel, Agos Athletics × @markfit.ph influencer fit, `influencer_brief` stimulus type, 4 dimensions, `response_format=detailed`, Discord thread delivery (multi-message), note on comparison vs second influencer. All examples include: exact Discord user message, bot pre-tool acknowledgment, exact tool call JSON, tool XML output, final Discord message rendering, optional follow-up, tool call summary table with costs and wall times.
 - [x] w3-discord-ux — Full Discord UX spec written to `discord-ux.md`. Expanded stub §5 into full progress indicator specification (pre/inter/post-tool text by operation, timing table, streaming architecture rationale). Added §6 complete error rendering for all 5 tools (24 errors across panel_create/run/results/list/delete). Added §7 panel list rendering (zero/one/many panels, persona listing format). Added §8 panel delete rendering (delete confirmation, "delete all" flow, safety pre-narration requirement). Added §9 thread creation decision algorithm (Option A: in-channel multi-message splitting preferred; Option B: thread tool future-proofing). Added §10 Unicode distribution bar algorithm (Python code + 6 examples). Added §11 Discord markdown limitations (what works, what doesn't, table formatting notes, quote truncation rules). Added §13 partial panel creation rendering. All existing §1–4 and §6 (error stub) content preserved and superseded/expanded.
 - [x] w3-workflow-design — No dedicated workflow type needed. SSR tools go in `ALL_TOOLS` as standard tools. 3 code changes beyond catalog-registration: (1) 13 keyword additions to `KEYWORD_PLATFORM_MAP` in `selection.py` for `Platform.SSR`; (2) `<consumer-panel>` section added to `base.txt` (chaining rules, defaults, result presentation guidance); (3) `Platform.SSR` case added to `get_platform_context()` in `meta_tools.py`. Trigger: active @mention or DM. No channel/user scoping. No authentication required. Multi-step flows: create→run→results chain in single agent turn. Comparison flow: two sequential `ssr_panel_run` calls then `ssr_panel_results` with comparison_run_id. Full chaining examples for 4 user flows (single-turn, reuse, comparison, explicit management).
 - [x] w2-pydantic-models — 22 types in one file (`models.py`): 3 enums (`StimulusType` 10 values, `EvaluationDimension` 10 values, `ResponseFormat` 3 values); 7 Pydantic v2 input models with all fields, validators, and descriptions; 11 pipeline dataclasses (incl. `DimensionScore`, `PersonaResponse`, `AggregatedDimensionResult`, `RetrievedRunResult`, `DimensionComparison`, `AnchorPoint`, `AnchorSet`); 6 DB row dataclasses mirroring all 6 table schemas; 2 output dataclasses (`SsrPanelSummary`, `SsrDeleteResult`). New models defined here: `PanelListInput`, `PanelDeleteInput`, `SsrPanelRow`, `SsrPersonaRow`, `SsrAnchorSetRow`, `SsrPanelSummary`, `SsrDeleteResult`. Includes type dependency graph, module-level import lists for `tools.py`/`api.py`/`db/repositories/`. Note: `SsrPersonaRow` documented but repo returns `SsrPersonaSummary`; `SsrAnchorSetRow` documented but repo returns `AnchorSet`.
