@@ -1042,3 +1042,230 @@ Compare with itemized (hypothetical 55% expense ratio):
 - Itemized wins (expense ratio > 40%)
 
 **Legal basis:** NIRC Sec. 34(L) — no income ceiling or VAT exclusion for individual OSD
+
+---
+
+## Group EC-ID: Itemized Deductions Edge Cases
+
+### EC-ID01: Home Office — Shared Workspace (Dual Use)
+**Scenario:** A freelancer uses a spare bedroom as a home office 8 hours per day for work, and it doubles as a guest room on weekends.
+
+**What the engine must do:**
+A home office deduction is allowed ONLY for space used **exclusively and regularly** for business. A room that is also used as a guest room does NOT qualify.
+
+**Engine behavior:**
+- If user answers "Yes, I use my home office exclusively for business" → include home office expense
+- If user answers "No, the room is also used personally" → set home_office_expense = 0 and display:
+  > "Home office deductions require exclusive business use. Rooms that double as personal space (guest rooms, bedrooms) are not deductible. If you have a clearly dedicated workspace (separate room, partition, or designated area used only for work), you may still qualify."
+
+**Resolution:** Engine enforces the "exclusive use" requirement through a checkbox acknowledgment. If user confirms exclusive use, expense is included; if not, it is excluded.
+
+**Legal basis:** NIRC Sec. 34(A)(1); general principle of ordinary and necessary business expenses
+
+---
+
+### EC-ID02: Dual-Use Equipment — Computer Used for Both Work and Personal Use
+**Scenario:** A freelancer uses one MacBook Pro for both client work and personal Netflix, gaming, and social media. They want to deduct the full cost.
+
+**What the engine must do:**
+Only the business-use percentage is deductible. The engine must prompt for the business use percentage.
+
+**Engine behavior:**
+- Engine prompts: "What percentage of this device's usage is for business? (e.g., 70% = 70% of annual depreciation is deductible)"
+- User enters: 75%
+- Engine computes: `deductible_depreciation = annual_sl_depreciation × 0.75`
+- No validation of user's stated percentage (engine accepts user's estimate)
+- Engine displays MRF-003 variant: "Business use percentage for dual-use equipment is based on your own records. BIR may request logbook evidence during audit."
+
+**Legal basis:** NIRC Sec. 34(F); general principle of prorating expenses between personal and business use
+
+---
+
+### EC-ID03: EAR Cap — Service Provider with Client Entertainment
+**Scenario:** A lawyer spends ₱50,000 on client dinners and a golf club membership for business entertainment, but has only ₱2,000,000 in gross receipts.
+
+**EAR Cap computation:**
+```
+ear_cap = ₱2,000,000 × 0.01 = ₱20,000
+actual_ear = ₱50,000
+deductible_ear = min(₱50,000, ₱20,000) = ₱20,000
+```
+
+**Engine behavior:**
+- Engine caps the EAR deduction at ₱20,000
+- Displays warning: "Your entertainment, amusement, and recreation (EAR) expenses (₱50,000) exceed the deductible limit of 1% of gross receipts (₱20,000). Only ₱20,000 is allowed as a deduction per NIRC Sec. 34(A)(1) and RR 10-2002."
+- The remaining ₱30,000 of EAR is permanently disallowed (cannot be carried forward)
+
+**Legal basis:** NIRC Sec. 34(A)(1); RR No. 10-2002
+
+---
+
+### EC-ID04: Depreciation — Asset Purchased Mid-Year
+**Scenario:** A freelancer buys a ₱80,000 camera in June 2025 (6 months into the taxable year). Do they get a full year's depreciation for 2025?
+
+**Engine behavior:**
+```
+// For assets purchased mid-year, prorate depreciation to months of use
+full_year_depreciation = (80,000 - 0) / 5 = ₱16,000
+months_of_use_in_year = 12 - 6 + 1 = 7  // June through December = 7 months
+prorated_depreciation = 16,000 × (7/12) = ₱9,333.33
+
+// Deductible for 2025: ₱9,333.33
+// Deductible for 2026-2030: ₱16,000/year
+// Final year (2030): remaining basis
+```
+
+**Engine input required:** `month_of_purchase` for each asset in the depreciation schedule.
+
+**Note:** BIR practice allows full-month convention (month of purchase counts as a full month). Engine uses whole-month convention.
+
+**Legal basis:** NIRC Sec. 34(F); RR 2-98 — no specific proration rule stated, but consistent treatment required
+
+---
+
+### EC-ID05: NOLCO — Taxpayer Switches Between Itemized and OSD Across Years
+**Scenario:** Taxpayer used itemized deductions in 2023 (had a net operating loss of ₱200,000). In 2024, they elected OSD. In 2025, they return to itemized deductions. Can they use the 2023 NOLCO?
+
+**Rule:** NOLCO is SUSPENDED (not forfeited) during years when OSD or 8% is used. The 3-year carry-over window continues to count, but the suspended year's NOLCO cannot be applied.
+
+```
+2023: Itemized → NOL = ₱200,000 (origin year 2023, expires after 2026)
+2024: OSD → NOLCO suspended (cannot use 2023 NOLCO in 2024)
+2025: Itemized → NOLCO resumed
+  available_nolco = ₱200,000 (origin 2023, expires 2026, not yet expired)
+  apply to 2025 NTI → NOLCO of ₱200,000 deductible if NTI > 0
+
+2026: Last year to use the 2023 NOLCO (expires after 2026)
+```
+
+**Engine behavior:**
+- Track each NOLCO entry with: origin_year, remaining amount, expiry year (origin + 3), is_suspended flag
+- is_suspended flag does NOT extend the carry-over period; it only prevents use for that year
+- If 2024 OSD year causes NOLCO to lapse due to expiry, engine must warn user
+
+**Warning message:**
+> "Your 2023 Net Operating Loss (NOLCO) of ₱200,000 was suspended in 2024 when you used OSD. It expires after TY2026. If you plan to return to itemized deductions, use this NOLCO in 2025 or 2026."
+
+**Legal basis:** NIRC Sec. 34(D)(3); BIR Revenue Memorandum Circulars on NOLCO application
+
+---
+
+### EC-ID06: Interest Expense — Arbitrage Reduction Edge Case
+**Scenario:** A freelancer has ₱30,000 in bank interest income (subject to 20% FWT) and ₱20,000 in interest paid on a business loan. Is the full ₱20,000 deductible?
+
+**Engine computation:**
+```
+interest_income_subject_to_fwt = ₱30,000
+arbitrage_adjustment = ₱30,000 × 0.33 = ₱9,900
+gross_interest_expense = ₱20,000
+deductible_interest = MAX(0, ₱20,000 - ₱9,900) = ₱10,100
+```
+
+**Engine behavior:**
+- Engine computes and applies the reduction automatically
+- Displays informational note: "Your interest deduction has been reduced by ₱9,900 (33% of your ₱30,000 interest income already subject to 20% final withholding tax) to prevent tax arbitrage. NIRC Sec. 34(B)(1)."
+
+**Edge case variant:** What if the arbitrage adjustment exceeds the gross interest expense?
+```
+interest_income_fwt = ₱90,000
+arbitrage_adjustment = ₱90,000 × 0.33 = ₱29,700
+gross_interest_expense = ₱15,000
+deductible_interest = MAX(0, ₱15,000 - ₱29,700) = MAX(0, -₱14,700) = ₱0
+// No interest deduction at all; do NOT allow negative interest deduction
+```
+
+**Legal basis:** NIRC Sec. 34(B)(1) as amended by TRAIN
+
+---
+
+### EC-ID07: Bad Debt — Receivable That Was Never Included in Income
+**Scenario:** A freelancer on the accrual basis billed ₱50,000 for services but the client never paid. The freelancer writes off the receivable as a bad debt. Is it deductible?
+
+**Rule:** Bad debts are only deductible if the receivable was **previously included in gross income**. For a cash-basis taxpayer, income is only recognized when received — so an uncollected receivable was never in gross income and cannot become a bad debt deduction.
+
+**Engine behavior:**
+- Engine must ask: "Are you on cash basis or accrual basis for income recognition?"
+  - Cash basis: Bad debt deduction = ₱0 (uncollected never entered gross income; flag and explain)
+  - Accrual basis: Bad debt deduction available if: (a) included in prior-year gross income, (b) actually ascertained as worthless, (c) written off in books
+- Display: If cash basis and bad debts claimed, engine rejects: "On cash-basis accounting, only amounts actually received are included in gross income. Unpaid receivables are not deductible as bad debts because they were never recognized as income."
+
+**Note:** Most freelancers are de facto cash-basis (they recognize income when received). Engine should default to cash basis and flag bad debt attempts.
+
+**Legal basis:** NIRC Sec. 34(E)
+
+---
+
+### EC-ID08: Charitable Contribution — NPO Cap Computation
+**Scenario:** A doctor has net taxable income before charitable deduction of ₱800,000 and wants to deduct ₱100,000 donated to a BIR-accredited nonprofit hospital.
+
+**Engine computation:**
+```
+// NPO charitable deduction cap: 10% of NTI before this deduction
+nti_before_charitable = ₱800,000
+charitable_npo_cap = ₱800,000 × 0.10 = ₱80,000
+charitable_npo_claimed = ₱100,000
+
+// Deductible amount:
+charitable_npo_allowed = min(₱100,000, ₱80,000) = ₱80,000
+
+// Warning: ₱20,000 excess is permanently disallowed
+```
+
+**Engine display:** "Your donation of ₱100,000 to [nonprofit name] exceeds the 10% of net taxable income limit (₱80,000). Only ₱80,000 is deductible. The remaining ₱20,000 cannot be carried forward."
+
+**Note on government donations (fully deductible):** If the donation is to a government agency for a priority program (DENR, DSWD, DepEd, DOH, etc.), there is NO ceiling. Engine must distinguish between government vs. NPO recipients.
+
+**Legal basis:** NIRC Sec. 34(H)
+
+---
+
+### EC-ID09: NOLCO Expiry — Partial Use
+**Scenario:** Taxpayer has NOLCO entries from multiple years:
+- 2022: ₱300,000 (expires after 2025)
+- 2023: ₱150,000 (expires after 2026)
+Current year is 2025. Net income before NOLCO = ₱200,000.
+
+**Engine applies FIFO (oldest first):**
+```
+available_nolco = [
+  {origin: 2022, remaining: 300,000, expires: 2025},
+  {origin: 2023, remaining: 150,000, expires: 2026}
+]
+net_income_before_nolco = ₱200,000
+
+// Apply 2022 NOLCO first (expires 2025 — THIS IS THE LAST YEAR):
+use_2022 = min(300,000, 200,000) = ₱200,000
+remaining_after_2022 = 300,000 - 200,000 = ₱100,000 (EXPIRES UNUSED)
+net_income_after_2022 = 200,000 - 200,000 = ₱0
+
+// 2023 NOLCO: net income is now ₱0; no further NOLCO needed
+// NTI = ₱0; Income Tax = ₱0
+
+// CRITICAL: ₱100,000 of 2022 NOLCO expires unutilized at end of 2025!
+```
+
+**Engine warning:** "₱100,000 of your 2022 NOLCO will expire unused at the end of TY2025 because your taxable income was fully offset by ₱200,000. The remaining ₱100,000 CANNOT be carried to 2026."
+
+**Legal basis:** NIRC Sec. 34(D)(3) — 3-year carry-over, FIFO application
+
+---
+
+### EC-ID10: Depreciation — Luxury Vehicle Cost Ceiling
+**Scenario:** A real estate broker uses a Toyota Land Cruiser (purchase price ₱4,500,000) for business client visits. They want to deduct depreciation.
+
+**Engine computation:**
+```
+// Vehicle cost ceiling for sedans/passenger cars (per BIR guidance): ₱2,400,000
+// Land Cruiser classified as SUV/utility vehicle; same ceiling applied per BIR practice
+depreciable_cost = min(₱4,500,000, ₱2,400,000) = ₱2,400,000
+salvage_value = ₱0
+useful_life = 5 years
+annual_depreciation = ₱2,400,000 / 5 = ₱480,000
+
+// If vehicle is 80% business use:
+deductible_depreciation = ₱480,000 × 0.80 = ₱384,000/year
+```
+
+**Engine display:** "The cost ceiling for vehicles is ₱2,400,000 per BIR Revenue Regulations. Your vehicle's cost of ₱4,500,000 has been capped at ₱2,400,000 for depreciation purposes. Annual depreciation: ₱480,000 × [business_use]% = ₱[deductible]."
+
+**Legal basis:** BIR Revenue Regulations (vehicle depreciation cap); NIRC Sec. 34(F)

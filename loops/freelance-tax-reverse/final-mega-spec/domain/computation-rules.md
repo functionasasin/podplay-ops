@@ -1853,6 +1853,313 @@ function eight_pct_crossover_with_osd(gross_receipts: decimal) -> string:
 
 ---
 
+---
+
+## CR-027: Itemized Deductions — Full Computation Rules (Path A)
+
+**Legal basis:** NIRC Sections 34(A)–(K) and 36, as amended by TRAIN (RA 10963) and EOPT Act (RA 11976)
+**Last updated:** 2026-03-01
+**See also:** [lookup-tables/itemized-deductions.md](lookup-tables/itemized-deductions.md) — complete deduction categories, limits, documentation, and disallowed items
+
+### CR-027-A: Path A — Complete Computation with Itemized Deductions
+
+```
+function compute_path_a(
+  gross_receipts: decimal,               // Total gross receipts from business/profession
+  itemized_deductions: ItemizedDeductions,  // See data model in lookup-tables/itemized-deductions.md
+  is_service_provider: bool,             // true = service/professional; false = trader
+  net_sales: decimal = 0,               // For traders: gross sales - returns - allowances
+  cost_of_goods_sold: decimal = 0,      // For traders only
+  passive_income_fwt: decimal = 0,      // Excluded from computation base
+  is_vat_registered: bool = false,
+  current_tax_year: int
+) -> PathAResult:
+
+  // Step 1: Compute Gross Income
+  if is_service_provider:
+    gross_income = gross_receipts - passive_income_fwt
+  else:
+    // Trader: gross income = net sales - COGS
+    gross_income = (net_sales - cost_of_goods_sold) - passive_income_fwt
+    assert gross_income >= 0, "Trader gross income cannot be negative — use NOLCO rules"
+
+  // Step 2: Compute Allowable Itemized Deductions
+  allowable = compute_itemized_deductions(
+    itemized_deductions,
+    gross_receipts,
+    is_service_provider,
+    net_sales
+  )
+  // compute_itemized_deductions is defined in lookup-tables/itemized-deductions.md Part 9
+
+  // Step 3: Compute Net Taxable Income (cannot be negative)
+  net_taxable_income = max(0, gross_income - allowable.total_allowable)
+
+  // Step 4: Compute Income Tax (Path A)
+  if current_tax_year >= 2023:
+    income_tax_path_a = graduated_tax_2023(net_taxable_income)
+  else:
+    income_tax_path_a = graduated_tax_2018(net_taxable_income)
+
+  // Step 5: Compute Percentage Tax (if non-VAT registered)
+  if is_vat_registered:
+    percentage_tax_path_a = 0  // VAT applies instead; this tool does not compute VAT
+  else:
+    percentage_tax_path_a = round(gross_receipts * 0.03, 2)
+
+  // Step 6: Total Tax Burden
+  total_path_a = round(income_tax_path_a + percentage_tax_path_a, 2)
+
+  return PathAResult {
+    gross_income: gross_income,
+    allowable_deductions: allowable.total_allowable,
+    deduction_subtotals: allowable.subtotals,
+    net_taxable_income: net_taxable_income,
+    income_tax: income_tax_path_a,
+    percentage_tax: percentage_tax_path_a,
+    total_tax: total_path_a,
+    nolco_applied: allowable.nolco_applied,
+    ear_cap_applied: allowable.ear_cap,
+    warnings: allowable.warnings,
+    nolco_remaining_after: [entry with updated remaining amounts]  // for user's records
+  }
+```
+
+### CR-027-B: Itemized Deductions Input Validation
+
+Before computing Path A, the engine must validate the ItemizedDeductions input:
+
+```
+function validate_itemized_deductions(d: ItemizedDeductions, gross_receipts: decimal) -> ValidationResult:
+  errors = []
+  warnings = []
+
+  // Must be non-negative values
+  for field in all_decimal_fields_of(d):
+    if field.value < 0:
+      errors.append(f"Deduction field '{field.name}' cannot be negative (got {field.value})")
+
+  // EAR flag: compute and compare to cap (do not error; just warn — capping is handled in compute function)
+  ear_cap_service = gross_receipts * 0.01
+  if d.ear_expense > ear_cap_service * 1.5:
+    warnings.append(f"EAR expenses (₱{d.ear_expense:,.2f}) are significantly above the deductible cap (₱{ear_cap_service:,.2f}). Only ₱{ear_cap_service:,.2f} is deductible.")
+
+  // NOLCO flag if OSD or 8% would be better recommendation
+  for entry in d.nolco_available:
+    if entry.origin_year + 3 < current_year:
+      warnings.append(f"NOLCO from {entry.origin_year} (₱{entry.remaining:,.2f}) has expired as of {entry.origin_year + 3}. It will not be applied.")
+
+  // Home office: if declared but no documentation commitment
+  if d.home_office_expense > 0:
+    warnings.append("Home office deduction requires documentation of exclusive business use (floor plan, photos). Ensure you can provide this upon BIR audit.")
+
+  // Bad debts: warn if no gross income evidence
+  if d.bad_debts_written_off > 0:
+    warnings.append("Bad debts deduction requires proof that the amount was previously included in gross income and has been actually ascertained as worthless.")
+
+  return ValidationResult { errors: errors, warnings: warnings, is_valid: len(errors) == 0 }
+```
+
+### CR-027-C: When Itemized Deductions Beat OSD
+
+Itemized deductions produce a lower taxable income than OSD when:
+
+```
+// For service providers (all income is gross receipts):
+total_itemized_deductions > gross_receipts * 0.40
+
+// For traders:
+total_itemized_deductions > (net_sales - cogs) * 0.40
+// (because OSD base for traders is gross income = net_sales - cogs)
+```
+
+**In practice:** The breakeven is exactly at the 40% mark of the OSD base. When actual documented and allowable expenses exceed 40% of gross income, itemized deductions produce lower NTI than OSD. See [osd-breakeven-table.md](lookup-tables/osd-breakeven-table.md) for detailed tables.
+
+**Common outcome:** Most pure service freelancers and professionals (no employees, home-based, no rent) have actual expenses well below 40% of gross receipts. For them, OSD is usually better than itemized — and 8% is usually better than OSD (if eligible). Itemized deductions primarily benefit:
+- Freelancers with employees (salaries are the largest deduction)
+- Professionals with physical office rent
+- Sole proprietors with significant COGS (traders)
+- Taxpayers with NOLCO carryovers from prior loss years
+
+### CR-027-D: Worked Examples — Path A (Itemized)
+
+**Example A: Software Developer with Office Rent and Employee**
+```
+Tax Year: 2025
+Gross Receipts: ₱1,500,000
+Business Type: Service (software development)
+is_service_provider: true
+
+Itemized Deductions:
+  salaries_wages:                ₱240,000  (one part-time assistant)
+  employer_sss_philhealth_pagibig: ₱25,000
+  rent_expense:                  ₱120,000  (co-working space, 12 months × ₱10,000)
+  communication_expense:         ₱18,000   (phone ₱6,000 + internet ₱12,000, 100% business)
+  office_supplies:               ₱15,000
+  travel_expense:                ₱30,000   (client meetings, transport)
+  professional_fees_paid:        ₱0
+  advertising_expense:           ₱12,000
+  ear_expense:                   ₱8,000    (cap = ₱1,500,000 × 1% = ₱15,000 → full ₱8,000 allowed)
+  utilities_expense:             ₱0        (included in co-working space rent)
+  insurance_expense:             ₱0
+  home_office_expense:           ₱0        (not applicable — uses co-working space)
+  other_operating_expenses:      ₱20,000
+  gross_interest_expense:        ₱0
+  local_business_tax:            ₱5,000
+  real_property_tax_business:    ₱0
+  professional_regulation_fees:  ₱1,000    (PRC renewal)
+  depreciation_schedule: [
+    {name: "MacBook Pro", cost: 100,000, salvage: 0, life: 5, method: SL, biz_pct: 1.00, year: 2024}
+    → annual_dep = 20,000
+    {name: "Monitors (×2)", cost: 40,000, salvage: 0, life: 5, method: SL, biz_pct: 1.00, year: 2025}
+    → annual_dep = 8,000
+  ]
+  // sec_34f = 20,000 + 8,000 = 28,000
+  nolco_available: []
+
+// Computation:
+sec_34a = 240,000 + 25,000 + 120,000 + 18,000 + 15,000 + 30,000 + 0 + 12,000 + 8,000 + 0 + 0 + 0 + 20,000 = 488,000
+sec_34b = 0
+sec_34c = 5,000 + 0 + 1,000 = 6,000
+sec_34d_losses = 0
+sec_34e = 0
+sec_34f = 28,000
+sec_34h = 0
+sec_34i = 0
+sec_34j = 0
+total_before_nolco = 488,000 + 0 + 6,000 + 0 + 0 + 28,000 + 0 + 0 + 0 = 522,000
+
+gross_income = 1,500,000 (service provider; passive income = 0)
+net_income_before_nolco = max(0, 1,500,000 - 522,000) = 978,000
+nolco_applied = 0
+net_taxable_income = 978,000
+
+income_tax_path_a = 102,500 + (978,000 - 800,000) × 0.25 = 102,500 + 44,500 = 147,000
+percentage_tax_path_a = 1,500,000 × 0.03 = 45,000
+total_path_a = 147,000 + 45,000 = ₱192,000
+
+// Compare:
+// Path B (OSD): NTI = 900,000; IT = 102,500 + 25,000 = 127,500; PT = 45,000; Total = 172,500
+// Path C (8%): (1,500,000 - 250,000) × 8% = 100,000; PT = 0; Total = ₱100,000
+// RECOMMENDATION: Path C (8% option) saves ₱72,500 vs. Path B and ₱92,000 vs. Path A
+// NOTE: Despite having ₱522,000 in expenses (34.8% of gross), 8% still wins for this taxpayer
+```
+
+**Example B: High-Expense Freelance Agency Owner (Itemized Wins)**
+```
+Tax Year: 2025
+Gross Receipts: ₱2,000,000
+Business Type: Creative agency (service)
+
+Itemized Deductions:
+  salaries_wages:                ₱600,000  (3 full-time contractors/employees)
+  employer_sss_philhealth_pagibig: ₱65,000
+  rent_expense:                  ₱240,000  (office space ₱20,000/month)
+  communication_expense:         ₱24,000
+  office_supplies:               ₱20,000
+  travel_expense:                ₱40,000
+  advertising_expense:           ₱30,000
+  ear_expense:                   ₱15,000   (cap = ₱2,000,000 × 1% = ₱20,000 → full ₱15,000)
+  utilities_expense:             ₱24,000
+  insurance_expense:             ₱12,000
+  local_business_tax:            ₱8,000
+  professional_regulation_fees:  ₱2,000
+  depreciation_schedule:         total sec_34f = ₱35,000
+
+// sec_34a = 600,000 + 65,000 + 240,000 + 24,000 + 20,000 + 40,000 + 30,000 + 15,000 + 24,000 + 12,000 = 1,070,000
+// sec_34c = 8,000 + 2,000 = 10,000
+// sec_34f = 35,000
+// total_deductions = 1,070,000 + 10,000 + 35,000 = 1,115,000
+
+net_taxable_income = max(0, 2,000,000 - 1,115,000) = 885,000
+income_tax_path_a = 102,500 + (885,000 - 800,000) × 0.25 = 102,500 + 21,250 = 123,750
+percentage_tax_path_a = 2,000,000 × 0.03 = 60,000
+total_path_a = ₱183,750
+
+// Path B (OSD): NTI = 1,200,000; IT = 102,500 + (1,200,000-800,000)×0.25 = 202,500; PT = 60,000; Total = ₱262,500
+// Path C (8%): (2,000,000 - 250,000) × 0.08 = 140,000; PT = 0; Total = ₱140,000
+// RECOMMENDATION: Path A (Itemized) saves ₱43,750 vs. 8% and ₱78,750 vs. OSD
+// KEY INSIGHT: When expense ratio = ₱1,115,000 / ₱2,000,000 = 55.75%, itemized beats OSD
+//   but 8% still beats itemized because PT (₱60,000) is waived under 8%
+// REAL WINNER: Only when expenses are extremely high can itemized beat 8%
+// At expense ratio of 55.75%, the totals are: Path A ₱183,750 vs Path C ₱140,000
+// For itemized to beat 8%: need expenses > 68% of gross at ₱2M (see osd-breakeven-table.md)
+```
+
+**Example C: Lawyer with NOLCO Carryover**
+```
+Tax Year: 2025
+Gross Receipts: ₱1,200,000
+
+NOLCO from 2024: ₱150,000 (net operating loss from prior year; itemized in 2024; expires 2027)
+Current Year Itemized (excl. NOLCO): ₱500,000
+
+gross_income = 1,200,000
+total_before_nolco = 500,000
+net_income_before_nolco = 700,000
+nolco_applied = apply_nolco([entry{2024, 150,000, expires 2027}], 700,000) = 150,000
+net_taxable_income = 700,000 - 150,000 = 550,000
+
+income_tax_path_a = 22,500 + (550,000 - 400,000) × 0.20 = 22,500 + 30,000 = 52,500
+percentage_tax_path_a = 1,200,000 × 0.03 = 36,000
+total_path_a = ₱88,500
+
+// Path C (8%): (1,200,000 - 250,000) × 0.08 = 76,000; PT = 0; Total = ₱76,000
+// NOLCO CANNOT be used with 8% option — if taxpayer chose 8%, NOLCO is suspended for 2025
+// Itemized with NOLCO: ₱88,500 vs 8%: ₱76,000 → 8% still wins
+// DISPLAY WARNING: "Your ₱150,000 NOLCO from 2024 reduces your itemized path by ₱18,500 in tax
+// but the 8% option is still ₱12,500 lower. If your NOLCO were ₱500,000+, itemized might win."
+```
+
+### CR-027-E: Non-Deductible Items — Engine Enforcement
+
+The engine must reject or warn when users attempt to include non-deductible items:
+
+```
+// Items the engine should NEVER include as deductions
+NON_DEDUCTIBLE_CODES = [
+  "ND-01",  // Personal expenses
+  "ND-02",  // Capital expenditures (direct expensing)
+  "ND-04",  // Life insurance (beneficiary = taxpayer)
+  "ND-07",  // Bribes, kickbacks
+  "ND-08",  // Government fines and penalties
+  "ND-10",  // Income tax itself
+  "ND-13",  // Employee share of SSS/PhilHealth/Pag-IBIG
+]
+
+// Engine validation function:
+function reject_non_deductible(expense_type: string) -> RejectionResult:
+  if expense_type in CLASSIFICATION_AS_NON_DEDUCTIBLE:
+    return RejectionResult {
+      rejected: true,
+      code: expense_type,
+      reason: NON_DEDUCTIBLE_DESCRIPTION[expense_type],
+      display_message: f"'{expense_description}' is not deductible for income tax purposes (NIRC Sec. 36). It has been removed from your itemized deductions."
+    }
+  return RejectionResult { rejected: false }
+```
+
+**Special handling for life insurance premiums:**
+```
+// Life insurance: context-dependent
+// Key question: Is the taxpayer the beneficiary?
+// If yes → NOT deductible (Sec. 36(A)(4))
+// If no (employee is beneficiary, employer-paid group policy) → deductible as compensation expense
+
+function is_life_insurance_deductible(
+  payer: str,   // "taxpayer" or "employer" (from self-employed perspective, always "taxpayer")
+  beneficiary: str  // "taxpayer", "employee", "employee_estate"
+) -> bool:
+  if payer == "taxpayer" and beneficiary == "taxpayer":
+    return false  // Sec. 36(A)(4)
+  elif payer == "taxpayer" and beneficiary == "employee":
+    return true   // Group life insurance for employees; classified under 34A-SAL
+  else:
+    return false  // Default conservative: flag for manual review
+```
+
+---
+
 ## Cross-References
 
 - For lookup tables: See [lookup-tables/](lookup-tables/)
@@ -1860,6 +2167,7 @@ function eight_pct_crossover_with_osd(gross_receipts: decimal) -> string:
   - [lookup-tables/bir-penalty-schedule.md](lookup-tables/bir-penalty-schedule.md) — complete BIR penalty schedule (compromise tables, criminal penalties, prescriptive periods)
   - [lookup-tables/eight-percent-option-rules.md](lookup-tables/eight-percent-option-rules.md) — complete 8% option reference (eligibility, election, irrevocability, quarterly mechanics, worked examples)
   - [lookup-tables/osd-breakeven-table.md](lookup-tables/osd-breakeven-table.md) — OSD tax tables, OSD vs 8% crossover, OSD vs itemized breakeven
+  - [lookup-tables/itemized-deductions.md](lookup-tables/itemized-deductions.md) — complete itemized deduction categories, limits, documentation, non-deductible items, NOLCO, depreciation
 - For decision trees covering regime selection: See [decision-trees.md](decision-trees.md)
   - DT-01: 8% eligibility
   - DT-02: Election procedure
@@ -1867,7 +2175,8 @@ function eight_pct_crossover_with_osd(gross_receipts: decimal) -> string:
   - DT-04: Annual form selection
   - DT-05: ₱250,000 deduction applicability
   - DT-06: Form 2551Q filing obligation
-- For edge cases (mid-year threshold crossing, first-year filers, tier boundaries, e-marketplace withholding, penalty scenarios, 8% option edge cases): See [edge-cases.md](edge-cases.md)
+  - DT-09: Deduction method selection (itemized vs. OSD)
+- For edge cases (mid-year threshold crossing, first-year filers, tier boundaries, e-marketplace withholding, penalty scenarios, 8% option edge cases, itemized deduction edge cases): See [edge-cases.md](edge-cases.md)
 - For test vectors validating these computations: See [../engine/test-vectors/basic.md](../engine/test-vectors/basic.md) (PENDING)
 - For full legal text behind each rule: See [legal-basis.md](legal-basis.md)
 - For RR 16-2023 source material: See [../../../input/sources/rr-16-2023-emarketplace.md](../../../input/sources/rr-16-2023-emarketplace.md)

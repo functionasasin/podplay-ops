@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 53
-- Analyzed: 13
-- Pending: 40
-- Convergence: 25%
+- Analyzed: 14
+- Pending: 39
+- Convergence: 26%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -26,7 +26,7 @@ Extract every computation rule, decision tree, and lookup table from source mate
 - [x] graduated-rate-table — Extract TRAIN-era graduated rate table (Sec. 24A), all 6 brackets, with worked examples
 - [x] eight-percent-option — Extract 8% flat rate rules: eligibility (≤₱3M gross), election procedure (RR 8-2018), ₱250K exemption, interaction with percentage tax
 - [x] osd-computation — Extract OSD rules (Sec. 34L): 40% of gross sales/receipts, no substantiation needed, when OSD is vs. isn't beneficial
-- [ ] itemized-deductions — Extract allowable business deductions for self-employed (Sec. 34), documentation requirements, disallowed expenses
+- [x] itemized-deductions — Extract allowable business deductions for self-employed (Sec. 34), documentation requirements, disallowed expenses
 - [ ] regime-comparison-logic — Define the decision tree: given (gross_receipts, business_expenses), compute tax under all 3 paths, select minimum
 - [ ] mixed-income-rules — How compensation + business income interact: compensation always graduated, business portion can choose 8%/OSD/itemized
 - [ ] vat-vs-percentage-tax — ₱3M threshold: below = 3% percentage tax (Form 2551Q), above = 12% VAT. Impact on 8% option eligibility
@@ -88,6 +88,7 @@ Cross-cutting concerns and gap filling. Only start after Waves 2-5 are complete.
 - [ ] convergence-check — Run final convergence checklist, either add new aspects or converge
 
 ## Recently Analyzed
+- itemized-deductions (2026-03-01): Extracted all allowable itemized deduction categories under NIRC Sec. 34(A)-(K), non-deductible items under Sec. 36, documentation requirements, EAR cap computation, NOLCO rules, depreciation schedule, home office deduction, interest arbitrage reduction formula. Wrote CR-027 to computation-rules.md (Path A full pseudocode, input validation, when itemized beats OSD, 3 worked examples with full path comparisons, non-deductible item enforcement, life insurance deductibility logic). Created lookup-tables/itemized-deductions.md (11 parts: 31-row deduction category table, 20-row non-deductible items table, interest arbitrage formula + example, EAR cap tables at 8 income levels, NOLCO tracking algorithm + worked example, depreciation useful life schedule 12 asset types + vehicle ceiling, home office rules + engine inputs, complete ItemizedDeductions struct, total allowable deductions pseudocode, practical notes for freelancers, cross-references). Added EC-ID01 through EC-ID10 to edge-cases.md (home office exclusive use, dual-use equipment, EAR cap, mid-year depreciation proration, NOLCO suspension cross-method, interest arbitrage zero case, bad debt cash-basis exclusion, charitable NPO cap, NOLCO FIFO partial expiry, luxury vehicle ceiling). Added MRF-009 through MRF-015 to manual-review-flags.md (travel expense purpose, home office documentation, equipment percentage unknown, NOLCO tax-exempt year, capital vs. operating loan, bad debt prior income, R&D connection to business).
 - bir-penalty-schedule (2026-03-01): Extracted complete BIR penalty structure. Key findings: (1) Three-component penalty stack = basic tax + surcharge + interest + compromise; (2) EOPT reduced MICRO/SMALL surcharge 25%→10%, interest 12%→6%, info-return failures ₱1K→₱500 per failure; (3) Compromise penalty table (RMO 7-2015 Annex A) has 9 brackets by tax due amount (₱1K–₱50K); (4) Nil return compromise: 1st offense ₱1K, 2nd ₱5K, 3rd ₱10K, 4th+ criminal; (5) Invoicing violations (Sec. 237/238): 50% EOPT reduction for MICRO/SMALL; (6) Fraud (50% surcharge, cannot be compromised, 10-year assessment period); (7) Prescriptive periods: 3-year ordinary (filed on time or late), 10-year extraordinary (fraud/no filing — from BIR discovery date); (8) SC G.R. 247737 clarifies intent required for 10-year period; (9) General Tax Amnesty (SB 60/HB 2653) PROPOSED but NOT enacted. Wrote to: final-mega-spec/domain/lookup-tables/bir-penalty-schedule.md (NEW, 9 parts, compromise tables, criminal penalties, prescriptive periods, tax amnesty), final-mega-spec/domain/computation-rules.md (CR-020 compromise penalty computation with full table lookup pseudocode + nil return offense counter + invoicing violations + multi-return worked example; CR-021 Section 250 info return penalties; CR-022 prescriptive period eligibility check), final-mega-spec/domain/edge-cases.md (EC-P01 through EC-P07: offense counter logic, abatement claim, prescribed years, 30% underdeclaration fraud trigger, multi-year catch-up nil returns, fraud bars compromise, Oplan Kandado), analysis/bir-penalty-schedule.md.
 - legal-source-fetch (2026-02-28): Fetched NIRC Sec. 24A (both graduated rate schedules 2018-2022 and 2023+), Sec. 34 (all itemized deductions A-K + OSD 34L), Sec. 74-79 (quarterly filing, cumulative method), Sec. 116 (percentage tax, CREATE rate history). Also captured RR 8-2018 8% option rules. Wrote to input/sources/ (3 files) and final-mega-spec/domain/legal-basis.md.
 - bir-forms-fetch (2026-02-28): Fetched exhaustive field-by-field descriptions for all 5 BIR forms. Form 1701 (4 pages, 6 schedules, ~80 items including all deduction line items), Form 1701A (2 pages, graduated OSD items 36-46 + 8% items 47-56, credits items 57-65), Form 1701Q (Schedules I/II/III/IV, items 36-68, both graduated cumulative and 8% cumulative methods), Form 2551Q (items 1-23, Schedule 1 with ATC table PT010-PT160), Form 2307 (Parts I-III, complete EWT ATC table with 50+ WI/WC codes and rates). Wrote to input/sources/bir-forms-field-descriptions.md.

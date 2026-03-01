@@ -113,6 +113,88 @@ Situations where the user clearly needs a CPA go into `legal/disclaimers.md`, no
 **User-facing text:**
 > "Your declared expenses (₱[amount]) are only [X]% of your gross receipts. For itemized deductions to be valid, ALL expenses must be: (a) substantiated with BIR-registered invoices/receipts, (b) ordinary and necessary for your business, and (c) not personal in nature. If you cannot fully document your expenses, the Optional Standard Deduction (40% of gross receipts) may be a safer and simpler option — and it gives you a higher deduction of ₱[OSD amount]."
 
+
+---
+
+## MRF-009: Business Purpose of Travel Expense Ambiguous (Mixed Personal/Business Trip)
+
+**Flag code:** MRF-009
+**Trigger:** User declares travel expense AND the destination appears to be a common vacation spot (engine cannot determine trip purpose from destination alone; this flag is for when the user marks it as "mixed trip" or the amount seems high relative to business income)
+**Engine fallback:** Include only the business-portion amount as declared by the user. Engine does NOT automatically prorate.
+
+**User-facing text:**
+> "Travel expenses are deductible only for the business-related portion of a trip. If a trip had both personal and business purposes, only the incremental costs for the business portion are deductible (e.g., airfare may not be deductible if you would have made the trip anyway). Please ensure you have records showing the business purpose of each trip (meeting minutes, client correspondence, event programs). We've included your stated amount — verify this is the business-only portion."
+
+**Resolution:** User manually computes the business portion and enters only that amount.
+
+---
+
+## MRF-010: Home Office — Cannot Provide Floor Plan or Exclusive Use Evidence
+
+**Flag code:** MRF-010
+**Trigger:** User claims home office deduction AND answers "No" when asked if they can provide documentation showing exclusive business use (floor plan, photos, lease)
+**Engine fallback:** Set home_office_expense = 0; do NOT include in Path A computation
+
+**User-facing text:**
+> "Home office deductions require documentation of exclusive business use — a floor plan showing the dimensions of the dedicated workspace and evidence it is not used for personal activities. Without these documents, this deduction is high risk during BIR audit and we recommend not claiming it. If you can prepare this documentation, you may re-enter the expense."
+
+---
+
+## MRF-011: Dual-Use Equipment — Business Use Percentage Not Known
+
+**Flag code:** MRF-011
+**Trigger:** User declares equipment for depreciation AND marks it as "dual-use" (business + personal) but cannot estimate the business use percentage
+**Engine fallback:** Apply 50% business use as a conservative default
+
+**User-facing text:**
+> "For equipment used for both business and personal purposes, only the business-use portion is deductible. We've applied 50% as a conservative default. To change this, estimate what percentage of your total device usage (hours or tasks) is for income-earning activities. Common ranges: full-time remote worker who also watches Netflix → 60-75%; occasional freelancer → 30-50%."
+
+---
+
+## MRF-012: NOLCO Year — Taxpayer Was Tax-Exempt in Prior Year
+
+**Flag code:** MRF-012
+**Trigger:** User indicates they had a net operating loss in a prior year AND that prior year they were tax-exempt (e.g., registered under BMBE law, RA 11470 COVID relief, or PEZA/BOI status)
+**Engine fallback:** Exclude the NOLCO from that exempt year; it is not available for carry-over
+
+**User-facing text:**
+> "Net Operating Loss Carry-Over (NOLCO) is only available if the loss was incurred in a year when you were subject to income tax. If you were exempt from income tax in [year] (e.g., under BMBE, PEZA, or other tax exemption), the loss from that year cannot be carried over. We've excluded this NOLCO entry."
+
+---
+
+## MRF-013: Interest Expense — Cannot Determine Whether Loan Was for Capital Asset
+
+**Flag code:** MRF-013
+**Trigger:** User declares interest expense on a loan AND the description mentions purchasing real property, equipment, or other capital assets
+**Engine fallback:** Include the interest as a deductible expense (assume business operating loan)
+
+**User-facing text:**
+> "Interest on loans used to PURCHASE capital assets (land, buildings, major equipment) must be capitalized — added to the asset's cost and depreciated — rather than deducted as interest expense in the year paid. However, interest on operating loans (working capital, short-term business loans) is deductible. We've included your stated interest as a deductible expense, but verify that this loan was for operating purposes, not asset acquisition."
+
+---
+
+## MRF-014: Bad Debt Claim — No Evidence of Prior Inclusion in Gross Income
+
+**Flag code:** MRF-014
+**Trigger:** User claims bad debts written off under itemized deductions AND the amount is substantial (> ₱10,000) AND user cannot confirm it was previously included in gross income
+**Engine fallback:** Prompt for confirmation; if user cannot confirm, exclude the bad debt
+
+**User-facing text:**
+> "Bad debts are only deductible if the receivable was previously recognized as income (included in gross receipts in a prior year). If you are on CASH BASIS (you only record income when received), uncollected receivables were never in your income — so they cannot be bad debts. Please confirm: Was this ₱[amount] receivable included in your gross income in a prior year (₱[year])?"
+
+**Resolution:** User confirms yes or no. If yes → include. If no (or cannot confirm) → exclude with explanation.
+
+---
+
+## MRF-015: R&D Expense — Unclear Whether Directly Connected to Business
+
+**Flag code:** MRF-015
+**Trigger:** User enters R&D expenses exceeding ₱50,000 AND description appears to be general training or self-improvement rather than specific business research
+**Engine fallback:** Include the expense with a warning about audit risk
+
+**User-facing text:**
+> "Research and development expenses are deductible only if directly connected to your registered trade, business, or profession. General self-improvement courses, hobby research, or skills unrelated to your current business activity are not deductible. We've included your stated R&D expense of ₱[amount], but ensure it is specifically for a research project tied to your business operations."
+
 ---
 
 ## Cross-References
@@ -121,3 +203,4 @@ Situations where the user clearly needs a CPA go into `legal/disclaimers.md`, no
 - For legal basis of each flag: See [legal-basis.md](legal-basis.md)
 - For the exact wizard UI text shown alongside these flags: See [../frontend/copy.md](../frontend/copy.md) (PENDING)
 - For error states in engine (invalid inputs): See [../engine/error-states.md](../engine/error-states.md) (PENDING)
+- For itemized deduction details: See [lookup-tables/itemized-deductions.md](lookup-tables/itemized-deductions.md)
