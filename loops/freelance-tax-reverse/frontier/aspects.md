@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 54
-- Analyzed: 28
-- Pending: 26
-- Convergence: 52%
+- Analyzed: 29
+- Pending: 25
+- Convergence: 54%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -44,7 +44,7 @@ Extract every computation rule, decision tree, and lookup table from source mate
 Design the computation engine from the extracted domain rules.
 - [x] pipeline-design — Design step-by-step computation flow with typed inputs/outputs per step
 - [x] data-model — Define every struct, enum, and type needed by the engine
-- [ ] invariants — Define what must always be true about outputs
+- [x] invariants — Define what must always be true about outputs
 - [ ] error-states — Define every invalid input state and the engine's response
 - [ ] test-vectors-basic — Write happy-path test vectors (one per common scenario)
 - [ ] test-vectors-edge — Write edge-case test vectors
