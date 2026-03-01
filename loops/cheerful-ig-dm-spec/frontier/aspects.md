@@ -9,9 +9,9 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 24 |
-| Analyzed | 13 |
-| Pending | 11 |
-| Convergence | 54% |
+| Analyzed | 14 |
+| Pending | 10 |
+| Convergence | 58% |
 
 ---
 
@@ -36,7 +36,7 @@
 
 ## Wave 3: Component Implementation Specs (Backend + Context Engine)
 
-- [ ] `spec-webhook-handler` — FastAPI webhook endpoint: verification, HMAC validation, payload parsing, BackgroundTask dispatch
+- [x] `spec-webhook-handler` — FastAPI webhook endpoint: verification, HMAC validation, payload parsing, BackgroundTask dispatch
 - [ ] `spec-ingest-workflow` — IgDmIngestWorkflow: dedup, media download, store, thread match, state transition, IGSID trigger
 - [ ] `spec-creator-resolution` — IGSID->creator matching: cache, Graph API fallback, GIN index lookup, campaign disambiguation
 - [ ] `spec-send-reply` — IgDmSendReplyWorkflow: 24h window check, Meta send API, state update, error handling
