@@ -9,9 +9,9 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 24 |
-| Analyzed | 15 |
-| Pending | 9 |
-| Convergence | 63% |
+| Analyzed | 16 |
+| Pending | 8 |
+| Convergence | 67% |
 
 ---
 
@@ -38,7 +38,7 @@
 
 - [x] `spec-webhook-handler` — FastAPI webhook endpoint: verification, HMAC validation, payload parsing, BackgroundTask dispatch
 - [x] `spec-ingest-workflow` — IgDmIngestWorkflow: dedup, media download, store, thread match, state transition, IGSID trigger
-- [ ] `spec-creator-resolution` — IGSID->creator matching: cache, Graph API fallback, GIN index lookup, campaign disambiguation
+- [x] `spec-creator-resolution` — IGSID->creator matching: cache, Graph API fallback, GIN index lookup, campaign disambiguation
 - [ ] `spec-send-reply` — IgDmSendReplyWorkflow: 24h window check, Meta send API, state update, error handling
 - [ ] `spec-ce-ig-dm-tools` — 8 context engine MCP tools: list/get/search DM threads, send reply, approve draft, connect/list IG accounts, campaign DM summary
 - [ ] `spec-ce-ig-dm-notifications` — Proactive Slack notifications: new inbound DM, 24h window expiring, AI draft ready, creator matched, window expired
