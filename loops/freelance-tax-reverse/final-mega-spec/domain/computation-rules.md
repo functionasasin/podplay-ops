@@ -1570,12 +1570,296 @@ Some service providers bill clients for reimbursements (travel, accommodation, m
 
 ---
 
+## CR-026: OSD Computation — Full Expanded Rules
+
+**Legal basis:** NIRC Sec. 34(L); RR No. 16-2008 (implementing rules for OSD)
+**Last updated:** 2026-03-01
+**See also:** [lookup-tables/osd-breakeven-table.md](lookup-tables/osd-breakeven-table.md) for full tax tables
+
+### CR-026-A: Who May Use OSD
+
+The following individuals may elect OSD:
+- Individuals engaged in trade or business (sole proprietors)
+- Individuals in the exercise of profession (doctors, lawyers, engineers, CPAs, etc.)
+- Freelancers and independent contractors
+
+The following **cannot** use OSD as an entity (but individual partners can use OSD for their share of net income distributed):
+- General Professional Partnerships (GPP) — the partnership itself; individual partners may use OSD on their distributive share received from the GPP
+- Corporations (they have a different OSD of 40% of gross income; but this engine only covers individuals)
+
+### CR-026-B: OSD Base — Service Providers (Professionals/Freelancers)
+
+```
+function compute_osd_base_service(
+  gross_receipts: decimal,           // All amounts received/accrued for services rendered
+  passive_income_with_fwt: decimal   // Interest, dividends, etc. already subject to final WHT
+) -> decimal:
+  osd_base = gross_receipts - passive_income_with_fwt
+  assert osd_base >= 0,
+    "OSD base cannot be negative (passive income cannot exceed total receipts)"
+  return osd_base
+```
+
+**What is included in gross receipts:**
+- Professional fees from clients
+- Consulting fees
+- Service income from freelance platforms (Upwork, Fiverr, Freelancer.com)
+- Project-based payments
+- Retainer fees
+- Commission income from services (not sales; that's a trader)
+- All amounts received WHETHER OR NOT BILLED (cash-basis or accrual-basis per RR 2-98)
+
+**What is EXCLUDED from gross receipts (passive income with final WHT):**
+- Interest income from bank deposits (FWT at 20% for PH banks, 15% for FCDU)
+- Dividend income from domestic corporations (FWT at 10%)
+- Prizes and awards > ₱10,000 (FWT at 20%)
+- PCSO and lotto winnings
+- Royalties on literary, musical works (FWT at 10%)
+- Capital gains from sale of shares (FWT at 15%)
+- Capital gains from sale of real property (FWT at 6%)
+
+### CR-026-C: OSD Base — Traders (Sellers of Goods)
+
+```
+function compute_osd_base_trader(
+  gross_sales: decimal,              // Total revenue from goods sold
+  sales_returns: decimal,            // Goods returned by customers
+  sales_allowances: decimal,         // Post-sale price adjustments
+  cost_of_goods_sold: decimal,       // COGS (beginning inventory + purchases - ending inventory)
+  passive_income_with_fwt: decimal   // As above
+) -> decimal:
+  net_sales = gross_sales - sales_returns - sales_allowances
+  gross_income = net_sales - cost_of_goods_sold
+  assert gross_income >= 0,
+    "Gross income cannot be negative for OSD purposes (record loss year; consider NOLCO under itemized)"
+  osd_base = gross_income - passive_income_with_fwt
+  assert osd_base >= 0, "OSD base cannot be negative"
+  return osd_base
+```
+
+**CRITICAL:** For traders, OSD is 40% of GROSS INCOME (gross sales minus COGS), NOT 40% of gross sales.
+This means a trader's "operating expenses" (rent, salaries, utilities) are covered by the 40% OSD. The trader gets OSD only on top of COGS already being deducted.
+
+### CR-026-D: OSD Amount and Net Taxable Income
+
+```
+function compute_osd(osd_base: decimal) -> OSDResult:
+  osd_amount = round(osd_base * 0.40, 2)   // round to centavo
+  nti = osd_base - osd_amount               // = osd_base * 0.60, but computed by subtraction to avoid rounding drift
+  return OSDResult {
+    osd_base: osd_base,
+    osd_amount: osd_amount,
+    net_taxable_income: nti
+  }
+```
+
+**Rounding rule:** Round the OSD amount to the nearest centavo (2 decimal places). Compute NTI by subtraction (not multiplication by 0.60) to avoid rounding discrepancy.
+
+### CR-026-E: OSD Election Procedure
+
+**Timing:**
+```
+function is_osd_election_valid(
+  quarter_of_election: int,          // 1, 2, 3, or 4
+  prior_quarter_method: string | null // null = no prior filing; "itemized", "osd", "eight_pct"
+) -> OSDElectionResult:
+  if quarter_of_election == 1 AND prior_quarter_method == null:
+    return OSDElectionResult { valid: true, reason: "First quarterly return; OSD may be elected" }
+  if quarter_of_election == 1 AND prior_quarter_method in ["itemized", "osd", "eight_pct"]:
+    // This means this is actually a re-election in the same year
+    return OSDElectionResult { valid: false, reason: "Q1 already filed with different method" }
+  if quarter_of_election > 1:
+    return OSDElectionResult { valid: false, reason: "OSD must be elected in Q1; cannot elect in Q2, Q3, or Q4" }
+```
+
+**New registrant rule:**
+- If first quarterly return is for a period that began mid-year (e.g., business registered September), the first 1701Q filed is still considered "Q1 of first taxable year." OSD election is valid in this first filing.
+
+**Annual re-election requirement:**
+- OSD election does NOT carry over from one taxable year to the next
+- At the start of each new taxable year, the taxpayer must affirmatively elect OSD in Q1
+- Failure to re-elect = taxpayer is on itemized for that year (cannot retroactively switch)
+
+**Irrevocability:**
+- Once Q1 1701Q is filed with OSD election, cannot switch to itemized or 8% for that year
+- EXCEPTION: If the taxpayer elected 8% in Q1 and subsequently becomes ineligible (gross > ₱3M mid-year), they switch to graduated — but whether OSD or itemized is then elected depends on what they signified when they first filed
+- ENGINE RULE: If user indicates they elected OSD in Q1, lock Path B as the graduated-rate deduction method
+
+### CR-026-F: OSD and Mixed Income Earners
+
+For taxpayers with BOTH compensation income AND business/professional income:
+```
+function compute_path_b_mixed_income(
+  compensation_income: decimal,           // Gross salary, wages, allowances
+  business_gross_receipts: decimal,       // From self-employment
+  passive_income_with_fwt: decimal        // Excluded from OSD base
+) -> PathBMixedResult:
+
+  // Step 1: Compensation NTI (no personal deduction under TRAIN for compensation)
+  compensation_nti = compensation_income
+
+  // Step 2: Business NTI under OSD
+  osd_base = business_gross_receipts - passive_income_with_fwt
+  osd_amount = round(osd_base * 0.40, 2)
+  business_nti_osd = osd_base - osd_amount  // = osd_base * 0.60
+
+  // Step 3: Combined NTI
+  combined_nti = compensation_nti + business_nti_osd
+
+  // Step 4: Tax on combined NTI
+  income_tax = graduated_tax(combined_nti)
+
+  // Note: No ₱250,000 deduction — the zero-bracket in the rate table handles this
+  // Note: Percentage tax on business income still applies separately (3% of gross receipts)
+  percentage_tax = round(business_gross_receipts * 0.03, 2)
+
+  return PathBMixedResult {
+    compensation_nti: compensation_nti,
+    business_nti: business_nti_osd,
+    combined_nti: combined_nti,
+    income_tax: income_tax,
+    percentage_tax: percentage_tax,
+    total_tax: income_tax + percentage_tax
+  }
+```
+
+**Important:** The "total tax burden" comparison for mixed income Path B should include both income tax (on combined NTI) and percentage tax (on business gross receipts). The compensation income's graduated tax is embedded in the combined NTI tax; it is not double-counted.
+
+### CR-026-G: OSD in Quarterly Returns (Cumulative Method)
+
+The 1701Q uses the **cumulative method**: each quarter's return reports cumulative year-to-date figures and credits prior payments.
+
+```
+function compute_1701Q_osd(
+  quarter: int,                          // 1, 2, or 3
+  cumulative_gross_receipts: decimal,    // Sum of Q1..Qn gross receipts
+  cumulative_cwt: decimal,               // Sum of Form 2307 amounts received Q1..Qn
+  prior_quarters_paid: decimal           // Sum of 1701Q payments for Q1..Q(n-1)
+) -> QuarterlyTaxResult:
+
+  // Compute cumulative NTI using OSD
+  cumulative_osd_base = cumulative_gross_receipts  // for service provider
+  cumulative_osd_amount = round(cumulative_osd_base * 0.40, 2)
+  cumulative_nti = cumulative_osd_base - cumulative_osd_amount
+
+  // Compute cumulative income tax
+  cumulative_it = graduated_tax(cumulative_nti)
+
+  // Quarterly tax payable = cumulative tax - prior payments - CWT credits
+  quarterly_tax_payable = max(0, cumulative_it - prior_quarters_paid - cumulative_cwt)
+
+  // Note: Form 1701Q also tracks percentage tax separately (Form 2551Q)
+  // Percentage tax is NOT on Form 1701Q; it has its own Form 2551Q
+
+  return QuarterlyTaxResult {
+    quarter: quarter,
+    cumulative_gross_receipts: cumulative_gross_receipts,
+    cumulative_osd_amount: cumulative_osd_amount,
+    cumulative_nti: cumulative_nti,
+    cumulative_income_tax: cumulative_it,
+    prior_quarters_paid: prior_quarters_paid,
+    cwt_credits: cumulative_cwt,
+    tax_payable_this_quarter: quarterly_tax_payable
+  }
+```
+
+**Worked Example — OSD Quarterly (Service Provider, ₱800K annual):**
+
+Q1 (Jan-Mar): Gross = ₱200,000; CWT = ₱10,000
+- OSD = 80,000; NTI = 120,000; IT = 0; Tax payable = max(0, 0 − 0 − 10,000) = 0
+
+Q2 (Jan-Jun cumulative): Gross = ₱400,000; Cumulative CWT = ₱20,000; Q1 paid = ₱0
+- OSD = 160,000; NTI = 240,000; IT = 0; Tax payable = max(0, 0 − 0 − 20,000) = 0
+
+Q3 (Jan-Sep cumulative): Gross = ₱600,000; Cumulative CWT = ₱30,000; Q1+Q2 paid = ₱0
+- OSD = 240,000; NTI = 360,000; IT = (360,000−250,000)×0.15 = 16,500
+- Tax payable = max(0, 16,500 − 0 − 30,000) = 0 (CWT exceeds tax)
+
+Annual (Jan-Dec): Gross = ₱800,000; Total CWT = ₱40,000; Quarterly paid = ₱0
+- OSD = 320,000; NTI = 480,000; IT = 22,500 + (480,000−400,000)×0.20 = 22,500 + 16,000 = 38,500
+- Balance = 38,500 − 0 − 40,000 = −₱1,500 (REFUNDABLE — CWT exceeded annual tax)
+- Taxpayer may claim refund or carry over as credit to next year
+
+### CR-026-H: OSD and NOLCO Interaction
+
+```
+function check_nolco_availability(deduction_method: string) -> bool:
+  if deduction_method == "itemized":
+    return true   // NOLCO available
+  elif deduction_method == "osd":
+    return false  // NOLCO NOT available (NIRC Sec. 34(D)(3))
+  elif deduction_method == "eight_pct":
+    return false  // NOLCO NOT available
+```
+
+**Rule:** A taxpayer electing OSD cannot deduct any NOLCO from prior years for that taxable year.
+If a taxpayer has significant NOLCO carryovers, switching to itemized for the year may be beneficial even if current-year expenses are below 40%.
+
+**Engine display:** If user has NOLCO carryovers AND selects OSD, engine must display:
+"Warning: Choosing OSD means you cannot use your carried-over Net Operating Loss (NOLCO) of ₱[amount] this year. Consider itemized deductions if NOLCO offsets significantly reduce your tax."
+This is a display warning, not a MRF flag — the engine can still compute but should make the trade-off explicit.
+
+### CR-026-I: Financial Statement Requirements Under OSD
+
+```
+function requires_audited_fs(
+  annual_gross_receipts: decimal,
+  deduction_method: string
+) -> bool:
+  if annual_gross_receipts >= 3_000_000:
+    return true  // RR 4-2019: audited FS required regardless of deduction method
+  if deduction_method == "itemized" AND annual_gross_receipts >= 150_000:
+    return true  // General rule: FS required for itemized when substantial income
+  if deduction_method == "osd":
+    return false  // No FS attachment to annual return required (Sec. 34L)
+  return false
+```
+
+**Note:** OSD exempts the taxpayer from ATTACHING financial statements to the annual ITR. However:
+- Must MAINTAIN books and FS (required by NIRC regardless of deduction method)
+- Must PRESENT FS upon BIR audit or examination request
+- If GR ≥ ₱3M: FS must be audited by independent CPA and registered with SEC/BIR even if OSD elected
+
+### CR-026-J: OSD vs. Other Paths — Recommendation Logic
+
+```
+function osd_is_better_than_itemized(
+  osd_total_tax: decimal,
+  itemized_total_tax: decimal
+) -> bool:
+  return osd_total_tax < itemized_total_tax
+  // Tiebreaker: prefer OSD (less compliance burden; no FS attachment required)
+
+function eight_pct_crossover_with_osd(gross_receipts: decimal) -> string:
+  // Returns which is lower in the narrow crossover range
+  // For pure service, no compensation income
+  // Crossover: OSD beats 8% in range ₱400,001 to ₱437,500
+  // 8% beats OSD outside this range (when eligible)
+  // Engine should ALWAYS compute both and compare; do not use this heuristic
+  if gross_receipts >= 400_001 AND gross_receipts <= 437_500:
+    return "OSD_or_close"  // Must compute both; OSD slightly better or tied
+  elif gross_receipts <= 400_000:
+    return "8_pct_better"
+  else:  // > 437,500
+    return "8_pct_better"
+```
+
+**Engine recommendation rule for OSD:**
+1. If taxpayer is 8% eligible: Compute all three paths. Recommend lowest. Do NOT assume 8% wins.
+2. If taxpayer is NOT 8% eligible (GR > ₱3M or VAT-registered): Compare Path A (itemized) vs Path B (OSD).
+   - OSD wins when actual expenses < 40% of gross receipts
+   - Itemized wins when actual expenses > 40% of gross receipts
+3. If deduction method cannot be determined (no expense data): Present both Path A and Path B with note that Path B requires no documentation.
+
+---
+
 ## Cross-References
 
 - For lookup tables: See [lookup-tables/](lookup-tables/)
   - [lookup-tables/taxpayer-classification-tiers.md](lookup-tables/taxpayer-classification-tiers.md) — complete tier table with all implications
   - [lookup-tables/bir-penalty-schedule.md](lookup-tables/bir-penalty-schedule.md) — complete BIR penalty schedule (compromise tables, criminal penalties, prescriptive periods)
   - [lookup-tables/eight-percent-option-rules.md](lookup-tables/eight-percent-option-rules.md) — complete 8% option reference (eligibility, election, irrevocability, quarterly mechanics, worked examples)
+  - [lookup-tables/osd-breakeven-table.md](lookup-tables/osd-breakeven-table.md) — OSD tax tables, OSD vs 8% crossover, OSD vs itemized breakeven
 - For decision trees covering regime selection: See [decision-trees.md](decision-trees.md)
   - DT-01: 8% eligibility
   - DT-02: Election procedure

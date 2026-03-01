@@ -755,3 +755,290 @@ if underdecl_pct > 0.30:
 ---
 
 *Additional 8% edge cases may be discovered during regime-comparison-logic, quarterly-filing-rules, and annual-reconciliation aspects. EC-E, EC-M, EC-Q, EC-C, EC-F groups to be added in the Wave 2 edge-cases aspect.*
+
+---
+
+## Group EC-OSD: Optional Standard Deduction Edge Cases
+
+*Added: 2026-03-01 (osd-computation aspect)*
+
+### EC-OSD01: OSD Election Missed in Q1 — Default to Itemized
+
+**Scenario:** A freelancer files their Q1 Form 1701Q on April 15 without ticking the OSD checkbox or otherwise signifying OSD intent. They come back in July and want to switch to OSD because they realize they have few expenses.
+
+**What the engine must do:**
+- If user indicates Q1 was filed without OSD election: Lock deduction method = itemized for the year
+- Display: "Your Q1 return was filed without electing OSD. The OSD election must be made in your first quarterly return and cannot be changed mid-year. You are locked into itemized deductions for [Tax Year]. You may elect OSD again starting January [Next Year]."
+- Continue computing Paths A and B; Path B (OSD) becomes unavailable
+- Only show Path A (Itemized) and Path C (8%, if eligible) as viable options
+
+**Engine flag:** EC-OSD01
+**Legal basis:** NIRC Sec. 34(L); RR No. 16-2008 Sec. 3 and 5
+
+**Engine behavior:**
+```
+if osd_election_missed_in_q1 == true AND current_quarter > 1:
+  available_paths = ["path_a"]  // Only itemized
+  if eight_pct_eligible:
+    available_paths.append("path_c")  // 8% still available if not previously filed as graduated
+  display_warning("EC-OSD01: OSD not elected in Q1. Locked into itemized deductions for this year.")
+```
+
+---
+
+### EC-OSD02: Trader with COGS — OSD Applied to Wrong Base
+
+**Scenario:** A sole proprietor sells merchandise (not services). Gross sales = ₱1,500,000. COGS = ₱900,000. Operating expenses = ₱200,000. They try to apply OSD to their gross sales of ₱1,500,000 instead of gross income = ₱600,000.
+
+**What the engine must do:**
+- For taxpayers who select "trading/merchandising" as business type: Collect COGS separately
+- Compute OSD base = gross_sales − sales_returns − COGS (= gross income)
+- OSD amount = 40% × ₱600,000 = ₱240,000
+- NTI = ₱360,000
+- NOT: 40% × ₱1,500,000 = ₱600,000 (WRONG — this would be overstating the deduction)
+
+**Correct computation:**
+```
+gross_sales = 1_500_000
+cogs = 900_000
+gross_income = gross_sales - cogs = 600_000
+osd_amount = gross_income * 0.40 = 240_000
+nti = gross_income - osd_amount = 360_000  // = 600,000 × 0.60
+it = graduated_tax(360_000) = (360_000-250_000) * 0.15 = 16_500
+pt = gross_sales * 0.03 = 45_000  // Note: PT on gross sales, not gross income
+total_path_b = 16_500 + 45_000 = 61_500
+```
+
+**Note on PT base:** Percentage tax (3%) is computed on GROSS RECEIPTS/GROSS SALES (before COGS), not on gross income. This is consistent with Sec. 116 which refers to "gross quarterly sales/receipts."
+
+**Display requirement:** Engine must clearly label: "OSD Deduction: 40% of ₱600,000 (Gross Income after Cost of Sales) = ₱240,000"
+
+**Legal basis:** NIRC Sec. 34(L) — "gross income" for individuals in trade = gross sales minus cost of sales; BIR Form 1701A Schedule 1 (OSD section, line 40 definition)
+
+---
+
+### EC-OSD03: Passive Income Alongside Business — OSD Base Exclusion
+
+**Scenario:** A professional earns ₱1,200,000 from consulting AND ₱50,000 in bank interest (subject to 20% FWT). They want to use OSD.
+
+**What the engine must do:**
+- Exclude the ₱50,000 bank interest from OSD base (already subjected to final WHT; not included in gross receipts for income tax purposes)
+- OSD base = ₱1,200,000 (consulting only)
+- OSD = ₱480,000
+- NTI = ₱720,000
+- Percentage tax = ₱1,200,000 × 0.03 = ₱36,000 (PT is on professional income only, not on FWT income)
+
+**What the engine must NOT do:**
+- Do NOT include ₱50,000 interest in gross receipts
+- Do NOT compute income tax on ₱1,250,000 (total including interest)
+- The ₱50,000 interest was already taxed at 20% FWT by the bank — no further income tax liability
+
+**Engine input collection:** When user enters income sources, distinguish:
+1. Professional/business income → subject to regular income tax computation
+2. Passive income with FWT → pre-taxed; excluded from OSD base; shown in output as "Final Tax Income (excluded from computation)"
+
+**Legal basis:** RR No. 16-2008 Sec. 2(B) — OSD base excludes income already subjected to final taxes
+
+---
+
+### EC-OSD04: First-Year Registrant — Mid-Year Registration
+
+**Scenario:** A professional registers with BIR on August 15, 2025. Their first quarterly period covers August-September 2025 (Q3 of calendar year, but Q1 of their first taxable year). Their first 1701Q is filed November 15, 2025.
+
+**What the engine must do:**
+- Treat the first 1701Q (November 2025, covering Aug-Sep 2025) as "Q1 for OSD election purposes"
+- OSD election in this first return is VALID
+- The quarterly computation covers only Aug 15 – Sep 30, 2025 (partial Q3 in calendar year terms, but Q1 in taxpayer's first year)
+- Annual ITR (1701A) covers Aug 15 – Dec 31, 2025
+
+**Engine input:** Collect `business_registration_date`. If mid-year:
+- First taxable period = registration date to December 31
+- Q1 = registration month through next quarter end
+- OSD election valid in this first filing
+
+**Worked example:**
+- Registered: Aug 15, 2025
+- Q1 return covers: Aug 15 – Sep 30, 2025 (filed by Nov 15, 2025)
+- Q2 covers: Oct 1 – Dec 31, 2025 (but no 1701Q for Q4; goes straight to annual)
+- Actually: 1701Q is only filed for Q1, Q2, Q3. Annual covers all four quarters.
+- For mid-year registrant: only Q3 1701Q (covering Aug-Sep) is filed; then annual (Form 1701A)
+
+**Legal basis:** RR 8-2018; NIRC Sec. 76 — quarterly returns for Q1, Q2, Q3 only; no Q4 return
+
+---
+
+### EC-OSD05: Expense Ratio Proves Greater Than 40% After OSD Elected
+
+**Scenario:** A freelancer elected OSD in Q1. By year-end, they discover their actual expenses are ₱600,000 on ₱1,000,000 gross (60% expense ratio). Under itemized, their NTI would be ₱400,000; under OSD, NTI is ₱600,000. They want to switch.
+
+**What the engine must do:**
+- Recognize that the election is irrevocable for the year
+- Compute tax under OSD (what they're stuck with)
+- Show the difference: "If you had used itemized deductions (expense ratio 60%), your tax would have been ₱X less. Consider using itemized deductions next year."
+- Do NOT compute or recommend switching for the current year
+
+**Computed difference for example:**
+- OSD: NTI = 600,000; IT = graduated(600,000) = 62,500; PT = 30,000; Total = ₱92,500
+- Itemized: NTI = 400,000; IT = graduated(400,000) = 0 (= 240,000; wait: 400,000 - 600,000 expenses... net = 400,000); IT = graduated(400,000) = 22,500 - 400,000... Let me recalculate:
+  - Gross = 1,000,000; Expenses = 600,000; NTI = 400,000; IT = graduated(400,000) = 22,500; PT = 30,000; Total = ₱52,500
+
+Wait, gross - expenses = 1,000,000 - 600,000 = 400,000 NTI.
+IT = graduated(400,000):
+- 400,000 is in bracket 3 (400,001–800,000)... actually 400,000 is the BOUNDARY. At exactly 400,000 it's still bracket 2:
+- 250,001-400,000 at 15%: (400,000-250,000)×0.15 = 22,500; Base tax bracket 3 starts at 400,001.
+- So IT = ₱22,500
+
+- Itemized: IT = 22,500; PT = 30,000; Total = ₱52,500
+- OSD excess cost: ₱92,500 − ₱52,500 = ₱40,000 EXTRA tax paid due to OSD election
+- Engine message: "Your actual expense ratio is 60%, which exceeds the 40% OSD. You are paying ₱40,000 more in income tax than if you had used itemized deductions. Your OSD election is irrevocable for [Year]. For [Next Year], consider tracking your expenses to use itemized deductions."
+
+**Engine behavior:**
+```
+if deduction_method == "osd" AND actual_expense_ratio > 0.40:
+  itemized_nti = gross_receipts - actual_itemized_expenses
+  itemized_it = graduated_tax(max(0, itemized_nti))
+  tax_difference = osd_total_tax - (itemized_it + percentage_tax)
+  if tax_difference > 0:
+    display_advisory("EC-OSD05: You could save ₱{tax_difference} with itemized deductions next year. OSD election is irrevocable for {year}.")
+```
+
+---
+
+### EC-OSD06: GPP Partner vs. GPP Entity — OSD Question
+
+**Scenario:** A lawyer is a partner in a General Professional Partnership (GPP). The GPP itself computes net income under itemized deductions. The lawyer receives a ₱500,000 distributive share. Can the individual lawyer claim OSD on their distributive share?
+
+**Answer:** YES — but the OSD election is made by the INDIVIDUAL on their distributive share received from the GPP, NOT by the GPP entity.
+- GPP entity: Files its own return (Form 1702); may use itemized or OSD at the GPP level
+- Individual partner: Receives distributive share (already net of GPP-level deductions)
+- Individual partner's return: Reports distributive share as business income; MAY elect OSD
+  - BUT: If GPP already deducted expenses, the individual partner's OSD would effectively double-deduct
+
+**BIR position (per RMC 76-2020):**
+- Individual partner's OSD is applied to their DISTRIBUTIVE SHARE from GPP (the amount received)
+- The GPP's own deductions (at GPP level) are separate — the partner doesn't "add back" GPP expenses
+- This means: IF the GPP used itemized deductions and distributed ₱500K to a partner, the partner can STILL elect OSD on their ₱500K distributive share
+- This is NOT double-deduction because the two deductions are at different entity levels
+
+**Engine handling:**
+- If user selects "GPP partner" as taxpayer type: Collect `gpp_distributive_share` as income
+- Apply OSD at 40% of distributive share (if OSD elected by individual partner)
+- NTI = distributive_share × 0.60
+
+**Note:** This situation is flagged as requiring user confirmation: "You indicated you are a GPP partner. Your ₱{X} distributive share is treated as self-employment income. You have elected OSD: your NTI = ₱{X × 0.60}."
+
+---
+
+### EC-OSD07: Multiple Business Activities — OSD Across Activities
+
+**Scenario:** A person is both a practicing CPA (professional income: ₱800,000) AND operates a small retail store (gross sales: ₱400,000; COGS: ₱250,000). They elect OSD.
+
+**What the engine must do:**
+- Both income sources are from the same individual → consolidated return
+- OSD applies to the COMBINED gross income (aggregated):
+  - Professional gross receipts: ₱800,000
+  - Retail gross income: ₱400,000 − ₱250,000 = ₱150,000
+  - Combined gross income: ₱950,000
+  - OSD: ₱380,000 (40% of combined)
+  - NTI: ₱570,000
+- Percentage tax: 3% of total gross receipts/sales (800,000 + 400,000 = ₱1,200,000) = ₱36,000
+
+**Alternative interpretation (WRONG — engine must NOT do this):**
+- Do NOT compute OSD separately for each business type and then add
+- Do NOT apply OSD to gross sales (₱400,000) for the retail portion (must use gross income = ₱150,000)
+
+**Legal basis:** Individual files one consolidated ITR covering all business/professional income. The OSD is applied to total gross income across all activities.
+
+**Engine design:** Collect income by type (professional fees, trading income with COGS, service income). Consolidate all into one OSD computation:
+```
+total_gross_income = (
+  sum(professional_gross_receipts) +
+  sum(trading_gross_income)  // already net of COGS per activity
+)
+osd_amount = total_gross_income * 0.40
+nti = total_gross_income * 0.60
+```
+
+---
+
+### EC-OSD08: OSD and NOLCO — Cannot Combine
+
+**Scenario:** A freelancer has ₱200,000 NOLCO carried over from 2023 (loss year). In 2025, they earn ₱1,000,000 and elect OSD. They expect to deduct both the 40% OSD AND the ₱200,000 NOLCO.
+
+**What the engine must do:**
+- OSD and NOLCO are MUTUALLY EXCLUSIVE for that taxable year
+- If OSD is elected: NOLCO deduction is NOT available
+- Display: "NOLCO Notice: You have ₱200,000 of Net Operating Loss Carry-Over from [Year]. If you elect OSD this year, you cannot deduct this NOLCO. Under itemized deductions with your NOLCO, your taxable income would be ₱[GR − expenses − NOLCO]; under OSD, your taxable income is ₱[GR × 0.60]. Consider itemized deductions to use your NOLCO."
+
+**Comparison engine should show:**
+```
+// Under OSD:
+osd_nti = 1_000_000 * 0.60 = 600_000
+osd_it = graduated_tax(600_000) = 62_500
+
+// Under Itemized (assuming expenses = ₱150,000):
+itemized_nti_before_nolco = 1_000_000 - 150_000 = 850_000
+itemized_nti_after_nolco = max(0, 850_000 - 200_000) = 650_000
+itemized_it = graduated_tax(650_000) = 22_500 + (650_000-400_000)*0.20 = 72_500
+
+// Compare:
+osd_total = 62_500 + 30_000 (PT) = 92_500
+itemized_total = 72_500 + 30_000 (PT) = 102_500
+// In this case: OSD wins despite NOLCO under itemized (because NOLCO effect = 40K savings, 8K less tax, but OSD advantage > NOLCO advantage)
+```
+
+**NOLCO carry-over period:** 3 consecutive years from year of loss. Engine must track:
+- Year NOLCO was incurred
+- Whether taxpayer was on itemized in the loss year (NOLCO only generated under itemized)
+- Remaining carry-over years
+
+**Legal basis:** NIRC Sec. 34(D)(3) — NOLCO not available to OSD or 8% users
+
+---
+
+### EC-OSD09: OSD for VAT-Registered Taxpayer (GR > ₱3M)
+
+**Scenario:** A VAT-registered professional with gross receipts of ₱4,000,000 wants to use OSD. The 8% option is not available (gross > ₱3M and VAT-registered). Can they use OSD?
+
+**Answer:** YES — OSD is available regardless of VAT status or income level.
+
+**What changes for VAT-registered taxpayers:**
+- No percentage tax (not applicable; VAT applies instead)
+- 8% option: NOT available
+- OSD: Available — applies 40% of gross receipts (exclusive of VAT)
+
+**Engine computation for VAT-registered + OSD:**
+```
+gross_receipts_excl_vat = gross_receipts  // VAT is separate; gross receipts for IT = ex-VAT amount
+osd_base = gross_receipts_excl_vat - passive_income_with_fwt
+osd_amount = osd_base * 0.40
+nti = osd_base - osd_amount
+income_tax = graduated_tax(nti)
+// NO percentage tax (VAT-registered)
+total_tax_burden = income_tax
+// VAT is computed separately and is not part of the income tax optimizer scope
+```
+
+**Output note:** Engine must display: "VAT Registration Notice: You are VAT-registered. Your 12% VAT liability is separate from your income tax and is not computed here. This tool computes your income tax only. Your VAT returns are filed via BIR Form 2550Q."
+
+**Worked example:**
+- Gross receipts (excl. VAT): ₱4,000,000
+- OSD: ₱1,600,000
+- NTI: ₱2,400,000
+- IT: 402,500 + (2,400,000−2,000,000)×0.30 = 402,500 + 120,000 = ₱522,500
+- No PT
+- Total: ₱522,500
+
+Compare with itemized (hypothetical 30% expense ratio):
+- Expenses = ₱1,200,000 (30% of GR)
+- NTI = ₱2,800,000
+- IT = 402,500 + (2,800,000−2,000,000)×0.30 = 402,500+240,000 = ₱642,500
+- OSD wins (expense ratio < 40%)
+
+Compare with itemized (hypothetical 55% expense ratio):
+- Expenses = ₱2,200,000 (55% of GR)
+- NTI = ₱1,800,000
+- IT = 102,500 + (1,800,000−800,000)×0.25 = 102,500+250,000 = ₱352,500
+- Itemized wins (expense ratio > 40%)
+
+**Legal basis:** NIRC Sec. 34(L) — no income ceiling or VAT exclusion for individual OSD
