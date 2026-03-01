@@ -4,7 +4,7 @@ Implementation-ready specification for adding SSR (Semantic Similarity Rating) c
 
 ## Status
 
-Wave 1: Audit & Map — 1/5 complete
+Wave 1: Audit & Map — 2/5 complete
 Wave 2: Design — 0/7 complete
 Wave 3: Synthesis & Integration — 0/4 complete
 
@@ -17,7 +17,7 @@ Audit of the existing Daimon codebase — patterns a developer must understand b
 | File | Status | Contents |
 |------|--------|----------|
 | [tool-system.md](existing-patterns/tool-system.md) | ✅ Complete | `@tool` decorator, `ToolDef`, `ToolError`, `ToolRegistry`, `ToolContext`, `DatabaseContext`, `UserContext`, registration in `catalog.py`, XML output helpers |
-| [reference-tools.md](existing-patterns/reference-tools.md) | ⬜ Pending | Patterns from existing tool implementations |
+| [reference-tools.md](existing-patterns/reference-tools.md) | ✅ Complete | Patterns from `discord/read.py`, `bluedot/read.py`+`api.py`, `github/tools.py`, `acp/tools.py` — split-file structure, DB access, formatters, error handling, pagination, credential gates |
 | [db-patterns.md](existing-patterns/db-patterns.md) | ⬜ Pending | Supabase schema patterns, migrations, RLS, indexes |
 | [embedding-options.md](existing-patterns/embedding-options.md) | ⬜ Pending | Embedding model survey — cost, latency, quality |
 
