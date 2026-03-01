@@ -412,6 +412,88 @@ Please consult a CPA to determine the correct treatment. Enter only the sales re
 
 ---
 
+## MRF-025: GPP Partner — 8% Option Not Available, Deduction Basis Unclear
+
+**Flag code:** MRF-025
+**Trigger:** User indicates their professional income comes from a General Professional Partnership (GPP) as a distributing partner receiving a distributive share.
+
+**Why the engine cannot fully resolve this:**
+- GPP income is governed by NIRC Sec. 26: the partnership itself is not taxed; instead, each partner includes their distributive share in gross income.
+- Individual partner files Form 1701 (never 1701A, and the 8% option is expressly excluded per RR 8-2018 Sec. 4(A)(2)(b) — GPP partners are listed as ineligible for 8%).
+- Only Paths A and B are available.
+- The deductions available to the individual partner depend on whether the GPP has already taken deductions at the partnership level. If the GPP deducted operating expenses before distributing the net income, the individual cannot claim those same expenses again. If the GPP distributed gross income without deductions, the partner may claim their share of deductible expenses.
+- The partner's Certificate of Share (issued by the GPP to each partner) should specify whether the amount is net of GPP-level deductions.
+
+**What the engine CAN do:**
+- Set `eight_percent_eligible = false` regardless of the partner's gross income from the GPP.
+- Compute Paths A and B only.
+- Path B: Apply OSD at 40% of the GPP distributive share (treating the distributive share as "gross income").
+- Path A: Accept user-input of any personal deductions NOT already deducted at GPP level.
+
+**What the engine CANNOT decide:**
+- Whether the GPP has already deducted operating expenses before computing the distributable share.
+- Whether the partner's stated expenses have already been reflected in the partnership's net income computation.
+- The correct basis of the distributive share (gross vs. net of partnership expenses).
+
+**Engine fallback behavior:**
+- Proceed with computation using the distributive share as the gross income input.
+- Use the Path B (OSD) as the default recommended path.
+- Flag for user acknowledgment.
+
+**User-facing text:**
+> "You indicated income from a General Professional Partnership (GPP). GPP partners cannot use the 8% flat rate — only the graduated rates with Itemized or Optional Standard Deductions are available to you. Your computation uses Paths A and B only. Important: verify with your GPP managing partner whether your distributive share is GROSS (before GPP-level expenses) or NET (after GPP-level expenses). If the GPP has already deducted its operating costs, you cannot deduct those costs again as your personal expenses. Consult your CPA for the correct treatment."
+
+**Legal basis:** NIRC Sec. 26; RR 8-2018 Sec. 4(A)(2)(b) (GPP partner exclusion from 8% eligibility).
+
+---
+
+## MRF-026: Non-Resident Filipino Citizen — Different Source Rules Apply
+
+**Flag code:** MRF-026
+**Trigger:** User indicates they are a Filipino citizen who is a permanent resident outside the Philippines, an OFW (Overseas Filipino Worker) under a valid work contract abroad, or otherwise establishes non-resident status for the tax year.
+
+**Why this is out of scope:**
+- NIRC Sec. 23(B): Non-resident citizens are taxable ONLY on income from Philippine sources. Foreign-sourced income is exempt.
+- NIRC Sec. 23(C): OFWs receiving compensation for services rendered overseas are exempt from Philippine income tax on that overseas compensation.
+- The source rules under NIRC Sec. 42 are complex (location of performance, location of property, residence of payer) and require case-by-case analysis.
+- This tool is designed for resident Filipino taxpayers and cannot correctly determine what portion of a non-resident citizen's income is Philippine-sourced vs. foreign-sourced.
+
+**Engine fallback behavior:**
+- Do NOT attempt to compute income taxes for non-resident citizens.
+- Display this flag immediately when user selects "Non-Resident Citizen" or "OFW" as residency status.
+- Block computation and redirect to professional consultation.
+
+**User-facing text:**
+> "This tool is designed for resident Filipino citizens and resident aliens filing under the standard individual income tax schedule. If you are a non-resident Filipino citizen (living and working abroad permanently or as an OFW), your tax situation is different: you are taxable only on income from Philippine sources, and your overseas employment income is generally exempt from Philippine income tax. The source rules are complex and require professional analysis. Please consult a Certified Public Accountant or tax lawyer familiar with non-resident citizen taxation and BIR Revenue Memorandum Circular requirements for OFWs and emigrants."
+
+**Legal basis:** NIRC Sec. 23(B) (non-resident citizens taxable only on Philippine-sourced income); Sec. 23(C) (OFW compensation exemption); Sec. 42 (income from Philippine sources definition).
+
+---
+
+## MRF-027: Non-Resident Alien — Different Rate Schedule and Treaty Rules Apply
+
+**Flag code:** MRF-027
+**Trigger:** User indicates they are a foreign national who is NOT a resident of the Philippines (non-resident alien).
+
+**Why this is out of scope:**
+- NIRC Sec. 25(A): Non-resident aliens ENGAGED in trade or business in the Philippines are taxed at graduated rates on Philippine-source income, but with different rules than resident taxpayers (no personal exemptions, different OSD application).
+- NIRC Sec. 25(B): Non-resident aliens NOT engaged in trade or business are taxed at a flat 25% final withholding tax on gross Philippine-source income.
+- Philippines has tax treaties with over 40 countries that may reduce or eliminate withholding rates on specific income types (dividends, royalties, professional services, etc.).
+- The correct computation requires determining: (a) resident vs. non-resident status, (b) engaged in trade/business vs. not, (c) type of income, (d) applicable treaty (if any), (e) treaty eligibility conditions.
+- None of these determinations can be made reliably from the inputs this tool collects.
+
+**Engine fallback behavior:**
+- Do NOT attempt to compute income taxes for non-resident aliens.
+- Display this flag immediately when user selects "Foreign National / Non-Resident Alien" as residency/citizenship status.
+- Block computation and redirect to professional consultation.
+
+**User-facing text:**
+> "This tool is designed for Filipino citizens and resident aliens subject to the standard individual income tax schedule. If you are a foreign national who is not a resident of the Philippines, your Philippine income tax treatment is governed by separate rules (NIRC Section 25) and may be affected by a tax treaty between the Philippines and your home country. The Philippines has tax treaties with over 40 countries, including the United States, Japan, Singapore, Australia, the United Kingdom, and others. These treaties may significantly reduce your tax liability on specific income types. Please consult a Philippine tax lawyer or CPA specializing in international taxation to determine your correct tax obligations."
+
+**Legal basis:** NIRC Sec. 25(A) (NRA-ETB rates); Sec. 25(B) (NRA-NETB 25% flat rate); applicable bilateral tax treaties.
+
+---
+
 ## Cross-References
 
 - For edge cases where the engine CAN make a decision: See [edge-cases.md](edge-cases.md)

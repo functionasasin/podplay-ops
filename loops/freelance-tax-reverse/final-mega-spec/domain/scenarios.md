@@ -1,6 +1,6 @@
 # Scenarios — Philippine Freelance & Self-Employed Income Tax Optimizer
 
-**Status:** Initial enumeration complete. Full expansion with additional scenario codes and quarterly-filing scenarios is handled by the `scenario-enumeration` Wave 2 aspect.
+**Status:** EXPANDED — Groups 1-8 (initial), Groups 9-14 (added by scenario-enumeration aspect). Total: 80 scenario codes.
 **Last updated:** 2026-03-01
 
 Each scenario code corresponds to a distinct computation path and taxpayer profile. Every scenario code MUST have at least one test vector in [../engine/test-vectors/exhaustive.md](../engine/test-vectors/exhaustive.md).
@@ -120,12 +120,128 @@ Highest priority scenarios for initial test vectors:
 
 ---
 
+### Group 11: Additional Mixed Income Sub-Scenarios (Expanding Group 3)
+
+These extend Group 3. Group 3 only enumerated the most common Mixed Income paths; this group adds the remaining method and income-range combinations.
+
+| Code | Profile | Compensation | Biz Gross | Biz Method | Key Notes |
+|------|---------|-------------|----------|-----------|-----------|
+| SC-M-L-O | Employee + small freelance | Any amount | ≤₱500,000 | OSD | Combined NTI = taxable_comp + (biz_gross × 0.60); graduated rates on combined; Form 1701 always |
+| SC-M-L-I | Employee + small freelance | Any amount | ≤₱500,000 | Itemized | Combined NTI = taxable_comp + (biz_gross − itemized_deductions); only optimal when expenses > 40% of small biz GR |
+| SC-M-MH-O | Employee + medium business | Any amount | ₱1,000,000–₱2,000,000 | OSD | Significant biz income adds to NTI; OSD on biz portion; combined NTI pushes into higher graduated bracket |
+| SC-M-MH-I | Employee + medium business | Any amount | ₱1,000,000–₱2,000,000 | Itemized | Only optimal when biz expenses > 40% of biz GR; documents required for all deductions |
+| SC-M-H-8 | Employee + large business | Any amount | ₱2,000,000–₱3,000,000 | 8% (no ₱250K) | Business at 8% separate; comp at graduated separate; NO ₱250K deduction on business income per RMC 50-2018; Form 1701 required |
+| SC-M-H-O | Employee + large business | Any amount | ₱2,000,000–₱3,000,000 | OSD | Combined NTI often in 25–30% graduated bracket; OSD may be better than 8% if compensation pushes combined NTI high |
+| SC-M-H-I | Employee + large business | Any amount | ₱2,000,000–₱3,000,000 | Itemized | Only when biz expense ratio > 58-75% (breakeven varies by income level); high documentation burden |
+| SC-M-MINWAGE | Minimum wage employee + business | Minimum wage salary (₱0 taxable, tax-exempt under Sec. 24(A)(2)(a)) | Any ≤₱3M | Any | Min wage is income-tax-exempt; biz NTI is the ENTIRE taxable base; ₱250K deduction barred even though comp is ₱0 taxable (has compensation income); Path B (OSD) often optimal — may yield NTI below ₱250K threshold |
+| SC-M-GOVT | Government employee + business | Government salary (GSIS instead of SSS; PhilHealth/Pag-IBIG apply same way) | Any | Any | Form 2316 from government employer; GSIS contributions non-taxable same as SSS; 13th month pay same ≤₱90K exemption; Form 1701 required; business income handled identically to private employees |
+| SC-M-DUAL-EMP | Two private employers + business | Two Form 2316s (Main + Second employer) | Any | Any | Both employers withhold but second employer uses Q1-Q3 cumulative withheld amount from their employment alone; aggregation required at annual; balance payable almost certain because second employer doesn't know first employer's comp; Form 1701 required |
+
+---
+
+### Group 9: Business/Trading Taxpayers (SC-B)
+
+Trading taxpayers (sellers of goods) differ from service providers in one critical way: **OSD base = 40% of gross INCOME (gross sales − COGS), NOT gross sales**. The 8% base is still gross sales. Itemized deductions include COGS as the primary deduction category.
+
+| Code | Profile | Gross Sales | COGS Ratio | Method | Key Notes |
+|------|---------|-------------|-----------|--------|-----------|
+| SC-B-ML-8 | Online retailer (digital/physical goods) | ₱500,000–₱1,000,000 | < 20% | 8% flat | Low COGS means 8% on gross sales is cost-effective; OSD would apply to (gross sales − COGS) which is nearly equal to gross sales when COGS is minimal; 8% wins clearly |
+| SC-B-ML-O | Physical goods retailer | ₱500,000–₱1,000,000 | 30%–50% | OSD | OSD = 40% × (gross_sales − COGS); graduated on net; example: ₱800K sales, ₱400K COGS → gross income ₱400K → OSD ₱160K → NTI ₱240K → ₱0 income tax + 3% PT ₱24K; compare to 8%: (₱800K − ₱250K) × 8% = ₱44K; OSD wins at high COGS |
+| SC-B-ML-I | High-cost goods retailer | ₱500,000–₱1,000,000 | > 70% | Itemized | COGS + operating expenses exceed OSD; itemized = COGS + other allowed expenses; example: ₱800K sales, ₱600K COGS, ₱100K other expenses → NTI ₱100K → ₱0 income tax |
+| SC-B-MH-8 | E-commerce seller | ₱1,000,000–₱2,000,000 | < 30% | 8% flat | Low COGS; 8% on gross sales beats OSD on small gross income base; standard optimal choice for digital product sellers |
+| SC-B-MH-O | General merchandise retailer | ₱1,000,000–₱2,000,000 | 40%–60% | OSD | OSD on gross income; example: ₱1.5M sales, ₱750K COGS → gross income ₱750K → OSD ₱300K → NTI ₱450K → graduated tax ₱22,500 + 3% PT ₱45K = ₱67,500; 8% comparison: (₱1.5M − ₱250K) × 8% = ₱100K; OSD wins significantly |
+| SC-B-MH-I | Importer/distributor | ₱1,000,000–₱2,000,000 | > 65% | Itemized | Very high COGS; total deductible = COGS + operating; itemized almost always beats OSD when COGS ratio exceeds 60% |
+| SC-B-H-8 | E-commerce seller | ₱2,000,000–₱3,000,000 | < 25% | 8% flat | At ₱3M with low COGS: 8% = (₱3M − ₱250K) × 8% = ₱220K; OSD at ₱3M gross, ₱750K COGS → gross income ₱2.25M → OSD ₱900K → NTI ₱1.35M → graduated ₱240K + PT ₱90K = ₱330K; 8% wins |
+| SC-B-H-O | Large retailer | ₱2,000,000–₱3,000,000 | 45%–65% | OSD | OSD on gross income; example ₱2.5M sales, ₱1.375M COGS → gross income ₱1.125M → OSD ₱450K → NTI ₱675K → graduated ₱57,500 + PT ₱75K = ₱132,500; 8%: (₱2.5M − ₱250K) × 8% = ₱180K; OSD wins |
+| SC-B-H-I | Distributor/importer | ₱2,000,000–₱3,000,000 | > 65% | Itemized | COGS ratio so high that itemized (COGS + expenses) substantially reduces NTI below OSD amount; preferred when supplier documentation is complete |
+| SC-B-VH-O-VAT | VAT-registered retailer | > ₱3,000,000 | Any | OSD | OSD = 40% of gross income (VAT-exclusive gross sales − COGS VAT-exclusive); graduated rates; no PT component; 8% not available; example ₱5M gross sales (VAT-excl), ₱3M COGS → gross income ₱2M → OSD ₱800K → NTI ₱1.2M → graduated ₱197,500 |
+| SC-B-VH-I-VAT | VAT-registered importer | > ₱3,000,000 | > 40% | Itemized | Path A: (gross_sales_vat_excl − COGS − operating_expenses) → NTI; graduated; preferred when COGS + expenses > 40% of gross income |
+
+---
+
+### Group 10: Combined Service + Trading (Mixed Business Types) (SC-COMBO)
+
+A taxpayer who earns both professional/service income AND sells goods under one TIN. Both income streams are aggregated. The OSD base differs for each stream: service portion OSD = 40% × service gross receipts; trading portion OSD = 40% × (goods gross sales − COGS). For the 8% option, the combined gross (service + goods) must be ≤ ₱3M and the rate applies to the combined total.
+
+| Code | Profile | Service Gross | Goods Gross (Sales) | COGS | Method | Key Notes |
+|------|---------|--------------|---------------------|------|--------|-----------|
+| SC-COMBO-ML-8 | Designer + digital product seller | ₱400,000 | ₱300,000 | ₱30,000 | 8% flat | Combined gross ₱700K ≤ ₱3M → 8% eligible; 8% base = ₱700K total gross; tax = (₱700K − ₱250K) × 8% = ₱36K + ₱0 PT; no COGS distinction under 8% |
+| SC-COMBO-MH-O | Consultant + merchandise | ₱1,000,000 | ₱500,000 | ₱250,000 | OSD | Combined gross ₱1.5M; OSD base for service = ₱1M × 60% = ₱600K NTI portion; OSD base for goods = (₱500K − ₱250K) × 60% = ₱150K NTI portion; combined NTI = ₱750K; graduated tax = ₱57,500 + 3% PT on ₱1.5M = ₱45K; total = ₱102,500; 8% comparison: (₱1.5M − ₱250K) × 8% = ₱100K; 8% wins slightly |
+| SC-COMBO-CROSS-3M | Freelancer + online store | ₱2,000,000 | ₱1,200,000 | ₱400,000 | OSD or Itemized | Combined gross ₱3.2M → exceeds ₱3M → 8% NOT available; VAT registration required; Paths A or B only; OSD: service ₱2M × 60% + (₱1.2M − ₱400K) × 60% = ₱1.2M + ₱480K = ₱1.68M NTI; graduated ₱307,500 |
+
+---
+
+### Group 12: Breakeven and Boundary Precision Scenarios (SC-BE)
+
+These scenarios test the engine at the exact mathematical boundaries where two tax paths produce equal total tax. They are critical for verifying the regime comparison logic and tie-breaking rules.
+
+| Code | Profile | Gross Receipts | Expense Input | Expected Result | Key Test Point |
+|------|---------|---------------|--------------|----------------|----------------|
+| SC-BE-OSD-8-LO | Pure service, professional | Exactly ₱400,000 | ₱0 expenses (OSD comparison) | Path C = Path B = ₱12,000 total tax; tie-break: Path C wins (preference rule: 8% > OSD > Itemized on tie) | First 8%/OSD tie: Path C IT = (₱400K − ₱250K) × 8% = ₱12,000; Path B IT = graduated(₱400K × 0.60) = graduated(₱240K) = ₱0 + 3% PT on ₱400K = ₱12,000; totals equal; engine selects Path C |
+| SC-BE-OSD-8-HI | Pure service, professional | Exactly ₱437,500 | ₱0 expenses (OSD comparison) | Path C = Path B = ₱15,000 total tax; tie-break: Path C wins | Second 8%/OSD tie: Path C = (₱437.5K − ₱250K) × 8% = ₱15,000; Path B = graduated(₱437.5K × 0.60) = graduated(₱262.5K) = (₱262.5K − ₱250K) × 0.15 = ₱1,875 + 3% × ₱437.5K = ₱13,125; total ₱15,000; at this gross, Path B catches back up to Path C |
+| SC-BE-OSD-WINS | Pure service, professional | ₱420,000 | ₱0 (OSD) | Path B < Path C — OSD is optimal in ₱400K–₱437.5K window | Path C = (₱420K − ₱250K) × 8% = ₱13,600; Path B = graduated(₱420K × 0.60) = graduated(₱252K) = (₱252K − ₱250K) × 0.15 = ₱300 + 3% × ₱420K = ₱12,600 + ₱300 = ₱12,600; TOTAL Path B = ₱12,600 < Path C = ₱13,600; Path B recommended |
+| SC-BE-8-ITEMIZED-500K | Pure service, 43.33% expense ratio | ₱500,000 | ₱216,667 expenses | Path A = Path C = ₱20,000 total tax; tie-break: Path C wins | Path C IT = (₱500K − ₱250K) × 8% = ₱20,000; Path A: NTI = ₱500K − ₱216,667 = ₱283,333; graduated = (₱283,333 − ₱250K) × 0.15 = ₱5,000; + 3% PT = ₱15,000; total = ₱20,000; exact tie at 43.33% expense ratio |
+| SC-BE-OSD-ITEMIZED | Pure service, exactly 40% expense ratio | Any gross | Expenses = 40% of gross | Path A = Path B (by construction); tie-break: Path B wins (OSD > Itemized) | OSD = 40% of GR → NTI = 60% GR; Itemized = NTI = GR − 40%GR = 60% GR; same NTI → same graduated tax → same PT; totals are exactly equal; engine selects Path B |
+| SC-BELOW-250K | Pure service freelancer | ₱150,000 | ₱0 | 8% IT = ₱0; OSD IT = ₱0; Itemized IT = ₱0 | Path C: (₱150K − ₱250K) < ₱0 → IT = ₱0 (floored); Path B: NTI = ₱150K × 0.60 = ₱90K < ₱250K → IT = ₱0; PT under Path B = 3% × ₱150K = ₱4,500; total Path B = ₱4,500; Path C total = ₱0 (8% eliminates PT); Path C wins |
+| SC-AT-250K-EXACT | Pure service freelancer | Exactly ₱250,000 | ₱0 | 8% IT = ₱0; Path C total = ₱0 | Path C: (₱250K − ₱250K) × 8% = ₱0; Path B: NTI = ₱250K × 0.60 = ₱150K < ₱250K → IT = ₱0 + PT ₱7,500; total Path B = ₱7,500; Path C total = ₱0; Path C wins by ₱7,500 |
+
+---
+
+### Group 13: Late-Filing and Penalty Scenarios (SC-LATE)
+
+These scenarios exercise the penalty computation module. Input is (tax_due, days_late, taxpayer_tier, return_type, is_nil_return).
+
+| Code | Profile | Return Type | Filing Status | Taxpayer Tier | Key Notes |
+|------|---------|------------|--------------|--------------|-----------|
+| SC-LATE-1701 | Any taxpayer | Form 1701/1701A Annual | Filed after April 15 (e.g., 45 days late, July 1) | MICRO | Penalty = surcharge (10%) + interest (6% annual × 45/365 days × tax_due) + compromise (per tax-due bracket table); total tax payable = tax_due + penalties; installment option was available (April 15 + July 15) but missed → full amount due |
+| SC-LATE-1701Q-Q1 | Quarterly filer | Form 1701Q Q1 | Filed after May 15 (e.g., June 1) | SMALL | Quarterly balance payable subject to penalties; if zero balance payable (full CWT offset) but return is late → still subject to ₱1,000 compromise penalty (nil compromise); surcharge and interest only apply on tax-due amount > ₱0 |
+| SC-LATE-2551Q | Non-8% taxpayer | Form 2551Q | Filed after 25th day of month following quarter end | MICRO | If PT is ₱0 (NIL return): compromise penalty ₱1,000 for 1st offense; if PT > ₱0: three-component penalty; MICRO/SMALL surcharge rate = 10%; interest rate = 6% per annum |
+| SC-CATCHUP-3YR | Non-filer | Forms 1701 for 3 prior years + all 1701Q returns | Voluntary disclosure filing 3 unfiled years | SMALL | Compute penalty for each year separately: basic tax + surcharge (10% SMALL) + interest (6% × days past each deadline) + compromise; verify 3-year ordinary prescriptive period has NOT expired (if within 3 years from original due date, BIR can still assess); total across 3 years; engine shows annual and combined penalty breakdown |
+
+---
+
+### Group 14: Platform Freelancer Specifics (SC-PLAT)
+
+These scenarios focus on the CWT mechanics specific to platform-based freelancers, particularly RR 16-2023 (e-marketplace withholding) and the combination of platform CWT with local client CWT.
+
+| Code | Profile | Income Source | CWT ATC(s) | Tax Rate | Key Notes |
+|------|---------|--------------|-----------|---------|-----------|
+| SC-PLAT-UPWORK-8 | Upwork/Payoneer freelancer, 8% rate | 100% Upwork via Payoneer | WI760 at 1% × ½ gross = effective 0.5% of gross remittance | 8% annual IT | Combined platform remittances must exceed ₱500K threshold OR Sworn Declaration not submitted → Payoneer withholds; 2307 issued within 20 days after quarter end; CWT credited at annual 1701A against IT due; most Upwork freelancers have modest CWT relative to 8% liability |
+| SC-PLAT-UPWORK-GRAD | Upwork/Payoneer, GR > ₱3M | 100% Upwork via Payoneer | WI760 | Path A or B only (>₱3M) | 8% not available; WI760 CWT still creditable against income tax under Path A/B; ATC classification: WI760 → INCOME_TAX_CWT (not PT_CWT) |
+| SC-PLAT-LOCAL-5PCT | Local professional, small clients | Local corporate clients, each < ₱3M annual purchase | WI010 (5% EWT) | 8% or graduated | Standard 5% EWT for professionals when professional's prior-year gross < ₱3M AND payor is not a Top Withholding Agent; 2307 issued quarterly; CWT often significant relative to annual IT under 8% |
+| SC-PLAT-LOCAL-10PCT | Local professional, large clients | Local corporate clients or Top Withholding Agents | WI011 (10% EWT) or WI157 (2% TWA) | Path A or B (often large gross) | 10% applies when professional's prior-year gross ≥ ₱3M; 2% applies when payor is BIR-designated TWA; engine determines correct expected rate; flags MRF-021 if 2307 shows wrong rate |
+| SC-PLAT-MIXED-CWTS | Both Upwork and local clients | Upwork/Payoneer + local corporate clients | WI760 (0.5% eff.) + WI010 (5%) | 8% or graduated | Multiple 2307 entries of different ATCs; aggregate_cwt() function sums all INCOME_TAX_CWT types; combined CWT can exceed annual tax under 8% for mid-range earners (₱800K–₱1.5M); overpayment election required at annual |
+
+---
+
+## Updated Priority for Test Vectors
+
+Highest-priority scenarios for initial test vector writing (updated to include new groups):
+
+1. SC-P-ML-8 — Most common real-world case (online freelancer, ₱700K gross, 8% wins)
+2. SC-P-ML-O — Suboptimal OSD path (same gross, uses OSD instead; shows tax cost of wrong choice)
+3. SC-M-ML-8 — Mixed income with 8% (most complex, no ₱250K deduction)
+4. SC-P-MH-I — High-expense case where itemized wins (₱1.5M gross, 65% expense ratio)
+5. SC-P-H-8 — Near-threshold case (₱2.8M gross, 8% saves vs OSD)
+6. SC-P-VH-O-VAT — Over-threshold VAT case (₱5M gross, Paths A/B only)
+7. SC-CROSS-3M — Threshold crossing (8% retroactively cancelled mid-year)
+8. SC-QC-8-3Q — Full three-quarter 8% cumulative cycle
+9. SC-B-ML-O — Business/trading, OSD wins because COGS is high
+10. SC-BE-OSD-WINS — OSD beats 8% in narrow ₱420K window
+11. SC-BE-8-ITEMIZED-500K — Exact breakeven (itemized = 8% at 43.33% expense ratio)
+12. SC-PLAT-UPWORK-8 — Upwork freelancer, WI760 CWT mechanics
+13. SC-LATE-1701 — Penalty computation for late annual filing
+14. SC-M-MINWAGE — Minimum wage employee + business (Path B often wins over Path C)
+15. SC-COMBO-MH-O — Combined service+trading OSD computation
+
+---
+
 ## Notes on Scenarios Not Covered by This Tool
 
 The following scenarios are OUT OF SCOPE and should display a "manual review" flag per [manual-review-flags.md](manual-review-flags.md):
-- GPP (General Professional Partnership) partners — use Sec. 26 distributive share rules; individual partner files Form 1701 but 8% option is unavailable; MRF-024 covers this
-- Non-resident citizens — different source rules under Sec. 23; income derived from foreign sources is taxable only to resident citizens; MRF-025 covers this
-- Non-resident aliens — different treaty rates may apply under applicable tax treaty (US, Japan, Singapore, etc.); MRF-026 covers this
+- GPP (General Professional Partnership) partners — use Sec. 26 distributive share rules; individual partner files Form 1701 but 8% option is unavailable; MRF-025 covers this
+- Non-resident citizens — different source rules under Sec. 23; income derived from foreign sources is taxable only to resident citizens; MRF-026 covers this
+- Non-resident aliens — different treaty rates may apply under applicable tax treaty (US, Japan, Singapore, etc.); MRF-027 covers this
 - Foreign-source income — sourcing and exclusion rules complex; depends on residency status and type of income; see MRF-016 and MRF-017
 - Retroactive regime change after Q1 deadline — requires amended returns and is a purely administrative process; the engine cannot compute retroactive changes without user intervention; see EC-QF01
 - NOLCO carry-over — three-year FIFO tracking requires multi-year data not captured in a single-year computation; see EC-ID09 and SC-NOLCO
