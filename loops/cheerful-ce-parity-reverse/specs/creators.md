@@ -1095,6 +1095,10 @@ cheerful_create_creator_list(title="Summer 2026 Skincare Creators")
 **Slack Formatting Notes**:
 - Agent should confirm: "Created list '{title}'. Add creators with search, CSV, or by ID."
 
+**Edge Cases**:
+- Duplicate title: allowed — no unique constraint on `title`, multiple lists with the same name can exist
+- Empty title: rejected with 422 Pydantic validation error (min_length=1)
+
 ---
 
 ### `cheerful_get_creator_list`
@@ -1137,6 +1141,23 @@ cheerful_create_creator_list(title="Summer 2026 Skincare Creators")
 cheerful_get_creator_list(list_id="d1e2f3a4-b5c6-7890-abcd-ef1234567890")
 ```
 
+**Example Response**:
+```json
+{
+  "id": "d1e2f3a4-b5c6-7890-abcd-ef1234567890",
+  "user_id": "550e8400-e29b-41d4-a716-446655440000",
+  "title": "Summer 2026 Skincare Creators",
+  "created_at": "2026-02-10T09:00:00Z",
+  "updated_at": "2026-02-28T14:30:00Z"
+}
+```
+
+**Slack Formatting Notes**: Agent should display: "List: *{title}* (ID: `{id}`), last updated {updated_at}. Use `cheerful_list_creator_list_items` to see creators."
+
+**Edge Cases**:
+- List owned by another user: returns 403 "Not authorized" (not 404 — avoids information disclosure about the list's existence)
+- List ID is a valid UUID but doesn't exist: 404 "List not found"
+
 ---
 
 ### `cheerful_update_creator_list`
@@ -1178,6 +1199,24 @@ cheerful_get_creator_list(list_id="d1e2f3a4-b5c6-7890-abcd-ef1234567890")
 cheerful_update_creator_list(list_id="d1e2f3a4-b5c6-7890-abcd-ef1234567890", title="Winter 2026 Skincare Creators")
 ```
 
+**Example Response**:
+```json
+{
+  "id": "d1e2f3a4-b5c6-7890-abcd-ef1234567890",
+  "user_id": "550e8400-e29b-41d4-a716-446655440000",
+  "title": "Winter 2026 Skincare Creators",
+  "created_at": "2026-02-10T09:00:00Z",
+  "updated_at": "2026-03-01T11:00:00Z"
+}
+```
+
+**Slack Formatting Notes**: Agent should confirm: "Renamed list to *Winter 2026 Skincare Creators*."
+
+**Edge Cases**:
+- `title=null` or omitting title: no change is made (PATCH semantics), `updated_at` is NOT updated
+- Same title as current: idempotent — `updated_at` IS updated to `func.now()` even when title unchanged
+- Title exceeding 255 chars: rejected with 422 Pydantic validation error
+
 ---
 
 ### `cheerful_delete_creator_list`
@@ -1214,6 +1253,14 @@ cheerful_update_creator_list(list_id="d1e2f3a4-b5c6-7890-abcd-ef1234567890", tit
 ```
 cheerful_delete_creator_list(list_id="d1e2f3a4-b5c6-7890-abcd-ef1234567890")
 ```
+
+**Example Response**: 204 No Content — empty body.
+
+**Edge Cases**:
+- All `CreatorListItem` records are cascade-deleted via FK constraint — all creator memberships in this list are removed
+- The global `Creator` table records are NOT deleted — only the list and its membership records are removed
+- Not idempotent: if the list doesn't exist (or was already deleted), returns 404 "List not found" (not 204)
+- Irreversible: there is no undelete. Recreate the list and re-add creators if needed.
 
 ---
 
@@ -1377,6 +1424,12 @@ cheerful_add_creators_to_list(list_id="d1e2f3a4-b5c6-7890-abcd-ef1234567890", cr
 
 **Slack Formatting Notes**: Agent should report: "Added {added_count} creators to list. {skipped_count} already in list."
 
+**Edge Cases**:
+- All `creator_ids` already in list: returns `{"added_count": 0, "skipped_count": N}` — not an error
+- Creator ID that doesn't exist in `Creator` table: DB FK constraint error — the backend does not pre-validate creator existence, an unknown UUID will cause a 500 error
+- Duplicate IDs in the same request: the second occurrence will be skipped (ON CONFLICT DO NOTHING semantics)
+- Empty `creator_ids` array: rejected with 422 Pydantic validation error (min_length=1)
+
 ---
 
 ### `cheerful_add_search_creators_to_list`
@@ -1539,6 +1592,13 @@ cheerful_add_csv_creators_to_list(list_id="d1e2f3a4-b5c6-7890-abcd-ef1234567890"
 
 **Slack Formatting Notes**: Agent should confirm: "Added {added_count} creators from CSV. {skipped_count} duplicates skipped."
 
+**Edge Cases**:
+- `email` is required for CSV import (unlike search import where it's optional) — any row with empty email will fail Pydantic validation
+- CSV import overwrites existing email in the `Creator` table (unlike search import which uses COALESCE to preserve existing email)
+- TikTok platform is supported here (but not in IC search) — useful when you have TikTok handle data from external sources
+- Max 500 rows per request; larger CSVs must be split into batches
+- `follower_count` null in CSV: stored as 0 in the Creator table (`follower_count or 0`)
+
 ---
 
 ### `cheerful_remove_creator_from_list`
@@ -1575,6 +1635,16 @@ cheerful_add_csv_creators_to_list(list_id="d1e2f3a4-b5c6-7890-abcd-ef1234567890"
 ```
 cheerful_remove_creator_from_list(list_id="d1e2f3a4-b5c6-7890-abcd-ef1234567890", creator_id="f47ac10b-58cc-4372-a567-0e02b2c3d479")
 ```
+
+**Example Response**: 204 No Content — empty body.
+
+**Slack Formatting Notes**: Agent should confirm: "Removed creator from the list. Their global profile is preserved (not deleted)."
+
+**Edge Cases**:
+- Creator not in this list: 404 "Creator not found in list" — not idempotent
+- Creator exists in the `Creator` table but not in this specific list: same 404 response
+- The global `Creator` record is preserved — only the `CreatorListItem` join table row is deleted
+- `creator_list.updated_at` is updated to reflect the removal
 
 ---
 
@@ -1973,7 +2043,14 @@ cheerful_refresh_creator_posts(campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890
 cheerful_delete_post(campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890", post_id="e1f2a3b4-c5d6-7890-ef01-234567890abc")
 ```
 
+**Example Response**: 204 No Content — empty body.
+
 **Slack Formatting Notes**: Agent should confirm with context: "Deleted post (matched via {method}). Marked as false positive."
+
+**Edge Cases**:
+- Post belongs to a different campaign: returns 404 "Post not found" (not 403) — backend checks `post.campaign_id == campaign_id`; a mismatch returns 404 to avoid revealing the post's existence in other campaigns
+- Deleting a correctly matched post by mistake: irreversible. Use `cheerful_refresh_creator_posts` to re-detect posts (the post may be re-matched if still visible on Instagram)
+- No soft-delete: the `CampaignCreatorPost` record is permanently removed from the database
 
 ---
 
@@ -2046,6 +2123,13 @@ cheerful_list_public_creator_profiles(limit=10, offset=0)
 ```
 
 **Slack Formatting Notes**: Present as a browse list: `@{username} ({full_name}) — {followers} followers, {engagement_rate}% ER, category: {primary_category}`
+
+**Edge Cases**:
+- No scraped profiles exist: returns empty list `[]` (not 404)
+- Only creators with `status == "completed"` workflow executions appear — in-progress or errored scrapes are excluded
+- Multiple scrapes of the same creator are deduplicated via `DISTINCT ON (username)` — only the latest appears
+- `primary_category` and `avatar_url` may be null for profiles with incomplete scrape data
+- Pagination: no `total` count returned — iterate with offset until empty list is returned
 
 ---
 
@@ -2191,6 +2275,13 @@ cheerful_trigger_creator_scrape(handle="sarahchen_style", creator_data={"known_b
 ```
 
 **Slack Formatting Notes**: Agent should confirm: "Scrape triggered for @{handle}. Check back in a few minutes for the profile."
+
+**Edge Cases**:
+- Workflow config not found in DB: background task silently returns null; no error surfaced to client — call still returns 202
+- Handle doesn't exist on Instagram: Apify returns empty data; Claude agent produces minimal or empty `output_data`
+- Re-triggering for same handle: creates a new `CampaignWorkflowExecution` record — does not deduplicate; use `cheerful_get_public_creator_profile` to check if a recent scrape already exists before triggering again
+- No polling endpoint: client receives 202 immediately; typically 2-5 minutes before results are available via `cheerful_get_public_creator_profile`
+- `creator_data` context: only used as supplementary information for the Claude agent — it does not override scraped data, just augments the analysis
 
 ---
 
