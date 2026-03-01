@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 16
-- Analyzed: 6
-- Pending: 10
-- Convergence: 38%
+- Analyzed: 7
+- Pending: 9
+- Convergence: 44%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -19,7 +19,7 @@ Read the existing Daimon codebase and map what SSR tools need.
 ### Wave 2: Design
 Design every tool, prompt, schema, and integration point.
 - [x] w2-tool-panel-create — Design panel_create tool: MCP definition, input/output schemas, persona generation prompt, validation
-- [ ] w2-tool-panel-run — Design panel_run tool: MCP definition, SSR pipeline steps, concurrency, scoring, output format
+- [x] w2-tool-panel-run — Design panel_run tool: MCP definition, SSR pipeline steps, concurrency, scoring, output format
 - [ ] w2-tool-panel-results — Design panel_results tool: MCP definition, result formatting for Discord, comparison mode
 - [ ] w2-supabase-schema — Design all DB tables (ssr_panel, ssr_persona, ssr_run, ssr_stimulus, ssr_response, ssr_score, ssr_anchor_set)
 - [ ] w2-anchor-statements — Design Likert anchor statement sets for all marketing evaluation dimensions
@@ -40,3 +40,4 @@ Bring everything together into a cohesive implementation spec.
 - [x] w1-embedding-options — Recommendation: `text-embedding-3-small` (OpenAI). Already in pyproject.toml (openai package). Cost $0.00006/20-persona run (<0.1% of total). 1536 dims. No new package dep. Requires: `OPENAI_API_KEY` env var + `OpenAISettings` in config.py + `openai_api_key: str` in `ToolContext` + injection in main.py. Scoring: softmax-weighted mean + argmax hard score via cosine similarity. Anchors pre-embedded at migration (stored as `FLOAT8[1536]`). numpy available transitively via pandas — no new dep.
 - [x] w1-supabase-patterns — Read 7 migrations. Key findings: (1) UUID PKs with `gen_random_uuid()`; (2) `TIMESTAMPTZ NOT NULL DEFAULT NOW()` for timestamps; (3) `updated_at` triggers reuse `update_updated_at_column()` (already defined); (4) status/enum = `TEXT NOT NULL` + `CHECK (col IN (...))` constraint; (5) all FKs have `ON DELETE CASCADE`; (6) no RLS for bot-owned tables (service_role bypasses it); (7) Discord IDs as `TEXT` on `session_templates` — SSR uses same; (8) `FLOAT8[]` for embedding vectors; (9) index naming `idx_ssr_{table}_{cols}`; (10) migration filename `20260301_create_ssr_panel_tables.sql`.
 - [x] w2-tool-panel-create — Full MCP definition: `ssr_panel_create` with `PanelCreateInput`, `PersonaDemographics` (age_min/max, genders, locations, income_brackets, education_levels, languages), `PersonaPsychographics` (interests, values, lifestyle_descriptors, media_consumption). Full system prompt + user prompt template for Haiku 4.5 persona generation. `asyncio.gather` concurrent generation, 50% threshold partial recovery, `_parse_persona_response()` regex parser, `_fmt_panel_created()` XML formatter, `_estimate_run_cost_usd()` ($0.003/persona). Cross-written to `pipeline/persona-generation.md`.
+- [x] w2-tool-panel-run — Full MCP definition: `ssr_panel_run` with `PanelRunInput`, `StimulusType` (10 values), `EvaluationDimension` (10 values with descriptions), `ResponseFormat` (summary/detailed/raw). Complete 4-stage pipeline: concurrent Haiku elicitation → batch OpenAI embedding → cosine similarity scoring per persona×dimension → aggregation. `_build_ssr_system_prompt()` (persona inhabitation, ~840 tokens) in `stimulus-presentation.md`. `_build_ssr_user_prompt()` with `_STIMULUS_LABELS`/`_STIMULUS_CONTEXT` per type in `response-elicitation.md`. `score_against_anchors()` (softmax-weighted + argmax), `_aggregate_scores()` (mean, std, mode, t-CI, highlights), `_select_highlights()`, `_extract_response_excerpt()`, hardcoded t-table in `scoring-aggregation.md`. 5 new repository files. All dataclasses defined.
