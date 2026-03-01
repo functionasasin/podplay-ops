@@ -3,14 +3,14 @@
 **Domain**: Campaigns
 **Spec file**: `specs/campaigns.md`
 **Wave 2 status**: Tool design complete
-**Wave 3 status**: In progress — CRUD section complete (w3-campaigns-crud)
+**Wave 3 status**: In progress — CRUD complete (w3-campaigns-crud), Wizard + Products complete (w3-campaigns-wizard)
 
 ---
 
 ## Table of Contents
 
 1. [Campaign Core CRUD](#campaign-core-crud) (6 tools) — **Wave 3 COMPLETE**
-2. [Campaign Draft / Wizard](#campaign-draft--wizard) (5 tools)
+2. [Campaign Draft / Wizard](#campaign-draft--wizard) (5 tools) — **Wave 3 COMPLETE**
 3. [Campaign Recipients](#campaign-recipients) (4 tools)
 4. [Campaign Senders](#campaign-senders) (2 tools)
 5. [Campaign Outbox](#campaign-outbox) (2 tools)
@@ -18,7 +18,7 @@
 7. [Merge Tags & Template Helpers](#merge-tags--template-helpers) (2 tools)
 8. [Google Sheet Validation](#google-sheet-validation) (1 tool)
 9. [Client Summary (AI)](#client-summary-ai) (1 tool)
-10. [Products](#products) (3 tools)
+10. [Products](#products) (3 tools) — **Wave 3 COMPLETE**
 11. [Campaign Enrichment](#campaign-enrichment) (2 tools)
 
 **Total**: 31 tools (1 existing + 30 new)
@@ -911,49 +911,111 @@ cheerful_duplicate_campaign(campaign_id="550e8400-e29b-41d4-a716-446655440000")
 
 ## Campaign Draft / Wizard
 
+> **Context**: The campaign wizard is a multi-step form (steps 0-7) in the webapp. Users can save their progress at any point as a "draft" and resume later. The draft stores all wizard state in a `draft_metadata` JSONB column on the `campaign` table. When the user finishes the wizard, they "launch" the campaign, which converts the draft to an active campaign, creates recipients/senders/outbox/workflows, and starts sending.
+
 ### `cheerful_save_campaign_draft`
 
 **Status**: NEW
 
-**Purpose**: Save a new campaign wizard draft. Creates a draft record that can be iteratively updated and eventually launched.
+**Purpose**: Save a new campaign wizard draft. Creates a `campaign` record with `status=draft` and stores all form state in the `draft_metadata` JSONB column. Does NOT create recipients, senders, or outbox entries.
 
-**Maps to**: `POST /api/service/campaigns/draft` (new service route needed; main route: `POST /campaigns/draft`)
+**Maps to**: `POST /api/service/campaigns/draft` (new service route needed; main route: `POST /campaigns/draft` in `campaign_launch.py` line 920)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: authenticated.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: authenticated (creates draft owned by user).
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| campaign_name | string | no | — | Campaign name |
-| campaign_type | enum | no | — | One of: "gifting", "paid_promotion", "sales", "creator", "other" |
-| is_external | boolean | no | false | External campaign flag |
-| product_id | uuid | no | — | Existing product ID |
-| product_ids | uuid[] | no | — | Additional product IDs |
-| product_name | string | no | — | New product name (if not using existing) |
-| product_description | string | no | — | Product description |
-| additional_products | object[] | no | — | Additional products (name, description per entry) |
-| subject_template | string | no | — | Email subject template |
-| body_template | string | no | — | Email body template |
-| campaign_goal | string | no | — | Campaign goal for AI context |
-| campaign_faqs | string | no | — | FAQs for AI context |
-| sample_emails | string | no | — | Sample emails for AI tone |
-| follow_up_templates | object[] | no | — | Follow-up templates |
-| google_sheet_url | string | no | — | Google Sheet URL for recipients |
-| google_sheet_tab_name | string | no | — | Sheet tab name |
-| tracking_rules | string | no | — | Tracking rules configuration |
-| selected_accounts | object[] | no | — | Selected sender accounts |
-| cc_emails | string[] | no | — | CC emails |
-| creators_csv_data | string | no | — | Raw CSV data for creators |
-| creators_csv_headers | string[] | no | — | CSV column headers |
-| search_creators | object[] | no | — | Creators found via search |
-| search_merged_emails | object[] | no | — | Merged email results from search |
-| email_signature | string | no | — | HTML email signature |
-| email_signature_enabled | boolean | no | — | Whether signature is enabled |
+| campaign_name | string | no | `null` | Campaign name. If `null`, stored as `"Untitled Draft"` in the `campaign.name` column. |
+| campaign_type | enum | no | `null` | Frontend campaign type. One of: `"seeding"`, `"paid"`, `"sales"`, `"creator"`, `"gifting"`. Mapped to backend enum: `seeding`→`gifting`, `gifting`→`gifting`, `paid`→`paid_promotion`, `sales`→`sales`, `creator`→`creator`. If `null`, defaults to `CampaignType.OTHER` in the DB column. |
+| is_external | boolean | no | `false` | External campaigns don't require recipients or email templates. |
+| product_id | uuid | no | `null` | Existing product ID to link. Stored in the `campaign.product_id` column directly. |
+| product_ids | uuid[] | no | `[]` | Additional product IDs. Stored as JSON string array in `draft_metadata.product_ids`. Not written to the `campaign_product` junction table until launch. |
+| product_name | string | no | `null` | New product name (for products not yet in the `product` table). Stored in `draft_metadata.product_name`. |
+| product_description | string | no | `null` | Product description for new products. Stored in `draft_metadata.product_description`. |
+| additional_products | list[dict] | no | `null` | Additional product cards with name/description (for new products not yet in DB). Stored in `draft_metadata.additional_products`. Each dict has `name` (string) and `description` (string) keys. |
+| subject_template | string | no | `null` | Email subject template with `{placeholders}`. Stored in both `campaign.subject_template` (as empty string if null) and `draft_metadata.subject_template`. |
+| body_template | string | no | `null` | Email body HTML template with `{placeholders}`. Stored in both `campaign.body_template` (as empty string if null) and `draft_metadata.body_template`. |
+| campaign_goal | string | no | `null` | Campaign goal text for AI drafting context. Stored in `campaign.goal_for_llm` and `draft_metadata.campaign_goal`. |
+| campaign_faqs | list[dict] | no | `null` | FAQ list. Each dict has `question` (string) and `answer` (string) keys. Stored in `campaign.frequently_asked_questions_for_llm` and `draft_metadata.campaign_faqs`. |
+| sample_emails | dict | no | `null` | Sample emails for AI tone matching. Freeform dict. Stored in `campaign.sample_emails_for_llm` and `draft_metadata.sample_emails`. |
+| follow_up_templates | FollowUpTemplateInput[] | no | `null` | Follow-up email templates. Max 10. Each has `index` (int, ≥0), `body_template` (string, min 1 char), `hours_since_last_email` (int, >0). Indices must be sequential 0-based. Stored as JSON dicts in `campaign.follow_up_templates` and `draft_metadata.follow_up_templates`. Sets `campaign.is_follow_up_enabled=true` if provided. |
+| google_sheet_url | string | no | `null` | Google Sheet URL for recipient tracking. Stored in `campaign.google_sheet_url`. |
+| google_sheet_tab_name | string | no | `null` | Google Sheet tab name. Stored in `campaign.google_sheet_tab_name`. |
+| tracking_rules | list[dict] | no | `null` | Tracking rules configuration. Each dict has `text` (string), optionally `isIgnored` (bool), `column` (string). Stored in `draft_metadata.tracking_rules` only (not in campaign columns until launch). |
+| selected_accounts | list[string] | no | `null` | Email addresses of sender accounts. Stored in `draft_metadata.selected_accounts` only (not in `campaign_sender` table until launch). |
+| cc_emails | list[string] | no | `null` | CC email addresses. Stored in `draft_metadata.cc_emails`. |
+| creators_csv_data | list[dict] | no | `null` | Parsed CSV data with email and custom fields per row. Each dict has `email` (string) plus arbitrary custom field keys. Stored in `draft_metadata.creators_csv_data`. |
+| creators_csv_headers | list[string] | no | `null` | CSV column headers in order. Stored in `draft_metadata.creators_csv_headers`. |
+| search_creators | list[dict] | no | `null` | Creators added via Influencer Club search. Each dict has `id` (string), `platform` (string), `name` (string), `handle` (string), `email` (string or null), and other IC fields. Stored in `draft_metadata.search_creators`. |
+| search_merged_emails | list[string] | no | `null` | Lowercase emails added to CSV data by the search flow (not from CSV upload). Used for removal tracking on hydration. Stored in `draft_metadata.search_merged_emails`. |
+| email_signature | string | no | `null` | HTML email signature content. If provided, validated for max length (10,000 chars) and sanitized via `sanitize_signature_html()`. Creates an `EmailSignature` record linked to the campaign with `is_default=false`. |
+| email_signature_enabled | boolean | no | `false` | Whether to append the signature to outbound emails. Sets `EmailSignature.is_enabled`. |
 
-**Returns**: `{ campaign_id: uuid, message: string }`
+**Parameter Validation Rules**:
+- `campaign_type`: Must be one of `"seeding"`, `"paid"`, `"sales"`, `"creator"`, `"gifting"` if provided. Invalid value returns 422.
+- `follow_up_templates`: If provided, indices must be sequential starting from 0 with no gaps or duplicates. Violation: `ValueError: "follow_up_templates indices must be sequential starting from 0. Got indices {actual}, expected {expected}."` Returns 422.
+- `email_signature`: Max 10,000 characters. Exceeded: `HTTPException 400: "Email signature exceeds maximum length of 10,000 characters"`.
+- All fields are optional — a completely empty request creates a minimal draft with `name="Untitled Draft"`, `campaign_type=other`, `status=draft`.
 
-**Notes**: This corresponds to the campaign wizard's "save progress" functionality. The draft stores all wizard state across steps 0-7 so users can resume later.
+**Return Schema**:
+```json
+{
+  "campaign_id": "uuid — ID of the newly created draft campaign",
+  "message": "string — Always 'Draft saved successfully'"
+}
+```
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Invalid campaign_type value | Pydantic validation error: not a valid enum value | 422 |
+| Follow-up template indices not sequential | "follow_up_templates indices must be sequential starting from 0..." | 422 |
+| Email signature too long | "Email signature exceeds maximum length of 10,000 characters" | 400 |
+
+**Pagination**: N/A
+
+**Example Request**:
+```
+cheerful_save_campaign_draft(
+  campaign_name="Summer Gifting 2026",
+  campaign_type="gifting",
+  product_name="Hydration Bottle Pro",
+  product_description="Premium stainless steel water bottle, 32oz",
+  subject_template="Hi {name}, we'd love to send you a {product}!",
+  body_template="Hey {name},\n\nWe're big fans of your content and would love to send you our Hydration Bottle Pro...",
+  selected_accounts=["outreach@brand.com", "sarah@brand.com"],
+  campaign_goal="Send free products to 50 micro-influencers in the fitness niche"
+)
+```
+
+**Example Response**:
+```json
+{
+  "campaign_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "message": "Draft saved successfully"
+}
+```
+
+**Slack Formatting Notes**:
+- On success: "Draft *{campaign_name}* saved (ID: `{campaign_id}`). Use `cheerful_update_campaign_draft` to continue editing, or `cheerful_launch_campaign` when ready to launch."
+- If no campaign_name provided: "Draft saved as *Untitled Draft* (ID: `{campaign_id}`)."
+
+**Edge Cases**:
+- Saving a draft with no fields: Creates a minimal draft with `name="Untitled Draft"`, `campaign_type=other`. Valid operation.
+- `product_id` references a non-existent product: The product_id is stored in the campaign column directly — no FK validation at save time. Validation happens at launch time.
+- `selected_accounts` with invalid emails: Stored in `draft_metadata` as-is. Validation only happens at launch when sender accounts are looked up.
+- `creators_csv_data` with invalid emails: Stored as-is. Validation happens at launch.
+- Signature with HTML: The signature is sanitized via `sanitize_signature_html()` which strips dangerous tags/attributes. The sanitized version is stored, not the raw input.
+- Creating multiple drafts: Each call creates a new draft — there is no "one draft per user" limit.
+
+**Storage Architecture**:
+The draft uses a dual-storage model:
+1. **Campaign columns**: `name`, `campaign_type`, `status` (=DRAFT), `is_external`, `product_id`, `subject_template`, `body_template`, `goal_for_llm`, `frequently_asked_questions_for_llm`, `sample_emails_for_llm`, `is_follow_up_enabled`, `follow_up_templates`, `google_sheet_url`, `google_sheet_tab_name`
+2. **`draft_metadata` JSONB column**: Everything else — including duplicates of some column values for the `campaign_name`/`campaign_type` frontend format, plus `selected_accounts`, `tracking_rules`, `cc_emails`, `creators_csv_data`, `creators_csv_headers`, `search_creators`, `search_merged_emails`, `product_name`, `product_description`, `product_ids`, `additional_products`
 
 ---
 
@@ -961,22 +1023,111 @@ cheerful_duplicate_campaign(campaign_id="550e8400-e29b-41d4-a716-446655440000")
 
 **Status**: NEW
 
-**Purpose**: Update an existing campaign wizard draft with new data.
+**Purpose**: Update an existing campaign wizard draft with new data. Only campaigns with `status=draft` can be updated via this endpoint.
 
-**Maps to**: `PUT /api/service/campaigns/draft/{campaign_id}` (new service route needed; main route: `PUT /campaigns/draft/{campaign_id}`)
+**Maps to**: `PUT /api/service/campaigns/draft/{campaign_id}` (new service route needed; main route: `PUT /campaigns/draft/{campaign_id}` in `campaign_launch.py` line 1045)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner (draft creator).
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: owner or assigned team member (verified via `CampaignMemberAssignmentRepository.can_access_campaign(user_id, campaign_id)`).
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | campaign_id | uuid | yes | — | Draft campaign ID to update |
-| *(all fields from save_campaign_draft)* | | no | — | Same optional fields — only provided fields are updated |
+| campaign_name | string | no | `null` (no change) | Campaign name. If set to empty string, stored as `"Untitled Draft"`. |
+| campaign_type | enum | no | `null` (no change) | Frontend campaign type. One of: `"seeding"`, `"paid"`, `"sales"`, `"creator"`, `"gifting"`. |
+| is_external | boolean | no | `null` (no change) | External campaign flag. |
+| product_id | uuid | no | `null` (no change) | Existing product ID. Stored in `campaign.product_id` column. |
+| product_ids | uuid[] | no | `[]` (no change if empty) | Additional product IDs. Stored as JSON string array in `draft_metadata.product_ids`. |
+| product_name | string | no | `null` (no change) | New product name for products not yet in DB. |
+| product_description | string | no | `null` (no change) | Product description for new products. |
+| additional_products | list[dict] | no | `null` (no change) | Additional product cards (name, description per entry). |
+| subject_template | string | no | `null` (no change) | Email subject template. |
+| body_template | string | no | `null` (no change) | Email body HTML template. |
+| campaign_goal | string | no | `null` (no change) | Campaign goal text for AI. |
+| campaign_faqs | list[dict] | no | `null` (no change) | FAQ list (question/answer pairs). |
+| sample_emails | dict | no | `null` (no change) | Sample emails for AI tone. |
+| follow_up_templates | FollowUpTemplateInput[] | no | `null` (no change) | Follow-up templates. Max 10. `null` = don't change, empty array `[]` = clear all follow-ups (sets `campaign.follow_up_templates=null`, `campaign.is_follow_up_enabled=false`). |
+| google_sheet_url | string | no | `null` (no change) | Google Sheet URL. |
+| google_sheet_tab_name | string | no | `null` (no change) | Sheet tab name. |
+| tracking_rules | list[dict] | no | `null` (no change) | Tracking rules configuration. |
+| selected_accounts | list[string] | no | `null` (no change) | Sender account email addresses. |
+| cc_emails | list[string] | no | `null` (no change) | CC email addresses. |
+| creators_csv_data | list[dict] | no | `null` (no change) | Parsed CSV data. |
+| creators_csv_headers | list[string] | no | `null` (no change) | CSV column headers. |
+| search_creators | list[dict] | no | `null` (no change) | Search-added creators. |
+| search_merged_emails | list[string] | no | `null` (no change) | Search-merged email addresses. |
+| email_signature | string | no | `null` (no change) | HTML email signature. Set to empty string `""` to remove the campaign's signature. Validated for max 10,000 chars and sanitized if non-empty. |
+| email_signature_enabled | boolean | no | `false` | Whether signature is enabled. |
 
-**Returns**: `{ campaign_id: uuid, message: string }`
+**Parameter Validation Rules**:
+- `campaign_id` must be a valid UUID. Invalid format returns 422.
+- `campaign_type`: Must be one of `"seeding"`, `"paid"`, `"sales"`, `"creator"`, `"gifting"` if provided. Invalid returns 422.
+- Campaign must have `status=draft`. Non-draft returns `HTTPException 400: "Only draft campaigns can be updated via this endpoint"`.
+- `follow_up_templates`: Same sequential 0-based index validation as save. Max 10.
+- `email_signature`: Max 10,000 characters.
+- Update uses merge semantics: the `draft_metadata` JSONB is updated with a full replace of the metadata dict (all keys are written, even if `null`). This means providing `null` for a field OVERWRITES the previously saved value in metadata. Only campaign column fields use `if request.field is not None` conditional update logic.
 
-**Error responses**: Draft not found (404), access denied (403).
+**Return Schema**:
+```json
+{
+  "campaign_id": "uuid — ID of the updated draft campaign",
+  "message": "string — Always 'Draft updated successfully'"
+}
+```
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Campaign not found | "Campaign not found: {campaign_id}" | 404 |
+| User not authorized | "Not authorized to update this campaign" | 403 |
+| Campaign not a draft | "Only draft campaigns can be updated via this endpoint" | 400 |
+| Invalid campaign_type | Pydantic validation error | 422 |
+| Follow-up template indices not sequential | "follow_up_templates indices must be sequential starting from 0..." | 422 |
+| Email signature too long | "Email signature exceeds maximum length of 10,000 characters" | 400 |
+
+**Pagination**: N/A
+
+**Example Request**:
+```
+cheerful_update_campaign_draft(
+  campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  campaign_name="Summer Gifting 2026 — v2",
+  follow_up_templates=[
+    {"index": 0, "body_template": "Hi {name}, just following up on our gifting offer...", "hours_since_last_email": 72},
+    {"index": 1, "body_template": "Hi {name}, last chance to claim your free product!", "hours_since_last_email": 120}
+  ],
+  selected_accounts=["outreach@brand.com", "sarah@brand.com", "mike@brand.com"]
+)
+```
+
+**Example Response**:
+```json
+{
+  "campaign_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "message": "Draft updated successfully"
+}
+```
+
+**Slack Formatting Notes**:
+- On success: "Draft *{campaign_name}* updated (ID: `{campaign_id}`). Continue editing with `cheerful_update_campaign_draft` or launch with `cheerful_launch_campaign`."
+- On 400 (not a draft): "This campaign is no longer a draft (status: {actual_status}). Use `cheerful_update_campaign` instead."
+
+**Side Effects**:
+- Updates `campaign.updated_at` timestamp on every update (explicit `datetime.now(timezone.utc)` assignment).
+- Email signature management:
+  - Non-empty `email_signature`: Creates or updates `EmailSignature` record for the campaign (note: signature belongs to the campaign OWNER, even if a team member is updating).
+  - Empty string `email_signature=""`: Deletes the campaign's `EmailSignature` record if one exists.
+  - `null` / not provided: No change to signature.
+
+**Edge Cases**:
+- Updating a campaign that was already launched (status=active): Returns 400 "Only draft campaigns can be updated via this endpoint". Use `cheerful_update_campaign` instead.
+- Team member updating a draft: Works — access is via `can_access_campaign`. However, the email signature record's `user_id` is always set to the campaign OWNER (not the requesting team member).
+- `draft_metadata` overwrite behavior: The update does a `dict.update()` on the existing metadata, overwriting ALL keys with the new values (including `null`s). If the save had `selected_accounts=["a@b.com"]` and the update sends `selected_accounts=null`, the metadata will contain `selected_accounts: null`.
+- `follow_up_templates=[]` (empty list): Clears follow-ups — sets `campaign.follow_up_templates=null` and `campaign.is_follow_up_enabled=false`.
+- `follow_up_templates=null`: No change to follow-ups.
 
 ---
 
@@ -984,21 +1135,127 @@ cheerful_duplicate_campaign(campaign_id="550e8400-e29b-41d4-a716-446655440000")
 
 **Status**: NEW
 
-**Purpose**: Load a saved campaign wizard draft with all stored state.
+**Purpose**: Load a saved campaign wizard draft with all stored state for form hydration. Returns data from both campaign columns and the `draft_metadata` JSONB, with product details resolved from the database.
 
-**Maps to**: `GET /api/service/campaigns/draft/{campaign_id}` (new service route needed; main route: `GET /campaigns/draft/{campaign_id}`)
+**Maps to**: `GET /api/service/campaigns/draft/{campaign_id}` (new service route needed; main route: `GET /campaigns/draft/{campaign_id}` in `campaign_launch.py` line 1223)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner (draft creator).
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: owner or assigned team member (verified via `CampaignMemberAssignmentRepository.can_access_campaign(user_id, campaign_id)`).
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | campaign_id | uuid | yes | — | Draft campaign ID to load |
 
-**Returns**: Full draft response object including all stored wizard fields, product info, CSV data, search creators, signature, and timestamps.
+**Parameter Validation Rules**:
+- `campaign_id` must be a valid UUID. Invalid format returns 422.
+- Campaign must have `status=draft`. Non-draft returns `HTTPException 400: "Campaign is not a draft"`.
 
-**Error responses**: Draft not found (404), access denied (403).
+**Return Schema**:
+```json
+{
+  "id": "uuid — Campaign ID",
+  "campaign_name": "string | null — From draft_metadata.campaign_name or campaign.name",
+  "campaign_type": "string | null — Frontend format: 'seeding', 'paid', 'sales', 'creator', 'gifting'. Resolved from draft_metadata.campaign_type first, then reverse-mapped from campaign.campaign_type (gifting→'gifting', paid_promotion→'paid', sales→'sales', creator→'creator', other→'sales')",
+  "is_external": "boolean — Default false",
+
+  "product_id": "uuid | null — Primary product ID from campaign.product_id column",
+  "product_ids": "uuid[] — Product IDs from campaign_product junction table, or from draft_metadata.product_ids if junction is empty",
+  "product_name": "string | null — If product_id exists: fetched from product.name. Otherwise: from draft_metadata.product_name",
+  "product_description": "string | null — If product_id exists: fetched from product.description. Otherwise: from draft_metadata.product_description",
+  "products": "list[dict] | null — Array of {id: string, name: string, description: string} for all products in product_ids. Null if no products.",
+  "additional_products": "list[dict] | null — Additional product cards from draft_metadata (for new products not yet in DB)",
+
+  "subject_template": "string | null — From draft_metadata.subject_template or campaign.subject_template",
+  "body_template": "string | null — From draft_metadata.body_template or campaign.body_template",
+  "campaign_goal": "string | null — From draft_metadata.campaign_goal or campaign.goal_for_llm",
+  "campaign_faqs": "list[dict] | null — From draft_metadata.campaign_faqs or campaign.frequently_asked_questions_for_llm",
+  "sample_emails": "dict | null — From draft_metadata.sample_emails or campaign.sample_emails_for_llm",
+  "follow_up_templates": "list[dict] | null — From draft_metadata.follow_up_templates or campaign.follow_up_templates. Each dict: {index: int, body_template: string, hours_since_last_email: int}",
+
+  "google_sheet_url": "string | null — From campaign.google_sheet_url",
+  "google_sheet_tab_name": "string | null — From campaign.google_sheet_tab_name",
+  "cc_emails": "list[string] | null — From draft_metadata.cc_emails",
+
+  "selected_accounts": "list[string] | null — Sender account email addresses from draft_metadata.selected_accounts",
+  "tracking_rules": "list[dict] | null — From draft_metadata.tracking_rules",
+
+  "creators_csv_data": "list[dict] | null — From draft_metadata.creators_csv_data",
+  "creators_csv_headers": "list[string] | null — From draft_metadata.creators_csv_headers",
+
+  "search_creators": "list[dict] | null — From draft_metadata.search_creators",
+  "search_merged_emails": "list[string] | null — From draft_metadata.search_merged_emails",
+
+  "email_signature": "string | null — From EmailSignature.content if a campaign signature exists, otherwise null",
+  "email_signature_enabled": "boolean — From EmailSignature.is_enabled if a campaign signature exists, otherwise false"
+}
+```
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Campaign not found | "Campaign not found: {campaign_id}" | 404 |
+| User not authorized | "Not authorized to view this campaign" | 403 |
+| Campaign not a draft | "Campaign is not a draft" | 400 |
+
+**Pagination**: N/A
+
+**Example Request**:
+```
+cheerful_get_campaign_draft(campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890")
+```
+
+**Example Response**:
+```json
+{
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "campaign_name": "Summer Gifting 2026",
+  "campaign_type": "gifting",
+  "is_external": false,
+  "product_id": null,
+  "product_ids": [],
+  "product_name": "Hydration Bottle Pro",
+  "product_description": "Premium stainless steel water bottle, 32oz",
+  "products": null,
+  "additional_products": null,
+  "subject_template": "Hi {name}, we'd love to send you a {product}!",
+  "body_template": "Hey {name},\n\nWe're big fans of your content and would love to send you our Hydration Bottle Pro...",
+  "campaign_goal": "Send free products to 50 micro-influencers in the fitness niche",
+  "campaign_faqs": null,
+  "sample_emails": null,
+  "follow_up_templates": [
+    {"index": 0, "body_template": "Hi {name}, just following up on our gifting offer...", "hours_since_last_email": 72},
+    {"index": 1, "body_template": "Hi {name}, last chance to claim your free product!", "hours_since_last_email": 120}
+  ],
+  "google_sheet_url": null,
+  "google_sheet_tab_name": null,
+  "cc_emails": null,
+  "selected_accounts": ["outreach@brand.com", "sarah@brand.com"],
+  "tracking_rules": null,
+  "creators_csv_data": [
+    {"email": "creator1@gmail.com", "name": "Jane Doe", "instagram": "@janedoe"},
+    {"email": "creator2@gmail.com", "name": "John Smith", "tiktok": "@johnsmith"}
+  ],
+  "creators_csv_headers": ["email", "name", "instagram", "tiktok"],
+  "search_creators": null,
+  "search_merged_emails": null,
+  "email_signature": "<p>Best regards,<br>The Brand Team</p>",
+  "email_signature_enabled": true
+}
+```
+
+**Slack Formatting Notes**:
+- Present as a structured summary: "Draft: *{campaign_name}*\n• Type: {campaign_type}\n• Product: {product_name or 'Not set'}\n• Senders: {selected_accounts count} accounts\n• Recipients: {creators_csv_data length} from CSV, {search_creators length} from search\n• Follow-ups: {follow_up_templates length} configured\n• Status: Ready to launch / Missing {list of required fields}"
+- If the agent needs to help the user complete the wizard, use this data to identify what's missing (no senders, no recipients, no email content, etc.).
+
+**Edge Cases**:
+- Draft with no product_id and no product_name in metadata: Returns `product_id=null`, `product_name=null`, `product_description=null`, `products=null`.
+- Draft with `product_id` pointing to a deleted product: Returns `product_id=UUID`, `product_name=null`, `product_description=null` (product SELECT returns None).
+- Draft with `product_ids` in metadata but not in junction table: Falls back to `draft_metadata.product_ids` and resolves them from the `product` table.
+- `campaign_type` resolution priority: `draft_metadata.campaign_type` (frontend format) takes precedence. If null, reverse-maps from `campaign.campaign_type` using `CAMPAIGN_TYPE_REVERSE_MAP` (which maps `CampaignType.OTHER` → `"sales"`).
+- Field resolution priority: For fields stored in both campaign columns and `draft_metadata`, the response prefers `draft_metadata` values first, falling back to column values if metadata is null. This means the frontend format is preserved.
 
 ---
 
@@ -1006,21 +1263,64 @@ cheerful_duplicate_campaign(campaign_id="550e8400-e29b-41d4-a716-446655440000")
 
 **Status**: NEW
 
-**Purpose**: Delete a campaign wizard draft.
+**Purpose**: Delete a campaign wizard draft permanently. Only campaigns with `status=draft` can be deleted via this endpoint.
 
-**Maps to**: `DELETE /api/service/campaigns/draft/{campaign_id}` (new service route needed; main route: `DELETE /campaigns/draft/{campaign_id}`)
+**Maps to**: `DELETE /api/service/campaigns/draft/{campaign_id}` (new service route needed; main route: `DELETE /campaigns/draft/{campaign_id}` in `campaign_launch.py` line 1352)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner (draft creator).
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: owner or assigned team member (verified via `CampaignMemberAssignmentRepository.can_access_campaign(user_id, campaign_id)`).
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| campaign_id | uuid | yes | — | Draft campaign ID to delete |
+| campaign_id | uuid | yes | — | Draft campaign ID to permanently delete |
 
-**Returns**: Success confirmation (204 No Content).
+**Parameter Validation Rules**:
+- `campaign_id` must be a valid UUID. Invalid format returns 422.
+- Campaign must have `status=draft`. Non-draft returns `HTTPException 400: "Only draft campaigns can be deleted via this endpoint"`.
 
-**Error responses**: Draft not found (404), access denied (403).
+**Return Schema**:
+```json
+null
+```
+Backend returns HTTP 204 No Content. Tool should return a confirmation message string.
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Campaign not found | "Campaign not found: {campaign_id}" | 404 |
+| User not authorized | "Not authorized to delete this campaign" | 403 |
+| Campaign not a draft | "Only draft campaigns can be deleted via this endpoint" | 400 |
+
+**Pagination**: N/A
+
+**Example Request**:
+```
+cheerful_delete_campaign_draft(campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890")
+```
+
+**Example Response**:
+```
+"Draft campaign a1b2c3d4-e5f6-7890-abcd-ef1234567890 deleted successfully."
+```
+
+**Slack Formatting Notes**:
+- Agent SHOULD confirm before deleting: "Are you sure you want to delete the draft *{campaign_name}*? This is permanent."
+- On success: "Draft *{campaign_name}* has been deleted."
+- Agent should retrieve draft name via `cheerful_get_campaign_draft` before deleting so it can display the name.
+
+**Side Effects — Cascading Deletions**:
+- The `db.delete(campaign)` triggers the same cascade as `cheerful_delete_campaign` (all campaign sub-resources). However, since the campaign is a draft, most sub-resources (recipients, senders, outbox, workflows) should not exist yet.
+- The `EmailSignature` record linked to the campaign (if any) is cascade-deleted.
+- Less destructive than deleting an active campaign since drafts typically have no recipients, senders, or outbox entries.
+
+**Edge Cases**:
+- Deleting a draft that has an associated `EmailSignature`: The signature is cascade-deleted.
+- Deleting a draft that was partially set up (e.g., product_id pointing to a product): The product itself is NOT deleted — only the campaign record.
+- Attempting to delete an active/paused/completed campaign: Returns 400 "Only draft campaigns can be deleted via this endpoint". Use `cheerful_delete_campaign` instead.
+- Draft with `product_ids` in `draft_metadata`: The `draft_metadata` JSONB is deleted with the campaign — no separate cleanup needed.
 
 ---
 
@@ -1028,52 +1328,210 @@ cheerful_duplicate_campaign(campaign_id="550e8400-e29b-41d4-a716-446655440000")
 
 **Status**: NEW
 
-**Purpose**: Launch a campaign from a saved draft. This is the culmination of the wizard flow — it creates the live campaign, populates the outbox, and starts workflows.
+**Purpose**: Launch a campaign — the culmination of the wizard flow. This complex orchestration endpoint creates or updates the campaign to `status=active`, creates/links products, validates and adds senders, processes recipients (from JSON and optional CSV), populates the outbox queue, creates integration workflows, uploads a campaign image, auto-creates a brand, seeds campaign creators from recipient social data, and sends a Slack notification. All operations happen in a single database transaction.
 
-**Maps to**: `POST /api/service/campaigns/launch` (new service route needed; main route: `POST /campaigns/launch`)
+**Maps to**: `POST /api/service/campaigns/launch` (new service route needed; main route: `POST /campaigns/launch` in `campaign_launch.py` line 445)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: authenticated (creates a new campaign owned by user).
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: authenticated (creates new campaign owned by user). If `draft_campaign_id` is provided, permission is owner or assigned team member (via `can_access_campaign`).
 
-**Parameters**:
+> **Important**: The main API endpoint accepts `multipart/form-data` with three fields: `campaign_data` (JSON string), `csv_file` (optional file upload), `image_file` (optional file upload). The CE tool cannot handle file uploads from Slack. The service route must accept `csv_content` (string) and `image_url` (string) as alternatives, or the CE tool should require CSV recipients to be added separately via `cheerful_add_campaign_recipients` or `cheerful_upload_campaign_recipients_csv` after launch.
+
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| draft_campaign_id | uuid | no | — | ID of draft to launch from (if using wizard flow) |
-| campaign_type | enum | yes | — | One of: "gifting", "paid_promotion", "sales", "creator", "other" |
-| campaign_name | string | yes | — | Campaign name |
-| product_name | string | no | — | Product name |
-| product_description | string | no | — | Product description |
-| product_url | string | no | — | Product URL (triggers Firecrawl scraping) |
-| existing_product_id | uuid | no | — | Use existing product instead of creating new |
-| additional_product_ids | uuid[] | no | — | Additional product IDs |
-| is_external | boolean | no | false | External campaign flag |
-| campaign_goal | string | no | — | Campaign goal for AI |
-| campaign_faqs | string | no | — | FAQs for AI |
-| sample_emails | string | no | — | Sample emails for AI tone |
-| tracking_rules | string | no | — | Tracking rules |
-| google_sheet_url | string | no | — | Google Sheet URL |
-| google_sheet_tab_title | string | no | — | Sheet tab title |
-| selected_accounts | object[] | no | — | Sender account selections |
-| email_draft | object | no | — | Email draft with subject + body templates |
-| recipients | object[] | no | — | Recipient list (email, name, custom_fields, social handles) |
-| follow_up_templates | object[] | no | — | Follow-up email templates |
-| integrations | object | no | — | Integration configs (workflows to create) |
-| cc_emails | string[] | no | — | CC email addresses |
-| is_lookalike_suggestions_enabled | boolean | no | false | Enable lookalike suggestions |
-| has_creators_pending_enrichment | boolean | no | false | Flag that enrichment is in progress |
-| automation_level | string | no | — | Automation level |
-| slack_channel_id | string | no | — | Slack channel for notifications |
-| email_signature | string | no | — | HTML email signature |
-| email_signature_enabled | boolean | no | — | Whether signature is enabled |
+| draft_campaign_id | uuid | no | `null` | If provided, converts this existing draft to an active campaign instead of creating a new one. Draft must have `status=draft`. Resource ownership (products, senders) is validated against the draft's original owner, not the launching user (relevant for team members). |
+| campaign_type | enum | yes | — | Frontend campaign type. One of: `"seeding"`, `"paid"`, `"sales"`, `"creator"`, `"gifting"`. Mapped to backend: `seeding`→`GIFTING`, `gifting`→`GIFTING`, `paid`→`PAID_PROMOTION`, `sales`→`SALES`, `creator`→`CREATOR`. Unmapped values default to `OTHER`. |
+| product_name | string | conditional | `null` | Product name. Required for non-creator, non-external campaigns. If `existing_product_id` is not provided, used to look up or create a product (by `(user_id, name)` unique key). |
+| product_description | string | no | `null` | Product description for new products. Used only when creating a new product. |
+| product_url | string | no | `null` | Product URL. Used for: (1) setting `product.url_to_scrape` on new products, (2) auto-creating a brand via BrandfetchService (best-effort, failure is non-fatal). |
+| existing_product_id | uuid | no | `null` | Explicit product ID to use. Overrides `product_name` lookup. Must be owned by the resource owner (campaign creator or draft owner). |
+| additional_product_ids | uuid[] | no | `[]` | Additional existing product IDs to associate. Each must be owned by the resource owner. Duplicates of the primary product ID are silently skipped. |
+| is_external | boolean | no | `false` | External campaigns don't require recipients or email templates. |
+| campaign_name | string | no | `null` | Campaign name. Defaults to `product_name` if not provided. Falls back to `"Creator Campaign"` if both are null. |
+| campaign_goal | string | no | `null` | Campaign goal text for AI context. |
+| campaign_faqs | list[dict] | no | `null` | FAQ list (question/answer pairs) for AI context. |
+| sample_emails | dict | no | `null` | Sample emails for AI tone matching. |
+| tracking_rules | list[dict] | no | `null` | Tracking rules for Google Sheet integration. Each rule dict has `text` (string), optionally `isIgnored` (bool), `column` (string). Active rules (where `isIgnored` is not true) are joined with newlines and stored as `google_sheet_data_instructions`. Ignored rules' column names are stored in `google_sheet_columns_to_skip`. |
+| google_sheet_url | string | no | `null` | Google Sheet URL for recipient tracking. |
+| google_sheet_tab_title | string | no | `null` | Google Sheet tab title. Note: parameter name is `tab_title` (not `tab_name` as in draft). |
+| selected_accounts | list[string] | yes | — | Email addresses of sender accounts to use. Must contain at least 1 (`min_length=1`). Each email is validated against `UserGmailAccount` (checked first) and `UserSmtpAccount`. Must be active (`is_active=True`) and owned by the resource owner. |
+| email_draft | EmailDraft | conditional | `null` | Email content template. Required for non-creator, non-external campaigns. Sub-fields: `subject_line` (string, min 1 char) and `email_body` (string, min 1 char), both with `{placeholder}` support. |
+| recipients | list[RecipientData] | conditional | `[]` | Recipient list. Each recipient has `email` (EmailStr, required), `name` (string, optional), `custom_fields` (dict, optional). Required for non-creator, non-external campaigns (unless `has_creators_pending_enrichment=true`). Combined with CSV recipients — total must be ≥1 for non-external, non-creator campaigns without pending enrichment. |
+| follow_up_templates | list[FollowUpTemplateInput] | no | `null` | Follow-up email templates. Max 10 (`max_length=10`). Each: `index` (int, ≥0), `body_template` (string, min 1 char), `hours_since_last_email` (int, >0). Indices must be sequential 0-based. |
+| integrations | dict | no | `null` | Integration configuration for workflow creation. Supported keys: `goaffpro_token` (string — GoAffPro API key), `discount_enabled` (bool — create GoAffPro discount workflow), `discount_type` (string — `"percentage"` or `"fixed_amount"`, default `"percentage"`), `discount_value` (number — default `10`), `orders_enabled` (bool — create Shopify order drafting workflow). |
+| cc_emails | list[string] | no | `null` | CC email addresses for all outbound emails. Passed to outbox queue population. |
+| is_lookalike_suggestions_enabled | boolean | no | `false` | Enable YouTube lookalike creator suggestions for this campaign. |
+| has_creators_pending_enrichment | boolean | no | `false` | If true, creators without emails will be added post-launch for enrichment. Bypasses the empty-recipients check for non-external, non-creator campaigns. |
+| automation_level | string | no | `null` | Reply automation level. Convention: `"manual"`, `"semi-automated"`, `"fully-automated"`. No enum validation — stored as-is. |
+| slack_channel_id | string | no | `null` | Slack channel ID for campaign notifications (e.g., `"C0ADFMSMZU4"`). |
+| email_signature | string | no | `null` | HTML email signature content. Max 10,000 chars. Sanitized via `sanitize_signature_html()`. Creates or updates `EmailSignature` record for the campaign. |
+| email_signature_enabled | boolean | no | `false` | Whether to append the signature to outbound emails. |
+| csv_content | string | no | `null` | **CE-specific parameter** (not in main API). Raw CSV text content for recipients. Must have an `email` column. Parsed, deduplicated, and combined with `recipients` list. NOTE: The main API accepts `csv_file` as a `multipart/form-data` upload — the service route must accept this as text instead. |
 
-**Returns**: `{ campaign_id: uuid, status: "launched", workflow_id: string }`
+**Parameter Validation Rules (from Pydantic model validators)**:
+1. **`validate_follow_up_templates_sequential`**: Follow-up template indices must be sequential starting from 0. `Got indices {actual}, expected {expected}.` Returns 422.
+2. **`validate_product_name`**: `product_name` is required for non-creator, non-external campaigns. If `campaign_type="creator"` or `is_external=true`, product_name can be null. Otherwise: `"product_name is required for non-creator, non-external campaigns"`. Returns 422.
+3. **`validate_email_draft`**: `email_draft` is required for non-creator, non-external campaigns. Both `subject_line` and `email_body` must be non-empty. `"email_draft is required for non-creator, non-external campaigns"`, `"email_draft.subject_line is required..."`, `"email_draft.email_body is required..."`. Returns 422.
+4. **Route-level recipient validation**: After combining JSON recipients and CSV recipients, total must be ≥1 for non-creator, non-external campaigns (unless `has_creators_pending_enrichment=true`). `"Non-creator, non-external campaigns require at least one recipient."` Returns 400.
+5. **Sender account validation**: Each email in `selected_accounts` is validated against `UserGmailAccount` (checked first) then `UserSmtpAccount`. Must be active and owned by the resource owner. `"Not authorized to use sender account: {email}"` (403), `"Sender account not found or inactive: {email}"` (404). After validation: `"No valid sender accounts found. Check that the email addresses exist and are active."` (404).
+6. **Email signature**: Max 10,000 chars. `"Email signature exceeds maximum length of 10,000 characters"`. Returns 400.
+7. **CSV parsing**: Must contain an `email` column. `"CSV must contain an 'email' column. Found columns: {first 5 columns}"`. Returns 400.
+8. **Queue population**: Template placeholders must match recipient custom fields. `"Personalization failed: {error}. Check that all template placeholders have matching recipient fields."`. Returns 400.
 
-**Notes**:
-- The main API endpoint accepts `multipart/form-data` with optional `csv_file` and `image_file` uploads. The CE tool will need to handle this differently — either accept file content as base64/text params or require files to be uploaded separately first.
-- This is a complex orchestration endpoint that: creates/links products, creates the campaign, adds senders, adds recipients, populates outbox, creates workflows, triggers enrichment, and starts background processes.
-- The Slack agent should use this for the complete "set up and launch" flow, typically after walking the user through configuration via conversation.
+**Return Schema**:
+```json
+{
+  "campaign_id": "uuid — ID of the launched campaign (new or converted draft)",
+  "campaign_name": "string — Final campaign name",
+  "recipients_added": "integer — Number of recipients successfully added (deduplicated)",
+  "senders_added": "integer — Number of sender accounts linked",
+  "queue_entries_created": "integer — Number of outbox queue entries created",
+  "workflow_created": "boolean — Whether integration workflows were created (GoAffPro discount and/or Shopify order drafting)",
+  "image_uploaded": "boolean — Whether a campaign image was uploaded. Always false for CE (no file upload support)"
+}
+```
 
-**Side effects**: Creates campaign, creates/links products, adds senders, adds recipients, populates outbox, creates workflows, optionally starts enrichment.
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Invalid campaign_data JSON | "Invalid campaign data: {error}" | 422 |
+| Draft not found (when draft_campaign_id provided) | "Draft campaign not found: {draft_campaign_id}" | 404 |
+| User cannot access draft | "Not authorized to launch this campaign" | 403 |
+| Draft not in DRAFT status | "Campaign is not a draft" | 400 |
+| Product not found (existing_product_id) | "Product not found: {product_id}" | 404 |
+| Product not owned by resource owner | "Not authorized to use this product" | 403 |
+| Additional product not found | "Product not found: {product_id}" | 404 |
+| Additional product not owned | "Not authorized to use this product" | 403 |
+| Sender account not found/inactive | "Sender account not found or inactive: {email}" | 404 |
+| Sender account not owned | "Not authorized to use sender account: {email}" | 403 |
+| No valid sender accounts | "No valid sender accounts found. Check that the email addresses exist and are active." | 404 |
+| No recipients (non-external, non-creator) | "Non-creator, non-external campaigns require at least one recipient." | 400 |
+| product_name required | "product_name is required for non-creator, non-external campaigns" | 422 |
+| email_draft required | "email_draft is required for non-creator, non-external campaigns" | 422 |
+| email_draft.subject_line required | "email_draft.subject_line is required for non-creator, non-external campaigns" | 422 |
+| email_draft.email_body required | "email_draft.email_body is required for non-creator, non-external campaigns" | 422 |
+| Follow-up indices invalid | "follow_up_templates indices must be sequential starting from 0..." | 422 |
+| CSV missing email column | "CSV must contain an 'email' column. Found columns: {columns}" | 400 |
+| Template personalization failed | "Personalization failed: {error}. Check that all template placeholders have matching recipient fields." | 400 |
+| Campaign image invalid type | "Invalid image type '{type}'. Allowed: image/jpeg, image/png, image/gif, image/webp" | 400 |
+| Image upload failed | "Failed to upload campaign image: {error}" | 500 |
+| Signature too long | "Email signature exceeds maximum length of 10,000 characters" | 400 |
+
+**Pagination**: N/A
+
+**Example Request** (launch from draft):
+```
+cheerful_launch_campaign(
+  draft_campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  campaign_type="gifting",
+  campaign_name="Summer Gifting 2026",
+  product_name="Hydration Bottle Pro",
+  product_description="Premium stainless steel water bottle, 32oz",
+  selected_accounts=["outreach@brand.com", "sarah@brand.com"],
+  email_draft={"subject_line": "Hi {name}, free product for you!", "email_body": "Hey {name},\n\nWe love your content..."},
+  recipients=[
+    {"email": "creator1@gmail.com", "name": "Jane Doe", "custom_fields": {"instagram": "@janedoe"}},
+    {"email": "creator2@gmail.com", "name": "John Smith", "custom_fields": {"tiktok": "@johnsmith"}}
+  ],
+  follow_up_templates=[
+    {"index": 0, "body_template": "Hi {name}, following up on our offer...", "hours_since_last_email": 72}
+  ],
+  automation_level="semi-automated",
+  is_lookalike_suggestions_enabled=true
+)
+```
+
+**Example Request** (launch new campaign without draft):
+```
+cheerful_launch_campaign(
+  campaign_type="sales",
+  campaign_name="Q2 Outbound",
+  product_name="SaaS Platform Pro",
+  selected_accounts=["sales@company.com"],
+  email_draft={"subject_line": "Quick question, {name}", "email_body": "Hi {name},\n\nI noticed your company {company} is..."},
+  recipients=[
+    {"email": "lead1@prospect.com", "name": "Alice", "custom_fields": {"company": "TechCorp"}},
+    {"email": "lead2@prospect.com", "name": "Bob", "custom_fields": {"company": "StartupInc"}}
+  ]
+)
+```
+
+**Example Request** (external campaign — no recipients/email needed):
+```
+cheerful_launch_campaign(
+  campaign_type="creator",
+  campaign_name="Inbound Creator Campaign",
+  is_external=true,
+  selected_accounts=["outreach@brand.com"],
+  campaign_goal="Manage inbound creator applications",
+  automation_level="fully-automated"
+)
+```
+
+**Example Response**:
+```json
+{
+  "campaign_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "campaign_name": "Summer Gifting 2026",
+  "recipients_added": 2,
+  "senders_added": 2,
+  "queue_entries_created": 2,
+  "workflow_created": false,
+  "image_uploaded": false
+}
+```
+
+**Slack Formatting Notes**:
+- On success: ":rocket: Campaign *{campaign_name}* launched!\n• Recipients: {recipients_added}\n• Senders: {senders_added}\n• Emails queued: {queue_entries_created}\n• Workflows: {workflow_created ? 'Created' : 'None'}"
+- If `workflow_created=true`: Add "GoAffPro discount codes and/or Shopify order drafting workflows are active."
+- If `queue_entries_created=0` and `recipients_added>0`: "Note: Outbox queue was not populated. This may happen if there are no senders configured."
+- If launching from a draft, the agent should first use `cheerful_get_campaign_draft` to review the draft state with the user, confirm the settings, then launch.
+
+**Side Effects (Orchestration Steps)**:
+
+The launch endpoint executes the following steps in order, all within a single DB transaction:
+
+1. **Draft access check** (if `draft_campaign_id` provided): Verify campaign exists, user has access (via `can_access_campaign`), and status is DRAFT. Set `resource_owner_id` to the draft's original owner (for product/sender validation).
+2. **Product handling**: Create or look up primary product by `existing_product_id` or `product_name` (name-based lookup uses `(user_id, name)` unique key — creates if not found). Validate and add `additional_product_ids`. All products must be owned by the resource owner.
+3. **Brand auto-creation**: If `product_url` is provided, attempt to auto-create a brand via `BrandfetchService.get_or_create_brand()`. Failure is non-fatal (logged as warning).
+4. **Sender validation**: Each email in `selected_accounts` is looked up in `UserGmailAccount` (first) then `UserSmtpAccount`. Must be active and owned by resource owner. Returns list of `(account_id, account_type)` tuples.
+5. **CSV parsing** (if `csv_file` or `csv_content` provided): Parse CSV, require `email` column, deduplicate by email, clean invalid emails.
+6. **Combine recipients**: Merge JSON `recipients` with CSV recipients.
+7. **Recipient validation**: For non-external, non-creator campaigns without `has_creators_pending_enrichment`, require ≥1 recipient.
+8. **Campaign type mapping**: Map frontend type to backend enum.
+9. **Follow-up preparation**: Convert templates to dicts.
+10. **Tracking rules processing**: Split into active rules (joined as `google_sheet_data_instructions`) and ignored rules (columns stored in `google_sheet_columns_to_skip`).
+11. **Signature validation**: Validate length, sanitize HTML.
+12. **Campaign create/update**: If `draft_campaign_id`, update existing draft to ACTIVE. Otherwise, create new Campaign with `status=ACTIVE`. Clear `draft_metadata=null` on draft conversion.
+13. **Signature record**: Create or update `EmailSignature` record (belongs to resource owner, not requesting user).
+14. **Image upload** (if image_file provided — not applicable for CE): Upload to Supabase Storage, set `campaign.image_url`.
+15. **Product junction**: Replace `campaign_product` records via `replace_for_campaign()`.
+16. **Recipients**: Insert `CampaignRecipient` records (idempotent by campaign_id + email).
+17. **Creator seeding**: For each recipient with social handles or name, create `CampaignCreator` record (idempotent by email) with `source="csv_upload"`.
+18. **Senders**: Insert `CampaignSender` records (idempotent). Each sender gets either `gmail_account_id` or `smtp_account_id`.
+19. **Workflow creation**: If `integrations.goaffpro_token` is set:
+    - If `integrations.discount_enabled=true`: Create "GoAffPro Discount Code Creation" workflow with tools `[goaffpro_search_affiliate, goaffpro_create_affiliate, goaffpro_create_discount]` and config `{goaffpro_api_key, discount_type, discount_value}`.
+    - If `integrations.orders_enabled=true`: Create "Shopify Order Drafting" workflow with tools `[goaffpro_search_affiliate, goaffpro_create_affiliate]` and config `{goaffpro_api_key}`.
+20. **Outbox population**: If `recipients_added > 0` and `senders_added > 0`, call `populate_queue_for_campaign()` with round-robin sender distribution and template placeholder validation. Passes `cc_emails`.
+21. **Commit transaction**.
+22. **Slack notification** (post-commit, best-effort): Post to hardcoded channel `C0ADFMSMZU4` with campaign launch details including user name and email.
+
+**Edge Cases**:
+- **Launch from draft as team member**: Works — access via `can_access_campaign`. Products and senders are validated against the DRAFT OWNER (not the launching team member). The `resource_owner_id` is set to `draft_campaign.user_id`.
+- **Launch without draft (direct launch)**: Creates a new campaign. `resource_owner_id` = requesting user.
+- **Duplicate recipient emails**: Silently deduplicated — `idempotent_insert` returns 0 for duplicates.
+- **CSV + JSON recipients overlap**: Both sources are combined. Deduplication happens at the DB level via idempotent insert.
+- **Creator campaign with no recipients**: Valid — creator campaigns skip the recipient requirement entirely.
+- **External campaign with no email_draft**: Valid — external campaigns skip the email draft requirement.
+- **Product name collision**: If `product_name` matches an existing product for the user, the existing product is reused (not duplicated).
+- **Sender account is Gmail AND SMTP**: Gmail is checked first. If found, SMTP is not checked for that email.
+- **Template placeholder mismatch**: If `email_draft.email_body` contains `{company}` but no recipient has a `company` custom field, personalization fails with 400. This happens at outbox population (step 20), so the campaign IS created but the queue is not populated. The transaction rolls back entirely.
+- **Brand auto-create failure**: Logged as warning, does not prevent campaign launch. `brand_id` is simply `null`.
+- **Image upload failure**: Raises 500. Transaction has already been committed at this point — NO, actually the image upload happens BEFORE commit. If it fails, the entire transaction rolls back.
+- **Queue population failure (personalization)**: Raises 400. Since this happens before `db.commit()`, the entire transaction rolls back — no campaign, no recipients, nothing is created.
 
 ---
 
@@ -1460,27 +1918,83 @@ cheerful_duplicate_campaign(campaign_id="550e8400-e29b-41d4-a716-446655440000")
 
 ## Products
 
+> **Context**: Products are standalone entities owned by users. They can be linked to campaigns during the wizard flow (via `product_id` or `product_ids`). Products have a unique constraint on `(user_id, name)`. The product table has 6 columns: `id`, `user_id`, `name`, `description`, `url_to_scrape`, `created_at`.
+
 ### `cheerful_create_product`
 
 **Status**: NEW
 
-**Purpose**: Create a new product that can be linked to campaigns.
+**Purpose**: Create a new product that can be linked to campaigns. Products have a unique constraint on `(user_id, name)` — creating a product with a duplicate name returns 409.
 
-**Maps to**: `POST /api/service/products` (new service route needed; main route: `POST /products/`)
+**Maps to**: `POST /api/service/products` (new service route needed; main route: `POST /products/` in `product.py` line 22)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: authenticated.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: authenticated (product is owned by the user).
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| name | string | yes | — | Product name |
-| description | string | no | — | Product description |
-| url_to_scrape | string | no | — | Product URL (triggers Firecrawl scraping for auto-enrichment) |
+| name | string | yes | — | Product name. Must be unique per user (case-sensitive). Stored as `product.name` (Text, NOT NULL). |
+| description | string | yes | — | Product description. Stored as `product.description` (Text, NOT NULL). Pass empty string `""` if no description. |
+| url_to_scrape | string | no | `null` | Product URL. Stored as `product.url_to_scrape` (Text, nullable). Note: despite the field name suggesting automatic scraping, the product create endpoint does NOT trigger any scraping. Scraping may happen at campaign launch time via BrandfetchService if `product_url` is provided to the launch endpoint. |
 
-**Returns**: Full product response object with generated ID and timestamps.
+**Parameter Validation Rules**:
+- `name` is required. Missing returns 422.
+- `description` is required. Missing returns 422.
+- `(user_id, name)` unique constraint. Duplicate returns `HTTPException 409: "Product with name '{name}' already exists"`.
 
-**Notes**: If `url_to_scrape` is provided, the backend uses Firecrawl to scrape product details and may auto-create a Brand entity via BrandfetchService.
+**Return Schema** (`ProductResponse`):
+```json
+{
+  "id": "uuid — Auto-generated product ID",
+  "user_id": "uuid — Owner's user ID",
+  "name": "string — Product name",
+  "description": "string — Product description",
+  "url_to_scrape": "string | null — Product URL",
+  "created_at": "datetime — ISO 8601 timestamp with timezone"
+}
+```
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Missing name or description | Pydantic validation error | 422 |
+| Duplicate product name | "Product with name '{name}' already exists" | 409 |
+
+**Pagination**: N/A
+
+**Example Request**:
+```
+cheerful_create_product(
+  name="Hydration Bottle Pro",
+  description="Premium stainless steel water bottle, 32oz, double-wall vacuum insulated",
+  url_to_scrape="https://example.com/products/hydration-bottle-pro"
+)
+```
+
+**Example Response**:
+```json
+{
+  "id": "b5c6d7e8-f9a0-1234-5678-90abcdef1234",
+  "user_id": "83a3177e-0307-4e5f-ae4e-4bc823db56e9",
+  "name": "Hydration Bottle Pro",
+  "description": "Premium stainless steel water bottle, 32oz, double-wall vacuum insulated",
+  "url_to_scrape": "https://example.com/products/hydration-bottle-pro",
+  "created_at": "2026-03-01T14:00:00+00:00"
+}
+```
+
+**Slack Formatting Notes**:
+- On success: "Product *{name}* created (ID: `{id}`). You can now link it to a campaign using `cheerful_create_campaign` or `cheerful_launch_campaign`."
+- On 409 (duplicate): "A product named *{name}* already exists. Use `cheerful_list_products` to find it, or choose a different name."
+
+**Edge Cases**:
+- Creating a product with the same name as a product owned by another user: Works — unique constraint is per user, not global.
+- `url_to_scrape` with invalid URL format: No validation — stored as-is. Format validation is the caller's responsibility.
+- `description` as empty string: Valid — stored as empty string.
+- Product has no update or delete endpoints in the main API. To "update" a product, the user must create a new one and re-link campaigns. However, `ProductUpdateRequest` model exists but no route uses it.
 
 ---
 
@@ -1488,15 +2002,76 @@ cheerful_duplicate_campaign(campaign_id="550e8400-e29b-41d4-a716-446655440000")
 
 **Status**: NEW
 
-**Purpose**: List all products owned by the authenticated user.
+**Purpose**: List all products owned by the authenticated user. Returns all products with no filtering or pagination.
 
-**Maps to**: `GET /api/service/products` (new service route needed; main route: `GET /products/`)
+**Maps to**: `GET /api/service/products` (new service route needed; main route: `GET /products/` in `product.py` line 64)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: authenticated.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: authenticated (returns only user's products).
 
-**Parameters**: None (user-scoped via injected context).
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
-**Returns**: Array of product response objects (id, name, description, url, created_at).
+None. This endpoint has no parameters — it returns all products owned by the authenticated user.
+
+**Parameter Validation Rules**: None.
+
+**Return Schema**:
+```json
+[
+  {
+    "id": "uuid — Product ID",
+    "user_id": "uuid — Owner's user ID",
+    "name": "string — Product name",
+    "description": "string — Product description",
+    "url_to_scrape": "string | null — Product URL",
+    "created_at": "datetime — ISO 8601 timestamp with timezone"
+  }
+]
+```
+Returns an array of `ProductResponse` objects. Empty array `[]` if the user has no products.
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+
+**Pagination**: None — returns ALL products. No limit/offset support. If a user has many products, the full list is returned. In practice, users typically have <50 products.
+
+**Example Request**:
+```
+cheerful_list_products()
+```
+
+**Example Response**:
+```json
+[
+  {
+    "id": "b5c6d7e8-f9a0-1234-5678-90abcdef1234",
+    "user_id": "83a3177e-0307-4e5f-ae4e-4bc823db56e9",
+    "name": "Hydration Bottle Pro",
+    "description": "Premium stainless steel water bottle, 32oz",
+    "url_to_scrape": "https://example.com/products/hydration-bottle-pro",
+    "created_at": "2026-03-01T14:00:00+00:00"
+  },
+  {
+    "id": "c6d7e8f9-a0b1-2345-6789-0abcdef12345",
+    "user_id": "83a3177e-0307-4e5f-ae4e-4bc823db56e9",
+    "name": "Fitness Tracker Band",
+    "description": "Waterproof fitness tracker with heart rate monitor",
+    "url_to_scrape": null,
+    "created_at": "2026-02-15T10:30:00+00:00"
+  }
+]
+```
+
+**Slack Formatting Notes**:
+- Present as a numbered list: "Your products:\n1. *Hydration Bottle Pro* — Premium stainless steel water bottle, 32oz\n2. *Fitness Tracker Band* — Waterproof fitness tracker with heart rate monitor"
+- If no products: "You don't have any products yet. Create one with `cheerful_create_product`."
+- If the user is looking for a product to link to a campaign, show the product IDs for easy reference.
+
+**Edge Cases**:
+- User with no products: Returns empty array `[]`.
+- Products are not sorted — order is implementation-dependent (typically by insertion order).
 
 ---
 
@@ -1504,21 +2079,67 @@ cheerful_duplicate_campaign(campaign_id="550e8400-e29b-41d4-a716-446655440000")
 
 **Status**: NEW
 
-**Purpose**: Get a single product by ID.
+**Purpose**: Get a single product by ID. Verifies the product is owned by the authenticated user.
 
-**Maps to**: `GET /api/service/products/{product_id}` (new service route needed; main route: `GET /products/{product_id}`)
+**Maps to**: `GET /api/service/products/{product_id}` (new service route needed; main route: `GET /products/{product_id}` in `product.py` line 78)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: authenticated (product must belong to user).
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: authenticated (product must be owned by user — `product.user_id == user_id`).
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| product_id | uuid | yes | — | Product ID |
+| product_id | uuid | yes | — | Product ID to retrieve |
 
-**Returns**: Full product response object with all fields.
+**Parameter Validation Rules**:
+- `product_id` must be a valid UUID. Invalid format returns 422.
 
-**Error responses**: Product not found (404), access denied (403).
+**Return Schema** (`ProductResponse`):
+```json
+{
+  "id": "uuid — Product ID",
+  "user_id": "uuid — Owner's user ID",
+  "name": "string — Product name",
+  "description": "string — Product description",
+  "url_to_scrape": "string | null — Product URL",
+  "created_at": "datetime — ISO 8601 timestamp with timezone"
+}
+```
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Product not found | "Product not found" | 404 |
+| Product not owned by user | "Not authorized" | 403 |
+
+**Pagination**: N/A
+
+**Example Request**:
+```
+cheerful_get_product(product_id="b5c6d7e8-f9a0-1234-5678-90abcdef1234")
+```
+
+**Example Response**:
+```json
+{
+  "id": "b5c6d7e8-f9a0-1234-5678-90abcdef1234",
+  "user_id": "83a3177e-0307-4e5f-ae4e-4bc823db56e9",
+  "name": "Hydration Bottle Pro",
+  "description": "Premium stainless steel water bottle, 32oz, double-wall vacuum insulated",
+  "url_to_scrape": "https://example.com/products/hydration-bottle-pro",
+  "created_at": "2026-03-01T14:00:00+00:00"
+}
+```
+
+**Slack Formatting Notes**:
+- Display as a brief card: "*Hydration Bottle Pro*\n_{description}_\nURL: {url_to_scrape or 'None'}\nCreated: {created_at formatted as human-readable date}"
+
+**Edge Cases**:
+- Getting a product owned by another user: Returns 403 "Not authorized" (not 404 — information disclosure is acceptable since the user needs to know it exists but isn't theirs).
+- Product ID exists but belongs to another user: 403.
+- Product ID doesn't exist at all: 404.
 
 ---
 

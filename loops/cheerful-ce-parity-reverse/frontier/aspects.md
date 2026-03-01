@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total Aspects**: 36
-- **Analyzed**: 17
-- **Pending**: 19
-- **Convergence**: 47%
+- **Analyzed**: 18
+- **Pending**: 18
+- **Convergence**: 50%
 
 ---
 
@@ -40,7 +40,7 @@ Take Wave 1 capability lists and design tool signatures per domain. **Every tool
 Flesh each tool to exhaustive detail. Verify every parameter, type, and enum against actual source code.
 
 - [x] **w3-campaigns-crud** — Full specs for campaign create/read/update/delete tools. Verify all Pydantic models, enum values, validation rules against `projects/cheerful/apps/backend/src/api/route/campaigns.py`
-- [ ] **w3-campaigns-wizard** — Full specs for campaign wizard tools: draft save/load, product management, sender management, email sequence config. Verify against `campaign_draft.py`, `campaign_launch.py`
+- [x] **w3-campaigns-wizard** — Full specs for campaign wizard tools: draft save/update/get/delete, launch (22-step orchestration), plus product CRUD (3 tools). Verified against `campaign_launch.py` (1396 lines — all 5 draft/launch endpoints), `models/api/campaign_launch.py` (425 lines — all request/response models with 3 validators), `product.py` (98 lines — 3 CRUD endpoints), `models/api/product.py`, `models/database/product.py`. Key findings: draft routes are in campaign_launch.py (not campaign_draft.py), campaign types use frontend strings mapped via CAMPAIGN_TYPE_MAP, dual-storage model (columns + draft_metadata JSONB), update has asymmetric overwrite behavior, launch has 22 orchestration steps in single transaction with resource_owner_id concept for team member launches, product_update.py is product changelog feed (not CRUD). 8 tools fully specified (5 wizard + 3 products).
 - [ ] **w3-campaigns-recipients** — Full specs for recipient tools: single add, bulk upsert, CSV upload, Google Sheet import, outbox population. Verify against recipient-related routes
 - [ ] **w3-email-threads** — Full specs for thread listing (all filter params, pagination), thread detail, status marking (all status values). Verify against `threads.py`
 - [ ] **w3-email-drafts** — Full specs for draft CRUD, AI draft generation (tone, style, reply examples), draft sending. Verify against `gmail.py`, draft routes
