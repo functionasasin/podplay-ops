@@ -1446,3 +1446,293 @@ Wait — for regime comparison, engine must compute TOTAL annual IT on all incom
 - Show: "The 8% option saves you ₱XX,XXX vs the OSD method and ₱YY,YYY vs itemized deductions."
 - savings_vs_recommended (₱0) is for internal validation only (INV-RC-08); never shown in UI.
 
+---
+
+## Group EC-M: Mixed Income Earner Edge Cases
+
+**Legal basis:** NIRC Sec. 24(A)(1)(b), Sec. 24(A)(2)(b); RMC 50-2018; RR 8-2018; CR-029; CR-030.
+
+---
+
+### EC-M01: Multiple Employers in Same Tax Year
+
+**Scenario:** Renzo resigned from Employer A in May (taxable comp ₱240,000, TW ₱0) and joined Employer B in July (taxable comp ₱360,000, TW ₱16,500). He also freelances (gross receipts ₱500,000, 8% option elected). Multiple Form 2316s exist.
+
+**Problem:** Employer A withheld ₱0 because ₱240,000 is within the zero bracket when considered alone. Employer B withheld ₱16,500 on ₱360,000 (15% × (360,000 − 250,000) = ₱16,500) because B also only knows about B's portion. But combined taxable compensation is ₱600,000 — now in the 20% bracket above ₱400,000.
+
+**Engine computation:**
+1. Aggregate taxable_compensation = 240,000 + 360,000 = ₱600,000
+2. Aggregate TW = 0 + 16,500 = ₱16,500
+3. compensation_it = graduated_tax(600,000) = 22,500 + 20% × (600,000 − 400,000) = ₱62,500
+4. tw_deficiency = 62,500 − 16,500 = ₱46,000 deficiency on compensation alone
+5. Business Path C: business_it = 500,000 × 0.08 = ₱40,000 (no ₱250K — mixed income)
+6. Total IT Path C = 62,500 + 40,000 = ₱102,500
+7. Balance at annual = 102,500 − 16,500 (TW) = ₱86,000 payable (including the comp deficiency)
+
+**Engine behavior:**
+- Show "Multiple employers detected" warning
+- Show compensation deficiency of ₱46,000 prominently
+- Advise: "Consider requesting additional withholding from your current employer for the rest of the year to avoid a large balance at filing."
+- Allow user to enter aggregated values or itemize per employer
+
+**Form to file:** BIR Form 1701 (Annex A for multiple Form 2316s is required — attach all Form 2316s).
+
+---
+
+### EC-M02: Compensation Income Exceeds ₱3M (High-Salary Executive + Freelance)
+
+**Scenario:** Atty. Bea earns ₱5,000,000 taxable compensation from her law firm employer (PEZA company, exempt from income tax — so comp is non-taxable? No — PEZA exemption applies to the COMPANY, not employee compensation). She also does outside arbitration work earning ₱800,000 gross professional fees.
+
+Wait — clarification: PEZA employees' compensation IS still subject to Philippine income tax; the PEZA exemption applies to the entity's income, not employee wages. So:
+- taxable_compensation = ₱5,000,000 (employer withholds at graduated rates)
+- business_gross_receipts = ₱800,000
+
+**8% eligibility for business portion:**
+- gross_for_threshold = ₱800,000 (compensation excluded from threshold)
+- ₱800K ≤ ₱3M → 8% ELIGIBLE for business portion
+- Note: The ₱3M threshold check uses ONLY business gross, NOT compensation. A taxpayer earning ₱50M in compensation can still elect 8% on ₱500K of side income.
+
+**Path C (8% on business):**
+- compensation_it = graduated_tax(5,000,000) = 402,500 + 0.30 × (5,000,000 − 2,000,000) = ₱1,302,500
+- business_it = 800,000 × 0.08 = ₱64,000
+- total_it = ₱1,366,500; pt = 0
+- total_burden = ₱1,366,500
+
+**Path B (OSD + Graduated, combined):**
+- business_nti_osd = 800,000 × 0.60 = 480,000
+- combined_nti = 5,000,000 + 480,000 = 5,480,000
+- total_it = 402,500 + 0.30 × (5,480,000 − 2,000,000) = 402,500 + 1,044,000 = ₱1,446,500
+- pt = 800,000 × 0.03 = ₱24,000
+- total_burden = ₱1,470,500
+
+**WINNER: Path C (8%) saves ₱104,000 vs Path B.**
+
+**Engine behavior:** No special handling required beyond standard. The computation is straightforward. However, display a note: "Your compensation income pushes your combined income into the top 30% bracket. The 8% option on your business income is especially valuable because it avoids the 30% marginal rate that would apply to business income under graduated methods."
+
+---
+
+### EC-M03: Business Net Loss — Cannot Offset Compensation Income
+
+**Scenario:** Dana is an employee (taxable comp ₱600,000, TW ₱62,500) who started a catering business that lost money. Business gross receipts ₱200,000, business expenses ₱350,000 (net loss of ₱150,000).
+
+**Path A (Itemized) — business has a NET LOSS:**
+- business_nti_itemized = max(200,000 − 350,000, 0) = ₱0 (floored at 0)
+- NOLCO: ₱150,000 net operating loss can be carried forward for 3 years under Path A
+- combined_nti = 600,000 + 0 = 600,000
+- total_it = graduated_tax(600,000) = 22,500 + 20% × (600,000 − 400,000) = ₱62,500
+- pt = 200,000 × 0.03 = ₱6,000
+- total_burden_A = ₱68,500
+
+**Path B (OSD):**
+- business_nti_osd = 200,000 × 0.60 = 120,000 (OSD ALWAYS produces positive NTI; no loss possible)
+- combined_nti = 600,000 + 120,000 = 720,000
+- total_it = 22,500 + 20% × (720,000 − 400,000) = 22,500 + 64,000 = ₱86,500
+- pt = ₱6,000
+- total_burden_B = ₱92,500
+
+**Path C (8%):**
+- business_it = 200,000 × 0.08 = ₱16,000 (8% on GROSS — ignores the actual loss)
+- compensation_it = ₱62,500
+- total_it = ₱78,500; pt = 0
+- total_burden_C = ₱78,500
+
+**WINNER: Path A (Itemized) at ₱68,500 — because the business NTI is floored at ₱0, effectively shielding the business income from tax while still paying the lower compensation-only tax.**
+
+**Engine behavior:**
+- Detect: business_gross_income < itemized_deductions (net loss condition)
+- Flag EC-M03: "Your business has a net operating loss of ₱[loss_amount]. The loss cannot reduce your compensation income. Under Path A (Itemized), your business income tax is ₱0, and the ₱[loss_amount] loss is tracked as NOLCO for potential deduction in future tax years."
+- Set business_nti_itemized = 0 (do NOT use negative value in graduated computation)
+- Track NOLCO: nolco_amount = max(itemized_deductions − business_gross_income, 0); nolco_year = tax_year; nolco_expiry = tax_year + 3
+- Flag MRF-009 (business loss NOLCO tracking) — see manual-review-flags.md
+
+---
+
+### EC-M04: Mid-Year Employee Resignation — Becomes Pure Self-Employed
+
+**Scenario:** Carlos resigned from his BPO job on June 30 after earning ₱280,000 taxable compensation (TW ₱4,500 — employer withheld on the ₱280K which is above ₱250K on an annualized basis but not much). He started freelance software consulting in July, earning ₱600,000 gross for July–December.
+
+**Type of earner for the year:** Mixed income (has comp income Jan–Jun + business income Jul–Dec).
+
+**8% eligibility:**
+- gross_for_threshold = ₱600,000 (business only) ≤ ₱3M → 8% available
+- IMPORTANT: Taxpayer originally registered as employee; now needs to register as self-employed. The engine should remind user to register for BIR Certificate of Registration as self-employed if not already done.
+- 8% election: If taxpayer registered mid-year and filed their first 1701Q in Q3 (covering Jul–Sep), they can elect 8% at that time (it's effectively their "first quarter" of business activity). [Ref: CR-023 — election timing rules for mid-year starters]
+
+**Quarterly filing:**
+- Q1 (Jan–Mar): No business income. No 1701Q for business needed. (But if already registered as SE, file nil 1701Q.)
+- Q2 (Jan–Jun): Same as Q1 — no business income. nil or skip depending on registration date.
+- Q3 (Jul–Sep): First business income. Cumulative gross = ₱300,000. File first 1701Q.
+  - For 1701Q Q3 (covers cumulative Jan–Sep on cumulative method, but business started in July):
+  - Cumulative business gross (from Jul–Sep) = ₱300,000
+  - If 8% method: IT = 300,000 × 0.08 = ₱24,000 (no ₱250K deduction — mixed income)
+- Annual (Form 1701):
+  - taxable_compensation = ₱280,000; TW = ₱4,500
+  - gross_receipts (business) = ₱600,000
+
+**Path C computation:**
+- compensation_it = graduated_tax(280,000) = 0.15 × (280,000 − 250,000) = ₱4,500
+- business_it = 600,000 × 0.08 = ₱48,000 (no ₱250K deduction)
+- total_it = ₱52,500; pt = 0
+- Balance at annual = 52,500 − 4,500 (TW) − 24,000 (Q3 1701Q payment) = **₱24,000 payable**
+
+**Engine behavior:**
+- Detect: user indicates business start date after January 1
+- Set quarterly_filing_start_quarter = Q3 (if business started Jul–Sep)
+- Remind: "Since you started business activities in July, your first quarterly income tax return (Form 1701Q) is due November 15 (Q3). You do not need to file Q1 or Q2 1701Q for business income."
+- Apply the ₱250K no-deduction rule (mixed income earner for the full year)
+- Prior-quarter business payments: Only Q3's ₱24,000 paid (no Q1/Q2 payments)
+
+---
+
+### EC-M05: Mid-Year Job Start — Pure Freelancer Becomes Mixed Income
+
+**Scenario:** Gina was a pure freelancer from January to June (gross ₱400,000, on 8% option). She accepted a full-time job offer in July (taxable comp ₱360,000 for July–Dec, TW ₱16,500).
+
+**Type of earner for the year:** Mixed income (became mixed income in July when she accepted a job).
+
+**Critical rule (8% deduction — MIR-03 retroactive application):**
+- In Q1 and Q2, Gina was a pure SE taxpayer, so she applied the ₱250K deduction.
+  - Q1 (Jan–Mar): Gross ₱200,000. 8% IT (cumulative) = max(200K − 250K, 0) × 0.08 = ₱0. Q1 paid: ₱0.
+  - Q2 (Jan–Jun): Gross ₱400,000. 8% IT (cumulative) = (400K − 250K) × 0.08 = ₱12,000. Less Q1 = ₱12,000 Q2 payment.
+- BUT: At annual filing, Gina is NOW a mixed income earner (has compensation income).
+  The annual 8% computation will be: business_it = 400,000 × 0.08 = ₱32,000 (NO ₱250K deduction).
+  Annual compensation_it = graduated_tax(360,000) = 0.15 × (360,000 − 250,000) = ₱16,500.
+  Total annual IT = 32,000 + 16,500 = ₱48,500.
+  Less: TW ₱16,500; less: Q1+Q2 quarterly payments ₱12,000.
+  Balance at annual = 48,500 − 16,500 − 12,000 = **₱20,000 payable**.
+
+**Engine behavior:**
+- Detect: user indicates they received compensation income mid-year (July onwards)
+- At annual reconciliation: recalculate business_it WITHOUT the ₱250K deduction
+- Display: "Because you received employment income from July onwards, you are now a mixed income earner for this tax year. Your quarterly payments were computed as if you were purely self-employed. The annual reconciliation adjusts your business income tax (no ₱250,000 deduction applies), resulting in a ₱20,000 balance payable."
+- Note: Q1 and Q2 payments (₱12,000 total) are still creditable — they were advance payments
+- The quarterly filing behavior is retroactively corrected at annual filing only; no amended quarterly returns needed
+
+---
+
+### EC-M06: Government Employee with Private Professional Practice
+
+**Scenario:** Dr. Reyes is a physician employed at a government hospital (annual taxable comp ₱520,000, tax withheld via government payroll system). He also maintains a private clinic earning ₱1,200,000 gross professional fees.
+
+**Key differences from private-sector employment:**
+- Government payroll uses its own computation system (often manual or legacy); the "tax withheld" amount may not exactly match graduated computation. The engine uses whatever amount the doctor declares as TW from the government-issued Certificate of Compensation.
+- GSIS deductions (not SSS) are non-taxable. These have already been excluded by the government payroll system before issuing the Certificate.
+- Government employees may receive RATA (Representation and Transportation Allowance) which may be exempt from income tax under certain circulars (DBM rules). Assume it has already been excluded in the Certificate.
+
+**Engine computation (standard mixed income):**
+- taxable_compensation = ₱520,000 (from government Certificate)
+- TW = whatever the government payroll withheld (enter from Certificate)
+- gross_receipts = ₱1,200,000 (private practice)
+- gross_for_threshold = ₱1,200,000 (business only) ≤ ₱3M → 8% eligible
+
+**Path C:** compensation_it = grad_tax(520,000) = 22,500 + 20% × (520,000 − 400,000) = ₱46,500
+business_it = 1,200,000 × 0.08 = ₱96,000 (no ₱250K deduction — mixed income)
+total_it = ₱142,500; pt = 0; total_burden = ₱142,500
+
+**Path B:** business_nti_osd = 720,000; combined_nti = 520,000 + 720,000 = 1,240,000
+total_it = 102,500 + 0.25 × (1,240,000 − 800,000) = 102,500 + 110,000 = ₱212,500
+pt = 1,200,000 × 0.03 = ₱36,000; total_burden = ₱248,500
+
+**WINNER: Path C saves ₱106,000 vs Path B.**
+
+**Engine behavior:** No special handling for government vs private employer. The Certificate of Compensation replaces Form 2316. Engine accepts both. Display note: "Government employees receive a Certificate of Compensation instead of BIR Form 2316. The taxable compensation and tax withheld values are equivalent — enter them in the same fields."
+
+---
+
+### EC-M07: Zero Taxable Compensation — Minimum Wage Earner with Side Business
+
+**Scenario:** Ana is a minimum wage earner at a rural factory (exempt from income tax per NIRC Sec. 24(A)(2)(b) special MWE exemption). She receives a Form 2316 with taxable compensation = ₱0 (all compensation is non-taxable MWE pay). She also does online selling earning ₱300,000 gross from her e-commerce store.
+
+**Key rule (MIR-03 applies even at zero taxable comp):**
+- Ana IS a mixed income earner — she has compensation income from an employer.
+- Even though taxable_compensation = 0, the presence of the employment relationship triggers RMC 50-2018.
+- 8% business tax = 300,000 × 0.08 = ₱24,000 (NO ₱250K deduction)
+- This is MORE than if she were purely self-employed: (300,000 − 250,000) × 0.08 = ₱4,000
+
+**Engine behavior:**
+- If taxable_compensation = 0 and user indicates they are an employee, proceed as mixed income
+- Display note: "Even though your compensation is tax-exempt (minimum wage earner), your status as an employee means the ₱250,000 deduction cannot be applied to your business income under the 8% option. This is required by BIR RMC 50-2018."
+- Compute Path C: business_it = 300,000 × 0.08 = ₱24,000 (no deduction)
+- Compute Path B: combined_nti = 0 + 300,000 × 0.60 = 180,000; total_it = 0 (below ₱250K); pt = 300,000 × 0.03 = ₱9,000; total_burden_B = ₱9,000
+
+**WINNER: Path B (₱9,000) beats Path C (₱24,000) in this specific edge case.**
+
+Key insight: For very low business gross receipts (near ₱250K) where the ₱250K deduction is prohibited (because of mixed income status), Path B (OSD + graduated combined at ₱0 tax) may BEAT Path C (8% on full gross). This is the ONLY common scenario where a mixed income earner with low business income should not automatically choose 8%.
+
+**Engine invariant update:** The general rule "Path C beats Path B below ₱3M for service businesses" does NOT apply to ALL mixed income scenarios. For mixed income earners, compute both and compare numerically.
+
+---
+
+### EC-M08: Foreign Employer — No Philippine Income Tax Withheld
+
+**Scenario:** Miko works remotely for a US tech company (employee, not contractor). He is paid USD and the US company does not register with Philippine BIR or withhold Philippine income tax. He also does freelance coding on the side earning ₱500,000 from local clients.
+
+**Philippine tax treatment of foreign employment income:**
+- Filipino citizens are taxed on WORLDWIDE income per NIRC Sec. 23(A).
+- Foreign employment income IS taxable in the Philippines; the US employer does not handle this.
+- US taxes withheld (if any) cannot offset Philippine income tax without a tax treaty credit (Philippines-US tax treaty is the US-Philippines Tax Treaty of 1982). [FLAG: MRF-016 — foreign tax credit computation is complex and out of scope for engine; flag for professional review.]
+- For engine purposes: user enters their annual foreign employment income (converted to PHP at BSP annual average rate) as taxable_compensation. TW = 0 (no Philippine withholding by foreign employer).
+
+**Engine computation:**
+- taxable_compensation = foreign_comp_in_USD × bsp_annual_rate (user provides this conversion)
+- tax_withheld_by_employer = 0
+- business_gross_receipts = ₱500,000
+
+**Path C (8% on business, mixed income):**
+- compensation_it = graduated_tax(taxable_comp_php) — varies based on amount
+- business_it = 500,000 × 0.08 = ₱40,000 (no ₱250K deduction)
+- total_it = compensation_it + 40,000
+- it_balance_at_annual = total_it − 0 (TW) − CWT_business − quarterly_paid
+  → Likely a large balance payable since no TW on comp
+
+**Engine behavior:**
+- If user indicates "foreign employer / no Philippine withholding":
+  - Set tax_withheld_by_employer = 0
+  - Show warning: "Your foreign employer does not withhold Philippine income tax. Your compensation income is still fully taxable in the Philippines. You must self-compute and pay via quarterly 1701Q for any advance payments, or prepare for a large balance at annual filing."
+  - Flag MRF-016 (foreign employment income), MRF-017 (foreign tax credit if any taxes paid abroad)
+- For quarterly planning: advise the taxpayer to make estimated quarterly IT payments on compensation income to avoid a large year-end balance (optional — no requirement to pay comp tax quarterly if no employer)
+
+---
+
+### EC-M09: Mixed Income with Large Business CWT — Potential Refund
+
+**Scenario:** Lani is an employee (taxable comp ₱480,000, TW ₱34,500) who also has a professional practice. Her clients issued Form 2307 at 15% EWT rate on ₱800,000 gross professional fees. total_cwt_business = ₱120,000 (15% × 800,000).
+
+**Path C (8%):**
+- compensation_it = graduated_tax(480,000) = 22,500 + 20% × (480,000 − 400,000) = ₱38,500
+- business_it = 800,000 × 0.08 = ₱64,000 (no ₱250K deduction — mixed income)
+- total_it = ₱102,500; pt = 0; total_burden = ₱102,500
+- Total credits = TW (₱34,500) + CWT_business (₱120,000) + quarterly_paid (₱0) = ₱154,500
+- Overpayment: 154,500 − 102,500 = **₱52,000 REFUND**
+
+**Engine behavior:**
+- Detect overpayment: overpayment = max(total_credits − total_it, 0) = ₱52,000
+- Display: "You have a refund of ₱52,000. This is because your creditable withholding tax (₱120,000 withheld by your clients at 15%) plus employer withholding (₱34,500) exceed your total income tax due (₱102,500) by ₱52,000."
+- Refund options: (a) Claim as cash refund — file annual 1701 with "To be refunded" option, then file BIR Form 1914 or 1918 for refund; (b) Apply as tax credit for next year — check "To be carried over/applied to next year" on Form 1701
+- Warning: "Cash refunds from the BIR can take time to process. Consider applying the excess as a tax credit to next year's return if you expect similar income levels."
+- Note: The 15% EWT rate appears abnormally high. Standard EWT for professional fees is 10% (gross < ₱3M prior year) or 15% (gross ≥ ₱3M prior year). Verify ATC code and confirm the correct rate was applied by clients.
+
+**Invariant:** overpayment and it_balance_at_annual cannot both be > 0 simultaneously. If total_credits > total_it → overpayment; if total_credits < total_it → balance_due.
+
+---
+
+### EC-M10: Business Income Switches Regime Mid-Year (8% to Graduated)
+
+**Scenario:** Jed is a mixed income earner who elected 8% for business income at Q1 (gross receipts ₱200,000 by March). By September (Q3 filing), his cumulative business gross crossed ₱3,000,000 (total ₱3,100,000).
+
+**When 8% election is retroactively cancelled:**
+- At the point gross_for_threshold exceeds ₱3,000,000, the 8% option is automatically DISQUALIFIED.
+- Taxpayer must switch to graduated rates (Path A or B) for the ENTIRE YEAR.
+- Q1 and Q2 payments made under 8% become advance payments toward the graduated-rate annual tax.
+- Q3 1701Q must be filed under graduated method (cumulative Jan–Sep, not just Q3 business).
+
+**Engine behavior at annual filing (if user discloses full-year gross > ₱3M after having elected 8%):**
+- Detect: election_status = EIGHT_PCT_ELECTED but gross_for_threshold > 3,000,000
+- Flag EC-M10: "Your gross business receipts exceeded ₱3,000,000 this year. The 8% option is not available. We have switched your computation to graduated rates for the full year. Your Q1/Q2 8% payments (₱[amount]) are credited as advance payments."
+- Recompute using Path B (OSD) or Path A (Itemized) for the full year
+- Prior quarterly payments under 8% are added to total_quarterly_it_paid
+- At annual: total tax = graduated-rate computation; less: TW + CWT + 8%-based quarterly payments
+- Also flag: VAT registration obligation triggered (taxpayer must register for VAT within 30 days of the month threshold was breached). Show alert: "You must register for Value-Added Tax (VAT) with the BIR. Contact your Revenue District Office to update your Certificate of Registration."
+
+**This EC-M10 applies identically whether the taxpayer is pure SE or mixed income.** The distinction is that for mixed income, the annual form is 1701 (not 1701A) and the computation still separates compensation from business income.
+

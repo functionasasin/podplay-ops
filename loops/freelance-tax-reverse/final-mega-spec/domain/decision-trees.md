@@ -674,6 +674,230 @@ START: Compute gross income (for VAT taxpayers: net of output VAT on receipts; V
 
 ---
 
+---
+
+## DT-09: Mixed Income Earner — Complete Computation Flow
+
+**Legal basis:** NIRC Sec. 24(A)(1)(b) (compensation), Sec. 24(A)(2) (business income), Sec. 24(A)(2)(b) (8% option); RMC 50-2018 (₱250K deduction waiver for mixed income); RR 8-2018 Part II; CR-029; CR-030.
+
+```
+START: Does this taxpayer have compensation income from an employer this tax year?
+(i.e., receives salary/wages with a BIR Form 2316 issued by at least one employer)
+│
+├── NO → [ACTION: Route to pure self-employed flow (DT-07). Exit DT-09.]
+│         [Reference: CR-028 for pure SE comparison.]
+│
+└── YES (Mixed Income Earner) →
+
+     │
+     ├── Does the taxpayer have MORE THAN ONE Form 2316 (multiple employers)?
+     │    │
+     │    ├── YES →
+     │    │    [ACTION: Prompt user to enter SUMMED values from all Form 2316s.
+     │    │     "Enter the total of all 'Total Taxable Compensation Income' amounts
+     │    │     from all your employers' Form 2316s."
+     │    │     Compute aggregated_compensation via CR-030 aggregate_form_2316s().
+     │    │     If tw_deficiency > 0: Show warning "Multiple employer deficiency alert:
+     │    │     Your combined compensation tax of ₱[comp_it] exceeds the total withheld
+     │    │     (₱[total_tw]). You will owe approximately ₱[tw_deficiency] at annual filing
+     │    │     due to each employer not knowing your other income."
+     │    │     Proceed with total_taxable_compensation and total_tw as inputs.]
+     │    │
+     │    └── NO (single employer or summed by user) →
+     │         [ACTION: Use single Form 2316 taxable_compensation and tax_withheld_by_employer.]
+     │         Continue.
+     │
+     ├── Does the taxpayer have a FOREIGN employer with no Philippine income tax withholding?
+     │    │
+     │    ├── YES →
+     │    │    [FLAG: MRF-016 — Foreign employer compensation.
+     │    │     User must self-compute Philippines taxable amount and tax.
+     │    │     Set tax_withheld_by_employer = 0 for foreign employer portion.
+     │    │     If taxpayer claims foreign tax credit: FLAG MRF-017.]
+     │    │    Continue with user-provided taxable_compensation and TW = 0.
+     │    │
+     │    └── NO → Continue.
+     │
+     ├── Is the taxpayer's taxable compensation = 0 (i.e., they reported compensation income
+     │    but all of it is excluded / below minimum wage)?
+     │    │
+     │    ├── YES →
+     │    │    [DECISION: If compensation income exists but taxable_compensation = 0,
+     │    │     the taxpayer is STILL a mixed income earner. RMC 50-2018 does not require
+     │    │     a minimum taxable compensation amount — ANY compensation income (even ₱0 taxable)
+     │    │     triggers the "no ₱250K deduction" rule for the 8% business option.
+     │    │     Treat as mixed income earner with taxable_compensation = 0 and TW = 0.
+     │    │     Note: Minimum wage earners are EXEMPT from income tax on compensation per NIRC Sec. 24(A)(2)(b)
+     │    │     — their compensation may be 0 taxable. But their business income can still be taxed.
+     │    │     8% tax base = gross_business_receipts × 0.08 (NO ₱250K deduction).]
+     │    │
+     │    └── NO (normal case: taxable_compensation > 0) → Continue.
+     │
+     ═══════════════════════════════════════════
+     STEP 2: GATHER BUSINESS INCOME INFORMATION
+     ═══════════════════════════════════════════
+     │
+     [ACTION: Collect business income inputs:]
+     - gross_receipts: decimal  (annual gross from self-employment/profession)
+     - non_operating_income: decimal  (interest, etc. from business; set to 0 if none)
+     - gross_for_threshold: = gross_receipts + non_operating_income
+       [RULE: Compensation income is NOT added to this threshold. Only BUSINESS gross counts.]
+     - itemized_deductions: decimal (if user has substantiated business expenses)
+     - has_itemized_documentation: bool
+     - is_vat_registered: bool
+     - election_status: ElectionStatus
+     - total_cwt_business: decimal (from all Form 2307s for business income)
+     - total_quarterly_it_paid: decimal (prior quarterly 1701Q payments for business)
+     │
+     ═══════════════════════════════════════════════════════════════════
+     STEP 3: DETERMINE WHICH PATHS ARE AVAILABLE FOR BUSINESS INCOME
+     ═══════════════════════════════════════════════════════════════════
+     │
+     │ PATH A (Itemized + Graduated, Combined):
+     ├── Is has_itemized_documentation = true?
+     │    ├── YES → Path A is AVAILABLE.
+     │    └── NO → Path A is UNAVAILABLE (no documentation to substantiate).
+     │
+     │ PATH B (OSD + Graduated, Combined):
+     ├── Always AVAILABLE. [OSD requires no documentation.]
+     │
+     │ PATH C (8% on Business, Graduated on Compensation Separately):
+     ├── Run DT-01 (8% Eligibility) using business gross_for_threshold only:
+     │    │
+     │    ├── Is is_vat_registered = true?
+     │    │    └── YES → Path C UNAVAILABLE. [Ref: DT-01 branch.]
+     │    │
+     │    ├── Is gross_for_threshold > ₱3,000,000?
+     │    │    └── YES → Path C UNAVAILABLE. [Ref: DT-01 branch.]
+     │    │    └── NO (≤ ₱3,000,000) → Continue 8% eligibility checks.
+     │    │
+     │    ├── Is election_status = GRADUATED_ELECTED?
+     │    │    └── YES → Path C UNAVAILABLE (taxpayer locked into graduated for the year).
+     │    │
+     │    └── All eligibility checks pass → Path C AVAILABLE.
+     │
+     ═══════════════════════════════════════════════════
+     STEP 4: COMPUTE EACH AVAILABLE PATH
+     ═══════════════════════════════════════════════════
+     │
+     ├── [COMPUTE PATH A if available]
+     │    business_nti_itemized = max(gross_receipts − itemized_deductions, 0)
+     │    combined_nti_A = taxable_compensation + business_nti_itemized
+     │    total_it_A = graduated_tax(combined_nti_A, tax_year)
+     │    pt_A = 0 if is_vat_registered else gross_receipts × 0.03
+     │    total_burden_A = total_it_A + pt_A
+     │    it_balance_A = max(total_it_A − tax_withheld_by_employer − total_cwt_business − total_quarterly_it_paid, 0)
+     │    overpayment_A = max(tax_withheld_by_employer + total_cwt_business + total_quarterly_it_paid − total_it_A, 0)
+     │
+     ├── [COMPUTE PATH B]
+     │    business_nti_osd = gross_receipts × 0.60
+     │    combined_nti_B = taxable_compensation + business_nti_osd
+     │    total_it_B = graduated_tax(combined_nti_B, tax_year)
+     │    pt_B = 0 if is_vat_registered else gross_receipts × 0.03
+     │    total_burden_B = total_it_B + pt_B
+     │    it_balance_B = max(total_it_B − tax_withheld_by_employer − total_cwt_business − total_quarterly_it_paid, 0)
+     │    overpayment_B = max(tax_withheld_by_employer + total_cwt_business + total_quarterly_it_paid − total_it_B, 0)
+     │
+     └── [COMPUTE PATH C if available]
+          ← CRITICAL DIFFERENCE FROM PATHS A/B:
+            Compensation and business income are taxed SEPARATELY (not combined).
+          ←
+          business_8pct_base = gross_for_threshold  // NO ₱250,000 deduction (RMC 50-2018)
+          business_it_C = business_8pct_base × 0.08
+          compensation_it_C = graduated_tax(taxable_compensation, tax_year)  // separate computation
+          total_it_C = business_it_C + compensation_it_C
+          pt_C = 0  // Waived under 8% regime
+          total_burden_C = total_it_C
+          it_balance_C = max(total_it_C − tax_withheld_by_employer − total_cwt_business − total_quarterly_it_paid, 0)
+          overpayment_C = max(tax_withheld_by_employer + total_cwt_business + total_quarterly_it_paid − total_it_C, 0)
+
+     ═══════════════════════════════════════════════════
+     STEP 5: COMPARE AND RECOMMEND
+     ═══════════════════════════════════════════════════
+     │
+     [ACTION: Build list of computed paths.]
+     [ACTION: Find path with minimum total_tax_burden.]
+     │
+     ├── Do two or more paths have the SAME total_tax_burden?
+     │    └── YES → Apply tie-breaking: prefer Path C > Path B > Path A
+     │              (simpler compliance requirement → prefer 8% over OSD over itemized on tie)
+     │
+     [ACTION: RECOMMENDATION = minimum-burden path after tie-breaking.]
+     [ACTION: Compute savings: savings_vs_x = x.total_burden − recommended.total_burden for each non-recommended path.]
+     │
+     ═══════════════════════════════════════════════════
+     STEP 6: DETERMINE FILING OBLIGATIONS AND QUARTERLY SCHEDULE
+     ═══════════════════════════════════════════════════
+     │
+     [ACTION: Annual form = "BIR Form 1701" — ALWAYS for mixed income, regardless of regime.]
+     [ACTION: If total quarterly filing quarters remain (e.g., Q1, Q2, Q3 not yet filed):
+              Set quarterly_form = "BIR Form 1701Q" for business income.]
+     [ACTION: Percentage tax filing (if pt > 0): "BIR Form 2551Q" — quarterly, due 25 days after quarter end.]
+     │
+     ═══════════════════════════════════════════════════
+     STEP 7: OUTPUT
+     ═══════════════════════════════════════════════════
+     │
+     [ACTION: Return MixedIncomeComparisonResult (see CR-029 compare_mixed_income_regimes):]
+     - All computed paths with breakdowns
+     - Recommended path with reason
+     - Savings vs each non-recommended path
+     - Annual IT balance due (or overpayment/refund)
+     - Effective total tax rate (total_burden / total_income)
+     - Filing obligations summary
+     - Key notes:
+       → "Your compensation income is always taxed at graduated rates. Your employer handles this via payroll."
+       → If Path C recommended: "Under the 8% option, the ₱250,000 exemption does NOT apply to your business income because you also have compensation income (RMC 50-2018). Your business tax base is ₱[gross_receipts]."
+       → "At annual filing (Form 1701), both your compensation and business income are reconciled together."
+       → If multiple Form 2316s: "With income from multiple employers, verify your combined compensation tax."
+       → If near-threshold: "Your business income is near the ₱3,000,000 limit for the 8% option. Monitor your actual receipts."
+```
+
+---
+
+## DT-10: Mixed Income — ₱250,000 Deduction Decision
+
+**Legal basis:** NIRC Sec. 24(A)(2)(b); RMC 50-2018; CR-029 Rule MIR-03.
+
+```
+START: Is the taxpayer computing under Path C (8% flat rate)?
+│
+├── NO (Path A or Path B — graduated methods) →
+│    [ACTION: DEDUCTION_250K = NOT APPLICABLE.
+│     Under Paths A and B, the graduated rate table itself provides the zero-rate bracket
+│     (first ₱250,000 of combined NTI at 0%). This is NOT a separate deduction —
+│     it is built into the rate table. No adjustment needed.
+│     The graduated_tax() function handles this automatically.]
+│    [Leaf: Proceed with graduated computation.]
+│
+└── YES (Path C — 8% flat rate) →
+     │
+     └── Does the taxpayer have ANY compensation income from an employer this tax year?
+          (Even ₱1 of compensation; even if taxable_compensation = 0 due to exclusions)
+          │
+          ├── YES (compensation income exists — mixed income earner) →
+          │    [ACTION: DEDUCTION_250K = DO_NOT_APPLY.
+          │     8% Tax Base = gross_business_receipts + non_operating_income.
+          │     Tax = tax_base × 0.08. NO subtraction of ₱250,000.
+          │     Legal basis: RMC 50-2018 — "the applicable 8% income tax on gross sales/receipts
+          │     and other non-operating income in excess of ₱250,000 shall NOT be applicable
+          │     [for mixed income earners]; instead, the 8% income tax rate shall apply on the
+          │     TOTAL AMOUNT of gross sales/receipts."
+          │     Display note: "Because you also receive compensation income, the ₱250,000
+          │     deduction does not apply to your business income under the 8% option.
+          │     Your employer's payroll already accounts for this bracket in your withholding."]
+          │
+          └── NO (purely self-employed, no compensation) →
+               [ACTION: DEDUCTION_250K = APPLY.
+                8% Tax Base = max(gross_business_receipts + non_operating_income − 250,000, 0).
+                Tax = tax_base × 0.08.
+                If gross_for_threshold ≤ ₱250,000: Tax = ₱0 (fully exempt under 8% option).
+                Legal basis: NIRC Sec. 24(A)(2)(b).]
+                [Leaf: Pure self-employed 8% with ₱250K deduction.]
+```
+
+---
+
 ## Trees To Be Added in Future Aspects
 
 The following decision trees are planned but not yet written. They will be added when the corresponding aspects are analyzed:
@@ -681,8 +905,6 @@ The following decision trees are planned but not yet written. They will be added
 | Tree | Aspect That Will Create It | Brief Description |
 |------|---------------------------|-------------------|
 | DT-08: VAT vs Percentage Tax Determination | vat-vs-percentage-tax | Is taxpayer VAT or OPT? Threshold mechanics, registration obligations |
-| DT-09: Mixed Income Computation Flow | mixed-income-rules | Full compensation + business income computation with all regime combinations |
-| DT-10: Form 1701Q vs 1701A vs 1701 (full) | bir-form-1701-field-mapping | Expanded version of DT-04 with all schedule-level branching |
 | DT-11: CWT Credit Application | creditable-withholding-tax | How to apply 2307 credits at quarterly and annual level |
 | DT-12: Quarterly vs Annual Filing Sequence | quarterly-filing-rules | Order of operations, cumulative method, installment payment decision |
 | DT-13: OSD vs Itemized Comparison | osd-computation | When OSD beats itemized and vice versa |

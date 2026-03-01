@@ -197,6 +197,73 @@ Situations where the user clearly needs a CPA go into `legal/disclaimers.md`, no
 
 ---
 
+---
+
+## MRF-016: Foreign Employer — Philippine Tax Liability on Foreign Compensation
+
+**Flag code:** MRF-016
+**Trigger:** User indicates they receive salary/wages from a foreign employer that does NOT withhold Philippine income tax (e.g., remote work for a US, UK, or Australian company; work-from-home for offshore employer)
+**Engine fallback:** Accept the user's declared taxable_compensation (converted to PHP) and set tax_withheld_by_employer = 0. Proceed with computation. Do NOT refuse to compute.
+
+**What the engine CAN decide:**
+- Philippine income tax due on the foreign compensation, computed identically to local compensation
+- Total annual balance payable (since no TW exists)
+- Recommend the mixed income regime comparison using the foreign comp amount
+
+**What the engine CANNOT decide:**
+- Whether a foreign tax credit applies (if the foreign employer withheld home-country taxes)
+- The applicable foreign tax credit under any specific Philippine tax treaty (Philippines-US treaty, Philippines-UK treaty, etc.)
+- The correct BSP exchange rate to use (user must provide the PHP-converted amount)
+
+**User-facing text:**
+> "You indicated your employer is a foreign company that does not withhold Philippine income tax. As a Filipino citizen, your foreign compensation is fully taxable in the Philippines under worldwide income taxation rules (NIRC Sec. 23(A)). Please enter your annual foreign compensation converted to Philippine Pesos at the Bangko Sentral ng Pilipinas (BSP) average exchange rate for the year. We will compute your Philippine income tax on this amount. Note: If your foreign employer withheld taxes in their country, you may be entitled to a foreign tax credit — this requires review by a tax professional as treaty provisions vary by country."
+
+**Flag display:** Show as an informational banner (yellow/amber), not a blocking error. Engine proceeds with computation.
+
+---
+
+## MRF-017: Foreign Tax Credit Claim — Tax Treaty Offset
+
+**Flag code:** MRF-017
+**Trigger:** User indicates foreign employer withheld taxes AND user asks about offsetting those foreign taxes against Philippine IT liability
+**Engine fallback:** Do NOT attempt to compute the foreign tax credit. Display the flag and proceed without applying the credit.
+
+**What the engine CANNOT decide:**
+- Whether a Philippines tax treaty exists with the taxpayer's employer's country (requires country-by-country treaty lookup)
+- The amount of creditable foreign tax (limited to the Philippine tax on the foreign income — "credit limitation")
+- Whether the taxpayer's specific type of income qualifies for treaty relief
+- The treaty "tie-breaker" rules for dual residents
+
+**User-facing text:**
+> "You may be entitled to a foreign tax credit under a Philippine tax treaty with [country]. Computing the correct foreign tax credit requires reviewing the specific treaty provisions and may involve complex calculations (the credit is limited to the Philippine tax attributable to the foreign income). We recommend consulting a Certified Public Accountant or tax lawyer familiar with international taxation before filing. Your Philippine income tax computation above does NOT include any foreign tax credit — your actual tax due may be lower if a credit applies."
+
+**Flag display:** Show as a prominent amber warning with a "Get Professional Help" CTA linking to CPA referral.
+
+---
+
+## MRF-018: Mixed Income Business Loss — NOLCO Tracking and Future Year Impact
+
+**Flag code:** MRF-018
+**Trigger:** User is a mixed income earner on Path A (Itemized), AND business_gross_income < itemized_deductions (i.e., the business has a net operating loss)
+**Engine fallback:** Set business_nti = 0 (floored at zero). Do NOT allow negative business NTI to offset compensation income. Flag the NOLCO amount for future tracking.
+
+**What the engine CAN decide:**
+- Business NTI is ₱0 (loss cannot be applied to current year against compensation income)
+- The amount of the NOLCO (= itemized_deductions − business_gross_income, limited to actual business net loss)
+- That NOLCO can be carried forward for up to 3 years (NIRC Sec. 34(D)(3))
+
+**What the engine CANNOT decide:**
+- Whether the loss was genuine (not disguised personal expenses)
+- Whether NOLCO applies if the taxpayer switches to OSD or 8% in a future year (NOLCO only applies under itemized deductions method; switching methods may affect NOLCO availability)
+- Whether any NOLCO from a prior year under 8%/OSD (in which NOLCO does not accumulate) can be claimed in the current year
+
+**User-facing text:**
+> "Your business has a net operating loss of ₱[loss_amount] this year. Under Philippine tax law, this loss cannot reduce your compensation income. The loss may be carried forward as Net Operating Loss Carry-Over (NOLCO) and deducted from future business income for up to 3 years — but only if you continue to use the Itemized Deductions method in those future years. We've recorded your NOLCO of ₱[loss_amount] from [tax_year], which expires on December 31, [tax_year + 3]. Consider tracking this with a tax professional to ensure it is properly applied in future returns."
+
+**Flag display:** Show as an informational note (blue) on the results screen. Include NOLCO tracking table: year incurred, amount, expiry year, remaining balance.
+
+---
+
 ## Cross-References
 
 - For edge cases where the engine CAN make a decision: See [edge-cases.md](edge-cases.md)
@@ -204,3 +271,4 @@ Situations where the user clearly needs a CPA go into `legal/disclaimers.md`, no
 - For the exact wizard UI text shown alongside these flags: See [../frontend/copy.md](../frontend/copy.md) (PENDING)
 - For error states in engine (invalid inputs): See [../engine/error-states.md](../engine/error-states.md) (PENDING)
 - For itemized deduction details: See [lookup-tables/itemized-deductions.md](lookup-tables/itemized-deductions.md)
+- For mixed income computation rules: See [computation-rules.md](computation-rules.md) CR-029, CR-030
