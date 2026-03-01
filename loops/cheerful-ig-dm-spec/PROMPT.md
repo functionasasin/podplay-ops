@@ -23,6 +23,26 @@ The `cheerful-ig-dm-reverse` loop explored all viable approaches and converged o
 - **Architecture**: Parallel Tables — add `ig_dm_*` tables following the SMTP precedent, extend existing junction tables with 3-way CHECK constraints
 - **Draft table**: New `ig_dm_llm_draft` table (clean isolation over naming debt)
 
+### Strategic Constraint: Backend-Only + Context Engine (NO Frontend Changes)
+
+**CRITICAL**: This spec covers ONLY backend infrastructure and context engine tools. There are NO frontend/webapp changes.
+
+**Rationale**: The context engine (Slack bot) is the primary interaction point for IG DM functionality. All IG DM operations — viewing threads, reading messages, sending replies, connecting accounts — are exposed as context engine tools, not webapp UI. The backend API endpoints exist and are fully functional, but no webapp components are created or modified.
+
+**What this means for the spec**:
+- Backend: DB migrations, webhook handler, Temporal workflows, API endpoints — all specced as before
+- Context engine: New MCP tools for IG DM operations replace the frontend specs
+- Frontend: ZERO changes. No inbox UI modifications, no DM composer, no IG account settings page
+- The `audit-frontend-types` and `audit-frontend-components` audits remain as reference material for a future frontend phase (when/if leadership wants IG DMs visible in the webapp)
+- TypeScript types spec (`spec-typescript-types`) is already complete — it becomes reference for a future frontend phase
+
+**Interaction model**: Users interact with IG DMs entirely through Slack via the context engine. This includes:
+- Listing and searching DM threads
+- Reading full DM conversations
+- Sending DM replies (with 24h window awareness)
+- Connecting/managing IG accounts (via backend API called from CE)
+- Viewing AI-generated draft replies and approving/editing them
+
 ### Spec Requirements
 
 The output spec must be **file-level precise**:
@@ -345,42 +365,35 @@ Per-component implementation specifications. Each spec references exact files fr
    - 24h window: if window expired, surface "DM window closed" in composer
 3. Produce: `analysis/spec/send-reply.md`
 
-#### `spec-inbox-ui`
+#### `spec-ce-ig-dm-tools`
 
-1. Read Wave 1 `audit-frontend-components` + Wave 2 `spec-typescript-types`
-2. Spec frontend inbox changes:
-   - Thread list: add channel badge (email icon / IG icon), remove subject line for DM threads, show @handle instead of email
-   - Thread detail: show @handle in header instead of email, chat-bubble message layout (vs email format), media rendering (images, videos)
-   - Sidebar/filters: add channel filter (All / Email / Instagram DM)
-   - Routing: existing inbox route handles both, discriminated by `channel` field on thread
-   - No new routes — DM threads appear in the same inbox
-3. Exact file paths for each modification, component names, props changes
-4. Produce: `analysis/spec/inbox-ui.md`
+1. Read Wave 2 `spec-api-contracts` + `../cheerful-ce-parity-reverse/` (for existing CE tool patterns) + the context engine codebase at `../../projects/cheerful/apps/context-engine/`
+2. Spec new context engine MCP tools for IG DM operations. These are the PRIMARY interaction point — there is no webapp UI for IG DMs. All tools follow existing CE patterns (meta-tool discovery, Slack formatting).
+3. Define exact tools:
+   - `cheerful_list_ig_dm_threads` — List DM threads with filtering (campaign, status, date range). Slack-formatted output: @handle, snippet, status badge, 24h window indicator
+   - `cheerful_get_ig_dm_thread` — Full DM conversation with messages, creator info, campaign association, AI draft if available. Slack-formatted chat-style layout
+   - `cheerful_send_ig_dm_reply` — Send a DM reply. Pre-checks 24h window, validates content (1000 char limit), calls backend endpoint. Returns confirmation with delivery status
+   - `cheerful_approve_ig_dm_draft` — Approve an AI-generated draft reply (optionally with edits). Sends the draft via the send endpoint
+   - `cheerful_search_ig_dms` — Full-text search across DM messages (parallel to `cheerful_search_emails`)
+   - `cheerful_connect_ig_account` — Initiate IG account connection. Returns Meta OAuth URL for the user to complete in browser. Backend callback handles token exchange. Tool polls for connection completion
+   - `cheerful_list_ig_accounts` — List connected Instagram accounts with status, webhook subscription state, token health
+   - `cheerful_ig_dm_campaign_summary` — Campaign-level DM overview: total threads, response rate, pending drafts, window status breakdown
+4. Per tool: exact tool name, description, parameter schema (JSON Schema), return schema, backend API endpoint called, Slack Block Kit formatting spec
+5. Note: these tools are registered via the existing meta-tool pattern (`discover_tools` + `execute_tool`)
+6. Produce: `analysis/spec/ce-ig-dm-tools.md`
 
-#### `spec-dm-composer`
+#### `spec-ce-ig-dm-notifications`
 
-1. Read Wave 1 `audit-frontend-components` (reply composer) + Wave 2 `spec-typescript-types`
-2. Spec `DmComposer` component:
-   - Replaces Tiptap HTML editor when thread.channel === 'instagram_dm'
-   - Plain-text textarea (no rich text)
-   - Character count (1000 char limit for IG DMs)
-   - Media upload button (image/video, stored in Supabase Storage, sent as URL)
-   - 24-hour window indicator: countdown timer, disabled state when expired
-   - Send button -> calls `POST /api/ig-dm/threads/{id}/reply`
-   - Props interface, where it mounts (conditional render in reply area)
-3. Produce: `analysis/spec/dm-composer.md`
-
-#### `spec-ig-account-settings`
-
-1. Read Wave 1 `audit-frontend-components` (account settings) + Wave 2 `spec-meta-oauth`
-2. Spec Instagram account connection UI:
-   - Settings page: list connected IG accounts with status
-   - Connect button -> Meta OAuth popup flow
-   - Callback handler: receive code, exchange for token via backend
-   - Per-campaign IG account assignment (dropdown in campaign settings)
-   - Disconnect flow: revoke token, delete webhook subscription, mark inactive
-3. Exact file paths, component names, props
-4. Produce: `analysis/spec/ig-account-settings.md`
+1. Read context engine codebase for existing notification patterns
+2. Spec proactive Slack notifications for IG DM events (the CE doesn't just respond to queries — it alerts):
+   - **New inbound DM**: Post to campaign channel when a creator DMs. Include: @handle, message preview, campaign name, quick-action buttons (view thread, approve draft)
+   - **24h window expiring**: Alert 2 hours before window closes on threads with pending replies. Include: thread summary, time remaining, approve-draft button
+   - **AI draft ready**: Notify when AI generates a draft reply. Include: draft preview, approve/edit/reject actions
+   - **Creator matched**: Notify when IGSID resolves to a known campaign creator
+   - **Window expired**: Alert when a reply window closes without a response being sent
+3. Slack Block Kit message structures for each notification type
+4. Temporal workflow integration: which workflows trigger which notifications
+5. Produce: `analysis/spec/ce-ig-dm-notifications.md`
 
 #### `spec-ai-drafting`
 
@@ -402,14 +415,14 @@ Read ALL Wave 1, 2, and 3 spec files before starting any Wave 4 aspect.
 #### `spec-phase-plan`
 
 1. Read all spec files
-2. Break into 3-4 shippable phases:
-   - **Phase 1**: DB migrations + Meta OAuth + webhook ingest pipeline (backend only, no UI)
+2. Break into 3-4 shippable phases (NOTE: NO frontend phases — context engine is the interaction layer):
+   - **Phase 1**: DB migrations + Meta OAuth + webhook ingest pipeline (backend infrastructure)
      - Acceptance: webhooks received, messages stored, threads created, IGSID resolved
-   - **Phase 2**: Inbox UI + DM composer + account settings (frontend + API routes)
-     - Acceptance: DM threads visible in inbox, can send replies, can connect IG account
-   - **Phase 3**: AI drafting + creator resolution enhancement + reconciliation polling
-     - Acceptance: AI drafts generated for DM threads, IGSID resolved to campaign creators
-   - **Phase 4** (optional): Polish — 24h window enforcement everywhere, media handling edge cases, error states
+   - **Phase 2**: API endpoints + send reply workflow + AI drafting (backend feature-complete)
+     - Acceptance: full API surface for IG DMs, AI drafts generated, replies sendable via API
+   - **Phase 3**: Context engine tools + Slack notifications (interaction layer)
+     - Acceptance: all 8 CE tools functional, proactive notifications firing, end-to-end DM management via Slack
+   - **Phase 4** (optional): Polish — 24h window enforcement everywhere, media handling edge cases, reconciliation polling, error states
 3. Per phase: exact file list, acceptance criteria, effort estimate (engineering days), dependencies
 4. Produce: `analysis/spec/phase-plan.md`
 
@@ -420,9 +433,9 @@ Read ALL Wave 1, 2, and 3 spec files before starting any Wave 4 aspect.
    - Unit tests per component (webhook handler, ingest workflow, creator resolution, send reply)
    - Integration tests (webhook -> Temporal -> DB, full pipeline)
    - Webhook simulator fixture (mock Meta webhook payloads)
-   - Frontend tests (component tests for DmComposer, inbox with DM threads)
-   - E2E test scenarios (connect account -> receive DM -> view in inbox -> send reply)
-   - Test data factories (IG DM message payloads, thread fixtures)
+   - Context engine tool tests (mock backend API, verify Slack formatting, test 24h window logic)
+   - E2E test scenarios (connect account -> receive DM -> view in CE -> send reply via CE)
+   - Test data factories (IG DM message payloads, thread fixtures, webhook simulator)
 3. Exact test file paths and test function names
 4. Produce: `analysis/spec/test-plan.md`
 
@@ -433,7 +446,7 @@ Read ALL Wave 1, 2, and 3 spec files before starting any Wave 4 aspect.
    - All new tables: zero risk (additive only)
    - ALTER TABLE with CHECK constraint expansion: transaction safety, ordering
    - Backward compatibility: existing email code must not break
-   - Feature flag: `ENABLE_IG_DM` environment variable gates all new routes and UI
+   - Feature flag: `ENABLE_IG_DM` environment variable gates all new routes and CE tools
    - Rollback plan: drop new tables, revert CHECK constraints (exact SQL)
    - Zero-downtime deployment: new tables + feature flag -> enable flag -> verify -> commit
 3. Produce: `analysis/spec/migration-safety.md`
@@ -443,7 +456,7 @@ Read ALL Wave 1, 2, and 3 spec files before starting any Wave 4 aspect.
 1. Read ALL spec files in `analysis/spec/` and `analysis/audit/`
 2. Build the master implementation spec:
    - Table of contents with links to all spec files
-   - Architecture overview (text diagram: Meta -> webhook -> Temporal -> DB -> API -> UI)
+   - Architecture overview (text diagram: Meta -> webhook -> Temporal -> DB -> API -> Context Engine/Slack)
    - Complete file manifest (every new file, every modified file, organized by phase)
    - Database changes summary (all new tables, all modified tables, column counts)
    - Environment variables needed (all new env vars with descriptions)
