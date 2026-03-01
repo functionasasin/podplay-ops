@@ -264,11 +264,46 @@ Situations where the user clearly needs a CPA go into `legal/disclaimers.md`, no
 
 ---
 
+## MRF-019: VAT Transition Quarter — OPT/VAT Period Split
+
+**Trigger:** Taxpayer crossed the ₱3M VAT threshold during a quarter, meaning part of the quarter was under OPT (percentage tax) and part under VAT.
+
+**Why the engine cannot fully decide:**
+- The exact day of VAT registration (effective date) determines how to split the quarter.
+- BIR processing time for Form 1905 varies (same day to several weeks).
+- The Form 2551Q for the partial OPT period must cover only the pre-VAT days.
+- The first VAT return (2550Q or 2550M) must cover only post-VAT-registration transactions.
+- The OPT and VAT amounts depend on which sales invoices fall before vs. after the VAT effective date.
+
+**What the engine CAN do:**
+- Detect the threshold breach (DT-12)
+- Compute total OPT for the pre-breach portion of the year (Jan 1 through end of month before VAT)
+- Compute income tax on full-year gross income under Path A or B
+- Alert user to the split-quarter obligation
+
+**What the user must resolve:**
+1. Confirm the exact date they filed Form 1905 with the RDO
+2. Confirm the BIR-approved VAT effective date (noted on the updated Certificate of Registration)
+3. File Form 2551Q covering only the OPT period (January 1 through VAT effective date minus 1 day)
+4. File Form 2550Q/M for VAT on sales from VAT effective date onwards
+5. Maintain separate records for pre-VAT and post-VAT sales in the transition quarter
+
+**User-facing text:**
+> "Your gross sales crossed ₱3,000,000, requiring VAT registration. Part of your filing period was subject to 3% percentage tax (before your VAT registration took effect) and part subject to 12% VAT (after VAT registration). The exact split depends on your VAT effective date, which is shown on your updated BIR Certificate of Registration. Please consult your accountant to correctly file your Form 2551Q for the OPT period and begin VAT filings from your VAT registration date."
+
+**Flag display:** Show as an alert (orange) on the results screen when `vat_registration_required == true` AND `vat_registered == false`.
+
+**References:** CR-031, CR-033, DT-12; NIRC Sec. 116, Sec. 236(G).
+
+---
+
 ## Cross-References
 
 - For edge cases where the engine CAN make a decision: See [edge-cases.md](edge-cases.md)
 - For legal basis of each flag: See [legal-basis.md](legal-basis.md)
-- For the exact wizard UI text shown alongside these flags: See [../frontend/copy.md](../frontend/copy.md) (PENDING)
-- For error states in engine (invalid inputs): See [../engine/error-states.md](../engine/error-states.md) (PENDING)
+- For the exact wizard UI text shown alongside these flags: See [../frontend/copy.md](../frontend/copy.md)
+- For error states in engine (invalid inputs): See [../engine/error-states.md](../engine/error-states.md)
 - For itemized deduction details: See [lookup-tables/itemized-deductions.md](lookup-tables/itemized-deductions.md)
 - For mixed income computation rules: See [computation-rules.md](computation-rules.md) CR-029, CR-030
+- For VAT vs OPT decision trees: See [decision-trees.md](decision-trees.md) DT-11, DT-12, DT-13
+- For percentage tax rate history: See [lookup-tables/percentage-tax-rates.md](lookup-tables/percentage-tax-rates.md)

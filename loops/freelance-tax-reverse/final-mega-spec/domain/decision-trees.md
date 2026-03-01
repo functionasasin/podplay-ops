@@ -898,15 +898,194 @@ START: Is the taxpayer computing under Path C (8% flat rate)?
 
 ---
 
+## DT-11: VAT vs. Percentage Tax (OPT) Obligation Determination
+
+**Root question:** What indirect tax obligation does this taxpayer have?
+
+**Legal basis:** NIRC Sec. 109(CC), Sec. 116, Sec. 236(G); RR 3-2024; RMC 67-2021
+
+```
+START: Is the taxpayer currently VAT-registered?
+(Check: BIR Certificate of Registration shows VAT as a registered tax type)
+│
+├── YES (VAT-registered) →
+│    [ACTION: INDIRECT_TAX = "VAT".
+│     Percentage tax does NOT apply. VAT applies instead.
+│     8% income tax option is NOT available (VAT-registered bars 8% per RR 8-2018).
+│     Engine uses Paths A and B only for regime comparison.
+│     Paths A and B: no OPT component in total burden calculation.
+│     Alert: "As a VAT-registered taxpayer, you have a separate quarterly VAT obligation
+│             (BIR Form 2550Q). This tool computes income tax only."
+│     Legal: NIRC Sec. 116 (percentage tax applies to NON-VAT persons only);
+│            NIRC Sec. 24(A)(2)(b) (8% bars VAT-registered persons).]
+│
+└── NO (not VAT-registered) →
+     What is the taxpayer's annual gross sales (accrual basis)?
+     │
+     ├── Annual gross sales > ₱3,000,000 →
+     │    [ACTION: VAT_REGISTRATION_REQUIRED.
+     │     Taxpayer has exceeded the mandatory VAT threshold under NIRC Sec. 236(G).
+     │     Required action: File BIR Form 1905 within 10 days of end of the month
+     │     when the ₱3,000,000 threshold was exceeded.
+     │     INDIRECT_TAX = "PERCENTAGE_TAX_UNTIL_VAT_REGISTRATION_THEN_VAT".
+     │     For income tax regime comparison: treat as VAT-registered (no OPT in paths A/B).
+     │     8% income tax option NOT available (gross > ₱3M bars 8% per Sec. 24(A)(2)(b)).
+     │     Engine shows 2 paths (A and B) only.
+     │     Alert: "Your gross sales exceed ₱3,000,000. VAT registration is REQUIRED.
+     │             File BIR Form 1905 at your RDO within 10 days of the end of the month
+     │             your cumulative sales crossed ₱3,000,000. Until VAT takes effect,
+     │             you remain subject to 3% percentage tax."
+     │     Legal: NIRC Sec. 236(G); NIRC Sec. 116.]
+     │
+     └── Annual gross sales ≤ ₱3,000,000 →
+          Has the taxpayer elected the 8% income tax option this year?
+          (Check: Q1 1701Q Item 16 = Option B, or Form 1905, or 2551Q NIL notation)
+          │
+          ├── YES (8% option elected) →
+          │    [ACTION: INDIRECT_TAX = "NONE_WAIVED".
+          │     8% income tax rate is "in lieu of" both the graduated income tax
+          │     AND the Sec. 116 percentage tax.
+          │     Percentage tax WAIVED — no Form 2551Q required for Q2 and Q3.
+          │     (Q1: may have filed 2551Q NIL as election signal; no further 2551Q needed)
+          │     Engine uses Path C only for computing 8% regime.
+          │     For regime comparison: show Paths A and B WITH hypothetical PT to
+          │     demonstrate the savings from Path C (no PT).
+          │     Legal: NIRC Sec. 24(A)(2)(b) — "in lieu of" language;
+          │            RR 8-2018 Part I; RMC 32-2018.]
+          │
+          └── NO (not on 8%, or election not yet made) →
+               Is the taxpayer eligible to ELECT the 8% option?
+               (DT-01 returns ELIGIBLE, AND we are within Q1 election window)
+               │
+               ├── ELIGIBLE AND WITHIN ELECTION WINDOW →
+               │    [ACTION: INDIRECT_TAX = "PERCENTAGE_TAX" (current default).
+               │     However: engine MUST show the 8% path (Path C) in regime comparison
+               │     to illustrate the benefit of electing 8% (saves 3% OPT).
+               │     If Path C is recommended: prompt user to elect 8% via Q1 1701Q.
+               │     If graduated (Path A or B) is recommended: user stays on OPT (3%).
+               │     Annual PT = annual_gross_sales × 0.03. File Form 2551Q quarterly.
+               │     Legal: NIRC Sec. 116; NIRC Sec. 24(A)(2)(b).]
+               │
+               └── NOT ELIGIBLE OR ELECTION WINDOW CLOSED →
+                    [ACTION: INDIRECT_TAX = "PERCENTAGE_TAX".
+                     Taxpayer cannot use 8% option this year (DT-01 returned INELIGIBLE,
+                     or Q1 deadline passed without election).
+                     Annual PT = annual_gross_sales × 0.03. File Form 2551Q quarterly.
+                     Engine uses Paths A and B only in regime comparison.
+                     Legal: NIRC Sec. 116; RR 8-2018 Part I (irrevocable after Q1).]
+```
+
+---
+
+## DT-12: VAT Registration Timing and Transition
+
+**Root question:** When does VAT take effect after the ₱3M threshold is crossed, and what happens during the transition?
+
+**Legal basis:** NIRC Sec. 236(G); RR 11-1998 as amended; NIRC Sec. 116
+
+**Precondition:** Taxpayer is not VAT-registered and gross sales have exceeded ₱3,000,000.
+
+```
+START: In which calendar MONTH did cumulative annual gross sales exceed ₱3,000,000?
+(breach_month = first month where running total of gross sales > ₱3,000,000)
+│
+└── breach_month identified (e.g., October 2026)
+    │
+    ├── REGISTRATION DEADLINE:
+    │    Form 1905 must be filed at the RDO within 10 days of the end of breach_month.
+    │    Breach month = October → Form 1905 deadline = November 10, 2026.
+    │
+    ├── PERCENTAGE TAX PERIOD (before VAT takes effect):
+    │    OPT (3%) applies to gross sales from January 1 through the last day of the month
+    │    BEFORE VAT registration takes effect.
+    │    VAT effective date = first day of the month AFTER Form 1905 is processed.
+    │    │
+    │    ├── Form 1905 filed and processed in November 2026 →
+    │    │    VAT effective December 1, 2026.
+    │    │    OPT applies to January 1 – November 30, 2026 gross sales.
+    │    │    OPT amount = (cumulative gross sales through Nov 30) × 0.03
+    │    │    Q4 OPT (Oct–Dec): only October and November gross sales count.
+    │    │    December is VAT period — no OPT for December sales.
+    │    │    [ACTION: Flag split-quarter OPT obligation. Amended or special Q4 2551Q filing
+    │    │     covers October 1 – November 30 only; Q4 VAT (2550Q) covers December only.]
+    │    │
+    │    └── Form 1905 filed late (after November 10) →
+    │         [ACTION: Late VAT registration — BIR may assess penalties for late registration.
+    │          OPT technically continues until VAT is processed.
+    │          Flag: "Late VAT registration may result in a ₱1,000 compromise penalty.
+    │                 Consult your CPA or RDO to regularize your registration status."
+    │          For income tax computation: treat taxpayer as non-VAT for OPT purposes up to
+    │          VAT effective date, and VAT-registered from VAT effective date onwards.]
+    │
+    ├── INCOME TAX IMPACT:
+    │    For income tax computation (annual ITR):
+    │    - Path C (8%) was DISQUALIFIED at point of breach (gross > ₱3M — see CR-024).
+    │    - Paths A and B: no percentage tax component for the portion of the year after VAT.
+    │    - For the annual ITR: aggregate the full year's gross income (before VAT).
+    │    - OPT paid before VAT registration IS deductible under Sec. 34(C)(1) for Path A.
+    │    [ACTION: Split-year computation required. Engine prompt:
+    │     "You crossed the ₱3M threshold. The engine will compute Path A and B for the
+    │      full year. OPT applies only from January 1 to [VAT effective date - 1 day]."]
+    │
+    └── VAT OBLIGATIONS GOING FORWARD:
+         From VAT effective date:
+         ├── File BIR Form 2550Q (quarterly VAT return) — due 25th day after quarter end.
+         ├── OR BIR Form 2550M (monthly) if gross sales ≥ ₱10M or enrolled in eFPS.
+         ├── Charge 12% VAT on all sales from VAT effective date.
+         ├── Claim input VAT on VAT-able business purchases from VAT effective date.
+         └── [OUT_OF_SCOPE: Full VAT computation. Alert user to engage CPA for VAT compliance.]
+```
+
+---
+
+## DT-13: Percentage Tax Filing Obligation Check (Quarter-Level)
+
+**Root question:** For a given quarter, is a Form 2551Q filing required?
+
+**Legal basis:** NIRC Sec. 116; RMC 67-2021; RR 8-2018
+
+```
+START: What is the taxpayer's indirect tax status for this quarter?
+│
+├── VAT-registered for the ENTIRE quarter →
+│    [ACTION: NO_2551Q_REQUIRED.
+│     Taxpayer files VAT returns (2550M/Q) instead.
+│     Ref: NIRC Sec. 116 applies only to non-VAT persons.]
+│
+├── On 8% income tax option for this year →
+│    [ACTION: NO_2551Q_REQUIRED (except possibly Q1 NIL election signal).
+│     Q1: If taxpayer elected 8% via a Q1 2551Q NIL filing, that one NIL return was filed.
+│          No further 2551Q filings for Q2 and Q3 of this year.
+│     Q2, Q3: No 2551Q required (8% waives OPT).
+│     Q4: No 2551Q for Q4 (no Q4 quarterly OPT — annual reconciliation via 1701A).
+│     Ref: RR 8-2018 Part I — 8% election waives OPT; RMC 32-2018.]
+│
+├── Non-VAT, graduated rates (Paths A or B), gross ≤ ₱3M for the year →
+│    [ACTION: 2551Q_REQUIRED.
+│     File BIR Form 2551Q for this quarter.
+│     Tax due = gross quarterly SALES (accrual) × 0.03.
+│     Even if tax due = ₱0 (e.g., zero gross sales quarter), file a NIL 2551Q before deadline.
+│     Deadlines: Q1 April 25, Q2 July 25, Q3 October 25, Q4 January 25.
+│     Ref: NIRC Sec. 116; RMC 67-2021.]
+│
+└── Non-VAT, graduated rates, taxpayer crossed ₱3M during this quarter →
+     [ACTION: PARTIAL_QUARTER_2551Q.
+      Percentage tax covers only the period from the quarter start through the day
+      BEFORE VAT registration takes effect.
+      File Form 2551Q for the OPT-applicable portion; separately begin VAT filings.
+      This is a manual-review flag (MRF) — engine alerts user to seek CPA guidance
+      for the transition quarter.
+      Ref: NIRC Sec. 116; NIRC Sec. 236(G); DT-12 for registration timeline.
+      See: MRF-019 (VAT transition quarter OPT/VAT split).]
+```
+
+---
+
 ## Trees To Be Added in Future Aspects
 
 The following decision trees are planned but not yet written. They will be added when the corresponding aspects are analyzed:
 
 | Tree | Aspect That Will Create It | Brief Description |
 |------|---------------------------|-------------------|
-| DT-08: VAT vs Percentage Tax Determination | vat-vs-percentage-tax | Is taxpayer VAT or OPT? Threshold mechanics, registration obligations |
-| DT-11: CWT Credit Application | creditable-withholding-tax | How to apply 2307 credits at quarterly and annual level |
-| DT-12: Quarterly vs Annual Filing Sequence | quarterly-filing-rules | Order of operations, cumulative method, installment payment decision |
-| DT-13: OSD vs Itemized Comparison | osd-computation | When OSD beats itemized and vice versa |
-| DT-14: NOLCO Applicability | edge-cases | When net operating loss carry-over applies |
-| DT-15: First-Year Taxpayer Setup | edge-cases | New taxpayer mid-year registration, first filing obligations |
+| DT-14: CWT Credit Application | creditable-withholding-tax | How to apply 2307 credits at quarterly and annual level |
+| DT-15: Quarterly vs Annual Filing Sequence | quarterly-filing-rules | Order of operations, cumulative method, installment payment decision |

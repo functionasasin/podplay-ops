@@ -1736,3 +1736,215 @@ Key insight: For very low business gross receipts (near ₱250K) where the ₱25
 
 **This EC-M10 applies identically whether the taxpayer is pure SE or mixed income.** The distinction is that for mixed income, the annual form is 1701 (not 1701A) and the computation still separates compensation from business income.
 
+---
+
+## Group EC-VPT: VAT vs. Percentage Tax Edge Cases
+
+### EC-VPT01: Exactly ₱3,000,000 Gross Sales — Triple Boundary
+**Scenario:** A freelance graphic designer has exactly ₱3,000,000 in annual gross sales.
+
+**Applicable rules and outcomes:**
+- EOPT Taxpayer Tier: **SMALL** (boundary is "less than ₱3M" — exactly ₱3M is SMALL, not MICRO)
+- VAT Registration: **NOT required** (threshold is "exceeding ₱3M" — ₱3M exactly is not "exceeding")
+- 8% Option Eligibility: **STILL ELIGIBLE** (threshold is "not exceeding ₱3M" — ₱3M is included)
+- Percentage Tax: Applies (non-VAT, not on 8%, gross ≤ ₱3M), unless 8% is elected
+
+**Engine behavior:**
+- `taxpayer_tier = SMALL`
+- `vat_registration_required = false`
+- `eight_pct_eligible = true`
+- `opm_obligation = true` (unless 8% elected)
+- If 8% is elected: Path C total = (₱3,000,000 − ₱250,000) × 0.08 = ₱220,000
+- If Path B: NTI = ₱3,000,000 × 0.60 = ₱1,800,000; IT = ₱402,500 + (₱1,800,000 − ₱2,000,000) × 0.25 = ₱402,500 − wait, ₱1,800,000 is in bracket 4: IT = ₱102,500 + (₱1,800,000 − ₱800,000) × 0.25 = ₱102,500 + ₱250,000 = ₱352,500; PT = ₱3,000,000 × 0.03 = ₱90,000; Total B = ₱442,500
+- Recommendation: Path C (₱220,000) saves ₱222,500 vs Path B
+
+**Engine output note:** "Although your gross sales equal exactly ₱3,000,000, you remain eligible for the 8% option and VAT registration is not required."
+
+---
+
+### EC-VPT02: Voluntary VAT Registration Below ₱3M
+**Scenario:** A web developer with ₱1,500,000 in gross sales voluntarily registered for VAT (clients required a VAT-registered supplier for their input VAT credits).
+
+**What changes:**
+- VAT applies (voluntary registration is binding)
+- Percentage tax does NOT apply (mutual exclusivity)
+- 8% option is NOT available (VAT-registered status bars 8%)
+- Engine: Paths A and B only; no percentage tax component
+
+**Engine behavior:**
+- `vat_registered = true`
+- `eight_pct_eligible = false`
+- `opm_obligation = false`
+- Alert: "You are voluntarily VAT-registered. The 8% option is not available and you have a separate quarterly VAT obligation. This tool computes income tax only."
+
+**Comparison table for this taxpayer:**
+
+| Path | NTI | Income Tax | PT | VAT | Total IT |
+|------|-----|------------|----|----|---------|
+| A (Itemized, assume ₱300K expenses) | ₱1,200,000 | ₱148,500 | ₱0 | Separate | ₱148,500 |
+| B (OSD) | ₱900,000 | ₱102,500 + ₱25,000 = ₱127,500 — wait: ₱900K is bracket 4: ₱102,500 + (₱900,000 − ₱800,000) × 0.25 = ₱102,500 + ₱25,000 = ₱127,500 | ₱0 | Separate | ₱127,500 |
+| C (8%) | N/A | N/A | N/A | N/A | NOT AVAILABLE |
+
+**Recommendation: Path B (OSD) at ₱127,500 total IT.** VAT obligation is separate and not included.
+
+---
+
+### EC-VPT03: Taxpayer Crosses ₱3M During Q3 — Split-Quarter OPT
+**Scenario:** A consultant's cumulative gross sales reached ₱3,100,000 in September (Q3). Was on Path B (graduated + OSD) all year. Had not elected 8%.
+
+**Applicable rules:**
+- 8% was never elected → OPT was due Q1 and Q2
+- Q3: OPT applies from July 1 to the day before VAT takes effect (filing Form 1905 in October, VAT effective November 1)
+- Q4: VAT (no OPT)
+
+**Step-by-step engine behavior:**
+1. Detect: `annual_gross_sales = 3,100,000 > 3,000,000` AND `not vat_registered` AND `not elected_eight_percent`
+2. Set `vat_registration_required = true`
+3. For income tax regime comparison: treat as VAT-registered (no OPT in final burden for simplicity — the actual Q3 OPT is a separate transition detail)
+4. Alert: "Your gross sales exceeded ₱3,000,000. VAT registration is required (File Form 1905 at your RDO within 10 days of September 30). Percentage tax (3%) applied to your sales from January through the day before VAT took effect."
+5. Compute Q3 OPT (July–September, pre-VAT): e.g., Q3 gross sales = ₱700,000 → OPT = ₱21,000
+6. Annual income tax uses full-year gross income (VAT-exclusive): graduated rates on Path A or B
+
+**Manual review flag MRF-019 applies** — user must confirm exact breach month and VAT effective date for correct Q3 2551Q filing split.
+
+---
+
+### EC-VPT04: Taxpayer on 8% Crosses ₱3M Mid-Year (Combined EC with EC-T02)
+**Scenario:** A graphic artist elected 8% for 2026 in Q1 (filing 2551Q NIL and 1701Q with 8% box). By August (Q3), cumulative gross reaches ₱3,200,000.
+
+**Cascade of consequences:**
+1. 8% option RETROACTIVELY CANCELLED for all of 2026 (CR-024 mid-year breach procedure)
+2. VAT registration REQUIRED: File Form 1905 within 10 days of August 31
+3. VAT effective September 1, 2026 (assuming Oct 10 deadline met)
+4. Retroactive OPT: 3% × gross sales Jan–Aug (pre-VAT period) computed and filed via amended 2551Q
+5. All 8% quarterly IT payments (Q1, Q2 under 8%) reclassified as advance IT payments
+6. Annual income tax: graduated rates (Path A or B) on full-year gross income
+
+**Retroactive OPT computation example:**
+- Jan–Aug gross sales: ₱3,200,000 (all sales before VAT effective date)
+- Wait — breach is at ₱3M, so Jan–Aug total is ₱3,200,000; VAT effective Sep 1
+- Retroactive OPT = ₱3,200,000 × 0.03 = ₱96,000
+
+**Note:** The retroactive OPT is deductible as Path A itemized expense (Sec. 34(C)(1)), but for total burden comparison, it is an additional cost. The engine should show the total additional cost triggered by the breach.
+
+**Engine output:**
+- `eight_pct_breached = true`
+- `breach_month = "August 2026"`
+- `retroactive_opm = 96,000`
+- `vat_registration_required = true`
+- `vat_effective_date = "September 1, 2026"`
+- Switch to graduated rates for full year; credit prior 8% quarterly payments
+
+---
+
+### EC-VPT05: Two Businesses — One Exceeds ₱3M, One Does Not
+**Scenario:** A freelancer has two lines of business: (1) web development (GR ₱2,500,000) and (2) online English tutoring (GR ₱800,000). Total gross = ₱3,300,000.
+
+**Rule:** The ₱3M threshold uses COMBINED gross sales from ALL business activities of the same individual taxpayer (per NIRC Sec. 236(G) — the threshold applies to the person, not to individual business lines).
+
+**Engine behavior:**
+- `total_gross_sales = 2,500,000 + 800,000 = 3,300,000`
+- `vat_registration_required = true` (combined exceeds ₱3M)
+- `eight_pct_eligible = false` (combined exceeds ₱3M)
+- `opm_obligation = false` for income tax purposes (treat as VAT scenario)
+- Alert: "Your combined gross sales from all business activities total ₱3,300,000, which exceeds the ₱3M VAT threshold. VAT registration is required for ALL your business activities."
+
+**Note:** After VAT registration, BOTH business lines are VAT-registered — taxpayer cannot register only one business line for VAT. VAT applies to all sales of the individual taxpayer.
+
+---
+
+### EC-VPT06: OPT as Deductible Expense Creates Apparent Discrepancy
+**Scenario:** A freelancer uses Path A (itemized deductions). They claim the percentage tax paid (₱45,000) as an itemized deduction. Their accountant says their total tax burden is ₱147,000 (IT) + ₱45,000 (OPT) = ₱192,000. But their CPA says the income tax is only ₱137,250 because the OPT is deducted first.
+
+**Resolution:** Both are correct — they're describing different things:
+- **CPA's calculation:** IT computed AFTER deducting OPT = ₱137,250. Plus OPT of ₱45,000. Total burden = ₱182,250.
+- **Naive sum:** IT without OPT deduction = ₱147,000. Plus OPT. Total = ₱192,000. **INCORRECT** — overstates burden.
+- **Correct method** (CR-032 algorithm): OPT reduces Path A's NTI, which lowers IT. Total burden = lower IT + OPT.
+
+**Engine behavior:**
+- Always compute Path A using the CR-032 algorithm (OPT included in itemized deductions first, then compute IT on reduced NTI, then add OPT back for total burden display)
+- Show breakdown: "Income Tax: ₱137,250 + Percentage Tax: ₱45,000 = Total: ₱182,250"
+- Path A savings vs Path B and C computed on this correct total
+
+---
+
+### EC-VPT07: OPT Rate History — Taxpayer Files Amended Return for 2021
+**Scenario:** A freelancer is filing an amended annual ITR for taxable year 2021 (for audit defense). They need to include the correct percentage tax for that year.
+
+**Applicable OPT rate for 2021:**
+- Q1 2021 (Jan–Mar): 1% (CREATE 1% rate — effective July 1, 2020; Q1 2021 is within the 1% period)
+- Q2 2021 (Apr–Jun): 1%
+- Q3 2021 (Jul–Sep): 1%
+- Q4 2021 (Oct–Dec): 1%
+- Full year 2021: ALL quarters at 1% (entire year 2021 falls within July 1, 2020 – June 30, 2023 window)
+
+**Engine behavior when `tax_year = 2021`:**
+- `pt_rate = 0.01` (for the full 2021 year)
+- Annual OPT = annual_gross_receipts (cash basis for 2021) × 0.01
+- Note: For TY2021, the basis is gross RECEIPTS (pre-EOPT), not gross sales
+- Path A: OPT = receipts × 0.01; deductible under Sec. 34(C)(1)
+- Path B: OPT = receipts × 0.01; adds to total burden
+
+**Reference:** See [percentage-tax-rates.md Part 1](lookup-tables/percentage-tax-rates.md) for complete rate history table.
+
+---
+
+### EC-VPT08: Percentage Tax as the Only Tax Due (Zero Income Tax)
+**Scenario:** A first-year freelance writer earns ₱200,000 in gross receipts, has no expenses, and is not on 8% option.
+
+**Path B (OSD):**
+- NTI = ₱200,000 × 0.60 = ₱120,000
+- IT = ₱0 (below ₱250,000 zero-bracket)
+- OPT = ₱200,000 × 0.03 = ₱6,000
+- Total burden B = ₱6,000 (OPT only)
+
+**Path C (8%, if eligible — assume eligible):**
+- IT = (₱200,000 − ₱250,000) → max(−₱50,000, 0) = ₱0 (negative base → zero tax)
+- OPT = ₱0 (waived)
+- Total burden C = ₱0
+
+**Recommendation: Path C (₱0) is best.** However, even though there is zero income tax, the taxpayer must still:
+- File Q1 1701Q (8% option box checked, zero tax due)
+- File 2551Q NIL for Q1 if not electing 8%, OR file 2551Q with ₱6,000/4 = ₱1,500 per quarter
+
+**Edge case:** Path C with gross receipts < ₱250,000 results in ₱0 income tax AND ₱0 percentage tax. The taxpayer must still register with BIR and file returns (NIL returns). Engine behavior: show "₱0 total tax — Path C recommended. You must still file quarterly returns and annual ITR even with zero liability."
+
+---
+
+### EC-VPT09: Percentage Tax on Non-Operating Income
+**Scenario:** A non-VAT freelance photographer earns ₱800,000 in professional fees and also ₱50,000 in bank interest (already subjected to 20% Final Withholding Tax).
+
+**OPT basis clarification:**
+- Professional fees: ₱800,000 — SUBJECT to OPT (business/professional income)
+- Bank interest income: ₱50,000 — **NOT SUBJECT to OPT** (final-taxed passive income; excluded from OPT base)
+- OPT base = ₱800,000 only
+- OPT = ₱800,000 × 0.03 = ₱24,000
+
+**Engine behavior:**
+- OPT is computed on professional fee/business gross sales ONLY
+- Passive income subjected to final withholding tax (interest, dividends, royalties) is EXCLUDED from OPT base
+- `opm_base = gross_professional_sales` (excludes final-withheld income)
+- For 8% threshold test: same — final-withheld income excluded from the ₱3M threshold calculation
+
+**Note for non-operating income in 8% computation:** Non-operating income that is NOT subject to FWT (e.g., rental income from a property used in business) IS included in the 8% base and OPT base.
+
+---
+
+### EC-VPT10: VAT-Registered Taxpayer Switching to Graduated Rates — PT Impact
+**Scenario:** A VAT-registered architect (₱4,500,000 gross sales) wants to compare Path A vs Path B. In prior years, their CPA always chose OSD. This year they have significant business expenses (₱2,200,000) and wonder if itemized beats OSD.
+
+**Key rule:** For VAT-registered taxpayers, the OSD breakeven is still 40% of gross INCOME:
+- OSD deduction = gross income × 40%
+- Itemized beats OSD when itemized > gross income × 40%
+- VAT-exclusive gross income = ₱4,500,000
+- OSD amount = ₱4,500,000 × 0.40 = ₱1,800,000
+- Itemized = ₱2,200,000 > ₱1,800,000 → **Path A (itemized) WINS**
+
+**Computation:**
+- Path A: NTI = ₱4,500,000 − ₱2,200,000 = ₱2,300,000; IT = ₱402,500 + (₱2,300,000 − ₱2,000,000) × 0.30 = ₱402,500 + ₱90,000 = ₱492,500
+- Path B: NTI = ₱4,500,000 × 0.60 = ₱2,700,000; IT = ₱402,500 + (₱2,700,000 − ₱2,000,000) × 0.30 = ₱402,500 + ₱210,000 = ₱612,500
+- No OPT on either path (VAT-registered)
+- Savings from Path A vs B: ₱612,500 − ₱492,500 = ₱120,000
+
+**Engine behavior:** For VAT-registered taxpayers, no OPT in total burden for either path. Breakeven analysis: `itemized_deductions > gross_income * 0.40` → Path A wins. This is the same breakeven as non-VAT taxpayers (the presence of OPT on both paths for non-VAT does not change the relative breakeven between A and B — only the A-vs-C and B-vs-C comparisons are affected by OPT presence/absence).
+

@@ -299,7 +299,7 @@ Filed on Form 2551Q on or before the 25th day of the month following each quarte
 | Q3 | Jul–Sep | October 25 |
 | Q4 | Oct–Dec | January 25 (next year) |
 
-**Note:** As of EOPT Act (RA 11976, effective 2024), filing deadlines and procedures may have been updated. Forward loop should confirm current deadlines from BIR website.
+**Deadlines confirmed per RMC 67-2021 and remain unchanged post-EOPT:** Q1 April 25, Q2 July 25, Q3 October 25, Q4 January 25. See [percentage-tax-rates.md Part 4](lookup-tables/percentage-tax-rates.md) for complete deadline table with holiday rule.
 
 ---
 
@@ -3477,3 +3477,353 @@ function aggregate_form_2316s(form_2316s: List[Form2316Data]) -> AggregatedCompe
 2. Engine computes compensation_only_it on the combined taxable_compensation
 3. If tw_deficiency > 0: show warning "With multiple employers, your combined income is taxed at a higher rate than what each employer individually withheld. You have a compensation income tax deficiency of approximately ₱[amount] that will be payable at annual filing."
 4. Proceed with standard mixed income comparison using aggregated values
+
+---
+
+## CR-031: VAT vs. Percentage Tax Obligation Determination
+
+**Legal basis:** NIRC Sec. 109(CC), Sec. 116, Sec. 236(G); RA 11534 (CREATE); RA 11976 (EOPT); RR 8-2024
+
+**Purpose:** Determine which indirect tax obligation applies, and how that affects the regime comparison.
+
+### Step 1: Classify Indirect Tax Status
+
+```
+function determine_indirect_tax_status(input: TaxInput) -> IndirectTaxStatus:
+  // Priority order: VAT-registered check first
+  if input.vat_registered:
+    return IndirectTaxStatus {
+      obligation: "VAT",
+      percentage_tax_applies: false,
+      percentage_tax_waived: false,
+      vat_applies: true,
+      eight_pct_eligible: false,  // VAT-registered bars 8% option
+      note: "VAT-registered. Percentage tax does not apply. 8% option not available."
+    }
+
+  // Check if gross exceeds ₱3M threshold
+  if input.annual_gross_sales > 3_000_000:
+    return IndirectTaxStatus {
+      obligation: "VAT_REGISTRATION_REQUIRED",
+      percentage_tax_applies: true,  // technically still applies until VAT is registered
+      percentage_tax_waived: false,
+      vat_applies: false,  // VAT not yet in effect (not registered)
+      eight_pct_eligible: false,  // gross > ₱3M bars 8% option
+      flag_vat_required: true,
+      note: "Gross sales exceed ₱3,000,000. VAT registration is REQUIRED under NIRC Sec. 236(G). "
+            "File Form 1905 within 10 days of end of the month the threshold was exceeded. "
+            "Until VAT registration takes effect, percentage tax continues to apply."
+    }
+
+  // At exactly ₱3,000,000 gross sales: NOT required (threshold is "exceeding")
+  // Check if 8% option was elected (waives OPT)
+  if input.elected_eight_percent:
+    return IndirectTaxStatus {
+      obligation: "NONE_WAIVED_BY_8PCT",
+      percentage_tax_applies: false,
+      percentage_tax_waived: true,  // 8% option subsumes the OPT
+      vat_applies: false,
+      eight_pct_eligible: true,
+      note: "8% income tax option elected. Percentage tax is waived. No Form 2551Q required."
+    }
+
+  // Default: non-VAT, gross ≤ ₱3M, not on 8% → Percentage tax applies
+  return IndirectTaxStatus {
+    obligation: "PERCENTAGE_TAX",
+    percentage_tax_applies: true,
+    percentage_tax_waived: false,
+    vat_applies: false,
+    eight_pct_eligible: true,  // still eligible to elect 8% (if not already past Q1)
+    note: "Non-VAT registered. Gross sales ≤ ₱3,000,000. Percentage tax (3%) applies. "
+          "File Form 2551Q quarterly (April 25, July 25, October 25, January 25)."
+  }
+```
+
+### Step 2: Effect on Regime Comparison
+
+```
+// Impact of indirect tax status on path computations:
+
+if indirect_status.percentage_tax_applies:
+  // Paths A and B: include PT in total burden
+  pt_amount = compute_annual_percentage_tax(input.quarterly_gross_sales)
+  path_a_total = income_tax_path_a + pt_amount
+  path_b_total = income_tax_path_b + pt_amount
+
+  // Path C: PT is waived (8% is in lieu of PT)
+  path_c_total = income_tax_path_c  // no PT
+
+elif indirect_status.vat_applies:
+  // VAT-registered: no PT on any path, no Path C
+  path_a_total = income_tax_path_a  // no PT
+  path_b_total = income_tax_path_b  // no PT
+  path_c_total = null  // 8% not available
+
+elif indirect_status.obligation == "NONE_WAIVED_BY_8PCT":
+  // On 8% option: no PT on any path
+  // Paths A and B theoretically have no PT since 8% election means no 2551Q filed
+  // BUT: if switching away from 8%, paths A/B WOULD have PT
+  // For comparison purposes: show what PT would cost under A or B vs. 8% saving it
+  pt_amount_if_graduated = compute_annual_percentage_tax(input.quarterly_gross_sales)
+  path_a_total = income_tax_path_a + pt_amount_if_graduated  // hypothetical PT
+  path_b_total = income_tax_path_b + pt_amount_if_graduated  // hypothetical PT
+  path_c_total = income_tax_path_c  // no PT (actual 8% path)
+```
+
+---
+
+## CR-032: Percentage Tax Annual and Quarterly Computation
+
+**Legal basis:** NIRC Sec. 116 as amended; RR 3-2024 (EOPT basis change); RMC 67-2021
+
+**Current rules (for 2026 tax year):**
+- Rate: 3%
+- Basis: Gross quarterly SALES (accrual — invoice date, not payment date)
+- Excludes: Sales returns and allowances, VAT (if any), zero-rated transactions
+
+### Annual Percentage Tax (for regime comparison total burden):
+
+```
+function compute_annual_percentage_tax(quarterly_gross_sales: [Decimal; 4]) -> AnnualPT:
+  // quarterly_gross_sales = [q1_gross, q2_gross, q3_gross, q4_gross]
+  // Each element = gross sales for that quarter only (not cumulative)
+
+  pt_rate = 0.03  // Current rate for 2026
+
+  q1_pt = quarterly_gross_sales[0] * pt_rate
+  q2_pt = quarterly_gross_sales[1] * pt_rate
+  q3_pt = quarterly_gross_sales[2] * pt_rate
+  q4_pt = quarterly_gross_sales[3] * pt_rate
+
+  annual_pt = q1_pt + q2_pt + q3_pt + q4_pt
+
+  // Validation: annual_pt should equal annual_gross_sales * 0.03
+  // (because PT is simply 3% of total gross sales, no progressivity)
+  assert abs(annual_pt - sum(quarterly_gross_sales) * pt_rate) < 0.01
+
+  return AnnualPT {
+    q1_pt: round(q1_pt, 2),
+    q2_pt: round(q2_pt, 2),
+    q3_pt: round(q3_pt, 2),
+    q4_pt: round(q4_pt, 2),
+    annual_total: round(annual_pt, 2),
+    rate_applied: pt_rate,
+    basis: "gross_sales_accrual",
+    form: "2551Q"
+  }
+```
+
+### When user provides annual gross (not quarterly breakdown):
+
+```
+function compute_annual_percentage_tax_from_annual(annual_gross_sales: Decimal) -> AnnualPT:
+  // If user provides only annual total (not quarterly breakdown)
+  // Assume equal quarterly distribution (engine cannot know actual quarterly figures)
+  // User must manually verify quarterly amounts for actual Form 2551Q filing
+
+  estimated_q_gross = annual_gross_sales / 4
+  pt_rate = 0.03
+
+  return AnnualPT {
+    q1_pt: round(estimated_q_gross * pt_rate, 2),
+    q2_pt: round(estimated_q_gross * pt_rate, 2),
+    q3_pt: round(estimated_q_gross * pt_rate, 2),
+    q4_pt: round(estimated_q_gross * pt_rate, 2),
+    annual_total: round(annual_gross_sales * pt_rate, 2),
+    rate_applied: pt_rate,
+    basis: "gross_sales_accrual_estimated",
+    note: "Quarterly breakdown estimated as equal fourths. "
+          "Actual Form 2551Q must use real quarterly gross sales figures."
+  }
+```
+
+### Percentage Tax as Deductible Expense Under Path A:
+
+```
+function path_a_with_pt_deduction(
+  gross_income: Decimal,          // After COGS for traders, = gross sales for service providers
+  itemized_deductions_before_pt: Decimal,  // All Sec. 34(A)-(K) deductions EXCLUDING percentage tax
+  annual_gross_sales: Decimal
+) -> PathAResult:
+
+  // Step 1: Compute PT (fixed — depends only on gross sales, not on NTI)
+  pt = annual_gross_sales * 0.03
+
+  // Step 2: PT is deductible under Sec. 34(C)(1) (taxes paid, other than income tax)
+  total_itemized = itemized_deductions_before_pt + pt
+
+  // Step 3: Compute NTI (no circular dependency — PT was already computed)
+  nti = max(gross_income - total_itemized, 0)
+
+  // Step 4: Apply NOLCO if applicable (see CR-027 for NOLCO rules)
+  nti_after_nolco = max(nti - nolco_applied, 0)
+
+  // Step 5: Compute income tax
+  income_tax = graduated_tax(nti_after_nolco)
+
+  // Step 6: Compute total burden
+  total_burden = income_tax + pt
+
+  return PathAResult {
+    gross_income: gross_income,
+    itemized_deductions_before_pt: itemized_deductions_before_pt,
+    percentage_tax: pt,
+    total_itemized_with_pt: total_itemized,
+    net_taxable_income: nti_after_nolco,
+    income_tax: income_tax,
+    percentage_tax_total: pt,
+    total_burden: total_burden
+  }
+```
+
+**Worked Example — CR-032-WE-01:**
+- Freelance web developer, 2026 tax year
+- Gross income (service): ₱1,200,000
+- Itemized deductions (excl. PT): ₱180,000
+- Annual gross sales: ₱1,200,000 (same as gross income for service provider)
+- Taxpayer: non-VAT, not on 8%, graduated + itemized (Path A)
+
+```
+pt = ₱1,200,000 × 0.03 = ₱36,000
+total_itemized = ₱180,000 + ₱36,000 = ₱216,000
+nti = ₱1,200,000 − ₱216,000 = ₱984,000
+income_tax = ₱102,500 + (₱984,000 − ₱800,000) × 0.25 = ₱102,500 + ₱46,000 = ₱148,500
+total_burden_a = ₱148,500 + ₱36,000 = ₱184,500
+
+// Compare Path B (OSD):
+pt_b = ₱36,000 (same)
+nti_b = ₱1,200,000 × 0.60 = ₱720,000
+income_tax_b = ₱22,500 + (₱720,000 − ₱400,000) × 0.20 = ₱22,500 + ₱64,000 = ₱86,500
+total_burden_b = ₱86,500 + ₱36,000 = ₱122,500
+
+// Compare Path C (8%):
+income_tax_c = (₱1,200,000 − ₱250,000) × 0.08 = ₱950,000 × 0.08 = ₱76,000
+total_burden_c = ₱76,000 (no PT)
+
+// Recommendation: Path C (₱76,000) < Path B (₱122,500) < Path A (₱184,500)
+// Savings vs. next best: ₱122,500 − ₱76,000 = ₱46,500
+```
+
+---
+
+## CR-033: VAT-Registered Taxpayer Regime Comparison
+
+**Legal basis:** NIRC Sec. 106-110 (VAT); NIRC Sec. 24(A)(2)(b) (8% option ineligibility if VAT-registered)
+
+**Purpose:** When a taxpayer is VAT-registered (or gross > ₱3M, whether or not registered), the engine must adapt the regime comparison.
+
+### VAT-Registered Taxpayer Engine Rules:
+
+```
+function compute_all_paths_vat_registered(input: TaxInput) -> TaxResult:
+  // Precondition: input.vat_registered == true OR input.annual_gross_sales > 3_000_000
+
+  // Path C is INELIGIBLE
+  path_c_result = PathResult {
+    available: false,
+    reason: "8% income tax option requires gross receipts ≤ ₱3,000,000 and non-VAT status. "
+            "VAT-registered taxpayers are ineligible per RR 8-2018 Sec. 2(A)."
+  }
+
+  // Path A and B: no percentage tax component (VAT is a separate filing)
+  // For income tax purposes, gross income for a VAT-registered service provider:
+  //   gross_income = gross_sales (EXCLUDING output VAT collected)
+  //   [VAT collected is not income — it is a liability to BIR]
+
+  gross_income = input.vat_exclusive_gross_sales  // sales net of 12% output VAT
+
+  path_a_result = compute_path_a(gross_income, input.itemized_deductions)
+  path_a_result.percentage_tax = 0  // No OPT for VAT-registered
+  path_a_result.total_burden = path_a_result.income_tax  // IT only
+
+  path_b_result = compute_path_b(gross_income)
+  path_b_result.percentage_tax = 0  // No OPT for VAT-registered
+  path_b_result.total_burden = path_b_result.income_tax  // IT only
+
+  // Recommendation: min(path_a, path_b) — only 2 paths
+  recommended = "path_a" if path_a_result.total_burden <= path_b_result.total_burden else "path_b"
+  // Tie-break: prefer OSD (Path B) over Itemized (Path A) on equal burden — simpler, no documentation
+
+  // Alert: VAT is a SEPARATE obligation — this tool does not compute VAT payable
+  vat_alert = "IMPORTANT: As a VAT-registered taxpayer, you have a separate quarterly VAT obligation "
+              "(BIR Form 2550Q, due 25th day after each quarter end). This tool computes income tax only. "
+              "Your VAT computation (output VAT minus input VAT) must be done separately."
+
+  return TaxResult {
+    taxpayer_type: "VAT_REGISTERED",
+    path_a: path_a_result,
+    path_b: path_b_result,
+    path_c: path_c_result,
+    recommended: recommended,
+    indirect_tax_obligation: "VAT",
+    vat_alert: vat_alert
+  }
+```
+
+### VAT-Exclusive Gross Income Computation:
+
+```
+// For VAT-registered taxpayers, income tax is computed on VAT-EXCLUSIVE amounts
+// (the VAT collected is not income; it is a pass-through to BIR)
+
+function vat_exclusive_gross_income(
+  gross_sales_inclusive: Decimal,  // total billed to clients including VAT
+  vat_rate: Decimal = 0.12
+) -> Decimal:
+  // If taxpayer billed VAT on top of selling price:
+  //   gross_sales_inclusive = selling_price + (selling_price × 0.12) = selling_price × 1.12
+  //   gross_income_for_it = selling_price = gross_sales_inclusive / 1.12
+
+  // If taxpayer billed VAT-inclusive (price includes VAT):
+  //   gross_income_for_it = gross_sales_inclusive / 1.12
+
+  // Engine default: assume VAT is charged on top of selling price
+  // (i.e., user enters their fee/selling price, and VAT is added on top — standard practice)
+  // In this case, user-entered gross income = VAT-exclusive amount already
+  // No adjustment needed if user enters their sales before VAT
+
+  return gross_sales_inclusive  // If user enters pre-VAT amounts (recommended input)
+```
+
+**Engine input instruction for VAT-registered users:**
+The wizard must instruct: "Enter your gross sales BEFORE VAT. Do not include the 12% VAT you collected from clients."
+
+### Deductibility of VAT for Income Tax Purposes:
+
+```
+// For VAT-registered taxpayers computing Path A (itemized deductions):
+// Input VAT that is NOT creditable against output VAT (e.g., from non-VAT-able purchases
+//   or purchases from non-VAT-registered suppliers) MAY be deductible as business expense
+//   under NIRC Sec. 34(A) if it is part of the cost of doing business.
+// Non-creditable input VAT treatment:
+//   Option 1: Deduct as part of the purchase/cost (most common approach)
+//   Option 2: Expense separately as "taxes paid" under Sec. 34(C)
+// Engine behavior: include a note in Path A results for VAT-registered taxpayers:
+//   "Non-creditable input VAT may be included in your itemized deductions.
+//    Consult your CPA for the correct treatment of input VAT in your specific situation."
+// This is flagged as MRF for VAT-registered users — engine cannot determine which
+// input VAT is creditable without full VAT computation.
+```
+
+**Worked Example — CR-033-WE-01 (VAT-Registered IT Consultant):**
+- Annual gross sales (VAT-exclusive): ₱5,000,000
+- Itemized deductions (business expenses): ₱1,800,000
+- VAT-registered (mandatory, exceeds ₱3M)
+- Path A and B available; Path C not available
+
+```
+// Path A (Graduated + Itemized):
+nti_a = ₱5,000,000 − ₱1,800,000 = ₱3,200,000
+income_tax_a = ₱402,500 + (₱3,200,000 − ₱2,000,000) × 0.30 = ₱402,500 + ₱360,000 = ₱762,500
+total_burden_a = ₱762,500 (no PT)
+
+// Path B (Graduated + OSD):
+nti_b = ₱5,000,000 × 0.60 = ₱3,000,000
+income_tax_b = ₱402,500 + (₱3,000,000 − ₱2,000,000) × 0.30 = ₱402,500 + ₱300,000 = ₱702,500
+total_burden_b = ₱702,500 (no PT)
+
+// Recommendation: Path B (₱702,500) < Path A (₱762,500)
+// Savings: ₱762,500 − ₱702,500 = ₱60,000
+// Note: Only worth choosing Path A if itemized > OSD of ₱2,000,000 (40% × ₱5M)
+// Breakeven: itemized > ₱2,000,000 → Path A wins; itemized ≤ ₱2,000,000 → Path B wins
+```
