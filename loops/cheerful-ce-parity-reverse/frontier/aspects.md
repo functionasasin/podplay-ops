@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total Aspects**: 36
-- **Analyzed**: 26
-- **Pending**: 10
-- **Convergence**: 72.2%
+- **Analyzed**: 27
+- **Pending**: 9
+- **Convergence**: 75.0%
 
 ---
 
@@ -49,7 +49,7 @@ Flesh each tool to exhaustive detail. Verify every parameter, type, and enum aga
 - [x] **w3-users-team-full** — Full specs for ALL 13 user/team tools (1 user settings, 1 connected accounts, 5 team management, 5 campaign assignments, 1 onboarding status). 12 source files verified: user.py (161 lines), team.py (536 lines), 4 Pydantic model files, 3 database model files, repositories/team.py (413 lines), 4 webapp onboarding routes. 11 corrections from Wave 2: (1) add_team_member already-member is 400 not 409, (2) add_team_member new error "Could not invite user: {msg}" 400 from Supabase AuthApiError, (3) get_team non-member error is "Not a member of this team" not "Access denied to team {team_id}", (4) remove_team_member error is "Member not found" not "Member not found in team", (5) assign_campaign already-assigned is 400 not 409, (6) assign/list ownership error is "Campaign does not belong to this team's owner" (subtle wording), (7-8) list_campaign_assignments same 2 error corrections, (9) unassign also validates campaign exists + belongs to owner, (10) connected_accounts Gmail display_name is gmail_email not null, (11) list_my_assignments user_email always null. ZERO service routes exist — all 13 tools need new /api/service/* routes. Onboarding needs entirely new backend endpoint (currently webapp-only)
 - [x] **w3-analytics-full** — Full specs for 1 analytics tool (`cheerful_get_dashboard_analytics`). 8 source files verified: dashboard.py (668 lines), models/api/dashboard.py (142 lines), service.py (360 lines), campaign.py (CampaignOutboxQueueStatus 5 values, CampaignStatus 4 values), campaign_follow_up_outbox_queue.py (CampaignFollowUpOutboxQueueStatus 5 values), gmail_thread_state.py (GmailThreadStatus 8 values), smtp_thread_state.py, gmail_thread_llm_draft.py (63 lines). 5 corrections from Wave 2: (1) response_rate uses OPTED_IN_STATUSES + ["OPTED_OUT"] not REPLIED_STATUSES — excludes "DECLINED"/"NEGOTIATING"/"AWAITING_CONTRACT", (2) cancelled outbox/follow-up items NOT counted in email_stats (silent exclusion), (3) AI-sent count uses COALESCE dual-join across GmailThreadState + SmtpThreadState, (4) campaign_type NULL in ActiveCampaignStats is latent bug (Pydantic str but DB nullable), (5) conversions_by_follow_up_number is misnomer — counts sent follow-ups not actual conversions. ZERO service routes exist — 1 new needed. All enum values exhaustively documented
 - [x] **w3-search-full** — Full specs for all 4 lookalike suggestion management tools (fully verified against webapp Next.js routes). 7 corrections from Wave 2: (1) `cheerful_update_lookalike_suggestion` does NOT add a recipient when accepted — status update only; (2) `suggested_follower_count` is nullable not "default 0"; (3) `seed_creator_id` and `seed_platform_handle` are nullable; (4) `apify_run_id` is nullable; (5) PUT validation error is 400 not 422; (6) suggestion in wrong campaign → 400 "does not belong to this campaign" not 404; (7) bulk-accept `custom_fields` always uses `instagram_username` regardless of platform (webapp bug — ground truth). 3 existing tool formatter bugs documented: `cheerful_search_emails` reads wrong field names (sender/snippet → sender_email/matched_snippet), `cheerful_find_similar_emails` reads wrong field names (summary/reply_text → thread_summary/sent_reply_text), `cheerful_list_campaign_creators` missing `offset` param in API client. Security gap confirmed: `cheerful_search_campaign_creators` searches ALL campaigns globally when no campaign_id given.
-- [ ] **w3-workflows-full** — Full specs for workflow CRUD, execution history, lifecycle triggers. Verify against workflow routes and Temporal activity definitions
+- [x] **w3-workflows-full** — Full specs for workflow CRUD, execution history, lifecycle triggers. Verify against workflow routes and Temporal activity definitions
 - [ ] **w3-existing-tools-audit** — Audit all 7 existing Cheerful CE tools against actual implementation. Document any parameter mismatches, missing fields, or needed corrections. Verify against `mcp/tools/cheerful/tools.py`
 
 ## Wave 4: Cross-Domain Synthesis (8 aspects)
