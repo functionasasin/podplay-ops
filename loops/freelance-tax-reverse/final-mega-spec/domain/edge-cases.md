@@ -2548,3 +2548,358 @@ assert(actual_payment[q] == max(0, item_63[q]))
    - Whether the switch is beneficial based on entered expenses
    - Reminder: election must be made on Q1 return by [May 15 deadline]
 5. Transition year has no special computation — just follow the newly elected regime from Q1.
+
+---
+
+## Group EC-AR: Annual Reconciliation Edge Cases
+
+These edge cases arise during the annual ITR filing phase (Forms 1701 and 1701A), specifically during the reconciliation of the full-year tax liability against quarterly payments, creditable withholding taxes, and prior-year excess credits.
+
+---
+
+### EC-AR01: Annual 8% Overpayment Due to Q1–Q3 Underpayment Recovery at Annual Level
+
+**Scenario:** A purely self-employed 8% freelancer earned ₱800,000 in Q1–Q3 combined, and only ₱50,000 in Q4. Quarterly payments were:
+- Q1: (₱200,000 − ₱250,000) = ₱0 tax payable (gross < ₱250K running total allows ₱0)
+- Q2: (₱500,000 − ₱250,000) × 8% = ₱20,000 cumulative, less Q1 ₱0 = ₱20,000
+- Q3: (₱800,000 − ₱250,000) × 8% = ₱44,000 cumulative, less Q2 ₱20,000 = ₱24,000
+- Annual: (₱850,000 − ₱250,000) × 8% = ₱48,000
+
+Annual CWT from multiple 2307s = ₱15,000. Total quarterly payments = ₱44,000.
+Annual balance_raw = ₱48,000 − ₱15,000 − ₱44,000 = −₱11,000 (OVERPAYMENT)
+
+**Why this matters:** The low-Q4 scenario means Q1–Q3 cumulative IT exceeded annual IT after Q4 added only ₱4,000 more to the annual gross (₱800K → ₱850K but the Q3 cumulative IT was already ₱44,000 vs. annual ₱48,000 on ₱600K incremental receipts above ₱250K). The ₱11,000 overpayment must be disposed of.
+
+**Engine behavior:**
+1. Compute: `annual_it = (850_000 - 250_000) * 0.08 = ₱48,000`
+2. `total_credits = ₱15,000 (CWT) + ₱44,000 (quarterly) + ₱0 (prior year) = ₱59,000`
+3. `balance_raw = ₱48,000 - ₱59,000 = -₱11,000` → OVERPAYMENT
+4. Present overpayment disposition screen: REFUND | TCC | CARRY-OVER
+5. Default recommendation: CARRY-OVER (easiest, no BIR visit required for amounts ≤ ₱1M)
+6. Record election on Form 1701A Item 22 overpayment checkbox (irrevocable once filed)
+7. Form output: Item 20 = ₱48,000, Item 64 = ₱59,000, Item 65 = −₱11,000
+
+**Legal basis:** NIRC Sec. 76; CR-054.3; BIR Form 1701A Items 57–65.
+
+---
+
+### EC-AR02: Sales Returns Exceed Gross Sales (Negative Net Receipts)
+
+**Scenario:** A freelancer issued invoices for ₱500,000 in Q1–Q3, but a major client reversed a ₱600,000 payment mid-year (disputed contract). Annual gross sales/revenues/fees = ₱500,000. Annual sales returns, allowances, and discounts = ₱600,000.
+
+**Engine behavior:**
+1. Compute Item 38 = Item 36 − Item 37 = ₱500,000 − ₱600,000 = −₱100,000
+2. VALIDATION FAILURE: Item 38 cannot be negative on BIR Form 1701A.
+3. Engine raises error: `EC-AR02: Net receipts cannot be negative. Sales returns/allowances (₱600,000) exceed gross sales/revenues/fees (₱500,000).`
+4. Engine explanation to user: "Your sales returns exceed your gross billings for this year. This typically happens when a prior-year transaction is reversed in the current year. You may need to: (1) Reduce sales returns to the amount attributable to current-year billings only, (2) Include the matching prior-year income that was returned in this year's gross, or (3) Consult a CPA to determine how to treat the cross-year reversal."
+5. Block form computation until user resolves the input error.
+6. Note: If the ₱600,000 reversal relates to a prior-year invoice (income already declared in a prior year's ITR), the current-year return cannot show a refund larger than current-year income. A separate bad debt claim or amended prior-year return may be appropriate — flagged as MRF.
+
+**Legal basis:** BIR Form 1701A Item 37 and Item 38 instructions; NIRC Sec. 34(E) (bad debts); CR-049.2 validate rule.
+
+**MRF trigger:** If user confirms the return reversal relates to a prior-year invoice, flag MRF-024 (cross-year revenue reversal).
+
+---
+
+### EC-AR03: Annual Gross Income Tax Due ≤ ₱2,000 — Installment Not Available
+
+**Scenario:** A first-year freelancer grossed ₱310,000 in their first full year. Using 8% rate:
+- Annual IT = (₱310,000 − ₱250,000) × 8% = ₱4,800
+- CWT from 2307s = ₱3,000
+- Quarterly payments (Q1–Q3): ₱1,800 (Q1 = ₱0 since gross < ₱250K, Q2 = ₱600, Q3 = ₱1,200)
+- Balance payable = ₱4,800 − ₱3,000 − ₱1,800 = ₱0
+
+Different scenario: If CWT = ₱0 and quarterly payments = ₱1,200, balance = ₱3,600.
+But the *gross IT due before credits* is ₱4,800, which IS > ₱2,000.
+→ Installment IS available in this case (see CR-054.2: threshold is on gross IT due, not balance payable).
+
+Actual edge case — threshold exactly at boundary:
+- Annual gross = ₱280,000 | Annual IT = (₱280,000 − ₱250,000) × 8% = ₱2,400
+- CWT = ₱400, quarterly payments = ₱0
+- Balance payable = ₱2,400 − ₱400 = ₱2,000
+- Installment check: annual_it_due = ₱2,400 > ₱2,000 → INSTALLMENT AVAILABLE (threshold is GREATER THAN ₱2,000, i.e., IT due must exceed ₱2,000)
+
+Boundary case: annual_it_due exactly = ₱2,000:
+- Annual gross = ₱275,000 | Annual IT = (₱275,000 − ₱250,000) × 8% = ₱2,000
+- Installment check: annual_it_due = ₱2,000 NOT > ₱2,000 → INSTALLMENT NOT AVAILABLE
+- Full balance due by April 15.
+
+**Engine behavior:**
+1. Compute `annual_it_due` (gross IT before any credits)
+2. `installment_available = (annual_it_due > Decimal("2000")) AND (balance_payable > 0)`
+3. If annual_it_due = ₱2,000 exactly: `installment_available = False`
+4. Display: "Your gross income tax of ₱2,000 must be paid in full by April 15. The installment option requires your gross tax to exceed ₱2,000."
+5. If annual_it_due = ₱2,001 or more: installment is available; present the option.
+
+**Legal basis:** NIRC Sec. 56(A)(2) — "exceeds two thousand pesos" (strict inequality); CR-054.2.
+
+---
+
+### EC-AR04: Second Installment Missed — Penalty Starts October 16
+
+**Scenario:** A taxpayer elected the installment payment option on their Form 1701A filed April 15, 2026. Annual IT due = ₱50,000. Credits = ₱10,000. Balance payable = ₱40,000. They pay ₱25,000 by April 15 (first installment = ₱40,000 − ₱25,000 deferred = ₱15,000 deferred wait, let me be precise).
+
+Per CR-054.2: max_second = 50% × ₱50,000 = ₱25,000. actual_second = min(₱25,000, ₱40,000) = ₱25,000.
+- First installment due April 15: ₱40,000 − ₱25,000 = ₱15,000 (paid on time)
+- Second installment due October 15: ₱25,000 (MISSED — taxpayer pays nothing by Oct 15)
+
+**Penalty on missed second installment (starting October 16, 2026):**
+- Tax basis: ₱25,000
+- Surcharge (SMALL/MICRO tier): 10% surcharge × ₱25,000 = ₱2,500
+- Interest: 6% per annum × ₱25,000 × (days late / 365)
+  - If paid October 30: 15 days late
+  - Interest = ₱25,000 × 6% × (15/365) = ₱61.64
+  - Total penalty: ₱2,561.64 (rounded to ₱2,562 on BIR form — no centavos)
+- If paid much later (e.g., December 31): 77 days late
+  - Interest = ₱25,000 × 6% × (77/365) = ₱316.44
+  - Total: ₱2,816.44 rounded to ₱2,817
+
+**Engine behavior:**
+1. If user reports they missed the October 15 deadline, compute penalty starting October 16.
+2. Use EOPT-adjusted rates for MICRO/SMALL (10% surcharge, 6% interest) or pre-EOPT rates for MEDIUM/LARGE (25% surcharge, 12% interest).
+3. Display: "Your second installment of ₱25,000 was due October 15. Paying on [date] incurs: Surcharge ₱2,500 + Interest ₱[X] + Compromise ₱[Y based on CR-020 table]. Total to pay: ₱[amount]."
+4. Payment applies first to the second installment principal, then to penalties.
+
+**Legal basis:** NIRC Sec. 248 (surcharge), Sec. 249 (interest), RA 11976 (EOPT reduced rates); CR-054.2; CR-016 through CR-020.
+
+---
+
+### EC-AR05: Prior Year Carry-Over Applied But Supporting Document Not Available
+
+**Scenario:** A taxpayer carried over ₱8,000 overpayment from TY2024 and wants to apply it as Item 57 (Form 1701A) in their TY2025 return. However, they did not keep a copy of their 2024 annual ITR (lost in a move).
+
+**Rule:** BIR requires proof of prior year excess credits — specifically, a copy of the prior year annual ITR showing the overpayment, as a required attachment.
+
+**Engine behavior:**
+1. When user enters prior_year_excess_credits > ₱0, trigger attachment checklist reminder:
+   "To claim prior year excess credits of ₱[amount], you must attach: Photocopy of your [prior year] BIR Form 1701A/1701 showing the overpayment amount. Without this document, the BIR may disallow the credit during audit."
+2. Engine still computes the return using the claimed amount (user is responsible for documentation).
+3. UI shows yellow warning (not error): "Attachment required: prior year ITR copy."
+4. If user does not have the document: recommend requesting a copy from the BIR (eFPS/eBIRForms reprint, or visit RDO). Alternatively, if amount ≤ ₱1,000: user may consider carrying ₱0 and forfeiting the small credit to avoid documentation risk.
+5. Engine does NOT block computation — it is the user's responsibility to ensure attachments are complete.
+
+**Legal basis:** BIR Form 1701 Required Attachments (Proof of Prior Years' Excess Credits); BIR Form 1701A filing instructions; CR-055.1.
+
+---
+
+### EC-AR06: Amended Annual Return — Prior Payment Credit Application
+
+**Scenario:** A taxpayer filed Form 1701A for TY2025 on April 14, 2026, paying a balance of ₱25,000. In June 2026, they discover they omitted ₱80,000 of additional income. They file an amended return.
+
+**Engine behavior for amended return:**
+1. User marks Item 2 of Form 1701A (or Form 1701): "Amended Return? YES"
+2. User enters additional data: amended gross sales = original + ₱80,000
+3. Engine recomputes full tax with corrected inputs:
+   - New annual IT = (original NTI + ₱80,000) × applicable rate
+4. `tax_paid_prior_return` = ₱25,000 (amount paid with original return) → entered in Item 61 (Form 1701A) or Part VI Item 10 (Form 1701)
+5. Recomputed balance = new_IT − prior_CWT_credits − quarterly_payments − ₱25,000
+6. If balance > 0: taxpayer owes the difference plus penalties if amending after April 15.
+
+**Penalty on amended return with additional tax:**
+- Voluntary amended return (before BIR assessment): only interest applies (no surcharge under EOPT Act for MICRO/SMALL voluntary amendments).
+- Surcharge applies only if BIR-assessed deficiency, not for taxpayer-initiated amendment per RA 11976.
+- Interest from original due date (April 15) to payment date of amendment.
+
+**Engine behavior:**
+1. `balance_additional = amended_IT - original_IT`
+2. `interest_days = (payment_date - Date(filing_year, 4, 15)).days`
+3. `interest = balance_additional × rate × (interest_days / 365)` where rate = 0.06 (MICRO/SMALL) or 0.12 (MEDIUM/LARGE)
+4. Display: "Amending your return adds ₱[balance_additional] in tax. Paying by [date] incurs interest of ₱[interest_amount]. No surcharge applies for taxpayer-initiated amendments under EOPT Act."
+5. Form Item 61 must show the ₱25,000 originally paid; net new payment = balance_additional + interest.
+
+**Legal basis:** NIRC Sec. 6(A) (amended returns); RA 11976 EOPT Sec. 7 (voluntary amendments); CR-054.1; BIR Form 1701A Item 61 instructions.
+
+---
+
+### EC-AR07: Taxpayer Made Only Partial Quarterly Payments (Underpaid During the Year)
+
+**Scenario:** An OSD freelancer computed Q1 tax payable = ₱30,000 but only paid ₱15,000 (forgot to pay the remainder). Q2 tax payable = ₱45,000 and was fully paid. Q3 tax payable = ₱20,000 and was fully paid.
+
+**What counts as credits at annual reconciliation:**
+- Item 2 (Form 1701 Part VI) or Item 58 (Form 1701A): "Tax Payments for [Quarter]" = the ACTUAL CASH PAID, not the tax payable amount.
+- So: Q1 credit = ₱15,000 (not ₱30,000), Q2 credit = ₱45,000, Q3 credit = ₱20,000.
+- Total quarterly credits = ₱80,000 (not ₱95,000 as would be shown if using computed tax payable).
+- The unpaid ₱15,000 from Q1 is a delinquency on Form 1701Q Q1. Late payment penalties accrued from May 16 (Q1 deadline) onward.
+
+**Engine behavior:**
+1. Input fields: `quarterly_payments: Tuple[Decimal, Decimal, Decimal]` = actual amounts paid per quarter.
+2. Engine does NOT infer quarterly payments from computed tax payable — it only uses user-entered actual payments.
+3. Annual balance reflects the underpayment from Q1: annual balance is ₱15,000 higher than if Q1 was fully paid.
+4. Engine displays: "Your Q1 quarterly payment was ₱15,000. Note: if your Q1 tax payable was ₱30,000, you have an underpayment of ₱15,000 on your Q1 Form 1701Q. This Q1 underpayment has been accumulating interest since [Q1 due date]. Contact BIR to pay the delinquent Q1 balance separately; it is NOT included in your annual ITR payment."
+5. The annual ITR balance is computed correctly: annual_IT − CWT − ₱80,000 actual payments.
+6. The delinquent Q1 ₱15,000 is a SEPARATE obligation — it cannot be merged into the annual return.
+
+**Legal basis:** NIRC Sec. 74 (quarterly returns are separate obligations); BIR Form 1701A Item 58 ("Quarterly Income Tax Payments" = actual payments, per form instructions); CR-042 through CR-044.
+
+---
+
+### EC-AR08: Taxpayer Filed Q1 but Missed Q2 Quarterly Return
+
+**Scenario:** A freelancer filed Form 1701Q for Q1 (paid ₱12,000) but forgot to file Q2. They now want to file the annual ITR.
+
+**Rule:** The annual ITR does NOT cure the unfiled Q2 return. Quarterly returns and the annual return are separate and parallel obligations. The annual ITR credits only what was actually paid on quarterly returns.
+
+**Engine behavior:**
+1. User enters Q2 actual payment = ₱0 (no return filed, no payment made).
+2. Annual balance = annual_IT − CWT − ₱12,000 (only Q1) − Q3_payment
+3. Engine warns: "You did not file a Q2 Form 1701Q. This is a separate BIR obligation. Filing the annual ITR does NOT replace your Q2 quarterly return. You should file the late Q2 return and pay any tax due plus penalties. Late Q2 penalty includes surcharge + interest + compromise penalty per CR-020."
+4. Engine computes: Q2 late penalty estimate displayed separately for informational purposes.
+   - Q2 was due August 15. If filing annual now in April: ~8 months late.
+   - Assume Q2 tax payable was ₱18,000 (using user's Q2 gross inputs):
+   - MICRO tier: surcharge = ₱18,000 × 10% = ₱1,800; interest = ₱18,000 × 6% × (245/365) = ₱724; compromise per CR-020 table (₱18,000 due) = ₱4,000. Total = ₱6,524 penalties.
+5. Annual ITR balance payable is computed as if Q2 payment = ₱0 (correct treatment).
+
+**Legal basis:** NIRC Sec. 74 (each quarter is a separate return obligation); NIRC Sec. 247 (separate penalties per return); CR-048.
+
+---
+
+### EC-AR09: Short Period Return — First-Year Registrant or Mid-Year Business Start
+
+**Scenario:** A freelancer registered with BIR on July 15, 2025 and begins work immediately. Their first taxable period runs July 15 – December 31, 2025 (5.5 months). Gross receipts for this period = ₱350,000. They elected the 8% rate.
+
+**Rules:**
+1. The taxable period is July 15 – December 31, 2025 (a "short period").
+2. On Form 1701A, Item 3 "Short Period Return?" = YES.
+3. The ₱250,000 deduction is NOT prorated for the short period — the full ₱250,000 applies regardless of how many months the taxpayer operated. (See EC-8-08 in edge-cases.md.)
+4. No Q1 or Q2 quarterly returns are required (taxpayer was not yet registered).
+5. Q3 covers July 15 – September 30 only (partial quarter — from registration date to quarter end). One quarterly return for Q3 is filed.
+6. Annual tax: (₱350,000 − ₱250,000) × 8% = ₱8,000
+
+**Engine behavior:**
+1. User marks `is_short_period_return = true`.
+2. `deduction_250k = ₱250,000` (always full amount; no proration).
+3. `quarterly_payments` = actual Q3 payment (Q1 and Q2 = ₱0 because not yet registered).
+4. Annual balance = ₱8,000 − CWT − Q3_payment_actual.
+5. Form output: Item 3 = "YES (Short Period Return)", income dates = July 15 to December 31.
+6. Important: The annual return is still due April 15, 2026 (due date is based on calendar year-end, not registration date).
+
+**Legal basis:** BIR Form 1701A Item 3; NIRC Sec. 24(A)(2)(b); RR 8-2018 Part VII (first-year partial year); CR-047 (quarterly first-year registrant).
+
+---
+
+### EC-AR10: 8% Taxpayer Discovers Annual Gross Exceeds ₱3M at Annual Filing Time
+
+**Scenario:** A freelancer was using the 8% rate and filed Q1, Q2, Q3 quarterly returns under 8%. In Q4, they received a large payment that pushed annual gross from ₱2.8M to ₱3.2M. They now need to file the annual return.
+
+**Rule:** This is the mid-year threshold breach scenario (EC-8-01 in existing edge cases, DT-03). The breach means:
+1. 8% is INELIGIBLE for this taxable year (gross > ₱3M).
+2. The annual return must be Form 1701 (graduated + OSD or itemized), NOT Form 1701A.
+3. All quarterly payments under 8% are creditable against the graduated annual IT.
+4. Percentage tax (3% on all gross receipts) must be retroactively computed and filed for Q1–Q3 as amended 2551Q returns (if not already filed); Q4 2551Q must be filed.
+5. Breach recomputation follows CR-024.
+
+**Engine behavior:**
+1. Engine detects: annual_gross > ₱3,000,000 AND elected_regime == "8%"
+2. Engine routes to breach detection: DT-03 breach path.
+3. Engine computes:
+   a. Retroactive percentage tax: 3% × annual_gross_receipts (all 4 quarters, pro-rated per quarter for 2551Q)
+   b. Annual income tax using graduated + OSD (or itemized): recompute under Path A or B
+   c. Quarterly 8% payments remain as credits against the graduated annual IT (Form 1701)
+   d. Annual form: Form 1701 (not 1701A) — ATC = II012 or II014 (graduated)
+4. Display comprehensive breach notice: "Your annual gross receipts of ₱3,200,000 exceed the ₱3,000,000 ceiling for the 8% option. Your 8% election is void for [year]. This triggers: (1) Annual IT computed under graduated rates (₱[amount]); (2) Percentage tax of 3% × ₱3,200,000 = ₱96,000 due for the year; (3) Your quarterly payments of ₱[total] are credited against the graduated annual IT; (4) Excess quarterly PT already filed (if any) is credited against the ₱96,000 total PT; (5) You are required to register for VAT starting [next quarter after breach]."
+5. Net impact computation: show the increased tax burden from losing 8% status.
+
+**Legal basis:** NIRC Sec. 24(A)(2)(b); RR 8-2018 Part IV (breach procedure); CR-024; DT-03.
+
+---
+
+### EC-AR11: CPA Certification Required But Taxpayer Does Not Have One
+
+**Scenario:** A freelancer has quarterly gross receipts averaging ₱200,000 (i.e., highest single quarter = ₱200,000 > ₱150,000). Under BIR rules, they must attach a Certificate of Independent CPA and Financial Statements to their annual ITR. The taxpayer, filing on their own, does not have an audited FS or CPA certificate.
+
+**Rule:** Per CR-055.1, if `gross_quarterly_sales > ₱150,000`, the CPA certificate and AIF/Financial Statements are required attachments for Form 1701 (and by extension Form 1701A, per the form instructions). Filing without required attachments is an incomplete filing.
+
+**Engine behavior:**
+1. Compute highest single-quarter gross: `max(Q1_gross, Q2_gross, Q3_gross, Q4_gross)`.
+2. If max_quarter > ₱150,000 AND deduction_method != "8%":
+   - Flag required attachment: "CPA Certificate (BIR-accredited) + AIF/Financial Statements required."
+   - Display: "Since your quarterly gross receipts exceed ₱150,000, BIR requires you to attach: (1) Certificate of Independent CPA (accredited with BIR), and (2) Account Information Form (AIF) or Financial Statements (Balance Sheet + Income Statement). These must be prepared by a BIR-accredited CPA. A CPA typically charges ₱3,000–₱10,000 for this service."
+3. Note: For 8% filers, no FS attachment is required per RR 4-2019 / EOPT simplifications (the 8% rate was designed to be simple). This is an important advantage of the 8% option.
+4. Engine does NOT block form computation — the CPA certificate requirement is an attachment obligation, not a computation input. Engine outputs the completed form fields; the user is responsible for the physical attachment.
+
+**Legal basis:** BIR Form 1701 required attachments; RR 4-2019; CR-055.1; RR 12-2007 (external auditors).
+
+**Note on 8% exception:** Form 1701A (for 8% rate and OSD filers) does NOT require CPA certification or FS regardless of income level, per BIR Form 1701A instructions and EOPT simplification. This is another concrete advantage of the 8% regime that the engine should surface in the regime comparison output.
+
+---
+
+### EC-AR12: Joint Filing vs. Separate Filing for Married Taxpayers
+
+**Scenario:** A married couple, both self-employed, are deciding whether to file jointly on Form 1701 or separately (each files their own Form 1701 or 1701A). Husband: ₱800,000 gross receipts (freelancer). Wife: ₱1,500,000 gross receipts (consultant). Both are purely self-employed.
+
+**Rules under TRAIN (post-2018):**
+1. Joint filing is available but rarely beneficial post-TRAIN. Under the old law, joint filing could be beneficial due to personal exemptions. Under TRAIN, personal exemptions were abolished.
+2. For Tax Year 2023+: The graduated rate table applies to the COMBINED NTI if filing jointly, which almost always results in higher tax than filing separately (progressive rates punish combined income).
+3. In almost every case post-2018, SEPARATE filing yields lower or equal total tax compared to joint filing.
+4. HOWEVER: The engine must be able to compute both to confirm.
+
+**Engine behavior:**
+1. If both spouses have self-employment income and user selects "Joint Filing":
+   a. Compute husband's NTI using his chosen regime (8%, OSD, or itemized).
+   b. Compute wife's NTI using her chosen regime.
+   c. Combine: total NTI = husband_NTI + wife_NTI.
+   d. Apply graduated rate to combined total NTI.
+   e. Less: each spouse's own CWT and quarterly payments.
+2. Compute separately: each on their own return, each under their own regime.
+3. Compare: display joint tax vs. separate tax total, show which is lower.
+4. Note: If spouses elect different regimes (e.g., husband 8%, wife OSD), they cannot combine on a joint Form 1701 because the 8% regime uses Form 1701A for purely self-employed. Joint filing under 1701 would force both to use Form 1701 (graduated rates). Engine must note this constraint.
+5. Recommendation: almost always SEPARATE filing. Display: "Separate filing saves ₱[amount] compared to joint filing. This is typical for married couples under TRAIN Law."
+
+**Example:**
+- Husband: NTI = ₱800,000 (under 8%: IT = ₱44,000); Wife: NTI = ₱1,500,000 (under 8%: IT = ₱100,000 but wife is over ₱3M? No: ₱1.5M gross so 8% is available for wife too).
+- Wait: Husband elects 8%: IT = (₱800,000 − ₱250,000) × 8% = ₱44,000.
+- Wife elects 8%: IT = (₱1,500,000 − ₱250,000) × 8% = ₱100,000.
+- Separate total: ₱144,000.
+- Joint (graduated on combined ₱800,000 OSD NTI + ₱1,500,000 OSD NTI = ₱2,300,000 combined NTI):
+  - IT = ₱102,500 + (₱2,300,000 − ₱800,000) × 25% = ₱102,500 + ₱375,000 = ₱477,500 (if using graduated)
+  - Wait — joint filing would use each spouse's NTI, not just OSD. Let's use 8% for both on Form 1701:
+  - For joint 1701: each spouse's business NTI is reported separately in Schedules 3.A or 3.B. The COMBINED total NTI goes into Item 13 (Form 1701 Part V): ₱2,300,000.
+  - Joint graduated IT on ₱2,300,000 = ₱102,500 + (₱2,300,000 − ₱800,000) × 25% = ₱477,500.
+  - But: their 8% elections are on separate quarterly returns — joint 1701 will force them to graduate.
+  - Separate 8% filings: ₱44,000 + ₱100,000 = ₱144,000 total.
+  - Joint saves zero — it's dramatically worse: ₱477,500 vs ₱144,000.
+- Engine recommendation: SEPARATE filing for TY2025, saving ₱333,500.
+
+**Legal basis:** NIRC Sec. 24 (individual income tax rates); BIR Form 1701 joint filing instructions; RR 8-2018 on 8% option per individual.
+
+---
+
+### EC-AR13: Prior Year Return Shows Zero Overpayment But Taxpayer Claims Carry-Over Credit
+
+**Scenario:** A taxpayer enters ₱5,000 as prior_year_excess_credits (Item 57 of Form 1701A). However, their prior year return (TY2024) shows:
+- Item 20 (Tax Due) = ₱25,000
+- Item 64 (Total Credits) = ₱25,000 (exactly equal)
+- Item 65 (Tax Payable/Overpayment) = ₱0
+
+There is no overpayment. The ₱5,000 claimed is invalid.
+
+**Engine behavior:**
+1. Engine cannot verify prior year return data — it only accepts user-entered values.
+2. If user claims prior_year_excess > ₱0, engine includes it in the computation (user is responsible for accuracy).
+3. Engine displays attachment reminder: "You are claiming ₱5,000 in prior year excess credits. Please confirm this amount appears on your TY[prior year] annual ITR as an overpayment. Attach a copy of that return to this year's ITR."
+4. Engine does NOT require user to enter prior year return data for cross-verification (out of scope — engine is a forward-computation tool). The warning is advisory.
+5. If the BIR audits and finds the prior year return shows ₱0 overpayment, the ₱5,000 credit will be disallowed and a deficiency assessment + penalties will be issued.
+6. Note: This is a documentation responsibility, not a computation error — engine computes correctly using the stated amount.
+
+**Legal basis:** BIR Form 1701A Item 57 instructions; NIRC Sec. 76 (overpayment); CR-053.
+
+---
+
+### EC-AR14: Overpayment Election Changed After Filing (Irrevocability Rule)
+
+**Scenario:** A taxpayer filed Form 1701A on March 31, 2026 and marked "To be Carried Over" for their ₱12,000 overpayment. In May 2026, they urgently need cash and contact BIR to switch the election to "Refund."
+
+**Rule:** The overpayment election on the annual ITR is IRREVOCABLE once filed. NIRC Sec. 76 explicitly bars the taxpayer from changing from carry-over to refund after filing.
+
+**Engine behavior:**
+1. When user is about to select overpayment disposition, display warning before they confirm:
+   "IMPORTANT: This election is IRREVOCABLE once you file your return. Choose carefully:
+   - **To be Refunded**: You can claim the ₱12,000 back from BIR. Process takes 90 days (under ₱1M per EOPT) to several months. Once elected, you cannot later choose to carry it over.
+   - **To be Issued a Tax Credit Certificate (TCC)**: BIR issues a certificate usable against future BIR taxes. Same irrevocability.
+   - **To be Carried Over**: The ₱12,000 is automatically applied to your next year's tax. Fastest option. Once elected, you cannot later request a refund."
+2. Engine defaults to "CARRY OVER" (lowest friction for most users; avoids BIR visit).
+3. If user selects CARRY OVER, show reminder: "When you file TY2026 (due April 2027), enter ₱12,000 as 'Prior Year's Excess Credits' in the Tax Credits section."
+4. The ₱12,000 carry-over should be stored in the engine's user data for pre-population of the following year's return.
+
+**Legal basis:** NIRC Sec. 76 (Commissioner of Internal Revenue v. ACCRA Investments, G.R. No. 96322, December 20, 1991, and subsequent jurisprudence confirming irrevocability); CR-054.3.
+

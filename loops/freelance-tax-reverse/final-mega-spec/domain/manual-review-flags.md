@@ -386,6 +386,32 @@ function classify_2307_entry(atc: str) -> "INCOME_TAX_CWT" | "PT_CWT" | "UNKNOWN
 
 ---
 
+
+## MRF-024: Cross-Year Revenue Reversal — Prior-Year Income Returned in Current Year
+
+**Trigger condition:** Taxpayer reports sales returns, allowances, or discounts in the current year that exceed current-year gross sales/revenues/receipts. This typically occurs when a prior-year invoice (already declared as income in a prior annual ITR) is reversed in the current year.
+
+**Why the engine cannot resolve this automatically:** The correct tax treatment depends on:
+1. Whether the returned amount was previously included in gross income and taxed in a prior year.
+2. Whether a refund was actually paid (cash basis), or only a credit memo issued (accrual basis).
+3. Whether the correction should be handled as: (a) a reduction of current-year gross income (allowable only if the income was recognized in the current year), (b) a bad debt or loss deduction in the current year (if the client defaulted on a prior-year invoice), or (c) an amended prior-year return (if the income was overstated in the prior year due to error, not a commercial reversal).
+4. Whether the freelancer uses cash or accrual accounting basis.
+
+**What the engine does:** Blocks computation when `net_receipts < 0` (per EC-AR02 validation rule) and displays this flag.
+
+**User guidance to display:**
+"Your sales returns exceed your gross billings for this year. This usually means a prior-year transaction was reversed in the current year. Depending on the circumstances, this may require:
+(a) Reducing your current-year income by only the amount billed in the current year (not prior-year billings),
+(b) Claiming the prior-year income as a bad debt deduction under Sec. 34(E), or
+(c) Amending your prior-year return if the income was never actually earned.
+Please consult a CPA to determine the correct treatment. Enter only the sales returns attributable to current-year billings in the Sales Returns field to proceed."
+
+**Engine behavior after user resolves:** User corrects the sales_returns_allowances field to ≤ gross_sales_receipts_fees. Engine then proceeds normally.
+
+**Legal basis:** NIRC Sec. 34(E) (bad debts); NIRC Sec. 43 (accounting period); RR 2-98 on accounting methods.
+
+---
+
 ## Cross-References
 
 - For edge cases where the engine CAN make a decision: See [edge-cases.md](edge-cases.md)
@@ -398,3 +424,5 @@ function classify_2307_entry(atc: str) -> "INCOME_TAX_CWT" | "PT_CWT" | "UNKNOWN
 - For percentage tax rate history: See [lookup-tables/percentage-tax-rates.md](lookup-tables/percentage-tax-rates.md)
 - For CWT computation rules: See [computation-rules.md](computation-rules.md) CR-035 through CR-040
 - For EWT ATC code table: See [lookup-tables/cwt-ewt-rates.md](lookup-tables/cwt-ewt-rates.md)
+- For annual reconciliation edge cases: See [edge-cases.md](edge-cases.md) EC-AR01 through EC-AR14
+- For annual reconciliation computation: See [computation-rules.md](computation-rules.md) CR-049 through CR-055

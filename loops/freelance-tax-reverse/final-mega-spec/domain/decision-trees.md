@@ -309,12 +309,16 @@ START: Did the taxpayer earn ANY compensation income from employment this taxabl
           │     BIR Form 1701A (Annual Income Tax Return for Individuals Earning Purely
           │     from Business/Profession).
           │     Use Part IV-B (8% method, Items 47-56).
-          │     Item 47 = Gross Sales/Receipts and Other Non-Operating Income.
-          │     Item 48 = ₱250,000 (statutory deduction; field is pre-filled or user enters 250000).
-          │     Item 49 = Item 47 − Item 48 (or ₱0 if item 47 < ₱250,000).
-          │     Item 50 = Item 49 × 8% = Tax Due.
+          │     Item 47 = Sales/Revenues/Receipts/Fees (total gross sales for the year).
+          │     Item 48 = Less: Sales Returns, Allowances, and Discounts.
+          │     Item 49 = Net Sales/Revenues/Receipts/Fees (Item 47 − Item 48).
+          │     Items 50–52 = Other Non-Operating Income (up to 3 line items).
+          │     Item 53 = Total Gross Sales/Receipts + Non-Operating Income (Item 49 + Items 50–52).
+          │     Item 54 = Less: ₱250,000 allowable reduction (ONLY if purely self-employed, NOT mixed income).
+          │     Item 55 = Taxable Income at 8% Rate (Item 53 − Item 54; or ₱0 if Item 53 < ₱250,000).
+          │     Item 56 = Tax Due (Item 55 × 8%) → transfers to Part II Item 20.
           │     Audited Financial Statements NOT required to attach.
-          │     Ref: BIR Form 1701A (January 2018 ENCS) instructions.]
+          │     Ref: BIR Form 1701A (January 2018 ENCS) Part IV-B instructions; CR-050.]
           │
           └── GRADUATED + ITEMIZED DEDUCTIONS (Path A) →
                [ACTION: ANNUAL_FORM = "1701".
@@ -1265,6 +1269,119 @@ START: Compute Item 63 = Item 46 or 54 (cumulative tax due) − Item 62 (total c
 
 ---
 
+## DT-17: Annual Reconciliation Balance Determination
+
+**Root question:** After computing annual income tax due and all credits, what does the taxpayer owe or receive?
+
+**Legal basis:** NIRC Sec. 56(A)(2) (installment option); NIRC Sec. 76 (overpayment refund/carry-over); BIR Form 1701/1701A Part II; CR-054; CR-053.
+
+```
+START: Compute annual IT due (before credits)
+│  Sources: Form 1701A Item 46 (OSD) or Item 56 (8%) or Form 1701 Part V Item 5
+│  Let: annual_it_due = computed income tax for the full year
+│
+├── Step 1: Sum all tax credits and payments
+│   │  (Form 1701A Items 57–63; Form 1701 Part VI Items 1–12)
+│   │  total_credits = prior_year_excess + Q1_payment + Q2_payment + Q3_payment
+│   │                + cwt_q1_q3 + cwt_q4 + compensation_ewt + other_credits
+│   │
+│   └── signed_balance = annual_it_due − total_credits
+│
+├── signed_balance > 0 (BALANCE PAYABLE)
+│   │  [ACTION: Tax is owed. Compute payment obligations.]
+│   │
+│   ├── Check installment eligibility: annual_it_due > ₱2,000?
+│   │   │
+│   │   ├── YES (annual_it_due > ₱2,000) → Does taxpayer want installment?
+│   │   │   │
+│   │   │   ├── YES → [ACTION: SPLIT PAYMENT.
+│   │   │   │          max_deferred = 50% × annual_it_due.
+│   │   │   │          actual_deferred = min(max_deferred, signed_balance).
+│   │   │   │          first_installment = signed_balance − actual_deferred (due April 15).
+│   │   │   │          second_installment = actual_deferred (due October 15).
+│   │   │   │          Mark Item 25 (Form 1701) or Item 23 (Form 1701A) with second installment amount.
+│   │   │   │          Election is IRREVOCABLE once return is filed.
+│   │   │   │          Ref: NIRC Sec. 56(A)(2); CR-054.2.]
+│   │   │   │
+│   │   │   └── NO → [ACTION: FULL PAYMENT.
+│   │   │              Pay signed_balance in full by April 15.
+│   │   │              Ref: NIRC Sec. 56(A)(1).]
+│   │   │
+│   │   └── NO (annual_it_due ≤ ₱2,000) →
+│   │        [ACTION: FULL PAYMENT REQUIRED.
+│   │         Installment option not available. Full balance due April 15.
+│   │         Even if balance_payable is small, if annual_it_due ≤ ₱2,000 → no installment.
+│   │         See EC-AR03 for boundary case at exactly ₱2,000.
+│   │         Ref: NIRC Sec. 56(A)(2); CR-054.2.]
+│   │
+│   └── Is the return filed late (filing_date > April 15)?
+│       │
+│       ├── YES → [ACTION: LATE FILING PENALTIES apply in addition to the balance payable.
+│       │          Compute: surcharge (10% MICRO/SMALL; 25% MEDIUM/LARGE) on underpaid tax.
+│       │          Compute: interest (6% MICRO/SMALL; 12% MEDIUM/LARGE) per annum from April 15.
+│       │          Compute: compromise penalty per CR-020 table based on tax amount.
+│       │          Total payment = balance_payable + surcharge + interest + compromise.
+│       │          Ref: NIRC Secs. 248-249; RA 11976 (EOPT); CR-016 through CR-020.]
+│       │
+│       └── NO (on time) → [ACTION: Pay balance_payable only. No penalties.]
+│
+├── signed_balance = 0 (ZERO BALANCE)
+│   │
+│   └── [ACTION: FILE NIL PAYMENT RETURN.
+│          Return must still be filed by April 15. Tax payable = ₱0. No payment needed.
+│          Mark Item 26 (Form 1701) or Item 24 (Form 1701A): ₱0.
+│          No overpayment election needed.
+│          Ref: BIR filing requirement; CR-054.1.]
+│
+└── signed_balance < 0 (OVERPAYMENT)
+    │  [ACTION: Taxpayer has excess credits. Must elect disposition — IRREVOCABLE on filing.]
+    │  overpayment_amount = |signed_balance|
+    │
+    ├── OPTION A: REFUND →
+    │   [ACTION: Mark "To be Refunded" on Form 1701/1701A.
+    │    For overpayment ≤ ₱1,000,000: auto-processable refund under EOPT Act (RA 11976).
+    │    Timeline: 90 days from filing for EOPT-eligible refunds.
+    │    For overpayment > ₱1,000,000: requires full BIR audit process (120+ days).
+    │    After filing: taxpayer may file BIR Form 1931 (Application for Refund of Taxes).
+    │    Once elected, cannot be changed to carry-over or TCC.
+    │    Ref: NIRC Sec. 76; RA 11976 Sec. 12 (auto-refund); CR-054.3.]
+    │
+    ├── OPTION B: TAX CREDIT CERTIFICATE (TCC) →
+    │   [ACTION: Mark "To be Issued a Tax Credit Certificate (TCC)."
+    │    BIR issues a TCC for overpayment_amount, usable against any BIR tax liability.
+    │    Apply via BIR Form 1926 after filing the ITR.
+    │    TCC cannot be transferred to unrelated parties (only to wholly-owned subsidiaries).
+    │    Same processing timeline as refund.
+    │    Once elected, cannot be changed.
+    │    Ref: NIRC Sec. 76; CR-054.3.]
+    │
+    └── OPTION C: CARRY OVER (default recommendation) →
+        [ACTION: Mark "To be Carried Over as Tax Credit for Next Year/Quarter."
+         overpayment_amount becomes prior_year_excess_credits for next taxable year.
+         Applied as Item 57 (Form 1701A) or Part VI Item 1 (Form 1701) in next annual return.
+         No BIR visit required; no separate application needed.
+         Record carry-over amount for pre-population of next year's return.
+         Once elected, cannot be changed to refund or TCC.
+         Default recommendation for amounts ≤ ₱50,000 (low-friction option).
+         For amounts > ₱50,000, present all three options with clear tradeoffs.
+         Ref: NIRC Sec. 76; CR-054.3; EC-AR14 (irrevocability rule).]
+```
+
+**Summary of annual reconciliation outputs (Form 1701A example):**
+
+| Item | Form Field | Value Source |
+|------|-----------|--------------|
+| Item 20 | Tax Due | From Part IV-A (OSD: Item 46) or Part IV-B (8%: Item 56) |
+| Item 21 | Less: Total Tax Credits/Payments | From Tax Credits section (Item 64 = sum of Items 57–63) |
+| Item 22 | Tax Payable/(Overpayment) | Item 20 − Item 21 (signed) |
+| Item 23 | Less: 2nd Installment Deferred | ≤ 50% of Item 20; ₱0 if no installment elected |
+| Item 24 | Amount Due April 15 | Item 22 − Item 23 (capped at ₱0 if overpayment) |
+| Item 25–27 | Penalties (if late) | Surcharge + interest + compromise |
+| Item 28 | Total Penalties | Sum of Items 25–27 |
+| Item 29 | Total Amount Payable/(Overpayment) | Item 24 + Item 28 |
+
+---
+
 ## Updated Trees Summary
 
 | Tree | Description | Status |
@@ -1285,3 +1402,4 @@ START: Compute Item 63 = Item 46 or 54 (cumulative tax due) − Item 62 (total c
 | DT-14 | Quarterly Filing Sequence and Form Selection | Complete (this document) |
 | DT-15 | Quarterly Installment and Overpayment | Complete (this document) |
 | DT-16 | VAT-Registered Regime Selection (OSD vs Itemized) | Complete |
+| DT-17 | Annual Reconciliation Balance Determination | Complete |
