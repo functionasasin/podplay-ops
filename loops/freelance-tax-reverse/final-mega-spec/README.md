@@ -3,7 +3,7 @@
 This directory contains the complete product specification. A forward loop can build the entire platform by reading ONLY this directory.
 
 **Last updated:** 2026-03-01
-**Convergence status:** IN PROGRESS (27/54 aspects analyzed; pipeline-design completed)
+**Convergence status:** IN PROGRESS (28/54 aspects analyzed; data-model completed)
 
 ---
 
@@ -36,7 +36,7 @@ This directory contains the complete product specification. A forward loop can b
 | File | Status | Description |
 |------|--------|-------------|
 | [engine/pipeline.md](engine/pipeline.md) | COMPLETE | 17-step pipeline (PL-01 to PL-17): input validation (20 rules, 5 soft warnings), taxpayer classification (EOPT tier, income type), gross aggregates (threshold base, PT base, OSD base per class), eligibility check (Path A/B/C gates, ineligibility reasons), itemized deductions (19 categories with caps, EAR cap, interest arbitrage, NOLCO), OSD computation (service vs. trader base), CWT aggregation (IT vs. PT classification), Path A/B/C tax computation (full pseudocode with ₱250K logic, mixed income routing), percentage tax (3%/1% rate, EOPT accrual basis shift, PT waiver for Path C), quarterly payments aggregation, regime comparison (total burden sort, C>B>A tie-break), balance computation (installment rule, disposition), form selection (1701 vs 1701A vs 1701Q), penalty computation (EOPT-aware), result assembly; dependency graph; quarterly vs. annual differences table; precision/rounding rules (R-01 to R-08) |
-| engine/data-model.md | PENDING | Every struct, enum, type — complete definitions |
+| [engine/data-model.md](engine/data-model.md) | COMPLETE | All 14 enums (TaxpayerType, TaxpayerTier, FilingPeriod, IncomeType, TaxpayerClass, RegimePath, RegimeElection, DeductionMethod, BalanceDisposition, ReturnType, FormType, CwtClassification, DepreciationMethod, OverpaymentDisposition); 6 input types (TaxpayerInput with 30 fields, ItemizedExpenseInput with 22 fields, Form2307Entry, QuarterlyPayment, DepreciationEntry, NolcoEntry); 21 pipeline intermediate types (ValidatedInput, ClassifiedTaxpayer, GrossAggregates, EligibilityResult, ItemizedDeductionResult, DeductionBreakdown 19 fields, OsdResult, CwtCreditResult, ClassifiedForm2307Entry, PathAResult, PathBResult, PathCResult, PercentageTaxResult, QuarterlyAggregates, RegimeOption, RegimeComparisonResult, BalanceResult, FormMappingResult, PenaltyStack, PenaltyResult); 6 form output types (Form1701AOutput ~50 fields, Form1701Output ~70 fields, Form1701QOutput, Form2551QOutput, PT2551QScheduleRow, NolcoScheduleRow); final output TaxComputationResult + InputSummary; 3 supporting types (ManualReviewFlag, FilingDeadlineInfo, PenaltyComputation); full type cross-reference table (all 28 types → pipeline steps → final output presence); design notes on decimal precision, immutability, null handling |
 | engine/invariants.md | PENDING | What must always be true about outputs |
 | engine/error-states.md | PENDING | Every invalid input and engine response |
 | engine/test-vectors/basic.md | PENDING | Happy path test vectors |
