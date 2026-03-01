@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 91
-- Analyzed: 87
-- Pending: 4
-- Convergence: 96%
+- Analyzed: 88
+- Pending: 3
+- Convergence: 97%
 
 ---
 
@@ -122,7 +122,7 @@
 - [x] All jeepney routes — deduplicated master list, confidence scores, gap analysis
 - [x] All city bus routes — deduplicated master list, confidence scores, gap analysis
 - [x] All provincial bus routes (NCR segments) — deduplicated list of NCR portions
-- [ ] All UV Express routes — deduplicated master list
+- [x] All UV Express routes — deduplicated master list
 - [ ] All P2P premium bus routes — deduplicated master list
 - [ ] All shuttle/loop services — BGC, Makati, campus shuttles
 
