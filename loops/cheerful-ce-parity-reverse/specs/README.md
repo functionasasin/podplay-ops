@@ -2,7 +2,7 @@
 
 ## Status
 
-Wave 2 tool design complete. Wave 3 in progress. All 8 domains designed: Campaigns (31), Email (24), Creators (27), Integrations (18), Users & Team (13), Analytics (1), Search & Discovery (4), Workflows (8). Total: 126 tools (7 existing + 119 new). **Wave 3 progress**: Campaigns complete (31 tools) + Email complete (24 tools) + Creators complete (27 tools) + Integrations complete (18 tools) + Users & Team complete (13 tools) + Analytics complete (1 tool) + Search & Discovery (4 tools Wave 3) + Workflows complete (8 tools) = **122 tools** fully specified with OpenAPI-level detail.
+Wave 4 in progress. All 8 domains fully specified at OpenAPI level (126 tools total: 7 existing + 119 new). Wave 4 completions: shared-conventions.md (auth, errors, pagination, shared schemas), parity-matrix.md (175+ frontend action rows → tool mappings, 100% coverage). Remaining Wave 4: README index finalization, Slack formatting guide, completeness audit.
 
 ## Domains
 
@@ -16,8 +16,8 @@ Wave 2 tool design complete. Wave 3 in progress. All 8 domains designed: Campaig
 | Analytics | `analytics.md` | 0 | 1 | 1 | Wave 3: All 1 tool fully specified with OpenAPI-level detail (5 corrections from Wave 2) |
 | Search & Discovery | `search-and-discovery.md` | 0 | 4 | 4 | Wave 2 complete |
 | Workflows | `workflows.md` | 0 | 8 | 8 | Wave 3: All 8 tools fully specified with OpenAPI-level detail (10 corrections from Wave 2, confirmed Shopify tools in integrations.md) |
-| Shared Conventions | `shared-conventions.md` | — | — | — | Pending |
-| Parity Matrix | `parity-matrix.md` | — | — | — | Pending |
+| Shared Conventions | `shared-conventions.md` | — | — | — | Complete — auth model, error conventions, pagination, shared schemas |
+| Parity Matrix | `parity-matrix.md` | — | — | — | Complete — 175+ action rows, 100% backend-accessible coverage |
 
 ## Tool Index
 
