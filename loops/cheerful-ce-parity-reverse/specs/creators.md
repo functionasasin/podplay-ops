@@ -149,61 +149,64 @@ cheerful_list_campaign_creators(campaign_id="a1b2c3d4-e5f6-7890-abcd-ef123456789
 **Parameter Validation Rules**:
 - Both must be valid UUIDs
 
-**Return Schema**:
+**Return Schema** — `ServiceCampaignCreatorDetailResponse` (verified against `models/api/service.py`):
+
+> **AUDIT CORRECTION (w3-existing-tools-audit)**: The previous spec version incorrectly listed `enrichment_status`, `source`, and `post_opt_in_follow_up_status` as return fields. These exist on the `CampaignCreator` DB model but are **NOT** included in `ServiceCampaignCreatorDetailResponse` — they are NOT serialized by the service endpoint. They will be absent from all API responses until the service model is enhanced. The example response below has also been corrected.
+
 ```json
 {
-  "id": "uuid — campaign creator ID",
+  "id": "uuid — campaign creator UUID",
   "campaign_id": "uuid — campaign this creator belongs to",
-  "name": "string | null — creator display name",
-  "email": "string | null — email address",
+  "name": "string | null — creator display name (null for newly-added creators)",
+  "email": "string | null — email address (null if not yet enriched)",
   "role": "string — one of: creator, talent_manager, agency_staff, internal, unknown",
   "gifting_status": "string | null — gifting pipeline status",
+  "gifting_address": "string | null — shipping address (free-form text or structured JSON)",
+  "gifting_discount_code": "string | null — discount code assigned to creator",
   "paid_promotion_status": "string | null — paid promotion pipeline status",
-  "paid_promotion_rate": "string | null — paid promotion rate/pricing",
-  "enrichment_status": "string — one of: pending, enriching, enriched, not_found",
-  "source": "string — one of: email, csv, search, sheet, list, api",
+  "paid_promotion_rate": "string | null — rate/pricing agreed for paid promotion",
+  "talent_manager_name": "string | null — talent manager's name",
+  "talent_manager_email": "string | null — talent manager's email address",
+  "talent_agency": "string | null — talent agency name",
   "social_media_handles": [
     {
       "platform": "string — one of: instagram, twitter, facebook, youtube, tiktok, linkedin, other",
-      "handle": "string",
-      "url": "string | null"
+      "handle": "string — handle without @ prefix",
+      "url": "string | null — explicit URL (not inferred from handle)"
     }
   ],
-  "gifting_address": "string | null — shipping address (free-form text or structured JSON)",
-  "gifting_discount_code": "string | null — discount code assigned to creator",
-  "talent_manager_name": "string | null — talent manager's name",
-  "talent_manager_email": "string | null — talent manager's email",
-  "talent_agency": "string | null — talent agency name",
-  "confidence_score": "float | null — email confidence score from enrichment",
-  "manually_verified": "boolean — whether email was manually verified",
   "notes_history": [
     {
-      "content": "string — note text",
-      "timestamp": "datetime — when note was added",
-      "author": "string | null — who wrote the note"
+      "content": "string — note text (format varies by note source)"
     }
   ],
-  "latest_interaction_at": "datetime | null — last email interaction",
-  "post_opt_in_follow_up_status": "string | null — one of: PENDING, PROCESSING, SENT, FAILED, CANCELLED",
-  "created_at": "datetime — when creator was added to campaign",
-  "updated_at": "datetime — last modification timestamp"
+  "confidence_score": "float — email enrichment confidence score (0.0 if not enriched)",
+  "manually_verified": "boolean — whether email was manually verified by a human",
+  "latest_interaction_at": "string | null — last email interaction ISO 8601 timestamp (null if no interaction)",
+  "created_at": "string | null — when creator was added to campaign (ISO 8601)",
+  "updated_at": "string | null — last modification timestamp (ISO 8601)"
 }
 ```
+
+**Fields NOT in service response (require service route enhancement to expose)**:
+- `enrichment_status` — available on `CampaignCreator` DB model, not serialized
+- `source` — available on `CampaignCreator` DB model, not serialized
+- `post_opt_in_follow_up_status` — available on `CampaignCreator` DB model, not serialized
 
 **Error Responses**:
 
 | Condition | Error Message | HTTP Status (underlying) |
 |-----------|--------------|-------------------------|
-| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
-| Creator not found in campaign | Backend returns 404 | 404 |
-| User cannot access campaign | Backend returns error | 403 |
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Creator not found in campaign | ToolError: "Creator '{creator_id}' not found in campaign '{campaign_id}'" (wraps 404 "Campaign creator not found") | 404 |
+| Service API error | ToolError: "Failed to get creator ({status}): {body}" | varies |
 
 **Example Request**:
 ```
 cheerful_get_campaign_creator(campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890", creator_id="f47ac10b-58cc-4372-a567-0e02b2c3d479")
 ```
 
-**Example Response**:
+**Example Response** (corrected — no enrichment_status/source/post_opt_in_follow_up_status):
 ```json
 {
   "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
@@ -212,40 +215,38 @@ cheerful_get_campaign_creator(campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890"
   "email": "sarah@example.com",
   "role": "creator",
   "gifting_status": "sent",
-  "paid_promotion_status": null,
-  "paid_promotion_rate": null,
-  "enrichment_status": "enriched",
-  "source": "search",
-  "social_media_handles": [
-    {"platform": "instagram", "handle": "sarahchen_style", "url": null}
-  ],
   "gifting_address": "123 Main St, Los Angeles, CA 90001",
   "gifting_discount_code": "SARAH20",
+  "paid_promotion_status": null,
+  "paid_promotion_rate": null,
   "talent_manager_name": null,
   "talent_manager_email": null,
   "talent_agency": null,
+  "social_media_handles": [
+    {"platform": "instagram", "handle": "sarahchen_style", "url": null}
+  ],
+  "notes_history": [
+    {"content": "Confirmed interest in gifting collab"}
+  ],
   "confidence_score": 0.95,
   "manually_verified": false,
-  "notes_history": [
-    {"content": "Confirmed interest in gifting collab", "timestamp": "2026-02-15T10:00:00Z", "author": "agent"}
-  ],
   "latest_interaction_at": "2026-02-28T14:30:00Z",
-  "post_opt_in_follow_up_status": "SENT",
   "created_at": "2026-02-01T09:00:00Z",
   "updated_at": "2026-02-28T14:30:00Z"
 }
 ```
 
 **Slack Formatting Notes**:
-- Present as a structured profile card: name, email, role, enrichment status, social handles (as links)
-- Key status fields in a summary line: "Gifting: {status} | Enrichment: {status} | Follow-up: {status}"
+- Present as a structured profile card: name, email, role, social handles (as links)
+- Key status fields in a summary line: "Gifting: {gifting_status} | Paid: {paid_promotion_status}"
 - Notes history as a threaded reply if more than 2 notes
+- Social handles with platforms shown as emoji: 📷 Instagram, 🎵 TikTok, ▶️ YouTube, etc.
 
 **Edge Cases**:
 - `notes_history` can be empty `[]`
 - `social_media_handles` can be empty `[]`
 - All nullable fields may be null simultaneously for newly-added creators
-- `confidence_score` is 0.0-1.0 range (null if not enriched)
+- `confidence_score` defaults to 0.0 (not null) even for unenriched creators — cannot distinguish unenriched from 0% confidence
 
 ---
 
