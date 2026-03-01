@@ -273,6 +273,10 @@ Each Wave 2 aspect reads relevant Wave 1 analysis files and produces a detailed 
 7. **Dependencies** — Which features must be built first
 8. **Acceptance Criteria** — How to verify this feature is complete
 
+**Before marking any Wave 2 aspect complete, self-validate:** Scan the output file for ALL banned placeholder patterns from Rule 9. Every table cell must have a real value. Every wireframe must have real labels. Every schema must have real column names, types, and constraints. Every API contract must have real endpoint paths, request/response shapes, and status codes. If any placeholder pattern is found, fix it before committing.
+
+**Note:** The `placeholder-validation` aspect in Wave 3 will retroactively scan ALL previously written analysis files (including already-completed Wave 1 and Wave 2 outputs). Any placeholders found in those files must be fixed before the loop can converge. Write thoroughly the first time.
+
 ### Feature Aspects
 
 #### spec-pdf-export
@@ -475,8 +479,40 @@ Synthesize everything into a single specification document:
 
 Each feature section includes: overview, data model, UI wireframes, API contracts, edge cases, dependencies, acceptance criteria.
 
+### placeholder-validation
+Reads: ALL `analysis/` files AND `/docs/plans/inheritance-premium-spec.md`
+
+**This is a hard gate. The loop CANNOT converge without this passing.**
+
+Perform an exhaustive scan of every output file for banned placeholder patterns. This is not a cursory check — it is a line-by-line audit.
+
+**Method:**
+1. Read every file in `analysis/` and `/docs/plans/inheritance-premium-spec.md`
+2. For each file, search for ALL of these patterns (case-insensitive):
+   - Literal strings: `TODO`, `TBD`, `FIXME`, `XXX`, `HACK`
+   - Bracket placeholders: `[fill in]`, `[insert]`, `[add]`, `[placeholder]`, `[to be determined]`, `[your ...]`, `[client ...]` (when used as placeholder, not as a real reference)
+   - Angle/curly placeholders: `<placeholder>`, `<insert>`, `{placeholder}`, `{insert}`
+   - Ellipsis-as-content: lines where `...` appears as the only content or as a substitute for real content (not in code syntax like `...args`)
+   - Deferral phrases: "to be defined", "to be determined", "will be specified later", "needs further research", "details TBD", "pending", "not yet determined"
+   - Empty sections: headings followed by no content before the next heading
+   - Empty table cells: `| |` or `|  |` where a value is expected
+   - Generic sample values standing in for real ones: `example.com`, `foo`, `bar`, `lorem ipsum`, `John Doe` (when not in a Philippine-context example)
+3. Write findings to `analysis/placeholder-validation.md` with:
+   - Total files scanned
+   - Per-file results: filename, line number, matched pattern, surrounding context
+   - Verdict: PASS (zero matches) or FAIL (with count)
+4. If FAIL: fix every placeholder in the source files in the same iteration, then re-scan to confirm zero remaining. Do NOT mark this aspect complete until the re-scan passes.
+
+**Output — `analysis/placeholder-validation.md`:**
+- Scan timestamp
+- Files scanned (full list)
+- Findings table: `| File | Line | Pattern | Context | Fixed? |`
+- Final verdict: PASS or FAIL
+- If PASS: "All output files are placeholder-free. Forward loop can consume this spec without gaps."
+
 ### mega-spec-review
-Reads: `/docs/plans/inheritance-premium-spec.md`
+Reads: `/docs/plans/inheritance-premium-spec.md`, `analysis/placeholder-validation.md`
+Depends: `placeholder-validation` must PASS first
 
 Validate the spec:
 - [ ] Every feature has: data model, UI wireframe, API contract, edge cases, acceptance criteria
@@ -488,9 +524,14 @@ Validate the spec:
 - [ ] All legal citations use consistent NCC format
 - [ ] Migration path from ephemeral → persisted is non-breaking
 - [ ] Anonymous usage (no auth) still works for basic computation
+- [ ] **ZERO placeholders, stubs, or deferred content exist** — `placeholder-validation` must show PASS verdict
+- [ ] Every ASCII wireframe has real labels (not "Label 1", "Button Text" — actual UI copy)
+- [ ] Every SQL DDL has real column names, types, constraints, and default values
+- [ ] Every API contract has real endpoint paths, HTTP methods, request/response JSON shapes with field names and types
+- [ ] No section consists solely of a heading with no content beneath it
 
 If ALL checks pass → write `status/converged.txt` with summary.
-If any check fails → note failures in `analysis/mega-spec-review.md`, fix issues in the spec, and re-run review next iteration.
+If any check fails → note failures in `analysis/mega-spec-review.md`, fix issues in the spec, and re-run review next iteration. **The loop does NOT converge until mega-spec-review passes with zero failures.**
 
 ---
 
@@ -504,3 +545,15 @@ If any check fails → note failures in `analysis/mega-spec-review.md`, fix issu
 6. **Discover aggressively.** During Wave 1, actively look for features NOT in the initial list. Add any feature that a PH estate lawyer would pay for.
 7. **Write findings with specifics.** No vague statements. Include URLs, code examples, schema DDL, ASCII wireframes, exact field names.
 8. **Commit format:** `git add -A && git commit -m "loop(inheritance-premium-reverse): {aspect-name}"`
+9. **ABSOLUTELY NO PLACEHOLDERS.** This is a hard constraint on ALL output — analysis files, feature specs, and especially the final mega-spec. The following patterns are BANNED and constitute convergence-blocking defects:
+   - `TODO`, `TBD`, `FIXME`, `XXX`
+   - `[fill in]`, `[insert]`, `[add]`, `[placeholder]`, `[to be determined]`
+   - `...` used as content ellipsis (meaning "more goes here")
+   - Stub sections with only a heading and no content
+   - `<placeholder>`, `<insert>`, `{placeholder}`, `{insert}`
+   - Phrases like "to be defined", "details TBD", "will be specified later", "needs further research"
+   - Empty table cells where values are expected
+   - Sample/example values where real values are required (e.g., `example.com` for a real URL)
+   - Any indication that content is deferred, incomplete, or waiting on future work
+
+   **Why:** This spec feeds a forward loop that builds the actual product. Every placeholder in the spec becomes a placeholder in the code. The forward loop CANNOT converge if the spec has gaps. If you don't have enough information to fill a section completely, DO the research in that iteration to fill it. If a section genuinely cannot be specified yet (e.g., depends on a runtime decision), explicitly state the decision criteria and default value — never leave it blank or stubbed.

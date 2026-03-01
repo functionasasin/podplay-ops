@@ -1,10 +1,10 @@
 # Frontier — Inheritance Premium Features
 
 ## Statistics
-- Total aspects discovered: 35
+- Total aspects discovered: 36
 - Analyzed: 16
-- Pending: 19
-- Convergence: 46%
+- Pending: 20
+- Convergence: 44%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -50,4 +50,5 @@
 
 - [ ] architecture-overview — Shared data model ERD, Supabase schema DDL, component hierarchy, API layer design, implementation dependency graph.
 - [ ] mega-spec-draft — Read ALL analysis/ files → synthesize into /docs/plans/inheritance-premium-spec.md.
-- [ ] mega-spec-review — Validate spec completeness, cross-feature dependencies, implementation order. Write status/converged.txt if passes.
+- [ ] placeholder-validation — **HARD GATE.** Exhaustive line-by-line scan of ALL analysis/ files and /docs/plans/inheritance-premium-spec.md for banned placeholder patterns (TODO, TBD, stubs, empty sections, deferral phrases, sample values). Must report PASS with zero findings before loop can converge. Depends: mega-spec-draft.
+- [ ] mega-spec-review — Validate spec completeness, cross-feature dependencies, implementation order, AND confirm placeholder-validation PASS. Write status/converged.txt only if ALL checks pass including zero placeholders. Depends: placeholder-validation.
