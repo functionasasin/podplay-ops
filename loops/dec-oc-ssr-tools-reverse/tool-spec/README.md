@@ -5,7 +5,7 @@ Implementation-ready specification for adding SSR (Semantic Similarity Rating) c
 ## Status
 
 Wave 1: Audit & Map — 5/5 complete
-Wave 2: Design — 0/7 complete
+Wave 2: Design — 1/7 complete
 Wave 3: Synthesis & Integration — 0/4 complete
 
 ---
@@ -30,7 +30,7 @@ MCP-compatible tool definitions for the SSR panel tools.
 
 | File | Status | Contents |
 |------|--------|----------|
-| [panel-create.md](tools/panel-create.md) | 🔶 Stub | `ssr_panel_create` — call chain, design decisions, Wave 2 checklist |
+| [panel-create.md](tools/panel-create.md) | ✅ Complete | `ssr_panel_create` — full MCP definition, `PanelCreateInput`/`PersonaDemographics`/`PersonaPsychographics` schemas, handler, API layer, `_fmt_panel_created()`, `_parse_persona_response()`, validation rules, error cases, repository signatures |
 | [panel-run.md](tools/panel-run.md) | 🔶 Stub | `ssr_panel_run` — full pipeline call chain, scoring algorithm outline, Wave 2 checklist |
 | [panel-results.md](tools/panel-results.md) | 🔶 Stub | `ssr_panel_results` — retrieval + comparison call chain, Wave 2 checklist |
 | [panel-manage.md](tools/panel-manage.md) | 🔶 Stub | `ssr_panel_list`, `ssr_panel_delete` — call chains, design notes, Wave 2 checklists |
@@ -43,7 +43,7 @@ Internal SSR pipeline — how the methodology is implemented.
 
 | File | Status | Contents |
 |------|--------|----------|
-| [persona-generation.md](pipeline/persona-generation.md) | ⬜ Pending | Persona prompt templates, demographic schemas |
+| [persona-generation.md](pipeline/persona-generation.md) | ✅ Complete | Full system prompt (~420 tokens), full user prompt template with all substitution logic, rendered example, expected Claude response example, `_parse_persona_response()` parsing table, cost accounting ($0.003/persona), concurrency architecture, diversity enforcement, storage mapping to `ssr_persona` table |
 | [stimulus-presentation.md](pipeline/stimulus-presentation.md) | ⬜ Pending | How marketing assets are presented to personas |
 | [response-elicitation.md](pipeline/response-elicitation.md) | ⬜ Pending | Prompts for eliciting naturalistic text responses |
 | [anchor-statements.md](pipeline/anchor-statements.md) | ⬜ Pending | Likert anchor statement sets per evaluation dimension |
