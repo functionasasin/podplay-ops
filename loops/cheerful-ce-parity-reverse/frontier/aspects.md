@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total Aspects**: 36
-- **Analyzed**: 5
-- **Pending**: 31
-- **Convergence**: 14%
+- **Analyzed**: 6
+- **Pending**: 30
+- **Convergence**: 17%
 
 ---
 
@@ -18,7 +18,7 @@ Read existing cheerful-reverse specs + verify against source code. Produce raw c
 - [x] **w1-creators** — Extract all creator capabilities: in-campaign listing with filters, cross-campaign search, full profile with enrichment data, enrichment status polling, email override, bulk operations, notes history. Sources: `spec-backend-api.md` (Domain 5), existing CE tools in `mcp/tools/cheerful/tools.py`. Also discovered: creator lists (11 endpoints), creator posts/content verification (4 endpoints), creator search/discovery via Influencer Club (4 endpoints)
 - [x] **w1-integrations** — Extract all integration capabilities: 8 sub-domains identified (Gmail OAuth, SMTP accounts, Google Sheets, Shopify/GoAffPro, Instantly/Composio, Slack operations, YouTube lookalike, Brand lookup). 23 total endpoints across webapp and backend. 0 existing CE tools. Key discoveries: Gmail OAuth is webapp-only (no backend endpoints), no Gmail disconnect exists, Instantly uses Composio broker, SMTP has full CRUD + bulk import with IMAP verification, Shopify uses GoAffPro proxy, Slack is primarily order approval webhook. Sources verified: `google_sheets.py`, `shopify.py`, `slack.py`, `instantly.py`, `smtp_account.py`, `user.py`, `youtube.py`, `brand.py`, webapp OAuth routes
 - [x] **w1-users-team** — Extract all user/team capabilities: 31 endpoints across 6 sub-domains (user settings, connected accounts, email signatures, team management, campaign assignments, onboarding). 0 existing CE tools — full gap. Key discoveries: email signatures have 6 endpoints with user-level vs campaign-specific model, SMTP has full CRUD + bulk import, onboarding is webapp-only (no backend endpoints), PUT /user/settings is a no-op placeholder, campaign assignment cascades on member removal. Sources verified: `user.py`, `team.py`, `email_signature.py`, `smtp_account.py`, webapp onboarding routes
-- [ ] **w1-analytics** — Extract all analytics/dashboard capabilities: campaign metrics (creator count, response rate, emails sent, opt-in rate), active campaigns table, follow-up statistics, gifting/paid pipeline, per-campaign stats. Sources: `spec-webapp.md` (Dashboard), backend routes `analytics.py`, `dashboard.py`
+- [x] **w1-analytics** — Extract all analytics/dashboard capabilities: 1 backend endpoint (`GET /dashboard/analytics`) with rich composite response containing 10 data sections: campaign counts, opt-in stats, calculated metrics (opt-in rate, response rate), email stats (sent/pending/failed + AI sent), recent opt-ins (max 20 with social handles), active campaigns (max 10 with per-campaign metrics), gifting pipeline (7 stages), paid promotion pipeline (11 stages), follow-up stats (total/sent/pending/cancelled/failed + conversions by follow-up number), campaign type stats (conversion by type). 0 existing CE tools — full gap. No service route exists — needs `GET /api/service/dashboard/analytics`. Frontend renders 10 visual components; 6 additional components exist but are NOT imported (CampaignTypeComparisonCard, RecentPostsCard, TopCreatorCard, ReachChartCard, FilterDropdown, TrendBadge). Per-campaign stats also available via `GET /campaigns?include_stats=true` but not in service route. ~1 CE tool needed (single comprehensive tool). Sources verified: `dashboard.py` (669 lines), `models/api/dashboard.py` (142 lines), `service.py` (no dashboard endpoints), webapp `dashboard/page.tsx`, `use-dashboard-analytics.ts`
 - [ ] **w1-search** — Extract all search/discovery capabilities: AI creator search (Apify/YouTube), semantic email search (pgvector), full-text email search, creator profile lookup. Sources: `spec-backend-api.md`, existing CE tools, backend routes `creators.py`, `search.py`
 - [ ] **w1-workflows** — Extract all workflow/automation capabilities: workflow CRUD per campaign, workflow execution history, Temporal workflow triggering, campaign lifecycle state machine, follow-up scheduling. Sources: `spec-workflows.md`, `spec-backend-api.md` (Domain 3-4), backend routes `workflows.py`
 
