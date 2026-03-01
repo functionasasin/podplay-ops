@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total Aspects**: 36
-- **Analyzed**: 3
-- **Pending**: 33
-- **Convergence**: 8%
+- **Analyzed**: 4
+- **Pending**: 32
+- **Convergence**: 11%
 
 ---
 
@@ -16,7 +16,7 @@ Read existing cheerful-reverse specs + verify against source code. Produce raw c
 - [x] **w1-campaigns** — Extract all campaign capabilities: CRUD, wizard steps (0-7), products, senders, recipients (single/bulk/CSV/sheet), outbox, launch, draft saving. Sources: `spec-backend-api.md` (Domain 1-2), `spec-webapp.md` (Campaign Wizard), backend routes `campaigns.py`, `campaign_draft.py`, `campaign_launch.py`
 - [x] **w1-email** — Extract all email/thread capabilities: thread listing with all filter params, thread detail, status marking (all statuses), draft CRUD, AI draft generation, draft sending, follow-up management. Sources: `spec-backend-api.md` (Domain 6-10), `spec-webapp.md` (Inbox UI), backend routes `gmail_message.py`, `draft.py`, `email.py`, `email_dispatch.py`, `email_signature.py`, `bulk_draft_edit.py`
 - [x] **w1-creators** — Extract all creator capabilities: in-campaign listing with filters, cross-campaign search, full profile with enrichment data, enrichment status polling, email override, bulk operations, notes history. Sources: `spec-backend-api.md` (Domain 5), existing CE tools in `mcp/tools/cheerful/tools.py`. Also discovered: creator lists (11 endpoints), creator posts/content verification (4 endpoints), creator search/discovery via Influencer Club (4 endpoints)
-- [ ] **w1-integrations** — Extract all integration capabilities: Gmail OAuth connect/disconnect/list, Google Sheets tab listing/validation, Shopify token validation/product listing, Slack channel config, integration status checking. Sources: `spec-integrations.md`, `spec-backend-api.md` (Domain 8), backend routes `integrations.py`, `google_sheets.py`, `shopify.py`
+- [x] **w1-integrations** — Extract all integration capabilities: 8 sub-domains identified (Gmail OAuth, SMTP accounts, Google Sheets, Shopify/GoAffPro, Instantly/Composio, Slack operations, YouTube lookalike, Brand lookup). 23 total endpoints across webapp and backend. 0 existing CE tools. Key discoveries: Gmail OAuth is webapp-only (no backend endpoints), no Gmail disconnect exists, Instantly uses Composio broker, SMTP has full CRUD + bulk import with IMAP verification, Shopify uses GoAffPro proxy, Slack is primarily order approval webhook. Sources verified: `google_sheets.py`, `shopify.py`, `slack.py`, `instantly.py`, `smtp_account.py`, `user.py`, `youtube.py`, `brand.py`, webapp OAuth routes
 - [ ] **w1-users-team** — Extract all user/team capabilities: user profile (get/update), Gmail account management, onboarding status, team CRUD, member invitations, campaign assignments, permission model. Sources: `spec-backend-api.md` (Additional Endpoints), `spec-webapp.md` (Settings, Team), backend routes `users.py`, `teams.py`
 - [ ] **w1-analytics** — Extract all analytics/dashboard capabilities: campaign metrics (creator count, response rate, emails sent, opt-in rate), active campaigns table, follow-up statistics, gifting/paid pipeline, per-campaign stats. Sources: `spec-webapp.md` (Dashboard), backend routes `analytics.py`, `dashboard.py`
 - [ ] **w1-search** — Extract all search/discovery capabilities: AI creator search (Apify/YouTube), semantic email search (pgvector), full-text email search, creator profile lookup. Sources: `spec-backend-api.md`, existing CE tools, backend routes `creators.py`, `search.py`
