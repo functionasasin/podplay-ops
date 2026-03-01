@@ -29,6 +29,7 @@ All tools are **user-scoped** — `user_id` is injected via `RequestContext`, ne
 | [`workflows.md`](workflows.md) | Workflow CRUD, execution history, tool discovery | 8 | W3 complete |
 | [`shared-conventions.md`](shared-conventions.md) | Auth model, error conventions, pagination, shared schemas | — | W4 complete |
 | [`parity-matrix.md`](parity-matrix.md) | Frontend page → tool mapping (175+ rows, 100% coverage) | — | W4 complete |
+| [`slack-formatting-guide.md`](slack-formatting-guide.md) | Cross-cutting Slack presentation guide: XML formatters, domain-specific templates, error surfacing | — | W4 complete |
 
 > **Note on `cheerful_list_connected_accounts`**: This tool appears in both `integrations.md` (canonical spec, #84) and `users-and-team.md` (cross-reference). It is one tool, counted once. This resolves to 126 unique tools: 31 + 24 + 27 + 18 + 13 + 1 + 4 + 8 = 126.
 

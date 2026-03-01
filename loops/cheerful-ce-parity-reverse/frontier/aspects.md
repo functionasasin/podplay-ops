@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total Aspects**: 36
-- **Analyzed**: 34
-- **Pending**: 2
-- **Convergence**: 94.4%
+- **Analyzed**: 35
+- **Pending**: 1
+- **Convergence**: 97.2%
 
 ---
 
@@ -62,5 +62,5 @@ Shared schemas, conventions, parity matrix, and completeness audit.
 - [x] **w4-pagination-conventions** — Standard pagination: limit/offset patterns, default/max values, how paginated results should be presented in Slack threads. 3 pagination models documented (offset, page-based, no-pagination). 7 service routes verified. 7 v1 routes needing service wrappers documented. 2 errors in prior skeleton corrected (similar_emails max=10 not 20; workflow executions default=100 not 50). Critical: creator listing `total` is unfiltered count. Thread listing offset is approximate for mixed Gmail+SMTP campaigns.
 - [x] **w4-parity-matrix** — Build the complete parity matrix: every frontend page, every user action, mapped to a context engine tool. Flag any gaps. Write to `specs/parity-matrix.md`. 175+ action rows across 17 frontend sections, 126 unique tools (7 existing + 119 new), 100% coverage of backend-accessible actions. 25 webapp-only features documented as N/A. All 7 existing tools listed with bug status.
 - [x] **w4-readme-index** — Write `specs/README.md` with complete tool index: every tool name, domain, one-line description, status (exists/new). Final index: 126 unique tools (7 existing + 119 new). Resolved `cheerful_list_connected_accounts` duplicate (1 canonical tool in integrations.md, cross-ref in users-and-team.md). Added `cheerful_get_onboarding_status` (#113). Full implementation notes: ~90+ new service routes needed, 2 CE-native tools (no backend route), 7 existing tools with P1-P3 bugs documented, 3 cross-domain security gaps flagged.
-- [ ] **w4-slack-formatting-guide** — Cross-cutting guide for how tools should format responses for Slack: tables, thread summaries, campaign reports, creator profiles. Consistent UX patterns
+- [x] **w4-slack-formatting-guide** — Cross-cutting guide for how tools should format responses for Slack: tables, thread summaries, campaign reports, creator profiles. Consistent UX patterns. 18 sections: Slack markdown reference, general principles, response length guidelines, progressive disclosure, all 8 domain-specific patterns, 9 component templates, error surfacing, success confirmations, empty states, XML formatter patterns for CE developers. Key spec: XML formatter bugs prevention guide from existing tool bugs (tag name mismatches, None emission, missing raw=True)
 - [ ] **w4-completeness-audit** — Final audit: read every spec file, verify no TODOs/TBDs/placeholders, verify every tool has all required sections, verify parity matrix has no gaps. If gaps found, add new aspects and DO NOT converge
