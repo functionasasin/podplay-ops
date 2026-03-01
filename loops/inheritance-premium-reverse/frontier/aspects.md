@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 36
-- Analyzed: 21
-- Pending: 15
-- Convergence: 58%
+- Analyzed: 22
+- Pending: 14
+- Convergence: 61%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -34,7 +34,7 @@
 - [x] spec-shareable-links — Read-only case URLs, access control, QR codes, share UI. Depends: spec-auth-persistence.
 - [x] spec-multi-seat — Firm accounts, roles (admin/attorney/paralegal), shared client pool, invitation flow. Depends: spec-auth-persistence. Reads: multi-tenancy-patterns.
 - [x] spec-share-breakdown-panel — Expandable per-heir row showing from_legitime / from_free_portion / from_intestate split and legitime_fraction. Reads: codebase-audit. [Discovered: codebase-audit]
-- [ ] spec-decedent-header — Add decedent name and date of death to ResultsHeader for professional report context. Reads: codebase-audit. [Discovered: codebase-audit]
+- [x] spec-decedent-header — Add decedent name and date of death to ResultsHeader for professional report context. Reads: codebase-audit. [Discovered: codebase-audit]
 - [ ] spec-represents-display — Show "representing [deceased parent name]" label when inherits_by === Representation. Reads: codebase-audit. [Discovered: codebase-audit]
 - [ ] spec-donation-summary-in-results — Display the input donations list in results view (advances on inheritance transparency). Reads: codebase-audit. [Discovered: codebase-audit]
 - [ ] spec-case-export-zip — Export all case files (input JSON, output JSON, PDF) as a ZIP for offline archival. Legal obligation for PH lawyers. Depends: spec-pdf-export, spec-auth-persistence. [Discovered: auth-persistence-patterns]
