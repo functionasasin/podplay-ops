@@ -211,8 +211,9 @@ loops:
     schedule: "*/30 * * * *"
     max_iterations: 60
     timeout_minutes: 30
-    status: active
+    status: converged
     created: 2026-03-01
+    converged_at: "2026-03-01"
   mamasitas-campaign-reverse:
     description: "End-to-end Mama Sita's gifting campaign journey → stage-by-stage spec mapped to Cheerful features, gaps, and build priorities"
     type: reverse
