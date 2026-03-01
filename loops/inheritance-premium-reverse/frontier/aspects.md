@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 36
-- Analyzed: 24
-- Pending: 12
-- Convergence: 67%
+- Analyzed: 25
+- Pending: 11
+- Convergence: 69%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -37,7 +37,7 @@
 - [x] spec-decedent-header — Add decedent name and date of death to ResultsHeader for professional report context. Reads: codebase-audit. [Discovered: codebase-audit]
 - [x] spec-represents-display — Show "representing [deceased parent name]" label when inherits_by === Representation. Reads: codebase-audit. [Discovered: codebase-audit]
 - [x] spec-donation-summary-in-results — Display the input donations list in results view (advances on inheritance transparency). Reads: codebase-audit. [Discovered: codebase-audit]
-- [ ] spec-case-export-zip — Export all case files (input JSON, output JSON, PDF) as a ZIP for offline archival. Legal obligation for PH lawyers. Depends: spec-pdf-export, spec-auth-persistence. [Discovered: auth-persistence-patterns]
+- [x] spec-case-export-zip — Export all case files (input JSON, output JSON, PDF) as a ZIP for offline archival. Legal obligation for PH lawyers. Depends: spec-pdf-export, spec-auth-persistence. [Discovered: auth-persistence-patterns]
 - [ ] spec-conflict-check — Search existing clients/heirs before new case intake. PH bar ethics require conflict-of-interest screening. Depends: spec-client-profiles. [Discovered: crm-law-firm-patterns]
 - [ ] spec-intake-form — Guided digital intake capturing decedent info, family composition, asset summary; pre-populates case wizard. Depends: spec-client-profiles. [Discovered: crm-law-firm-patterns]
 - [ ] spec-family-tree-visualizer — Interactive heir tree diagram (SVG/canvas) showing succession relationships, separate from distribution table. Reads: codebase-audit. [Discovered: crm-law-firm-patterns]
