@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total Aspects**: 36
-- **Analyzed**: 1
-- **Pending**: 35
-- **Convergence**: 3%
+- **Analyzed**: 2
+- **Pending**: 34
+- **Convergence**: 6%
 
 ---
 
@@ -14,7 +14,7 @@
 Read existing cheerful-reverse specs + verify against source code. Produce raw capability lists per domain.
 
 - [x] **w1-campaigns** — Extract all campaign capabilities: CRUD, wizard steps (0-7), products, senders, recipients (single/bulk/CSV/sheet), outbox, launch, draft saving. Sources: `spec-backend-api.md` (Domain 1-2), `spec-webapp.md` (Campaign Wizard), backend routes `campaigns.py`, `campaign_draft.py`, `campaign_launch.py`
-- [ ] **w1-email** — Extract all email/thread capabilities: thread listing with all filter params, thread detail, status marking (all statuses), draft CRUD, AI draft generation, draft sending, follow-up management. Sources: `spec-backend-api.md` (Domain 6-7), `spec-webapp.md` (Inbox UI), backend routes `threads.py`, `gmail.py`
+- [x] **w1-email** — Extract all email/thread capabilities: thread listing with all filter params, thread detail, status marking (all statuses), draft CRUD, AI draft generation, draft sending, follow-up management. Sources: `spec-backend-api.md` (Domain 6-10), `spec-webapp.md` (Inbox UI), backend routes `gmail_message.py`, `draft.py`, `email.py`, `email_dispatch.py`, `email_signature.py`, `bulk_draft_edit.py`
 - [ ] **w1-creators** — Extract all creator capabilities: in-campaign listing with filters, cross-campaign search, full profile with enrichment data, enrichment status polling, email override, bulk operations, notes history. Sources: `spec-backend-api.md` (Domain 5), existing CE tools in `mcp/tools/cheerful/tools.py`
 - [ ] **w1-integrations** — Extract all integration capabilities: Gmail OAuth connect/disconnect/list, Google Sheets tab listing/validation, Shopify token validation/product listing, Slack channel config, integration status checking. Sources: `spec-integrations.md`, `spec-backend-api.md` (Domain 8), backend routes `integrations.py`, `google_sheets.py`, `shopify.py`
 - [ ] **w1-users-team** — Extract all user/team capabilities: user profile (get/update), Gmail account management, onboarding status, team CRUD, member invitations, campaign assignments, permission model. Sources: `spec-backend-api.md` (Additional Endpoints), `spec-webapp.md` (Settings, Team), backend routes `users.py`, `teams.py`
@@ -24,9 +24,9 @@ Read existing cheerful-reverse specs + verify against source code. Produce raw c
 
 ## Wave 2: Tool Design (8 aspects)
 
-Take Wave 1 capability lists and design tool signatures per domain. **Every tool must include `user_id` as a required parameter and document its permission model (owner-only, assigned-member, or authenticated).**
+Take Wave 1 capability lists and design tool signatures per domain. **Every tool is user-scoped via `RequestContext` injection (not a tool param). Document the permission model (owner-only, assigned-member, or authenticated) for each tool.**
 
-- [ ] **w2-campaigns** — Design all campaign tools: names, parameters, return types, API mappings. Group CRUD ops, wizard steps, and bulk ops into individual tools. Include `user_id` scoping and note which ops are owner-only vs assigned-member. Write skeleton definitions to `specs/campaigns.md`
+- [ ] **w2-campaigns** — Design all campaign tools: names, parameters, return types, API mappings. Group CRUD ops, wizard steps, and bulk ops into individual tools. Document permission model: which ops are owner-only vs assigned-member. Write skeleton definitions to `specs/campaigns.md`
 - [ ] **w2-email** — Design all email tools: thread listing with all filter combos, status mutations, draft lifecycle, AI generation, sending. All scoped to `user_id` via campaign access. Write skeleton definitions to `specs/email.md`
 - [ ] **w2-creators** — Design all creator tools: extend existing 3 tools + add enrichment, notes, bulk ops. All scoped to `user_id`. Write skeleton definitions to `specs/creators.md`
 - [ ] **w2-integrations** — Design all integration tools: OAuth flows, config, validation, status. Integration tools are owner-only (Gmail tokens, Shopify keys are per-user). Write skeleton definitions to `specs/integrations.md`
@@ -57,7 +57,7 @@ Flesh each tool to exhaustive detail. Verify every parameter, type, and enum aga
 Shared schemas, conventions, parity matrix, and completeness audit.
 
 - [ ] **w4-shared-schemas** — Define all shared types used across domains: Campaign, Thread, Creator, EmailMessage, Draft, Workflow, User, Team. Write to `specs/shared-conventions.md`
-- [ ] **w4-auth-model** — Document the full per-user authentication model. Frontend: Supabase Auth login (email/password + Google OAuth), middleware route protection, session cookies. Context Engine: Slack user → email mapping → cheerful_user_id resolution, `X-Service-Api-Key` + `user_id` query param on every `/api/service/*` call. Permission tiers: owner-only (campaign CRUD, launch, integrations), assigned-member (view/edit campaign data), authenticated (own profile/settings). Backend: JWT validation for webapp, service key for CE, RLS as defense-in-depth. Document: identity resolution flow, per-tool permission requirements, team access model (campaign_member_assignment), credential isolation (team members cannot access gmail tokens). Reference: `auth-permissions.md` from cheerful-reverse, `auth.py`, `service_auth.py`, `middleware.ts`
+- [ ] **w4-auth-model** — Document the full per-user authentication model as it actually works in the codebase. **CE identity injection**: `RequestContext` created in `entrypoints/slack/handlers.py` with `cheerful_user_id` from hardcoded `SLACK_USER_MAPPING` in `constants.py` → threaded through execution pipeline → every tool calls `_resolve_user_id(request_context)` → `user_id` sent as query param to `/api/service/*` routes. **Frontend**: Supabase Auth login (email/password + Google OAuth), middleware route protection, session cookies. **Backend two-path auth**: JWT validation (`get_current_user`) for webapp requests, `X-Service-Api-Key` (`verify_service_api_key`) for CE/service requests. **Permission tiers**: owner-only (campaign CRUD, launch, integrations), assigned-member (view/edit campaign data via `campaign_member_assignment`), authenticated (own profile/settings). **RLS defense-in-depth**: DB-level row isolation, `SECURITY DEFINER` functions (`is_campaign_owner`, `can_access_campaign`), credential isolation (team members cannot SELECT `user_gmail_account`/`user_smtp_account`). Reference: `tools.py`, `api.py`, `constants.py`, `handlers.py`, `auth-permissions.md` from cheerful-reverse, `auth.py`, `service_auth.py`, `middleware.ts`
 - [ ] **w4-error-conventions** — Standard error handling: error response format, retry logic, how tools surface errors to Claude agent. Common error patterns across all tools
 - [ ] **w4-pagination-conventions** — Standard pagination: limit/offset patterns, default/max values, how paginated results should be presented in Slack threads
 - [ ] **w4-parity-matrix** — Build the complete parity matrix: every frontend page, every user action, mapped to a context engine tool. Flag any gaps. Write to `specs/parity-matrix.md`
