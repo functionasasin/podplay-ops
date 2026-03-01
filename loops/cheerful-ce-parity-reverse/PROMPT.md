@@ -35,6 +35,23 @@ The `loops/cheerful-reverse/` loop has already produced comprehensive analysis d
 
 **Use these as your primary source.** Read them first. Only go to actual source code when you need to verify details, find enum values, check parameter types, or discover something the specs missed.
 
+### Per-User Authentication Model (CRITICAL)
+
+**Every single tool must be scoped to an authenticated user.** This is non-negotiable.
+
+**Frontend**: Users must LOGIN (Supabase Auth — email/password or Google OAuth) before interacting with anything. The webapp middleware at `projects/cheerful/apps/webapp/utils/supabase/middleware.ts` enforces this — `/mail`, `/settings`, `/dashboard`, `/campaigns` all redirect to `/sign-in` if unauthenticated.
+
+**Context Engine**: The CE operates on behalf of a known user. When a request comes in (e.g., from Slack), the system resolves the requesting user's identity (email → `cheerful_user_id`). This `user_id` is passed to every backend service route call as a required query parameter. The backend scopes ALL queries to that user — you only see your own campaigns, your own threads, your own integrations.
+
+**How it works today** (existing 7 tools): Every tool takes `user_id: str` as a required parameter. The CE calls `/api/service/*` routes with `X-Service-Api-Key` header + `user_id` query param. The backend then scopes all DB queries to that user via RLS and application-level checks.
+
+**What this means for specs**:
+- **Every tool** must include `user_id` (or equivalent user identity) as a required parameter
+- **Every tool's error responses** must include a 403 "Access denied" case for when a user tries to access resources they don't own
+- **Team-aware tools** (campaign access) must document the permission model: owner vs assigned team member vs unassigned
+- **The auth model section** in `specs/shared-conventions.md` must document the full flow: Slack user → email mapping → cheerful_user_id → scoped backend calls
+- **Never assume global access.** A tool that lists campaigns returns ONLY that user's campaigns. A tool that reads a thread checks that the user owns (or is assigned to) the campaign it belongs to.
+
 ### Current Context Engine Cheerful Tools (Baseline)
 
 These 7 tools already exist. Your spec must include them (verified against source) PLUS all new tools:
@@ -80,6 +97,7 @@ Every tool MUST include ALL of the following:
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
+| user_id | string (UUID) | yes | — | Cheerful user ID of the authenticated user. Scopes all queries to this user's data. |
 | param_name | string | yes | — | Full description including constraints |
 | param_name | integer | no | 50 | Description. Valid range: 1-100 |
 | param_name | enum | no | "all" | One of: "value1", "value2", "value3" |
@@ -106,8 +124,10 @@ Every tool MUST include ALL of the following:
 
 | Condition | Error Message | HTTP Status (underlying) |
 |-----------|--------------|-------------------------|
+| Invalid/missing user_id | "Valid user_id is required" | 401 |
+| User does not own resource | "Access denied to campaign {id}" | 403 |
+| User not assigned to campaign (team) | "User is not assigned to campaign {id}" | 403 |
 | Campaign not found | "Campaign {id} not found" | 404 |
-| No permission | "Access denied to campaign {id}" | 403 |
 
 **Pagination** (if applicable):
 - Default limit: N, max limit: M
@@ -174,6 +194,9 @@ When all aspects are `- [x]`, do NOT immediately write `status/converged.txt`. I
    - [ ] Every enum parameter lists ALL possible values (verified against source)
    - [ ] Every tool has at least one realistic example request and response
    - [ ] Shared conventions doc covers auth, pagination, and error patterns
+   - [ ] Every tool includes `user_id` as a required parameter for user scoping
+   - [ ] Every tool documents permission model (owner-only, assigned-member, or authenticated)
+   - [ ] Auth model documents the full identity flow: Slack user → email → cheerful_user_id → scoped calls
    - [ ] The parity matrix has no empty cells — every frontend feature maps to a tool
    - [ ] No file contains "TODO", "TBD", "placeholder", "etc.", or "similar to above"
    - [ ] Existing 7 tools are documented with any corrections needed
@@ -229,9 +252,10 @@ Take each capability list from Wave 1 and design the tool definitions. This is t
    - Multi-step flows can be broken into atomic tools (Claude orchestrates the sequence)
 3. For each tool, decide:
    - Tool name (`cheerful_` prefix, snake_case, verb_noun pattern)
-   - Parameters (from the backend endpoint signature)
+   - Parameters (from the backend endpoint signature) — **always include `user_id` as first required parameter**
    - Return type (from the backend response shape)
    - Which backend endpoint(s) it maps to
+   - Permission model: does this require ownership, team assignment, or just authenticated access?
 4. Write the tool designs to the domain spec file in `specs/`
 
 **Naming conventions**:

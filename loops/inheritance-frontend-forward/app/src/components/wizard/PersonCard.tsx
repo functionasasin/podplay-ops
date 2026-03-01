@@ -356,12 +356,87 @@ export function PersonCard({
 
         {/* Conditional: Children for Representation (deceased + children-relevant) */}
         {showChildren && (
-          <div className="ml-4 border-l-2 border-border pl-4">
-            <p className="text-sm font-medium text-muted-foreground">Children for Representation</p>
-          </div>
+          <>
+            <Separator />
+            <ChildrenForRepresentation
+              personIndex={index}
+              personId={watch(`family_tree.${index}.id` as any) as string}
+              selectedChildren={(watch(`family_tree.${index}.children` as any) as string[]) ?? []}
+              persons={persons}
+              setValue={setValue}
+            />
+          </>
         )}
       </CardContent>
     </Card>
+  );
+}
+
+// ============================================================================
+// Children for Representation — Multi-select for deceased persons
+// ============================================================================
+
+interface ChildrenForRepresentationProps {
+  personIndex: number;
+  personId: string;
+  selectedChildren: string[];
+  persons: Person[];
+  setValue: UseFormSetValue<EngineInput>;
+}
+
+function ChildrenForRepresentation({
+  personIndex,
+  personId,
+  selectedChildren,
+  persons,
+  setValue,
+}: ChildrenForRepresentationProps) {
+  // Filter out the person themselves — can't be your own child
+  const availablePersons = persons.filter((p) => p.id !== personId);
+
+  const handleToggle = (childId: string, checked: boolean) => {
+    const updated = checked
+      ? [...selectedChildren, childId]
+      : selectedChildren.filter((id) => id !== childId);
+    setValue(`family_tree.${personIndex}.children` as any, updated);
+  };
+
+  return (
+    <div className="space-y-3">
+      <p className="text-sm font-medium leading-none">Children for Representation</p>
+      <p className="text-xs text-muted-foreground">
+        Select this person&apos;s children from the family tree. They will inherit by representation.
+      </p>
+      {availablePersons.length === 0 ? (
+        <p className="text-sm text-muted-foreground italic">
+          No other persons in the family tree. Add children first, then link them here.
+        </p>
+      ) : (
+        <div className="space-y-2 ml-1">
+          {availablePersons.map((person) => {
+            const relLabel = RELATIONSHIP_OPTIONS.find(
+              (o) => o.value === person.relationship_to_decedent
+            )?.label;
+            return (
+              <label key={person.id} className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selectedChildren.includes(person.id)}
+                  onChange={(e) => handleToggle(person.id, e.target.checked)}
+                  className="h-4 w-4 rounded accent-primary"
+                />
+                <span className="text-sm">
+                  {person.name || person.id}
+                  {relLabel && (
+                    <span className="text-muted-foreground"> ({relLabel})</span>
+                  )}
+                </span>
+              </label>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
 

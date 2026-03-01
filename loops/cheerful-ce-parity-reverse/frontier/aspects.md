@@ -24,16 +24,16 @@ Read existing cheerful-reverse specs + verify against source code. Produce raw c
 
 ## Wave 2: Tool Design (8 aspects)
 
-Take Wave 1 capability lists and design tool signatures per domain.
+Take Wave 1 capability lists and design tool signatures per domain. **Every tool must include `user_id` as a required parameter and document its permission model (owner-only, assigned-member, or authenticated).**
 
-- [ ] **w2-campaigns** — Design all campaign tools: names, parameters, return types, API mappings. Group CRUD ops, wizard steps, and bulk ops into individual tools. Write skeleton definitions to `specs/campaigns.md`
-- [ ] **w2-email** — Design all email tools: thread listing with all filter combos, status mutations, draft lifecycle, AI generation, sending. Write skeleton definitions to `specs/email.md`
-- [ ] **w2-creators** — Design all creator tools: extend existing 3 tools + add enrichment, notes, bulk ops. Write skeleton definitions to `specs/creators.md`
-- [ ] **w2-integrations** — Design all integration tools: OAuth flows, config, validation, status. Write skeleton definitions to `specs/integrations.md`
-- [ ] **w2-users-team** — Design all user/team tools: profile, accounts, team management, permissions. Write skeleton definitions to `specs/users-and-team.md`
-- [ ] **w2-analytics** — Design all analytics tools: dashboard data, campaign metrics, reporting queries. Write skeleton definitions to `specs/analytics.md`
-- [ ] **w2-search** — Design all search/discovery tools: extend existing search + add AI discovery. Write skeleton definitions to `specs/search-and-discovery.md`
-- [ ] **w2-workflows** — Design all workflow tools: automation CRUD, execution history, lifecycle triggers. Write skeleton definitions to `specs/workflows.md`
+- [ ] **w2-campaigns** — Design all campaign tools: names, parameters, return types, API mappings. Group CRUD ops, wizard steps, and bulk ops into individual tools. Include `user_id` scoping and note which ops are owner-only vs assigned-member. Write skeleton definitions to `specs/campaigns.md`
+- [ ] **w2-email** — Design all email tools: thread listing with all filter combos, status mutations, draft lifecycle, AI generation, sending. All scoped to `user_id` via campaign access. Write skeleton definitions to `specs/email.md`
+- [ ] **w2-creators** — Design all creator tools: extend existing 3 tools + add enrichment, notes, bulk ops. All scoped to `user_id`. Write skeleton definitions to `specs/creators.md`
+- [ ] **w2-integrations** — Design all integration tools: OAuth flows, config, validation, status. Integration tools are owner-only (Gmail tokens, Shopify keys are per-user). Write skeleton definitions to `specs/integrations.md`
+- [ ] **w2-users-team** — Design all user/team tools: profile, accounts, team management, permissions. Note: profile tools are self-only; team admin tools are owner-only. Write skeleton definitions to `specs/users-and-team.md`
+- [ ] **w2-analytics** — Design all analytics tools: dashboard data, campaign metrics, reporting queries. All scoped to `user_id`'s campaigns. Write skeleton definitions to `specs/analytics.md`
+- [ ] **w2-search** — Design all search/discovery tools: extend existing search + add AI discovery. Search scoped to `user_id`'s campaigns/threads. Write skeleton definitions to `specs/search-and-discovery.md`
+- [ ] **w2-workflows** — Design all workflow tools: automation CRUD, execution history, lifecycle triggers. Scoped to `user_id` via campaign ownership. Write skeleton definitions to `specs/workflows.md`
 
 ## Wave 3: Full OpenAPI-Level Specs (12 aspects)
 
@@ -57,7 +57,7 @@ Flesh each tool to exhaustive detail. Verify every parameter, type, and enum aga
 Shared schemas, conventions, parity matrix, and completeness audit.
 
 - [ ] **w4-shared-schemas** — Define all shared types used across domains: Campaign, Thread, Creator, EmailMessage, Draft, Workflow, User, Team. Write to `specs/shared-conventions.md`
-- [ ] **w4-auth-model** — Document the authentication model for CE → backend: API key auth, user context injection, permission scoping. What user identity does the CE use? How does it scope queries?
+- [ ] **w4-auth-model** — Document the full per-user authentication model. Frontend: Supabase Auth login (email/password + Google OAuth), middleware route protection, session cookies. Context Engine: Slack user → email mapping → cheerful_user_id resolution, `X-Service-Api-Key` + `user_id` query param on every `/api/service/*` call. Permission tiers: owner-only (campaign CRUD, launch, integrations), assigned-member (view/edit campaign data), authenticated (own profile/settings). Backend: JWT validation for webapp, service key for CE, RLS as defense-in-depth. Document: identity resolution flow, per-tool permission requirements, team access model (campaign_member_assignment), credential isolation (team members cannot access gmail tokens). Reference: `auth-permissions.md` from cheerful-reverse, `auth.py`, `service_auth.py`, `middleware.ts`
 - [ ] **w4-error-conventions** — Standard error handling: error response format, retry logic, how tools surface errors to Claude agent. Common error patterns across all tools
 - [ ] **w4-pagination-conventions** — Standard pagination: limit/offset patterns, default/max values, how paginated results should be presented in Slack threads
 - [ ] **w4-parity-matrix** — Build the complete parity matrix: every frontend page, every user action, mapped to a context engine tool. Flag any gaps. Write to `specs/parity-matrix.md`
