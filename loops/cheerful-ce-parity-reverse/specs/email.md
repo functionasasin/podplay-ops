@@ -3,7 +3,7 @@
 **Domain**: Email
 **Spec file**: `specs/email.md`
 **Wave 2 status**: Tool design complete
-**Wave 3 status**: Pending (full OpenAPI-level specs)
+**Wave 3 status**: Thread Listing + Thread Operations + Attachments complete (7/24 tools fully specified)
 
 ---
 
@@ -32,138 +32,491 @@
 
 ### `cheerful_search_emails`
 
-**Status**: EXISTS
+**Status**: EXISTS — verified against source, corrections noted
 
-**Purpose**: Full-text search within campaign email threads by query string.
+**Purpose**: Full-text search within campaign email threads by query string. Searches across both Gmail and SMTP threads, merging results sorted by latest date.
 
 **Maps to**: `GET /api/service/threads/search`
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: authenticated (searches only user's campaigns).
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: authenticated (searches only user's campaigns). **SECURITY NOTE (existing gap)**: The current service route does NOT validate `user_id` — the parameter is sent by the CE API client but the FastAPI endpoint does not declare it, so it is silently ignored. Any caller with a valid service API key can search any campaign. The new service route MUST accept and enforce `user_id` scoping.
 
-**Current parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| campaign_id | uuid | yes | — | Campaign to search within |
-| query | string | yes | — | Full-text search query |
-| direction | enum | no | — | One of: "inbound", "outbound". Filter by message direction |
-| limit | integer | no | 10 | Max results. Range: 1-50 |
+| campaign_id | string (uuid) | yes | — | Campaign UUID to search within |
+| query | string | yes | — | Full-text search query. Searches sender email, recipient emails, subject, and body text. Plain text matching (no operators like AND/OR/quotes — uses SQL `ILIKE` with `%query%` pattern) |
+| direction | string | no | null | Filter by message direction. One of: `"INBOUND"`, `"OUTBOUND"` (uppercase). Case-sensitive — the service route passes this directly to the repository |
+| limit | integer | no | 20 | Max results. Range: 1-50. Validated via `le=50` on the service route |
 
-**Returns**: Array of `ThreadSearchResult` objects (gmail_thread_id, snippet, subject, sender_email, latest_date, direction, campaign_id).
+**Parameter Validation Rules**:
+- `campaign_id` must be a valid UUID: FastAPI raises 422 if not parseable
+- `query` is required (no default): FastAPI raises 422 if missing
+- `limit` must be ≤ 50: FastAPI raises 422 `"ensure this value is less than or equal to 50"`
 
-**Existing tool audit notes** (for Wave 3):
-- Verify exact return schema against current service endpoint
-- Check if search query supports operators (AND, OR, quotes)
-- Security note from w1-search: service endpoint may lack user_id ownership validation — needs verification
+**Return Schema** — Array of `ThreadSearchResult`:
+
+```json
+[
+  {
+    "gmail_thread_id": "string — Gmail thread hex ID or SMTP angle-bracket ID (e.g., '18f3a2b4c5d6e7f8' or '<msg-id@smtp.example.com>')",
+    "subject": "string — Email subject line",
+    "sender_email": "string — Sender email address",
+    "recipient_emails": ["string — Array of recipient email addresses"],
+    "direction": "string — 'inbound' or 'outbound' (lowercase, from GmailMessageDirection enum)",
+    "message_count": "integer — Number of messages in the thread",
+    "latest_date": "datetime — ISO 8601 timestamp of the most recent message",
+    "matched_snippet": "string — Text snippet containing the search match"
+  }
+]
+```
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Missing campaign_id | "field required" | 422 |
+| Missing query | "field required" | 422 |
+| Invalid campaign_id format | "value is not a valid uuid" | 422 |
+| limit > 50 | "ensure this value is less than or equal to 50" | 422 |
+| Service API error | ToolError: "Email search failed ({status}): {body}" | varies |
+
+**Pagination**: Not paginated — returns up to `limit` results (max 50). Combined Gmail + SMTP results are sorted by `latest_date DESC` and trimmed to `limit`.
+
+**Example Request**:
+```
+cheerful_search_emails(campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890", query="discount code", direction="INBOUND", limit=10)
+```
+
+**Example Response** (realistic data):
+```json
+[
+  {
+    "gmail_thread_id": "18f3a2b4c5d6e7f8",
+    "subject": "Re: Collaboration opportunity — discount code request",
+    "sender_email": "creator@example.com",
+    "recipient_emails": ["brand@company.com"],
+    "direction": "inbound",
+    "message_count": 4,
+    "latest_date": "2026-02-28T14:30:00Z",
+    "matched_snippet": "...I'd love to get a discount code for my followers. Could you send one..."
+  },
+  {
+    "gmail_thread_id": "<msg-123@smtp.example.com>",
+    "subject": "Discount code for February campaign",
+    "sender_email": "outreach@company.com",
+    "recipient_emails": ["influencer@example.com"],
+    "direction": "outbound",
+    "message_count": 1,
+    "latest_date": "2026-02-27T09:15:00Z",
+    "matched_snippet": "Here is your unique discount code: CREATOR20..."
+  }
+]
+```
+
+**Slack Formatting Notes**:
+- Present as a numbered list: `1. [Subject] — from [sender] ([direction], [message_count] msgs, [date])`
+- Truncate subject to 60 chars
+- Include `matched_snippet` as a quote block under each result if space permits
+- For empty results: "No matching threads found. Try broader search terms."
+
+**Edge Cases**:
+- Empty results: Returns empty array `[]`, not an error
+- SMTP threads mixed with Gmail threads: Both are returned in the same array, distinguished by thread ID format
+- Very long matched_snippet: The backend truncates snippets at the repository level
+- Campaign with no threads: Returns empty array
+- Direction filter is case-sensitive: "INBOUND" works, "inbound" does not match the service route expectation (the service route passes the string directly to the repository which expects uppercase)
+
+**Source Code Audit Notes** (for w3-existing-tools-audit):
+- The CE tool `SearchEmailsInput.direction` is described as "INBOUND or OUTBOUND" — this matches the service route
+- The CE tool default `limit=20` matches the service route default
+- The CE formatter `_fmt_thread_summary` maps `thread.get("sender")` but the actual response field is `sender_email` — potential data loss in formatting
+- The CE formatter also maps `thread.get("snippet")` but the actual field is `matched_snippet` — potential data loss
+- The CE formatter maps `thread.get("recipient")` but the actual field is `recipient_emails` (array) — potential data loss
 
 ---
 
 ### `cheerful_get_thread`
 
-**Status**: EXISTS
+**Status**: EXISTS — verified against source, corrections noted
 
-**Purpose**: Fetch a full email thread with all messages, including sender/recipient details and body content.
+**Purpose**: Fetch a full email thread with all messages. Returns the complete conversation including sender/recipient details and body text. Auto-detects Gmail vs SMTP threads.
 
 **Maps to**: `GET /api/service/threads/{gmail_thread_id}`
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: authenticated (user must own the thread or be assigned to the campaign it belongs to).
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. **SECURITY NOTE (existing gap)**: The current service route does NOT validate `user_id` — the endpoint function signature is `def get_thread(gmail_thread_id: str)` with no `user_id` parameter. Any caller with a valid service API key can read any thread by ID. The new service route MUST accept and enforce `user_id` scoping.
 
-**Current parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| gmail_thread_id | string | yes | — | Thread ID (Gmail hex or SMTP angle-bracket format) |
+| gmail_thread_id | string | yes | — | Thread ID. Supports both Gmail hex format (e.g., `18f3a2b4c5d6e7f8`) and SMTP angle-bracket format (e.g., `<msg-id@smtp.example.com>`). The backend auto-detects via `_is_smtp_thread_id()` |
 
-**Returns**: `ThreadDetailResponse` with thread metadata and array of `GmailMessageResponse` objects (id, gmail_message_id, gmail_thread_id, direction, sender_email, recipient_emails, cc_emails, subject, body_text, body_html, internal_date, labels).
+**Parameter Validation Rules**:
+- `gmail_thread_id` must be a non-empty string: passed as a path parameter
 
-**Existing tool audit notes** (for Wave 3):
-- Current response may not include: thread status, flags (wants_paid, has_question, has_issue), draft info, attachment metadata
-- Verify whether `ThreadDetailResponse` includes `ThreadFlags`, `DraftResponse`, `preferences__is_hidden`
-- The main API thread listing includes these fields — service route may be a subset
+**Return Schema** — `ThreadDetailResponse`:
+
+```json
+{
+  "gmail_thread_id": "string — The thread ID (same as input)",
+  "messages": [
+    {
+      "gmail_message_id": "string — Gmail message ID (hex) or SMTP message-ID header",
+      "direction": "string — 'inbound' or 'outbound' (lowercase, from GmailMessageDirection)",
+      "sender_email": "string — Sender email address",
+      "recipient_emails": ["string — Array of recipient email addresses"],
+      "subject": "string — Email subject line (empty string if null in DB)",
+      "body_text": "string — Plain text email body (empty string if null in DB)",
+      "internal_date": "datetime — ISO 8601 timestamp when the message was received/sent"
+    }
+  ]
+}
+```
+
+**Fields NOT included in service response** (available in main API `GmailMessageResponse` but missing from service `ThreadMessage`):
+- `id` (database UUID) — not in service model
+- `cc_emails` — not in service model
+- `body_html` — not in service model
+- `labels` — not in service model
+- Thread-level metadata: `status`, `flags`, `campaign_id`, `preferences__is_hidden`, `gifting_status`, `paid_promotion_status` — not in service model
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Thread not found | ToolError: "Thread '{gmail_thread_id}' not found" | 404 |
+| Service API error | ToolError: "Failed to get thread ({status}): {body}" | varies |
+
+**Pagination**: Not paginated — returns all messages in the thread.
+
+**Example Request**:
+```
+cheerful_get_thread(gmail_thread_id="18f3a2b4c5d6e7f8")
+```
+
+**Example Response** (realistic data):
+```json
+{
+  "gmail_thread_id": "18f3a2b4c5d6e7f8",
+  "messages": [
+    {
+      "gmail_message_id": "18f3a2b4c5d6e7f8",
+      "direction": "outbound",
+      "sender_email": "brand@company.com",
+      "recipient_emails": ["creator@example.com"],
+      "subject": "Collaboration opportunity with BrandX",
+      "body_text": "Hi Sarah,\n\nWe love your content and would like to send you some products...",
+      "internal_date": "2026-02-25T10:00:00Z"
+    },
+    {
+      "gmail_message_id": "18f4b3c5d6e7f809",
+      "direction": "inbound",
+      "sender_email": "creator@example.com",
+      "recipient_emails": ["brand@company.com"],
+      "subject": "Re: Collaboration opportunity with BrandX",
+      "body_text": "Hi! I'd love to try your products. What size should I pick?",
+      "internal_date": "2026-02-26T15:30:00Z"
+    }
+  ]
+}
+```
+
+**Slack Formatting Notes**:
+- Present thread subject as a header, then each message as a block
+- Format: `[direction arrow ← or →] [sender] — [date]\n[body text truncated to 3000 chars]`
+- The CE formatter already truncates body text to 3000 chars with "... [truncated]" suffix
+- For SMTP threads, the message ID will be in angle-bracket format
+
+**Edge Cases**:
+- Thread with no messages: Returns `{"gmail_thread_id": "...", "messages": []}` (empty array)
+- SMTP thread: Auto-detected, queries SMTP tables. SMTP message IDs use `message_id_header` format
+- Very long email bodies: The backend does not truncate; the CE formatter truncates at 3000 chars
+- Thread that exists in both Gmail and SMTP: Impossible — each thread ID belongs to one provider
+
+**Source Code Audit Notes** (for w3-existing-tools-audit):
+- The CE formatter `_fmt_thread_detail` maps `thread.get("subject")` from the response — but `subject` is NOT a top-level field on `ThreadDetailResponse`. It's only on individual `ThreadMessage` objects. The formatter falls back to "No subject". To get the subject, it should read `thread["messages"][0]["subject"]` if messages exist.
+- The CE formatter maps `message.get("from")` and `message.get("to")` — but the actual fields are `sender_email` and `recipient_emails`. This means from/to are always empty strings in the formatted output.
+- The CE formatter maps `message.get("body_text")` — this matches the actual field name.
 
 ---
 
 ### `cheerful_find_similar_emails`
 
-**Status**: EXISTS
+**Status**: EXISTS — verified against source, corrections noted
 
-**Purpose**: Semantic similarity search via pgvector RAG. Finds emails with similar meaning to a query string or reference thread.
+**Purpose**: Semantic similarity search via pgvector RAG. Finds email reply examples with similar meaning to a query string or reference thread. Uses OpenAI text-embedding-3-small (1536 dimensions) for embedding, then cosine similarity search against the `email_reply_example` table.
 
 **Maps to**: `GET /api/service/rag/similar`
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: authenticated (scoped to user's campaigns).
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. **SECURITY NOTE (existing gap)**: The current service route does NOT validate `user_id` — the endpoint accepts `campaign_id`, `query`, `thread_id`, `limit`, `min_similarity` only. Any caller with a valid service API key can search any campaign's reply examples. The new service route MUST accept and enforce `user_id` scoping.
 
-**Current parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| campaign_id | uuid | yes | — | Campaign to search within |
-| query | string | no | — | Natural language query (mutually exclusive with thread_id) |
-| thread_id | string | no | — | Reference thread ID to find similar threads (mutually exclusive with query) |
-| limit | integer | no | 5 | Max results. Range: 1-20 |
-| min_similarity | float | no | 0.3 | Minimum cosine similarity threshold. Range: 0.0-1.0 |
+| campaign_id | string (uuid) | yes | — | Campaign UUID to search within. Only reply examples from this campaign are searched |
+| query | string | no | null | Natural language query describing the email pattern to find. Mutually exclusive with `thread_id` — at least one must be provided |
+| thread_id | string | no | null | Reference thread ID to find similar threads. The last 5 messages' body text (up to 4000 chars total) is embedded and used as the search vector. Mutually exclusive with `query` — at least one must be provided |
+| limit | integer | no | 5 | Max results. Range: 1-10. Validated via `le=10` on the service route |
+| min_similarity | float | no | 0.3 | Minimum cosine similarity threshold. Range: 0.0-1.0. Results below this threshold are excluded |
 
-**Returns**: Array of `SimilarEmailResult` objects (gmail_thread_id, similarity_score, snippet, reply_text, subject, campaign_id).
+**Parameter Validation Rules**:
+- At least one of `query` or `thread_id` is required: CE client raises `ToolError("Either query or thread_id is required for similarity search")` pre-request; service route raises 422 `"Either 'query' or 'thread_id' must be provided"` if both are null
+- `limit` must be ≤ 10: FastAPI raises 422 if exceeded
+- If `thread_id` references a thread with no messages or only whitespace body text: returns empty array (no error)
 
-**Existing tool audit notes** (for Wave 3):
-- Uses OpenAI text-embedding-3-small (1536 dimensions)
-- Verify exact parameter names in service route (query vs search_query)
-- Security note from w1-search: service endpoint may lack user_id ownership validation — needs verification
+**Return Schema** — Array of `SimilarEmailResult`:
+
+```json
+[
+  {
+    "thread_id": "string — Thread ID of the similar email (Gmail hex or SMTP angle-bracket)",
+    "campaign_id": "string — Campaign UUID the reply example belongs to",
+    "thread_summary": "string — AI-generated summary of the thread conversation",
+    "inbound_email_text": "string — The inbound email text that was replied to",
+    "sent_reply_text": "string — The actual reply that was sent",
+    "sanitized_reply_text": "string | null — Sanitized/cleaned version of the reply (null if not available)",
+    "similarity": "float — Cosine similarity score (0.0 to 1.0, higher is more similar)"
+  }
+]
+```
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Neither query nor thread_id provided | ToolError: "Either query or thread_id is required for similarity search" | N/A (pre-request) |
+| Neither query nor thread_id (at service level) | "Either 'query' or 'thread_id' must be provided" | 422 |
+| Invalid campaign_id format | "value is not a valid uuid" | 422 |
+| limit > 10 | "ensure this value is less than or equal to 10" | 422 |
+| Service API error | ToolError: "Similarity search failed ({status}): {body}" | varies |
+
+**Pagination**: Not paginated — returns up to `limit` results (max 10).
+
+**Example Request**:
+```
+cheerful_find_similar_emails(campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890", query="creator asking about product sizing", limit=3, min_similarity=0.5)
+```
+
+**Example Response** (realistic data):
+```json
+[
+  {
+    "thread_id": "18f1a2b3c4d5e6f7",
+    "campaign_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "thread_summary": "Creator asked about available sizes for the winter collection. Brand provided size chart and offered to send both S and M.",
+    "inbound_email_text": "Hi! I'm interested in the collab but I'm not sure which size to pick. Do you have a size chart?",
+    "sent_reply_text": "Great question! Here's our size chart: [link]. If you're between sizes, I'd recommend going with M. I can send both S and M if you'd like to try both!",
+    "sanitized_reply_text": "Here's our size chart. If you're between sizes, I'd recommend going with M. I can send both sizes if you'd like to try both!",
+    "similarity": 0.847
+  }
+]
+```
+
+**Slack Formatting Notes**:
+- Present each result with similarity score as a percentage: `87% similar`
+- Show the thread_summary as the main description
+- Show sent_reply_text (or sanitized_reply_text if available) as an example reply in a quote block
+- Truncate reply text to 2000 chars (the CE formatter already does this)
+- For empty results: "No similar emails found. Try a different query or lower min_similarity."
+
+**Edge Cases**:
+- No reply examples in campaign: Returns empty array
+- Thread with only whitespace body text: Returns empty array (no embedding generated)
+- Very high min_similarity (e.g., 0.99): May return empty array — no exact matches
+- SMTP thread as reference: Supported — auto-detected via `_is_smtp_thread_id()`
+- The embedding service uses the last 5 messages' body_text concatenated, trimmed to 4000 chars
+
+**Source Code Audit Notes** (for w3-existing-tools-audit):
+- The CE formatter `_fmt_similar_email` maps `result.get("summary")` — but the actual field is `thread_summary`. This means summary is always empty in formatted output.
+- The CE formatter maps `result.get("reply_text")` — but the actual fields are `sent_reply_text` and `sanitized_reply_text`. Reply text is always empty in formatted output.
+- The CE formatter maps `result.get("subject")` — but there is no `subject` field on `SimilarEmailResult`. Subject is always empty.
+- The CE formatter maps `result.get("thread_id")` correctly for the ID attribute.
+- The CE formatter maps `result.get("similarity")` correctly for the score.
+- **These formatting bugs mean the existing tool returns mostly empty XML tags** — a critical issue for the w3-existing-tools-audit to address.
 
 ---
 
 ### `cheerful_list_threads`
 
-**Status**: NEW
+**Status**: NEW — full OpenAPI-level spec
 
-**Purpose**: List email threads with comprehensive filtering by status, direction, campaign, account, and search text. The primary inbox view endpoint with full filter support.
+**Purpose**: List email threads with comprehensive filtering by status, direction, campaign, account, and search text. The primary inbox view endpoint with full filter support. Merges Gmail and SMTP threads, sorted by most recent first.
 
-**Maps to**: `GET /api/service/threads` (new service route needed; main route: `GET /threads/`)
+**Maps to**: `GET /api/service/threads` (new service route needed; mirrors main route: `GET /threads/`)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: authenticated (returns only threads from user's campaigns or assigned campaigns).
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: authenticated — returns only threads from user's owned Gmail/SMTP accounts OR campaigns the user is assigned to as a team member. The backend uses `CampaignMemberAssignmentRepository` to determine assigned campaigns for team members.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| campaign_id | uuid | no | — | Filter to a single campaign |
-| campaign_ids | uuid[] | no | — | Filter to multiple campaigns |
-| status_filter | string[] | no | — | Filter by thread status. Values: "READY_FOR_ATTACHMENT_EXTRACTION", "READY_FOR_CAMPAIGN_ASSOCIATION", "READY_FOR_RESPONSE_DRAFT", "WAITING_FOR_DRAFT_REVIEW", "WAITING_FOR_INBOUND", "IGNORE", "DONE", "NOT_LATEST" |
-| direction_filter | enum | no | — | One of: "inbound", "outbound". Filter by latest message direction |
-| gmail_account_ids | uuid[] | no | — | Filter by Gmail account IDs |
-| smtp_account_ids | uuid[] | no | — | Filter by SMTP account IDs |
-| show_hidden | boolean | no | false | Include hidden/archived threads |
-| search | string | no | — | Text search across sender, recipient, and subject |
-| participant_email | string | no | — | Filter to threads involving this email address |
-| include_messages | boolean | no | false | Include full message bodies (returns `ThreadWithMessages[]` instead of `ThreadSummary[]`) |
-| limit | integer | no | 50 | Results per page. Max: 100 |
-| offset | integer | no | 0 | Pagination offset |
+| campaign_id | string (uuid) | no | null | Filter to a single campaign. Mutually exclusive with `campaign_ids` — use one or neither |
+| campaign_ids | string[] (uuid[]) | no | null | Filter to multiple campaigns. Mutually exclusive with `campaign_id` |
+| status_filter | string[] (enum[]) | no | null | Filter by thread status. Each value must be one of the `GmailThreadStatus` enum values: `"READY_FOR_ATTACHMENT_EXTRACTION"`, `"READY_FOR_CAMPAIGN_ASSOCIATION"`, `"READY_FOR_RESPONSE_DRAFT"`, `"WAITING_FOR_DRAFT_REVIEW"`, `"WAITING_FOR_INBOUND"`, `"IGNORE"`, `"DONE"`, `"NOT_LATEST"`. Multiple values = OR filter (thread matches if status is ANY of the provided values) |
+| direction_filter | string (enum) | no | null | Filter by latest message direction. One of: `"inbound"`, `"outbound"` (lowercase — uses `GmailMessageDirection` StrEnum) |
+| gmail_account_ids | string[] (uuid[]) | no | null | Filter by Gmail account UUIDs. Only threads from these accounts are returned |
+| smtp_account_ids | string[] (uuid[]) | no | null | Filter by SMTP account UUIDs. Only threads from these accounts are returned |
+| show_hidden | boolean | no | false | When `false` (default), hidden/archived threads are excluded. When `true`, both hidden and visible threads are included |
+| search | string | no | null | Free-text search across sender email, recipient email, and subject. Uses SQL `ILIKE` matching |
+| participant_email | string | no | null | Filter to threads where this email address appears as either sender or recipient in any message |
+| include_messages | boolean | no | false | When `false` (default), returns `ThreadSummary[]` (lightweight). When `true`, returns `ThreadWithMessages[]` with full message bodies, attachments, and draft injection |
+| limit | integer | no | 50 | Results per page. Range: 1-100. Validated via `ge=1, le=100` |
+| offset | integer | no | 0 | Pagination offset for result page. Validated via `ge=0` |
 
-**Returns (when include_messages=false)**: Array of `ThreadSummary` objects:
-- gmail_thread_id: string
-- gmail_thread_state_id: uuid
-- status: GmailThreadStatus enum
-- latest_internal_date: datetime
-- latest_direction: string (nullable)
-- snippet: string (first 150 chars)
-- sender_email: string
-- subject: string (nullable)
-- campaign_id: uuid (nullable)
-- preferences__is_hidden: boolean
-- gifting_status: string (nullable)
-- paid_promotion_status: string (nullable)
-- flags: ThreadFlags (wants_paid, has_question, has_issue — each with bool + reason string)
+**Parameter Validation Rules**:
+- `limit` must be 1-100: FastAPI raises 422 if out of range
+- `offset` must be ≥ 0: FastAPI raises 422 if negative
+- `status_filter` values must be valid `GmailThreadStatus` enum values: FastAPI raises 422 for invalid enum values
+- `direction_filter` must be `"inbound"` or `"outbound"`: FastAPI raises 422 for invalid enum values
+- All UUID parameters must be valid UUID format: FastAPI raises 422 if not parseable
 
-**Returns (when include_messages=true)**: Array of `ThreadWithMessages` — extends ThreadSummary with:
-- sender_name: string
-- account_email: string
-- is_unread: boolean
-- labels: string[]
-- messages: MessageInThread[] (id, thread_id, sender_name, sender_email, recipient_emails, cc_emails, subject, body_text, body_html, date, labels, is_read, is_draft, message_id_header, alternative_drafts, attachments)
+**Return Schema (when `include_messages=false`)** — Array of `ThreadSummary`:
 
-**Service route changes needed**: New `GET /api/service/threads` accepting all filter params with `user_id` query param for ownership scoping.
+```json
+[
+  {
+    "gmail_thread_id": "string — Gmail thread hex ID or SMTP angle-bracket ID",
+    "gmail_thread_state_id": "string (uuid) — Current thread state UUID. Used as version anchor for draft operations",
+    "status": "string — GmailThreadStatus enum value (one of the 8 values listed above)",
+    "latest_internal_date": "datetime — ISO 8601 timestamp of the most recent message",
+    "latest_direction": "string — 'inbound' or 'outbound' (GmailMessageDirection enum). The direction of the most recent message",
+    "snippet": "string — First ~150 characters of the latest message body_text",
+    "sender_email": "string — Email address of the latest message sender",
+    "subject": "string | null — Email subject line. Null if no subject",
+    "campaign_id": "string (uuid) | null — Associated campaign UUID. Null if thread is not yet associated with a campaign",
+    "preferences__is_hidden": "boolean — Whether the thread is hidden/archived by this user",
+    "gifting_status": "string | null — Creator's gifting pipeline status from campaign_creator table. Null if no creator match or not a gifting campaign",
+    "paid_promotion_status": "string | null — Creator's paid promotion pipeline status. Null if no creator match or not a paid promotion campaign",
+    "flags": {
+      "wants_paid": "boolean — AI-detected flag: creator expressed interest in paid promotion. Default: false",
+      "wants_paid_reason": "string | null — AI explanation for why wants_paid was set. Null if wants_paid is false",
+      "has_question": "boolean — AI-detected flag: creator asked a question requiring response. Default: false",
+      "has_question_reason": "string | null — AI explanation for the detected question. Null if has_question is false",
+      "has_issue": "boolean — AI-detected flag: creator raised an issue or complaint. Default: false",
+      "has_issue_reason": "string | null — AI explanation for the detected issue. Null if has_issue is false"
+    }
+  }
+]
+```
 
-**Slack formatting notes**: Agent should present as a summary list showing: subject (truncated), sender, status badge, and date. For large result sets, summarize counts by status (e.g., "23 threads: 15 awaiting review, 5 waiting for reply, 3 done").
+**Return Schema (when `include_messages=true`)** — Array of `ThreadWithMessages`:
+
+All `ThreadSummary` fields above, PLUS:
+
+```json
+[
+  {
+    "...all ThreadSummary fields...",
+    "sender_name": "string — Parsed display name from the sender email (e.g., 'Sarah Johnson' from 'Sarah Johnson <sarah@example.com>')",
+    "account_email": "string — The Gmail/SMTP account email this thread belongs to (the user's connected account)",
+    "is_unread": "boolean — Whether any message in the thread has the UNREAD label (Gmail) or unread flag (SMTP)",
+    "labels": ["string — Aggregated Gmail labels from all messages in the thread (e.g., 'INBOX', 'UNREAD', 'IMPORTANT')"],
+    "messages": [
+      {
+        "id": "string — Gmail message ID (hex string for Gmail, message-ID header for SMTP). Used for frontend display, NOT for database lookups",
+        "db_message_id": "string (uuid) | null — Database message UUID. Use this for attachment lookups with cheerful_list_message_attachments. Null for injected draft messages",
+        "thread_id": "string — Parent thread ID (same as gmail_thread_id)",
+        "sender_name": "string — Parsed display name of the sender",
+        "sender_email": "string — Sender email address",
+        "recipient_emails": ["string — Array of recipient (To) email addresses"],
+        "cc_emails": ["string — Array of CC email addresses"],
+        "subject": "string | null — Message subject. Null if no subject",
+        "body_text": "string | null — Plain text body. Null if message has no text part",
+        "body_html": "string | null — HTML body. Null if message has no HTML part",
+        "date": "datetime — ISO 8601 message date",
+        "labels": ["string — Gmail labels for this message (e.g., 'SENT', 'INBOX')"],
+        "is_read": "boolean — Whether the message has been read (derived from absence of UNREAD label)",
+        "is_draft": "boolean — True if this is an injected draft message (not yet sent). Draft messages are virtual — they represent the current draft state appended to the thread",
+        "message_id_header": "string | null — RFC 822 Message-ID header value. Used for email threading (In-Reply-To, References). Null for some older messages",
+        "attachments": [
+          {
+            "id": "string (uuid) — Attachment UUID. Use with cheerful_list_message_attachments or download endpoint",
+            "gmail_message_id": "string (uuid) — Parent message database UUID",
+            "filename": "string | null — Original filename. Null for inline attachments without filenames",
+            "mime_type": "string — MIME type (e.g., 'image/jpeg', 'application/pdf')",
+            "size": "integer — File size in bytes"
+          }
+        ],
+        "alternative_drafts": "array | null — Only present on draft messages where source='llm'. Array of alternative draft options generated by the AI. Each element is a dict with draft_body_text and draft_subject. Null for non-draft messages and human-edited drafts"
+      }
+    ]
+  }
+]
+```
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Invalid UUID format (campaign_id, etc.) | "value is not a valid uuid" | 422 |
+| Invalid status_filter value | "value is not a valid enumeration member" | 422 |
+| Invalid direction_filter value | "value is not a valid enumeration member" | 422 |
+| limit out of range | "ensure this value is greater than or equal to 1" / "ensure this value is less than or equal to 100" | 422 |
+| offset negative | "ensure this value is greater than or equal to 0" | 422 |
+| Service API error | ToolError with status code and truncated body | varies |
+
+**Pagination**:
+- Default limit: 50, max limit: 100
+- Offset-based pagination
+- Response does NOT include a `total` count — the backend returns only the result array
+- To determine if more results exist: if `len(results) == limit`, there are likely more pages
+- Results are sorted by `latest_internal_date DESC` (most recent first) after merging Gmail and SMTP threads
+
+**Example Request**:
+```
+cheerful_list_threads(campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890", status_filter=["WAITING_FOR_DRAFT_REVIEW"], direction_filter="inbound", limit=20, offset=0)
+```
+
+**Example Response** (ThreadSummary mode, `include_messages=false`):
+```json
+[
+  {
+    "gmail_thread_id": "18f3a2b4c5d6e7f8",
+    "gmail_thread_state_id": "b2c3d4e5-f6a7-8901-bcde-f23456789012",
+    "status": "WAITING_FOR_DRAFT_REVIEW",
+    "latest_internal_date": "2026-02-28T14:30:00Z",
+    "latest_direction": "inbound",
+    "snippet": "Hi! I'd love to try your products. What size should I pick? I usually wear...",
+    "sender_email": "creator@example.com",
+    "subject": "Re: Collaboration opportunity with BrandX",
+    "campaign_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "preferences__is_hidden": false,
+    "gifting_status": "INTERESTED",
+    "paid_promotion_status": null,
+    "flags": {
+      "wants_paid": false,
+      "wants_paid_reason": null,
+      "has_question": true,
+      "has_question_reason": "Creator asked about product sizing",
+      "has_issue": false,
+      "has_issue_reason": null
+    }
+  }
+]
+```
+
+**Slack Formatting Notes**:
+- Present as a summary list: `[status emoji] [Subject] — [sender_email] ([direction] [date])`
+- Status emoji mapping: `WAITING_FOR_DRAFT_REVIEW` → "📝", `WAITING_FOR_INBOUND` → "⏳", `READY_FOR_RESPONSE_DRAFT` → "🤖", `DONE` → "✅", `IGNORE` → "🚫"
+- Show flag indicators: `[❓ question]` `[💰 wants paid]` `[⚠️ issue]`
+- For large result sets (>10), summarize first: "Found 23 threads: 15 awaiting review, 5 waiting for reply, 3 done" then show the first page
+- If `include_messages=true`, format each thread with its messages nested below
+
+**Edge Cases**:
+- No threads match filters: Returns empty array `[]`
+- User has no Gmail/SMTP accounts: Returns empty array
+- Team member: Only sees threads from campaigns they are assigned to (not all campaigns of the account owner)
+- Both `campaign_id` and `campaign_ids` provided: Backend behavior depends on implementation — prefer using one or the other
+- `show_hidden=true`: Returns ALL threads including hidden ones; `preferences__is_hidden` field indicates which are hidden
+- Threads without campaign association: `campaign_id` will be null; `gifting_status` and `paid_promotion_status` will also be null
+- Draft injection (when `include_messages=true`): If a thread has an active draft (LLM or human), a virtual draft message is appended to the messages array with `is_draft=true`
+- The backend fetches both Gmail and SMTP threads, merges them, and sorts — this means a single response may contain threads from both providers
 
 ---
 
@@ -171,57 +524,148 @@
 
 ### `cheerful_hide_thread`
 
-**Status**: NEW
+**Status**: NEW — full OpenAPI-level spec
 
-**Purpose**: Hide (archive) an email thread. The thread will be excluded from default inbox views.
+**Purpose**: Hide (archive) an email thread. The thread will be excluded from default inbox views (where `show_hidden=false`). The thread continues to be ingested and synced — hiding only affects display. Supports both Gmail and SMTP threads.
 
-**Maps to**: `PATCH /api/service/threads/{thread_id}/hide` (new service route needed; main route: `PATCH /threads/{gmail_thread_id}/hide`)
+**Maps to**: `PATCH /api/service/threads/{thread_id}/hide` (new service route needed; mirrors main route: `PATCH /threads/{gmail_thread_id}/hide`)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner (user must own the thread, verified via thread state user_id). Supports both Gmail and SMTP threads.
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: owner-only — the backend gets or creates a `gmail_thread_user_preferences` record scoped to `(user_id, gmail_account_id/smtp_account_id, gmail_thread_id)`. The unique constraint on this triple ensures user-scoped isolation.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| thread_id | string | yes | — | Thread ID (Gmail hex or SMTP angle-bracket format) |
+| thread_id | string | yes | — | Thread ID. Supports Gmail hex format (e.g., `18f3a2b4c5d6e7f8`) and SMTP angle-bracket format (e.g., `<msg-id@smtp.example.com>`). The backend auto-detects via `_is_smtp_thread_id()` |
 
-**Returns**: `{ message: "Thread hidden successfully", is_hidden: true }`
+**Parameter Validation Rules**:
+- `thread_id` must be a non-empty string: passed as path parameter
+- Thread must exist in the user's Gmail or SMTP accounts: 404 if not found
 
-**Error responses**: Thread not found (404), user does not own thread (403).
+**Return Schema** — `ThreadHideResponse`:
 
-**Slack formatting notes**: Agent should confirm with thread subject/sender context.
+```json
+{
+  "message": "string — Confirmation message: 'Thread hidden successfully'",
+  "is_hidden": "boolean — Always true for hide operation"
+}
+```
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Thread not found | "Thread not found" | 404 |
+| User does not own thread (thread belongs to another user's account) | "Thread not found" (same as not found — no information leakage) | 404 |
+| Service API error | ToolError with status code and truncated body | varies |
+
+**Side Effects**:
+- Sets `is_hidden=True` in `gmail_thread_user_preferences` table
+- If no preferences record exists yet for this (user, account, thread) triple, creates one
+- Thread continues to be synced by the ingestion pipeline — hiding does NOT stop Gmail/SMTP sync
+- Thread is excluded from `cheerful_list_threads` results when `show_hidden=false` (default)
+- Thread is excluded from automated workflow processing (drafts, follow-ups)
+
+**Example Request**:
+```
+cheerful_hide_thread(thread_id="18f3a2b4c5d6e7f8")
+```
+
+**Example Response**:
+```json
+{
+  "message": "Thread hidden successfully",
+  "is_hidden": true
+}
+```
+
+**Slack Formatting Notes**:
+- Agent should confirm: "Thread hidden. It won't appear in your inbox but will continue syncing. Use unhide to restore it."
+- If the agent has context about the thread (from a prior `cheerful_get_thread` or `cheerful_list_threads` call), include the subject and sender: "Hidden thread 'Re: Collaboration with BrandX' from creator@example.com"
+
+**Edge Cases**:
+- Already hidden thread: Operation is idempotent — sets `is_hidden=True` again, returns success
+- SMTP thread: Supported — same behavior as Gmail threads
+- Thread preferences record doesn't exist yet: Created automatically with `is_hidden=True`
 
 ---
 
 ### `cheerful_unhide_thread`
 
-**Status**: NEW
+**Status**: NEW — full OpenAPI-level spec
 
-**Purpose**: Unhide (restore) an archived email thread. Reprocesses the thread through the full pipeline, picking up any messages that arrived while hidden.
+**Purpose**: Unhide (restore) an archived email thread. This is NOT just a flag toggle — it triggers a full thread reprocessing pipeline that picks up any messages that arrived while the thread was hidden, and generates new AI drafts if needed.
 
-**Maps to**: `PATCH /api/service/threads/{thread_id}/unhide` (new service route needed; main route: `PATCH /threads/{gmail_thread_id}/unhide`)
+**Maps to**: `PATCH /api/service/threads/{thread_id}/unhide` (new service route needed; mirrors main route: `PATCH /threads/{gmail_thread_id}/unhide`)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner (user must own the thread).
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: owner-only — same scoping as `cheerful_hide_thread`.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| thread_id | string | yes | — | Thread ID (Gmail hex or SMTP angle-bracket format) |
-| campaign_id | uuid | no | — | Force association with this campaign (otherwise auto-detected) |
+| thread_id | string | yes | — | Thread ID. Supports Gmail hex format and SMTP angle-bracket format |
+| campaign_id | string (uuid) | no | null | Force association with this specific campaign. If omitted, the backend auto-detects the campaign from the thread's existing association or sender/recipient matching. NOTE: This is sent as a JSON body parameter (not query param) to the backend endpoint |
 
-**Returns**: `{ message: "Thread unhidden successfully", is_hidden: false }`
+**Parameter Validation Rules**:
+- `thread_id` must be a non-empty string: passed as path parameter
+- Thread must exist and be owned by the user: 404 if not found
+- `campaign_id` (if provided) must be a valid UUID and must exist: 404 if campaign not found
 
-**Error responses**: Thread not found (404), user does not own thread (403).
+**Return Schema** — `ThreadHideResponse`:
 
-**Side effects** (critical — not just a flag toggle):
-1. Sets `is_hidden=false` in `gmail_thread_preferences`
-2. Creates new thread state if messages arrived while hidden (via `idempotent_batch_insert_latest_state`)
-3. If no new messages, resets existing state status to `READY_FOR_ATTACHMENT_EXTRACTION`
-4. Spawns `ThreadProcessingCoordinatorWorkflow` Temporal workflow to reprocess the thread
-5. If `campaign_id` provided, forces campaign association
+```json
+{
+  "message": "string — Confirmation message: 'Thread unhidden successfully'",
+  "is_hidden": "boolean — Always false for unhide operation"
+}
+```
 
-**Slack formatting notes**: Agent should warn user that unhiding triggers reprocessing, which may generate new AI drafts.
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Thread not found | "Thread not found" | 404 |
+| User does not own thread | "Thread not found" (same — no information leakage) | 404 |
+| Campaign not found (if campaign_id provided) | "Campaign not found" | 404 |
+| Unexpected reprocessing failure | "Internal server error" | 500 |
+| Service API error | ToolError with status code and truncated body | varies |
+
+**Side Effects** (critical — this is NOT just a flag toggle):
+1. **Sets `is_hidden=False`** in `gmail_thread_user_preferences` table
+2. **Syncs thread state for missed messages**: Calls `idempotent_batch_insert_latest_state` to check if new messages arrived while the thread was hidden. If new messages exist, creates a new `GmailThreadState` record for the latest message
+3. **Resets state if no new messages**: If no new messages arrived, resets the existing thread state's status to `READY_FOR_ATTACHMENT_EXTRACTION` (the pipeline entry state)
+4. **Spawns reprocessing workflow**: Starts a `ThreadProcessingCoordinatorWorkflow` Temporal workflow with:
+   - `force_reply=True` — ensures a new AI draft is generated even if conditions might otherwise skip it
+   - `force_campaign_id=campaign_id` (if provided) — overrides automatic campaign detection
+5. **Campaign association**: If `campaign_id` is provided, the thread is force-associated with that campaign during reprocessing
+
+**Example Request**:
+```
+cheerful_unhide_thread(thread_id="18f3a2b4c5d6e7f8", campaign_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890")
+```
+
+**Example Response**:
+```json
+{
+  "message": "Thread unhidden successfully",
+  "is_hidden": false
+}
+```
+
+**Slack Formatting Notes**:
+- Agent should warn: "Thread restored and reprocessing started. This may generate new AI drafts for any messages that arrived while the thread was hidden."
+- If `campaign_id` was provided: "Thread restored and force-associated with campaign '[campaign name]'. Reprocessing started."
+- If the thread had messages arrive while hidden, mention: "X new messages detected since the thread was hidden."
+
+**Edge Cases**:
+- Already visible thread: Operation is idempotent — re-triggers reprocessing pipeline (which is intentional — allows manual re-trigger of draft generation)
+- Thread was hidden for a long time with many new messages: All new messages are picked up; only the latest triggers a new thread state
+- Campaign doesn't exist: 404 before any state changes occur (no partial updates)
+- Reprocessing failure: The workflow is async (Temporal) — the API returns success immediately. Workflow failures are handled by Temporal's retry mechanism, not surfaced to the caller
+- SMTP thread: Supported — same behavior as Gmail threads
 
 ---
 
@@ -229,33 +673,95 @@
 
 ### `cheerful_list_message_attachments`
 
-**Status**: NEW
+**Status**: NEW — full OpenAPI-level spec
 
-**Purpose**: List attachment metadata for a specific email message. Returns filenames, MIME types, and sizes without downloading the actual content.
+**Purpose**: List attachment metadata for a specific email message. Returns filenames, MIME types, and sizes without downloading the actual binary content. The CE operates in Slack (text-only), so this tool returns metadata for the agent to describe to the user.
 
-**Maps to**: `GET /api/service/messages/{message_id}/attachments` (new service route needed; main route: `GET /messages/{gmail_message_id}/attachments`)
+**Maps to**: `GET /api/service/messages/{message_id}/attachments` (new service route needed; mirrors main route: `GET /messages/{gmail_message_id}/attachments`)
 
-**Auth**: User-scoped — `user_id` injected via `RequestContext`. Permission: owner or assigned team member (via thread → campaign ownership check).
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: owner or assigned team member — the backend checks ownership via the message → thread → account → user_id chain, and also checks team member assignment via thread → campaign → campaign_member_assignment.
 
-**Parameters**:
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| message_id | uuid | yes | — | Database message UUID (from the `id` field in `GmailMessageResponse`) |
+| message_id | string (uuid) | yes | — | Database message UUID. This is the `db_message_id` field from `MessageInThread` (when using `cheerful_list_threads` with `include_messages=true`), or the `id` field from `GmailMessageResponse` (when using `cheerful_get_thread`). NOTE: This is the database UUID, NOT the Gmail message ID string |
 
-**Returns**: Array of `AttachmentMetadata` objects:
-- id: uuid
-- gmail_message_id: uuid
-- filename: string
-- mime_type: string
-- size: integer (bytes)
+**Parameter Validation Rules**:
+- `message_id` must be a valid UUID format: FastAPI raises 422 if not parseable
+- Message must exist: 404 if not found in either Gmail or SMTP tables
+- User must own the message (or be an assigned team member): 403 if access denied
 
-**Notes**:
-- SMTP messages return an empty list (attachment indexing not yet implemented for SMTP)
-- The binary download endpoint (`GET /messages/{id}/attachments/{attachment_id}/download`) returns raw file content. Since the CE operates in Slack (text-only), this tool returns metadata only. The agent should describe attachments to the user rather than attempting download.
-- Attachment data is also included inline in `cheerful_get_thread` responses (via `attachments` field on each message). This tool is useful for targeted queries without loading full thread content.
+**Return Schema** — Array of `AttachmentMetadata`:
 
-**Slack formatting notes**: Agent should list attachments as: `filename (type, size KB/MB)`.
+```json
+[
+  {
+    "id": "string (uuid) — Attachment UUID. Can be used to construct a download URL (though download is not a CE tool)",
+    "filename": "string | null — Original filename of the attachment (e.g., 'product-photo.jpg'). Null for inline attachments without explicit filenames",
+    "mime_type": "string — MIME type of the attachment (e.g., 'image/jpeg', 'application/pdf', 'text/csv')",
+    "size": "integer — File size in bytes"
+  }
+]
+```
+
+**Important: The `AttachmentMetadata` return model does NOT include `gmail_message_id`** — it only has `id`, `filename`, `mime_type`, `size`. This differs from `AttachmentInMessage` (embedded in `MessageInThread` responses from `cheerful_list_threads`), which does include `gmail_message_id`.
+
+**Error Responses**:
+
+| Condition | Error Message | HTTP Status (underlying) |
+|-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user. Ensure user mapping exists." | N/A (pre-request) |
+| Invalid message_id format | "value is not a valid uuid" | 422 |
+| Message not found | "Message not found" | 404 |
+| User does not own message | "Access denied" | 403 |
+| Service API error | ToolError with status code and truncated body | varies |
+
+**Pagination**: Not paginated — returns all attachments for the message (typically 0-10 attachments per message).
+
+**Example Request**:
+```
+cheerful_list_message_attachments(message_id="c3d4e5f6-a7b8-9012-cdef-345678901234")
+```
+
+**Example Response** (realistic data):
+```json
+[
+  {
+    "id": "d4e5f6a7-b8c9-0123-defa-456789012345",
+    "filename": "product-lineup-spring2026.jpg",
+    "mime_type": "image/jpeg",
+    "size": 245760
+  },
+  {
+    "id": "e5f6a7b8-c9d0-1234-efab-567890123456",
+    "filename": "collaboration-agreement.pdf",
+    "mime_type": "application/pdf",
+    "size": 102400
+  },
+  {
+    "id": "f6a7b8c9-d0e1-2345-fabc-678901234567",
+    "filename": null,
+    "mime_type": "image/png",
+    "size": 15360
+  }
+]
+```
+
+**Slack Formatting Notes**:
+- Present attachments as a bulleted list: `• product-lineup-spring2026.jpg (JPEG, 240 KB)`
+- Format sizes human-readably: bytes → KB (÷1024) → MB (÷1024²)
+- For null filenames: `• [unnamed attachment] (PNG, 15 KB)`
+- If no attachments: "This message has no attachments."
+- Mention that attachment download is not available through the context engine: "I can describe the attachments but can't download or display them directly."
+
+**Edge Cases**:
+- Message with no attachments: Returns empty array `[]`
+- SMTP message: The backend tries Gmail tables first, then falls back to SMTP. SMTP attachment indexing is not yet implemented, so SMTP messages always return empty array `[]`
+- Inline images (embedded in HTML body): May appear as attachments with null filename and `image/*` MIME type
+- Very large attachments: Size is reported accurately; no truncation
+- Attachment data is also available inline: When using `cheerful_list_threads` with `include_messages=true`, each `MessageInThread` includes an `attachments` field with `AttachmentInMessage` objects (which include `gmail_message_id`). This standalone tool is useful when you only need attachment info for a specific message without loading the full thread.
+- The binary download endpoint (`GET /messages/{id}/attachments/{attachment_id}/download`) exists but is NOT exposed as a CE tool — it returns raw binary with `Content-Disposition: attachment` header, which is incompatible with the text-only Slack interface
 
 ---
 

@@ -9,7 +9,7 @@ Wave 2 tool design complete. Wave 3 in progress. All 8 domains designed: Campaig
 | Domain | Spec File | Existing Tools | New Tools | Total | Status |
 |--------|-----------|---------------|-----------|-------|--------|
 | Campaigns | `campaigns.md` | 1 | 30 | 31 | Wave 3: CRUD + Wizard + Products + Recipients + Senders + Outbox + Signatures + MergeTags + Sheet + Summary + Enrichment complete (31/31 tools fully specified) |
-| Email | `email.md` | 3 | 21 | 24 | Wave 2 complete |
+| Email | `email.md` | 3 | 21 | 24 | Wave 3: Threads + Operations + Attachments complete (7/24 tools fully specified) |
 | Creators | `creators.md` | 3 | 24 | 27 | Wave 2 complete |
 | Integrations | `integrations.md` | 0 | 18 | 18 | Wave 2 complete |
 | Users & Team | `users-and-team.md` | 0 | 13 | 13 | Wave 2 complete |

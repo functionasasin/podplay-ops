@@ -17,6 +17,14 @@ async def health():
     return {"status": "ok", "service": "ig-webhook-test"}
 
 
+@app.get("/privacy")
+async def privacy():
+    return Response(
+        content="<h1>Privacy Policy</h1><p>This is a test application for Instagram webhook development. No user data is stored or shared.</p>",
+        media_type="text/html",
+    )
+
+
 @app.get("/webhooks/instagram")
 async def verify_webhook(request: Request):
     """Meta webhook verification — responds to the challenge."""
