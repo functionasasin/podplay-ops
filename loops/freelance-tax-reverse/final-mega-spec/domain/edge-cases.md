@@ -487,4 +487,271 @@ if underdecl_pct > 0.30:
 
 ---
 
-*Additional edge cases to be added in Wave 2 edge-cases aspect (EC-E: eligibility edge cases, EC-M: mixed income edge cases, EC-Q: quarterly filing edge cases, EC-C: CWT edge cases from professional fee withholding, EC-F: filing form edge cases)*
+---
+
+## Group EC-8: 8% Income Tax Option Edge Cases
+
+*(Added from eight-percent-option aspect, 2026-03-01)*
+
+### EC-8-01: Gross Receipts Exactly Equal to ₱250,000 (Pure Self-Employed, 8% Elected)
+
+**Scenario:** A freelancer on 8% option earns exactly ₱250,000 for the year. No other income.
+
+**Computation:**
+- Tax base = MAX(0, ₱250,000 − ₱250,000) = ₱0
+- 8% Tax Due = ₱0 × 0.08 = **₱0**
+- Percentage Tax = ₱0 (waived)
+- Total Tax = **₱0**
+
+**Engine must still require filing:**
+- Taxpayer must file quarterly 1701Q (even if zero) and annual 1701A (zero return)
+- Failure to file a zero return = ₱1,000 compromise penalty (first offense nil return)
+- Engine output must NOT say "no filing required" — it must say "zero tax but filing still required"
+
+**Engine behavior:**
+- `eight_pct_tax_due = 0`
+- `total_tax_burden = 0`
+- `filing_required = true`
+- `note = "Zero tax due but quarterly 1701Q and annual 1701A must still be filed by deadlines."`
+
+**Legal basis:** NIRC Sec. 51 — annual return required for all individuals deriving income; RR 8-2018 Part IV filing obligations table.
+
+---
+
+### EC-8-02: Q1 Gross Receipts Below ₱250,000 (Purely Self-Employed, 8%)
+
+**Scenario:** Freelancer on 8% option earns ₱180,000 in Q1 (Jan–Mar). No other income in Q1.
+
+**Q1 Computation:**
+- Q1 cumulative gross = ₱180,000
+- 8% tax base = MAX(0, ₱180,000 − ₱250,000) = ₱0
+- Q1 Tax Due = **₱0**
+- Q1 Tax Payable = ₱0 − ₱0 (CWT) = **₱0**
+
+**Q1 1701Q must still be filed** with zero tax payable.
+
+**Q2 Scenario:** Earns additional ₱400,000 in Q2. Cumulative = ₱580,000.
+- Q2 8% tax base = MAX(0, ₱580,000 − ₱250,000) = ₱330,000
+- Q2 cumulative tax due = ₱330,000 × 0.08 = ₱26,400
+- Q2 tax payable = ₱26,400 − CWT − ₱0 (Q1 payment) = ₱26,400 − CWT
+
+**Engine behavior:**
+- For quarterly computation, always use MAX(0, cumulative_gross − 250,000) × 0.08
+- Never allow quarterly tax due to be negative
+- Still require filing of Q1 1701Q with zero amount
+
+**Legal basis:** RR 8-2018 Part IX; CR-010; NIRC Sec. 76.
+
+---
+
+### EC-8-03: Mid-Year Threshold Breach in Q1 (Very High First-Quarter Income)
+
+**Scenario:** Freelancer elected 8% option. Receives a large one-time contract payment in February: ₱3,500,000. Total Q1 gross = ₱3,500,000. This is a Q1 breach.
+
+**Detection:** Cumulative exceeds ₱3M as early as February (month 2).
+
+**Actions:**
+1. 8% option auto-disqualified for the ENTIRE year (retroactive from January 1)
+2. Form 1905 must be filed in March (month following February)
+3. Retroactive PT: 3% on January-only gross (month before VAT registration month of March)
+   - If ₱1,000,000 received in January: retroactive PT = ₱1,000,000 × 3% = ₱30,000
+4. Annual ITR on Form 1701 (not 1701A)
+5. No 8% quarterly payments were made yet (Q1 not yet filed at time of breach detection)
+
+**Nuance:** If taxpayer ALREADY PAID Q1 8% tax (Q1 1701Q filed early in April before realizing breach):
+- Those Q1 8% payments become credits on the annual return
+- Engine must ask: "Have you already filed and paid Q1 1701Q under the 8% option?"
+- If yes: record q1_8pct_payment for CR-024 credit computation
+
+**Engine behavior:**
+- Detect breach when monthly_cumulative exceeds 3_000_000
+- Immediately display breach warning with all required actions (Steps 1-6 from CR-024)
+- Compute OSD-based annual IT as default (itemized requires expense documentation)
+- Show total additional liability: annual IT payable + retroactive PT
+
+**Legal basis:** RR 8-2018 Part III; RMO 23-2018 Sec. 3(C).
+
+---
+
+### EC-8-04: Mixed-Income Earner — Taxable Compensation Below ₱250,000
+
+**Scenario:** Employee earns ₱150,000 taxable compensation (after all allowances). Also has ₱800,000 freelance income. Elects 8% on business income.
+
+**Compensation Tax:**
+- Taxable comp = ₱150,000 → Graduated tax = ₱0 (within ₱250,000 zero bracket)
+- Unused ₱250K bracket = ₱100,000
+
+**Business Tax (8%, mixed income):**
+- 8% Business Tax = ₱800,000 × 0.08 = **₱64,000**
+- The ₱100,000 "unused" portion of the ₱250K is FORFEITED — cannot reduce business income
+
+**INCORRECT (do not do this):**
+- 8% Tax = (₱800,000 − ₱100,000) × 0.08 = ₱56,000 ← WRONG
+
+**Engine behavior:**
+- `mixed_income = true`
+- `deduction_250k_applied = false` (never for mixed income under 8%)
+- `business_tax_base = 800_000` (full gross, no deduction)
+- `business_tax = 800_000 * 0.08 = 64_000`
+- Note displayed: "The ₱250,000 allowance applies only to purely self-employed taxpayers. As a mixed-income earner, your business income is taxed at 8% of the full gross amount with no deduction."
+
+**Legal basis:** RMC 50-2018; RR 8-2018 Part II; NIRC Sec. 24(A)(2)(c).
+
+---
+
+### EC-8-05: Taxpayer Tries to Elect 8% After Q1 Has Been Filed Under Graduated
+
+**Scenario:** Freelancer filed Q1 1701Q in May 2026 with Item 16 set to "Graduated Rates" (Option A). In July, realizes that 8% would have been cheaper. Asks if they can amend Q1 return to elect 8%.
+
+**Rule:** The 8% election is irrevocable once Q1 is filed under graduated rates. There is no mechanism for retroactive election after Q1 is filed. The election window closed when the Q1 graduated return was filed.
+
+**Engine behavior:**
+- Display: "The 8% income tax option must be elected on or before the Q1 quarterly income tax return (Form 1701Q). Since your Q1 return was filed under graduated rates, the 8% option is not available for this tax year."
+- Compute and show how much could have been saved with 8% (educational; cannot be acted on for this year)
+- Prompt: "You may elect the 8% option starting January 1 of next year by checking Item 16 as '8%' on your Q1 1701Q."
+- Do NOT allow engine to submit with 8% election if Q1 is known to have been filed under graduated
+
+**Legal basis:** RR 8-2018 Part I — "default: considered to have availed of graduated rates" if no election; irrevocability clause.
+
+---
+
+### EC-8-06: Other Non-Operating Income Pushes Gross Above ₱3M Threshold
+
+**Scenario:** Freelancer has ₱2,900,000 in professional service fees but also ₱200,000 in interest income from a business bank account (non-operating income). Total = ₱3,100,000 → exceeds ₱3M.
+
+**Threshold computation:**
+- Threshold base = ₱2,900,000 (service fees) + ₱200,000 (business interest) = ₱3,100,000
+- ₱3,100,000 > ₱3,000,000 → **8% INELIGIBLE**
+
+**Note:** Passive income already subject to final withholding tax (e.g., regular savings account interest at 20% FWT) is EXCLUDED from the threshold. The ₱200,000 business interest here refers to interest from a current/savings account not yet subject to FWT, or where the taxpayer is computing on an accrual basis.
+
+**Engine behavior:**
+- `threshold_base = service_fees + non_operating_income_included`
+- `eight_pct_eligible = threshold_base <= 3_000_000`
+- If `threshold_base > 3_000_000`: display "8% option not available. Your gross receipts including non-operating income exceed ₱3,000,000."
+- Clarify to user which income sources are included in threshold
+
+**Legal basis:** RMC 50-2018; NIRC Sec. 24(A)(2)(b) — "gross sales or receipts and other non-operating income."
+
+---
+
+### EC-8-07: GPP Partner Also Has Separate Sole Proprietorship Income
+
+**Scenario:** A CPA is a partner in an accounting partnership (GPP) and also operates a personal coaching business as a sole proprietor.
+
+**Two income streams:**
+1. GPP distributive share: cannot use 8% option. Must use graduated rates on GPP net share.
+2. Sole proprietorship coaching income: CAN use 8% option if gross ≤ ₱3M.
+
+**Threshold check for 8%:**
+- The ₱3M threshold is checked on the SOLE PROPRIETORSHIP income only
+- GPP distributive share is NOT included in the 8% threshold computation for the sole prop business
+- Combined income for INCOME TAX purposes: GPP share (graduated) + coaching income (8% if elected)
+
+**Engine behavior:**
+- Treat GPP distributive share as a separate, non-8%-eligible income stream
+- Separately compute: graduated tax on GPP share + 8% on coaching income
+- 8% eligibility check uses only coaching gross receipts for threshold
+- Annual form: Form 1701 (mixed income: GPP share + sole prop)
+
+**Manual review flag:** MRF should be raised for GPP partner scenarios. The engine can compute the 8% on the sole prop portion, but GPP distributive share computation requires the partnership's K-1 equivalent (BIR Schedule K equivalent for GPPs). See MRF-001.
+
+**Legal basis:** RMC 50-2018; RMO 23-2018; RR 8-2018 Part I ineligibility clause for GPP partners.
+
+---
+
+### EC-8-08: New Registrant Commences Business Mid-Year (Not January 1)
+
+**Scenario:** Freelancer registers with BIR in July 2026 and earns ₱600,000 from July to December.
+
+**Does the ₱250,000 deduction apply for partial year?**
+- YES. The ₱250,000 deduction is an annual amount, NOT prorated for partial years.
+- Even if the taxpayer only operated for 6 months, the full ₱250,000 is deducted.
+
+**Does the ₱3M threshold apply for partial year?**
+- YES, the ₱3M threshold is an annual cap. For a mid-year registrant, their partial-year gross is compared to ₱3M. Since ₱600,000 < ₱3M, 8% is available.
+
+**Quarterly filing for mid-year registrant:**
+- Only required to file for quarters after registration date
+- If registered in July (Q3): first quarterly ITR is for Q3 (Jul–Sep), due November 15
+- No Q1 or Q2 filing required (not yet registered; no income)
+- Q3 is also the "first" quarterly return — 8% election is made on this Q3 return (which is the initial return)
+
+**Engine behavior:**
+- `registration_month = 7` (July)
+- `first_required_quarter = 3` (Q3, July–September)
+- 8% election can be made on Q3 1701Q (which is the initial quarterly return for this taxpayer)
+- Apply full ₱250,000 deduction against cumulative gross of ₱600,000 (Jul–Dec)
+- Annual 1701A tax base: MAX(0, 600,000 − 250,000) × 0.08 = 350,000 × 8% = ₱28,000
+
+**Legal basis:** RR 8-2018 Part I (election on initial quarterly return after commencement); NIRC Sec. 24(A)(2)(b) — ₱250K deduction is annual amount with no proration provision.
+
+---
+
+### EC-8-09: Excess CWT Credits Exceed 8% Annual Tax Due (Refund vs Carry-Over)
+
+**Scenario:** Freelancer on 8% option. Annual gross = ₱1,200,000. Annual 8% tax due = (₱1,200,000 − ₱250,000) × 8% = ₱76,000. Total CWT credits from Form 2307s = ₱90,000. No quarterly payments (CWT covered it all).
+
+**Annual computation:**
+- Tax Due = ₱76,000
+- Less CWT: ₱90,000
+- Balance: ₱76,000 − ₱90,000 = **−₱14,000** (overpayment)
+
+**Options for excess CWT (per NIRC Sec. 76):**
+1. **Claim as refund:** File BIR Form 1701A with the overpayment marked as "refund." BIR will issue refund after review. This is often slow (6–24 months in practice).
+2. **Carry over to next year:** Mark as "tax credit carry-over for next year." No cash refund, but credited against next year's Q1 tax.
+3. **Cannot do both:** The taxpayer must choose ONE option on the annual return; the choice is irrevocable.
+
+**Engine behavior:**
+- Compute `overpayment = MAX(0, cwt_total + quarterly_payments - annual_tax_due)`
+- If `overpayment > 0`:
+  - Display: "You have an overpayment of ₱[amount]. You may either: (1) Claim as a refund (mark on Form 1701A Item 64 = 'To be refunded') or (2) Carry over as credit to next year (mark on Form 1701A Item 65 = 'Tax credit for next year')."
+  - Present both options as radio buttons on the results screen
+  - Warn: "Once you file your annual return, this choice is final for this tax year."
+
+**Legal basis:** NIRC Sec. 76; BIR Form 1701A Items 64-65.
+
+---
+
+### EC-8-10: Sales Returns Reduce Gross Below ₱250,000 (Net Gross Receipts = Negative)
+
+**Scenario:** Freelancer issued invoices totaling ₱320,000 but had ₱100,000 in client-approved sales returns (cancelled project, refunded). Net gross = ₱220,000.
+
+**Computation:**
+- Net gross receipts = ₱320,000 − ₱100,000 = ₱220,000
+- 8% Tax Base = MAX(0, ₱220,000 − ₱250,000) = ₱0
+- 8% Tax Due = **₱0**
+
+**Important:** The gross for the ₱3M threshold is also NET: ₱220,000 → well below ₱3M, 8% available.
+
+**Engine validation:**
+- `assert net_gross_receipts >= 0` — even with returns, net cannot go below zero
+- If user inputs returns > gross billings: display validation error "Sales returns (₱X) cannot exceed gross billings (₱Y). Please verify your entries."
+
+**Legal basis:** CR-025; NIRC Sec. 24(A)(2)(b) using "gross sales or receipts" which is net of returns by convention.
+
+---
+
+### EC-8-11: 8% Election Valid — but Taxpayer Is Marginal VAT Filer (Approaching ₱3M)
+
+**Scenario:** Freelancer's projected annual gross = ₱2,800,000. Currently on 8% option. Receives a new contract in October that could push them to ₱3,100,000 by December.
+
+**Engine behavior — proactive warning:**
+- When user's current-year-to-date gross exceeds ₱2,000,000 (67% of threshold), display:
+  "⚠️ Your gross receipts are approaching the ₱3,000,000 threshold. If your total gross exceeds ₱3M before December 31, your 8% option will be automatically cancelled and you must register for VAT."
+- If user's projected annual gross > ₱3,000,000: immediately compute breach scenario via CR-024
+- Show comparison: "If you remain below ₱3M, your 8% tax is ₱X. If you exceed ₱3M, your tax increases to ₱Y (graduated + retroactive PT)."
+
+**Threshold proximity flags (engine thresholds):**
+| Cumulative Gross | Warning Level | Engine Action |
+|-----------------|--------------|---------------|
+| > ₱2,000,000 | CAUTION | Show yellow warning banner about VAT threshold |
+| > ₱2,500,000 | WARNING | Show orange warning; add threshold tracker widget |
+| > ₱2,800,000 | ALERT | Show red warning; show breach scenario computation |
+| > ₱3,000,000 | BREACH | Trigger full breach recomputation (CR-024); show all required actions |
+
+**Legal basis:** RR 8-2018 Part III; NIRC Sec. 236(G) — VAT registration obligation when threshold exceeded.
+
+---
+
+*Additional 8% edge cases may be discovered during regime-comparison-logic, quarterly-filing-rules, and annual-reconciliation aspects. EC-E, EC-M, EC-Q, EC-C, EC-F groups to be added in the Wave 2 edge-cases aspect.*
