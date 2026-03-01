@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 53
-- Analyzed: 9
-- Pending: 44
-- Convergence: 17%
+- Analyzed: 10
+- Pending: 43
+- Convergence: 19%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -19,7 +19,7 @@ Fetch and cache all primary source material before any analysis begins.
 - [x] eopt-create-fetch — Fetch RA 11976 (EOPT Act) and RA 11534 (CREATE Law) provisions affecting self-employed filing
 - [x] eopt-taxpayer-tiers — EOPT Act tiered taxpayer classification (Micro/Small/Medium/Large), how it affects self-employed filing procedures and deadlines
 - [x] bir-rr-16-2023-emarketplace — BIR RR 16-2023: 1% withholding on e-marketplace remittances (Upwork/Fiverr via Payoneer/PayPal); how this affects CWT credit computation for freelancers
-- [ ] bir-penalty-schedule — Complete BIR penalty structure: interest rate (12% per annum under EOPT), surcharge rates (25%/50%), compromise penalties, late filing fees; how to compute total penalties on past-due taxes
+- [x] bir-penalty-schedule — Complete BIR penalty structure: interest rate (12% per annum under EOPT), surcharge rates (25%/50%), compromise penalties, late filing fees; how to compute total penalties on past-due taxes
 
 ### Wave 2: Domain Rules Extraction
 Extract every computation rule, decision tree, and lookup table from source material.
@@ -88,6 +88,7 @@ Cross-cutting concerns and gap filling. Only start after Waves 2-5 are complete.
 - [ ] convergence-check — Run final convergence checklist, either add new aspects or converge
 
 ## Recently Analyzed
+- bir-penalty-schedule (2026-03-01): Extracted complete BIR penalty structure. Key findings: (1) Three-component penalty stack = basic tax + surcharge + interest + compromise; (2) EOPT reduced MICRO/SMALL surcharge 25%→10%, interest 12%→6%, info-return failures ₱1K→₱500 per failure; (3) Compromise penalty table (RMO 7-2015 Annex A) has 9 brackets by tax due amount (₱1K–₱50K); (4) Nil return compromise: 1st offense ₱1K, 2nd ₱5K, 3rd ₱10K, 4th+ criminal; (5) Invoicing violations (Sec. 237/238): 50% EOPT reduction for MICRO/SMALL; (6) Fraud (50% surcharge, cannot be compromised, 10-year assessment period); (7) Prescriptive periods: 3-year ordinary (filed on time or late), 10-year extraordinary (fraud/no filing — from BIR discovery date); (8) SC G.R. 247737 clarifies intent required for 10-year period; (9) General Tax Amnesty (SB 60/HB 2653) PROPOSED but NOT enacted. Wrote to: final-mega-spec/domain/lookup-tables/bir-penalty-schedule.md (NEW, 9 parts, compromise tables, criminal penalties, prescriptive periods, tax amnesty), final-mega-spec/domain/computation-rules.md (CR-020 compromise penalty computation with full table lookup pseudocode + nil return offense counter + invoicing violations + multi-return worked example; CR-021 Section 250 info return penalties; CR-022 prescriptive period eligibility check), final-mega-spec/domain/edge-cases.md (EC-P01 through EC-P07: offense counter logic, abatement claim, prescribed years, 30% underdeclaration fraud trigger, multi-year catch-up nil returns, fraud bars compromise, Oplan Kandado), analysis/bir-penalty-schedule.md.
 - legal-source-fetch (2026-02-28): Fetched NIRC Sec. 24A (both graduated rate schedules 2018-2022 and 2023+), Sec. 34 (all itemized deductions A-K + OSD 34L), Sec. 74-79 (quarterly filing, cumulative method), Sec. 116 (percentage tax, CREATE rate history). Also captured RR 8-2018 8% option rules. Wrote to input/sources/ (3 files) and final-mega-spec/domain/legal-basis.md.
 - bir-forms-fetch (2026-02-28): Fetched exhaustive field-by-field descriptions for all 5 BIR forms. Form 1701 (4 pages, 6 schedules, ~80 items including all deduction line items), Form 1701A (2 pages, graduated OSD items 36-46 + 8% items 47-56, credits items 57-65), Form 1701Q (Schedules I/II/III/IV, items 36-68, both graduated cumulative and 8% cumulative methods), Form 2551Q (items 1-23, Schedule 1 with ATC table PT010-PT160), Form 2307 (Parts I-III, complete EWT ATC table with 50+ WI/WC codes and rates). Wrote to input/sources/bir-forms-field-descriptions.md.
 - worked-examples-fetch (2026-02-28): Fetched and synthesized 9 worked examples from respicio.ph, businesstips.ph, tripleiconsulting.com, and taxumo.com. Examples cover: EX-001 (500K low-expense freelancer), EX-002 (1M consultant no expenses), EX-003 (800K designer moderate expenses), EX-004 (1.5M agency high expenses — itemized wins), EX-005 (2.5M lawyer near threshold), EX-006 (4M VAT-registered — 8% not available), EX-007 (quarterly cumulative method with CWT offsets across Q1-Q3 + annual), EX-008 (mixed income employee+freelancer), EX-009 (multiple 2307 CWT scenario). Also computed breakeven tables: 8% vs OSD (8% ALWAYS wins below 3M), 8% vs Itemized (itemized wins at ≥60-83% expense ratio depending on gross). Wrote to: input/sources/worked-examples.md, final-mega-spec/domain/computation-rules.md (CR-001 through CR-014 including both rate tables, all path formulas, quarterly cumulative method, CWT mechanics), final-mega-spec/domain/scenarios.md (scenario code taxonomy, 30+ codes across 7 groups).

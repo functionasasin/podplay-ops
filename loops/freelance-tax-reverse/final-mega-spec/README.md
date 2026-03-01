@@ -2,8 +2,8 @@
 
 This directory contains the complete product specification. A forward loop can build the entire platform by reading ONLY this directory.
 
-**Last updated:** 2026-02-28
-**Convergence status:** IN PROGRESS (9/53 aspects analyzed)
+**Last updated:** 2026-03-01
+**Convergence status:** IN PROGRESS (10/53 aspects analyzed; bir-penalty-schedule completed)
 
 ---
 
@@ -14,14 +14,15 @@ This directory contains the complete product specification. A forward loop can b
 | File | Status | Description |
 |------|--------|-------------|
 | domain/legal-basis.md | → see updated entry below |
-| [domain/computation-rules.md](domain/computation-rules.md) | PARTIAL | CR-001 to CR-019: both rate tables (2018-2022 + 2023+), 3 path formulas, OSD base clarification, 8% eligibility, quarterly cumulative method, CWT mechanics, installment rule, breakeven analysis, EOPT taxpayer tier classification (CR-015), surcharge computation (CR-016), interest computation (CR-017), total penalty computation (CR-018), e-marketplace DFSP withholding tax rule CR-019 (RR 16-2023: WI760 ATC, 0.5% effective rate, ₱500K threshold, multi-channel rule, credit flow, 7 worked examples) |
+| [domain/computation-rules.md](domain/computation-rules.md) | PARTIAL | CR-001 to CR-022: both rate tables (2018-2022 + 2023+), 3 path formulas, OSD base clarification, 8% eligibility, quarterly cumulative method, CWT mechanics, installment rule, breakeven analysis, EOPT taxpayer tier classification (CR-015), surcharge computation (CR-016), interest computation (CR-017), total penalty computation (CR-018), e-marketplace DFSP withholding tax rule CR-019 (RR 16-2023), compromise penalty computation CR-020 (full table-based lookup for tax-due and nil returns, invoicing violations with EOPT 50% reduction, multi-return worked example), Section 250 info-return penalties CR-021 (₱500/₱1K per failure, ₱12.5K/₱25K annual cap), prescriptive period eligibility check CR-022 (3yr ordinary, 10yr extraordinary fraud/no-filing, waiver mechanics) |
 | domain/decision-trees.md | PENDING | Every branching path, fully expanded to leaf nodes |
 | domain/lookup-tables/graduated-rate-table.md | PARTIAL | Both rate schedules included in computation-rules.md; dedicated file pending |
 | domain/lookup-tables/percentage-tax-rates.md | PENDING | Section 116 rates by period |
 | domain/lookup-tables/filing-deadlines.md | PENDING | All BIR deadlines by form and period |
 | [domain/lookup-tables/taxpayer-classification-tiers.md](domain/lookup-tables/taxpayer-classification-tiers.md) | COMPLETE | 7 tables: tier thresholds, filing obligations by tier, penalty/interest rates by tier, classification rules and procedures, ₱3M triple coincidence boundary rules, EOPT filing simplifications, uniform deadline schedule |
+| [domain/lookup-tables/bir-penalty-schedule.md](domain/lookup-tables/bir-penalty-schedule.md) | COMPLETE | Full BIR penalty reference: compromise penalty tables (by tax due and gross sales), surcharges, interest, Section 250 info-return penalties, criminal penalties (Secs. 254, 255, 264, 275, 258), underdeclaration escalation chain (30% threshold), prescriptive periods (3yr/10yr), tax amnesty status, penalty computation formula and worked examples |
 | [domain/scenarios.md](domain/scenarios.md) | PARTIAL | 30+ scenario codes in 7 groups; to be expanded in scenario-enumeration aspect |
-| [domain/edge-cases.md](domain/edge-cases.md) | PARTIAL | EC-T01 through EC-T09 (taxpayer tier edge cases); EC-EM01 through EC-EM07 (e-marketplace RR 16-2023 withholding edge cases); additional groups (EC-E, EC-M, EC-Q, EC-C, EC-F) to be added in Wave 2 edge-cases aspect |
+| [domain/edge-cases.md](domain/edge-cases.md) | PARTIAL | EC-T01 through EC-T09 (taxpayer tier edge cases); EC-EM01 through EC-EM07 (e-marketplace RR 16-2023 withholding edge cases); EC-P01 through EC-P07 (penalty/compliance: offense counter logic, abatement claims, prescribed years, 30% underdeclaration fraud trigger, multi-year catch-up, fraud bars compromise, Oplan Kandado closure orders); additional groups (EC-E, EC-M, EC-Q, EC-C, EC-F) to be added in Wave 2 edge-cases aspect |
 | [domain/manual-review-flags.md](domain/manual-review-flags.md) | INITIAL | MRF-001 through MRF-008: platform DFSP qualification uncertainty, unexpected withholding, ordinary-and-necessary expense determination, first-year tier default, reclassification notice, VAT threshold proximity, mixed income substituted filing, OSD vs. itemized documentation |
 | [domain/legal-basis.md](domain/legal-basis.md) | UPDATED | Added RR 16-2023 (Section 2.11: e-marketplace withholding tax, ATC WI760/WC760, 0.5% effective rate, ₱500K threshold, DFSPs list, multi-channel rule, sworn declaration) and RMC 8-2024 (Section 4.8: implementation procedures, three withholding triggers, grace period) |
 

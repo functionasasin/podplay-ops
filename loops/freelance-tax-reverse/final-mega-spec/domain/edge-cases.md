@@ -321,4 +321,170 @@ if cwt_excess > 0:
 
 ---
 
+---
+
+## Group EC-P: Penalty and Compliance Edge Cases
+
+**Legal basis:** NIRC Sections 203, 222, 247-282; RA 11976 (EOPT Act); RMO 7-2015
+
+### EC-P01: Multiple Missed Returns in Same Year — Offense Counter
+**Scenario:** A freelancer missed filing 1701Q for Q1, Q2, and Q3. They are catching up in November. Q1 and Q3 had ₱0 tax due (nil). Q2 had ₱15,000 tax due.
+
+**What the engine must compute:**
+- Q1: Nil return, 1st offense (most recent tax year, first discovered) → ₱1,000 compromise
+- Q2: Return with tax due → compromise based on ₱15,000 bracket (₱10,001–₱20,000) → ₱5,000 compromise + 10% surcharge + 6% interest
+- Q3: Nil return, 2nd offense → ₱5,000 compromise
+
+**Engine behavior:**
+- Track offense number for nil returns within a single catch-up scenario
+- Q1 nil = offense 1 (₱1,000), Q3 nil = offense 2 (₱5,000)
+- Returns with tax due have a fixed compromise table (no offense counter — bracket-based)
+- Offense counter is NOT shared between nil and non-nil return types
+
+**Key rule:** Offense numbering for nil returns is PER SERIES OF VIOLATIONS identified in the same inspection or catch-up, NOT per lifetime. Engine defaults to offense 1 for the first nil return in the current catch-up, incrementing from there.
+
+---
+
+### EC-P02: Abatement Claim — Force Majeure (Typhoon, BIR System Downtime)
+**Scenario:** A freelancer missed filing the Q3 1701Q deadline because Typhoon Julian caused eBIRForms to be inaccessible and AABs were closed in their area from October 1–15.
+
+**What happens:**
+- Taxpayer is entitled to file for ABATEMENT of surcharges and interest under NIRC Section 204(B)
+- Must file BIR Form 2105 with supporting documentation (news clippings, barangay certification, etc.)
+- If approved: surcharge and interest are WAIVED; only the basic tax due remains payable
+- Compromise penalty may also be abated
+
+**Engine behavior:**
+- Engine computes the FULL penalty as if no abatement
+- Adds a note: "If your late filing was caused by a BIR-recognized circumstance (typhoon, earthquake, BIR eFPS/eBIRForms downtime, etc.), you may apply for penalty abatement under NIRC Section 204(B). File BIR Form 2105 with your RDO. If approved, surcharges and interest are waived."
+- Engine does NOT compute post-abatement amounts (outcome is discretionary per BIR)
+- Flag: MRF_ABATEMENT_POSSIBLE
+
+**Resolution:** Display full penalty amounts. Display abatement note. Mark as manual review flag.
+
+---
+
+### EC-P03: Prescriptive Period — Prior Year Return Already Prescribed
+**Scenario:** A freelancer asking "what if I caught up filing my TY2019 income tax return right now (in 2026)?"
+
+**What happens (assuming return was filed late in 2020):**
+- TY2019 annual return was due April 15, 2020
+- If filed late in 2020: 3-year prescriptive period started from actual filing date → expires ~2023
+- If filed in 2026 (now): the assessment window has ALREADY EXPIRED
+- BIR can no longer ASSESS deficiency taxes for TY2019 (with ordinary 3-year period)
+- However: the tax was still legally DUE; the filing is still required; late filing penalties still apply for the act of filing late
+
+**Engine behavior:**
+```
+prescriptive = is_still_assessable(2019, filed_on_time=False, return_filed=True,
+                                    has_fraud=False, current_date=2026-03-01)
+→ expiry_date = ~2023 (3 years from 2020 filing)
+→ is_assessable = False
+
+if not prescriptive.is_assessable:
+  display: "Your TY2019 return appears to be beyond the 3-year ordinary assessment
+            period. BIR can generally no longer assess additional deficiency taxes for
+            this year. However, late filing penalties (surcharge, interest, compromise)
+            still apply for the filing. Filing late is better than not filing at all."
+```
+
+**Key distinction:** Prescriptive period prevents BIR from ASSESSING additional tax. It does NOT waive the taxpayer's obligation to FILE and PAY the tax due.
+
+---
+
+### EC-P04: Substantial Underdeclaration — Fraud Surcharge Override
+**Scenario:** A freelancer declared ₱500,000 gross receipts but actual gross receipts were ₱900,000 (underdeclaration of ₱400,000 = 80% of declared amount, well above 30% threshold).
+
+**What triggers:**
+1. Section 248(B): Creates PRIMA FACIE evidence of fraudulent return
+2. Fraud surcharge: 50% of FULL deficiency (not 25% or the EOPT-reduced 10%)
+3. Assessment period: 10-year extraordinary period from BIR's date of discovery
+4. Criminal referral: BIR may refer to DOJ for prosecution under Section 254
+
+**Computation:**
+```
+declared_gross = 500_000
+actual_gross   = 900_000
+underdeclaration = 400_000
+underdecl_pct = 400_000 / 500_000 = 80%  // > 30% → prima facie fraud
+
+// Engine scenario: user entered both amounts, engine detects discrepancy
+if underdecl_pct > 0.30:
+  violation_type = ViolationType.FRAUD
+  surcharge_rate = 0.50  // OVERRIDES tier-based rates (EOPT reduction does NOT apply)
+  flag: EC_P04_SUBSTANTIAL_UNDERDECLARATION
+  display: "WARNING: Your underdeclaration exceeds 30% of your declared income.
+            Under NIRC Section 248(B), this creates prima facie evidence of a
+            fraudulent return. A 50% civil surcharge applies (not reduced by EOPT).
+            The BIR has 10 years from discovery to assess additional taxes.
+            This situation should be resolved with a licensed CPA."
+```
+
+**Engine behavior:**
+- Compute 50% surcharge on the additional tax due (not the declared tax due)
+- Compute interest at tier rate (fraud does NOT change interest rate — only surcharge)
+- Compute compromise penalty from table (based on additional tax due)
+- Output full exposure with warning
+- Flag: MANUAL_REVIEW — user must consult a CPA for remediation
+
+---
+
+### EC-P05: Nil Return Filed Late — Multiple Years Not Filed
+**Scenario:** A freelancer has been freelancing for 3 years and has NEVER filed any return. They want to catch up now. Each year they had ₱0 net tax due (earnings under ₱250,000, pure gross basis).
+
+**What applies:**
+- 3 annual returns missed (1701A, assumed nil — no tax due each year)
+- Q1, Q2, Q3 quarterly returns (1701Q) missed for each year = 9 quarterly returns
+- Percentage tax returns (2551Q) missed if they were not on 8% = 12 quarterly returns per year × 3 years = 36 missed 2551Q
+
+**Compromise penalties per return (nil, Sec. 275):**
+- Annual 1701A: 1st offense ₱1,000, 2nd offense ₱5,000, 3rd offense ₱10,000
+- Quarterly 1701Q (nil): counted sequentially — 1st through 9th offense (3rd = ₱10,000; subsequent = escalates to prosecution if not compromised)
+- Quarterly 2551Q (nil): same offense counter progression
+
+**Engine behavior:**
+- For this catch-up scenario, show estimated total compromise exposure
+- Flag that quarterly returns beyond 3rd offense may not be compromisable
+- Note that filing (even late, even nil) is better than not filing — prescriptive period starts running
+
+**Resolution:** Engine computes 1st, 2nd, 3rd offense amounts for nil returns. For the 4th+ nil return in sequence, flags as "may require criminal prosecution" and outputs: "For returns beyond the 3rd missed nil filing, consult a CPA for negotiated settlement with BIR."
+
+---
+
+### EC-P06: Compromise Penalty Not Applicable — Fraud Violation
+**Scenario:** BIR discovers a freelancer used ghost receipts (fake expenses) to overstate deductions, inflating tax savings. This constitutes fraud under Section 254.
+
+**What triggers:**
+1. 50% fraud surcharge (Section 248(B))
+2. Criminal prosecution under Section 254: fine ₱30,000–₱100,000 + imprisonment 2–4 years
+3. **CANNOT be compromised** — Section 254 violations are excluded from the compromise framework
+
+**Engine behavior:**
+- Engine does NOT process fraud scenarios (it computes taxes, not criminal defense)
+- If user indicates a past filing was fraudulent, engine displays: "Fraud violations under NIRC Section 254 cannot be resolved through compromise penalties. You should consult a licensed CPA or tax attorney for guidance on voluntary correction and potential penalty abatement."
+- Engine redirects to computing the correct tax liability going forward
+
+**Resolution:** Engine never computes compromise for fraud scenarios. Always flags to manual review.
+
+---
+
+### EC-P07: BIR Oplan Kandado — Closure Order
+**Scenario:** A freelancer operating without BIR registration is caught during a TCVD (Tax Compliance Verification Drive). BIR issues a "Closure Order" (Oplan Kandado).
+
+**What a closure order means:**
+- BIR can padlock the business premises for 5+ days
+- Not applicable to home-based/remote freelancers (no physical business premises to close)
+- More relevant for freelancers operating a co-working space, clinic, studio, or retail outlet
+
+**For online-only freelancers:**
+- No physical premises to close
+- BIR enforcement tools: administrative penalties (compromise), criminal referral, asset distraint/levy, third-party notices to banks
+
+**Engine behavior:**
+- Engine displays the registration failure penalty (₱2,000–₱20,000 by municipality class)
+- For remote/online freelancers: adds note that Oplan Kandado closure orders apply to physical business premises and may not apply to their situation
+- Still recommends immediate BIR registration to avoid escalating penalties
+
+---
+
 *Additional edge cases to be added in Wave 2 edge-cases aspect (EC-E: eligibility edge cases, EC-M: mixed income edge cases, EC-Q: quarterly filing edge cases, EC-C: CWT edge cases from professional fee withholding, EC-F: filing form edge cases)*

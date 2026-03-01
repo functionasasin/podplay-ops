@@ -958,12 +958,364 @@ aggregate_platform_cwt_for_year: decimal  # sum of all WI760 2307s for the year
 
 ---
 
+---
+
+## CR-020: Compromise Penalty Computation
+
+**Legal basis:** RMO No. 7-2015 (Annex A); NIRC Secs. 204(A), 255, 275; RA 11976 (EOPT Act)
+
+Compromise penalties are VOLUNTARY settlements of criminal liability. They are imposed IN ADDITION TO surcharges and interest — not as a substitute.
+
+**Key rule:** Compromise penalties apply per RETURN (not per year). A freelancer who failed to file 4 quarterly returns incurs 4 separate compromise penalties.
+
+### 20.1 Compromise Penalty for Late Filing WITH Tax Due
+
+```
+function compute_compromise_penalty_with_tax_due(basic_tax_due):
+  """
+  INPUTS:
+    basic_tax_due: float — The original income/percentage tax owed for the period
+
+  RETURNS:
+    compromise_penalty: float — Standard compromise amount from RMO 7-2015 Annex A
+
+  SOURCE: RMO No. 7-2015 Annex A (Failure to File/Pay Return, Section 255)
+
+  NOTE: The EOPT 50% reduction applies ONLY to invoicing violations (Sec. 113, 237, 238).
+  For late-filing penalties (Sec. 255), the standard table below applies to ALL taxpayers
+  regardless of tier. Micro/Small taxpayers still benefit from the reduced 10% surcharge
+  and 6% interest under EOPT — just not from a reduced compromise penalty.
+  """
+  if basic_tax_due <= 5_000:
+    return 1_000
+  elif basic_tax_due <= 10_000:
+    return 3_000
+  elif basic_tax_due <= 20_000:
+    return 5_000
+  elif basic_tax_due <= 50_000:
+    return 10_000
+  elif basic_tax_due <= 100_000:
+    return 15_000
+  elif basic_tax_due <= 500_000:
+    return 20_000
+  elif basic_tax_due <= 1_000_000:
+    return 30_000
+  elif basic_tax_due <= 5_000_000:
+    return 40_000
+  else:
+    return 50_000
+```
+
+### 20.2 Compromise Penalty for Late Filing with NO Tax Due (Nil Return)
+
+```
+function compute_compromise_penalty_nil_return(offense_number):
+  """
+  INPUTS:
+    offense_number: int — 1 for first offense, 2 for second, 3 for third, etc.
+                         Tracked per taxpayer across all return types and periods.
+
+  RETURNS:
+    compromise_penalty: float
+    can_be_compromised: bool  — False for 4th and subsequent offenses
+
+  SOURCE: RMO No. 7-2015 Annex A (Sec. 275 violations)
+  """
+  if offense_number == 1:
+    return (1_000, True)
+  elif offense_number == 2:
+    return (5_000, True)
+  elif offense_number == 3:
+    return (10_000, True)
+  else:
+    return (None, False)  // Must be referred for criminal prosecution
+```
+
+**Important:** The engine tracks the user's reported offense history for nil returns. Default assumption: FIRST offense, unless user indicates multiple missed returns.
+
+### 20.3 Compromise Penalty for Invoicing Violations (With EOPT Reduction)
+
+```
+function compute_invoicing_compromise_penalty(violation_type, offense_number, tier):
+  """
+  INPUTS:
+    violation_type: InvoicingViolationType (see enum below)
+    offense_number: int — 1 = 1st offense, 2 = 2nd offense, 3+ = criminal only
+    tier: TaxpayerTier
+
+  RETURNS:
+    compromise_penalty: float
+    can_be_compromised: bool
+
+  LEGAL BASIS: NIRC Sections 237 and 238; EOPT 50% reduction applies
+  """
+  // Standard amounts (before EOPT reduction)
+  standard_amounts = {
+    (FAILURE_TO_ISSUE, 1): 10_000,
+    (FAILURE_TO_ISSUE, 2): 20_000,
+    (REFUSAL_TO_ISSUE, 1): 25_000,
+    (REFUSAL_TO_ISSUE, 2): 50_000,
+    (INCORRECT_INFORMATION, 1): 10_000,
+    (INCORRECT_INFORMATION, 2): 20_000,
+    (UNREGISTERED_RECEIPT, 1): 10_000,
+    (UNREGISTERED_RECEIPT, 2): 20_000,
+    (DUPLICATE_RECEIPT, 1): 10_000,
+    (DUPLICATE_RECEIPT, 2): 20_000,
+    (UNDERSTATED_AMOUNT, 1): 10_000,
+    (UNDERSTATED_AMOUNT, 2): 20_000,
+  }
+
+  key = (violation_type, offense_number)
+  if key not in standard_amounts:
+    return (None, False)  // 3rd+ offense: criminal prosecution, cannot be compromised
+
+  standard = standard_amounts[key]
+
+  // EOPT 50% reduction for MICRO and SMALL only (violations of Sec. 237 and 238)
+  if tier in [TaxpayerTier.MICRO, TaxpayerTier.SMALL]:
+    return (standard * 0.50, True)
+  else:
+    return (standard, True)
+```
+
+### 20.4 Complete Penalty Computation — Single Late Return
+
+```
+function compute_total_late_filing_penalty(
+  basic_tax_due,
+  tier,
+  days_late,
+  has_tax_due,
+  offense_number_nil = 1
+):
+  """
+  INPUTS:
+    basic_tax_due:     float  — Tax owed (₱0 for nil returns)
+    tier:              TaxpayerTier
+    days_late:         int    — Days past deadline (0 if on time)
+    has_tax_due:       bool   — False if nil return, True otherwise
+    offense_number_nil: int   — For nil returns, which offense number (default 1)
+
+  RETURNS:
+    LatePenaltyResult {
+      original_tax:     float,
+      surcharge:        float,
+      interest:         float,
+      compromise:       float,
+      total_penalty:    float,    // surcharge + interest + compromise
+      total_amount_due: float     // original_tax + total_penalty
+    }
+
+  ASSUMPTIONS:
+    - violation_type defaults to FAILURE_TO_PAY if has_tax_due else Sec. 275
+    - Surcharge computed via CR-016
+    - Interest computed via CR-017
+    - Compromise computed via CR-020.1 or CR-020.2 depending on has_tax_due
+  """
+  surcharge = compute_surcharge(basic_tax_due, tier, FAILURE_TO_FILE)
+  interest  = compute_interest(basic_tax_due, tier, days_late)
+
+  if has_tax_due:
+    compromise = compute_compromise_penalty_with_tax_due(basic_tax_due)
+  else:
+    (compromise, _) = compute_compromise_penalty_nil_return(offense_number_nil)
+
+  total_penalty    = surcharge + interest + compromise
+  total_amount_due = basic_tax_due + total_penalty
+
+  return LatePenaltyResult(
+    original_tax     = round(basic_tax_due, 2),
+    surcharge        = surcharge,
+    interest         = interest,
+    compromise       = compromise,
+    total_penalty    = round(total_penalty, 2),
+    total_amount_due = round(total_amount_due, 2)
+  )
+```
+
+### 20.5 Worked Example: MICRO Taxpayer, Three Missed Quarterly Returns
+
+**Scenario:** Freelancer (MICRO, ₱500K gross) missed 1701Q for Q1, Q2, Q3. Catches up and files all three at once in November (annual deadline not yet reached). Q1 had ₱8,000 tax due, Q2 had ₱5,000, Q3 had ₱0 (loss quarter).
+
+```
+// Assume filing date: November 10. Q1 deadline April 15, Q2 Aug 15, Q3 Nov 15.
+// Q1: 209 days late (April 15 to November 10)
+// Q2: 87 days late (August 15 to November 10)
+// Q3: on time (November 10 < November 15 deadline)
+
+Q1 = compute_total_late_filing_penalty(8_000, MICRO, 209, True)
+  surcharge = 8_000 × 0.10 = ₱800
+  interest  = 8_000 × 0.06 × (209/365) = ₱275.18
+  compromise = table[₱5K-₱10K bracket] = ₱3,000
+  total_penalty = ₱4,075.18 | total_due = ₱12,075.18
+
+Q2 = compute_total_late_filing_penalty(5_000, MICRO, 87, True)
+  surcharge = 5_000 × 0.10 = ₱500
+  interest  = 5_000 × 0.06 × (87/365) = ₱71.51
+  compromise = table[≤₱5K bracket] = ₱1,000
+  total_penalty = ₱1,571.51 | total_due = ₱6,571.51
+
+Q3 = compute_total_late_filing_penalty(0, MICRO, 0, False, 3)
+  // Third missed-deadline event, but it's on time this time — no penalty
+  // (Q3 filed before Nov 15 deadline)
+  total_penalty = ₱0 | total_due = ₱0
+
+Grand total penalties: ₱4,075.18 + ₱1,571.51 = ₱5,646.69
+```
+
+---
+
+## CR-021: Section 250 Information Return Penalties
+
+**Legal basis:** NIRC Section 250, as amended by RA 11976 (EOPT Act); RMO No. 7-2015
+
+Applies to: SAWT, Quarterly Alphalist of Payees (QAP), Annual Alphalist, Form 2307 (when the taxpayer is the PAYOR/withholding agent).
+
+**Scope for self-employed freelancers:**
+- If freelancer is the PAYEE: The payor (client) is responsible for filing 2307. The freelancer's obligation is to attach the **SAWT** to their quarterly and annual returns.
+- If freelancer has employees or pays service fees: The freelancer is the WITHHOLDING AGENT and must file 2307s and the QAP/Annual Alphalist.
+- Most solo freelancers with no employees: SAWT obligation only.
+
+```
+function compute_section_250_penalty(
+  failures_count,
+  tier
+):
+  """
+  INPUTS:
+    failures_count: int — Number of separate failures (one per required submission)
+    tier: TaxpayerTier
+
+  RETURNS:
+    Section250PenaltyResult {
+      per_failure_amount: float,
+      annual_cap: float,
+      total_penalty: float   // min(failures_count × per_failure, annual_cap)
+    }
+  """
+  if tier in [TaxpayerTier.MICRO, TaxpayerTier.SMALL]:
+    per_failure = 500
+    annual_cap  = 12_500
+  else:  // MEDIUM or LARGE
+    per_failure = 1_000
+    annual_cap  = 25_000
+
+  total = min(failures_count * per_failure, annual_cap)
+
+  return Section250PenaltyResult(
+    per_failure_amount = per_failure,
+    annual_cap         = annual_cap,
+    total_penalty      = total
+  )
+```
+
+### What Counts as One "Failure"
+Per RMC 51-2009: Failure to supply information for each payee = one separate failure.
+- Failing to attach SAWT to one quarterly return = one failure = ₱1,000 (or ₱500)
+- Failing to include one payee in the alphalist = one failure = ₱1,000 (or ₱500)
+- Failing to file the entire QAP for one quarter = the number of payees omitted × per-failure rate, up to annual cap
+
+**Engine note:** For most solo freelancers (SAWT only, no employees), missing SAWT from one return = 1 failure = ₱500 (MICRO/SMALL). Missing from all 4 returns in a year = 4 failures = ₱2,000 (below the ₱12,500 cap).
+
+---
+
+## CR-022: Prescriptive Period — Is This Tax Year Still Assessable?
+
+**Legal basis:** NIRC Sections 203, 222(a), 222(c)
+
+The engine's penalty estimator must check whether a prior-year tax deficiency is still within the BIR's assessment window. If the period has prescribed, the BIR can no longer assess the deficiency.
+
+```
+function is_still_assessable(
+  taxable_year,
+  filed_on_time,
+  return_filed,
+  has_fraud,
+  current_date
+):
+  """
+  INPUTS:
+    taxable_year:  int  — The year for which the return was due (e.g., 2021)
+    filed_on_time: bool — Was the return filed by the April 15 deadline?
+    return_filed:  bool — Was a return filed at all?
+    has_fraud:     bool — Was the return fraudulent or is underdeclaration > 30%?
+    current_date:  date — Today's date (for computing elapsed time)
+
+  RETURNS:
+    AssessabilityResult {
+      prescriptive_period:   int,    // years (3 or 10)
+      start_of_period:       date,   // when the clock started
+      expiry_date:           date,   // when the right to assess expires
+      is_assessable:         bool,   // True if current_date < expiry_date
+      assessment_period_type: str    // "ordinary" or "extraordinary"
+    }
+
+  RULES:
+    (a) If no return filed: 10-year period; starts from date of discovery
+        → Engine cannot determine "date of discovery" — outputs: "assessable (BIR's period
+          starts from discovery; if BIR discovers this year, assessment window extends to
+          {current_year + 10})"
+    (b) If fraudulent return or underdeclaration > 30%: 10-year period; starts from discovery
+        → Same as (a) — engine cannot know discovery date, so flags as potentially assessable
+    (c) If return filed late, no fraud: 3-year period from ACTUAL filing date
+    (d) If return filed on time, no fraud: 3-year period from April 15 of the following year
+  """
+
+  ANNUAL_DEADLINE = date(taxable_year + 1, 4, 15)  // April 15 of the year after
+
+  if not return_filed or has_fraud:
+    // 10-year extraordinary period; start date unknown (BIR's discovery date)
+    return AssessabilityResult(
+      prescriptive_period    = 10,
+      start_of_period        = None,  // unknown
+      expiry_date            = None,  // unknown
+      is_assessable          = True,  // conservative: assume assessable
+      assessment_period_type = "extraordinary",
+      note = "10-year period from BIR's date of discovery. Cannot determine expiry without knowing BIR's discovery date."
+    )
+
+  if filed_on_time:
+    start = ANNUAL_DEADLINE
+  else:
+    // Need actual filing date from user input; engine falls back to deadline if unknown
+    start = user_provided_filing_date or ANNUAL_DEADLINE
+
+  expiry = date(start.year + 3, start.month, start.day)
+
+  return AssessabilityResult(
+    prescriptive_period    = 3,
+    start_of_period        = start,
+    expiry_date            = expiry,
+    is_assessable          = current_date <= expiry,
+    assessment_period_type = "ordinary"
+  )
+```
+
+### Prescriptive Period Summary Table (Quick Reference)
+
+| Scenario | Assessment Period | Period Starts | Collection After Assessment |
+|----------|------------------|---------------|----------------------------|
+| Return filed on time, no fraud | 3 years | April 15 of the NEXT year | 3 more years from assessment date |
+| Return filed late, no fraud | 3 years | Actual filing date | 3 more years from assessment date |
+| Return not filed (no return) | 10 years | Date of BIR discovery | 5 more years from assessment date |
+| Fraudulent return (deliberate) | 10 years | Date of BIR discovery | 5 more years from assessment date |
+| Underdeclaration > 30% of declared | 10 years | Date of BIR discovery | 5 more years from assessment date |
+
+**Supreme Court clarification (G.R. No. 247737, McDonald's PH Realty Corp. v. CIR):**
+- The 10-year period requires PROOF of intentional and deliberate misstatement with clear and convincing evidence.
+- Unintentional clerical errors do NOT trigger the 10-year period.
+- The mere SIZE of the understatement, without proof of intent, is insufficient to invoke the extraordinary period.
+- However: Section 248(B) creates "prima facie evidence of fraud" for underdeclarations > 30%, effectively shifting the burden to the taxpayer to disprove fraudulent intent.
+
+---
+
 ## Cross-References
 
 - For lookup tables: See [lookup-tables/](lookup-tables/)
   - [lookup-tables/taxpayer-classification-tiers.md](lookup-tables/taxpayer-classification-tiers.md) — complete tier table with all implications
+  - [lookup-tables/bir-penalty-schedule.md](lookup-tables/bir-penalty-schedule.md) — complete BIR penalty schedule (compromise tables, criminal penalties, prescriptive periods)
 - For decision trees covering regime selection: See [decision-trees.md](decision-trees.md) (PENDING)
-- For edge cases (mid-year threshold crossing, first-year filers, tier boundaries, e-marketplace withholding): See [edge-cases.md](edge-cases.md)
+- For edge cases (mid-year threshold crossing, first-year filers, tier boundaries, e-marketplace withholding, penalty scenarios): See [edge-cases.md](edge-cases.md)
 - For test vectors validating these computations: See [../engine/test-vectors/basic.md](../engine/test-vectors/basic.md) (PENDING)
 - For full legal text behind each rule: See [legal-basis.md](legal-basis.md)
 - For RR 16-2023 source material: See [../../../input/sources/rr-16-2023-emarketplace.md](../../../input/sources/rr-16-2023-emarketplace.md)
