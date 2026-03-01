@@ -1,265 +1,261 @@
 # Analytics — Capability Extraction
 
+**Aspect:** w1-analytics
+**Date:** 2026-03-01
+**Sources consulted:**
+- `loops/cheerful-reverse/analysis/synthesis/spec-backend-api.md` (Domain 25)
+- `loops/cheerful-reverse/analysis/synthesis/spec-webapp.md` (Dashboard section)
+- `projects/cheerful/apps/backend/src/api/route/dashboard.py` (source of truth)
+- `projects/cheerful/apps/backend/src/models/api/dashboard.py` (Pydantic models)
+- `projects/cheerful/apps/webapp/app/(mail)/dashboard/page.tsx` (frontend consumer)
+- `projects/cheerful/apps/webapp/hooks/use-dashboard-analytics.ts` (API hook)
+- `projects/cheerful/apps/context-engine/app/src_v2/mcp/tools/cheerful/api.py` (CE call pattern)
+
+---
+
 ## Existing Context Engine Tools
 
 | Tool | Description | Coverage |
 |------|-------------|----------|
-| (none) | No analytics tools exist in the context engine | 0% coverage |
+| (none) | No analytics tools exist in the CE | 0% |
 
-## Service Route Status
+---
 
-**No service route exists for dashboard analytics.** The `GET /dashboard/analytics` endpoint uses JWT auth (`get_current_user`). A new `GET /api/service/dashboard/analytics` endpoint must be created for the context engine to access this data.
+## Critical Architecture Gap: No Service Route for Analytics
 
-Existing service routes (`/api/service/*`) in `service.py` cover: campaigns, threads/search, threads/{id}, rag/similar, campaign creators (list, detail), creators/search — but NO analytics/dashboard endpoints.
+The dashboard analytics endpoint (`GET /dashboard/analytics`) uses **JWT authentication** (`get_current_user` dependency), NOT the service API key pattern used by all existing CE tools.
 
-## Backend Endpoints
+All existing CE tools call `/api/service/*` routes authenticated via `X-Service-Api-Key`. There is **no** `/api/service/dashboard/analytics` endpoint.
 
-There is exactly **1 dedicated analytics endpoint** in the backend:
+**Implication for spec:** The `cheerful_get_dashboard_analytics` tool spec must document that a new service route must be added: `GET /api/service/dashboard/analytics` with `user_id` query param and `X-Service-Api-Key` auth. The spec must describe what that route should implement (mirroring the JWT route's logic with service auth).
 
-### Endpoint 1: `GET /dashboard/analytics`
+---
 
-**Source**: `src/api/route/dashboard.py`
-**Auth**: JWT required (`get_current_user`)
-**Router prefix**: `/dashboard`
+## Frontend Dashboard Components and Their Data Sources
 
-**Query Parameters**:
+The `/dashboard` page (`DashboardPage` component) shows 9 distinct UI sections, all populated from ONE endpoint response:
 
-| Parameter | Type | Required | Default | Validation | Description |
-|-----------|------|----------|---------|------------|-------------|
-| `recent_optins_days` | int | no | 7 | ge=1, le=30 | Days to look back for recent opt-ins |
+| UI Component | Data Field(s) Used | Notes |
+|---|---|---|
+| Metric: Total Creators | `total_contacts` | Count of all creators across all campaigns |
+| Metric: Response Rate / Total Opted In | `response_rate` (if non-null) else `total_opted_in` | Response rate = responses ÷ emails_sent (internal campaigns only) |
+| Metric: Emails Sent (+ pending/failed) | `email_stats.emails_sent`, `.emails_pending`, `.emails_failed` | Includes initial outreach + follow-ups + AI-sent emails |
+| Metric: Total Opt-in Rate | `opt_in_rate` | Percentage (0-100), null if no contacts |
+| Active Campaigns Table | `active_campaigns[]` | Up to 10 campaigns; sorted by created_at desc, status=active only |
+| Follow-up Stats Card | `follow_up_stats` | null if no follow-ups exist |
+| Top Campaign Card | Computed from `active_campaigns[]` (frontend) | Best opt-in rate; computed on frontend, no additional API call |
+| Gifting Pipeline Card | `gifting_pipeline` | null if no gifting campaign creators exist |
+| Paid Promotion Pipeline Card | `paid_promotion_pipeline` | null if no paid promotion creators exist |
+| Recent Opt-ins List | `recent_optins[]` | Up to 20 entries; ordered by updated_at desc |
 
-**Response Model**: `DashboardAnalyticsResponse` (from `src/models/api/dashboard.py`)
+---
 
-**Response contains 10 data sections**:
+## Backend Capabilities
 
-#### Section 1: Campaign Counts
-- `active_campaigns_count: int` — Count of campaigns with status="active" for this user
-- `paused_campaigns_count: int` — Count of campaigns with status="paused" for this user
+### Endpoint: `GET /dashboard/analytics`
 
-#### Section 2: Opt-in Stats (aggregated across ALL user campaigns)
-- `total_opted_in: int` — Creators where gifting_status IN GIFTING_OPTED_IN_STATUSES OR paid_promotion_status IN PAID_PROMOTION_OPTED_IN_STATUSES
-- `total_opted_out: int` — Creators where gifting_status="OPTED_OUT" OR paid_promotion_status="OPTED_OUT"
-- `total_new: int` — Creators where gifting_status="NEW" OR paid_promotion_status="NEW"
-- `total_contacts: int` — Total creators across all user campaigns (unfiltered count)
+**Auth:** `get_current_user` (JWT — webapp only; CE needs service route)
+**Query Parameters:**
 
-#### Section 3: Calculated Metrics
-- `opt_in_rate: float | None` — `round((total_opted_in / total_contacts) * 100, 1)`. None if total_contacts=0. Percentage 0-100.
-- `response_rate: float | None` — `round((internal_responded / internal_emails_sent) * 100, 1)`. Only for internal campaigns (is_external=False). None if no internal campaigns or no emails sent. Percentage 0-100.
+| Param | Type | Required | Default | Constraints |
+|-------|------|----------|---------|-------------|
+| `recent_optins_days` | integer | no | 7 | ge=1, le=30 |
 
-**Response rate calculation details**:
-- Only counts campaigns where `is_external=False`
-- `internal_emails_sent` = count of outbox queue items with status="sent" for internal campaigns
-- `internal_responded` = count of creators in internal campaigns where gifting_status IN (GIFTING_OPTED_IN_STATUSES + ["OPTED_OUT"]) OR paid_promotion_status IN (PAID_PROMOTION_OPTED_IN_STATUSES + ["OPTED_OUT"])
+**Business Logic (from source code):**
 
-#### Section 4: Email Stats (`EmailStats` sub-model)
-- `emails_sent: int` — Total sent emails (initial outreach + follow-ups + AI-drafted emails that were actually sent)
-- `emails_pending: int` — Total pending emails (initial "pending"+"processing" + follow-up "pending"+"processing")
-- `emails_failed: int` — Total failed emails (initial "failed" + follow-up "failed")
+The handler performs 9 sequential database queries in a single session:
 
-**AI sent count detail**: Counts `GmailThreadLlmDraft` records for this user where the associated `GmailThreadState` or `SmtpThreadState` status != `WAITING_FOR_DRAFT_REVIEW`. This is added to the `emails_sent` total.
+1. **Campaign counts**: Groups user's campaigns by `status` → yields `active_campaigns_count`, `paused_campaigns_count`
 
-#### Section 5: Recent Opt-ins (`list[RecentOptinResponse]`, max 20)
-Each item:
-- `id: UUID` — CampaignCreator.id
-- `creator_name: str | None` — CampaignCreator.name
-- `creator_email: str | None` — CampaignCreator.email
-- `campaign_id: UUID` — CampaignCreator.campaign_id
-- `campaign_name: str` — Campaign.name (joined)
-- `gifting_status: str | None` — CampaignCreator.gifting_status
-- `updated_at: datetime` — CampaignCreator.updated_at
-- `source_gmail_thread_id: str | None` — CampaignCreator.source_gmail_thread_id
-- `social_media_handles: list[SocialMediaHandle]` — Each has: platform (str), handle (str), url (str|None)
+2. **Cross-campaign opt-in stats**: Counts `CampaignCreator` rows across ALL user's campaigns:
+   - `total_opted_in`: creators where `gifting_status IN GIFTING_OPTED_IN_STATUSES` OR `paid_promotion_status IN PAID_PROMOTION_OPTED_IN_STATUSES`
+   - `total_opted_out`: creators where either status = "OPTED_OUT"
+   - `total_contacts`: total creator rows across all campaigns
+   - `total_new`: creators where either status = "NEW"
 
-**Selection criteria**: CampaignCreator.campaign_id in user's campaigns AND (gifting_status IN GIFTING_OPTED_IN_STATUSES OR paid_promotion_status IN PAID_PROMOTION_OPTED_IN_STATUSES) AND updated_at >= cutoff_date. Ordered by updated_at DESC, limit 20.
+3. **Response rate** (internal campaigns only): `responded / emails_sent * 100`. Denominator = CampaignOutboxQueue rows with `status="sent"` for non-external campaigns. Numerator = CampaignCreator rows with gifting replied statuses OR paid promotion replied statuses.
 
-#### Section 6: Active Campaigns (`list[ActiveCampaignStats]`, max 10)
-Each item:
-- `id: UUID` — Campaign.id
-- `name: str` — Campaign.name
-- `campaign_type: str` — Campaign.campaign_type
-- `status: str` — Campaign.status (always "active" since filtered)
-- `created_at: datetime` — Campaign.created_at
-- `total_creators: int` — Count of CampaignCreator for this campaign
-- `opted_in_count: int` — Count where gifting_status IN GIFTING_OPTED_IN_STATUSES OR paid_promotion_status IN PAID_PROMOTION_OPTED_IN_STATUSES
-- `opted_out_count: int` — Count where gifting_status="OPTED_OUT" OR paid_promotion_status="OPTED_OUT"
-- `order_sent_count: int` — Count where gifting_status="ORDER_SENT" (backward compat, included in opted_in_count already)
-- `replied_count: int` — Count where gifting_status IN GIFTING_REPLIED_STATUSES OR paid_promotion_status IN PAID_PROMOTION_REPLIED_STATUSES
+4. **Recent opt-ins**: Creators with opted-in status and `updated_at >= cutoff`. Joins to get `campaign_name`. Limit: 20. Includes social media handles.
 
-**Selection**: user_id=user, status="active", ordered by created_at DESC, limit 10.
+5. **Email stats**: Aggregates `CampaignOutboxQueue.status` counts across all user's campaigns. Adds follow-up queue counts. Adds AI-sent drafts (GmailThreadLlmDraft rows where status != WAITING_FOR_DRAFT_REVIEW).
 
-#### Section 7: Gifting Pipeline (`GiftingPipeline | None`)
-Only populated if there are gifting campaigns (campaign_type="gifting") with creators:
-- `new: int`
-- `contacted: int`
-- `opted_in: int`
-- `pending_details: int`
-- `ready_to_ship: int`
-- `ordered: int` — Folds ORDERED + legacy SHIPPED + DELIVERED
-- `opted_out: int`
-- `total: int`
+6. **Active campaigns with stats**: Top 10 active campaigns (status="active"), each with:
+   - `total_creators`, `opted_in_count`, `opted_out_count`, `order_sent_count` (legacy), `replied_count`
+   - `replied_count` uses union of GIFTING_REPLIED_STATUSES + PAID_PROMOTION_REPLIED_STATUSES
 
-Returns None if no gifting campaigns or total=0.
+7. **Gifting pipeline**: Status breakdown for creators in gifting-type campaigns. Returns null if zero total. SHIPPED and DELIVERED are folded into `ordered` bucket.
 
-#### Section 8: Paid Promotion Pipeline (`PaidPromotionPipeline | None`)
-Only populated if there are paid_promotion campaigns:
-- `new: int`
-- `negotiating: int`
-- `contract_signed: int`
-- `content_in_progress: int`
-- `awaiting_review: int`
-- `changes_requested: int`
-- `content_approved: int`
-- `posted: int`
-- `awaiting_payment: int`
-- `paid: int`
-- `opted_out: int`
-- `total: int`
+8. **Paid promotion pipeline**: Status breakdown for creators in paid_promotion-type campaigns. Returns null if zero total.
 
-Returns None if no paid_promotion campaigns or total=0.
+9. **Follow-up stats**: Aggregated `CampaignFollowUpOutboxQueue` status counts + conversions by follow-up index number.
 
-#### Section 9: Follow-up Stats (`FollowUpStats | None`)
-Only populated if there are follow-up outbox queue items:
-- `total_follow_ups: int` — Sum of all follow-up queue item counts
-- `sent_count: int` — Follow-ups with status="sent"
-- `pending_count: int` — Follow-ups with status="pending" or "processing"
-- `cancelled_count: int` — Follow-ups with status="cancelled"
-- `failed_count: int` — Follow-ups with status="failed"
-- `cancellation_rate: float | None` — `round((cancelled_count / total_follow_ups) * 100, 1)`. None if total=0. Percentage 0-100.
-- `conversions_by_follow_up_number: dict[int, int]` — Map of (follow-up index + 1) → sent count. E.g., {1: 5, 2: 3} means follow-up #1 had 5 sent, #2 had 3 sent.
+10. **Campaign type stats**: Aggregated by `campaign_type` across ALL user's campaigns (not just active). Computes `conversion_rate` per type.
 
-Returns None if no follow-up queue items exist.
+**Gifting status constants (from source):**
 
-#### Section 10: Campaign Type Stats (`list[CampaignTypeStats]`)
-Aggregated by campaign_type across all user's campaigns:
-- `campaign_type: str` — One of: "gifting", "paid_promotion", "creator", "sales", "other" (or null → "other")
-- `total_creators: int` — Total CampaignCreator count for campaigns of this type
-- `converted: int` — Count where gifting_status IN GIFTING_OPTED_IN_STATUSES OR paid_promotion_status IN PAID_PROMOTION_OPTED_IN_STATUSES
-- `conversion_rate: float | None` — `round((converted / total_creators) * 100, 1)`. None if total_creators=0. Percentage 0-100.
+```python
+GIFTING_OPTED_IN_STATUSES = [
+    "OPTED_IN",         # Legacy
+    "ORDER_SENT",       # Legacy
+    "SHIPPED",          # Legacy - product was shipped
+    "DELIVERED",        # Legacy - product was delivered
+    "PENDING_DETAILS",  # Creator expressed interest but missing shipping info
+    "READY_TO_SHIP",    # Interest confirmed + all shipping details collected
+    "ORDERED",          # Product ordered (final fulfillment status)
+]
 
-## Enum Values Referenced (verified from source)
+GIFTING_REPLIED_STATUSES = GIFTING_OPTED_IN_STATUSES + [
+    "OPTED_OUT",  # Replied to decline
+    "DECLINED",   # Explicitly declined
+]
+```
 
-### GIFTING_OPTED_IN_STATUSES
-- "OPTED_IN" (legacy)
-- "ORDER_SENT" (legacy)
-- "SHIPPED" (legacy)
-- "DELIVERED" (legacy)
-- "PENDING_DETAILS"
-- "READY_TO_SHIP"
-- "ORDERED"
+**Paid promotion status constants (from source):**
 
-### PAID_PROMOTION_OPTED_IN_STATUSES
-- "CONTRACT_SIGNED"
-- "CONTENT_IN_PROGRESS"
-- "AWAITING_REVIEW"
-- "CHANGES_REQUESTED"
-- "CONTENT_APPROVED"
-- "POSTED"
-- "AWAITING_PAYMENT"
-- "PAID"
+```python
+PAID_PROMOTION_OPTED_IN_STATUSES = [
+    "CONTRACT_SIGNED",      # Contract signed
+    "CONTENT_IN_PROGRESS",  # Creator producing content
+    "AWAITING_REVIEW",      # Content draft submitted
+    "CHANGES_REQUESTED",    # Brand requested revisions
+    "CONTENT_APPROVED",     # Content approved
+    "POSTED",               # Content published
+    "AWAITING_PAYMENT",     # Waiting for payment
+    "PAID",                 # Payment processed
+]
 
-### GIFTING_REPLIED_STATUSES (GIFTING_OPTED_IN_STATUSES + these)
-- "OPTED_OUT"
-- "DECLINED"
+PAID_PROMOTION_REPLIED_STATUSES = PAID_PROMOTION_OPTED_IN_STATUSES + [
+    "NEGOTIATING",          # Responded, discussing terms
+    "AWAITING_CONTRACT",    # Agreed on terms, pending signature
+    "OPTED_OUT",            # Replied to decline
+    "DECLINED",             # Explicitly declined
+]
+```
 
-### PAID_PROMOTION_REPLIED_STATUSES (PAID_PROMOTION_OPTED_IN_STATUSES + these)
-- "NEGOTIATING"
-- "AWAITING_CONTRACT"
-- "OPTED_OUT"
-- "DECLINED"
+**Full Response Schema (from `DashboardAnalyticsResponse` Pydantic model):**
 
-### CampaignType Values (from frontend TypeScript)
-- "paid_promotion"
-- "creator"
-- "gifting"
-- "sales"
-- "other"
+```python
+class DashboardAnalyticsResponse:
+    active_campaigns_count: int
+    paused_campaigns_count: int
+    total_opted_in: int       # All opted-in statuses for both campaign types
+    total_opted_out: int      # Both gifting and paid OPTED_OUT
+    total_new: int            # NEW status (not yet responded)
+    total_contacts: int       # Total CampaignCreator rows across all campaigns
+    opt_in_rate: float | None # (total_opted_in / total_contacts) * 100, rounded to 1 decimal; None if total_contacts==0
+    response_rate: float | None  # (responded / emails_sent) * 100 (internal campaigns only); None if no emails sent
 
-### Follow-up Queue Statuses (from dashboard.py logic)
-- "sent"
-- "pending"
-- "processing"
-- "cancelled"
-- "failed"
+    email_stats: EmailStats
+        emails_sent: int      # Outbox "sent" + follow-up "sent" + AI-sent drafts
+        emails_pending: int   # Outbox "pending"+"processing" + follow-up same
+        emails_failed: int    # Outbox "failed" + follow-up "failed"
 
-### Outbox Queue Statuses (from dashboard.py logic)
-- "sent"
-- "pending"
-- "processing"
-- "failed"
+    recent_optins: list[RecentOptinResponse]  # Up to 20, ordered by updated_at desc
+        id: UUID
+        creator_name: str | None
+        creator_email: str | None
+        campaign_id: UUID
+        campaign_name: str
+        gifting_status: str | None
+        updated_at: datetime
+        source_gmail_thread_id: str | None
+        social_media_handles: list[SocialMediaHandle]  # default []
+            platform: str
+            handle: str
+            url: str | None
 
-### GmailThreadStatus used in AI count
-- `WAITING_FOR_DRAFT_REVIEW` — drafts in this status are NOT counted as sent
+    active_campaigns: list[ActiveCampaignStats]  # Up to 10, status=active, ordered by created_at desc
+        id: UUID
+        name: str
+        campaign_type: str    # "gifting", "paid_promotion", "creator", "sales", "other"
+        status: str           # always "active"
+        created_at: datetime
+        total_creators: int
+        opted_in_count: int   # Union of gifting + paid opted-in statuses
+        opted_out_count: int  # Union of gifting + paid OPTED_OUT
+        order_sent_count: int # Legacy: gifting_status=="ORDER_SENT" only; kept for backwards compat
+        replied_count: int    # Union of GIFTING_REPLIED_STATUSES + PAID_PROMOTION_REPLIED_STATUSES
 
-## Frontend Capabilities (Dashboard Page)
+    gifting_pipeline: GiftingPipeline | None  # None if no gifting campaign creators exist
+        new: int
+        contacted: int
+        opted_in: int         # Legacy OPTED_IN only (not the full opted-in set)
+        pending_details: int
+        ready_to_ship: int
+        ordered: int          # ORDERED + SHIPPED + DELIVERED (legacy folded in)
+        opted_out: int
+        total: int
 
-**Source**: `app/(mail)/dashboard/page.tsx` + `hooks/use-dashboard-analytics.ts`
+    paid_promotion_pipeline: PaidPromotionPipeline | None  # None if no paid_promotion creators exist
+        new: int
+        negotiating: int
+        contract_signed: int
+        content_in_progress: int
+        awaiting_review: int
+        changes_requested: int
+        content_approved: int
+        posted: int
+        awaiting_payment: int
+        paid: int
+        opted_out: int
+        total: int
 
-The dashboard page fetches `GET /api/dashboard/analytics` and renders:
+    follow_up_stats: FollowUpStats | None  # None if no follow-up records exist
+        total_follow_ups: int
+        sent_count: int
+        pending_count: int        # "pending" + "processing" combined
+        cancelled_count: int
+        failed_count: int
+        cancellation_rate: float | None  # (cancelled / total) * 100; None if total==0
+        conversions_by_follow_up_number: dict[int, int]  # {1: 5, 2: 3, 3: 1} (1-indexed)
 
-| # | Visual Component | Data Source | User Action |
-|---|-----------------|-------------|-------------|
-| 1 | MetricCard: "Total Creators" | `analytics.total_contacts` | View-only |
-| 2 | MetricCard: "Response Rate" (gauge) OR MetricCard: "Total Opted In" | `analytics.response_rate` (if not null) OR `analytics.total_opted_in` | View-only. Shows gauge if response_rate exists (internal campaigns), otherwise plain number. |
-| 3 | EmailStatsCard: emails sent/pending/failed | `analytics.email_stats` | View-only |
-| 4 | MetricCard: "Total Opt-in Rate" (gauge) | `analytics.opt_in_rate` | View-only |
-| 5 | ActiveCampaignsCard: table of active campaigns | `analytics.active_campaigns` | View-only. "View All" links to /campaigns. "Create Campaign" navigates to /campaigns/new. Per-campaign: name, type badge, creators count, opt-ins count, opt-in rate %, reply rate %. |
-| 6 | FollowUpStatsCard: follow-up effectiveness | `analytics.follow_up_stats` | View-only. Shows total follow-ups, cancellation rate, status breakdown (sent/pending/cancelled/failed), most effective follow-up #, conversions by follow-up number. |
-| 7 | TopCampaignCard: best performing campaign | Computed client-side from `analytics.active_campaigns` (highest opt-in rate) | View-only |
-| 8 | PipelineCard: "Gifting Pipeline" | `analytics.gifting_pipeline` | View-only. Shows 7-stage stacked bar: New, Contacted, Opted In, Pending Details, Ready to Ship, Ordered, Opted Out. Only renders if total > 0. |
-| 9 | PipelineCard: "Paid Promotion Pipeline" | `analytics.paid_promotion_pipeline` | View-only. Shows 11-stage stacked bar: New, Negotiating, Contract Signed, Content In Progress, Awaiting Review, Changes Requested, Content Approved, Posted, Awaiting Payment, Paid, Opted Out. Only renders if total > 0. |
-| 10 | RecentOptinsCard: recent opt-ins list | `analytics.recent_optins` | View-only. Shows creator name/email, campaign name, timestamp, social media handles. |
+    campaign_type_stats: list[CampaignTypeStats]  # One entry per distinct campaign_type
+        campaign_type: str        # Defaults to "other" if NULL
+        total_creators: int
+        converted: int            # Union of gifting + paid opted-in statuses
+        conversion_rate: float | None  # (converted / total_creators) * 100; None if total==0
+```
 
-### Components Defined But NOT Currently Rendered
-- `CampaignTypeComparisonCard` — Component exists at `dashboard/components/campaign-type-comparison-card.tsx` but is NOT imported/used in `page.tsx`. Data (`campaign_type_stats`) is returned by the API but not displayed.
-- `RecentPostsCard` — Component file exists but not imported in `page.tsx`.
-- `TopCreatorCard` — Component file exists but not imported in `page.tsx`.
-- `ReachChartCard` — Component file exists but not imported in `page.tsx`.
-- `FilterDropdown` — Component file exists but not imported in `page.tsx`.
-- `TrendBadge` — Component file exists but not imported in `page.tsx`.
+---
 
-### Modal/Walkthrough Components (not analytics)
-- `WelcomeModal` — First-visit welcome, not analytics
-- `WalkthroughModal` — App walkthrough, not analytics
-- `SetupModal` — Email connection prompt, not analytics
+## Tool Design (Preliminary)
 
-## Per-Campaign Stats (Cross-Domain)
+| Tool | Action | Backend Endpoint (needed) | Auth Pattern |
+|------|--------|--------------------------|--------------|
+| `cheerful_get_dashboard_analytics` | Get full dashboard analytics summary | NEW: `GET /api/service/dashboard/analytics` | Service API Key + user_id query param |
 
-The `GET /campaigns?include_stats=true` endpoint on the campaigns router also provides per-campaign metrics:
-- `sent_count: int | None` — Outbox queue sent count
-- `pending_count: int | None` — Outbox queue pending count
-- `failed_count: int | None` — Outbox queue failed count
-- `total_recipients: int | None` — Unified participant count
-- `thread_count: int | None` — CampaignThread record count
+**Note:** Only ONE tool is needed for the analytics domain. The entire dashboard is one API call.
 
-**Note**: This is in the **campaigns** domain, not analytics. The existing CE tool `cheerful_list_campaigns` uses the service route `GET /api/service/campaigns` which does NOT include these stats. The user-facing campaign list (`GET /campaigns?include_stats=true`) provides them but requires JWT auth.
+**Note:** There is no per-campaign analytics endpoint in this domain. Per-campaign stats are obtained via:
+- `GET /campaigns/?include_stats=true` (in campaigns domain → yields `sent_count`, `pending_count`, `failed_count`, `total_recipients`, `thread_count` per campaign)
+- `GET /dashboard/analytics` active_campaigns field (top 10 active campaigns with opt-in stats)
 
-## Gap Analysis
+---
 
-| Capability | Backend | Service Route | CE Tool | Gap |
-|-----------|---------|--------------|---------|-----|
-| Dashboard analytics (full composite) | GET /dashboard/analytics | MISSING | MISSING | Need service route + CE tool |
-| Per-campaign stats on campaign list | GET /campaigns?include_stats=true | GET /api/service/campaigns (NO stats) | cheerful_list_campaigns (basic) | Partial — service route needs stats support |
+## Discovered Gaps / New Aspects
 
-## Tool Estimates
+1. **Service route gap**: `GET /dashboard/analytics` has no `/api/service/` equivalent. The Wave 3 spec must note that implementation requires adding `GET /api/service/dashboard/analytics` to `service.py`.
 
-**Minimum 1, maximum 3 new CE tools needed**:
+2. **Campaign type enum**: The frontend TypeScript type shows `CampaignType = 'paid_promotion' | 'creator' | 'gifting' | 'sales' | 'other'`. This exact enum is needed in the analytics tool spec.
 
-1. `cheerful_get_dashboard_analytics` — Full dashboard overview (the primary tool)
-2. Optional: `cheerful_get_gifting_pipeline` — Dedicated gifting pipeline view (could be subset of #1)
-3. Optional: `cheerful_get_paid_pipeline` — Dedicated paid promotion pipeline view (could be subset of #1)
+3. **Follow-up index is 0-indexed in DB, 1-indexed in response**: `conversions_by_follow_up_number` dict keys are `row.index + 1` (verified from source).
 
-**Recommendation**: Keep it as 1 comprehensive tool matching the single backend endpoint. The data is already well-structured by the API. The Claude agent can extract relevant sections from the composite response based on user questions.
+4. **AI-sent emails counted in email_stats.emails_sent**: AI-drafted emails sent via `GmailThreadLlmDraft` are included if their thread status != `WAITING_FOR_DRAFT_REVIEW`. This cross-table join is not obvious from the response schema alone.
 
-**Backend prerequisite**: A new service route `GET /api/service/dashboard/analytics` must be created, mirroring the logic from `GET /dashboard/analytics` but using service API key auth + user_id query parameter instead of JWT auth.
+---
 
-## Status Constants Defined in dashboard.py
+## Frontend-Only Capabilities (No Additional Endpoint Needed)
 
-These constants are defined at module level in `dashboard.py` and control which creator statuses count toward various metrics. They are NOT configurable — they are hardcoded:
+| UI Feature | How Computed |
+|------------|--------------|
+| "Top Campaign" card | Computed on frontend from `active_campaigns[]`: campaign with highest `opted_in_count / total_creators` ratio |
+| WelcomeModal / WalkthroughModal | Uses `GET /user/onboarding-status` (users domain, not analytics) |
+| Empty state detection | `active_campaigns_count === 0 && paused_campaigns_count === 0` |
 
-**GIFTING_OPTED_IN_STATUSES** (7 values): OPTED_IN, ORDER_SENT, SHIPPED, DELIVERED, PENDING_DETAILS, READY_TO_SHIP, ORDERED
+---
 
-**PAID_PROMOTION_OPTED_IN_STATUSES** (8 values): CONTRACT_SIGNED, CONTENT_IN_PROGRESS, AWAITING_REVIEW, CHANGES_REQUESTED, CONTENT_APPROVED, POSTED, AWAITING_PAYMENT, PAID
+## Summary
 
-**GIFTING_REPLIED_STATUSES** (9 values): All GIFTING_OPTED_IN_STATUSES + OPTED_OUT, DECLINED
+**Analytics domain is minimal: 1 backend endpoint, 1 CE tool needed.**
 
-**PAID_PROMOTION_REPLIED_STATUSES** (12 values): All PAID_PROMOTION_OPTED_IN_STATUSES + NEGOTIATING, AWAITING_CONTRACT, OPTED_OUT, DECLINED
+The tool `cheerful_get_dashboard_analytics` will expose the full dashboard analytics summary with all 9 metric sections. Key constraint: requires adding a new service route since the existing endpoint uses JWT auth incompatible with the CE's service-key authentication model.

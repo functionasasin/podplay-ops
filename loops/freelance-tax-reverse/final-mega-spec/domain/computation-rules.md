@@ -1309,13 +1309,281 @@ function is_still_assessable(
 
 ---
 
+---
+
+## CR-023: 8% Option Election Procedure Rules
+
+**Legal basis:** RR 8-2018 Part I; RMO 23-2018; RMC 32-2018; NIRC Sec. 24(A)(2)(b)
+
+The engine must enforce these rules when presenting the 8% option to the user and when determining if the election window is still open.
+
+### Election Window Determination
+
+```
+function is_election_window_open(
+  taxpayer_type: "new_registrant" | "existing",
+  q1_1701q_filed: bool,
+  q1_filing_deadline_passed: bool,  // Q1 1701Q deadline = May 15
+  q1_elected_graduated: bool        // Q1 filed WITHOUT 8% election
+) -> ElectionWindowResult:
+
+  if taxpayer_type == "new_registrant":
+    if q1_1701q_filed and q1_elected_graduated:
+      return ElectionWindowResult { open: false, reason: "Q1_FILED_GRADUATED" }
+    elif not q1_1701q_filed:
+      return ElectionWindowResult { open: true, method: ["AT_REGISTRATION", "INITIAL_Q1_RETURN"] }
+    else:
+      // Q1 filed with 8% elected (valid)
+      return ElectionWindowResult { open: true, already_elected: true }
+  else:  // existing taxpayer
+    if q1_filing_deadline_passed and q1_elected_graduated:
+      return ElectionWindowResult { open: false, reason: "Q1_DEADLINE_PASSED" }
+    elif q1_1701q_filed and not q1_elected_graduated:
+      // Q1 filed with 8% elected (valid)
+      return ElectionWindowResult { open: true, already_elected: true }
+    elif not q1_filing_deadline_passed:
+      return ElectionWindowResult {
+        open: true,
+        method: ["FORM_1905_THEN_Q1", "Q1_1701Q_ITEM16", "NIL_Q1_2551Q_WITH_NOTATION"]
+      }
+    else:
+      return ElectionWindowResult { open: false, reason: "Q1_DEADLINE_PASSED_NO_ELECTION" }
+```
+
+### Exact Notation Text for NIL Form 2551Q Election
+
+When a taxpayer files a NIL Q1 2551Q to signal the 8% election, the notation must be:
+```
+"Availing of 8% Income Tax Rate Option for Taxable Year [YEAR]"
+```
+Where `[YEAR]` is the 4-digit current tax year (e.g., "2026").
+
+This exact notation (per RR 8-2018 and RMO 23-2018) must be present in the Remarks/Notes field of BIR Form 2551Q. The engine shall display this text to the user for them to copy when filing.
+
+### Annual Re-Election Check
+
+```
+function check_annual_reelection(
+  prior_year_used_8pct: bool,
+  current_year_q1_filed: bool,
+  current_year_q1_election: "8pct" | "graduated" | null
+) -> ReelectionResult:
+
+  if prior_year_used_8pct and current_year_q1_filed:
+    if current_year_q1_election == "8pct":
+      return ReelectionResult { elected: true, method: "Q1_1701Q" }
+    elif current_year_q1_election == "graduated":
+      return ReelectionResult { elected: false, reason: "DEFAULTED_TO_GRADUATED" }
+    else:
+      return ReelectionResult { open: true, pending: "MUST_FILE_Q1_TO_ELECT" }
+  elif not current_year_q1_filed:
+    return ReelectionResult { open: true, pending: "Q1_NOT_YET_FILED" }
+  else:
+    return ReelectionResult { elected: false, reason: "PRIOR_YEAR_WAS_GRADUATED" }
+```
+
+**Note:** The 8% option does NOT automatically carry over. Each year is a fresh election.
+
+---
+
+## CR-024: Mid-Year Threshold Breach — Recomputation Pseudocode
+
+**Legal basis:** RR 8-2018 Part III; RMO 23-2018 Sec. 3(C)
+
+When a taxpayer on the 8% option has cumulative gross receipts + non-operating income exceed ₱3,000,000 mid-year, the engine must:
+
+1. Identify the breach month
+2. Compute retroactive 3% percentage tax on pre-breach receipts
+3. Recompute annual income tax under graduated rates for the FULL year
+4. Credit all 8% quarterly payments already made
+
+```
+struct BreachRecomputationInput {
+  monthly_gross: array[12] of decimal,     // gross receipts per calendar month
+  monthly_non_op: array[12] of decimal,    // non-operating income per calendar month
+  annual_business_expenses: decimal,       // if taxpayer wants itemized; null = use OSD
+  deduction_method: "OSD" | "ITEMIZED",   // if OSD: ignore expenses; if ITEMIZED: require expenses
+  cwt_total_year: decimal,                // total CWT (Form 2307) for full year
+  q1_8pct_payment: decimal,              // actual payment made for Q1 under 8%
+  q2_8pct_payment: decimal,              // actual payment made for Q2 under 8% (if applicable)
+  q3_8pct_payment: decimal,              // actual payment made for Q3 under 8% (if applicable)
+  tax_year: int                           // e.g., 2026
+}
+
+struct BreachRecomputationOutput {
+  breach_detected: bool,
+  breach_month: int | null,                     // 1-12 (null if no breach)
+  vat_registration_deadline: date | null,       // last day of month following breach month
+  retroactive_pct_tax_due: decimal,            // 3% × receipts from Jan through (breach_month - 1)
+  retroactive_pct_months_covered: string,      // e.g., "Jan-Mar" (months before VAT reg)
+  annual_gross_total: decimal,                 // sum of all monthly gross + non-op
+  deduction_applied: decimal,                  // OSD (40% of gross) or itemized expense total
+  net_taxable_income_annual: decimal,          // annual_gross - deduction
+  annual_graduated_it_due: decimal,            // graduated tax on net_taxable_income_annual
+  total_credits_against_annual: decimal,       // cwt_total_year + q1_8pct_payment + q2 + q3
+  annual_it_payable: decimal,                  // annual_graduated_it_due - total_credits (min 0)
+  annual_it_overpayment: decimal,              // if total_credits > annual_it_due; refundable
+  annual_form_required: "1701",                // always 1701 in breach year
+  vat_filing_start_month: int                  // month from which 2550M/Q must be filed
+}
+
+function compute_breach_recomputation(input: BreachRecomputationInput) -> BreachRecomputationOutput:
+
+  // Step 1: Find breach month
+  cumulative = 0
+  breach_month = null
+  for m in 1..12:
+    cumulative += input.monthly_gross[m] + input.monthly_non_op[m]
+    if cumulative > 3_000_000 and breach_month is null:
+      breach_month = m
+
+  if breach_month is null:
+    return BreachRecomputationOutput { breach_detected: false }
+
+  // Step 2: Retroactive percentage tax
+  receipts_before_breach = sum(input.monthly_gross[1..breach_month-1])
+  non_op_before_breach = sum(input.monthly_non_op[1..breach_month-1])
+  // Note: Sec. 116 percentage tax is on gross receipts only (EOPT: on gross sales from Oct 27, 2024)
+  retroactive_pct_tax = receipts_before_breach * 0.03
+  retroactive_months = months_name_range(1, breach_month - 1)  // e.g., "Jan-Sep"
+
+  // Step 3: Annual gross totals
+  annual_gross = sum(input.monthly_gross[1..12]) + sum(input.monthly_non_op[1..12])
+
+  // Step 4: Deductions
+  if input.deduction_method == "OSD":
+    deduction = annual_gross * 0.40
+    net_taxable = annual_gross - deduction  // = annual_gross * 0.60
+  else:  // ITEMIZED
+    deduction = input.annual_business_expenses
+    net_taxable = annual_gross - deduction
+    if net_taxable < 0: net_taxable = 0  // Cannot be negative (NOLCO rules apply)
+
+  // Step 5: Graduated income tax
+  annual_it_due = compute_graduated_tax(net_taxable, input.tax_year)  // uses CR-002 or CR-003
+
+  // Step 6: Credits
+  total_8pct_payments = input.q1_8pct_payment + input.q2_8pct_payment + input.q3_8pct_payment
+  total_credits = input.cwt_total_year + total_8pct_payments
+
+  // Step 7: Net payable
+  annual_it_payable = MAX(0, annual_it_due - total_credits)
+  annual_it_overpayment = MAX(0, total_credits - annual_it_due)
+
+  // Step 8: VAT registration deadline
+  vat_reg_deadline_month = breach_month + 1
+  if vat_reg_deadline_month > 12:
+    vat_reg_deadline_month = 12  // December if breach in December (register by Dec 31)
+  vat_reg_deadline = last_day_of_month(vat_reg_deadline_month, input.tax_year)
+
+  return BreachRecomputationOutput {
+    breach_detected: true,
+    breach_month: breach_month,
+    vat_registration_deadline: vat_reg_deadline,
+    retroactive_pct_tax_due: retroactive_pct_tax,
+    retroactive_pct_months_covered: retroactive_months,
+    annual_gross_total: annual_gross,
+    deduction_applied: deduction,
+    net_taxable_income_annual: net_taxable,
+    annual_graduated_it_due: annual_it_due,
+    total_credits_against_annual: total_credits,
+    annual_it_payable: annual_it_payable,
+    annual_it_overpayment: annual_it_overpayment,
+    annual_form_required: "1701",
+    vat_filing_start_month: breach_month
+  }
+```
+
+### Breach Computation — Worked Example
+
+**Scenario:** Freelancer elected 8% in Q1 2026. Monthly gross receipts:
+- Jan: ₱400K, Feb: ₱500K, Mar: ₱300K (Q1 cumulative: ₱1.2M; Q1 8% tax paid: ₱76,000)
+- Apr: ₱600K, May: ₱700K (breach at May; May cumulative = ₱1.2M + ₱600K + ₱700K = ₱2.5M ... actually not yet)
+- Let's say: Jan–Sep total = ₱2.8M (Q1-Q3; Q2 8% paid: ₱96,000; Q3 8% paid: ₱68,000)
+- Oct: ₱400K → Cumulative = ₱3.2M → BREACH in October
+
+**Breach month:** October (10)
+
+**Retroactive percentage tax:**
+- Gross Jan–Sep (months 1–9 = before month 10 VAT reg): ₱2,800,000
+- Retroactive PT = ₱2,800,000 × 0.03 = **₱84,000**
+
+**VAT registration deadline:** End of November (month following October)
+
+**Annual recomputation (OSD method):**
+- Full-year gross = ₱3,200,000 (Jan-Oct is shown; assume Nov-Dec add ₱300K): say ₱3,500,000 total
+- OSD = 40% × ₱3,500,000 = ₱1,400,000
+- Net taxable = ₱2,100,000
+- Graduated tax: ₱402,500 + 30% × (₱2,100,000 − ₱2,000,000) = ₱402,500 + ₱30,000 = **₱432,500**
+- CWT credits (full year): assume ₱175,000
+- 8% quarterly payments credited: ₱76,000 + ₱96,000 + ₱68,000 = ₱240,000
+- Total credits: ₱175,000 + ₱240,000 = ₱415,000
+- Annual IT payable: ₱432,500 − ₱415,000 = **₱17,500**
+- Plus retroactive PT: ₱84,000
+- **Total additional tax burden due to breach: ₱101,500**
+
+---
+
+## CR-025: Sales Returns, Allowances, and Discounts — Net Gross Receipts for 8% Base
+
+**Legal basis:** NIRC Sec. 24(A)(2)(b); RR 8-2018; general accounting principles
+
+The 8% computation base and the ₱3M eligibility threshold both use NET gross receipts — i.e., gross receipts after deducting sales returns, allowances, and discounts. This rule is consistent across all three paths.
+
+```
+struct NetGrossReceiptsInput {
+  gross_billings: decimal,         // Total invoiced amounts before any deductions
+  sales_returns: decimal,          // Amounts reversed because client returned or rejected
+  sales_allowances: decimal,       // Post-billing price reductions (not returns; price adjustment)
+  trade_discounts: decimal,        // Discounts shown on invoice at time of billing
+  cash_discounts: decimal,         // Discounts for early payment (only if actually availed and booked)
+  volume_discounts: decimal        // Bulk pricing discounts actually given
+}
+
+function compute_net_gross_receipts(input: NetGrossReceiptsInput) -> decimal:
+  total_deductions = (
+    input.sales_returns +
+    input.sales_allowances +
+    input.trade_discounts +
+    input.cash_discounts +
+    input.volume_discounts
+  )
+  net = input.gross_billings - total_deductions
+  assert net >= 0,
+    "Net gross receipts cannot be negative (deductions exceed billings)"
+  return net
+
+// Usage in 8% computation (purely self-employed):
+net_gross = compute_net_gross_receipts(input)
+eight_pct_threshold_base = net_gross + non_operating_income
+eight_pct_eligible = eight_pct_threshold_base <= 3_000_000
+eight_pct_taxable = MAX(0, eight_pct_threshold_base - 250_000)  // purely SE
+eight_pct_tax_due = eight_pct_taxable * 0.08
+```
+
+**Reimbursements edge case:**
+Some service providers bill clients for reimbursements (travel, accommodation, materials). Treatment:
+- If billed at COST (pass-through, no markup, shown separately on invoice): EXCLUDE from gross receipts
+- If billed at COST + MARKUP (or lumped into professional fee): INCLUDE in gross receipts
+- If unclear: engine shall display MRF flag (MRF-008) asking taxpayer to clarify treatment
+- Default if taxpayer provides no clarification: INCLUDE (conservative — avoids under-reporting)
+
+---
+
 ## Cross-References
 
 - For lookup tables: See [lookup-tables/](lookup-tables/)
   - [lookup-tables/taxpayer-classification-tiers.md](lookup-tables/taxpayer-classification-tiers.md) — complete tier table with all implications
   - [lookup-tables/bir-penalty-schedule.md](lookup-tables/bir-penalty-schedule.md) — complete BIR penalty schedule (compromise tables, criminal penalties, prescriptive periods)
-- For decision trees covering regime selection: See [decision-trees.md](decision-trees.md) (PENDING)
-- For edge cases (mid-year threshold crossing, first-year filers, tier boundaries, e-marketplace withholding, penalty scenarios): See [edge-cases.md](edge-cases.md)
+  - [lookup-tables/eight-percent-option-rules.md](lookup-tables/eight-percent-option-rules.md) — complete 8% option reference (eligibility, election, irrevocability, quarterly mechanics, worked examples)
+- For decision trees covering regime selection: See [decision-trees.md](decision-trees.md)
+  - DT-01: 8% eligibility
+  - DT-02: Election procedure
+  - DT-03: Mid-year breach
+  - DT-04: Annual form selection
+  - DT-05: ₱250,000 deduction applicability
+  - DT-06: Form 2551Q filing obligation
+- For edge cases (mid-year threshold crossing, first-year filers, tier boundaries, e-marketplace withholding, penalty scenarios, 8% option edge cases): See [edge-cases.md](edge-cases.md)
 - For test vectors validating these computations: See [../engine/test-vectors/basic.md](../engine/test-vectors/basic.md) (PENDING)
 - For full legal text behind each rule: See [legal-basis.md](legal-basis.md)
 - For RR 16-2023 source material: See [../../../input/sources/rr-16-2023-emarketplace.md](../../../input/sources/rr-16-2023-emarketplace.md)

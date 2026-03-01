@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 91
-- Analyzed: 83
-- Pending: 8
-- Convergence: 91%
+- Analyzed: 85
+- Pending: 6
+- Convergence: 93%
 
 ---
 
@@ -116,10 +116,10 @@
 - [x] Mandaluyong — validate all routes within/through Mandaluyong
 - [x] Caloocan — validate all routes within/through Caloocan
 - [x] Las Piñas, Parañaque, Muntinlupa — validate southern Metro Manila routes
-- [ ] Marikina, San Juan, Pasay, Malabon, Navotas, Valenzuela, Pateros — remaining cities
+- [x] Marikina, San Juan, Pasay, Malabon, Navotas, Valenzuela, Pateros — remaining cities
 
 ### By Mode Validation
-- [ ] All jeepney routes — deduplicated master list, confidence scores, gap analysis
+- [x] All jeepney routes — deduplicated master list, confidence scores, gap analysis
 - [ ] All city bus routes — deduplicated master list, confidence scores, gap analysis
 - [ ] All provincial bus routes (NCR segments) — deduplicated list of NCR portions
 - [ ] All UV Express routes — deduplicated master list

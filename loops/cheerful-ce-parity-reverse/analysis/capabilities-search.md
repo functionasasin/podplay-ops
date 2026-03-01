@@ -1,383 +1,444 @@
-# Search & Discovery — Capability Extraction
+# Search and Discovery — Capability Extraction
 
-**Aspect**: w1-search
-**Sources**: `spec-backend-api.md` (Domains 6, 13), `spec-integrations.md` (Creator Discovery), actual source code (`creator_search.py`, `youtube.py`, `service.py`, `rag.py`, `embedding.py`, `email_reply_example.py`, `influencer_club.py` models, webapp lookalike suggestion API routes, webapp search hooks/stores)
+## Sources Consulted
+
+| Source | File | Notes |
+|--------|------|-------|
+| Service API routes | `projects/cheerful/apps/backend/src/api/route/service.py` | Ground truth for all `/api/service/` endpoints |
+| IC discovery routes | `projects/cheerful/apps/backend/src/api/route/creator_search.py` | JWT-only — CE cannot call without new service routes |
+| YouTube discovery | `projects/cheerful/apps/backend/src/api/route/youtube.py` | JWT-only — CE cannot call without new service routes |
+| IC API models | `projects/cheerful/apps/backend/src/models/api/influencer_club.py` | Full request/response Pydantic models |
+| Service API models | `projects/cheerful/apps/backend/src/models/api/service.py` | ThreadSearchResult, SimilarEmailResult, etc. |
+| CE API client | `projects/cheerful/apps/context-engine/app/src_v2/mcp/tools/cheerful/api.py` | How CE calls each endpoint |
+| CE Tools | `projects/cheerful/apps/context-engine/app/src_v2/mcp/tools/cheerful/tools.py` | Existing tool implementations |
 
 ---
 
 ## Existing Context Engine Tools
 
-| Tool | Description | Service Endpoint | Coverage |
-|------|-------------|------------------|----------|
-| `cheerful_search_emails` | Full-text search within campaign threads (sender, subject, recipient, body) | `GET /api/service/threads/search` | READ only — searches Gmail + SMTP threads by campaign_id, query text, optional direction filter. Returns ThreadSearchResult[] (max 50) sorted by latest_date desc. |
-| `cheerful_find_similar_emails` | Semantic similarity search via pgvector RAG embeddings | `GET /api/service/rag/similar` | READ only — accepts natural language query OR thread_id. Returns SimilarEmailResult[] with thread_summary, inbound/reply text, similarity score. Max 10 results. |
-| `cheerful_search_campaign_creators` | Cross-campaign creator search by name/email/handle | `GET /api/service/creators/search` | READ only — searches campaign_creator table across all user's campaigns. Returns ServiceCreatorSearchResult[] with campaign context. Max 50 results. |
-
-**Gap**: All 3 existing search tools are read-only and limited to existing database content. No external creator discovery (Influencer Club), no YouTube lookalike search (Apify), no creator profile fetching, no creator enrichment (getting emails), no lookalike suggestion management. The entire "find new creators" workflow has zero CE coverage.
+| Tool | Backend Endpoint | Auth Model | Coverage |
+|------|-----------------|------------|----------|
+| `cheerful_search_emails` | `GET /api/service/threads/search` | Service API key | Full-text email search within campaign |
+| `cheerful_find_similar_emails` | `GET /api/service/rag/similar` | Service API key | Semantic RAG search via pgvector |
+| `cheerful_search_campaign_creators` | `GET /api/service/creators/search` | Service API key | Cross-campaign creator search by name/email/handle |
 
 ---
 
-## Enums & Constants (Verified from Source)
+## Critical Finding: Auth Model Mismatch for Discovery Tools
 
-### Lookalike Suggestion Status (verified from `webapp/app/api/campaigns/[id]/lookalike-suggestions/[suggestionId]/route.ts`)
+**The Influencer Club and YouTube discovery endpoints currently use JWT auth (`get_current_user` dependency), NOT the service API key.** The CE uses `X-Service-Api-Key` authentication for all `/api/service/*` routes. Therefore:
 
-| Value | Description |
-|-------|-------------|
-| `"pending"` | Newly generated, awaiting user review |
-| `"accepted"` | User accepted — added as campaign recipient |
-| `"rejected"` | User rejected — excluded from campaign |
+- `POST /creator-search/keyword` — JWT only, CE cannot call
+- `POST /creator-search/similar` — JWT only, CE cannot call
+- `POST /creator-search/enrich` — JWT only, CE cannot call
+- `POST /creator-search/profile` — JWT only, CE cannot call
+- `POST /youtube/lookalikes` — JWT only, CE cannot call
 
-### Lookalike Suggestion Platform (verified from `campaign_lookalike_suggestion.py`)
+**Remediation**: New `/api/service/` route wrappers must be created for each discovery endpoint (accepting `X-Service-Api-Key` instead of JWT) before CE tools can be implemented. The specs should document this as a prerequisite.
 
-| Value | Description |
-|-------|-------------|
-| `"instagram"` | Instagram creator (default) |
-| `"youtube"` | YouTube channel |
+---
 
-### Creator Search Platform (verified from `influencer_club.py` request models)
+## Critical Finding: User Scoping Gaps in Existing Service Routes
 
-| Value | Description |
-|-------|-------------|
-| `"instagram"` | Instagram search (default for IC similar/keyword search) |
-| `"youtube"` | YouTube search (supported by enrich and profile endpoints) |
+Several existing `/api/service/` endpoints do NOT validate `user_id`, even though the CE client passes it:
 
-### Creator Profile Source (verified from `creator_search.py`)
+| Endpoint | CE Passes user_id? | Backend Validates user_id? | Notes |
+|---------|---------------------|---------------------------|-------|
+| `GET /service/campaigns` | Yes | **YES** | Only endpoint with proper user scoping |
+| `GET /service/threads/search` | Yes | **NO** | Scoped by campaign_id only |
+| `GET /service/threads/{id}` | Yes | **NO** | No campaign_id check either |
+| `GET /service/rag/similar` | Yes | **NO** | Scoped by campaign_id only |
+| `GET /service/campaigns/{id}/creators` | No | **NO** | Campaign_id implicit scope |
+| `GET /service/campaigns/{id}/creators/{id}` | No | **NO** | Campaign_id implicit scope |
+| `GET /service/creators/search` | Yes | **NO** | Searches across ALL users' campaigns |
 
-| Value | Description |
-|-------|-------------|
-| `"cache"` | Served from DB cache (fresh, within 24h) |
-| `"stale_cache"` | Served from DB cache (older than 24h, returned immediately) |
-| `"apify"` | Fresh scrape from Apify Instagram actor |
-| `"influencer_club"` | Enriched via Influencer Club API (YouTube path) |
-
-### Embedding Model Constants (verified from `embedding.py`)
-
-| Constant | Value |
-|----------|-------|
-| EMBEDDING_MODEL | `"text-embedding-3-small"` |
-| EMBEDDING_DIMENSIONS | `1536` |
-
-### IC Search Limit (verified from `creator_search.py`)
-
-| Constant | Value |
-|----------|-------|
-| `_SEARCH_LIMIT` | `10` (hardcoded max results per page from IC API) |
-| `_PROFILE_CACHE_HOURS` | `24` (hours before cache is considered stale) |
-
-### YouTube Lookalike Search Pool Size (verified from `youtube.py`)
-
-| Constraint | Value |
-|-----------|-------|
-| Default | `50` |
-| Min | `10` |
-| Max | `100` |
-
-### Discovery Config Schema (verified from generated `discoveryConfig.ts` and campaign model)
-
-```json
-{
-  "seed_profiles": ["string — Instagram handles to find lookalikes for"],
-  "search_keywords": ["string — Keywords to search for creators"],
-  "follower_min": "integer | null — Minimum follower count filter",
-  "follower_max": "integer | null — Maximum follower count filter",
-  "platform": "string | null — Platform to search on"
-}
-```
+**Implication**: The service API trusts the CE as a trusted internal caller. User scoping is enforced at the CE layer (CE only uses campaign_ids obtained from `list_campaigns?user_id={user_id}`). The `creators/search` endpoint is the most dangerous: it searches across ALL campaigns globally, not filtered to the user's campaigns. This is a security issue that must be documented in specs.
 
 ---
 
 ## Frontend/Backend Capabilities (Not Yet in Context Engine)
 
-### 1. Creator Discovery — Similar Search (Influencer Club) (`creator_search.py`)
+### A. Influencer Club Creator Discovery (5 new tools, 4 need new service routes)
 
-| # | Action | Backend Endpoint | Method | Key Parameters | Returns |
-|---|--------|-----------------|--------|----------------|---------|
-| 1 | Find similar creators by handle | `/v1/creator-search/similar` | POST | `handle` (str, 1-50 chars), `platform` (str, default "instagram"), `page` (int, min 1, default 1), `followers` (RangeFilter: {min?, max?} | null), `engagement_rate` (RangeFilter: {min?, max?} | null), `location` (list[str] | null), `gender` (str | null), `profile_language` (list[str] | null). Auth: JWT. | `CreatorSearchResponse { creators: [SearchedCreatorResponse], total: int|null, provider: "influencer_club", page: int, has_more: bool }` |
-
-**SearchedCreatorResponse fields** (verified from `src/models/api/influencer_club.py`):
-- id: str
-- username: str
-- full_name: str | null
-- profile_pic_url: str | null
-- follower_count: int | null
-- is_verified: bool (default false)
-- biography: str | null
-- email: str | null
-- engagement_rate: float | null
-
-**Error handling** (verified from `creator_search.py`):
-- 503: "Creator search service is not configured." (no IC API key / service is None)
-- 429: "Search service rate limit exceeded. Try again later." (IC rate limit)
-- 503: "Search service is not properly configured." (IC auth failure 401/403)
-- 502: "Search service returned an error." (other IC API errors)
-- 500: "Search failed unexpectedly." (unexpected exception)
-
-**Pagination**: Page-based (not offset). Max 10 results per page (hardcoded `_SEARCH_LIMIT = 10`). `has_more = total > page * 10`.
-
-**No service endpoint exists** — currently JWT-only. Needs new service route.
+| # | Action | Current Backend Endpoint | Method | Key Parameters | Returns |
+|---|--------|-------------------------|--------|----------------|---------|
+| 1 | Discover creators by keyword | `POST /creator-search/keyword` | POST (JWT) | keyword, platform, page, followers, engagement_rate, location, gender, profile_language, sort_by, sort_order | CreatorSearchResponse |
+| 2 | Find creators similar to a handle | `POST /creator-search/similar` | POST (JWT) | handle, platform, page, followers, engagement_rate, location, gender, profile_language | CreatorSearchResponse |
+| 3 | Enrich creator for email + profile | `POST /creator-search/enrich` | POST (JWT) | handle, platform | EnrichedCreatorResponse |
+| 4 | Fetch full creator profile (Apify + cache) | `POST /creator-search/profile` | POST (JWT) | handle, platform, refresh | CreatorProfileResponse |
+| 5 | Find YouTube lookalike channels | `POST /youtube/lookalikes` | POST (JWT) | channel_url, search_pool_size, region, language | YouTubeLookalikeResponse |
 
 ---
 
-### 2. Creator Discovery — Keyword Search (Influencer Club) (`creator_search.py`)
+## Detailed Capability Specifications
 
-| # | Action | Backend Endpoint | Method | Key Parameters | Returns |
-|---|--------|-----------------|--------|----------------|---------|
-| 2 | Search creators by keyword/topic | `/v1/creator-search/keyword` | POST | `keyword` (str, 1-200 chars), `platform` (str, default "instagram"), `page` (int, min 1, default 1), `followers` (RangeFilter | null), `engagement_rate` (RangeFilter | null), `location` (list[str] | null), `gender` (str | null), `profile_language` (list[str] | null), `sort_by` (str | null), `sort_order` (str | null). Auth: JWT. | `CreatorSearchResponse` (same as similar search) |
+### 1. Full-Text Email Search (EXISTING: `cheerful_search_emails`)
 
-**Additional parameters over similar search**: `sort_by` and `sort_order` — passed through to IC API. Frontend supports sorting by followers, engagement, relevance.
+**Backend endpoint**: `GET /api/service/threads/search`
 
-**Error handling**: Same as similar search.
+**Request parameters** (verified from service.py line 73-101):
+| Parameter | Type | Required | Default | Constraint | Notes |
+|-----------|------|----------|---------|------------|-------|
+| campaign_id | UUID | yes | — | valid UUID | Scopes search to this campaign |
+| query | str | yes | — | non-empty | Searches sender, subject, recipient, body |
+| direction | str | no | None | "INBOUND" or "OUTBOUND" | If omitted, searches both directions |
+| limit | int | no | 20 | max 50 | Number of results to return |
 
-**No service endpoint exists** — currently JWT-only.
+**Response model** (`ThreadSearchResult` from service.py):
+```json
+[
+  {
+    "gmail_thread_id": "string — Gmail thread ID or SMTP message-id header",
+    "subject": "string — email subject line",
+    "sender_email": "string — sender email address",
+    "recipient_emails": ["string — recipient addresses"],
+    "direction": "string — INBOUND or OUTBOUND",
+    "message_count": "integer — number of messages in thread",
+    "latest_date": "datetime — ISO 8601 timestamp of most recent message",
+    "matched_snippet": "string — excerpt showing the matched text"
+  }
+]
+```
 
----
+**Implementation note**: Searches BOTH Gmail threads and SMTP threads. Results are merged and sorted by latest_date descending, then trimmed to limit. Combined search of Gmail + SMTP repos.
 
-### 3. Creator Enrichment — Single Creator (Influencer Club) (`creator_search.py`)
-
-| # | Action | Backend Endpoint | Method | Key Parameters | Returns |
-|---|--------|-----------------|--------|----------------|---------|
-| 3 | Enrich creator to get email + profile | `/v1/creator-search/enrich` | POST | `handle` (str, 1-50 chars), `platform` (str, default "instagram"). Auth: JWT. | `EnrichedCreatorResponse { handle, platform, email|null, full_name|null, biography|null, follower_count|null, following_count|null, profile_pic_url|null, is_verified: bool, category|null, city_name|null, external_url|null, engagement_rate|null }` |
-
-**Platform-specific behavior** (verified from `creator_search.py`):
-- **Instagram**: Calls `service.enrich_creator(handle, platform)` via IC enrichment API. Returns full profile data including following_count, is_verified, external_url.
-- **YouTube**: Calls `service.enrich_creator_youtube(handle)` via IC YouTube enrichment. Response maps IC fields differently: `first_name` → `full_name`, `subscriber_count` → `follower_count`, `niche_class` → `category`, `picture` → `profile_pic_url`. Does NOT return following_count, is_verified, city_name, external_url.
-
-**Error handling**: Same as similar search + "Enrichment failed unexpectedly." (500).
-
-**No service endpoint exists** — currently JWT-only.
-
----
-
-### 4. Creator Profile Fetch (Apify + IC + DB Cache) (`creator_search.py`)
-
-| # | Action | Backend Endpoint | Method | Key Parameters | Returns |
-|---|--------|-----------------|--------|----------------|---------|
-| 4 | Fetch full creator profile with cache | `/v1/creator-search/profile` | POST | `handle` (str, 1-50 chars), `platform` (str, default "instagram"), `refresh` (bool, default false). Auth: JWT. | `CreatorProfileResponse { handle, platform, full_name|null, biography|null, follower_count|null, following_count|null, media_count|null, profile_pic_url|null, profile_pic_url_hd|null, is_verified: bool, email|null, category|null, city_name|null, external_url|null, phone_number|null, is_business: bool, bio_links: [CreatorProfileBioLink], latest_posts: [CreatorProfilePost], source: str }` |
-
-**CreatorProfileBioLink fields** (verified from `influencer_club.py`):
-- title: str | null
-- url: str
-- link_type: str | null
-
-**CreatorProfilePost fields** (verified from `influencer_club.py`):
-- id: str
-- shortcode: str | null
-- url: str | null
-- caption: str | null
-- post_type: str | null
-- display_url: str | null
-- video_url: str | null
-- like_count: int (default 0)
-- comment_count: int (default 0)
-- view_count: int | null
-- timestamp: str | null
-- is_sponsored: bool (default false)
-
-**Cache behavior** (verified from `creator_search.py`):
-1. If `refresh=false` and DB record exists with `last_updated_at` within 24 hours → return with `source="cache"`
-2. If `refresh=false` and DB record exists but stale (>24h) → return with `source="stale_cache"` (frontend can trigger refresh)
-3. If `refresh=true` or no DB record → fetch fresh from Apify (Instagram) or IC (YouTube)
-4. On fetch failure, falls back to stale cache if available
-5. Instagram: calls `_fetch_instagram_profile()` (Apify), saves via `save_creator_from_instagram()`, returns `source="apify"`
-6. YouTube: calls IC `enrich_creator_youtube()`, saves to Creator table, returns `source="influencer_club"`
-
-**Error handling** (verified from `creator_search.py`):
-- 404: "Profile not found for @{handle}." (Apify no results + no cache)
-- 404: "YouTube profile not found for @{handle}." (IC failure + no cache)
-- 500: "Profile fetch failed unexpectedly." (unexpected exception)
-
-**No service endpoint exists** — currently JWT-only.
+**CE client note**: CE client (api.py line 56-76) passes `user_id` as a query param but the service endpoint ignores it. Campaign_id is the only scope.
 
 ---
 
-### 5. YouTube Lookalike Search (Apify) (`youtube.py`)
+### 2. Semantic Email Search via pgvector (EXISTING: `cheerful_find_similar_emails`)
 
-| # | Action | Backend Endpoint | Method | Key Parameters | Returns |
-|---|--------|-----------------|--------|----------------|---------|
-| 5 | Find similar YouTube channels | `/v1/youtube/lookalikes` | POST | `channel_url` (str, required — YouTube channel URL or handle, e.g., "https://www.youtube.com/@MrBeast" or "@MrBeast"), `search_pool_size` (int, 10-100, default 50), `region` (str | null — ISO 3166-1 alpha-2 code), `language` (str | null — IETF BCP-47 code). Auth: JWT. | `YouTubeLookalikeResponse { seed_channel: YouTubeSeedChannelResponse, similar_channels: [YouTubeSimilarChannelResponse], keywords_used: [str], scraper_run_id: str, finder_run_id: str }` |
+**Backend endpoint**: `GET /api/service/rag/similar`
 
-**YouTubeSeedChannelResponse fields** (verified from `youtube.py`):
-- channel_id: str
-- channel_name: str
-- channel_username: str | null
-- channel_url: str
-- subscriber_count: int
-- total_videos: int
-- total_views: int
-- description: str | null
-- location: str | null
-- is_verified: bool
-- avatar_url: str | null
-- email: str | null
+**Request parameters** (verified from service.py line 146-201):
+| Parameter | Type | Required | Default | Constraint | Notes |
+|-----------|------|----------|---------|------------|-------|
+| campaign_id | UUID | yes | — | valid UUID | Scopes search to this campaign's examples |
+| query | str | no | None | — | Natural language description; mutually exclusive with thread_id but one is required |
+| thread_id | str | no | None | — | Find similar to this thread; SMTP threads use `<message-id>` format |
+| limit | int | no | 5 | max 10 | Number of similar results |
+| min_similarity | float | no | 0.3 | 0.0-1.0 | Minimum cosine similarity threshold |
 
-**YouTubeSimilarChannelResponse fields** (verified from `youtube.py`):
-- channel_id: str
-- channel_name: str
-- channel_handle: str | null
-- channel_url: str
-- thumbnail_url: str | null
-- description: str | null
-- country: str | null
-- subscriber_count: int | null
-- total_views: int | null
-- keywords: list[str]
-- is_verified: bool
-- channel_type: str | null
-- email: str | null
+**Validation**: Either `query` or `thread_id` must be provided. Returns 422 if neither is given.
 
-**Process** (verified from `youtube.py`):
-1. Normalizes input (handle or URL → full URL)
-2. Fetches seed channel details via YouTube Apify channel scraper
-3. Uses LLM to extract relevant search keywords from seed channel
-4. Searches for similar channels using extracted keywords via YouTube Channel Finder Apify actor
-5. Returns ALL channels with emails found (not capped at search_pool_size — search_pool_size controls how many to search before filtering)
-6. **Side effect**: Saves all discovered channels to the global `creator` table via `save_creator_from_youtube()`
+**Response model** (`SimilarEmailResult` from service.py line 51-61):
+```json
+[
+  {
+    "thread_id": "string — Gmail thread ID or SMTP message-id of the similar example",
+    "campaign_id": "string — campaign UUID the example belongs to",
+    "thread_summary": "string — AI-generated summary of the thread context",
+    "inbound_email_text": "string — the inbound email that was replied to",
+    "sent_reply_text": "string — the human reply that was sent",
+    "sanitized_reply_text": "string | null — redacted version of reply with PII removed",
+    "similarity": "float — cosine similarity score (0.0-1.0)"
+  }
+]
+```
 
-**Error handling** (verified from `youtube.py`):
-- 400: "Invalid YouTube channel. Provide a channel URL, @handle, or channel ID." (invalid input after normalization)
-- 429: "Service rate limit exceeded. Please try again later." (Apify/YouTube rate limit)
-- 503: "YouTube search service is not properly configured." (auth error)
-- 404: "Channel not found or invalid URL: {channel_url}" (channel not found)
-- 500: "An unexpected error occurred while searching for similar channels." (unexpected error)
+**Implementation detail**: When using `thread_id`, the service fetches the last 5 messages of the thread, concatenates their body text (max 4000 chars), and embeds that text. The embedding is then used for pgvector search against `EmailReplyExample` records for the given campaign.
 
-**No service endpoint exists** — currently JWT-only.
+**SMTP thread detection**: Thread IDs starting with `<` and ending with `>` are SMTP message-ids. All other thread IDs are treated as Gmail thread IDs.
 
 ---
 
-### 6. Lookalike Suggestion Management (Webapp-Only — Next.js API Routes)
+### 3. Cross-Campaign Creator Search (EXISTING: `cheerful_search_campaign_creators`)
 
-These endpoints are implemented entirely in the webapp as Next.js API routes using Supabase client directly. **There are no backend FastAPI endpoints for these.** The backend only generates suggestions via the Temporal `generate_lookalikes_for_opt_in_activity`.
+**Backend endpoint**: `GET /api/service/creators/search`
 
-| # | Action | Webapp API Route | Method | Key Parameters | Returns |
-|---|--------|-----------------|--------|----------------|---------|
-| 6 | List lookalike suggestions | `/api/campaigns/{id}/lookalike-suggestions` | GET | `status` (query param, optional — "pending", "accepted", "rejected"). Auth: Supabase session. | `CampaignLookalikeSuggestion[]` — filtered to non-null email only, ordered by similarity_score desc |
-| 7 | Update suggestion status | `/api/campaigns/{id}/lookalike-suggestions/{suggestionId}` | PUT | `status` (body — "accepted", "rejected", "pending"). Auth: Supabase session + CSRF. | Updated suggestion record |
-| 8 | Bulk accept suggestions | `/api/campaigns/{id}/lookalike-suggestions/bulk-accept` | POST | `suggestion_ids` (body — array of UUID strings, min 1). Auth: Supabase session + CSRF. | `{ accepted_count: int, added_recipient_count: int, failed_suggestion_ids: [str] }` |
-| 9 | Bulk reject suggestions | `/api/campaigns/{id}/lookalike-suggestions/bulk-reject` | POST | `suggestion_ids` (body — array of UUID strings, min 1). Auth: Supabase session + CSRF. | `{ rejected_count: int, failed_suggestion_ids: [str] }` |
+**Request parameters** (verified from service.py line 310-359):
+| Parameter | Type | Required | Default | Constraint | Notes |
+|-----------|------|----------|---------|------------|-------|
+| query | str | yes | — | non-empty | Searches name, email, and social media handles |
+| campaign_id | UUID | no | None | valid UUID | Filter to a specific campaign; if omitted, searches ALL campaigns globally |
+| limit | int | no | 20 | max 50 | Maximum results |
 
-**CampaignLookalikeSuggestion fields** (verified from `campaign_lookalike_suggestion.py` DB model):
-- id: UUID
-- campaign_id: UUID
-- seed_creator_id: UUID
-- seed_platform_handle: str
-- platform: str ("instagram" or "youtube")
-- suggested_username: str
-- suggested_full_name: str | null
-- suggested_biography: str | null
-- suggested_follower_count: int (default 0)
-- suggested_profile_pic_url: str | null
-- suggested_is_verified: bool (default false)
-- suggested_external_url: str | null
-- suggested_category: str | null
-- suggested_email: str | null
-- apify_run_id: str
-- similarity_score: float | null (Numeric(5,2))
-- status: str (default "pending")
-- created_at: datetime
-- updated_at: datetime
+**Response model** (`ServiceCreatorSearchResponse`):
+```json
+{
+  "results": [
+    {
+      "id": "string — campaign creator UUID",
+      "campaign_id": "string — campaign UUID",
+      "campaign_name": "string — campaign name (joined from CampaignRepository)",
+      "name": "string | null — creator display name",
+      "email": "string | null — creator email address",
+      "role": "string — creator role (lead, follower, manager, producer, other)",
+      "gifting_status": "string | null — current gifting status",
+      "social_media_handles": [
+        {"platform": "string", "handle": "string"}
+      ]
+    }
+  ]
+}
+```
 
-**Unique constraint**: `(campaign_id, platform, suggested_username)` — prevents duplicate suggestions per campaign+platform.
-
-**Bulk accept side effects** (verified from `bulk-accept/route.ts`):
-1. Updates suggestion status to "accepted"
-2. For each suggestion with email: checks if `campaign_recipient` already exists
-3. If not exists: inserts new recipient with `custom_fields` containing instagram_username, follower_count, is_verified, category, lookalike_suggestion_id, seed_platform_handle
-4. Returns count of accepted suggestions + count of added recipients + any failed IDs
-
-**Auth model**: Uses Supabase RLS for campaign access checks — both owner and assigned team members can manage suggestions.
-
-**Key discovery**: These endpoints bypass the backend entirely — they use Supabase client directly from Next.js. For the CE to manage suggestions, new backend service endpoints would need to be created, OR the CE would need direct Supabase access.
+**Security note**: When no `campaign_id` is provided, the endpoint searches ALL campaigns globally (not filtered to the authenticated user's campaigns). The CE client passes user_id but the backend ignores it. This means a CE user could theoretically search creators from campaigns they don't own (though they'd need to know what to search for). This is acceptable because the service layer is trusted, and the CE itself is responsible for not exposing cross-user data.
 
 ---
 
-### 7. Auto-Discovery Configuration (Campaign-Level Settings)
+### 4. Keyword-Based Creator Discovery (NEW: `cheerful_discover_creators_by_keyword`)
 
-Auto-discovery is configured per-campaign as fields on the Campaign model. No dedicated endpoints — managed via campaign create/update.
+**Current backend endpoint**: `POST /creator-search/keyword` (JWT auth — needs service route)
+**Required new service route**: `POST /api/service/creator-search/keyword`
 
-| # | Action | Backend Endpoint | Method | Key Parameters | Returns |
-|---|--------|-----------------|--------|----------------|---------|
-| 10 | Enable/configure auto-discovery | Campaign update endpoint | PATCH | `discovery_enabled` (bool), `discovery_config` (DiscoveryConfig), `is_lookalike_suggestions_enabled` (bool) | Campaign response |
+**Request model** (`KeywordSearchRequest` from influencer_club.py line 104-114):
+| Parameter | Type | Required | Default | Constraint | Notes |
+|-----------|------|----------|---------|------------|-------|
+| keyword | str | yes | — | 1-200 chars | AI-powered keyword search via Influencer Club |
+| platform | str | no | "instagram" | "instagram" or "youtube" (IC may support others) | Platform to search |
+| page | int | no | 1 | ≥1 | Page number (10 results per page, hardcoded) |
+| followers | RangeFilter | no | None | {min: float, max: float} | Follower count filter range |
+| engagement_rate | RangeFilter | no | None | {min: float, max: float} | Engagement rate filter range |
+| location | list[str] | no | None | — | Location filter (city/country strings) |
+| gender | str | no | None | — | Gender filter |
+| profile_language | list[str] | no | None | — | Profile language filter (e.g., ["en"]) |
+| sort_by | str | no | None | — | Sort field |
+| sort_order | str | no | None | — | Sort direction |
 
-**DiscoveryConfig fields** (verified from `discoveryConfig.ts` and campaign models):
-- seed_profiles: list[str] | null — Instagram handles to find lookalikes for
-- search_keywords: list[str] | null — Keywords to search for creators
-- follower_min: int | null — Minimum follower count filter
-- follower_max: int | null — Maximum follower count filter
-- platform: str | null — Platform to search on
+**Page size**: ALWAYS 10 results per page (hardcoded `_SEARCH_LIMIT = 10` in creator_search.py line 13). The `limit` is NOT a user parameter.
 
-**How auto-discovery works** (verified from `generate_lookalikes_activity.py`):
-1. When `is_lookalike_suggestions_enabled=true` on a campaign, the Temporal `generate_lookalikes_for_opt_in_activity` runs when creators opt in
-2. For each opted-in creator: detects platform from social_media_handles (YouTube first, then Instagram)
-3. Calls Apify to get similar creators (Instagram: max 40, YouTube: via channel finder)
-4. Stores results in `campaign_lookalike_suggestion` table via upsert (ON CONFLICT by campaign_id + platform + username)
-5. Only stores suggestions that have an email address
-6. Also saves all discovered creators to the global `creator` table
-7. Skips if campaign status is COMPLETED
+**Response model** (`CreatorSearchResponse` from influencer_club.py line 136-142):
+```json
+{
+  "creators": [
+    {
+      "id": "string — IC user_id or 'ic-{index}' if no user_id",
+      "username": "string — social handle",
+      "full_name": "string | null — display name",
+      "profile_pic_url": "string | null — profile picture URL",
+      "follower_count": "integer | null — number of followers",
+      "is_verified": "boolean — always false for IC results (not set in mapping)",
+      "biography": "string | null — profile bio",
+      "email": "string | null — email address if available",
+      "engagement_rate": "float | null — engagement rate percentage"
+    }
+  ],
+  "total": "integer | null — total results available (from IC)",
+  "provider": "string — always 'influencer_club'",
+  "page": "integer — current page number",
+  "has_more": "boolean — true if total > page * 10"
+}
+```
 
-**Note**: `discovery_enabled` and `discovery_config` appear to be for a separate weekly automated discovery feature (distinct from per-opt-in lookalike generation). Both are managed via campaign update.
+**Note**: The `id` field for IC search results is the IC `user_id`, NOT a Cheerful campaign creator UUID. To save a creator to a campaign, use the `cheerful_add_creator_to_campaign` tool with the `username` value.
 
 ---
 
-## Service Endpoint Coverage for Context Engine
+### 5. Similar Creator Discovery (NEW: `cheerful_discover_similar_creators`)
 
-The context engine currently calls 3 service endpoints for search/discovery:
+**Current backend endpoint**: `POST /creator-search/similar` (JWT auth — needs service route)
+**Required new service route**: `POST /api/service/creator-search/similar`
 
-| Service Endpoint | CE Tool | Parameters |
-|-----------------|---------|------------|
-| `GET /api/service/threads/search` | `cheerful_search_emails` | user_id (injected), campaign_id, query, direction, limit (max 50) |
-| `GET /api/service/rag/similar` | `cheerful_find_similar_emails` | user_id (injected), campaign_id, query OR thread_id, limit (max 10), min_similarity |
-| `GET /api/service/creators/search` | `cheerful_search_campaign_creators` | user_id (injected), query, campaign_id, limit (max 50) |
+**Request model** (`SimilarSearchRequest` from influencer_club.py line 93-101):
+| Parameter | Type | Required | Default | Constraint | Notes |
+|-----------|------|----------|---------|------------|-------|
+| handle | str | yes | — | 1-50 chars | Social handle to find similar creators for |
+| platform | str | no | "instagram" | "instagram" (IC likely supports others) | Platform of the seed handle |
+| page | int | no | 1 | ≥1 | Page number (10 results per page, hardcoded) |
+| followers | RangeFilter | no | None | {min: float, max: float} | Follower count range filter |
+| engagement_rate | RangeFilter | no | None | {min: float, max: float} | Engagement rate range filter |
+| location | list[str] | no | None | — | Location filter |
+| gender | str | no | None | — | Gender filter |
+| profile_language | list[str] | no | None | — | Profile language filter |
 
-**New service endpoints needed** for search/discovery parity:
+**Page size**: ALWAYS 10 results per page (hardcoded `_SEARCH_LIMIT = 10`).
 
-1. **Creator similar search** — `POST /api/service/creator-search/similar` — proxy to IC similar search
-2. **Creator keyword search** — `POST /api/service/creator-search/keyword` — proxy to IC keyword search
-3. **Creator enrichment** — `POST /api/service/creator-search/enrich` — proxy to IC enrichment
-4. **Creator profile fetch** — `POST /api/service/creator-search/profile` — proxy with DB cache
-5. **YouTube lookalike search** — `POST /api/service/youtube/lookalikes` — proxy to Apify YouTube search
-6. **List lookalike suggestions** — `GET /api/service/campaigns/{campaign_id}/lookalike-suggestions` — query DB
-7. **Update suggestion status** — `PUT /api/service/campaigns/{campaign_id}/lookalike-suggestions/{id}` — update DB
-8. **Bulk accept suggestions** — `POST /api/service/campaigns/{campaign_id}/lookalike-suggestions/bulk-accept` — accept + add recipients
-9. **Bulk reject suggestions** — `POST /api/service/campaigns/{campaign_id}/lookalike-suggestions/bulk-reject` — reject
+**Response model**: Same `CreatorSearchResponse` structure as keyword search (see above).
 
-### Existing Tool Issues Discovered
+---
 
-1. **`cheerful_search_emails`**: The service endpoint `GET /api/service/threads/search` does NOT accept `user_id` as a parameter — it only takes `campaign_id`, `query`, `direction`, `limit`. User scoping happens indirectly because the CE tool must know valid campaign IDs for the user (obtained from `cheerful_list_campaigns`). However, the search endpoint itself does NOT verify user ownership of the campaign. This is a security gap — anyone with a valid campaign_id could search threads.
+### 6. Creator Enrichment (NEW: `cheerful_enrich_creator_profile`)
 
-2. **`cheerful_find_similar_emails`**: Same issue — `GET /api/service/rag/similar` takes `campaign_id` but doesn't validate user access to that campaign.
+**Current backend endpoint**: `POST /creator-search/enrich` (JWT auth — needs service route)
+**Required new service route**: `POST /api/service/creator-search/enrich`
 
-3. **`cheerful_search_campaign_creators`**: The service endpoint does NOT filter by user_id even though `user_id` is passed as a query parameter. Looking at the service.py code (line 314-358), the `search_creators` function takes `query`, `campaign_id`, and `limit` — but there's no `user_id` filtering. The `repo.search_across_campaigns()` searches across ALL campaigns, not just the user's. This is a significant security gap.
+**Request model** (`EnrichCreatorRequest` from influencer_club.py line 117-119):
+| Parameter | Type | Required | Default | Constraint | Notes |
+|-----------|------|----------|---------|------------|-------|
+| handle | str | yes | — | 1-50 chars | Social handle to enrich |
+| platform | str | no | "instagram" | "instagram" or "youtube" | Platform to enrich for |
+
+**Response model** (`EnrichedCreatorResponse` from influencer_club.py line 144-158):
+```json
+{
+  "handle": "string — the handle that was enriched",
+  "platform": "string — the platform",
+  "email": "string | null — contact email if found by IC",
+  "full_name": "string | null — display name",
+  "biography": "string | null — profile bio",
+  "follower_count": "integer | null — number of followers",
+  "following_count": "integer | null — number following (Instagram only, null for YouTube)",
+  "profile_pic_url": "string | null — profile picture URL",
+  "is_verified": "boolean — verified account status (Instagram only; false for YouTube path)",
+  "category": "string | null — content category/niche",
+  "city_name": "string | null — location city (Instagram only, null for YouTube)",
+  "external_url": "string | null — bio link URL (Instagram only, null for YouTube)",
+  "engagement_rate": "float | null — engagement rate percentage"
+}
+```
+
+**Platform differences** (verified from creator_search.py lines 231-295):
+- `instagram`: Uses IC `enrich_creator()` — provides full profile including following_count, city_name, external_url, is_verified
+- `youtube`: Uses IC `enrich_creator_youtube()` — provides channel_name as full_name, description as biography, subscriber_count as follower_count, picture as profile_pic_url, niche_class as category; always is_verified=false; no following_count/city_name/external_url
+
+---
+
+### 7. Full Creator Profile via Apify (NEW: `cheerful_get_creator_full_profile`)
+
+**Current backend endpoint**: `POST /creator-search/profile` (JWT auth — needs service route)
+**Required new service route**: `POST /api/service/creator-search/profile`
+
+**Request model** (`CreatorProfileRequest` from influencer_club.py line 160-163):
+| Parameter | Type | Required | Default | Constraint | Notes |
+|-----------|------|----------|---------|------------|-------|
+| handle | str | yes | — | 1-50 chars | Social handle (@ prefix stripped if present) |
+| platform | str | no | "instagram" | "instagram" or "youtube" | Platform to fetch profile for |
+| refresh | bool | no | false | — | Force refresh even if cache is fresh (< 24h) |
+
+**Cache behavior** (verified from creator_search.py lines 365-390):
+- Cache lifetime: 24 hours (`_PROFILE_CACHE_HOURS = 24`)
+- Cache hit: Returns from DB with `source: "cache"`
+- Stale cache (older than 24h): Returns old data with `source: "stale_cache"` immediately
+- Refresh forced (`refresh=true`): Fetches fresh from Apify regardless of cache age
+- No cache + fresh fetch: Returns from Apify with `source: "apify"` (Instagram) or `source: "influencer_club"` (YouTube)
+
+**Response model** (`CreatorProfileResponse` from influencer_club.py lines 187-207):
+```json
+{
+  "handle": "string — the handle (@ stripped)",
+  "platform": "string — the platform",
+  "full_name": "string | null — display name",
+  "biography": "string | null — profile bio text",
+  "follower_count": "integer | null — follower count",
+  "following_count": "integer | null — following count (Instagram; null for YouTube)",
+  "media_count": "integer | null — total posts or videos",
+  "profile_pic_url": "string | null — standard profile picture URL",
+  "profile_pic_url_hd": "string | null — high-resolution profile picture URL (Instagram only)",
+  "is_verified": "boolean — whether account is verified",
+  "email": "string | null — contact email if available",
+  "category": "string | null — content category/niche",
+  "city_name": "string | null — location (Instagram only)",
+  "external_url": "string | null — bio link URL (Instagram only)",
+  "phone_number": "string | null — contact phone (Instagram only)",
+  "is_business": "boolean — whether account is a business account (Instagram only; false for YouTube)",
+  "bio_links": [
+    {
+      "title": "string | null — link display title",
+      "url": "string — link URL",
+      "link_type": "string | null — type of link"
+    }
+  ],
+  "latest_posts": [
+    {
+      "id": "string — post ID",
+      "shortcode": "string | null — Instagram shortcode for URL",
+      "url": "string | null — direct post URL",
+      "caption": "string | null — post caption text",
+      "post_type": "string | null — type of post",
+      "display_url": "string | null — thumbnail/display image URL",
+      "video_url": "string | null — video URL if applicable",
+      "like_count": "integer — number of likes",
+      "comment_count": "integer — number of comments",
+      "view_count": "integer | null — view count for videos",
+      "timestamp": "string | null — post timestamp",
+      "is_sponsored": "boolean — whether post is sponsored"
+    }
+  ],
+  "source": "string — one of: 'cache', 'stale_cache', 'apify', 'influencer_club'"
+}
+```
+
+**Error conditions** (from creator_search.py):
+- 404: Profile not found and no cache available (`f"Profile not found for @{handle}."` or `f"YouTube profile not found for @{handle}."`)
+- 500: Apify fetch failed unexpectedly
+
+---
+
+### 8. YouTube Lookalike Channel Discovery (NEW: `cheerful_find_youtube_lookalikes`)
+
+**Current backend endpoint**: `POST /youtube/lookalikes` (JWT auth — needs service route)
+**Required new service route**: `POST /api/service/youtube/lookalikes`
+
+**Request model** (`YouTubeLookalikeRequest` from youtube.py lines 27-48):
+| Parameter | Type | Required | Default | Constraint | Notes |
+|-----------|------|----------|---------|------------|-------|
+| channel_url | str | yes | — | non-empty | YouTube channel URL, @handle, or channel ID. Normalized to full URL internally. Examples: "https://www.youtube.com/@MrBeast", "@MrBeast" |
+| search_pool_size | int | no | 50 | 10-100 | How many channels to search before filtering for emails. Returns ALL with emails found. |
+| region | str | no | None | ISO 3166-1 alpha-2 (e.g., "US") | Geographic filter for results |
+| language | str | no | None | IETF BCP-47 (e.g., "en") | Language filter for channel content |
+
+**Response model** (`YouTubeLookalikeResponse` from youtube.py lines 86-93):
+```json
+{
+  "seed_channel": {
+    "channel_id": "string — YouTube channel ID",
+    "channel_name": "string — channel display name",
+    "channel_username": "string | null — @handle if available",
+    "channel_url": "string — full YouTube channel URL",
+    "subscriber_count": "integer — number of subscribers",
+    "total_videos": "integer — total uploaded videos",
+    "total_views": "integer — total view count",
+    "description": "string | null — channel description",
+    "location": "string | null — channel location",
+    "is_verified": "boolean — whether channel is verified",
+    "avatar_url": "string | null — channel avatar/thumbnail URL",
+    "email": "string | null — contact email if found in channel description"
+  },
+  "similar_channels": [
+    {
+      "channel_id": "string — YouTube channel ID",
+      "channel_name": "string — channel display name",
+      "channel_handle": "string | null — @handle if available",
+      "channel_url": "string — full YouTube channel URL",
+      "thumbnail_url": "string | null — channel thumbnail",
+      "description": "string | null — channel description",
+      "country": "string | null — channel country",
+      "subscriber_count": "integer | null — subscribers",
+      "total_views": "integer | null — total views",
+      "keywords": ["string — search keyword tags"],
+      "is_verified": "boolean — whether verified",
+      "channel_type": "string | null — channel type category",
+      "email": "string | null — contact email if found"
+    }
+  ],
+  "keywords_used": ["string — keywords AI extracted from seed channel"],
+  "scraper_run_id": "string — Apify scraper run ID for debugging",
+  "finder_run_id": "string — Apify channel finder run ID for debugging"
+}
+```
+
+**Side effects**: Saves all discovered similar channels to the global Creator table with `source="apify_youtube_lookalike:{finder_run_id}"` as a side effect of this call.
+
+**Error conditions** (from youtube.py):
+- 400: Invalid YouTube channel input (invalid URL/handle format)
+- 404: Channel not found or invalid URL
+- 429: Apify/YouTube service rate limit exceeded (check "rate limit" or "quota" in error message)
+- 500: Unexpected error during search
+- 503: Auth/config issue with Apify service ("unauthorized" or "forbidden" in error message)
+
+**Performance note**: This is a long-running operation involving Apify web scraping (scraper run) + AI keyword extraction + channel finder (finder run). It should be invoked asynchronously or with user expectation of wait time.
 
 ---
 
 ## Summary
 
-**Total search/discovery capabilities identified: 10 (across 7 sub-domains)**
+| Category | Count | New Tools Needed | Service Route Required |
+|----------|-------|-----------------|----------------------|
+| Existing CE tools (search domain) | 3 | 0 | N/A |
+| New IC creator discovery | 4 | 4 | YES — 4 new POST /api/service/ routes |
+| New YouTube lookalike | 1 | 1 | YES — 1 new POST /api/service/ route |
+| **Total** | **8** | **5** | **5 new service routes** |
 
-| Sub-domain | Count | Existing CE Tools | Gap |
-|-----------|-------|-------------------|-----|
-| Full-text email thread search | 1 | 1 (`cheerful_search_emails`) | Already covered (read-only) |
-| Semantic email similarity (pgvector) | 1 | 1 (`cheerful_find_similar_emails`) | Already covered (read-only) |
-| Cross-campaign creator search | 1 | 1 (`cheerful_search_campaign_creators`) | Already covered (read-only, security gap noted) |
-| Creator discovery — IC similar/keyword | 2 | 0 | 2 new tools needed |
-| Creator enrichment + profile | 2 | 0 | 2 new tools needed |
-| YouTube lookalike search | 1 | 0 | 1 new tool needed |
-| Lookalike suggestion management | 4 | 0 | 3-4 new tools needed (list, accept/reject, bulk ops) |
-| Auto-discovery configuration | 1 | 0 | 0 new tools (covered by campaign update) |
-| **TOTAL** | **13** (+ 3 existing) | **3** | **~8-9 new tools** |
+### Tool List
 
-### Discoveries Not in Original Frontier
-
-1. **Lookalike suggestion management is webapp-only** — Next.js API routes using Supabase client directly. No backend endpoints exist. The CE would need new backend service endpoints to manage suggestions, or direct Supabase access.
-
-2. **Security gaps in existing service endpoints** — Thread search and RAG similar endpoints don't validate user ownership of campaign_id. Creator search doesn't filter by user_id. These should be flagged for the existing tools audit (w3-existing-tools-audit).
-
-3. **Auto-discovery configuration** — `discovery_enabled` and `discovery_config` are campaign-level settings managed via campaign update. No dedicated endpoints needed — covered by campaign tools.
-
-4. **Temporal-only lookalike generation** — The actual lookalike generation runs as a Temporal activity (`generate_lookalikes_for_opt_in_activity`). There's no API endpoint to manually trigger it. It auto-runs when creators opt in to campaigns with `is_lookalike_suggestions_enabled=true`.
-
-5. **YouTube enrichment path difference** — YouTube creators go through IC YouTube enrichment which returns different fields than Instagram enrichment. The response mapping is different (e.g., `first_name` vs `full_name`, `subscriber_count` vs `follower_count`).
-
-6. **Search supports both IC and Apify paths** — Frontend has a feature flag `influencer_club_search` that switches between synchronous IC API calls and async Apify start-then-poll. The CE tools should use the IC path (synchronous, simpler).
-
-7. **Overlap with w1-creators** — Creator search/discovery endpoints were also partially documented in `capabilities-creators.md`. This extraction covers them with more detail on the search parameters and frontend UX. The w2-search tool design should reference w1-creators extraction for shared types.
+| # | Tool Name | Status | Backend Endpoint |
+|---|-----------|--------|-----------------|
+| 1 | `cheerful_search_emails` | EXISTS | `GET /api/service/threads/search` |
+| 2 | `cheerful_find_similar_emails` | EXISTS | `GET /api/service/rag/similar` |
+| 3 | `cheerful_search_campaign_creators` | EXISTS | `GET /api/service/creators/search` |
+| 4 | `cheerful_discover_creators_by_keyword` | NEW | `POST /api/service/creator-search/keyword` (needs route) |
+| 5 | `cheerful_discover_similar_creators` | NEW | `POST /api/service/creator-search/similar` (needs route) |
+| 6 | `cheerful_enrich_creator_profile` | NEW | `POST /api/service/creator-search/enrich` (needs route) |
+| 7 | `cheerful_get_creator_full_profile` | NEW | `POST /api/service/creator-search/profile` (needs route) |
+| 8 | `cheerful_find_youtube_lookalikes` | NEW | `POST /api/service/youtube/lookalikes` (needs route) |
