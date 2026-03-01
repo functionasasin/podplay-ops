@@ -9,9 +9,9 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 24 |
-| Analyzed | 14 |
-| Pending | 10 |
-| Convergence | 58% |
+| Analyzed | 15 |
+| Pending | 9 |
+| Convergence | 63% |
 
 ---
 
@@ -37,7 +37,7 @@
 ## Wave 3: Component Implementation Specs (Backend + Context Engine)
 
 - [x] `spec-webhook-handler` — FastAPI webhook endpoint: verification, HMAC validation, payload parsing, BackgroundTask dispatch
-- [ ] `spec-ingest-workflow` — IgDmIngestWorkflow: dedup, media download, store, thread match, state transition, IGSID trigger
+- [x] `spec-ingest-workflow` — IgDmIngestWorkflow: dedup, media download, store, thread match, state transition, IGSID trigger
 - [ ] `spec-creator-resolution` — IGSID->creator matching: cache, Graph API fallback, GIN index lookup, campaign disambiguation
 - [ ] `spec-send-reply` — IgDmSendReplyWorkflow: 24h window check, Meta send API, state update, error handling
 - [ ] `spec-ce-ig-dm-tools` — 8 context engine MCP tools: list/get/search DM threads, send reply, approve draft, connect/list IG accounts, campaign DM summary
