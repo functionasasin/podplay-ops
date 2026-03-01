@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 35
-- Analyzed: 12
-- Pending: 23
-- Convergence: 34%
+- Analyzed: 13
+- Pending: 22
+- Convergence: 37%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -25,7 +25,7 @@
 - [x] spec-pdf-export — PDF with firm header, distribution table, statute citations, narratives, computation log, warnings. Reads: codebase-audit, pdf-export-patterns, legal-doc-formatting.
 - [x] spec-auth-persistence — Supabase auth, cases table, save/load, auto-save. Reads: auth-persistence-patterns, codebase-audit.
 - [x] spec-client-profiles — Client table, client-case FK, list/detail pages, intake flow. Depends: spec-auth-persistence. Reads: crm-law-firm-patterns.
-- [ ] spec-firm-branding — Settings page, firm header on PDF, logo upload/storage. Depends: spec-pdf-export, spec-auth-persistence.
+- [x] spec-firm-branding — Settings page, firm header on PDF, logo upload/storage. Depends: spec-pdf-export, spec-auth-persistence.
 - [ ] spec-statute-citations-ui — Render legal_basis[] in distribution table, expandable rows, article text tooltips. Reads: codebase-audit.
 - [ ] spec-case-notes — Per-case timestamped notes, annotation display, optional PDF inclusion. Depends: spec-auth-persistence.
 - [ ] spec-print-layout — @media print CSS, A4 formatting, page breaks, hidden nav elements. Reads: legal-doc-formatting, codebase-audit.
