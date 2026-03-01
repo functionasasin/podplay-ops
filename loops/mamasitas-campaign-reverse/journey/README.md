@@ -7,7 +7,7 @@
 | 1 | Campaign Setup | `stage-1-campaign-setup.md` | complete |
 | 2 | Creator Discovery | `stage-2-creator-discovery.md` | complete |
 | 3 | Creator Vetting | `stage-3-creator-vetting.md` | complete |
-| 4 | IG DM Outreach | `stage-4-ig-outreach.md` | pending |
+| 4 | IG DM Outreach | `stage-4-ig-outreach.md` | complete — cold outbound gap (P0 architectural), manual send required, CE tools for prep + monitoring |
 | 5 | Response Management | `stage-5-response-management.md` | pending |
 | 6 | Negotiation | `stage-6-negotiation.md` | pending |
 | 7 | Shipping Export | `stage-7-shipping-export.md` | pending |

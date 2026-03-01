@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total Aspects**: 12
-- **Analyzed**: 3
-- **Pending**: 9
-- **Convergence**: 25%
+- **Analyzed**: 4
+- **Pending**: 8
+- **Convergence**: 33%
 
 ---
 
@@ -21,7 +21,7 @@ Map campaign creation and creator targeting to Cheerful CE tools. Read CE parity
 
 Direct creator contact via Instagram DM. Read IG DM spec for send/receive flows and 24h window handling.
 
-- [ ] **stage-ig-outreach** — Initial IG DM outreach to 50+ creators: connect IG business account, compose personalized outreach template, bulk/sequential send, delivery tracking. The outreach message for Mama Sita's gifting offer.
+- [x] **stage-ig-outreach** — Initial IG DM outreach to 50+ creators: connect IG business account, compose personalized outreach template, bulk/sequential send, delivery tracking. The outreach message for Mama Sita's gifting offer.
 - [ ] **stage-response-management** — Track creator responses: inbound DM webhook notifications, response categorization, 24h window management, follow-up scheduling, Slack notification flow.
 - [ ] **stage-negotiation** — Agree on deliverables: content requirements (post type, hashtags #MamaSitas #HomeCooking, @mention, timeline), shipping address collection, opt-in confirmation tracking.
 - [ ] **stage-shipping-export** — Export opted-in creator table: shipping addresses, product assignments, CSV/sheets export, shipping status tracking back in Cheerful.
