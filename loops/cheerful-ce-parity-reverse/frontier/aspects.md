@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total Aspects**: 36
-- **Analyzed**: 20
-- **Pending**: 16
-- **Convergence**: 55.6%
+- **Analyzed**: 21
+- **Pending**: 15
+- **Convergence**: 58.3%
 
 ---
 
@@ -20,7 +20,7 @@ Read existing cheerful-reverse specs + verify against source code. Produce raw c
 - [x] **w1-users-team** — Extract all user/team capabilities: 31 endpoints across 6 sub-domains (user settings, connected accounts, email signatures, team management, campaign assignments, onboarding). 0 existing CE tools — full gap. Key discoveries: email signatures have 6 endpoints with user-level vs campaign-specific model, SMTP has full CRUD + bulk import, onboarding is webapp-only (no backend endpoints), PUT /user/settings is a no-op placeholder, campaign assignment cascades on member removal. Sources verified: `user.py`, `team.py`, `email_signature.py`, `smtp_account.py`, webapp onboarding routes
 - [x] **w1-analytics** — Extract all analytics/dashboard capabilities: campaign metrics (creator count, response rate, emails sent, opt-in rate), active campaigns table, follow-up statistics, gifting/paid pipeline, per-campaign stats. Sources: `spec-webapp.md` (Dashboard), backend routes `analytics.py`, `dashboard.py`
 - [x] **w1-search** — Extract all search/discovery capabilities: 8 tools total — 3 existing CE tools (search_emails, find_similar_emails, search_campaign_creators) + 5 new (IC keyword discovery, IC similar discovery, IC enrich, Apify profile, YouTube lookalike). CRITICAL: all 5 new tools need new /api/service/ routes — they currently use JWT auth only. Security gaps documented: several service routes ignore user_id entirely (only campaigns endpoint validates it); creators/search searches ALL campaigns globally. Sources: service.py, creator_search.py, youtube.py, influencer_club.py models verified.
-- [ ] **w1-workflows** — Extract all workflow/automation capabilities: workflow CRUD per campaign, workflow execution history, Temporal workflow triggering, campaign lifecycle state machine, follow-up scheduling. Sources: `spec-workflows.md`, `spec-backend-api.md` (Domain 3-4), backend routes `workflows.py`
+- [x] **w1-workflows** — Extract all workflow/automation capabilities: 11 endpoints across 5 sub-domains (workflow CRUD 5 endpoints, execution history 2, tool discovery 1, Shopify-workflow 2, webapp execution update 1). 0 existing CE tools — full gap. Key discoveries: execution statuses are "completed"/"error"/"skipped"/"schema_validation_failed" (NOT pending/running/failed as webapp types claim — frontend/backend mismatch), list only returns enabled workflows, execution output_data is editable via webapp PATCH route, 13 tool slugs available for workflow composition, workflow execution is NOT user-triggerable (Temporal infrastructure only), Shopify order creation depends on workflow execution output. Sources verified: `campaign_workflow.py` (292 lines), `campaign_workflow_execution.py` (158 lines), `tools.py` (39 lines), `shopify.py` (255 lines), `workflow_execution.py` (369 lines — Temporal activity), `workflow-api-client.ts`, `workflow-executions/[id]/route.ts`, `tool_registry.py`, `workflow_classification.py`
 
 ## Wave 2: Tool Design (8 aspects)
 

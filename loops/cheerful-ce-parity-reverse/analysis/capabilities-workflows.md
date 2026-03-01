@@ -223,15 +223,54 @@ For the Context Engine, only Layer 1 (user-defined campaign workflows) is releva
 - `slug`: str
 - `description`: str
 
+### Sub-Domain 5: Shopify-Workflow Integration (2 endpoints)
+
+**Source**: `src/api/route/shopify.py` (255 lines)
+**Router prefix**: `/v1/shopify` (mounted via `api_router.include_router(shopify_router, prefix="/v1", tags=["shopify"])`)
+**Auth**: JWT (`get_current_user`)
+**Permission**: Campaign ownership (owner-only, NOT team assignment — uses direct `campaign.user_id != user_id` check)
+
+| # | Action | Backend Endpoint | Method | Key Parameters | Returns |
+|---|--------|-----------------|--------|----------------|---------|
+| 9 | Get Shopify products via GoAffPro | `/api/v1/shopify/workflows/{workflow_id}/products` | GET | Path: workflow_id; Query: `limit` (int, default=10, min=1, max=100) | `ShopifyProductsResponse` |
+| 10 | Create Shopify order from execution output | `/api/v1/shopify/workflow-executions/{workflow_execution_id}/orders` | POST | Path: workflow_execution_id | `CreateOrderFromExecutionResponse` (201) |
+
+**Important Notes**:
+- Endpoint #9: Extracts `goaffpro_api_key` from workflow.config. 400 if missing. 502 if GoAffPro API fails.
+- Endpoint #10: Requires execution.status == "completed" (400 otherwise). Validates required output_data fields: email, shipping_address, line_items. 502 if GoAffPro API fails. Returns order_id, order_name, total_amount, currency_code.
+- Both endpoints verify ownership via campaign → workflow → execution chain. Owner-only (no team assignment check).
+- These are in the Shopify route file but functionally depend on workflow data.
+
+### Sub-Domain 6: Webapp-Only Execution Update (1 Next.js API route)
+
+**Source**: `webapp/app/api/workflow-executions/[id]/route.ts` (167 lines)
+**Auth**: Supabase session (Next.js API route, not backend FastAPI)
+**Permission**: Campaign ownership (via workflow → campaign chain, Supabase RLS)
+
+| # | Action | Webapp Route | Method | Key Parameters | Returns |
+|---|--------|-------------|--------|----------------|---------|
+| 11 | Update execution output_data | `/api/workflow-executions/{id}` | PATCH | Body: `{ output_data: { email?, phone?, shipping_address?, line_items? } }` | Updated execution |
+
+**Important Notes**:
+- This is a Next.js API route, NOT a backend endpoint. It uses Supabase client directly.
+- CSRF validation required (body must include CSRF token).
+- Merges output_data with existing data (shallow merge, deep merge for shipping_address).
+- Used for manual edits to order drafting execution results before Shopify order creation.
+- Ownership verified through: execution → campaign_workflow → campaign → user_id.
+
 ## Execution Status Values
 
-Verified from `webapp/lib/workflow-api-client.ts`:
-- `"pending"` — Queued for execution
-- `"running"` — Currently executing
-- `"completed"` — Successfully finished
-- `"failed"` — Execution failed (error_message populated)
+**CORRECTED — Verified from actual backend code** (`temporal/activity/workflow_execution.py`):
 
-Note: There is no explicit enum in the backend — status is a free-form string field. The above 4 values are used by convention.
+Status values written to DB by the Temporal execution activity:
+- `"completed"` — Workflow executed successfully, structured output validated (if schema exists)
+- `"error"` — Workflow execution encountered an error (error_message populated)
+- `"skipped"` — Workflow was skipped (no applicable workflows found, or no workflows defined). Has `reason` field in ClaudeAgentExecutionResult but NOT in execution record.
+- `"schema_validation_failed"` — Output didn't match the workflow's `output_schema` JSON Schema. error_message contains validation details.
+
+**Frontend TypeScript types** (`webapp/lib/workflow-api-client.ts`) use: `'pending' | 'running' | 'completed' | 'failed'` — but these DON'T match actual DB values. "pending" and "running" are never written by the backend. "failed" doesn't exist — the backend writes "error". This is a frontend/backend mismatch.
+
+Note: There is no explicit enum in the backend — status is a free-form string field. The `CampaignWorkflowExecutionResponse` Pydantic model types it as plain `str` with no validation.
 
 ## Repository Methods (Additional Queries Beyond API)
 
@@ -285,6 +324,24 @@ These could be valuable as CE tools but don't have corresponding API endpoints y
 
 **None of these have user-facing trigger endpoints.** The CE cannot trigger Temporal workflows directly — they are triggered by the platform's event-driven architecture (Gmail polling, thread ingestion, campaign launch).
 
+## Workflow Execution Pipeline (How Workflows Actually Run)
+
+**Source**: `temporal/activity/workflow_execution.py` (369 lines)
+
+This is NOT user-triggerable. Workflows execute as part of the `ThreadProcessingCoordinatorWorkflow` Temporal workflow, triggered when a new email is processed. The pipeline is:
+
+1. **Load workflows**: Get enabled workflows for the campaign (`get_enabled_for_campaign()`)
+2. **Load thread context**: Build XML-formatted email thread context (last 5 emails)
+3. **Load previous executions**: Get all prior executions for this thread (across thread state versions)
+4. **Classify**: LLM call (`classify_applicable_workflows`) determines which workflows apply to this thread
+5. **Select tools**: Merge tool_slugs from all applicable workflows
+6. **Create MCP server**: Dynamic MCP server with only the needed tools
+7. **Execute**: Claude Agent SDK executes the workflows against the thread context
+8. **Validate output**: If workflow has `output_schema`, validate structured output against JSON Schema
+9. **Save results**: Create `CampaignWorkflowExecution` records (one per applicable workflow)
+
+**Key implication for CE**: The CE cannot trigger workflow execution directly. It can only CRUD workflows and read execution results. Actual execution happens via Temporal infrastructure when emails arrive.
+
 ## Summary
 
 | Sub-Domain | Endpoints | Existing CE Tools | New Service Routes Needed | New CE Tools Needed |
@@ -292,16 +349,20 @@ These could be valuable as CE tools but don't have corresponding API endpoints y
 | Workflow CRUD | 5 | 0 | 5 | 5 |
 | Execution History | 2 | 0 | 2 | 2 |
 | Tool Discovery | 1 | 0 | 1 | 1 |
-| **Total** | **8** | **0** | **8** | **~8** |
+| Shopify-Workflow | 2 | 0 | 2 | 2 |
+| Webapp Execution Update | 1 (Next.js) | 0 | 1 | 1 |
+| **Total** | **11** | **0** | **11** | **~11** |
 
 **Key Findings**:
 - **Zero CE coverage** — entire domain is new
 - **Zero service routes** — all endpoints are JWT-auth only, new service endpoints needed for every capability
-- **8 backend endpoints** across 3 sub-domains (CRUD, executions, tool discovery)
+- **11 total endpoints** across 5 sub-domains (CRUD, executions, tool discovery, Shopify-workflow, execution update)
 - **13 available tool slugs** across GoAffPro, Instagram analysis, and scraping categories
-- **4 execution statuses** by convention: pending, running, completed, failed
+- **4 actual execution statuses**: completed, error, skipped, schema_validation_failed (NOT pending/running/failed as webapp types suggest — frontend/backend mismatch)
 - **Workflow types defined by name/config** — not an enum; "GoAffPro Discount Code Creation", "Shopify Order Drafting", "Creator Profile Scraping"
 - **List only returns enabled** — disabled workflows are hidden from the list endpoint
-- **Executions are append-only** — no user-facing create/update/delete
+- **Executions are append-only** — created by Temporal activities only, but output_data can be updated via webapp PATCH route
 - **Temporal workflows are infrastructure** — 24 background workflows, not user-triggerable via API
 - **Additional repository queries** could become CE tools: cross-version execution lookups, creator profile queries by handle
+- **Shopify order creation** depends on workflow execution output data — tight coupling between workflows and Shopify integration
+- **Webapp PATCH for execution output_data** enables manual editing of AI-extracted data (shipping addresses, line items) before order creation
