@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 16
-- Analyzed: 7
-- Pending: 9
-- Convergence: 44%
+- Analyzed: 8
+- Pending: 8
+- Convergence: 50%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -20,7 +20,8 @@ Read the existing Daimon codebase and map what SSR tools need.
 Design every tool, prompt, schema, and integration point.
 - [x] w2-tool-panel-create — Design panel_create tool: MCP definition, input/output schemas, persona generation prompt, validation
 - [x] w2-tool-panel-run — Design panel_run tool: MCP definition, SSR pipeline steps, concurrency, scoring, output format
-- [ ] w2-tool-panel-results — Design panel_results tool: MCP definition, result formatting for Discord, comparison mode
+- [x] w2-tool-panel-results — Design panel_results tool: MCP definition, `PanelResultsInput`, retrieval + comparison API (`get_run_results`, `get_latest_run_for_panel`, `compute_dimension_comparisons`), formatters (`_fmt_retrieved_results`, `_fmt_comparison_results`, `_fmt_dimension_comparison`), `RetrievedRunResult`/`DimensionComparison`/`SsrRunRecord`/`SsrScoreRecord`/`SsrResponseRecord` models, 3 worked examples, cross-correction to panel-run.md (add `discord_id`+`completed_at` to `ssr_run`), initial discord-ux.md (panel results rendering section).
+- [x] w2-tool-panel-results — Design panel_results tool: MCP definition, result formatting for Discord, comparison mode
 - [ ] w2-supabase-schema — Design all DB tables (ssr_panel, ssr_persona, ssr_run, ssr_stimulus, ssr_response, ssr_score, ssr_anchor_set)
 - [ ] w2-anchor-statements — Design Likert anchor statement sets for all marketing evaluation dimensions
 - [ ] w2-prompt-templates — Design all prompt templates (persona system prompt, stimulus presentation, response elicitation)

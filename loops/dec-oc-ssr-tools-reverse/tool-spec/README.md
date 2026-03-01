@@ -5,7 +5,7 @@ Implementation-ready specification for adding SSR (Semantic Similarity Rating) c
 ## Status
 
 Wave 1: Audit & Map — 5/5 complete
-Wave 2: Design — 2/7 complete
+Wave 2: Design — 3/7 complete
 Wave 3: Synthesis & Integration — 0/4 complete
 
 ---
@@ -32,7 +32,7 @@ MCP-compatible tool definitions for the SSR panel tools.
 |------|--------|----------|
 | [panel-create.md](tools/panel-create.md) | ✅ Complete | `ssr_panel_create` — full MCP definition, `PanelCreateInput`/`PersonaDemographics`/`PersonaPsychographics` schemas, handler, API layer, `_fmt_panel_created()`, `_parse_persona_response()`, validation rules, error cases, repository signatures |
 | [panel-run.md](tools/panel-run.md) | ✅ Complete | `ssr_panel_run` — full MCP definition, `PanelRunInput`/`StimulusType`/`EvaluationDimension`/`ResponseFormat` schemas, 4-stage pipeline handler, `run_ssr_pipeline()` API, formatters, concurrency design, validation, errors, 5 repository file specs |
-| [panel-results.md](tools/panel-results.md) | 🔶 Stub | `ssr_panel_results` — retrieval + comparison call chain, Wave 2 checklist |
+| [panel-results.md](tools/panel-results.md) | ✅ Complete | `ssr_panel_results` — full MCP definition, `PanelResultsInput` schema, `_fmt_retrieved_results()` + `_fmt_comparison_results()` + `_fmt_dimension_comparison()` formatters, `get_run_results()` + `get_latest_run_for_panel()` + `compute_dimension_comparisons()` API, `RetrievedRunResult`/`DimensionComparison`/`SsrRunRecord`/`SsrScoreRecord`/`SsrResponseRecord` data models, 3 worked examples (summary retrieval, summary comparison, detailed comparison), validation, errors, repository signatures, cross-correction to panel-run.md (add discord_id + completed_at to ssr_run) |
 | [panel-manage.md](tools/panel-manage.md) | 🔶 Stub | `ssr_panel_list`, `ssr_panel_delete` — call chains, design notes, Wave 2 checklists |
 
 ---
@@ -71,7 +71,7 @@ How SSR tools fit into Daimon.
 |------|--------|----------|
 | [catalog-registration.md](integration/catalog-registration.md) | ⬜ Pending | How tools register in `catalog.py` |
 | [workflow-design.md](integration/workflow-design.md) | ⬜ Pending | How SSR tools become Daimon workflows |
-| [discord-ux.md](integration/discord-ux.md) | ⬜ Pending | Discord UX — how panels look in threads |
+| [discord-ux.md](integration/discord-ux.md) | 🔶 Partial | Discord UX — panel results rendering (message sizing, thread delivery thresholds, comparison format, character budget); full interactive flow pending w3-discord-ux |
 
 ---
 
