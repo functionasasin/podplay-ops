@@ -5,9 +5,9 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 18 |
-| Analyzed | 12 |
-| Pending | 6 |
-| Convergence | 67% |
+| Analyzed | 13 |
+| Pending | 5 |
+| Convergence | 72% |
 
 ---
 
@@ -28,7 +28,7 @@
 - [x] `current-post-tracking` — `creator_post` table, `PostTrackingWorkflow`: current opt-in model, fields, reusable components
 - [x] `current-ig-dm-overlap` — IG DM Messaging API webhook shared infrastructure: what Story capture gets for free vs new work
 - [x] `current-media-storage` — Media/asset storage patterns (Supabase Storage), bucket structure, UGC volume requirements
-- [ ] `current-campaign-ugc-link` — UGC attribution: how captured content links to campaigns/creators, brand-level vs campaign-level
+- [x] `current-campaign-ugc-link` — UGC attribution: how captured content links to campaigns/creators, brand-level vs campaign-level
 
 ## Wave 3: Options Cross-Product
 
