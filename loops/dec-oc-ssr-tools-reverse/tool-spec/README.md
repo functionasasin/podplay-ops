@@ -5,7 +5,7 @@ Implementation-ready specification for adding SSR (Semantic Similarity Rating) c
 ## Status
 
 Wave 1: Audit & Map — 5/5 complete
-Wave 2: Design — 4/7 complete
+Wave 2: Design — 5/7 complete
 Wave 3: Synthesis & Integration — 0/4 complete
 
 ---
@@ -46,7 +46,7 @@ Internal SSR pipeline — how the methodology is implemented.
 | [persona-generation.md](pipeline/persona-generation.md) | ✅ Complete | Full system prompt (~420 tokens), full user prompt template with all substitution logic, rendered example, expected Claude response example, `_parse_persona_response()` parsing table, cost accounting ($0.003/persona), concurrency architecture, diversity enforcement, storage mapping to `ssr_persona` table |
 | [stimulus-presentation.md](pipeline/stimulus-presentation.md) | ✅ Complete | `_build_ssr_system_prompt()` — persona inhabitation system prompt (~840 tokens), rendered example, design rationale (why full_profile, why no numeric ratings, VOICE instruction), token estimate |
 | [response-elicitation.md](pipeline/response-elicitation.md) | ✅ Complete | `_build_ssr_user_prompt()` — `_STIMULUS_LABELS` and `_STIMULUS_CONTEXT` for all 10 StimulusType values, 3 rendered examples (social caption, product concept, headline), response quality notes, dimension coverage table, token estimate |
-| [anchor-statements.md](pipeline/anchor-statements.md) | ⬜ Pending | Likert anchor statement sets per evaluation dimension |
+| [anchor-statements.md](pipeline/anchor-statements.md) | ✅ Complete | All 10 evaluation dimensions with full when-to-use guidance and design rationale; all 50 anchor statements; 5-point scale rationale; 5 anchor quality principles (first-person voice, monotonicity, distinctiveness, genuine neutrality, dimensional purity); dimension-by-stimulus recommendation matrix; full `seed_anchor_embeddings.py` implementation; `EvaluationDimension` enum reference |
 | [scoring-aggregation.md](pipeline/scoring-aggregation.md) | ✅ Complete | `cosine_similarity()`, `score_against_anchors()` (softmax+argmax), `_aggregate_scores()` (mean, std, mode, t-CI with hardcoded t-table), `_select_highlights()`, `_extract_response_excerpt()`, anchor loading from DB, embedding version check, DB storage spec |
 
 ---

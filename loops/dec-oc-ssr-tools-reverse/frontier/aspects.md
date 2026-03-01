@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 16
-- Analyzed: 9
-- Pending: 7
-- Convergence: 56%
+- Analyzed: 10
+- Pending: 6
+- Convergence: 63%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -23,7 +23,7 @@ Design every tool, prompt, schema, and integration point.
 - [x] w2-tool-panel-results — Design panel_results tool: MCP definition, `PanelResultsInput`, retrieval + comparison API (`get_run_results`, `get_latest_run_for_panel`, `compute_dimension_comparisons`), formatters (`_fmt_retrieved_results`, `_fmt_comparison_results`, `_fmt_dimension_comparison`), `RetrievedRunResult`/`DimensionComparison`/`SsrRunRecord`/`SsrScoreRecord`/`SsrResponseRecord` models, 3 worked examples, cross-correction to panel-run.md (add `discord_id`+`completed_at` to `ssr_run`), initial discord-ux.md (panel results rendering section).
 - [x] w2-tool-panel-results — Design panel_results tool: MCP definition, result formatting for Discord, comparison mode
 - [x] w2-supabase-schema — Design all DB tables (ssr_panel, ssr_persona, ssr_run, ssr_response, ssr_score, ssr_anchor_set); stimulus folded into ssr_run; 50 anchor statements seeded inline
-- [ ] w2-anchor-statements — Design Likert anchor statement sets for all marketing evaluation dimensions
+- [x] w2-anchor-statements — Design Likert anchor statement sets for all marketing evaluation dimensions
 - [ ] w2-prompt-templates — Design all prompt templates (persona system prompt, stimulus presentation, response elicitation)
 - [ ] w2-pydantic-models — Design Pydantic v2 models for all data structures (input, DB, output, pipeline)
 
@@ -35,6 +35,7 @@ Bring everything together into a cohesive implementation spec.
 - [ ] w3-examples — Write 3 end-to-end examples (ad copy, product concept, influencer fit)
 
 ## Recently Analyzed
+- [x] w2-anchor-statements — All 10 evaluation dimensions fully specified (purchase_intent, brand_favorability, message_clarity, emotional_response, personal_relevance, uniqueness, trust_credibility, value_perception, share_worthiness, overall_appeal). 50 anchor statements with design rationale per statement. 5-point scale rationale (vs 7-point). 5 anchor quality principles (first-person voice, monotonicity, distinctiveness, genuine neutrality, dimensional purity). Dimension-by-stimulus recommendation matrix (10×10 table). Complete seeding script (`seed_anchor_embeddings.py`, ~130 lines, idempotent, batch-embeds NULLs, verifies post-seed). EvaluationDimension enum code reference. Written to `tool-spec/pipeline/anchor-statements.md` (new file).
 - [x] w1-tool-system — `@tool` decorator, `ToolDef`, `ToolError`, `ToolRegistry`, `ToolContext`, `DatabaseContext`, `UserContext`, XML output helpers, tool organization, catalog registration pattern. Key finding: need to add `Platform.SSR` to `core/platforms.py`. `anthropic_api_key` already in `ToolContext`.
 - [x] w1-reference-tools — Studied `discord/read.py` (HTTP tools, pagination, error translation, XML formatters), `bluedot/read.py` + `api.py` (DB split-file pattern, session management, not-found errors), `github/tools.py` (credential-gated, subprocess, timeout), `acp/tools.py` (JSON parsing, manual validation). Key finding: SSR must use split-file pattern (`tools.py` + `api.py` + `models.py`). DB check `if db_context is None` at top of every handler. Formatters are private `_fmt_*()` pure functions.
 - [x] w1-ssr-primitives — 5 tools: `ssr_panel_create`, `ssr_panel_run`, `ssr_panel_results`, `ssr_panel_list`, `ssr_panel_delete`. Full internal pipeline decomposed: `create_panel_with_personas` → `_generate_all_personas` → `_generate_single_persona`; `run_ssr_pipeline` → `_run_all_personas` → `_elicit_response` + `_embed_text` + `_score_response`. 6 DB tables mapped. Key decisions: eager persona generation, synchronous blocking execution, asyncio.gather concurrency, haiku model for both steps, softmax-based scoring, discord_id ownership. File structure: `mcp/tools/ssr/{__init__,tools,api,models}.py` + 6 repository files.
