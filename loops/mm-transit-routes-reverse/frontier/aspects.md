@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 91
-- Analyzed: 85
-- Pending: 6
-- Convergence: 93%
+- Analyzed: 86
+- Pending: 5
+- Convergence: 95%
 
 ---
 
@@ -120,7 +120,7 @@
 
 ### By Mode Validation
 - [x] All jeepney routes — deduplicated master list, confidence scores, gap analysis
-- [ ] All city bus routes — deduplicated master list, confidence scores, gap analysis
+- [x] All city bus routes — deduplicated master list, confidence scores, gap analysis
 - [ ] All provincial bus routes (NCR segments) — deduplicated list of NCR portions
 - [ ] All UV Express routes — deduplicated master list
 - [ ] All P2P premium bus routes — deduplicated master list
