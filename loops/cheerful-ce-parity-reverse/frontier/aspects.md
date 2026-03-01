@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total Aspects**: 36
-- **Analyzed**: 0
-- **Pending**: 36
-- **Convergence**: 0%
+- **Analyzed**: 1
+- **Pending**: 35
+- **Convergence**: 3%
 
 ---
 
@@ -13,7 +13,7 @@
 
 Read existing cheerful-reverse specs + verify against source code. Produce raw capability lists per domain.
 
-- [ ] **w1-campaigns** — Extract all campaign capabilities: CRUD, wizard steps (0-7), products, senders, recipients (single/bulk/CSV/sheet), outbox, launch, draft saving. Sources: `spec-backend-api.md` (Domain 1-2), `spec-webapp.md` (Campaign Wizard), backend routes `campaigns.py`, `campaign_draft.py`, `campaign_launch.py`
+- [x] **w1-campaigns** — Extract all campaign capabilities: CRUD, wizard steps (0-7), products, senders, recipients (single/bulk/CSV/sheet), outbox, launch, draft saving. Sources: `spec-backend-api.md` (Domain 1-2), `spec-webapp.md` (Campaign Wizard), backend routes `campaigns.py`, `campaign_draft.py`, `campaign_launch.py`
 - [ ] **w1-email** — Extract all email/thread capabilities: thread listing with all filter params, thread detail, status marking (all statuses), draft CRUD, AI draft generation, draft sending, follow-up management. Sources: `spec-backend-api.md` (Domain 6-7), `spec-webapp.md` (Inbox UI), backend routes `threads.py`, `gmail.py`
 - [ ] **w1-creators** — Extract all creator capabilities: in-campaign listing with filters, cross-campaign search, full profile with enrichment data, enrichment status polling, email override, bulk operations, notes history. Sources: `spec-backend-api.md` (Domain 5), existing CE tools in `mcp/tools/cheerful/tools.py`
 - [ ] **w1-integrations** — Extract all integration capabilities: Gmail OAuth connect/disconnect/list, Google Sheets tab listing/validation, Shopify token validation/product listing, Slack channel config, integration status checking. Sources: `spec-integrations.md`, `spec-backend-api.md` (Domain 8), backend routes `integrations.py`, `google_sheets.py`, `shopify.py`
