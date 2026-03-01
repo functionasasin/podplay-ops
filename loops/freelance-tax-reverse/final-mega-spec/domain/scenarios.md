@@ -1,7 +1,7 @@
 # Scenarios — Philippine Freelance & Self-Employed Income Tax Optimizer
 
-**Status:** PARTIAL (initial enumeration from worked-examples-fetch; to be expanded in scenario-enumeration Wave 2 aspect)
-**Last updated:** 2026-02-28
+**Status:** Initial enumeration complete. Full expansion with additional scenario codes and quarterly-filing scenarios is handled by the `scenario-enumeration` Wave 2 aspect.
+**Last updated:** 2026-03-01
 
 Each scenario code corresponds to a distinct computation path and taxpayer profile. Every scenario code MUST have at least one test vector in [../engine/test-vectors/exhaustive.md](../engine/test-vectors/exhaustive.md).
 
@@ -58,32 +58,49 @@ Format: `SC-{profile_type}-{income_range}-{method}-{special_flag}`
 
 | Code | Profile | Notes |
 |------|---------|-------|
-| SC-FIRST-8 | New registrant, first year | 8% available; election on COR or Q1 1701Q |
-| SC-FIRST-O | New registrant, first year | OSD election |
-| SC-FIRST-MID | Registered mid-year | Only partial year income; quarters may not have Q1 filing |
+| SC-FIRST-8 | New registrant, first year, registered Q1 (Jan–Mar) | 8% available; election on COR or Q1 1701Q due May 15 |
+| SC-FIRST-O | New registrant, first year, registered Q1 | OSD election on Q1 1701Q |
+| SC-FIRST-MID-Q2 | Registered April–June (mid-year, Q2) | First quarterly return is Q2 (due August 15); Q2 is election quarter; 8% election possible; no Q1 return required |
+| SC-FIRST-MID-Q3 | Registered July–September (mid-year, Q3) | First quarterly return is Q3 (due November 15); Q3 is election quarter; 8% election possible; no Q1 or Q2 return required |
+| SC-FIRST-MID-Q4 | Registered October–December (mid-year, Q4) | No quarterly returns at all for registration year; only annual 1701/1701A due April 15 next year; if graduated: Q4 2551Q due January 25 next year |
 
 ### Group 5: CWT-Heavy Scenarios
 
 | Code | Profile | Notes |
 |------|---------|-------|
-| SC-P-ML-8-CWT | Service provider | Large CWT credits may exceed annual IT; refund scenario |
-| SC-P-ML-O-CWT | Service provider | Cumulative CWT calculation across quarters |
+| SC-P-ML-8-CWT | Service provider, 8% rate | Large CWT credits may exceed annual IT; full or partial refund/TCC/carryover disposition at annual; quarterly: CWT offsets incremental payments |
+| SC-P-ML-O-CWT | Service provider, graduated+OSD | CWT accumulates across Q1/Q2/Q3; Item 57 (prior-quarter CWT) plus Item 58 (new CWT) tracked separately each quarter |
+| SC-P-ML-8-CWT-PLATFORM | Freelancer on Upwork/Payoneer | RR 16-2023 1% platform withholding (ATC WI760) plus 5% client EWT (WI010); both types of 2307 credited against income tax |
 
 ### Group 6: Threshold Crossing
 
 | Code | Profile | Notes |
 |------|---------|-------|
-| SC-CROSS-3M | Any | Gross crosses ₱3M mid-year; retroactive regime switch |
-| SC-AT-3M | Any | Gross receipts exactly ₱3M; boundary condition |
-| SC-NEAR-3M | Any | Gross ₱2,800,000–₱2,999,999; 8% still available |
+| SC-CROSS-3M | Pure service provider | Gross crosses ₱3M mid-year during Q2 or Q3; 8% retroactively cancelled; retroactive 3% PT computed; all 8% quarterly payments credited toward graduated annual tax; Form 1701 required at annual |
+| SC-AT-3M | Pure service provider | Gross receipts exactly ₱3M at year-end; boundary condition: 8% eligible (≤₱3M), SMALL tier, not VAT-required; annual IT = (₱3,000,000 − ₱250,000) × 8% = ₱220,000 |
+| SC-NEAR-3M | Pure service provider | Gross ₱2,800,000–₱2,999,999; 8% still available; engine shows savings vs OSD (₱76,000–₱83,800 advantage for 8%) and highlights risk if Q4 earnings push over ₱3M |
 
 ### Group 7: Special Deduction Scenarios
 
 | Code | Profile | Notes |
 |------|---------|-------|
-| SC-NOLCO | Sole proprietor | Prior year net operating loss carry-over |
-| SC-ZERO-EXPENSE | Professional | No business expenses at all (common for online freelancers) |
-| SC-HIGH-ENTERTAIN | Professional | Entertainment expenses subject to 1% of net revenue cap |
+| SC-NOLCO | Sole proprietor, graduated+itemized | Prior year net operating loss carry-over; NOLCO deductible only under itemized (not OSD/8%); 3-year FIFO expiry; quarterly NOLCO applied proportionally |
+| SC-ZERO-EXPENSE | Professional (online freelancer) | No business expenses at all; 8% almost always optimal; quarterly: all Schedule II with ₱250K deduction; annual 1701A |
+| SC-HIGH-ENTERTAIN | Agency/professional | Entertainment/representation/transportation expenses capped at 1% of gross receipts (service) or 0.5% of net sales (goods) per RR 10-2002; EAR cap computed at annual level |
+
+### Group 8: Quarterly-Cycle–Specific Scenarios
+
+Scenarios that exercise the multi-quarter cumulative computation specifically:
+
+| Code | Profile | Notes |
+|------|---------|-------|
+| SC-QC-8-3Q | 8% pure SE, three full quarters | Cumulative gross builds Q1→Q2→Q3; ₱250K deduction applied each quarter via Item 52; quarterly tax payable varies by quarter due to cumulative structure; annual reconciliation shows balance |
+| SC-QC-OSD-3Q | Graduated+OSD, three full quarters | Item 36 (current quarter) + Item 42 (prior NTI carryforward) builds cumulative NTI; bracket escalation visible across quarters; annual 1701A |
+| SC-QC-ITEMIZED-3Q | Graduated+Itemized, three full quarters | Deductions accumulate quarterly (Item 39 = current quarter deductions); prior NTI carryforward in Item 42; NOLCO applied proportionally per quarter |
+| SC-QC-NIL-Q1 | 8% or OSD, zero Q1 income | Q1 NIL return required; ₱0 payable; Item 50 (for 8%) passes ₱0 to Q2; Q2 computation starts fresh; CWT not yet applicable in Q1 |
+| SC-QC-CWT-SHIFT | OSD or 8%, CWT received late | Q1 2307 received in Q2 (after Q1 1701Q was filed); CWT appears in Q2 Item 58 instead of Q1; Q1 was correctly filed showing ₱0 CWT; Q2 cumulative credits absorb full Q1+Q2 CWT |
+| SC-QC-AMENDMENT | 8% rate | Q1 filed with wrong gross figure (understated by ₱100K); Q1 must be amended; Q2 and Q3 cascade: Item 50 in Q2 must be updated to corrected Q1 Item 51; both Q2 and Q3 must also be amended |
+| SC-QC-OVERPY-Q3 | OSD or 8% | Cumulative YTD CWT at Q3 exceeds cumulative IT due; Q3 Item 63 is negative (overpayment); Q3 actual payment = ₱0; overpayment flows to annual reconciliation where excess CWT triggers refund/TCC/carryover |
 
 ---
 
@@ -97,16 +114,19 @@ Highest priority scenarios for initial test vectors:
 5. SC-P-H-8 — Near-threshold case
 6. SC-P-VH-O-VAT — Over-threshold VAT case
 7. SC-CROSS-3M — Threshold crossing edge case
+8. SC-QC-8-3Q — Full three-quarter cumulative cycle for 8% (quarterly tracking feature)
+9. SC-FIRST-MID-Q2 — Mid-year registrant (Q2 election window)
+10. SC-QC-OVERPY-Q3 — Q3 overpayment flowing to annual reconciliation
 
 ---
 
 ## Notes on Scenarios Not Covered by This Tool
 
-The following scenarios are OUT OF SCOPE and should display a "manual review" flag:
-- GPP (General Professional Partnership) partners — different rules apply
-- Non-resident citizens — different source rules
-- Non-resident aliens — different treaty rates may apply
-- Foreign-source income — sourcing and exclusion rules complex
-- Retroactive regime change after Q1 deadline — requires amended returns, cannot be automated
-- NOLCO carry-over — complex multi-year tracking, manual verification needed
-- Depreciation schedules — requires asset-by-asset computation
+The following scenarios are OUT OF SCOPE and should display a "manual review" flag per [manual-review-flags.md](manual-review-flags.md):
+- GPP (General Professional Partnership) partners — use Sec. 26 distributive share rules; individual partner files Form 1701 but 8% option is unavailable; MRF-024 covers this
+- Non-resident citizens — different source rules under Sec. 23; income derived from foreign sources is taxable only to resident citizens; MRF-025 covers this
+- Non-resident aliens — different treaty rates may apply under applicable tax treaty (US, Japan, Singapore, etc.); MRF-026 covers this
+- Foreign-source income — sourcing and exclusion rules complex; depends on residency status and type of income; see MRF-016 and MRF-017
+- Retroactive regime change after Q1 deadline — requires amended returns and is a purely administrative process; the engine cannot compute retroactive changes without user intervention; see EC-QF01
+- NOLCO carry-over — three-year FIFO tracking requires multi-year data not captured in a single-year computation; see EC-ID09 and SC-NOLCO
+- Depreciation schedules — requires asset-by-asset data (purchase date, cost, useful life, accumulated depreciation); engine accepts only a single "annual depreciation expense" input; detailed depreciation schedule is prepared by a CPA
