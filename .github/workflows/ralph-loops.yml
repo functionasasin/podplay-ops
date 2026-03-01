@@ -55,7 +55,7 @@ jobs:
     strategy:
       matrix: ${{ fromJson(needs.discover.outputs.matrix) }}
       fail-fast: false
-    timeout-minutes: 35
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -88,34 +88,57 @@ jobs:
         if: steps.check.outputs.skip != 'true'
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
 
-      - name: Run one iteration
+      - name: Run iterations (up to 20 minutes)
         if: steps.check.outputs.skip != 'true'
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           CHEERFUL_DATABASE_URL: ${{ secrets.CHEERFUL_DATABASE_URL }}
         run: |
           cd "loops/${{ matrix.loop }}"
-          # Run one iteration — CI is the outer loop
-          timeout 1800 bash -c '
-            unset CLAUDECODE
-            cat PROMPT.md | claude --print --dangerously-skip-permissions
-          ' || {
-            EXIT_CODE=$?
-            if [ "$EXIT_CODE" -eq 124 ]; then
-              echo "WARNING: Iteration timed out after 1800s"
-            else
-              echo "WARNING: Iteration exited with code $EXIT_CODE"
-            fi
-          }
+          DEADLINE=$(($(date +%s) + 1200))   # 20-minute budget
+          FAILURES=0
 
-      - name: Commit results
-        if: steps.check.outputs.skip != 'true'
-        run: |
-          cd "loops/${{ matrix.loop }}"
-          git add -A
-          git diff --cached --quiet || git commit -m "loop(${{ matrix.loop }}): iteration"
-          git pull --rebase origin "${{ github.ref_name }}" || true
-          git push || echo "WARNING: Push failed, will retry next iteration"
+          while [ $(date +%s) -lt $DEADLINE ]; do
+            # Stop if already converged
+            if [ -f status/converged.txt ]; then
+              echo "Loop converged, stopping."
+              break
+            fi
+
+            # Stop if less than 90s left (not enough runway for another aspect)
+            REMAINING=$((DEADLINE - $(date +%s)))
+            if [ $REMAINING -lt 90 ]; then
+              echo "Less than 90s remaining — stopping cleanly. Remaining: ${REMAINING}s"
+              break
+            fi
+
+            echo "--- $(date '+%H:%M:%S') | Remaining: ${REMAINING}s ---"
+
+            # Run one aspect (cap each at 10 min so we always get at least 2 per run)
+            if timeout 600 bash -c '
+              unset CLAUDECODE
+              cat PROMPT.md | claude --print --dangerously-skip-permissions
+            '; then
+              FAILURES=0
+            else
+              EXIT_CODE=$?
+              [ "$EXIT_CODE" -eq 124 ] && echo "WARNING: aspect timed out" || echo "WARNING: aspect exited $EXIT_CODE"
+              FAILURES=$((FAILURES + 1))
+              [ $FAILURES -ge 3 ] && echo "3 consecutive failures — stopping." && break
+            fi
+
+            # Commit after each aspect
+            git add -A
+            git diff --cached --quiet || {
+              git commit -m "loop(${{ matrix.loop }}): iteration"
+              git pull --rebase origin "${{ github.ref_name }}" || true
+              git push || echo "WARNING: Push failed, will retry next run"
+            }
+
+            sleep 5
+          done
+
+          echo "Time budget exhausted or loop finished."
 
       - name: Check convergence and notify
         if: steps.check.outputs.skip != 'true'
