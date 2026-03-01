@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 91
-- Analyzed: 81
-- Pending: 10
-- Convergence: 89%
+- Analyzed: 82
+- Pending: 9
+- Convergence: 90%
 
 ---
 
@@ -114,7 +114,7 @@
 - [x] Pasig — validate all routes within/through Pasig
 - [x] Taguig/BGC — validate all routes within/through Taguig
 - [x] Mandaluyong — validate all routes within/through Mandaluyong
-- [ ] Caloocan — validate all routes within/through Caloocan
+- [x] Caloocan — validate all routes within/through Caloocan
 - [ ] Las Piñas, Parañaque, Muntinlupa — validate southern Metro Manila routes
 - [ ] Marikina, San Juan, Pasay, Malabon, Navotas, Valenzuela, Pateros — remaining cities
 
