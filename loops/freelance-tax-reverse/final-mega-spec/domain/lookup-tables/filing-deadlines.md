@@ -429,13 +429,43 @@ Large taxpayers enrolled in the BIR's Electronic Filing and Payment System (eFPS
 | Filing Period | Form | Due Date | Action |
 |---|---|---|---|
 | Q1 Income Tax | 1701Q (Schedule I) | May 15 | Business NTI − credits |
-| Q1 VAT | BIR Form 2550Q | May 25 | VAT output − VAT input |
+| Q1 VAT | BIR Form 2550Q | April 25 | VAT output − VAT input (25th day after Q1 end) |
 | Q2 Income Tax | 1701Q | August 15 | Same pattern |
-| Q2 VAT | 2550Q | August 25 | Same pattern |
+| Q2 VAT | 2550Q | July 25 | VAT output − VAT input (25th day after Q2 end) |
 | Q3 Income Tax | 1701Q | November 15 | Same pattern |
-| Q3 VAT | 2550Q | November 25 | Same pattern |
-| Q4 VAT | 2550Q | February 25 (next year) | No Q4 income tax quarterly return |
+| Q3 VAT | 2550Q | October 25 | VAT output − VAT input (25th day after Q3 end) |
+| Q4 VAT | 2550Q | January 25 (next year) | 25th day after Q4 end; no separate Q4 income tax return |
 | Annual | 1701 | April 15 (next year) | Annual reconciliation (itemized or OSD) |
+
+**VAT deadline basis:** NIRC Section 114(A): "filed not later than the twenty-fifth (25th) day following the close of each taxable quarter." Confirmed by BIR Form 2550Q April 2024 (ENCS) and RMC 68-2024. Monthly VAT return (Form 2550M) was abolished effective January 1, 2023 (TRAIN Law Sec. 37 via RR 13-2018).
+
+### Profile F: Mixed Income Earner, Graduated+OSD, Non-VAT (Business Portion ≤₱3M)
+| Filing Period | Form | Due Date | Action |
+|---|---|---|---|
+| Q1 Business Income Tax | 1701Q (Schedule I, OSD) | May 15 | Business gross × 60% = NTI Q1; add comp NTI on annual only |
+| Q1 Percentage Tax | 2551Q | April 25 | Business Q1 gross × 3% |
+| Q2 Business Income Tax | 1701Q (Schedule I, OSD) | August 15 | Cumulative business NTI − Q1 payment |
+| Q2 Percentage Tax | 2551Q | July 25 | Business Q2 gross × 3% |
+| Q3 Business Income Tax | 1701Q (Schedule I, OSD) | November 15 | Cumulative business NTI − Q1 − Q2 payments |
+| Q3 Percentage Tax | 2551Q | October 25 | Business Q3 gross × 3% |
+| Q4 Percentage Tax | 2551Q | January 25 (next year) | Business Q4 gross × 3% |
+| Compensation (quarterly) | None — employer handles | N/A | Employer withholds monthly via BIR Form 1601-C |
+| Annual | 1701 (NEVER 1701A for mixed income) | April 15 (next year) | Combined: business NTI (OSD) + compensation NTI, graduated rates, all credits |
+
+**Note:** Mixed income earners ALWAYS file Form 1701 for the annual return, never 1701A, even when using OSD for the business portion. The quarterly 1701Q covers ONLY the business income portion.
+
+### Profile G: Mixed Income Earner, VAT-Registered, Graduated+OSD (Business Portion >₱3M)
+| Filing Period | Form | Due Date | Action |
+|---|---|---|---|
+| Q1 Business Income Tax | 1701Q (Schedule I) | May 15 | Business NTI (OSD or Itemized) − credits |
+| Q1 VAT | 2550Q | April 25 | Business VAT output − VAT input for Q1 |
+| Q2 Business Income Tax | 1701Q | August 15 | Cumulative NTI − Q1 payment |
+| Q2 VAT | 2550Q | July 25 | Q2 VAT |
+| Q3 Business Income Tax | 1701Q | November 15 | Cumulative NTI − Q1 − Q2 |
+| Q3 VAT | 2550Q | October 25 | Q3 VAT |
+| Q4 VAT | 2550Q | January 25 (next year) | Q4 VAT |
+| Compensation (quarterly) | None — employer handles | N/A | Employer payroll withholding |
+| Annual | 1701 | April 15 (next year) | Combined: business NTI + compensation NTI; Path A or B only (no 8%) |
 
 ---
 
