@@ -550,13 +550,9 @@ The shared case view (`/share/:token`) renders the `ResultsView` only. It **does
 -- Unauthenticated reads return empty result (no error, no data)
 ```
 
-### 5.5 Multi-Seat (spec-multi-seat — future)
+### 5.5 Multi-Seat Integration (see spec-multi-seat §5.4)
 
-In the current spec, notes are **private to the user who created them** (`user_id` scoped RLS). When firm accounts are implemented:
-- Option A: Keep notes private per-attorney (each member sees only their own notes)
-- Option B: Share notes across all firm members who have access to the case
-
-Option B requires adding a `visible_to_firm BOOLEAN DEFAULT TRUE` column and updating RLS. This is deferred to `spec-multi-seat`.
+In a single-user account, notes are **private to the user who created them** (`user_id` scoped RLS). In firm accounts, `spec-multi-seat §5.4` specifies the design decision: **notes are scoped through the case**, which is already scoped to the `org_id`. All firm members who have access to a case can read all notes on that case. No separate `org_id` column is added to `case_notes` — the join path `case_notes.case_id → cases.org_id` is sufficient for RLS. The `visible_to_firm` column (Option B from earlier design consideration) is not needed; firm-scoped access is handled entirely by `cases` RLS.
 
 ---
 
