@@ -2,7 +2,7 @@
 
 ## Status
 
-Wave 2 tool design complete. Wave 3 in progress. All 8 domains designed: Campaigns (31), Email (24), Creators (27), Integrations (18), Users & Team (13), Analytics (1), Search & Discovery (4), Workflows (8). Total: 126 tools (7 existing + 119 new). **Wave 3 progress**: Campaigns complete (31 tools) + Email complete (24 tools) + Creators complete (27 tools) + Integrations complete (18 tools) = **100 tools** fully specified with OpenAPI-level detail.
+Wave 2 tool design complete. Wave 3 in progress. All 8 domains designed: Campaigns (31), Email (24), Creators (27), Integrations (18), Users & Team (13), Analytics (1), Search & Discovery (4), Workflows (8). Total: 126 tools (7 existing + 119 new). **Wave 3 progress**: Campaigns complete (31 tools) + Email complete (24 tools) + Creators complete (27 tools) + Integrations complete (18 tools) + Users & Team complete (13 tools) = **113 tools** fully specified with OpenAPI-level detail.
 
 ## Domains
 
@@ -12,7 +12,7 @@ Wave 2 tool design complete. Wave 3 in progress. All 8 domains designed: Campaig
 | Email | `email.md` | 3 | 21 | 24 | Wave 3: All 24 tools fully specified with OpenAPI-level detail |
 | Creators | `creators.md` | 3 | 24 | 27 | Wave 3: All 27 tools fully specified with OpenAPI-level detail (3 existing audited + 24 new) |
 | Integrations | `integrations.md` | 0 | 18 | 18 | Wave 3: All 18 tools fully specified with OpenAPI-level detail (5 corrections from Wave 2) |
-| Users & Team | `users-and-team.md` | 0 | 13 | 13 | Wave 2 complete |
+| Users & Team | `users-and-team.md` | 0 | 13 | 13 | Wave 3: All 13 tools fully specified with OpenAPI-level detail (11 corrections from Wave 2) |
 | Analytics | `analytics.md` | 0 | 1 | 1 | Wave 2 complete |
 | Search & Discovery | `search-and-discovery.md` | 0 | 4 | 4 | Wave 2 complete |
 | Workflows | `workflows.md` | 0 | 8 | 8 | Wave 2 complete |
