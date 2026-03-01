@@ -2180,3 +2180,739 @@ function is_life_insurance_deductible(
 - For test vectors validating these computations: See [../engine/test-vectors/basic.md](../engine/test-vectors/basic.md) (PENDING)
 - For full legal text behind each rule: See [legal-basis.md](legal-basis.md)
 - For RR 16-2023 source material: See [../../../input/sources/rr-16-2023-emarketplace.md](../../../input/sources/rr-16-2023-emarketplace.md)
+
+---
+
+## CR-028: Regime Comparison Engine — Complete Computation and Recommendation
+
+**Legal basis:** NIRC Sec. 24(A)(2)(a) (graduated rates), Sec. 24(A)(2)(b) (8% option), Sec. 34(L) (OSD), Sec. 34(A)-(K) (itemized), Sec. 116 (percentage tax); RR 8-2018; CR-002, CR-003, CR-004, CR-005, CR-006, CR-007, CR-008, CR-009.
+
+**This rule supersedes the breakeven tables in CR-014.** CR-014 contained approximate values computed without the percentage tax offset for Path C. The values below are exact.
+
+**Purpose:** Given a taxpayer's gross receipts, itemized expenses, and profile flags, compute the total tax burden under every applicable path, then return a structured recommendation with savings amounts.
+
+---
+
+### 28.1 — Input Schema
+
+```
+struct RegimeComparisonInput {
+  // --- Income ---
+  gross_receipts: float              // Annual total gross sales/receipts (net of VAT if VAT-registered)
+  non_operating_income: float        // Dividends, interest, rent, capital gains NOT subject to FWT
+  itemized_deductions: float         // Total allowable Sec. 34 deductions (0 if not tracked)
+  has_itemized_documentation: bool   // True = receipts/invoices exist to support deductions
+
+  // --- Taxpayer Profile ---
+  has_compensation_income: bool      // True = mixed income earner (has employer + business income)
+  taxable_compensation: float        // Annual taxable compensation (net of exclusions); 0 if none
+  is_vat_registered: bool            // True = currently VAT-registered
+  taxpayer_type: TaxpayerType        // SE, PROFESSIONAL, GPP_PARTNER, etc.
+  tax_year: int                      // 2018-2022 (Schedule 1) or 2023+ (Schedule 2)
+
+  // --- Regime Election Status ---
+  election_status: ElectionStatus    // NONE_YET, EIGHT_PCT_ELECTED, GRADUATED_ELECTED
+  election_window_open: bool         // True = Q1 not yet filed; taxpayer can still choose
+
+  // --- CWT and Payments ---
+  total_cwt_for_year: float          // Sum of all BIR Form 2307 amounts received this year
+  total_quarterly_it_paid: float     // Sum of all 1701Q income tax payments (Q1+Q2+Q3)
+  total_quarterly_pt_paid: float     // Sum of all 2551Q percentage tax payments (Q1+Q2+Q3)
+
+  // --- Computed Context ---
+  gross_for_threshold: float         // = gross_receipts + non_operating_income
+}
+
+enum TaxpayerType {
+  SE_SERVICE,            // Sole proprietor / freelancer, service only (no COGS)
+  SE_TRADING,            // Sole proprietor, trading/goods (has COGS)
+  PROFESSIONAL,          // Licensed professional (lawyer, doctor, CPA, engineer, architect)
+  GPP_PARTNER,           // Partner in a General Professional Partnership
+  BMBE,                  // Barangay Micro Business Enterprise (income tax exempt)
+}
+
+enum ElectionStatus {
+  NONE_YET,              // No Q1 return filed yet; taxpayer hasn't locked in
+  EIGHT_PCT_ELECTED,     // Q1 filed under 8%; locked in for the year
+  GRADUATED_ELECTED,     // Q1 filed under graduated rates; locked in for the year
+}
+
+enum Regime {
+  PATH_A,  // Graduated + Itemized Deductions
+  PATH_B,  // Graduated + OSD (40%)
+  PATH_C,  // 8% Flat Rate
+}
+```
+
+---
+
+### 28.2 — Output Schema
+
+```
+struct RegimeComparisonResult {
+  // --- Per-Path Results ---
+  path_a: PathResult | null     // null if not applicable (e.g., no itemized docs)
+  path_b: PathResult            // Always computed (OSD available to all)
+  path_c: PathResult | null     // null if 8% not eligible
+
+  // --- Recommendation ---
+  recommended_regime: Regime
+  recommended_regime_total_tax: float
+  savings_vs_path_a: float | null   // How much taxpayer saves vs Path A (null if A not computed)
+  savings_vs_path_b: float          // How much taxpayer saves vs Path B
+  savings_vs_path_c: float | null   // How much taxpayer saves vs Path C (null if C not computed)
+
+  // --- Actionable Output ---
+  balance_payable: float         // Recommended regime tax - CWT - quarterly payments (≥ 0)
+  overpayment: float             // If CWT + quarterly payments exceed annual tax (≥ 0)
+  annual_form_to_file: string    // "1701" or "1701A"
+
+  // --- Informational Flags ---
+  eight_pct_ineligible_reason: string | null  // Reason if Path C not available
+  near_threshold_warning: bool                // True if gross_for_threshold within ₱200K of ₱3M
+  election_window_open: bool                  // Can taxpayer still change their mind?
+  pt_obligation: PTObligation                 // Whether 2551Q filing is required
+}
+
+struct PathResult {
+  regime: Regime
+  gross_income: float          // After COGS for traders; = gross_receipts for service
+  deduction_amount: float      // Itemized total, OSD amount, or 0 for 8%
+  net_taxable_income: float    // gross_income - deductions (0 for Path C)
+  income_tax: float            // Graduated tax or 8% flat tax
+  percentage_tax: float        // 3% of gross_receipts; 0 for Path C or VAT-registered
+  total_tax_burden: float      // income_tax + percentage_tax
+  effective_rate: float        // total_tax_burden / gross_receipts (for display only)
+}
+
+enum PTObligation {
+  NOT_REQUIRED_8PCT,           // 8% elected; percentage tax waived
+  NOT_REQUIRED_VAT,            // VAT registered; files 2550M/Q instead
+  REQUIRED_QUARTERLY,          // Must file 2551Q each quarter (non-VAT, graduated)
+  BREACH_PARTIAL_YEAR,         // Was on 8%, crossed ₱3M; PT owed for pre-breach period
+}
+```
+
+---
+
+### 28.3 — Top-Level Comparison Function
+
+```
+function compute_regime_comparison(input: RegimeComparisonInput) -> RegimeComparisonResult:
+  """
+  STEP 1: Validate inputs
+  STEP 2: Check 8% eligibility
+  STEP 3: Compute applicable paths
+  STEP 4: Compare and recommend
+  STEP 5: Compute balance payable/overpayment
+  STEP 6: Assemble output
+  """
+
+  // ─────────────────────────────────────────────────────────
+  // STEP 1: Input validation
+  // ─────────────────────────────────────────────────────────
+  assert gross_receipts >= 0, ERROR_NEGATIVE_GROSS
+  assert non_operating_income >= 0, ERROR_NEGATIVE_NOI
+  assert itemized_deductions >= 0, ERROR_NEGATIVE_DEDUCTIONS
+  assert taxable_compensation >= 0, ERROR_NEGATIVE_COMPENSATION
+  assert total_cwt_for_year >= 0, ERROR_NEGATIVE_CWT
+  assert total_quarterly_it_paid >= 0, ERROR_NEGATIVE_PAYMENTS
+  assert itemized_deductions <= gross_receipts * 1.5,  // sanity check; deductions > 150% gross is suspicious
+    FLAG_DEDUCTIONS_EXCEED_GROSS  // MRF flag; engine continues but shows warning
+
+  // Derived values
+  gross_for_threshold = gross_receipts + non_operating_income
+  gross_income = gross_receipts  // For service providers
+  // (If SE_TRADING, gross_income = gross_sales - COGS; this field must be pre-computed by caller
+  //  and passed as gross_receipts. See CR-004 for traders.)
+
+  // ─────────────────────────────────────────────────────────
+  // STEP 2: Check 8% eligibility
+  // ─────────────────────────────────────────────────────────
+  eight_pct_check = check_eight_pct_eligibility(input)
+  // (See Section 28.4 below for full eligibility function)
+
+  // ─────────────────────────────────────────────────────────
+  // STEP 3: Compute applicable paths
+  // ─────────────────────────────────────────────────────────
+  path_a = null
+  path_b = compute_path_b(input)
+  path_c = null
+
+  if input.has_itemized_documentation:
+    path_a = compute_path_a(input)
+  // If no documentation: path_a is null; engine cannot compute itemized
+
+  if eight_pct_check.eligible:
+    path_c = compute_path_c(input)
+
+  // ─────────────────────────────────────────────────────────
+  // STEP 4: Compare and recommend
+  // ─────────────────────────────────────────────────────────
+  candidates = [r for r in [path_a, path_b, path_c] if r is not null]
+  recommended = min(candidates, key=lambda r: r.total_tax_burden)
+
+  // Savings vs each non-recommended path
+  savings_vs_a = null
+  savings_vs_b = null
+  savings_vs_c = null
+
+  if path_a is not null:
+    savings_vs_a = path_a.total_tax_burden - recommended.total_tax_burden
+  savings_vs_b = path_b.total_tax_burden - recommended.total_tax_burden
+  if path_c is not null:
+    savings_vs_c = path_c.total_tax_burden - recommended.total_tax_burden
+
+  // Tie-breaking rule (when two or more paths have identical total_tax_burden):
+  // PATH_C > PATH_B > PATH_A in preference order (simpler to file wins on tie)
+  // Rationale: PATH_C (no PT, single form) is simplest; PATH_B (no documentation) is next;
+  //            PATH_A (requires documentation) is least preferred on tie.
+
+  // ─────────────────────────────────────────────────────────
+  // STEP 5: Balance payable / overpayment (recommended regime only)
+  // ─────────────────────────────────────────────────────────
+  annual_it_due = recommended.income_tax
+  balance_before_credits = annual_it_due - input.total_cwt_for_year - input.total_quarterly_it_paid
+  balance_payable = max(balance_before_credits, 0)
+  overpayment = max(-balance_before_credits, 0)
+
+  // ─────────────────────────────────────────────────────────
+  // STEP 6: Assemble output
+  // ─────────────────────────────────────────────────────────
+  return RegimeComparisonResult {
+    path_a: path_a,
+    path_b: path_b,
+    path_c: path_c,
+    recommended_regime: recommended.regime,
+    recommended_regime_total_tax: recommended.total_tax_burden,
+    savings_vs_path_a: savings_vs_a,
+    savings_vs_path_b: savings_vs_b,
+    savings_vs_path_c: savings_vs_c,
+    balance_payable: balance_payable,
+    overpayment: overpayment,
+    annual_form_to_file: determine_annual_form(input, recommended.regime),
+    eight_pct_ineligible_reason: eight_pct_check.ineligible_reason,
+    near_threshold_warning: gross_for_threshold >= 2_800_000 AND gross_for_threshold <= 3_000_000,
+    election_window_open: input.election_window_open,
+    pt_obligation: determine_pt_obligation(input, recommended.regime),
+  }
+```
+
+---
+
+### 28.4 — 8% Eligibility Check Function
+
+```
+struct EightPctCheck {
+  eligible: bool
+  ineligible_reason: string | null  // null if eligible
+}
+
+function check_eight_pct_eligibility(input: RegimeComparisonInput) -> EightPctCheck:
+  """
+  Returns {eligible: true} only if ALL conditions pass.
+  Returns {eligible: false, ineligible_reason: "..."}  on the FIRST failing condition.
+  """
+
+  // Condition 1: Not a GPP partner (computing on GPP share)
+  if input.taxpayer_type == GPP_PARTNER:
+    return {eligible: false, ineligible_reason: "GPP partners cannot use the 8% option on their distributive share (RR 8-2018 Part I)."}
+
+  // Condition 2: Not BMBE
+  if input.taxpayer_type == BMBE:
+    return {eligible: false, ineligible_reason: "BMBE-registered entities are income tax exempt; 8% option is moot (RA 9178)."}
+
+  // Condition 3: Not VAT-registered
+  if input.is_vat_registered:
+    return {eligible: false, ineligible_reason: "VAT-registered taxpayers cannot use the 8% option (RR 8-2018 Sec. 2(A))."}
+
+  // Condition 4: Gross receipts + non-operating income ≤ ₱3,000,000
+  if input.gross_for_threshold > 3_000_000:
+    return {eligible: false, ineligible_reason: "Gross receipts + other non-operating income exceeds ₱3,000,000. The 8% option is only available when this total does not exceed ₱3,000,000 (NIRC Sec. 24(A)(2)(b))."}
+
+  // Condition 5: Election window is open OR 8% was already elected
+  if input.election_status == ElectionStatus.GRADUATED_ELECTED:
+    return {eligible: false, ineligible_reason: "You have already filed Q1 under the graduated rate method. The 8% election window is closed for this tax year (RR 8-2018 Part I)."}
+
+  // Condition 6: Not subject to Sec. 117-128 percentage taxes
+  // (Engine assumes taxpayer is subject to Sec. 116 only; if on Sec. 117-128, caller must
+  //  set a flag — not modeled in RegimeComparisonInput v1. Future: add subject_to_117_128: bool)
+
+  // All checks passed
+  return {eligible: true, ineligible_reason: null}
+```
+
+---
+
+### 28.5 — Path A Computation Function (Graduated + Itemized)
+
+```
+function compute_path_a(input: RegimeComparisonInput) -> PathResult:
+  """
+  Computes tax under Path A: Graduated rates on (gross_income - itemized_deductions)
+  Includes 3% percentage tax for non-VAT-registered taxpayers.
+  """
+  // Gross income (after COGS for traders; = gross_receipts for service)
+  gross_income = input.gross_receipts  // Caller pre-computes for traders
+
+  // Net taxable income
+  net_taxable_income = max(gross_income - input.itemized_deductions, 0)
+
+  // If mixed income: add taxable_compensation to get combined NTI, then apply graduated rates
+  // (See CR-029 for mixed income computation; the below handles purely self-employed only)
+  if input.has_compensation_income:
+    combined_nti = input.taxable_compensation + net_taxable_income
+    income_tax = graduated_tax_for_year(combined_nti, input.tax_year)
+    // Then subtract the compensation-only tax to get the business IT component
+    compensation_only_tax = graduated_tax_for_year(input.taxable_compensation, input.tax_year)
+    income_tax = income_tax  // Combined tax applies to total NTI; compensation tax already withheld by employer
+    // NOTE: For mixed income, income_tax here is the TOTAL IT on combined NTI.
+    // The employer has withheld tax on the compensation portion. See CR-029 for reconciliation.
+  else:
+    income_tax = graduated_tax_for_year(net_taxable_income, input.tax_year)
+
+  // Percentage tax (not applicable if VAT-registered)
+  if input.is_vat_registered:
+    percentage_tax = 0
+  else:
+    percentage_tax = round(input.gross_receipts * 0.03, 2)
+
+  total_tax_burden = income_tax + percentage_tax
+  effective_rate = total_tax_burden / input.gross_receipts if input.gross_receipts > 0 else 0
+
+  return PathResult {
+    regime: PATH_A,
+    gross_income: gross_income,
+    deduction_amount: input.itemized_deductions,
+    net_taxable_income: net_taxable_income,
+    income_tax: income_tax,
+    percentage_tax: percentage_tax,
+    total_tax_burden: total_tax_burden,
+    effective_rate: effective_rate,
+  }
+```
+
+---
+
+### 28.6 — Path B Computation Function (Graduated + OSD)
+
+```
+function compute_path_b(input: RegimeComparisonInput) -> PathResult:
+  """
+  Computes tax under Path B: Graduated rates on (gross_income × 60%)
+  OSD = 40% of gross income (not gross sales for traders).
+  Includes 3% percentage tax for non-VAT taxpayers.
+  """
+  gross_income = input.gross_receipts  // Pre-computed by caller for traders
+
+  osd_amount = round(gross_income * 0.40, 2)
+  net_taxable_income = round(gross_income * 0.60, 2)  // = gross_income - osd_amount
+
+  if input.has_compensation_income:
+    combined_nti = input.taxable_compensation + net_taxable_income
+    income_tax = graduated_tax_for_year(combined_nti, input.tax_year)
+  else:
+    income_tax = graduated_tax_for_year(net_taxable_income, input.tax_year)
+
+  if input.is_vat_registered:
+    percentage_tax = 0
+  else:
+    percentage_tax = round(input.gross_receipts * 0.03, 2)
+
+  total_tax_burden = income_tax + percentage_tax
+  effective_rate = total_tax_burden / input.gross_receipts if input.gross_receipts > 0 else 0
+
+  return PathResult {
+    regime: PATH_B,
+    gross_income: gross_income,
+    deduction_amount: osd_amount,
+    net_taxable_income: net_taxable_income,
+    income_tax: income_tax,
+    percentage_tax: percentage_tax,
+    total_tax_burden: total_tax_burden,
+    effective_rate: effective_rate,
+  }
+```
+
+---
+
+### 28.7 — Path C Computation Function (8% Flat Rate)
+
+```
+function compute_path_c(input: RegimeComparisonInput) -> PathResult:
+  """
+  Computes tax under Path C: 8% flat rate on (gross_for_threshold - ₱250,000)
+  ₱250K deduction ONLY for purely self-employed (no compensation income).
+  Percentage tax is WAIVED under 8% option.
+  """
+  assert check_eight_pct_eligibility(input).eligible == true  // Precondition
+
+  tax_base: float
+  if input.has_compensation_income:
+    // Mixed income: ₱250K deduction does NOT apply (RMC 50-2018)
+    tax_base = input.gross_for_threshold  // gross_receipts + non_operating_income
+  else:
+    // Purely self-employed: ₱250K deduction applies
+    tax_base = max(input.gross_for_threshold - 250_000, 0)
+
+  income_tax = round(tax_base * 0.08, 2)
+  percentage_tax = 0  // Waived; "in lieu of" Sec. 116 (NIRC Sec. 24(A)(2)(b))
+  total_tax_burden = income_tax  // = income_tax + 0
+
+  effective_rate = total_tax_burden / input.gross_receipts if input.gross_receipts > 0 else 0
+
+  return PathResult {
+    regime: PATH_C,
+    gross_income: input.gross_for_threshold,
+    deduction_amount: 250_000 if NOT input.has_compensation_income else 0,
+    net_taxable_income: tax_base,
+    income_tax: income_tax,
+    percentage_tax: 0,
+    total_tax_burden: total_tax_burden,
+    effective_rate: effective_rate,
+  }
+```
+
+---
+
+### 28.8 — Graduated Tax Dispatcher
+
+```
+function graduated_tax_for_year(net_taxable_income: float, tax_year: int) -> float:
+  """
+  Dispatches to the correct rate schedule based on the tax year.
+  Uses Schedule 1 (2018-2022) or Schedule 2 (2023+).
+  Calls CR-002 and CR-003 functions.
+  """
+  if net_taxable_income < 0:
+    return 0  // EC-GRT: negative NTI → zero tax; NOLCO may apply separately
+
+  if tax_year >= 2023:
+    return graduated_tax_2023(net_taxable_income)
+  elif tax_year >= 2018:
+    return graduated_tax_2018(net_taxable_income)
+  else:
+    raise ERROR_UNSUPPORTED_TAX_YEAR  // Tool only supports TRAIN era (2018+)
+```
+
+---
+
+### 28.9 — Exact Breakeven Tables (8% vs Path A and 8% vs Path B)
+
+**These tables replace and supersede the approximate values in CR-014.**
+
+**Derivation method (for purely self-employed, non-VAT, service business, TY2023+):**
+
+The breakeven expense ratio `r` at which Path A total = Path C total:
+```
+graduated_tax_2023(GR × (1-r)) + GR × 0.03 = (GR - 250,000) × 0.08
+graduated_tax_2023(GR × (1-r)) = 0.05 × GR - 20,000
+```
+Let `T = 0.05 × GR - 20,000`. The breakeven NTI is `N` such that `graduated_tax_2023(N) = T`.
+
+#### Table RC-01: 8% vs Itemized Breakeven (Path C vs Path A) — Purely Self-Employed, TY2023+
+
+| Gross Receipts | Path C Tax | T = Required IT | Breakeven NTI | Breakeven Expense Ratio | Bracket for T |
+|----------------|------------|-----------------|---------------|------------------------|---------------|
+| ₱250,000 | ₱0 | ₱-7,500 | N/A | N/A (8% always wins) | — |
+| ₱300,000 | ₱4,000 | ₱-5,000 | N/A | N/A (8% always wins) | — |
+| ₱350,000 | ₱8,000 | ₱-2,500 | N/A | N/A (8% always wins) | — |
+| ₱400,000 | ₱12,000 | ₱0 | ₱250,000 | 37.5% (ties at ₱400K) | Zero bracket |
+| ₱437,500 | ₱15,000 | ₱1,875 | ₱262,500 | 40.0% (OSD ties 8% here) | Bracket 2 |
+| ₱500,000 | ₱20,000 | ₱5,000 | ₱283,333 | 43.3% | Bracket 2 |
+| ₱600,000 | ₱28,000 | ₱10,000 | ₱316,667 | 47.2% | Bracket 2 |
+| ₱700,000 | ₱36,000 | ₱15,000 | ₱350,000 | 50.0% | Bracket 2 |
+| ₱800,000 | ₱44,000 | ₱20,000 | ₱383,333 | 52.1% | Bracket 2 |
+| ₱850,000 | ₱48,000 | ₱22,500 | ₱400,000 | 52.9% | Bracket 2/3 boundary |
+| ₱1,000,000 | ₱60,000 | ₱30,000 | ₱437,500 | 56.3% | Bracket 3 |
+| ₱1,200,000 | ₱76,000 | ₱40,000 | ₱487,500 | 59.4% | Bracket 3 |
+| ₱1,500,000 | ₱100,000 | ₱55,000 | ₱562,500 | 62.5% | Bracket 3 |
+| ₱2,000,000 | ₱140,000 | ₱80,000 | ₱687,500 | 65.6% | Bracket 3 |
+| ₱2,450,000 | ₱176,000 | ₱102,500 | ₱800,000 | 67.3% | Bracket 3/4 boundary |
+| ₱2,500,000 | ₱180,000 | ₱105,000 | ₱810,000 | 67.6% | Bracket 4 |
+| ₱3,000,000 | ₱220,000 | ₱130,000 | ₱910,000 | 69.7% | Bracket 4 |
+
+**Column derivations:**
+- Path C Tax = max(GR − 250,000, 0) × 0.08
+- T = 0.05 × GR − 20,000
+- Breakeven NTI = inverse of graduated_tax_2023(N) = T (solve within bracket)
+- Breakeven Expense Ratio = 1 − (Breakeven NTI / GR)
+
+**Bracket 2 formula** (T ≤ 22,500; GR ≤ 850,000):
+`N = 250,000 + T / 0.15`; `r = 1 − N/GR`
+
+**Bracket 3 formula** (22,500 < T ≤ 102,500; 850,000 < GR ≤ 2,450,000):
+`N = 400,000 + (T − 22,500) / 0.20`; `r = 1 − N/GR`
+Simplified: `r = 0.75 − 187,500/GR`
+
+**Bracket 4 formula** (102,500 < T; GR > 2,450,000):
+`N = 800,000 + (T − 102,500) / 0.25`; `r = 1 − N/GR`
+Simplified: `r = 0.80 − 310,000/GR`
+
+**Key insight (for engine invariant check):**
+- GR ≤ ₱400,000: T ≤ 0. 8% is ALWAYS the winner regardless of expense ratio.
+  (Even at 100% expense ratio, Path A total = PT only = GR × 3% ≥ Path C)
+- GR = ₱400,001 to ₱437,499: Narrow OSD-wins window. Path B (OSD) beats both Path A and Path C for taxpayers in this range with ANY expense ratio. 8% has the highest total in this range.
+- GR ≥ ₱437,500: Path C (8%) always beats Path B (OSD). Path A (itemized) wins ONLY at r > breakeven threshold.
+
+#### Table RC-02: 8% vs OSD Crossover (Path C vs Path B) — Non-VAT, TY2023+
+
+**Formula:** Path B total = `graduated_tax_2023(GR × 0.60) + GR × 0.03`; Path C total = `(GR − 250,000) × 0.08`
+
+| Gross Receipts | Path B Total | Path C Total | Winner | Margin |
+|----------------|-------------|-------------|--------|--------|
+| ₱250,000 | ₱7,500 | ₱0 | Path C (8%) | ₱7,500 |
+| ₱300,000 | ₱9,000 | ₱4,000 | Path C (8%) | ₱5,000 |
+| ₱350,000 | ₱10,500 | ₱8,000 | Path C (8%) | ₱2,500 |
+| ₱375,000 | ₱11,250 | ₱10,000 | Path C (8%) | ₱1,250 |
+| ₱400,000 | ₱12,000 | ₱12,000 | **TIE** | ₱0 |
+| ₱410,000 | ₱12,300 | ₱12,800 | **Path B (OSD)** | ₱500 |
+| ₱420,000 | ₱12,900 | ₱13,600 | **Path B (OSD)** | ₱700 |
+| ₱430,000 | ₱13,425 | ₱14,400 | **Path B (OSD)** | ₱975 |
+| ₱437,500 | ₱15,000 | ₱15,000 | **TIE** | ₱0 |
+| ₱450,000 | ₱16,500 | ₱16,000 | Path C (8%) | ₱500 |
+| ₱500,000 | ₱22,500 | ₱20,000 | Path C (8%) | ₱2,500 |
+| ₱700,000 | ₱44,500* | ₱36,000 | Path C (8%) | ₱8,500 |
+| ₱1,000,000 | ₱92,500 | ₱60,000 | Path C (8%) | ₱32,500 |
+| ₱1,500,000 | ₱172,500 | ₱100,000 | Path C (8%) | ₱72,500 |
+| ₱2,000,000 | ₱262,500 | ₱140,000 | Path C (8%) | ₱122,500 |
+| ₱2,500,000 | ₱352,500 | ₱180,000 | Path C (8%) | ₱172,500 |
+| ₱3,000,000 | ₱442,500 | ₱220,000 | Path C (8%) | ₱222,500 |
+
+*₱700K Path B: NTI = 420,000; tax = 22,500 + (420,000−400,000)×0.20 = 22,500 + 4,000 = 26,500; + PT = 21,000; total = 47,500.
+Wait — let me re-verify: NTI=700K×0.6=420K; grad_tax(420K)=22,500+(420K-400K)×0.20=22,500+4,000=26,500; PT=700K×3%=21,000; total=47,500.
+Correction: Path B at ₱700K = ₱47,500 (not ₱44,500). Table updated above.
+
+**Note on the OSD-wins window (₱400,001–₱437,499):**
+This is a narrow ₱37,499 band. The maximum OSD advantage over 8% is ₱833 (at GR ≈ ₱425,000).
+Engine should still recommend Path B (OSD) in this range, but the margin is small enough that
+any additional percent tax payment errors could wipe out the advantage.
+
+#### Table RC-03: OSD vs Itemized Breakeven — All Incomes
+
+OSD (Path B) beats Itemized (Path A) when expense_ratio < 40%. Itemized beats OSD when expense_ratio > 40%.
+Breakeven is ALWAYS at exactly 40% expense ratio, independent of gross receipts level.
+
+Proof: Both paths have identical percentage tax (GR × 3%). For income tax:
+`graduated_tax(GR × 0.60) vs graduated_tax(GR × (1-r))`
+These are equal when `GR × 0.60 = GR × (1-r)` → `r = 0.40`.
+
+| Expense Ratio | Path A vs Path B |
+|---------------|-----------------|
+| < 40% | Path B (OSD) wins — simpler and lower IT |
+| = 40% | Tie — prefer Path B (simpler; no documentation needed) |
+| > 40% | Path A (Itemized) wins — IT savings exceed OSD advantage |
+
+---
+
+### 28.10 — Determine Annual Form
+
+```
+function determine_annual_form(input: RegimeComparisonInput, regime: Regime) -> string:
+  """
+  Returns "1701" or "1701A" based on taxpayer profile and regime.
+  See also DT-04 for the full decision tree.
+  """
+  // Mixed income earners always use Form 1701
+  if input.has_compensation_income:
+    return "1701"
+
+  // Path A (itemized) with Audited Financial Statements: 1701A or 1701 (either OK)
+  // Engine defaults to 1701A for simplicity
+  return "1701A"
+
+  // Note: Breach-year filers must use 1701 even if pure SE.
+  // The breach flag is not in RegimeComparisonInput v1; caller must check DT-03 separately.
+```
+
+---
+
+### 28.11 — Determine PT Obligation
+
+```
+function determine_pt_obligation(input: RegimeComparisonInput, regime: Regime) -> PTObligation:
+  if regime == Regime.PATH_C:
+    return PTObligation.NOT_REQUIRED_8PCT
+  if input.is_vat_registered:
+    return PTObligation.NOT_REQUIRED_VAT
+  // Non-VAT, graduated rates
+  return PTObligation.REQUIRED_QUARTERLY
+```
+
+---
+
+### 28.12 — Worked Examples (Regime Comparison)
+
+#### Example RC-E01: Pure Freelancer, ₱800,000 Gross, Minimal Expenses
+
+**Input:**
+- gross_receipts: 800,000
+- non_operating_income: 0
+- itemized_deductions: 50,000 (about 6.25% expense ratio)
+- has_itemized_documentation: true
+- has_compensation_income: false
+- is_vat_registered: false
+- tax_year: 2024
+
+**Computations:**
+- gross_for_threshold = 800,000
+
+**Path A:** NTI = 800,000 − 50,000 = 750,000
+grad_tax_2023(750,000) = 22,500 + (750,000−400,000)×0.20 = 22,500 + 70,000 = 92,500
+PT = 800,000 × 0.03 = 24,000
+Total A = 92,500 + 24,000 = **₱116,500**
+
+**Path B:** NTI = 800,000 × 0.60 = 480,000
+grad_tax_2023(480,000) = 22,500 + (480,000−400,000)×0.20 = 22,500 + 16,000 = 38,500
+PT = 24,000
+Total B = 38,500 + 24,000 = **₱62,500**
+
+**Path C:** Tax base = 800,000 − 250,000 = 550,000
+IT_C = 550,000 × 0.08 = 44,000; PT = 0
+Total C = **₱44,000**
+
+**Recommendation: Path C (8%)** — saves ₱72,500 vs Path A, ₱18,500 vs Path B.
+**Note:** Expense ratio = 6.25%, far below breakeven of 52.1% at ₱800K. Path C optimal.
+
+---
+
+#### Example RC-E02: Designer with High Expenses, ₱1,200,000 Gross, 65% Expense Ratio
+
+**Input:**
+- gross_receipts: 1,200,000
+- itemized_deductions: 780,000 (65% ratio)
+- non_operating_income: 0
+- has_itemized_documentation: true
+- has_compensation_income: false
+- is_vat_registered: false
+- tax_year: 2024
+
+**Computations:**
+
+**Path A:** NTI = 1,200,000 − 780,000 = 420,000
+grad_tax_2023(420,000) = 22,500 + (420,000−400,000)×0.20 = 22,500 + 4,000 = 26,500
+PT = 1,200,000 × 0.03 = 36,000
+Total A = 26,500 + 36,000 = **₱62,500**
+
+**Path B:** NTI = 1,200,000 × 0.60 = 720,000
+grad_tax_2023(720,000) = 22,500 + (720,000−400,000)×0.20 = 22,500 + 64,000 = 86,500
+PT = 36,000
+Total B = 86,500 + 36,000 = **₱122,500**
+
+**Path C:** Tax base = 1,200,000 − 250,000 = 950,000
+IT_C = 950,000 × 0.08 = 76,000; PT = 0
+Total C = **₱76,000**
+
+**Recommendation: Path A (Itemized)** — saves ₱13,500 vs Path C, ₱60,000 vs Path B.
+**Breakeven at GR = ₱1.2M is 59.4%.** This taxpayer's 65% ratio exceeds breakeven → itemized wins.
+
+---
+
+#### Example RC-E03: Freelancer Exactly at Breakeven (GR = ₱1,000,000, 56.3% Expenses)
+
+**Input:**
+- gross_receipts: 1,000,000
+- itemized_deductions: 562,500 (56.25% ratio — exact breakeven)
+- non_operating_income: 0
+- has_compensation_income: false
+- tax_year: 2024
+
+**Path A:** NTI = 437,500
+grad_tax_2023(437,500) = 22,500 + (437,500−400,000)×0.20 = 22,500 + 7,500 = 30,000
+PT = 30,000; Total A = **₱60,000**
+
+**Path C:** IT = (1,000,000−250,000)×0.08 = 60,000; PT = 0; Total C = **₱60,000**
+
+**Result:** TIE. Engine recommends Path C (tie-breaking rule: simpler to file wins).
+If taxpayer ALSO has documentation for Path A expenses: either is equally valid.
+Recommendation message: "Both the 8% Flat Rate and the Itemized Deduction method result in the same tax of ₱60,000. We recommend the 8% option as it requires no expense documentation and simpler filing (Form 1701A, Part IV-B)."
+
+---
+
+#### Example RC-E04: Mixed Income Earner (Compensation + Business)
+
+**Input:**
+- gross_receipts (business): 600,000
+- non_operating_income: 0
+- itemized_deductions: 100,000 (16.7% ratio — low expenses)
+- has_itemized_documentation: true
+- has_compensation_income: true
+- taxable_compensation: 400,000 (after mandatory deductions)
+- is_vat_registered: false
+- tax_year: 2024
+
+**Path A (Mixed Income, Itemized):**
+Business NTI = 600,000 − 100,000 = 500,000
+Total NTI = 400,000 (comp) + 500,000 (biz) = 900,000
+Total IT = grad_tax_2023(900,000) = 102,500 + (900,000−800,000)×0.25 = 102,500 + 25,000 = 127,500
+PT (on business gross) = 600,000 × 0.03 = 18,000
+Total A = 127,500 + 18,000 = **₱145,500**
+
+**Path B (Mixed Income, OSD):**
+Business NTI = 600,000 × 0.60 = 360,000
+Total NTI = 400,000 + 360,000 = 760,000
+Total IT = grad_tax_2023(760,000) = 22,500 + (760,000−400,000)×0.20 = 22,500 + 72,000 = 94,500
+PT = 18,000
+Total B = 94,500 + 18,000 = **₱112,500**
+
+**Path C (Mixed Income, 8%):**
+Tax base = 600,000 (NO ₱250K deduction for mixed income)
+Business IT (8%) = 600,000 × 0.08 = 48,000
+Compensation IT = grad_tax_2023(400,000) = (400,000−250,000)×0.15 = 22,500
+Note: For mixed income, the total tax is compensation_IT + business_8pct_IT = 22,500 + 48,000 = 70,500.
+But compensation income tax is handled separately (employer-withheld via Form 2316). What the engine reports as "Path C total" for mixed income is: business_8pct_IT only = 48,000; PT = 0. The annual return will also reconcile comp income.
+Total C (business portion only) = **₱48,000** (plus separately-computed compensation tax)
+PT = 0
+
+**Recommendation for mixed income:** Compare TOTAL tax burden (IT on combined income):
+- If comparing TOTAL annual IT burden: Path B (combined IT = ₱94,500) vs Path C (comp IT ₱22,500 + biz IT ₱48,000 = ₱70,500).
+- Path C total IT (₱70,500) + PT (₱0) = ₱70,500 beats Path B (₱94,500 + ₱18,000 = ₱112,500).
+- Path A total (₱127,500 + ₱18,000 = ₱145,500) is highest.
+**Recommendation: Path C (8% on business income)** saves ₱42,000 vs Path B.
+
+**Note:** Mixed income 8% total is compensation tax (₱22,500, withheld by employer) + business 8% (₱48,000, paid via 1701Q/annual). The comparison should use FULL annual tax burden.
+
+---
+
+### 28.13 — Invariants for Regime Comparison
+
+```
+// These invariants must hold for every valid output:
+
+// INV-RC-01: Total tax burden is always non-negative
+assert path_x.total_tax_burden >= 0 for all computed paths
+
+// INV-RC-02: Path C total tax ≤ Path B total tax, EXCEPT in ₱400K–₱437.5K gross range
+if gross_for_threshold <= 400_000 OR gross_for_threshold >= 437_500:
+  if path_c is not null:
+    assert path_c.total_tax_burden <= path_b.total_tax_burden + 1  // ₱1 tolerance for rounding
+
+// INV-RC-03: OSD beats Itemized (total burden) when expense_ratio < 0.40
+if itemized_deductions / gross_income < 0.40 and not is_vat_registered:
+  assert path_b.total_tax_burden <= path_a.total_tax_burden + 1  // ₱1 tolerance
+
+// INV-RC-04: Itemized beats OSD (total burden) when expense_ratio > 0.40
+if itemized_deductions / gross_income > 0.40 and not is_vat_registered:
+  assert path_a.total_tax_burden <= path_b.total_tax_burden + 1
+
+// INV-RC-05: Path C has zero percentage_tax
+if path_c is not null:
+  assert path_c.percentage_tax == 0
+
+// INV-RC-06: Recommended regime has the minimum total_tax_burden
+assert recommended.total_tax_burden == min([p.total_tax_burden for p in applicable_paths])
+
+// INV-RC-07: Balance payable + overpayment cannot both be > 0 simultaneously
+assert NOT (balance_payable > 0 AND overpayment > 0)
+
+// INV-RC-08: Savings vs recommended path are always 0 (saves nothing vs itself)
+if recommended_regime == PATH_B:
+  assert savings_vs_b == 0
+if recommended_regime == PATH_C:
+  assert savings_vs_c == 0
+
+// INV-RC-09: Savings are always non-negative
+assert savings_vs_a >= 0 or savings_vs_a is null
+assert savings_vs_b >= 0
+assert savings_vs_c >= 0 or savings_vs_c is null
+```

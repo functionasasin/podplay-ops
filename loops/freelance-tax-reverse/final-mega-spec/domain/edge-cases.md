@@ -1269,3 +1269,180 @@ deductible_depreciation = ₱480,000 × 0.80 = ₱384,000/year
 **Engine display:** "The cost ceiling for vehicles is ₱2,400,000 per BIR Revenue Regulations. Your vehicle's cost of ₱4,500,000 has been capped at ₱2,400,000 for depreciation purposes. Annual depreciation: ₱480,000 × [business_use]% = ₱[deductible]."
 
 **Legal basis:** BIR Revenue Regulations (vehicle depreciation cap); NIRC Sec. 34(F)
+
+---
+
+## Group EC-RC: Regime Comparison Edge Cases
+
+### EC-RC01: All Paths Produce ₱0 Tax (Gross < ₱250K, No Significant Expenses)
+**Scenario:** A part-time freelancer earns ₱200,000 gross and has elected 8% option.
+
+**Path C computation:**
+- Tax base = max(200,000 − 250,000, 0) = 0
+- IT = 0 × 0.08 = ₱0
+- PT = waived under 8%
+- Total = ₱0
+
+**Path B computation:**
+- NTI = 200,000 × 0.60 = 120,000 (in zero bracket)
+- IT = ₱0
+- PT = 200,000 × 0.03 = ₱6,000
+- Total = ₱6,000
+
+**Path A computation:**
+- NTI = 200,000 − expenses (say ₱0) = 200,000 (still in zero bracket)
+- IT = ₱0
+- PT = ₱6,000
+- Total = ₱6,000
+
+**Engine behavior:** Recommend Path C (₱0 total). Savings vs Path B/A = ₱6,000.
+**Message to user:** "Under the 8% option, your income tax is ₱0 because your gross receipts (₱200,000) do not exceed the ₱250,000 deductible amount. However, you must still file your quarterly 1701Q returns with zero tax due."
+**Key point:** Zero-tax scenario still requires filing (EC-8-01 from 8% option edge cases).
+
+---
+
+### EC-RC02: Path C and Path B Exact Tie at ₱400,000 Gross Receipts
+**Scenario:** Non-VAT freelancer, gross = exactly ₱400,000, purely self-employed.
+
+**Path B:** NTI = 240,000 (zero bracket); IT = 0; PT = 12,000; Total = **₱12,000**
+**Path C:** Tax base = 400,000 − 250,000 = 150,000; IT = 12,000; PT = 0; Total = **₱12,000**
+
+**Engine behavior:** Both paths tied at ₱12,000. Tie-breaking rule applies:
+- Prefer Path C (8%) — simpler to file, no PT filing obligation (no Form 2551Q required).
+- Display to user: "Both the 8% option and the OSD method result in the same total tax of ₱12,000. We recommend the 8% option because it eliminates the quarterly percentage tax filing (Form 2551Q)."
+
+**What NOT to do:** Do NOT return an error or undefined behavior. Tie is a valid output.
+
+---
+
+### EC-RC03: Path B (OSD) Wins Over Path C (8%) in Narrow ₱400K–₱437.5K Window
+**Scenario:** Non-VAT freelancer, gross = ₱420,000, purely self-employed, no itemized docs.
+
+**Path B:** NTI = 252,000; IT = (252,000−250,000)×0.15 = 300; PT = 12,600; Total = **₱12,900**
+**Path C:** Tax base = 170,000; IT = 13,600; PT = 0; Total = **₱13,600**
+
+**Engine behavior:** Recommend Path B (OSD). Savings vs Path C = ₱700.
+**Key warning:** Engine MUST NOT apply the invariant "Path C always beats Path B" here — that invariant only holds outside this window. See INV-RC-02 exception clause in CR-028.
+**Message to user:** "In your income range (₱400,001–₱437,499), the OSD method (₱12,900) is slightly cheaper than the 8% option (₱13,600) by ₱700. This is a narrow window where OSD is preferred. Note: You will still need to file quarterly percentage tax returns (Form 2551Q)."
+
+---
+
+### EC-RC04: Taxpayer Has CWT Credits That Exceed Annual Tax Under All Paths
+**Scenario:** Consultant, gross = ₱1,000,000, all income from corporate clients who withheld 10% EWT (₱100,000 total CWT). On 8%: annual IT = ₱60,000.
+
+**Computation:**
+- Path C annual IT = (1,000,000 − 250,000) × 0.08 = ₱60,000
+- CWT = ₱100,000
+- balance_payable = max(60,000 − 100,000, 0) = ₱0
+- overpayment = 100,000 − 60,000 = ₱40,000
+
+**Engine behavior:**
+1. Still recommend the path with lowest GROSS tax (Path C at ₱60,000).
+2. Report balance_payable = ₱0 and overpayment = ₱40,000.
+3. Show message: "Your creditable withholding tax (₱100,000) exceeds your income tax due (₱60,000) under the recommended 8% option by ₱40,000. You may: (a) apply this as a tax credit to next year's return, or (b) file for a cash refund with the BIR."
+4. Do NOT change the regime recommendation based on CWT amount — comparison is always on gross tax burden before CWT.
+
+---
+
+### EC-RC05: Itemized Deductions Exactly Equal to OSD (40% Expense Ratio)
+**Scenario:** GR = ₱1,500,000, itemized_deductions = ₱600,000 (exactly 40%).
+
+**Path A NTI = Path B NTI = 900,000. IT_A = IT_B = 102,500 + (900K−800K)×0.25 = 127,500**
+**PT for A and B = 45,000. Total A = Total B = 172,500**
+
+**Path C (if eligible):** Tax = (1,500,000−250,000) × 0.08 = 100,000. Total = ₱100,000.
+
+**Engine behavior:** Path C is recommended (100,000 < 172,500). If Path C were not available:
+- Path A = Path B at ₱172,500. Prefer Path B (OSD) per tie-breaking rule.
+- Message: "Your expense ratio is exactly 40%, so the OSD method produces the same income tax as itemized deductions. We recommend OSD for simplicity (no expense documentation required to substantiate your deductions with the BIR)."
+
+---
+
+### EC-RC06: Mixed Income Earner Where 8% Business Tax + Compensation Tax < OSD Total
+**Scenario:** Employee earns ₱480,000 taxable compensation; also freelances ₱800,000.
+- Taxable comp = ₱480,000 → employer withholds: (480K−250K)×0.15 = ₱34,500
+- 8% on business: ₱800,000 × 0.08 = ₱64,000 (no ₱250K deduction for mixed income)
+- 8% total ADDITIONAL tax due = ₱64,000 + ₱0 PT = ₱64,000
+
+**vs. OSD on business (graduated combined):**
+- Business NTI (OSD) = 800,000 × 0.60 = ₱480,000
+- Combined NTI = 480,000 + 480,000 = ₱960,000
+- Total IT = 102,500 + (960,000−800,000)×0.25 = 102,500 + 40,000 = ₱142,500
+- Less: employer-withheld compensation IT (₱34,500) = Balance tax = ₱108,000
+- PT on business = ₱24,000
+- OSD total incremental tax = ₱108,000 + ₱24,000 = ₱132,000
+
+Wait — for regime comparison, engine must compute TOTAL annual IT on all income, not just incremental:
+- Path C (8%): Annual IT = comp_IT + biz_8pct = 34,500 + 64,000 = ₱98,500; PT = ₱0; Total = ₱98,500
+- Path B (OSD): Annual IT = grad_tax(960K) = 142,500; PT = 24,000; Total = ₱166,500
+
+**Recommendation: Path C (8%) on business income.** Savings = ₱68,000.
+**Engine behavior:** For mixed income, the "compensation IT" is fixed regardless of business regime choice. The comparison is: (combined_IT + PT) across regimes. Engine must compute combined IT under each path (see CR-028 Section 28.5–28.7 for mixed income handling).
+
+---
+
+### EC-RC07: Recommendation Changes Based on Documentation Availability
+**Scenario:** Same taxpayer, GR = ₱2,000,000, itemized = ₱1,400,000 (70% ratio).
+
+**With documentation available:**
+- Path A: NTI = 600,000; IT = 22,500+(600K−400K)×0.20 = 62,500; PT = 60,000; Total = ₱122,500
+- Path B: NTI = 1,200,000; IT = 102,500+(1,200K−800K)×0.25 = 202,500; PT = 60,000; Total = ₱262,500
+- Path C: IT = (2M−250K)×0.08 = 140,000; PT = 0; Total = ₱140,000
+- Recommendation: **Path A (₱122,500)** — docs required.
+
+**Without documentation:**
+- Path A is null (no docs).
+- Path B: ₱262,500; Path C: ₱140,000.
+- Recommendation: **Path C (₱140,000)**.
+
+**Engine behavior:** When has_itemized_documentation = false, Path A must be null. The recommendation silently omits Path A and returns Path C.
+**UI message when docs unavailable:** "Based on your inputs, the 8% option (₱140,000 total tax) is recommended. Note: if you have documented business expenses totaling more than 65.6% of your gross receipts (more than ₱1,312,000), itemized deductions could reduce your tax below ₱140,000. Enable expense tracking to see if itemized deductions would save you more."
+
+---
+
+### EC-RC08: Savings Comparison When Only Path B is Available (Both 8% and Docs Unavailable)
+**Scenario:** GPP partner, GR = ₱2,000,000, no 8% option, no expense docs.
+
+**DT-01 returns:** INELIGIBLE (GPP partner).
+**Paths available:** Path B only (8% ineligible; no docs for Path A).
+
+**Engine behavior:**
+- path_a = null (no docs)
+- path_c = null (ineligible: GPP partner)
+- path_b = {total: 262,500}
+- recommended_regime = PATH_B (only option)
+- savings_vs_path_b = 0
+- savings_vs_path_a = null (not computed)
+- savings_vs_path_c = null (not computed)
+- eight_pct_ineligible_reason = "GPP partners cannot use the 8% option..."
+
+**Engine must NOT return an error when only one path is available.** It returns the single available path as the recommendation with savings = ₱0.
+
+---
+
+### EC-RC09: Gross Receipts = Exactly ₱3,000,000 (Threshold Boundary)
+**Scenario:** Non-VAT consultant, gross = exactly ₱3,000,000.
+
+**8% Eligibility check:** gross_for_threshold = 3,000,000. Check: `3,000,000 <= 3,000,000` → TRUE. 8% IS available.
+**Path C:** Tax base = 3,000,000 − 250,000 = 2,750,000; IT = 220,000; PT = 0; Total = ₱220,000
+**Path B:** NTI = 1,800,000; IT = 402,500 + (1,800K−2,000K)... Wait: NTI = 1,800,000 is in bracket 4.
+  IT = 102,500 + (1,800,000−800,000)×0.25 = 102,500 + 250,000 = 352,500; PT = 90,000; Total = ₱442,500
+
+**Recommendation: Path C (₱220,000)**. Savings vs OSD = ₱222,500.
+**Key invariant:** At ₱3,000,000 exactly, the 8% option IS available (the threshold is inclusive, `≤ 3,000,000`). See CR-015 boundary rules. Engine must use `<=` not `<` for the threshold check.
+**Near-threshold warning:** near_threshold_warning = true (at exactly ₱3M, within ₱200K of threshold). Warn user: "Your income is at the ₱3,000,000 threshold. If your actual annual receipts exceed ₱3,000,000, the 8% option becomes unavailable and you must register for VAT."
+
+---
+
+### EC-RC10: Savings Display When Recommended Path Has ₱0 Savings vs Itself
+**Scenario:** Path C recommended. Engine must show savings vs Path A and Path B, and ₱0 savings vs Path C.
+
+**Engine behavior:**
+- savings_vs_path_c = 0 (saving nothing vs yourself)
+- savings_vs_path_b = positive number (what you save over OSD)
+- savings_vs_path_a = positive number (what you save over itemized) if Path A available
+
+**Display rule:** Do NOT show "You save ₱0 by choosing the 8% option vs the 8% option." Only show savings vs non-recommended paths.
+- Show: "The 8% option saves you ₱XX,XXX vs the OSD method and ₱YY,YYY vs itemized deductions."
+- savings_vs_recommended (₱0) is for internal validation only (INV-RC-08); never shown in UI.
+

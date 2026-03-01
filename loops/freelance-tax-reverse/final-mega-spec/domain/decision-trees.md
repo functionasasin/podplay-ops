@@ -435,47 +435,241 @@ START: What is the taxpayer's income tax regime for this year?
 
 ---
 
-## DT-07: Regime Recommendation (Overview — Fully Expanded in regime-comparison-logic aspect)
+## DT-07: Regime Recommendation — Full Expanded Decision Tree
 
 **Root question:** Given gross receipts and business expenses, which tax path has the lowest total tax burden?
 
-**Legal basis:** NIRC Sec. 24(A); CR-007 in computation-rules.md
+**Legal basis:** NIRC Sec. 24(A)(2)(a), Sec. 24(A)(2)(b), Sec. 34(L), Sec. 116; CR-028 in computation-rules.md
 
-**Note:** This tree provides a high-level flow. For exact formula application, see
-[computation-rules.md](computation-rules.md) CR-007.
+**This tree is the canonical entry point for all regime comparisons.** For exact pseudocode, see CR-028.
 
 ```
-START: What is the taxpayer's income profile?
+START: Is the taxpayer VAT-registered?
 │
-├── PURELY SELF-EMPLOYED (no compensation) →
-│    Is 8% option eligible? (Run DT-01)
+├── YES (VAT-registered) →
+│    [INELIGIBLE for 8% option (RR 8-2018). No percentage tax applies (Sec. 116 exemption).]
+│    [Available paths: PATH_A and PATH_B only.]
 │    │
-│    ├── NOT ELIGIBLE →
-│    │    Compare Path A vs Path B:
-│    │    ├── expense_ratio > 0.40? → Path A (itemized) likely wins vs Path B (OSD)
-│    │    └── expense_ratio ≤ 0.40? → Path B (OSD) likely wins vs Path A (itemized)
-│    │    [Compute both; recommend lower. See CR-007.]
-│    │
-│    └── ELIGIBLE →
-│         Is expense_ratio ≥ breakeven_threshold(gross_receipts)?
-│         (Breakeven table: see CR-014 / lookup-tables/graduated-rate-table.md)
+│    └── Does the taxpayer have tracked and documented business expenses?
 │         │
-│         ├── YES (high expenses, itemized may beat 8%) →
-│         │    Compute all 3 paths. Compare Path A vs Path C.
-│         │    ├── Path A (itemized) ≤ Path C (8%)? → Recommend Path A
-│         │    └── Path C (8%) < Path A (itemized)? → Recommend Path C
+│         ├── YES (has itemized docs) →
+│         │    Compute Path A: grad_tax(gross_income − itemized_deductions)
+│         │    Compute Path B: grad_tax(gross_income × 0.60)
+│         │    Compare totals (NO percentage tax for either; VAT-registered):
+│         │    │
+│         │    ├── expense_ratio > 40% →
+│         │    │    [ACTION: RECOMMEND PATH_A (Graduated + Itemized).
+│         │    │     Path A NTI < Path B NTI when itemized > OSD (40% of gross).
+│         │    │     No PT applies to either; VAT filed separately.
+│         │    │     Savings = grad_tax(0.60×GI) − grad_tax(GI − itemized).
+│         │    │     Ref: NIRC Sec. 34(A)-(K); CR-004.]
+│         │    │
+│         │    ├── expense_ratio = 40% →
+│         │    │    [ACTION: RECOMMEND PATH_B (Graduated + OSD) on tie.
+│         │    │     Path A = Path B at exactly 40% expense ratio.
+│         │    │     OSD preferred: simpler filing, no documentation burden.
+│         │    │     Ref: NIRC Sec. 34(L); CR-026.]
+│         │    │
+│         │    └── expense_ratio < 40% →
+│         │         [ACTION: RECOMMEND PATH_B (Graduated + OSD).
+│         │          OSD (40% flat) deducts more than actual expenses.
+│         │          Path B NTI < Path A NTI.
+│         │          Ref: NIRC Sec. 34(L); CR-026.]
 │         │
-│         └── NO (low expenses) →
-│              [ACTION: RECOMMEND = PATH_C (8%). 8% always beats Path B (OSD) for service
-│               businesses below ₱3M. Only verify if Path A (itemized) might win with
-│               very high expenses. Ref: CR-014 breakeven analysis.]
+│         └── NO (no itemized docs) →
+│              [ACTION: RECOMMEND PATH_B (Graduated + OSD) — only option.
+│               Path A requires substantiation; without docs, itemized is unavailable.
+│               Path B: NTI = gross_income × 0.60; IT = grad_tax(NTI).
+│               No percentage tax. File Form 1701/1701A.
+│               Ref: NIRC Sec. 34(L); RR 16-2008.]
 │
-└── MIXED INCOME (compensation + business) →
-     Compensation portion: always graduated rates (no choice).
-     Business portion: run DT-01 for eligibility.
-     ├── 8% ELIGIBLE → Compare: graduated+deduction vs 8% for business portion.
-     └── NOT ELIGIBLE → Graduated + OSD or Itemized for business portion.
-     [Compute total tax for each combination. See mixed-income-rules aspect for full tree.]
+└── NO (not VAT-registered) →
+     Is the taxpayer's gross_receipts + non_operating_income > ₱3,000,000?
+     │
+     ├── YES (> ₱3M) →
+     │    [INELIGIBLE for 8% option. Must register for VAT.
+     │     Available paths: PATH_A and PATH_B only (with 3% PT on both).]
+     │    [FLAG: VAT registration is REQUIRED (NIRC Sec. 236(G)). Notify user.]
+     │    │
+     │    └── Same as the VAT-registered branch above, PLUS add PT = GR × 3% to both paths.
+     │         [ACTION: RECOMMEND whichever of PATH_A or PATH_B has lower total (IT + PT).
+     │          Breakeven is still at 40% expense ratio (PT is identical for both paths).]
+     │
+     └── NO (≤ ₱3M) → 8% OPTION MAY BE AVAILABLE.
+          │
+          └── Check DT-01 for eligibility. Did DT-01 return ELIGIBLE?
+               │
+               ├── NOT ELIGIBLE (GPP partner, Sec. 117-128 subject, election window closed, BMBE) →
+               │    [Available paths: PATH_A and PATH_B only (with 3% PT on both).]
+               │    │
+               │    └── Does taxpayer have itemized documentation?
+               │         │
+               │         ├── YES →
+               │         │    Compute Path A: grad_tax(gross_income − itemized) + GR×0.03
+               │         │    Compute Path B: grad_tax(gross_income×0.60) + GR×0.03
+               │         │    (PT cancels in comparison; compare only IT)
+               │         │    │
+               │         │    ├── expense_ratio > 40% →
+               │         │    │    [ACTION: RECOMMEND PATH_A (Itemized + Graduated).
+               │         │    │     Savings = grad_tax(0.60×GI) − grad_tax(GI−itemized).
+               │         │    │     Ref: CR-004; CR-005.]
+               │         │    │
+               │         │    ├── expense_ratio = 40% →
+               │         │    │    [ACTION: RECOMMEND PATH_B (OSD). Tie; simpler filing wins.
+               │         │    │     Ref: CR-026.]
+               │         │    │
+               │         │    └── expense_ratio < 40% →
+               │         │         [ACTION: RECOMMEND PATH_B (OSD).
+               │         │          Ref: CR-026.]
+               │         │
+               │         └── NO (no docs) →
+               │              [ACTION: RECOMMEND PATH_B (OSD). Only viable option.
+               │               Total = grad_tax(GR×0.60) + GR×0.03.
+               │               Ref: CR-005; CR-008.]
+               │
+               └── ELIGIBLE (DT-01 returned ELIGIBLE) →
+                    All 3 paths potentially available. Check the gross receipts range:
+                    │
+                    ├── BRANCH A: gross_for_threshold ≤ ₱250,000 →
+                    │    [Path C tax = ₱0 (no tax). Path A and B may also be ₱0 or close.
+                    │     ACTION: RECOMMEND PATH_C (8%). Zero tax under 8%; simpler to file.
+                    │     Note: Still must file 1701Q quarterly (even with ₱0 tax due).
+                    │     Ref: NIRC Sec. 24(A)(2)(b); EC-8-01 (zero-tax annual filing required).]
+                    │
+                    ├── BRANCH B: ₱250,001 ≤ gross_for_threshold ≤ ₱400,000 →
+                    │    [In this range: Path C tax = (GR−250K)×8% is very small.
+                    │     Path B tax = PT only (NTI < ₱250K → graduated IT = 0) = GR×3%.
+                    │     Comparison: (GR−250K)×0.08 vs GR×0.03.
+                    │     At GR = ₱250K: C = 0; B = 7,500 → C wins.
+                    │     At GR = ₱400K: C = 12,000; B = 12,000 → TIE.
+                    │     For all GR in (₱250K, ₱400K): C < B (see Table RC-02).
+                    │     ACTION: RECOMMEND PATH_C (8%) for this range.
+                    │     Ref: CR-028 Table RC-02.]
+                    │
+                    ├── BRANCH C: ₱400,001 ≤ gross_for_threshold ≤ ₱437,499 →
+                    │    [NARROW OSD-WINS WINDOW. Path B (OSD) is cheaper than Path C (8%) here.
+                    │     Maximum advantage to OSD: ₱833 (at GR ≈ ₱425,000).
+                    │     Path A (itemized) with expense_ratio > breakeven may also win.
+                    │     Compute all 3 paths. Compare totals.
+                    │     │
+                    │     └── Sub-check: Does taxpayer have itemized docs AND expense_ratio > breakeven?
+                    │          (Breakeven at GR = ₱400K: r = 37.5%; at ₱437.5K: r = 40%)
+                    │          │
+                    │          ├── YES (docs + expense > breakeven) →
+                    │          │    Compare Path A total vs Path B total:
+                    │          │    ├── Path A < Path B → [ACTION: RECOMMEND PATH_A]
+                    │          │    └── Path A ≥ Path B → [ACTION: RECOMMEND PATH_B]
+                    │          │
+                    │          └── NO (no docs or expense ≤ breakeven) →
+                    │               [ACTION: RECOMMEND PATH_B (OSD).
+                    │                OSD beats 8% in this narrow range. Maximum savings ₱833.
+                    │                Ref: CR-028 Table RC-02; OSD-wins window ₱400K–₱437.5K.]]
+                    │
+                    ├── BRANCH D: gross_for_threshold = ₱437,500 →
+                    │    [Exact second crossover: Path B (OSD) = Path C (8%) = ₱15,000.
+                    │     Tie-breaking rule: prefer Path C (simpler; no PT filing needed).
+                    │     ACTION: RECOMMEND PATH_C (8%). Equal total tax; fewer filings.
+                    │     Ref: CR-028 Table RC-02, crossover verification.]
+                    │
+                    └── BRANCH E: gross_for_threshold > ₱437,500 up to ₱3,000,000 →
+                         [Path C (8%) always beats Path B (OSD) in this range.
+                          Path A (itemized) may beat Path C only if expense_ratio > breakeven.]
+                         │
+                         └── Does taxpayer have itemized documentation?
+                              │
+                              ├── YES →
+                              │    Look up breakeven expense ratio from Table RC-01 (or compute inline).
+                              │    actual_expense_ratio = itemized_deductions / gross_receipts
+                              │    │
+                              │    ├── actual_expense_ratio > breakeven_ratio(GR) →
+                              │    │    Compute Path A and Path C. Compare.
+                              │    │    ├── Path A < Path C →
+                              │    │    │    [ACTION: RECOMMEND PATH_A (Itemized + Graduated).
+                              │    │    │     Show savings vs 8% and vs OSD.
+                              │    │    │     Note: Must file 2551Q quarterly for PT.
+                              │    │    │     Ref: CR-028 Table RC-01; CR-004.]
+                              │    │    │
+                              │    │    └── Path A ≥ Path C (rounding edge) →
+                              │    │         [ACTION: RECOMMEND PATH_C (8%).
+                              │    │          Tie or very near tie; prefer 8% (simpler, no PT).
+                              │    │          Ref: CR-028 Invariant INV-RC-06; tie-break rule.]
+                              │    │
+                              │    └── actual_expense_ratio ≤ breakeven_ratio(GR) →
+                              │         [Path C beats Path A (and definitionally Path B).
+                              │          ACTION: RECOMMEND PATH_C (8%).
+                              │          Show savings vs Path A (if docs available) and Path B.
+                              │          Ref: CR-028 Table RC-01; CR-006.]
+                              │
+                              └── NO (no itemized docs) →
+                                   [Path A not available. Compare Path B vs Path C only.
+                                    Path C always wins above ₱437,500.
+                                    ACTION: RECOMMEND PATH_C (8%).
+                                    Total = (GR − 250,000) × 0.08 (for purely self-employed).
+                                    Percentage tax waived.
+                                    Form: 1701A (if pure SE) or 1701 (if mixed income).
+                                    Ref: CR-006; CR-028 Table RC-02.]
+```
+
+---
+
+---
+
+## DT-16: Regime Recommendation — VAT-Registered Taxpayer (Path A vs Path B Only)
+
+**Root question:** For a VAT-registered taxpayer (gross > ₱3M or voluntarily VAT-registered), which of Path A or Path B yields the lower income tax?
+
+**Legal basis:** NIRC Sec. 24(A)(2)(a); Sec. 34(L); Sec. 34(A)-(K); CR-004; CR-005.
+
+**Precondition:** Taxpayer is VAT-registered. Path C (8%) is NOT available. Percentage tax does NOT apply.
+
+```
+START: Compute gross income (for VAT taxpayers: net of output VAT on receipts; VAT-exclusive)
+│
+│ NOTE: For VAT-registered taxpayers, gross income used for deduction/OSD purposes
+│       is the VAT-exclusive amount (total receipts ÷ 1.12 for 12% VAT output tax removal).
+│       The engine does not compute VAT liability; it uses the VAT-exclusive gross.
+│
+└── Does the taxpayer have documented and allowable business expenses (Sec. 34)?
+     │
+     ├── NO (no expense documentation) →
+     │    [ACTION: RECOMMEND PATH_B (Graduated + OSD).
+     │     NTI = gross_income × 0.60.
+     │     IT = grad_tax(NTI). No PT.
+     │     Must attach Audited Financial Statements if prior year GR > ₱3M (RR 4-2019).
+     │     Ref: NIRC Sec. 34(L); CR-005.]
+     │
+     └── YES (has expense documentation) →
+          Compute expense_ratio = itemized_deductions / gross_income
+          │
+          ├── expense_ratio < 40% →
+          │    [ACTION: RECOMMEND PATH_B (Graduated + OSD).
+          │     OSD = gross_income × 0.40 > itemized_deductions.
+          │     Lower NTI under OSD → lower IT.
+          │     Savings = grad_tax(GI − itemized) − grad_tax(GI × 0.60).
+          │     (Savings are positive since GI − itemized > GI × 0.60 when ratio < 40%)
+          │     Ref: NIRC Sec. 34(L); CR-026.]
+          │
+          ├── expense_ratio = 40% (exactly) →
+          │    [ACTION: RECOMMEND PATH_B (OSD). Tie; OSD preferred (no documentation risk).
+          │     Both paths yield identical IT. OSD election simpler to defend in BIR audit.
+          │     Ref: CR-026; DT-07 tie-breaking rule.]
+          │
+          └── expense_ratio > 40% →
+               Compute Path A IT = grad_tax(gross_income − itemized_deductions)
+               Compute Path B IT = grad_tax(gross_income × 0.60)
+               │
+               ├── Path A IT < Path B IT →
+               │    [ACTION: RECOMMEND PATH_A (Graduated + Itemized).
+               │     Savings = Path B IT − Path A IT.
+               │     Attach: receipts, invoices, payroll records, depreciation schedules.
+               │     AFS attachment: required if prior year GR > ₱3M (RR 4-2019).
+               │     Ref: NIRC Sec. 34(A)-(K); CR-004; CR-027.]
+               │
+               └── Path A IT ≥ Path B IT (rounding case only; mathematically impossible if ratio > 40%) →
+                    [ACTION: RECOMMEND PATH_B (OSD).
+                     Edge case: only occurs due to float rounding. OSD is preferred on tie.
+                     Log this as a rounding anomaly for monitoring.
+                     Ref: INV-RC-06; CR-028 invariants.]
 ```
 
 ---
