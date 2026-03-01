@@ -141,7 +141,17 @@ final-mega-spec/
 - **No summarizing.** Write every row of every table. Expand every branch of every decision tree. Enumerate every scenario.
 - **No "etc." or "and so on" or "similar to above."** If there are 47 penalty tiers, write all 47.
 - **No "see external source."** If a regulation defines a table, reproduce the table in full.
-- **No placeholders.** Every field, every value, every piece of copy must be concrete.
+- **ABSOLUTELY NO PLACEHOLDERS.** This is a hard constraint on ALL output. The following patterns are BANNED and constitute convergence-blocking defects:
+  - `TODO`, `TBD`, `FIXME`, `XXX`, `HACK`
+  - `[fill in]`, `[insert]`, `[add]`, `[placeholder]`, `[to be determined]`, `[your ...]`
+  - `<placeholder>`, `<insert>`, `{placeholder}`, `{insert}`
+  - `...` used as content ellipsis (meaning "more goes here" — not valid code syntax like `...args`)
+  - Stub sections with only a heading and no content
+  - Phrases like "to be defined", "details TBD", "will be specified later", "needs further research", "not yet determined"
+  - Empty table cells where values are expected (`| |` or `|  |`)
+  - Sample/example values where real values are required (e.g., `example.com` for a real URL)
+  - Any indication that content is deferred, incomplete, or waiting on future work
+  - **Why:** This spec feeds a forward loop that builds the entire platform. Every placeholder in the spec becomes a placeholder in the code. The forward loop CANNOT converge if the spec has gaps. If you don't have enough information to fill a section, DO the research in that iteration to fill it. If a section genuinely cannot be specified yet (depends on a runtime decision), explicitly state the decision criteria and default value — never leave it blank or stubbed.
 - **Cross-reference freely.** Use relative links between spec files: `See [computation-rules.md](../domain/computation-rules.md)`.
 - **Append, don't overwrite.** If a file already exists, add to it. Don't replace previous content unless correcting an error.
 - **One aspect can write to multiple files.** Analyzing a formula might update both `computation-rules.md` and `test-vectors/basic.md`.
@@ -171,7 +181,18 @@ final-mega-spec/
 When all aspects are `- [x]`, do NOT immediately write `status/converged.txt`. Instead:
 
 1. **Read every file in final-mega-spec/** — all of them
-2. **Run the completeness audit** — check every item below:
+2. **Run the placeholder sweep (HARD GATE)** — scan every file line-by-line for ALL banned placeholder patterns:
+   - Literal strings: `TODO`, `TBD`, `FIXME`, `XXX`, `HACK`
+   - Bracket placeholders: `[fill in]`, `[insert]`, `[add]`, `[placeholder]`, `[to be determined]`, `[your ...]`
+   - Angle/curly placeholders: `<placeholder>`, `<insert>`, `{placeholder}`, `{insert}`
+   - Ellipsis-as-content: lines where `...` appears as the only content or substitutes for real content
+   - Deferral phrases: "to be defined", "to be determined", "will be specified later", "needs further research", "details TBD", "pending", "not yet determined"
+   - Empty sections: headings followed by no content before the next heading
+   - Empty table cells: `| |` or `|  |` where a value is expected
+   - Generic sample values standing in for real ones: `example.com`, `foo`, `bar`, `lorem ipsum`
+   - If ANY match is found: fix it in the same iteration, then re-scan. Do NOT proceed to step 3 until zero matches remain.
+   - Write results to `analysis/placeholder-validation.md` with: files scanned, per-file findings (file, line, pattern, context), and final verdict (PASS/FAIL).
+3. **Run the completeness audit** — check every item below:
    - [ ] Every computation rule has a concrete formula (no prose descriptions of math)
    - [ ] Every lookup table is complete (every row, not a sample)
    - [ ] Every decision tree is fully expanded (every leaf node has a concrete outcome)
@@ -185,9 +206,12 @@ When all aspects are `- [x]`, do NOT immediately write `status/converged.txt`. I
    - [ ] The data model covers all structs needed by engine, API, frontend, and database
    - [ ] Test vectors cover every scenario code, not just common ones
    - [ ] Every cross-reference between files is valid
-   - [ ] No file contains "TODO", "TBD", "placeholder", "etc.", or "similar to above"
-3. **If ANY check fails**: Add new aspects to the frontier for each gap found, update statistics, commit, and exit — do NOT write converged.txt
-4. **If ALL checks pass**: Write `status/converged.txt` with a summary of the complete spec, commit, and exit
+   - [ ] **ZERO placeholders, stubs, or deferred content** — placeholder-validation must show PASS
+   - [ ] Every ASCII wireframe has real labels (actual UI copy, not "Label 1" or "Button Text")
+   - [ ] Every SQL DDL has real column names, types, constraints, and default values
+   - [ ] No section consists solely of a heading with no content beneath it
+4. **If ANY check fails**: Add new aspects to the frontier for each gap found, update statistics, commit, and exit — do NOT write converged.txt
+5. **If ALL checks pass**: Write `status/converged.txt` with a summary of the complete spec, commit, and exit
 
 ## Wave Definitions
 
@@ -381,9 +405,11 @@ This wave is about cross-cutting concerns and filling gaps.
 - API endpoints without error responses
 - Database columns without types
 - Premium features without gating rules
-- Copy that says "placeholder" or "TBD"
+- ANY banned placeholder pattern from the Rules section (TODO, TBD, FIXME, stubs, deferral phrases, empty sections, empty table cells, sample values standing in for real ones)
 
 If gaps are found, add new aspects to handle them. Do NOT converge with gaps.
+
+**Placeholder validation (HARD GATE)**: Before convergence can occur, run a dedicated line-by-line scan of every file in `final-mega-spec/` for all banned patterns. Write results to `analysis/placeholder-validation.md`. The loop CANNOT converge until this scan reports PASS with zero findings. Any matches must be fixed and re-scanned in the same iteration.
 
 ## Rules
 
@@ -398,3 +424,4 @@ If gaps are found, add new aspects to handle them. Do NOT converge with gaps.
 - The forward loop is a typist. It reads your spec and writes code. If it would need to think, research, or improvise, your spec is incomplete.
 - All monetary values in the spec must be in Philippine Pesos (₱).
 - All percentages must be expressed as decimals in pseudocode (6% → 0.06).
+- **ABSOLUTELY NO PLACEHOLDERS.** Before committing ANY file, scan it for all banned placeholder patterns (TODO, TBD, FIXME, stubs, `[fill in]`, `<placeholder>`, ellipsis-as-content, deferral phrases, empty sections, empty table cells, sample values). If any are found, fix them before committing. The forward loop CANNOT converge if this spec has gaps — every placeholder here becomes a placeholder in the code. See "Rules for spec files" above for the exhaustive banned patterns list.

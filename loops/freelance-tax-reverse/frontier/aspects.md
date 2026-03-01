@@ -1,9 +1,9 @@
 # Frontier — Philippine Freelance & Self-Employed Income Tax Optimizer
 
 ## Statistics
-- Total aspects discovered: 53
+- Total aspects discovered: 54
 - Analyzed: 16
-- Pending: 37
+- Pending: 38
 - Convergence: 30%
 
 ## Pending Aspects (ordered by dependency)
@@ -85,7 +85,8 @@ Cross-cutting concerns and gap filling. Only start after Waves 2-5 are complete.
 - [ ] data-model-reconciliation — Verify data model covers engine + frontend + API + database
 - [ ] cross-reference-audit — Verify all file references and links are valid
 - [ ] completeness-audit — Read every file in final-mega-spec/, check for gaps
-- [ ] convergence-check — Run final convergence checklist, either add new aspects or converge
+- [ ] placeholder-validation — **HARD GATE.** Exhaustive line-by-line scan of ALL final-mega-spec/ files for banned placeholder patterns (TODO, TBD, FIXME, stubs, empty sections, deferral phrases, sample values, ellipsis-as-content). Must report PASS with zero findings before loop can converge. Fix all matches and re-scan in same iteration. Depends: completeness-audit.
+- [ ] convergence-check — Run final convergence checklist, either add new aspects or converge. Depends: placeholder-validation PASS.
 
 ## Recently Analyzed
 - mixed-income-rules (2026-03-01): Full mixed income earner rules extracted and specified. Key findings: (1) RMC 50-2018 absolutely bars ₱250K deduction for 8% option when ANY compensation income exists — even ₱0 taxable comp (minimum wage earner) triggers the rule; (2) Paths A/B use COMBINED NTI (comp + business NTI) under graduated rates; Path C uses SEPARATE computation (comp at graduated, business at 8%); (3) ₱3M threshold uses ONLY business gross — compensation income is excluded; (4) Form 1701 ALWAYS for mixed income; (5) Quarterly 1701Q covers ONLY business income; compensation is employer-handled. Wrote: CR-029 (full mixed income Path A/B/C functions with compare_mixed_income_regimes(), quarterly 1701Q function, 3 worked examples MI-01 to MI-03), CR-030 (compensation income components, taxable_compensation definition, 3-column de minimis table with 8 benefit categories, FBT explanation, multiple Form 2316 aggregation function). DT-09 (complete mixed income computation flow tree, 7 steps with all branches). DT-10 (₱250K deduction decision — when to apply vs not apply). EC-M01 through EC-M10 (10 mixed income edge cases: multiple employers, high-salary exec, business loss, mid-year resignation, mid-year job start, government employee, minimum wage + business, foreign employer, large CWT refund, regime switch at ₱3M). MRF-016 (foreign employer compensation), MRF-017 (foreign tax credit), MRF-018 (NOLCO for business loss). Critical insight: for minimum wage earners with small business income (EC-M07), Path B (OSD) can beat Path C (8%) because the ₱250K deduction is prohibited but OSD produces combined NTI below ₱250K — invalidating the general rule that 8% always wins for service businesses below ₱3M.
