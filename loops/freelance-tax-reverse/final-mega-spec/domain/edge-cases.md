@@ -1,7 +1,7 @@
 # Edge Cases — Philippine Freelance & Self-Employed Income Tax Optimizer
 
-**Status:** INITIAL (populated from eopt-taxpayer-tiers aspect; to be expanded in Wave 2 edge-cases aspect)
-**Last updated:** 2026-02-28
+**Status:** COMPLETE — all Wave 2 edge cases written (edge-cases aspect 2026-03-01)
+**Last updated:** 2026-03-01
 
 Every edge case is numbered, described, and resolved. The engine must handle all of these without fallback to "consult a professional" — those belong in [manual-review-flags.md](manual-review-flags.md) instead.
 
