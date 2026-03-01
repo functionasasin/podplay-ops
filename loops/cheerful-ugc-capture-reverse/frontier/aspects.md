@@ -5,9 +5,9 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 18 |
-| Analyzed | 8 |
-| Pending | 10 |
-| Convergence | 44% |
+| Analyzed | 9 |
+| Pending | 9 |
+| Convergence | 50% |
 
 ---
 
@@ -21,7 +21,7 @@
 - [x] `ai-audio-detection` — Whisper STT + brand mention NER/keyword matching: cost, accuracy, self-hosted vs API
 - [x] `ai-candidate-discovery` — Candidate content pool: hashtag expansion, follower graphs, creator networks, coverage estimates
 - [x] `third-party-ugc-platforms` — Archive, Pixlee/Emplifi, TINT, Bazaarvoice, Dash Hudson: pricing, APIs, buy-vs-build assessment
-- [ ] `unofficial-scraping` — Apify actors, instagrapi for UGC monitoring: capabilities, TOS risks, existing Cheerful Apify usage
+- [x] `unofficial-scraping` — Apify actors, instagrapi for UGC monitoring: capabilities, TOS risks, existing Cheerful Apify usage
 
 ## Wave 2: Internal Landscape — Cheerful's Current Architecture
 
