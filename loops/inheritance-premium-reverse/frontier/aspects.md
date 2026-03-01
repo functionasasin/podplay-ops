@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 35
-- Analyzed: 15
-- Pending: 20
-- Convergence: 43%
+- Analyzed: 16
+- Pending: 19
+- Convergence: 46%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -28,7 +28,7 @@
 - [x] spec-firm-branding — Settings page, firm header on PDF, logo upload/storage. Depends: spec-pdf-export, spec-auth-persistence.
 - [x] spec-statute-citations-ui — Render legal_basis[] in distribution table, expandable rows, article text tooltips. Reads: codebase-audit.
 - [x] spec-case-notes — Per-case timestamped notes, annotation display, optional PDF inclusion. Depends: spec-auth-persistence.
-- [ ] spec-print-layout — @media print CSS, A4 formatting, page breaks, hidden nav elements. Reads: legal-doc-formatting, codebase-audit.
+- [x] spec-print-layout — @media print CSS, A4 formatting, page breaks, hidden nav elements. Reads: legal-doc-formatting, codebase-audit.
 - [ ] spec-scenario-comparison — Side-by-side testate vs intestate, share diff highlighting, estate planning use case. Reads: codebase-audit.
 - [ ] spec-bir-1801-integration — Combined inheritance + estate tax workflow, additional input form, combined PDF. Depends: spec-pdf-export, spec-auth-persistence. Reads: estate-tax-integration.
 - [ ] spec-shareable-links — Read-only case URLs, access control, QR codes, share UI. Depends: spec-auth-persistence.
