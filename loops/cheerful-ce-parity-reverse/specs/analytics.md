@@ -2,8 +2,9 @@
 
 **Domain**: Analytics
 **Spec file**: `specs/analytics.md`
-**Wave 2 status**: Tool design complete
-**Wave 3 status**: Pending (full OpenAPI-level specs)
+**Wave 3 status**: Complete — verified against source code
+
+**Source files verified**: `dashboard.py` (668 lines), `models/api/dashboard.py` (142 lines), `service.py` (360 lines), `campaign.py` (CampaignOutboxQueueStatus enum), `campaign_follow_up_outbox_queue.py` (CampaignFollowUpOutboxQueueStatus enum), `gmail_thread_state.py` (GmailThreadStatus enum), `smtp_thread_state.py`, `gmail_thread_llm_draft.py` (63 lines)
 
 ---
 
@@ -58,7 +59,7 @@
   "total_contacts": "integer — total creators across all user campaigns (unfiltered count)",
 
   "opt_in_rate": "float | null — round((total_opted_in / total_contacts) * 100, 1). Percentage 0-100. Null if total_contacts is 0.",
-  "response_rate": "float | null — round((internal_responded / internal_emails_sent) * 100, 1). Only for internal campaigns (is_external=false). internal_responded counts creators in GIFTING_OPTED_IN_STATUSES+OPTED_OUT OR PAID_PROMOTION_OPTED_IN_STATUSES+OPTED_OUT (DECLINED is excluded). Percentage 0-100. Null if no internal campaigns or no emails sent.",
+  "response_rate": "float | null — round((internal_responded / internal_emails_sent) * 100, 1). Only for internal campaigns (is_external=false). Percentage 0-100. Null if no internal campaigns or no emails sent.",
 
   "email_stats": {
     "emails_sent": "integer — total sent emails (initial outreach + follow-ups + AI-drafted emails actually sent)",
@@ -109,7 +110,7 @@
     "ready_to_ship": "integer — creators with gifting_status='READY_TO_SHIP'",
     "ordered": "integer — creators with gifting_status IN ('ORDERED', 'SHIPPED', 'DELIVERED') (folded together)",
     "opted_out": "integer — creators with gifting_status='OPTED_OUT'",
-    "total": "integer — count of ALL creators in gifting campaigns regardless of status; may exceed sum of named stages if creators have 'DECLINED' or 'UNRESPONSIVE' status (those statuses are counted in total but not in any named stage)"
+    "total": "integer — sum of all above stages"
   },
 
   "paid_promotion_pipeline": {
@@ -124,7 +125,7 @@
     "awaiting_payment": "integer — creators with paid_promotion_status='AWAITING_PAYMENT'",
     "paid": "integer — creators with paid_promotion_status='PAID'",
     "opted_out": "integer — creators with paid_promotion_status='OPTED_OUT'",
-    "total": "integer — count of ALL creators in paid_promotion campaigns regardless of status; may exceed sum of named stages if creators have 'AWAITING_CONTRACT' or 'DECLINED' status (those statuses are counted in total but not in any named stage)"
+    "total": "integer — sum of all above stages"
   },
 
   "follow_up_stats": {
@@ -152,33 +153,44 @@
 ```
 
 **Nullable sections**:
-- `gifting_pipeline` is `null` if the user has no gifting campaigns or the total is 0.
-- `paid_promotion_pipeline` is `null` if the user has no paid_promotion campaigns or the total is 0.
-- `follow_up_stats` is `null` if no follow-up outbox queue items exist for the user's campaigns.
+- `gifting_pipeline` is `null` if: (a) `user_campaign_ids` is empty (no campaigns at all), OR (b) the sum of ALL creator gifting_status counts across gifting-type campaigns (`Campaign.campaign_type == "gifting"`) is 0. This means it can be `null` even if gifting campaigns exist but have zero creators.
+- `paid_promotion_pipeline` is `null` if: (a) `user_campaign_ids` is empty, OR (b) the sum of ALL creator paid_promotion_status counts across paid_promotion-type campaigns (`Campaign.campaign_type == "paid_promotion"`) is 0. Same pattern as gifting.
+- `follow_up_stats` is `null` if no follow-up outbox queue items exist for the user's campaigns (i.e., the `follow_up_counts` dict is empty). This happens when either no campaigns have outbox queue items at all, or no outbox queue items have follow-up entries.
 - `recent_optins` is an empty array `[]` if no creators opted in within the lookback window.
 - `active_campaigns` is an empty array `[]` if the user has no active campaigns. Max 10 items, ordered by `created_at` DESC.
 - `campaign_type_stats` is an empty array `[]` if the user has no campaigns.
 
 **Calculated field details**:
 - `opt_in_rate`: `round((total_opted_in / total_contacts) * 100, 1)`. Returns `null` when `total_contacts` is 0 (division by zero guard).
-- `response_rate`: `round((internal_responded / internal_emails_sent) * 100, 1)`. Only counts campaigns where `is_external=false`. `internal_emails_sent` = outbox queue items with status="sent" for internal campaigns. `internal_responded` = creators in internal campaigns where gifting_status IN (GIFTING_OPTED_IN_STATUSES + ["OPTED_OUT"]) OR paid_promotion_status IN (PAID_PROMOTION_OPTED_IN_STATUSES + ["OPTED_OUT"]). Note: DECLINED is intentionally excluded from this count (uses a custom list, not the full GIFTING_REPLIED_STATUSES/PAID_PROMOTION_REPLIED_STATUSES constants). Returns `null` when there are no internal campaigns or no emails sent.
+- `response_rate`: `round((internal_responded / internal_emails_sent) * 100, 1)`. Only counts campaigns where `is_external=false`. `internal_emails_sent` = CampaignOutboxQueue rows with status="sent" for internal campaigns. `internal_responded` = creators in internal campaigns where `gifting_status IN GIFTING_OPTED_IN_STATUSES + ["OPTED_OUT"]` (8 statuses) OR `paid_promotion_status IN PAID_PROMOTION_OPTED_IN_STATUSES + ["OPTED_OUT"]` (9 statuses). **IMPORTANT**: This is narrower than `GIFTING_REPLIED_STATUSES`/`PAID_PROMOTION_REPLIED_STATUSES` — it excludes "DECLINED" from gifting and excludes "NEGOTIATING", "AWAITING_CONTRACT", "DECLINED" from paid promotion. Returns `null` when there are no internal campaigns or no emails sent.
 - `cancellation_rate`: `round((cancelled_count / total_follow_ups) * 100, 1)`. Returns `null` when `total_follow_ups` is 0.
 - `conversion_rate` (per campaign type): `round((converted / total_creators) * 100, 1)`. Returns `null` when `total_creators` is 0.
 
 **Status constant sets** (hardcoded in backend `dashboard.py`, not configurable):
 - **GIFTING_OPTED_IN_STATUSES** (7 values): `"OPTED_IN"`, `"ORDER_SENT"`, `"SHIPPED"`, `"DELIVERED"`, `"PENDING_DETAILS"`, `"READY_TO_SHIP"`, `"ORDERED"`
 - **PAID_PROMOTION_OPTED_IN_STATUSES** (8 values): `"CONTRACT_SIGNED"`, `"CONTENT_IN_PROGRESS"`, `"AWAITING_REVIEW"`, `"CHANGES_REQUESTED"`, `"CONTENT_APPROVED"`, `"POSTED"`, `"AWAITING_PAYMENT"`, `"PAID"`
-- **GIFTING_REPLIED_STATUSES** (9 values): All GIFTING_OPTED_IN_STATUSES + `"OPTED_OUT"`, `"DECLINED"`
-- **PAID_PROMOTION_REPLIED_STATUSES** (12 values): All PAID_PROMOTION_OPTED_IN_STATUSES + `"NEGOTIATING"`, `"AWAITING_CONTRACT"`, `"OPTED_OUT"`, `"DECLINED"`
+- **GIFTING_REPLIED_STATUSES** (9 values): All GIFTING_OPTED_IN_STATUSES + `"OPTED_OUT"`, `"DECLINED"` — used for `replied_count` in active campaigns
+- **PAID_PROMOTION_REPLIED_STATUSES** (12 values): All PAID_PROMOTION_OPTED_IN_STATUSES + `"NEGOTIATING"`, `"AWAITING_CONTRACT"`, `"OPTED_OUT"`, `"DECLINED"` — used for `replied_count` in active campaigns
+- **Response rate responded statuses** (different from replied): Gifting uses OPTED_IN_STATUSES + `"OPTED_OUT"` (8 values, excludes `"DECLINED"`). Paid promotion uses OPTED_IN_STATUSES + `"OPTED_OUT"` (9 values, excludes `"NEGOTIATING"`, `"AWAITING_CONTRACT"`, `"DECLINED"`)
 
-**CampaignType enum values**: `"gifting"`, `"paid_promotion"`, `"creator"`, `"sales"`, `"other"`
+**CampaignType enum values** (from `Campaign.campaign_type` column): `"gifting"`, `"paid_promotion"`, `"creator"`, `"sales"`, `"other"`. NULL values are mapped to `"other"` in `campaign_type_stats` but NOT in `active_campaigns` (potential Pydantic validation error if NULL — see Edge Cases).
+
+**CampaignStatus enum values** (from `CampaignStatus` StrEnum): `"active"`, `"paused"`, `"draft"`, `"completed"`. Dashboard counts group by all statuses but only report `active` and `paused`. `draft` and `completed` counts are computed but discarded.
+
+**CampaignOutboxQueueStatus enum values** (5 values): `"pending"`, `"processing"`, `"sent"`, `"failed"`, `"cancelled"`. Dashboard email_stats maps: "sent" → `emails_sent`, "pending"+"processing" → `emails_pending`, "failed" → `emails_failed`. **"cancelled" is NOT counted** in any email_stats bucket.
+
+**CampaignFollowUpOutboxQueueStatus enum values** (5 values): `"pending"`, `"processing"`, `"sent"`, `"failed"`, `"cancelled"`. Same mapping as outbox queue for email_stats. Follow-up stats separately track all 5 including cancelled.
+
+**GmailThreadStatus enum values** (8 values, from `GmailThreadStatus` StrEnum): `"READY_FOR_ATTACHMENT_EXTRACTION"`, `"READY_FOR_CAMPAIGN_ASSOCIATION"`, `"READY_FOR_RESPONSE_DRAFT"`, `"WAITING_FOR_DRAFT_REVIEW"`, `"WAITING_FOR_INBOUND"`, `"IGNORE"`, `"DONE"`, `"NOT_LATEST"`. SmtpThreadState uses the same enum. AI-sent count excludes only `"WAITING_FOR_DRAFT_REVIEW"` — all other statuses (including processing states like `"READY_FOR_RESPONSE_DRAFT"`) are counted as "sent."
 
 **Error Responses**:
 
 | Condition | Error Message | HTTP Status (underlying) |
 |-----------|--------------|-------------------------|
 | User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
-| Invalid recent_optins_days (< 1 or > 30) | Validation error: "ensure this value is greater than or equal to 1" / "ensure this value is less than or equal to 30" | 422 |
+| Invalid recent_optins_days (< 1 or > 30) | Pydantic v2: `{"detail": [{"type": "greater_than_equal", "msg": "Input should be greater than or equal to 1", ...}]}` or `{"type": "less_than_equal", "msg": "Input should be less than or equal to 30", ...}` | 422 |
+| Invalid recent_optins_days (not integer) | Pydantic v2: `{"type": "int_parsing", "msg": "Input should be a valid integer", ...}` | 422 |
+| Backend unreachable / internal error | ToolError wrapping HTTP 500 | 500 |
 
 **Example Request**:
 ```
@@ -423,19 +435,44 @@ cheerful_get_dashboard_analytics(recent_optins_days=14)
 
 **Edge Cases**:
 - **New user with no campaigns**: All counts are 0, rates are `null`, pipeline sections are `null`, arrays are empty. Agent should suggest creating a campaign.
-- **User with only external campaigns**: `response_rate` will be `null` because it only counts internal campaigns (`is_external=false`). The agent should explain this if the user asks about response rate. Note: DECLINED creators are also excluded from `internal_responded` — only OPTED_OUT (not DECLINED) is counted as a "response" for rate purposes.
+- **User with only external campaigns**: `response_rate` will be `null` because it only counts internal campaigns (`is_external=false`). The agent should explain this if the user asks about response rate.
 - **User with only gifting campaigns**: `paid_promotion_pipeline` will be `null`. Agent should not display the paid promotion pipeline section.
 - **User with only paid_promotion campaigns**: `gifting_pipeline` will be `null`. Agent should not display the gifting pipeline section.
 - **Recent opt-ins max 20**: Even if more than 20 creators opted in during the lookback window, only the 20 most recent are returned (ordered by `updated_at` DESC).
 - **Active campaigns max 10**: Only the 10 most recently created active campaigns are returned. If the user has more than 10 active campaigns, older ones are omitted.
-- **AI-drafted email count**: Emails drafted by the AI (LLM) that have been sent are counted in `emails_sent`. The code checks `GmailThreadLlmDraft` rows for this user where `COALESCE(GmailThreadState.status, SmtpThreadState.status) != WAITING_FOR_DRAFT_REVIEW`. Both Gmail and SMTP AI drafts are included. This means `emails_sent` counts human-sent AND AI-sent emails combined.
+- **AI-drafted email count (dual-join pattern)**: AI-drafted emails are counted by joining `GmailThreadLlmDraft` to BOTH `GmailThreadState` (via `gmail_thread_state_id`) AND `SmtpThreadState` (via `smtp_thread_state_id`) using LEFT OUTER JOINs. The thread status is resolved via `COALESCE(GmailThreadState.status, SmtpThreadState.status)`. Each draft has exactly one of these FKs set (DB CHECK constraint). Drafts where the resolved status != `WAITING_FOR_DRAFT_REVIEW` are counted as "sent." This includes drafts in processing states like `READY_FOR_RESPONSE_DRAFT`. The count is scoped to `GmailThreadLlmDraft.user_id == user_id`.
+- **Cancelled emails excluded from email_stats**: Outbox queue items and follow-up queue items with status="cancelled" are NOT counted in any of the 3 `email_stats` buckets (sent/pending/failed). This means `emails_sent + emails_pending + emails_failed` may be LESS than the total queue item count. The agent should note this if the user asks why their email counts don't add up. Follow-up stats DO separately track `cancelled_count`.
 - **Gifting pipeline `ordered` field folds together**: `ORDERED` + legacy `SHIPPED` + `DELIVERED` statuses are all counted under the `ordered` stage in the pipeline.
 - **`order_sent_count` in active campaigns**: This field is included for backward compatibility. It represents creators with `gifting_status='ORDER_SENT'` and is already a subset of `opted_in_count`. Do not double-count.
-- **`conversions_by_follow_up_number` keys are strings**: The dictionary keys are follow-up position numbers (1-indexed) as strings. Key `"1"` means the first follow-up, `"2"` means the second, etc. The value is the count of sent emails at that follow-up position.
+- **`conversions_by_follow_up_number` is a misnomer**: Despite the name, this field counts follow-ups with status="sent" grouped by follow-up position index, NOT actual conversions (opt-ins). Keys are follow-up position numbers (1-indexed) — the backend computes `row.index + 1` where `index` is 0-based in the DB. In JSON serialization, integer keys become strings: `{"1": 45, "2": 20}`.
+- **`campaign_type` NULL in active campaigns (latent bug)**: The `ActiveCampaignStats` Pydantic model declares `campaign_type: str` (non-nullable), but `Campaign.campaign_type` can be NULL in the DB. If an active campaign has NULL `campaign_type`, the endpoint would raise a Pydantic validation error (500 Internal Server Error). In practice this is unlikely since the campaign wizard requires type selection, but campaigns created via direct DB manipulation or migration could trigger this. The `campaign_type_stats` section handles this correctly by mapping NULL to `"other"`.
+- **Response rate vs. replied_count use different status sets**: `response_rate` uses OPTED_IN_STATUSES + `["OPTED_OUT"]` (excludes "DECLINED"), while `replied_count` in `active_campaigns` uses the full REPLIED_STATUSES (includes "DECLINED", "NEGOTIATING", "AWAITING_CONTRACT"). This means `response_rate` can differ from a manually computed rate based on `replied_count`.
+
+**Pagination**: Not applicable. This endpoint has no user-configurable pagination. Hardcoded limits:
+- `recent_optins`: max 20, ordered by `updated_at` DESC
+- `active_campaigns`: max 10, ordered by `created_at` DESC
+- `campaign_type_stats`: one entry per distinct campaign_type (max 5 possible entries)
+
+**Implementation Notes — Corrections from Wave 2**:
+1. **Response rate responded count is NOT REPLIED_STATUSES**: Uses `GIFTING_OPTED_IN_STATUSES + ["OPTED_OUT"]` (excludes "DECLINED") and `PAID_PROMOTION_OPTED_IN_STATUSES + ["OPTED_OUT"]` (excludes "NEGOTIATING", "AWAITING_CONTRACT", "DECLINED"). This is a narrower set than the REPLIED_STATUSES used for `replied_count` in active campaigns.
+2. **AI-sent count uses dual-table COALESCE join**: Outer joins to both `GmailThreadState` and `SmtpThreadState`, resolves via `COALESCE(gmail.status, smtp.status)`.
+3. **Cancelled outbox items are NOT in email_stats**: Only "sent", "pending"/"processing", and "failed" are counted. "cancelled" items are invisible in email_stats but visible in follow_up_stats.cancelled_count.
+4. **Gifting pipeline null when zero creators (not zero campaigns)**: The null check is on `sum(gifting_status_counts.values()) > 0`, not on campaign existence. Empty gifting campaigns (0 creators) yield null pipeline.
+5. **`conversions_by_follow_up_number` counts sent emails, not conversions**: Despite the field name, it groups follow-ups with status="sent" by `index + 1`, not actual opt-in conversions.
 
 **Service route changes needed**: New `GET /api/service/dashboard/analytics` endpoint that:
-1. Accepts `user_id` query parameter (string, required)
+1. Accepts `user_id` query parameter (UUID, required)
 2. Accepts `recent_optins_days` query parameter (integer, optional, default 7, range 1-30)
 3. Authenticates via `X-Service-Api-Key` header (same as other service routes)
-4. Replicates the exact aggregation logic from `GET /dashboard/analytics` in `dashboard.py`
+4. Replicates the exact aggregation logic from `GET /dashboard/analytics` in `dashboard.py` — all 9 sequential query steps
 5. Returns `DashboardAnalyticsResponse` (same Pydantic model)
+6. Should ideally extract the query logic into a shared service function to avoid code duplication with the JWT-auth route
+
+**Source verification checklist**:
+- [x] Parameter names match actual backend endpoint parameter names (`recent_optins_days` — `dashboard.py:79-81`)
+- [x] Types match Pydantic model field types (all 10 models verified — `models/api/dashboard.py:1-142`)
+- [x] All enum values listed (7 gifting opted-in, 8 paid opted-in, 9 gifting replied, 12 paid replied, 5 outbox statuses, 5 follow-up statuses, 4 campaign statuses, 8 thread statuses, 5 campaign types)
+- [x] Return schema matches actual response serialization (`dashboard.py:648-668`)
+- [x] Error conditions from actual code (only 422 from FastAPI Query validation)
+- [x] No service route exists — confirmed in `service.py` (360 lines)
+- [x] Null conditions verified against actual conditional checks in source
