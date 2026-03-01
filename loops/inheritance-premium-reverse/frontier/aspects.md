@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 36
-- Analyzed: 19
-- Pending: 17
-- Convergence: 53%
+- Analyzed: 20
+- Pending: 16
+- Convergence: 56%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -32,7 +32,7 @@
 - [x] spec-scenario-comparison — Side-by-side testate vs intestate, share diff highlighting, estate planning use case. Reads: codebase-audit.
 - [x] spec-bir-1801-integration — Combined inheritance + estate tax workflow, additional input form, combined PDF. Depends: spec-pdf-export, spec-auth-persistence. Reads: estate-tax-integration.
 - [x] spec-shareable-links — Read-only case URLs, access control, QR codes, share UI. Depends: spec-auth-persistence.
-- [ ] spec-multi-seat — Firm accounts, roles (admin/attorney/paralegal), shared client pool, invitation flow. Depends: spec-auth-persistence. Reads: multi-tenancy-patterns.
+- [x] spec-multi-seat — Firm accounts, roles (admin/attorney/paralegal), shared client pool, invitation flow. Depends: spec-auth-persistence. Reads: multi-tenancy-patterns.
 - [ ] spec-share-breakdown-panel — Expandable per-heir row showing from_legitime / from_free_portion / from_intestate split and legitime_fraction. Reads: codebase-audit. [Discovered: codebase-audit]
 - [ ] spec-decedent-header — Add decedent name and date of death to ResultsHeader for professional report context. Reads: codebase-audit. [Discovered: codebase-audit]
 - [ ] spec-represents-display — Show "representing [deceased parent name]" label when inherits_by === Representation. Reads: codebase-audit. [Discovered: codebase-audit]
