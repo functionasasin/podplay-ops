@@ -1,5 +1,9 @@
 # Frontier — Cheerful Codebase Distillation
 
+## Status: INACTIVE
+
+> Paused 2026-03-01. Waves 1-3 (architecture specs) complete. Wave 4 (production data analysis) deprioritized — informational, not blocking any build work.
+
 ## Statistics
 
 - **Total aspects**: 35
