@@ -201,3 +201,11 @@ loops:
     timeout_minutes: 30
     status: active
     created: 2026-03-01
+  cheerful-ce-parity-reverse:
+    description: "Exhaustive context engine tool spec for 101% frontend parity — OpenAPI-level tool definitions per domain"
+    type: reverse
+    schedule: "*/30 * * * *"
+    max_iterations: 60
+    timeout_minutes: 30
+    status: active
+    created: 2026-03-01
