@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total Aspects**: 36
-- **Analyzed**: 33
-- **Pending**: 3
-- **Convergence**: 91.7%
+- **Analyzed**: 34
+- **Pending**: 2
+- **Convergence**: 94.4%
 
 ---
 
@@ -61,6 +61,6 @@ Shared schemas, conventions, parity matrix, and completeness audit.
 - [x] **w4-error-conventions** — Standard error handling: 9 subsections added to specs/shared-conventions.md Section 2. Covers: 5 error response formats (ToolError/FastAPI 422/business/Pydantic/ToolNotFoundError), error tiers table (13 rows with retry guidance), 8-step propagation chain, backend-proxied vs CE-native tool categories, standard handler template, standard api.py template, per-domain common error messages (campaigns/email/creators/integrations/team/workflows/search), retry decision matrix (11 rows), and Slack error surfacing guide with 8 translation examples and permission error handling. CORRECTIONS: (1) service_auth.py uses `!=` not constant-time comparison (401 not 403), (2) 401 tier was missing from error tiers table. Sources verified: registry.py, tools.py, api.py, meta_tools.py, sdk_tools.py, execution.py, handlers.py, service_auth.py, campaign_launch.py, creator_search.py, youtube.py
 - [x] **w4-pagination-conventions** — Standard pagination: limit/offset patterns, default/max values, how paginated results should be presented in Slack threads. 3 pagination models documented (offset, page-based, no-pagination). 7 service routes verified. 7 v1 routes needing service wrappers documented. 2 errors in prior skeleton corrected (similar_emails max=10 not 20; workflow executions default=100 not 50). Critical: creator listing `total` is unfiltered count. Thread listing offset is approximate for mixed Gmail+SMTP campaigns.
 - [x] **w4-parity-matrix** — Build the complete parity matrix: every frontend page, every user action, mapped to a context engine tool. Flag any gaps. Write to `specs/parity-matrix.md`. 175+ action rows across 17 frontend sections, 126 unique tools (7 existing + 119 new), 100% coverage of backend-accessible actions. 25 webapp-only features documented as N/A. All 7 existing tools listed with bug status.
-- [ ] **w4-readme-index** — Write `specs/README.md` with complete tool index: every tool name, domain, one-line description, status (exists/new)
+- [x] **w4-readme-index** — Write `specs/README.md` with complete tool index: every tool name, domain, one-line description, status (exists/new). Final index: 126 unique tools (7 existing + 119 new). Resolved `cheerful_list_connected_accounts` duplicate (1 canonical tool in integrations.md, cross-ref in users-and-team.md). Added `cheerful_get_onboarding_status` (#113). Full implementation notes: ~90+ new service routes needed, 2 CE-native tools (no backend route), 7 existing tools with P1-P3 bugs documented, 3 cross-domain security gaps flagged.
 - [ ] **w4-slack-formatting-guide** — Cross-cutting guide for how tools should format responses for Slack: tables, thread summaries, campaign reports, creator profiles. Consistent UX patterns
 - [ ] **w4-completeness-audit** — Final audit: read every spec file, verify no TODOs/TBDs/placeholders, verify every tool has all required sections, verify parity matrix has no gaps. If gaps found, add new aspects and DO NOT converge
