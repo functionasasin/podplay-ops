@@ -2,7 +2,7 @@
 
 ## Status
 
-Wave 2 tool design in progress. Campaign and Email domains complete. Other domains pending.
+Wave 2 tool design in progress. Campaign, Email, and Creators domains complete. Other domains pending.
 
 ## Domains
 
@@ -10,7 +10,7 @@ Wave 2 tool design in progress. Campaign and Email domains complete. Other domai
 |--------|-----------|---------------|-----------|-------|--------|
 | Campaigns | `campaigns.md` | 1 | 30 | 31 | Wave 2 complete |
 | Email | `email.md` | 3 | 21 | 24 | Wave 2 complete |
-| Creators | `creators.md` | 3 | ~23 | ~26 | Wave 1 complete |
+| Creators | `creators.md` | 3 | 24 | 27 | Wave 2 complete |
 | Integrations | `integrations.md` | 0 | ~12 | ~12 | Wave 1 complete |
 | Users & Team | `users-and-team.md` | 0 | ~16 | ~16 | Wave 1 complete |
 | Analytics | `analytics.md` | 0 | ~1 | ~1 | Wave 1 complete |
@@ -94,6 +94,35 @@ Wave 2 tool design in progress. Campaign and Email domains complete. Other domai
 | 57 | `cheerful_improve_email_content` | AI | AI text improvement (shorten/expand/tone/custom) | NEW |
 | 58 | `cheerful_get_thread_summary` | AI | AI-generated thread conversation summary | NEW |
 
+### New Tools — Creators Domain (24)
+
+| # | Tool Name | Sub-domain | Description | Status |
+|---|-----------|------------|-------------|--------|
+| 59 | `cheerful_start_creator_enrichment` | Enrichment | Start async email enrichment for batch of creators | NEW |
+| 60 | `cheerful_get_enrichment_workflow_status` | Enrichment | Poll enrichment workflow status and results | NEW |
+| 61 | `cheerful_search_similar_creators` | IC Search | Find similar creators via Influencer Club | NEW |
+| 62 | `cheerful_search_creators_by_keyword` | IC Search | Search creators by keyword/topic via IC | NEW |
+| 63 | `cheerful_enrich_creator` | IC Search | Enrich single creator (email + profile) via IC | NEW |
+| 64 | `cheerful_get_creator_profile` | IC Search | Get detailed creator profile (Apify/IC, 24h cache) | NEW |
+| 65 | `cheerful_list_creator_lists` | Lists CRUD | List all user's creator lists | NEW |
+| 66 | `cheerful_create_creator_list` | Lists CRUD | Create new empty creator list | NEW |
+| 67 | `cheerful_get_creator_list` | Lists CRUD | Get single creator list by ID | NEW |
+| 68 | `cheerful_update_creator_list` | Lists CRUD | Update creator list title | NEW |
+| 69 | `cheerful_delete_creator_list` | Lists CRUD | Delete creator list and all items | NEW |
+| 70 | `cheerful_list_creator_list_items` | List Items | List creators in a list with pagination | NEW |
+| 71 | `cheerful_add_creators_to_list` | List Items | Add existing creators by ID to list | NEW |
+| 72 | `cheerful_add_search_creators_to_list` | List Items | Add IC search results to list | NEW |
+| 73 | `cheerful_add_csv_creators_to_list` | List Items | Add creators from CSV data to list | NEW |
+| 74 | `cheerful_remove_creator_from_list` | List Items | Remove single creator from list | NEW |
+| 75 | `cheerful_add_list_creators_to_campaign` | List Transfer | Transfer list creators to campaign (with outbox + enrichment side effects) | NEW |
+| 76 | `cheerful_list_posts` | Posts | List all tracked posts across campaigns (post library) | NEW |
+| 77 | `cheerful_list_creator_posts` | Posts | List posts for specific creator in campaign | NEW |
+| 78 | `cheerful_refresh_creator_posts` | Posts | Trigger manual post refresh (Apify + LLM vision) | NEW |
+| 79 | `cheerful_delete_post` | Posts | Delete false-positive tracked post | NEW |
+| 80 | `cheerful_list_public_creator_profiles` | Public SEO | List public creator profiles | NEW |
+| 81 | `cheerful_get_public_creator_profile` | Public SEO | Get single public creator profile | NEW |
+| 82 | `cheerful_trigger_creator_scrape` | Public SEO | Trigger async creator profile scrape | NEW |
+
 ### New Tools — Other Domains (pending design)
 
-*Tool designs for Creators, Integrations, Users & Team, Analytics, Search & Discovery, and Workflows domains will be added as Wave 2 progresses.*
+*Tool designs for Integrations, Users & Team, Analytics, Search & Discovery, and Workflows domains will be added as Wave 2 progresses.*

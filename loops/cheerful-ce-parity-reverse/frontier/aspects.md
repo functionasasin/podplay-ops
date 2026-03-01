@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total Aspects**: 36
-- **Analyzed**: 10
-- **Pending**: 26
-- **Convergence**: 28%
+- **Analyzed**: 11
+- **Pending**: 25
+- **Convergence**: 31%
 
 ---
 
@@ -28,7 +28,7 @@ Take Wave 1 capability lists and design tool signatures per domain. **Every tool
 
 - [x] **w2-campaigns** — Design all campaign tools: names, parameters, return types, API mappings. Group CRUD ops, wizard steps, and bulk ops into individual tools. Document permission model: which ops are owner-only vs assigned-member. Write skeleton definitions to `specs/campaigns.md`
 - [x] **w2-email** — Design all email tools: thread listing with all filter combos, status mutations, draft lifecycle, AI generation, sending. All scoped to `user_id` via campaign access. Write skeleton definitions to `specs/email.md`
-- [ ] **w2-creators** — Design all creator tools: extend existing 3 tools + add enrichment, notes, bulk ops. All scoped to `user_id`. Write skeleton definitions to `specs/creators.md`
+- [x] **w2-creators** — Design all creator tools: extend existing 3 tools + add enrichment, notes, bulk ops. All scoped to `user_id`. Write skeleton definitions to `specs/creators.md`
 - [ ] **w2-integrations** — Design all integration tools: OAuth flows, config, validation, status. Integration tools are owner-only (Gmail tokens, Shopify keys are per-user). Write skeleton definitions to `specs/integrations.md`
 - [ ] **w2-users-team** — Design all user/team tools: profile, accounts, team management, permissions. Note: profile tools are self-only; team admin tools are owner-only. Write skeleton definitions to `specs/users-and-team.md`
 - [ ] **w2-analytics** — Design all analytics tools: dashboard data, campaign metrics, reporting queries. All scoped to `user_id`'s campaigns. Write skeleton definitions to `specs/analytics.md`
