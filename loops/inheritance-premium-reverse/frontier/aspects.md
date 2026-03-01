@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 36
-- Analyzed: 29
-- Pending: 7
-- Convergence: 81%
+- Analyzed: 30
+- Pending: 6
+- Convergence: 83%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -42,7 +42,7 @@
 - [x] spec-intake-form — Guided digital intake capturing decedent info, family composition, asset summary; pre-populates case wizard. Depends: spec-client-profiles. [Discovered: crm-law-firm-patterns]
 - [x] spec-family-tree-visualizer — Interactive heir tree diagram (SVG/canvas) showing succession relationships, separate from distribution table. Reads: codebase-audit. [Discovered: crm-law-firm-patterns]
 - [x] spec-deadline-tracker — Per-case deadline timeline: BIR 1-year filing deadline, 3-week newspaper publication window, eCAR receipt, RD filing window. Color-coded status (green/yellow/red). Depends: spec-auth-persistence. [Discovered: ph-practice-workflow]
-- [ ] spec-timeline-report — Visual settlement timeline (milestone list or Gantt) generated from case facts showing all stages a lawyer can share with clients. Depends: spec-auth-persistence. [Discovered: competitive-landscape]
+- [x] spec-timeline-report — Visual settlement timeline (milestone list or Gantt) generated from case facts showing all stages a lawyer can share with clients. Depends: spec-auth-persistence. [Discovered: competitive-landscape]
 - [ ] spec-document-checklist — Per-case document checklist (PSA death cert, TCT/CCT, ITR, bank certs) with check-off status tracking. Depends: spec-auth-persistence. [Discovered: competitive-landscape]
 - [ ] spec-estate-tax-inputs-wizard — Detailed multi-tab wizard UI for estate tax inputs: Schedules 1/1A/2/2A/3/4 (assets) + Schedules 5A-5H/6 (deductions) + amnesty/filing flags. Depends: spec-auth-persistence. Reads: estate-tax-integration. [Discovered: estate-tax-integration]
 
