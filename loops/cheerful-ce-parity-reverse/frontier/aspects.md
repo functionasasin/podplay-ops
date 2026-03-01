@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total Aspects**: 36
-- **Analyzed**: 15
-- **Pending**: 21
-- **Convergence**: 42%
+- **Analyzed**: 16
+- **Pending**: 20
+- **Convergence**: 44%
 
 ---
 
@@ -33,7 +33,7 @@ Take Wave 1 capability lists and design tool signatures per domain. **Every tool
 - [x] **w2-users-team** — Design all user/team tools: profile, accounts, team management, permissions. Note: profile tools are self-only; team admin tools are owner-only. Write skeleton definitions to `specs/users-and-team.md`
 - [x] **w2-analytics** — Design all analytics tools: dashboard data, campaign metrics, reporting queries. All scoped to `user_id`'s campaigns. Write skeleton definitions to `specs/analytics.md`
 - [x] **w2-search** — Design all search/discovery tools: extend existing search + add AI discovery. Search scoped to `user_id`'s campaigns/threads. Write skeleton definitions to `specs/search-and-discovery.md`
-- [ ] **w2-workflows** — Design all workflow tools: automation CRUD, execution history, lifecycle triggers. Scoped to `user_id` via campaign ownership. Write skeleton definitions to `specs/workflows.md`
+- [x] **w2-workflows** — Design all workflow tools: automation CRUD, execution history, lifecycle triggers. Scoped to `user_id` via campaign ownership. Write skeleton definitions to `specs/workflows.md`
 
 ## Wave 3: Full OpenAPI-Level Specs (12 aspects)
 

@@ -2,7 +2,7 @@
 
 ## Status
 
-Wave 2 tool design in progress. Campaign, Email, Creators, Integrations, Users & Team, Analytics, and Search & Discovery domains complete. Workflows pending.
+Wave 2 tool design complete. All 8 domains designed: Campaigns (31), Email (24), Creators (27), Integrations (18), Users & Team (13), Analytics (1), Search & Discovery (4), Workflows (8). Total: 126 tools (7 existing + 119 new). Wave 3 (full OpenAPI-level specs) pending.
 
 ## Domains
 
@@ -15,7 +15,7 @@ Wave 2 tool design in progress. Campaign, Email, Creators, Integrations, Users &
 | Users & Team | `users-and-team.md` | 0 | 13 | 13 | Wave 2 complete |
 | Analytics | `analytics.md` | 0 | 1 | 1 | Wave 2 complete |
 | Search & Discovery | `search-and-discovery.md` | 0 | 4 | 4 | Wave 2 complete |
-| Workflows | `workflows.md` | 0 | ~7 | ~7 | Wave 1 complete |
+| Workflows | `workflows.md` | 0 | 8 | 8 | Wave 2 complete |
 | Shared Conventions | `shared-conventions.md` | — | — | — | Pending |
 | Parity Matrix | `parity-matrix.md` | — | — | — | Pending |
 
@@ -179,8 +179,21 @@ Wave 2 tool design in progress. Campaign, Email, Creators, Integrations, Users &
 | 117 | `cheerful_bulk_accept_lookalike_suggestions` | Suggestions | Bulk accept suggestions + add as campaign recipients | NEW |
 | 118 | `cheerful_bulk_reject_lookalike_suggestions` | Suggestions | Bulk reject suggestions | NEW |
 
-### New Tools — Remaining Domains (pending design)
+### New Tools — Workflows Domain (8)
 
-*Tool designs for Workflows domain will be added as Wave 2 progresses. Onboarding status tool (`cheerful_get_onboarding_status`) listed in `specs/users-and-team.md` but not numbered here pending Wave 3 (requires new backend endpoint).*
+| # | Tool Name | Sub-domain | Description | Status |
+|---|-----------|------------|-------------|--------|
+| 119 | `cheerful_list_campaign_workflows` | Workflow CRUD | List enabled workflows for a campaign | NEW |
+| 120 | `cheerful_get_campaign_workflow` | Workflow CRUD | Get specific workflow with full config | NEW |
+| 121 | `cheerful_create_campaign_workflow` | Workflow CRUD | Create new AI automation workflow for campaign | NEW |
+| 122 | `cheerful_update_campaign_workflow` | Workflow CRUD | Update workflow config (partial update) | NEW |
+| 123 | `cheerful_delete_campaign_workflow` | Workflow CRUD | Delete workflow and all execution history | NEW |
+| 124 | `cheerful_list_workflow_executions` | Execution History | List execution history for workflow (most recent first) | NEW |
+| 125 | `cheerful_get_thread_workflow_execution` | Execution History | Get latest execution result for a thread | NEW |
+| 126 | `cheerful_list_workflow_tools` | Tool Discovery | List all available tool slugs for workflow composition | NEW |
+
+### Remaining Domains (pending design)
+
+*Onboarding status tool (`cheerful_get_onboarding_status`) listed in `specs/users-and-team.md` but not numbered here pending Wave 3 (requires new backend endpoint).*
 
 > **Note on Search & Discovery tool count**: The w1-search extraction identified ~8-9 new tools needed, but during Wave 2 design, IC creator search/discovery tools (4) were placed in `creators.md` and YouTube lookalike (1) in `integrations.md` as they are integral to those domain workflows. The 4 tools here (lookalike suggestion management) are the search/discovery capabilities that don't naturally fit elsewhere. The total new search/discovery tool count across all domains is ~9 (4 here + 4 in creators + 1 in integrations).
