@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 16
-- Analyzed: 4
-- Pending: 12
-- Convergence: 25%
+- Analyzed: 5
+- Pending: 11
+- Convergence: 31%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -14,7 +14,7 @@ Read the existing Daimon codebase and map what SSR tools need.
 - [x] w1-reference-tools — Study 2-3 existing tool implementations as reference patterns (signatures, validation, error handling, DB access)
 - [x] w1-ssr-primitives — Map what tool functions the SSR pipeline requires, how they chain, what shared state they need
 - [x] w1-embedding-options — Survey embedding models (cost, latency, quality) for the anchor mapping step, recommend one
-- [ ] w1-supabase-patterns — Read existing migrations for table naming, column patterns, RLS, indexes
+- [x] w1-supabase-patterns — Read existing migrations for table naming, column patterns, RLS, indexes
 
 ### Wave 2: Design
 Design every tool, prompt, schema, and integration point.
@@ -38,3 +38,4 @@ Bring everything together into a cohesive implementation spec.
 - [x] w1-reference-tools — Studied `discord/read.py` (HTTP tools, pagination, error translation, XML formatters), `bluedot/read.py` + `api.py` (DB split-file pattern, session management, not-found errors), `github/tools.py` (credential-gated, subprocess, timeout), `acp/tools.py` (JSON parsing, manual validation). Key finding: SSR must use split-file pattern (`tools.py` + `api.py` + `models.py`). DB check `if db_context is None` at top of every handler. Formatters are private `_fmt_*()` pure functions.
 - [x] w1-ssr-primitives — 5 tools: `ssr_panel_create`, `ssr_panel_run`, `ssr_panel_results`, `ssr_panel_list`, `ssr_panel_delete`. Full internal pipeline decomposed: `create_panel_with_personas` → `_generate_all_personas` → `_generate_single_persona`; `run_ssr_pipeline` → `_run_all_personas` → `_elicit_response` + `_embed_text` + `_score_response`. 6 DB tables mapped. Key decisions: eager persona generation, synchronous blocking execution, asyncio.gather concurrency, haiku model for both steps, softmax-based scoring, discord_id ownership. File structure: `mcp/tools/ssr/{__init__,tools,api,models}.py` + 6 repository files.
 - [x] w1-embedding-options — Recommendation: `text-embedding-3-small` (OpenAI). Already in pyproject.toml (openai package). Cost $0.00006/20-persona run (<0.1% of total). 1536 dims. No new package dep. Requires: `OPENAI_API_KEY` env var + `OpenAISettings` in config.py + `openai_api_key: str` in `ToolContext` + injection in main.py. Scoring: softmax-weighted mean + argmax hard score via cosine similarity. Anchors pre-embedded at migration (stored as `FLOAT8[1536]`). numpy available transitively via pandas — no new dep.
+- [x] w1-supabase-patterns — Read 7 migrations. Key findings: (1) UUID PKs with `gen_random_uuid()`; (2) `TIMESTAMPTZ NOT NULL DEFAULT NOW()` for timestamps; (3) `updated_at` triggers reuse `update_updated_at_column()` (already defined); (4) status/enum = `TEXT NOT NULL` + `CHECK (col IN (...))` constraint; (5) all FKs have `ON DELETE CASCADE`; (6) no RLS for bot-owned tables (service_role bypasses it); (7) Discord IDs as `TEXT` on `session_templates` — SSR uses same; (8) `FLOAT8[]` for embedding vectors; (9) index naming `idx_ssr_{table}_{cols}`; (10) migration filename `20260301_create_ssr_panel_tables.sql`.

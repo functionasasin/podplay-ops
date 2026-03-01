@@ -4,7 +4,7 @@ Implementation-ready specification for adding SSR (Semantic Similarity Rating) c
 
 ## Status
 
-Wave 1: Audit & Map — 4/5 complete
+Wave 1: Audit & Map — 5/5 complete
 Wave 2: Design — 0/7 complete
 Wave 3: Synthesis & Integration — 0/4 complete
 
@@ -19,7 +19,7 @@ Audit of the existing Daimon codebase — patterns a developer must understand b
 | [tool-system.md](existing-patterns/tool-system.md) | ✅ Complete | `@tool` decorator, `ToolDef`, `ToolError`, `ToolRegistry`, `ToolContext`, `DatabaseContext`, `UserContext`, registration in `catalog.py`, XML output helpers |
 | [reference-tools.md](existing-patterns/reference-tools.md) | ✅ Complete | Patterns from `discord/read.py`, `bluedot/read.py`+`api.py`, `github/tools.py`, `acp/tools.py` — split-file structure, DB access, formatters, error handling, pagination, credential gates |
 | [ssr-primitives.md](existing-patterns/ssr-primitives.md) | ✅ Complete | 5 tools, full pipeline decomposition (persona gen → elicitation → embed → score → aggregate), 6 DB tables, design decisions (eager personas, sync blocking, asyncio.gather, haiku model, softmax scoring) |
-| [db-patterns.md](existing-patterns/db-patterns.md) | ⬜ Pending | Supabase schema patterns, migrations, RLS, indexes |
+| [db-patterns.md](existing-patterns/db-patterns.md) | ✅ Complete | UUID PKs, TIMESTAMPTZ NOT NULL, shared updated_at trigger, TEXT enums with CHECK, ON DELETE CASCADE, no RLS (service_role), discord_id TEXT ownership, FLOAT8[] embeddings, index naming/patterns, migration filename convention |
 | [embedding-options.md](existing-patterns/embedding-options.md) | ✅ Complete | `text-embedding-3-small` recommended; cost $0.00006/run; required changes to `ToolContext`, `config.py`, `main.py`; scoring logic (cosine similarity, softmax-weighted mean); anchor pre-embedding strategy |
 
 ---
