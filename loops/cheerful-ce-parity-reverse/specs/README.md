@@ -2,7 +2,7 @@
 
 ## Status
 
-Wave 2 tool design complete. Wave 3 in progress. All 8 domains designed: Campaigns (31), Email (24), Creators (27), Integrations (18), Users & Team (13), Analytics (1), Search & Discovery (4), Workflows (8). Total: 126 tools (7 existing + 119 new). **Wave 3 progress**: Campaigns complete (31 tools) + Email complete (24 tools) + Creators complete (27 tools) = **82 tools** fully specified with OpenAPI-level detail.
+Wave 2 tool design complete. Wave 3 in progress. All 8 domains designed: Campaigns (31), Email (24), Creators (27), Integrations (18), Users & Team (13), Analytics (1), Search & Discovery (4), Workflows (8). Total: 126 tools (7 existing + 119 new). **Wave 3 progress**: Campaigns complete (31 tools) + Email complete (24 tools) + Creators complete (27 tools) + Integrations complete (18 tools) = **100 tools** fully specified with OpenAPI-level detail.
 
 ## Domains
 
@@ -11,7 +11,7 @@ Wave 2 tool design complete. Wave 3 in progress. All 8 domains designed: Campaig
 | Campaigns | `campaigns.md` | 1 | 30 | 31 | Wave 3: CRUD + Wizard + Products + Recipients + Senders + Outbox + Signatures + MergeTags + Sheet + Summary + Enrichment complete (31/31 tools fully specified) |
 | Email | `email.md` | 3 | 21 | 24 | Wave 3: All 24 tools fully specified with OpenAPI-level detail |
 | Creators | `creators.md` | 3 | 24 | 27 | Wave 3: All 27 tools fully specified with OpenAPI-level detail (3 existing audited + 24 new) |
-| Integrations | `integrations.md` | 0 | 18 | 18 | Wave 2 complete |
+| Integrations | `integrations.md` | 0 | 18 | 18 | Wave 3: All 18 tools fully specified with OpenAPI-level detail (5 corrections from Wave 2) |
 | Users & Team | `users-and-team.md` | 0 | 13 | 13 | Wave 2 complete |
 | Analytics | `analytics.md` | 0 | 1 | 1 | Wave 2 complete |
 | Search & Discovery | `search-and-discovery.md` | 0 | 4 | 4 | Wave 2 complete |
@@ -127,31 +127,31 @@ Wave 2 tool design complete. Wave 3 in progress. All 8 domains designed: Campaig
 
 | # | Tool Name | Sub-domain | Description | Status |
 |---|-----------|------------|-------------|--------|
-| 83 | `cheerful_list_gmail_accounts` | Gmail | List connected Gmail accounts and sync status | NEW |
-| 84 | `cheerful_get_gmail_sync_status` | Gmail | Get sync status for a specific Gmail account | NEW |
-| 85 | `cheerful_list_smtp_accounts` | SMTP | List all SMTP accounts | NEW |
-| 86 | `cheerful_get_smtp_account` | SMTP | Get single SMTP account by ID | NEW |
-| 87 | `cheerful_create_smtp_account` | SMTP | Create new SMTP account with IMAP config | NEW |
-| 88 | `cheerful_update_smtp_account` | SMTP | Update SMTP account settings (partial) | NEW |
-| 89 | `cheerful_delete_smtp_account` | SMTP | Delete SMTP account | NEW |
-| 90 | `cheerful_bulk_import_smtp_accounts` | SMTP | Bulk import SMTP accounts with IMAP verification | NEW |
-| 91 | `cheerful_get_google_sheet_tabs` | Google Sheets | Get tab names from a Google Sheet URL | NEW |
-| 92 | `cheerful_list_shopify_products` | Shopify | List Shopify products via GoAffPro proxy | NEW |
-| 93 | `cheerful_create_shopify_order` | Shopify | Create draft Shopify order for creator | NEW |
-| 94 | `cheerful_get_instantly_status` | Instantly | Get Instantly (Composio) connection status | NEW |
-| 95 | `cheerful_connect_instantly` | Instantly | Connect Instantly via Composio broker | NEW |
-| 96 | `cheerful_disconnect_instantly` | Instantly | Disconnect Instantly integration | NEW |
-| 97 | `cheerful_test_instantly_connection` | Instantly | Test Instantly connection health | NEW |
-| 98 | `cheerful_trigger_slack_digest` | Slack | Trigger Slack campaign digest | NEW |
-| 99 | `cheerful_find_youtube_lookalikes` | YouTube | Find similar YouTube channels via Apify + LLM | NEW |
-| 100 | `cheerful_lookup_brand` | Brand | Detect brand info from URL | NEW |
+| 83 | `cheerful_list_gmail_accounts` | Gmail | List connected Gmail accounts and sync status | NEW — W3 |
+| 84 | `cheerful_list_connected_accounts` | Gmail + SMTP | List all connected accounts (Gmail + SMTP) unified view | NEW — W3 |
+| 85 | `cheerful_list_smtp_accounts` | SMTP | List all SMTP accounts | NEW — W3 |
+| 86 | `cheerful_get_smtp_account` | SMTP | Get single SMTP account by ID | NEW — W3 |
+| 87 | `cheerful_create_smtp_account` | SMTP | Create new SMTP account with IMAP config | NEW — W3 |
+| 88 | `cheerful_update_smtp_account` | SMTP | Update SMTP account settings (partial) | NEW — W3 |
+| 89 | `cheerful_delete_smtp_account` | SMTP | Permanently delete SMTP account (hard delete) | NEW — W3 |
+| 90 | `cheerful_bulk_import_smtp_accounts` | SMTP | Bulk import SMTP accounts with IMAP verification | NEW — W3 |
+| 91 | `cheerful_get_google_sheet_tabs` | Google Sheets | Get tab names from a Google Sheet URL | NEW — W3 |
+| 92 | `cheerful_list_shopify_products` | Shopify | List Shopify products via GoAffPro proxy | NEW — W3 |
+| 93 | `cheerful_create_shopify_order` | Shopify | Create Shopify order from completed workflow execution | NEW — W3 |
+| 94 | `cheerful_get_instantly_status` | Instantly | Get Instantly (Composio) connection status | NEW — W3 |
+| 95 | `cheerful_connect_instantly` | Instantly | Connect Instantly via API key + Composio broker | NEW — W3 |
+| 96 | `cheerful_disconnect_instantly` | Instantly | Disconnect Instantly integration | NEW — W3 |
+| 97 | `cheerful_test_instantly` | Instantly | Test Instantly connection health | NEW — W3 |
+| 98 | `cheerful_trigger_slack_digest` | Slack | Trigger Slack order digest for campaign | NEW — W3 |
+| 99 | `cheerful_find_youtube_lookalikes` | YouTube | Find similar YouTube channels via Apify + LLM | NEW — W3 |
+| 100 | `cheerful_lookup_brand` | Brand | Detect brand info from product URL via Brandfetch | NEW — W3 |
 
 ### New Tools — Users & Team Domain (13)
 
 | # | Tool Name | Sub-domain | Description | Status |
 |---|-----------|------------|-------------|--------|
 | 101 | `cheerful_get_user_settings` | User Settings | Get user settings metadata | NEW |
-| 102 | `cheerful_list_connected_accounts` | Connected Accounts | List all connected accounts (Gmail + SMTP) unified view | NEW |
+| 102 | `cheerful_list_connected_accounts` | Connected Accounts | List all connected accounts (Gmail + SMTP) unified view | NEW — *duplicate of #84 in Integrations; will reconcile in w4-readme-index* |
 | 103 | `cheerful_list_teams` | Team Management | List teams user belongs to | NEW |
 | 104 | `cheerful_create_team` | Team Management | Create new team (caller becomes owner) | NEW |
 | 105 | `cheerful_get_team` | Team Management | Get team details with full member list | NEW |
