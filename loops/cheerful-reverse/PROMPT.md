@@ -226,15 +226,89 @@ Synthesize `user-journeys` + ALL other Wave 2/3 analyses into a complete user st
 - Feature-to-story traceability matrix (every feature maps to at least one story)
 - Priority/complexity annotations based on codebase evidence
 
+### Wave 4: Production Data Analysis
+
+Wave 4 queries the **live production Supabase database** to understand how features are actually used. Read ALL Wave 1–3 analysis files before starting any Wave 4 aspect — you need the schema and feature context to write meaningful queries.
+
+**Database access:** The environment variable `CHEERFUL_DATABASE_URL` contains a direct PostgreSQL connection string to the production Supabase database (read-only). Use `psql` to run queries:
+
+```bash
+psql "$CHEERFUL_DATABASE_URL" -c "SELECT ..."
+```
+
+**Query guidelines:**
+- Always use `LIMIT` on exploratory queries to avoid pulling too much data.
+- For counts and aggregates, no limit needed.
+- Never run INSERT, UPDATE, DELETE, or DDL statements. Read-only queries only.
+- Include the exact SQL query in your analysis output so findings are reproducible.
+- When timestamps exist, bucket by week/month to show trends over time.
+- Cross-reference findings with Wave 1–3 analysis to explain what the numbers mean.
+
+#### `usage-data-landscape`
+1. For every table documented in `analysis/supabase-schema.md`, run: `SELECT count(*) FROM {table}` and `SELECT min(created_at), max(created_at) FROM {table}` (where created_at exists)
+2. Identify the biggest tables, empty tables, and most recently active tables
+3. Produce: data landscape overview — which parts of the system have real data, what's dormant, data growth patterns
+
+#### `usage-campaign-patterns`
+1. Query `campaign` table: count by status, count by automation_level, distribution of creator counts per campaign
+2. Query `campaign_sender`, `campaign_recipient`: average senders/recipients per campaign
+3. Query `campaign_product`: how many campaigns use product associations
+4. Query `campaign_outbox_queue` and `campaign_follow_up_outbox_queue`: outreach volume, follow-up usage
+5. Produce: campaign usage profile — how campaigns are configured, typical sizes, which automation levels are actually used
+
+#### `usage-email-activity`
+1. Query `gmail_message` / `smtp_message`: total volumes, inbound vs outbound, messages per week/month trend
+2. Query `gmail_thread_state` / `smtp_thread_state`: thread counts by status, threads per campaign
+3. Query `gmail_thread_llm_draft`: AI draft volumes, drafts per thread
+4. Query `gmail_thread_ui_draft`: manual draft volumes, compare to AI drafts
+5. Query `email_dispatch_queue`: dispatch volumes, queue patterns
+6. Produce: email pipeline health — volumes, AI vs manual drafting ratio, thread processing throughput
+
+#### `usage-creator-pipeline`
+1. Query `creator`: total creators, creators with vs without enrichment
+2. Query `creator_enrichment_attempt`: enrichment attempts, success/failure rates by source
+3. Query `campaign_creator`: creators per campaign, overlap across campaigns
+4. Query `creator_list` / `creator_list_item`: list sizes, how many lists per user
+5. Query `campaign_lookalike_suggestion`: lookalike feature usage
+6. Produce: creator pipeline funnel — discovery → enrichment → outreach → response rates
+
+#### `usage-ai-effectiveness`
+1. Query `gmail_thread_llm_draft`: total drafts generated, drafts per campaign, drafts over time trend
+2. Cross-reference with `gmail_message` (outbound): estimate how many AI drafts were actually sent vs discarded
+3. Query `campaign_rule_suggestion_analytics`: rule suggestion usage, acceptance rates
+4. Query `email_reply_example`: how many campaigns use reply examples for style training
+5. Produce: AI feature adoption — which AI features are used, draft approval rate, style training adoption
+
+#### `usage-user-engagement`
+1. Query `auth.users` (if accessible) or `user_setting` / `user_onboarding`: total users, onboarding completion rate
+2. Query `user_gmail_account` / `user_smtp_account`: email account connections per user
+3. Query `team` / `team_member`: team sizes, teams per user
+4. Query `campaign_member_assignment`: campaign sharing patterns
+5. Query `email_signature`: signature usage
+6. Produce: user adoption profile — how many users, team structures, feature discovery patterns
+
+#### `usage-workflow-health`
+1. Query `campaign_workflow`: workflow types registered, workflows per campaign
+2. Query `campaign_workflow_execution`: execution counts, statuses, execution frequency over time
+3. Query `discord_workflow` / `discord_workflow_execution`: Discord subsystem usage (if any)
+4. Produce: workflow execution profile — which workflows run most, success rates, automation coverage
+
+#### `synthesis-usage-report`
+1. Read ALL `analysis/usage-*.md` files
+2. Cross-reference with Wave 3 synthesis specs to identify: features that are heavily used vs dormant, surprising usage patterns, potential product insights
+3. Produce: executive usage report — feature adoption matrix, key metrics, what the data says about which features matter most, recommendations for what to prioritize in a rebuild
+
 ## Rules
 
 - Do ONE aspect per run, then exit.
-- Check dependencies before starting an aspect. All Wave 1 aspects must complete before Wave 2. All Wave 2 before Wave 3.
+- Check dependencies before starting an aspect. All Wave 1 aspects must complete before Wave 2. All Wave 2 before Wave 3. All Wave 3 before Wave 4.
 - Write findings in markdown with specific file paths and line references.
 - Every feature documented must explain its PURPOSE — what user problem it solves, not just what it does technically.
 - When you discover a subsystem, pattern, or concern not covered by existing aspects, add a new aspect to the appropriate Wave.
 - Keep analysis files focused. One aspect = one file.
 - Do NOT modify any files in `../../projects/cheerful/`. The codebase is read-only.
+- Do NOT run any write operations (INSERT, UPDATE, DELETE, DDL) against the database. Read-only queries only.
 - For large source files (>500 lines), document the key sections with line ranges rather than trying to capture every detail.
 - Prefer concrete examples over abstract descriptions. Show sample payloads, state transitions, and decision trees.
 - When documenting AI features, include the prompt strategy and structured output schema — these are as important as the code.
+- For Wave 4 data queries, always include the exact SQL in your output so findings are reproducible.

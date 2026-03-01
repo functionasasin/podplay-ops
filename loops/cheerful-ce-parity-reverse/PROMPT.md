@@ -35,6 +35,32 @@ The `loops/cheerful-reverse/` loop has already produced comprehensive analysis d
 
 **Use these as your primary source.** Read them first. Only go to actual source code when you need to verify details, find enum values, check parameter types, or discover something the specs missed.
 
+### Per-User Authentication Model (CRITICAL)
+
+**Every single tool is scoped to an authenticated user.** This is non-negotiable. The auth model is already implemented — new tools must follow the same pattern.
+
+**Frontend**: Users must LOGIN (Supabase Auth — email/password or Google OAuth) before interacting with anything. The webapp middleware at `projects/cheerful/apps/webapp/utils/supabase/middleware.ts` enforces this — `/mail`, `/settings`, `/dashboard`, `/campaigns` all redirect to `/sign-in` if unauthenticated.
+
+**Context Engine — how user identity works** (existing pattern in `mcp/tools/cheerful/tools.py`):
+- `user_id` is **NOT a tool parameter** — it is dependency-injected via `RequestContext`
+- Every tool receives `request_context: RequestContext | None` as an injected argument
+- Every tool calls `_resolve_user_id(request_context)` which extracts `request_context.cheerful_user_id`
+- If the user can't be resolved, it raises `ToolError("Could not resolve Cheerful user...")`
+- The resolved `user_id` is then passed as a query parameter to all `/api/service/*` backend calls
+- The identity chain: Slack user ID → hardcoded mapping in `constants.py` → `cheerful_user_id` UUID → `RequestContext` → injected into tool → sent to backend
+
+**Backend service routes** (`/api/service/*`):
+- Authenticated via `X-Service-Api-Key` header (constant-time comparison)
+- User scoping via `user_id` query parameter on every request
+- All DB queries scoped to that user (RLS + application-level checks)
+
+**What this means for specs**:
+- **Do NOT list `user_id` as a tool parameter** — it's injected, not user-facing. But DO document that every tool is user-scoped and how the backend endpoint receives `user_id`
+- **Every tool's error responses** must include the "Could not resolve Cheerful user" case and 403 "Access denied" for resources the user doesn't own
+- **Team-aware tools** (campaign access) must document the permission model: owner vs assigned team member vs unassigned
+- **The auth model section** in `specs/shared-conventions.md` must document the full identity injection flow and the `RequestContext` pattern
+- **Never assume global access.** A tool that lists campaigns returns ONLY that user's campaigns. A tool that reads a thread checks that the user owns (or is assigned to) the campaign it belongs to.
+
 ### Current Context Engine Cheerful Tools (Baseline)
 
 These 7 tools already exist. Your spec must include them (verified against source) PLUS all new tools:
@@ -76,7 +102,9 @@ Every tool MUST include ALL of the following:
 
 **Maps to**: `METHOD /api/endpoint/path` (the backend API endpoint(s) this tool calls)
 
-**Parameters**:
+**Auth**: User-scoped — `user_id` injected via `RequestContext`, sent as query param to backend. Permission: [owner-only | assigned-member | authenticated]
+
+**Parameters** (user-facing — `user_id` is injected, not listed here):
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
@@ -106,8 +134,10 @@ Every tool MUST include ALL of the following:
 
 | Condition | Error Message | HTTP Status (underlying) |
 |-----------|--------------|-------------------------|
+| User not resolved | ToolError: "Could not resolve Cheerful user..." | N/A (pre-request) |
+| User does not own resource | "Access denied to campaign {id}" | 403 |
+| User not assigned to campaign (team) | "User is not assigned to campaign {id}" | 403 |
 | Campaign not found | "Campaign {id} not found" | 404 |
-| No permission | "Access denied to campaign {id}" | 403 |
 
 **Pagination** (if applicable):
 - Default limit: N, max limit: M
@@ -174,6 +204,9 @@ When all aspects are `- [x]`, do NOT immediately write `status/converged.txt`. I
    - [ ] Every enum parameter lists ALL possible values (verified against source)
    - [ ] Every tool has at least one realistic example request and response
    - [ ] Shared conventions doc covers auth, pagination, and error patterns
+   - [ ] Every tool documents that it is user-scoped (via injected `RequestContext`, not a tool param)
+   - [ ] Every tool documents its permission model (owner-only, assigned-member, or authenticated)
+   - [ ] Auth model documents the full identity injection flow: Slack user → mapping → RequestContext → `_resolve_user_id()` → backend `user_id` query param
    - [ ] The parity matrix has no empty cells — every frontend feature maps to a tool
    - [ ] No file contains "TODO", "TBD", "placeholder", "etc.", or "similar to above"
    - [ ] Existing 7 tools are documented with any corrections needed
@@ -229,9 +262,10 @@ Take each capability list from Wave 1 and design the tool definitions. This is t
    - Multi-step flows can be broken into atomic tools (Claude orchestrates the sequence)
 3. For each tool, decide:
    - Tool name (`cheerful_` prefix, snake_case, verb_noun pattern)
-   - Parameters (from the backend endpoint signature)
+   - Parameters (user-facing only — `user_id` is injected via `RequestContext`, not a tool param)
    - Return type (from the backend response shape)
    - Which backend endpoint(s) it maps to
+   - Permission model: does this require ownership, team assignment, or just authenticated access?
 4. Write the tool designs to the domain spec file in `specs/`
 
 **Naming conventions**:

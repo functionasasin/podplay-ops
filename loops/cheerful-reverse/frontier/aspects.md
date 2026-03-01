@@ -2,10 +2,10 @@
 
 ## Statistics
 
-- **Total aspects**: 27
+- **Total aspects**: 35
 - **Analyzed**: 27
-- **Pending**: 0
-- **Convergence**: 100%
+- **Pending**: 8
+- **Convergence**: 77%
 
 ## Wave 1: Layer-by-Layer Extraction (13 aspects)
 
@@ -42,3 +42,14 @@
 - [x] spec-integrations — External integrations spec with auth, data flow, failure handling per service
 - [x] spec-infra — Infrastructure & deployment spec with topology, environments, secrets, monitoring
 - [x] spec-user-stories — Complete user stories index mapping every feature to user intent and acceptance criteria
+
+## Wave 4: Production Data Analysis (8 aspects)
+
+- [ ] usage-data-landscape — Row counts, timestamps, data growth patterns across all tables
+- [ ] usage-campaign-patterns — Campaign statuses, automation levels, sizes, outreach volumes
+- [ ] usage-email-activity — Email volumes, thread processing, AI vs manual draft ratios
+- [ ] usage-creator-pipeline — Creator enrichment funnel, outreach response rates, list usage
+- [ ] usage-ai-effectiveness — AI draft approval rates, rule suggestion adoption, style training usage
+- [ ] usage-user-engagement — User counts, onboarding completion, team structures, feature adoption
+- [ ] usage-workflow-health — Workflow execution counts, success rates, automation coverage
+- [ ] synthesis-usage-report — Executive usage report: feature adoption matrix, product insights, rebuild priorities

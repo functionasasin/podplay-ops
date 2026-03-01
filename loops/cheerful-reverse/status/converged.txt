@@ -56,3 +56,8 @@ campaign-lifecycle, ai-orchestration
 7. Auth is defense-in-depth: JWT at API layer + RLS at DB layer. Backend uses service_role
    (bypasses RLS) but enforces isolation via explicit WHERE user_id = ? clauses. Frontend
    is subject to full RLS.
+
+## Wave 4 Pending
+
+8 production data analysis aspects added (2026-02-27), pending CHEERFUL_DATABASE_URL secret.
+Set status back to active and delete this file to resume.
