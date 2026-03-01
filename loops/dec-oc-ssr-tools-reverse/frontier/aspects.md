@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 16
-- Analyzed: 13
-- Pending: 3
-- Convergence: 81%
+- Analyzed: 14
+- Pending: 2
+- Convergence: 88%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -30,11 +30,12 @@ Design every tool, prompt, schema, and integration point.
 ### Wave 3: Synthesis & Integration
 Bring everything together into a cohesive implementation spec.
 - [x] w3-catalog-registration — Write exact code for registering SSR tools in Daimon's catalog
-- [ ] w3-workflow-design — Design how SSR tools become Daimon workflows (trigger type, scoping)
+- [x] w3-workflow-design — Design how SSR tools become Daimon workflows (trigger type, scoping)
 - [ ] w3-discord-ux — Design Discord UX (progress indicators, result rendering, comparison views)
 - [ ] w3-examples — Write 3 end-to-end examples (ad copy, product concept, influencer fit)
 
 ## Recently Analyzed
+- [x] w3-workflow-design — No dedicated workflow type needed. SSR tools go in `ALL_TOOLS` as standard tools. 3 code changes beyond catalog-registration: (1) 13 keyword additions to `KEYWORD_PLATFORM_MAP` in `selection.py` for `Platform.SSR`; (2) `<consumer-panel>` section added to `base.txt` (chaining rules, defaults, result presentation guidance); (3) `Platform.SSR` case added to `get_platform_context()` in `meta_tools.py`. Trigger: active @mention or DM. No channel/user scoping. No authentication required. Multi-step flows: create→run→results chain in single agent turn. Comparison flow: two sequential `ssr_panel_run` calls then `ssr_panel_results` with comparison_run_id. Full chaining examples for 4 user flows (single-turn, reuse, comparison, explicit management).
 - [x] w2-pydantic-models — 22 types in one file (`models.py`): 3 enums (`StimulusType` 10 values, `EvaluationDimension` 10 values, `ResponseFormat` 3 values); 7 Pydantic v2 input models with all fields, validators, and descriptions; 11 pipeline dataclasses (incl. `DimensionScore`, `PersonaResponse`, `AggregatedDimensionResult`, `RetrievedRunResult`, `DimensionComparison`, `AnchorPoint`, `AnchorSet`); 6 DB row dataclasses mirroring all 6 table schemas; 2 output dataclasses (`SsrPanelSummary`, `SsrDeleteResult`). New models defined here: `PanelListInput`, `PanelDeleteInput`, `SsrPanelRow`, `SsrPersonaRow`, `SsrAnchorSetRow`, `SsrPanelSummary`, `SsrDeleteResult`. Includes type dependency graph, module-level import lists for `tools.py`/`api.py`/`db/repositories/`. Note: `SsrPersonaRow` documented but repo returns `SsrPersonaSummary`; `SsrAnchorSetRow` documented but repo returns `AnchorSet`.
 - [x] w2-prompt-templates — Prompt templates were substantially complete from previous aspects (w2-tool-panel-create and w2-tool-panel-run). This pass added: (1) expected responses for Examples B and C in response-elicitation.md (Gen Z gamer → product_concept, professional woman → headline); (2) §6 Multilingual Response Handling in response-elicitation.md (text-embedding-3-small multilingual alignment, English anchor design decision, implementation guard against ASCII normalization); (3) §7 Break-Character Detection in response-elicitation.md (_is_break_character() heuristic with fixed markers + third-person self-reference detection, 30% failure threshold warning); (4) §10 Format Failure Handling and Retry Prompt in persona-generation.md (default no-retry policy rationale, full _build_persona_retry_prompt() template, optional _generate_single_persona_with_retry() implementation for future use); (5) Updated cross-references in stimulus-presentation.md to point at new sections. All changes append-only.
 - [x] w2-anchor-statements — All 10 evaluation dimensions fully specified (purchase_intent, brand_favorability, message_clarity, emotional_response, personal_relevance, uniqueness, trust_credibility, value_perception, share_worthiness, overall_appeal). 50 anchor statements with design rationale per statement. 5-point scale rationale (vs 7-point). 5 anchor quality principles (first-person voice, monotonicity, distinctiveness, genuine neutrality, dimensional purity). Dimension-by-stimulus recommendation matrix (10×10 table). Complete seeding script (`seed_anchor_embeddings.py`, ~130 lines, idempotent, batch-embeds NULLs, verifies post-seed). EvaluationDimension enum code reference. Written to `tool-spec/pipeline/anchor-statements.md` (new file).
