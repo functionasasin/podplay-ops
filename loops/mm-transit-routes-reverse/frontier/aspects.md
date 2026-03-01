@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 106
-- Analyzed: 95
-- Pending: 11
-- Convergence: 90%
+- Analyzed: 96
+- Pending: 10
+- Convergence: 91%
 
 ---
 
@@ -136,7 +136,7 @@
 ## Wave 3: GTFS Synthesis
 
 - [x] Generate agency.txt — list all operators/agencies
-- [ ] Generate routes.txt — all validated routes with type, color codes, names
+- [x] Generate routes.txt — all validated routes with type, color codes, names
 - [ ] Generate stops.txt — all stop locations with lat/lon coordinates
 - [ ] Generate stop_times.txt — estimated arrival/departure times per stop
 - [ ] Generate shapes.txt — route geometry from best available sources
