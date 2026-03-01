@@ -180,8 +180,8 @@ This design ensures:
 
 ## 6. Cross-References
 
-- [response-elicitation.md](response-elicitation.md) — The user prompt: stimulus presentation + elicitation question (the other half of the same Claude call)
-- [persona-generation.md](persona-generation.md) — How `full_profile` is generated and what fields it contains
+- [response-elicitation.md](response-elicitation.md) — The user prompt (the other half of the same Claude call); also see §7 (break-character detection) and §6 (multilingual handling)
+- [persona-generation.md](persona-generation.md) — How `full_profile` is generated and what fields it contains; §10 covers retry prompts for format failures
 - [panel-run.md](../tools/panel-run.md) — The `_elicit_persona_response()` function that assembles system + user prompts
 - [scoring-aggregation.md](scoring-aggregation.md) — What happens to the response text after it's generated
 - [embedding-options.md](../existing-patterns/embedding-options.md) — How the response is embedded after generation

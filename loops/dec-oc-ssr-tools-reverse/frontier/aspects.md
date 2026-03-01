@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 16
-- Analyzed: 10
-- Pending: 6
-- Convergence: 63%
+- Analyzed: 11
+- Pending: 5
+- Convergence: 69%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -24,7 +24,7 @@ Design every tool, prompt, schema, and integration point.
 - [x] w2-tool-panel-results — Design panel_results tool: MCP definition, result formatting for Discord, comparison mode
 - [x] w2-supabase-schema — Design all DB tables (ssr_panel, ssr_persona, ssr_run, ssr_response, ssr_score, ssr_anchor_set); stimulus folded into ssr_run; 50 anchor statements seeded inline
 - [x] w2-anchor-statements — Design Likert anchor statement sets for all marketing evaluation dimensions
-- [ ] w2-prompt-templates — Design all prompt templates (persona system prompt, stimulus presentation, response elicitation)
+- [x] w2-prompt-templates — Design all prompt templates (persona system prompt, stimulus presentation, response elicitation)
 - [ ] w2-pydantic-models — Design Pydantic v2 models for all data structures (input, DB, output, pipeline)
 
 ### Wave 3: Synthesis & Integration
@@ -35,6 +35,7 @@ Bring everything together into a cohesive implementation spec.
 - [ ] w3-examples — Write 3 end-to-end examples (ad copy, product concept, influencer fit)
 
 ## Recently Analyzed
+- [x] w2-prompt-templates — Prompt templates were substantially complete from previous aspects (w2-tool-panel-create and w2-tool-panel-run). This pass added: (1) expected responses for Examples B and C in response-elicitation.md (Gen Z gamer → product_concept, professional woman → headline); (2) §6 Multilingual Response Handling in response-elicitation.md (text-embedding-3-small multilingual alignment, English anchor design decision, implementation guard against ASCII normalization); (3) §7 Break-Character Detection in response-elicitation.md (_is_break_character() heuristic with fixed markers + third-person self-reference detection, 30% failure threshold warning); (4) §10 Format Failure Handling and Retry Prompt in persona-generation.md (default no-retry policy rationale, full _build_persona_retry_prompt() template, optional _generate_single_persona_with_retry() implementation for future use); (5) Updated cross-references in stimulus-presentation.md to point at new sections. All changes append-only.
 - [x] w2-anchor-statements — All 10 evaluation dimensions fully specified (purchase_intent, brand_favorability, message_clarity, emotional_response, personal_relevance, uniqueness, trust_credibility, value_perception, share_worthiness, overall_appeal). 50 anchor statements with design rationale per statement. 5-point scale rationale (vs 7-point). 5 anchor quality principles (first-person voice, monotonicity, distinctiveness, genuine neutrality, dimensional purity). Dimension-by-stimulus recommendation matrix (10×10 table). Complete seeding script (`seed_anchor_embeddings.py`, ~130 lines, idempotent, batch-embeds NULLs, verifies post-seed). EvaluationDimension enum code reference. Written to `tool-spec/pipeline/anchor-statements.md` (new file).
 - [x] w1-tool-system — `@tool` decorator, `ToolDef`, `ToolError`, `ToolRegistry`, `ToolContext`, `DatabaseContext`, `UserContext`, XML output helpers, tool organization, catalog registration pattern. Key finding: need to add `Platform.SSR` to `core/platforms.py`. `anthropic_api_key` already in `ToolContext`.
 - [x] w1-reference-tools — Studied `discord/read.py` (HTTP tools, pagination, error translation, XML formatters), `bluedot/read.py` + `api.py` (DB split-file pattern, session management, not-found errors), `github/tools.py` (credential-gated, subprocess, timeout), `acp/tools.py` (JSON parsing, manual validation). Key finding: SSR must use split-file pattern (`tools.py` + `api.py` + `models.py`). DB check `if db_context is None` at top of every handler. Formatters are private `_fmt_*()` pure functions.

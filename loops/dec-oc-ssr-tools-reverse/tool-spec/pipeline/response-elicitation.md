@@ -222,6 +222,34 @@ Now, as yourself, describe your honest reaction to this product concept. Talk fr
 There are no right or wrong reactions. Be as honest and specific as you can. Speak naturally, in your own voice.
 ```
 
+**Expected response from a Gen Z gamer persona** (what Claude Haiku would produce for a persona like "Marco Reyes, 20, college student and competitive mobile gamer, Makati"):
+
+```
+Okay so — Gamer Fuel Pro. I've seen a lot of "gaming energy drinks" and 95%
+of them are just Monster or Red Bull rebranded with an RGB controller on the
+can. But 150mg caffeine plus beta-alanine? That's actually an ingredient stack
+I recognize from legit pre-workout supplements. Not just marketing fluff.
+
+Beta-alanine gives you that tingling focus, no crash — I know this because
+I've used pre-workout before a gym session. If it actually works the same
+for 4-hour gaming sessions, that's genuinely interesting to me. I lose
+focus hard around hour 3 of ranked and usually just slam another Cobra,
+which wrecks my sleep.
+
+The price is the thing. ₱75 for a 250ml can is not cheap. That's almost
+double what I pay for a Cobra or Sting. I'd need to be convinced it lasts
+longer and actually delivers before I switch. I'd probably buy one can to
+test it — Mountain Mango sounds kind of generic, Electric Citrus sounds
+better honestly, more of a gaming energy flavor.
+
+Do I trust the "no crash" claim? Skeptical. Every energy drink says that.
+I'd go to Reddit r/GamingEnergy (or the local Filipino gaming discord) to
+see if actual players rate it before I commit to buying a case. If the
+community is positive and I try one can and the focus is real, yeah, I'd
+probably make this my regular. I'm the guy in my squad who everyone hits
+up for gear recommendations so if this works I'd spread the word.
+```
+
 ---
 
 ### Example C: Advertising Headline, Professional Women Panel
@@ -250,6 +278,36 @@ Now, as yourself, describe your honest reaction to this advertising headline. Ta
 - Anything else you want to say about it
 
 There are no right or wrong reactions. Be as honest and specific as you can. Speak naturally, in your own voice.
+```
+
+**Expected response from a professional woman persona** (what Claude Haiku would produce for a persona like "Danielle Ortega, 34, senior marketing manager, Bonifacio Global City, BGC condo-dweller, fitness enthusiast"):
+
+```
+"Your Morning. Your Rules." — I actually stopped and read it again. That's
+a good sign for a headline.
+
+First instinct: I don't know what this is selling yet, and that's a little
+bit of a problem. Coffee? A scheduling app? Athletic wear? Meal delivery?
+The headline works for too many categories at once. Without the visual or
+the brand name, I'm reading it in a vacuum. That said, the ambiguity might
+be intentional — get the attention first, reveal the product second.
+
+What I do feel is a quiet resonance. My mornings are genuinely the one part
+of my day I control completely. I'm up at 5:45, gym by 6:15, back home
+by 7:30, coffee before the Slack messages start. That window is mine. So
+"Your Morning. Your Rules." lands emotionally for me — it names something
+I actually value.
+
+My eye-roll instinct is also present, I won't lie. There's a whole wave
+of "you do you" female empowerment marketing right now and it can feel
+hollow — like a brand discovered that autonomy language sells to women
+and is using it without meaning it. If this turns out to be for, I don't
+know, a yogurt brand or a banking app, the empowerment framing will feel
+grafted on. If it's for something that genuinely helps me own my morning —
+a premium coffee, a fitness product, a wellness tracker — then it earns it.
+
+I wouldn't act on this headline alone. I'd need the full ad to form an
+opinion. But as a headline, it passes the first test: I remembered it.
 ```
 
 ---
@@ -335,7 +393,149 @@ It is short enough to:
 
 ---
 
-## 6. Cross-References
+## 6. Multilingual Response Handling
+
+### The Challenge
+
+Personas for Filipino, Latin American, or other non-English-dominant markets are designed with `VOICE` fields that explicitly include code-switching or local expressions. When the system prompt instructs Maria Santos to "use code-switching or local expressions", Claude Haiku may produce responses mixing Tagalog and English — as shown in Example A above ("Eto na naman! Totoo 'to — parang nakaka-relate talaga ako").
+
+This raises the question: **does the SSR scoring methodology hold when responses contain non-English text?**
+
+### Answer: Yes — `text-embedding-3-small` Is Multilingual
+
+`text-embedding-3-small` is trained on multilingual data across 100+ languages and produces cross-lingually aligned embeddings. This means:
+
+1. **Semantic equivalence across languages**: The embedding for "I would definitely buy this" and "Bibilhin ko talaga ito" land in nearby vector positions in the 1536-dim embedding space.
+
+2. **Anchor statements don't need translation**: The anchor statements (all in English) can be compared to mixed-language responses via cosine similarity without accuracy loss. The model's training aligns English semantic content with Filipino, Spanish, French, Japanese, etc. content.
+
+3. **Code-switching is handled naturally**: A response mixing English and Tagalog in the same paragraph is not degraded — the model processes the full text holistically rather than per-language.
+
+### Empirical Caveat
+
+Cross-lingual embedding alignment is not perfect for all language pairs. For the primary target markets (Philippines, Singapore, Malaysia, Latin America), `text-embedding-3-small` performs well. For languages with lower representation in OpenAI's training data (e.g., Cebuano or Ilocano regional dialects), alignment quality may be lower.
+
+**Mitigation**: The system prompt instruction "speak the way {persona.name} would speak" combined with the research context paragraph tends to produce responses in the persona's dominant written language (English or English-Filipino code-switching), not purely in local dialects. This is realistic — most Filipino urban consumers engage with marketing research in English or Taglish, not pure Cebuano or Ilocano.
+
+### English-Language Anchor Statements — A Design Decision
+
+The anchor statements (see [anchor-statements.md](anchor-statements.md)) are written in English for all dimensions. This is deliberate:
+
+- Anchor embeddings serve as **fixed reference points** in the semantic space.
+- All persona responses are mapped to this fixed reference via cosine similarity.
+- If anchor statements were in different languages for different panels, comparisons across panels would be invalid.
+- English-language anchors provide a consistent reference frame for all panels regardless of consumer market.
+
+### Implementation Note
+
+No code changes are required to support multilingual panels. The embedding model handles it transparently. Do not filter or normalize non-English characters from response text before embedding:
+
+```python
+# CORRECT: Pass raw response text with any language content
+response_embeddings = await embed_texts(openai_client, [pr.response_text for pr in persona_responses])
+
+# WRONG: Do not pre-process or ASCII-ify text — this destroys semantic content
+response_embeddings = await embed_texts(openai_client, [pr.response_text.encode("ascii", "ignore").decode() for pr in persona_responses])
+```
+
+---
+
+## 7. Break-Character Detection
+
+### What It Means
+
+"Breaking character" occurs when Claude steps outside the persona role and responds as a language model rather than as the synthetic consumer. Examples:
+
+```
+# Break-character example 1: Meta-commentary
+"As an AI language model, I should note that I don't have personal experiences
+with products. However, as the persona Maria Santos, I would react to this
+advertisement by..."
+
+# Break-character example 2: Fourth-wall break
+"Maria Santos would likely respond positively to this advertisement given
+her profile values of family security and practicality..."
+```
+
+### Why It Happens
+
+Break-character responses occur when:
+1. The stimulus contains content that triggers Claude's safety filters (tobacco ads, alcohol ads targeting apparent minors, certain political messaging)
+2. The stimulus is ambiguous enough that Claude isn't sure how to proceed as the persona
+3. Claude's instruction-following for persona inhabitation is outweighed by a safety concern
+
+### Detection Heuristic
+
+`_elicit_persona_response()` applies a simple break-character check on the response text before storing it:
+
+```python
+# In apps/bot/src_v2/mcp/tools/ssr/api.py
+
+_BREAK_CHARACTER_MARKERS: list[str] = [
+    "as an ai",
+    "as a language model",
+    "i'm an ai",
+    "i am an ai",
+    "i don't have personal",
+    "i cannot experience",
+    "as the persona",
+    "the persona would",
+]
+
+
+def _is_break_character(response_text: str, persona_name: str) -> bool:
+    """Detect if a persona response has broken character.
+
+    Checks for markers indicating Claude has stepped outside the persona role.
+    This is a heuristic — not exhaustive. False negatives (subtle breaks) are
+    acceptable; false positives (flagging valid responses) are worse.
+
+    Args:
+        response_text: The full response text from Claude Haiku.
+        persona_name: The persona's full name (e.g., "Maria Santos").
+
+    Returns:
+        True if the response appears to break character; False otherwise.
+    """
+    lower = response_text.lower()
+
+    # Check fixed markers
+    for marker in _BREAK_CHARACTER_MARKERS:
+        if marker in lower:
+            return True
+
+    # Check third-person self-reference: "Maria Santos would..." or "Santos would..."
+    # Third-person self-reference indicates Claude is narrating the persona rather than being them
+    name_parts = persona_name.lower().split()
+    for part in name_parts:
+        if len(part) > 3 and f"{part} would" in lower:
+            return True
+
+    return False
+```
+
+### Handling Break-Character Responses
+
+When `_is_break_character()` returns `True`:
+
+1. The response is **discarded** — not stored in `ssr_response`, not scored
+2. The persona is counted as a **failure** in the run results (`personas_failed` counter)
+3. No retry is attempted — a second call with the same prompt would likely produce the same result if safety-triggered
+
+If more than 30% of personas break character for a given stimulus, `ssr_panel_run` returns a warning in the tool output:
+
+```xml
+<warning>
+{n} of {total} personas broke character when evaluating this stimulus.
+Results are based on {scored} personas and may not be representative.
+This can happen when the stimulus content triggers model safety filters.
+Consider revising the stimulus or using a different stimulus type.
+</warning>
+```
+
+---
+
+## 8. Cross-References
 
 - [stimulus-presentation.md](stimulus-presentation.md) — The system prompt that precedes this user prompt in the same Claude call
 - [panel-run.md](../tools/panel-run.md) — `_elicit_persona_response()`: assembles both prompts and calls Claude

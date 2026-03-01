@@ -323,10 +323,143 @@ See [supabase-schema.md](../data-model/supabase-schema.md) for the full `ssr_per
 
 ---
 
-## 10. Cross-References
+## 10. Format Failure Handling and Retry Prompt
+
+### What Is a Format Failure?
+
+A format failure occurs when `_parse_persona_response()` raises `ValueError` because a required labeled field is missing or malformed in Claude's response. The most common causes:
+
+1. Claude omitted one or more required labels (e.g., forgot `INCOME_BRACKET`)
+2. Claude restructured the output with narrative prose instead of labeled fields
+3. Claude added extra labels that displaced the expected ones
+4. A very short or truncated response (e.g., hit the 800-token max before completing all fields)
+
+### Default Behavior: No Retry
+
+By default, `_generate_single_persona()` does **not** retry on format failure. The exception propagates through `asyncio.gather(*tasks, return_exceptions=True)` and is counted against the failure count. If total failures exceed 50% of requested personas, `ssr_panel_create` raises `ToolError`.
+
+**Rationale**: The labeled format is explicit and simple. Format failures are rare (<5% of calls in testing). Adding retry logic adds complexity for marginal gain. The 50% threshold is generous enough that occasional failures don't block panel creation.
+
+### Optional Retry Prompt
+
+If retry logic is added in a future version, the retry prompt is a second call with the original inputs plus an explicit correction instruction. The **retry system prompt** is the same as the primary system prompt (§1 above). The **retry user prompt** is:
+
+```python
+def _build_persona_retry_prompt(
+    index: int,
+    total: int,
+    demographics: "PersonaDemographics",
+    psychographics: "PersonaPsychographics | None",
+    product_category: str,
+    custom_instructions: str | None,
+    failed_response: str,
+    missing_fields: list[str],
+) -> str:
+    """Build a retry user prompt for a persona that failed format validation.
+
+    Only used if retry logic is enabled (not enabled in v1).
+
+    Args:
+        failed_response: The raw text of the malformed response.
+        missing_fields: List of label names that were missing or unparseable,
+            e.g. ["INCOME_BRACKET", "EDUCATION"].
+    """
+    missing_str = ", ".join(missing_fields)
+
+    original_prompt = _build_persona_user_prompt(
+        index=index,
+        total=total,
+        demographics=demographics,
+        psychographics=psychographics,
+        product_category=product_category,
+        custom_instructions=custom_instructions,
+    )
+
+    return f"""{original_prompt}
+
+---
+
+CORRECTION REQUIRED:
+
+Your previous response was missing or had malformed values for these required fields: {missing_str}.
+
+Here was your previous response:
+
+{failed_response}
+
+Please regenerate the complete persona profile using the exact labeled format. Every field listed in your instructions must be present with the correct label. Do not skip fields. Do not use narrative prose in place of labeled fields."""
+```
+
+### Retry Implementation (Not in v1)
+
+If added, retry logic wraps `_generate_single_persona()` with one additional attempt:
+
+```python
+async def _generate_single_persona_with_retry(
+    client: "AsyncAnthropic",
+    index: int,
+    total: int,
+    demographics: "PersonaDemographics",
+    psychographics: "PersonaPsychographics | None",
+    product_category: str,
+    custom_instructions: str | None,
+    max_retries: int = 1,
+) -> "SsrPersonaSummary":
+    """Generate a persona, retrying once on format failure.
+
+    Not used in v1. Add this in place of _generate_single_persona()
+    in asyncio.gather() if format failure rates are unacceptably high in production.
+    """
+    last_exc: Exception | None = None
+
+    for attempt in range(max_retries + 1):
+        try:
+            if attempt == 0:
+                user_prompt = _build_persona_user_prompt(
+                    index=index, total=total, demographics=demographics,
+                    psychographics=psychographics, product_category=product_category,
+                    custom_instructions=custom_instructions,
+                )
+            else:
+                # On retry: use the correction prompt
+                user_prompt = _build_persona_retry_prompt(
+                    index=index, total=total, demographics=demographics,
+                    psychographics=psychographics, product_category=product_category,
+                    custom_instructions=custom_instructions,
+                    failed_response=failed_text,
+                    missing_fields=missing_fields,
+                )
+
+            response = await client.messages.create(
+                model="claude-haiku-4-5-20251001",
+                max_tokens=800,
+                system=_PERSONA_SYSTEM_PROMPT,
+                messages=[{"role": "user", "content": user_prompt}],
+            )
+            text = response.content[0].text
+            return _parse_persona_response(text, index)
+
+        except ValueError as exc:
+            last_exc = exc
+            failed_text = text if 'text' in dir() else ""
+            # Extract missing fields from ValueError message for retry prompt
+            # ValueError message format: "Missing required fields: NAME, AGE"
+            msg = str(exc)
+            if "Missing required fields:" in msg:
+                missing_fields = [f.strip() for f in msg.split(":", 1)[1].split(",")]
+            else:
+                missing_fields = ["UNKNOWN"]
+
+    raise last_exc
+```
+
+---
+
+## 11. Cross-References
 
 - [panel-create.md](../tools/panel-create.md) — `ssr_panel_create` tool definition, handler, and `_parse_persona_response()`
 - [stimulus-presentation.md](stimulus-presentation.md) — Next pipeline stage: presenting marketing assets to personas
+- [response-elicitation.md](response-elicitation.md) — Break-character detection (§7) for the elicitation stage
 - [supabase-schema.md](../data-model/supabase-schema.md) — `ssr_panel` and `ssr_persona` table definitions
 - [pydantic-models.md](../data-model/pydantic-models.md) — `PersonaDemographics`, `PersonaPsychographics`, `SsrPersonaSummary`
 - [embedding-options.md](../existing-patterns/embedding-options.md) — `text-embedding-3-small` for anchor scoring (used in `ssr_panel_run`, not here)
