@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 106
-- Analyzed: 92
-- Pending: 14
-- Convergence: 87%
+- Analyzed: 93
+- Pending: 13
+- Convergence: 88%
 
 ---
 
@@ -128,7 +128,7 @@
 
 ### Transfer Points
 - [x] Rail-to-road transfer mapping — every LRT/MRT/PNR station with connecting jeepney/bus routes
-- [ ] Terminal-to-terminal connections — how to transfer between major terminals
+- [x] Terminal-to-terminal connections — how to transfer between major terminals
 - [ ] Fare integration analysis — where transfers require separate fares vs integrated payment
 
 ---
