@@ -19,11 +19,11 @@ This feature modifies `ResultsHeader` to:
 2. Add a styled subtitle line: **"Date of Death: [formatted DOD]"** in the PH legal long-form date format (e.g., "January 15, 2025")
 
 **Why a PH estate lawyer needs this:**
-- Every legal document in PH estate practice begins with "In the Estate of [Full Name], deceased" — the results view should match this convention so that screen-captured or printed pages are court-ready context
+- Every legal document in PH estate practice begins with "In the Estate of Juan dela Cruz y Santos, deceased" (the decedent's full name as entered) — the results view should match this convention so that screen-captured or printed pages are court-ready context
 - When a lawyer has multiple tabs open or multiple printed reports on their desk, the decedent name in the header immediately identifies which estate each report belongs to
 - The date of death is a legally significant fact that determines the applicable succession law regime, the estate tax filing deadline (1 year from DOD, per BIR Revenue Regulations), and which assets form part of the gross estate — displaying it prominently anchors the report to the correct legal period
 - Estate documents filed with the BIR and courts always carry the DOD prominently; the platform's on-screen view should match the paper documents it will eventually generate
-- The `NarrativePanel` already shows "Philippine Inheritance Distribution — [Name] ([DOD])" in its copy-all header; the main results header should be at least as informative
+- The `NarrativePanel` already shows "Philippine Inheritance Distribution — Juan dela Cruz (January 15, 2025)" in its copy-all header; the main results header should be at least as informative
 
 ---
 
@@ -299,10 +299,10 @@ No changes to `NarrativePanel`.
 ### 5.3 With `spec-pdf-export`
 
 The PDF export spec defines a case summary section at the top of the generated document with:
-- Document title: "Estate of [decedent.name]"
+- Document title: "Estate of Juan dela Cruz" (rendered from `decedent.name`)
 - Date of Death label + formatted date
 
-The `formatDateOfDeath()` function defined here (in `ResultsHeader.tsx`) is **not imported** by the PDF renderer (which uses `@react-pdf/renderer` in its own component tree). The PDF renderer implements its own equivalent formatting. Both the PDF title and the on-screen `ResultsHeader` title use the same "Estate of [Name]" pattern, establishing a consistent report identity across all output formats.
+The `formatDateOfDeath()` function defined here (in `ResultsHeader.tsx`) is **not imported** by the PDF renderer (which uses `@react-pdf/renderer` in its own component tree). The PDF renderer implements its own equivalent formatting. Both the PDF title and the on-screen `ResultsHeader` title use the same "Estate of Juan dela Cruz" pattern (decedent name from input), establishing a consistent report identity across all output formats.
 
 ### 5.4 With `spec-print-layout`
 
@@ -325,7 +325,7 @@ When a saved case is loaded from Supabase, the app transitions to `{ phase: 'res
 | `successionType === 'IntestateByPreterition'` | The preterition Alert renders below the metadata row, unchanged. The decedent name and DOD appear above it. |
 | `successionType === 'Mixed'` | The Mixed succession Info alert renders below the metadata row, unchanged. |
 | Very short decedent name (e.g., "Bong Go") | Renders as "Estate of Bong Go" — no special handling. |
-| Decedent name identical to an heir name | No conflict — the header title "Estate of [Name]" refers to the decedent; heir names appear in the distribution table. |
+| Decedent name identical to an heir name | No conflict — the header title "Estate of Juan dela Cruz" refers to the decedent; heir names appear in the distribution table. |
 
 ---
 
@@ -385,5 +385,5 @@ When a saved case is loaded from Supabase, the app transitions to `{ phase: 'res
 - [ ] A unit test verifies that `formatDateOfDeath("2025-01-05")` returns `"January 5, 2025"` (no leading zero on day)
 
 ### AC-8: Professional Report Identity
-- [ ] On-screen results heading matches the PDF report title convention "Estate of [Name]" (as specified in spec-pdf-export §3.1)
+- [ ] On-screen results heading matches the PDF report title convention "Estate of Juan dela Cruz" (i.e., decedent name from input, as specified in spec-pdf-export §3.1)
 - [ ] The date format used on-screen ("January 15, 2025") matches the date format used in Philippine court documents and BIR filings (written month, not numeric)

@@ -332,8 +332,8 @@ These emerged from reviewing the codebase and are not in the initial Wave 2 list
 
 1. **`spec-share-breakdown-panel`** — Render the three-way split (`from_legitime`, `from_free_portion`, `from_intestate`) and `legitime_fraction` for each heir in an expandable row. Critical for legal audit trail. *Sourced from: InheritanceShare fields analysis.*
 
-2. **`spec-decedent-header-in-results`** — ResultsHeader currently shows scenario code and total estate but NOT decedent name or date of death. For professional use, every report page should show "Estate of [Name] | Date of Death: [DOD]". *Sourced from: ResultsHeader.tsx gap.*
+2. **`spec-decedent-header-in-results`** — ResultsHeader currently shows scenario code and total estate but NOT decedent name or date of death. For professional use, every report page should show "Estate of Juan dela Cruz | Date of Death: January 15, 2025" (decedent name and DOD from input). *Sourced from: ResultsHeader.tsx gap.*
 
 3. **`spec-represents-display`** — When `inherits_by === 'Representation'`, the `represents` field (heir ID) is never displayed. A "representing [deceased parent name]" label would clarify the distribution for clients. *Sourced from: HeirTable conditional rendering.*
 
-4. **`spec-donation-list-in-results`** — The donations list in EngineInput is not shown in results view. For client-facing reports, showing "Advances on inheritance: [amount] to [heir]" is important for transparency. *Sourced from: Donations gap.*
+4. **`spec-donation-list-in-results`** — The donations list in EngineInput is not shown in results view. For client-facing reports, showing "Advances on inheritance: ₱500,000.00 to Pedro dela Cruz" (donation amount and heir name from engine input) is important for transparency. *Sourced from: Donations gap.*

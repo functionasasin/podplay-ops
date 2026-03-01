@@ -265,7 +265,13 @@ III. PER-HEIR NARRATIVES
 
   Pedro dela Cruz — Legitimate Child
   ────────────────────────────────────
-  [narrative text from engine]
+  Pedro dela Cruz is entitled to one-fourth (1/4) of the net distributable
+  estate in his capacity as a legitimate child of Juan dela Cruz. Under
+  Article 887 of the New Civil Code, legitimate children are compulsory
+  heirs. Pursuant to Article 888 NCC, legitimate children are entitled
+  collectively to one-half of the estate as legitime, divided equally
+  among them. With three legitimate children and one surviving spouse,
+  Pedro's individual legitime share equals that of the surviving spouse.
 
   Legal Basis: Art. 887, NCC; Art. 888, NCC; Art. 889, NCC
 
@@ -281,21 +287,29 @@ IV. COMPUTATION LOG
   Step 2: Classify heirs and apply filiation          4 heirs
   Step 3: Apply preterition check                     None
   Step 4: Compute legitime pool                       ₱6,250,000.00
-  ...
+  Step 5: Divide legitime among 3 legitimate children ₱3,125,000.00 each
+  Step 6: Compute spouse legitime (Art. 892)          ₱3,125,000.00
+  Step 7: Compute free portion                        ₱6,250,000.00
 
 ─────────────────────────────────────────────────────────────────────
 V. WARNINGS & MANUAL REVIEW FLAGS
 ─────────────────────────────────────────────────────────────────────
-  [Only rendered if warnings.length > 0]
-  ⚠ WARNING: [flag title]
-    [flag description]
+  Rendered only when engine.warnings.length > 0. Each warning displays
+  with an amber alert icon. Example output:
+  ⚠ WARNING: Preterition detected — review heir classification
+    One or more compulsory heirs were omitted from the will. Under Art.
+    854 NCC, preterition annuls the institution of heirs. Manual legal
+    review required before distributing estate assets.
 
 ─────────────────────────────────────────────────────────────────────
 VI. ATTESTATION & DISCLAIMER
 ─────────────────────────────────────────────────────────────────────
-  [Standard disclaimer text]
-  Prepared by: [firm name / "—" if no firm profile]
-  Counsel:     [counsel_name + credentials / "—" if no firm profile]
+  This report was generated using the Philippine Inheritance Computation
+  Engine based on the New Civil Code (R.A. 386) and TRAIN Law (R.A.
+  10963). This is a computation aid only and does not constitute legal
+  advice. Verify all figures with a licensed Philippine attorney.
+  Prepared by: Santos & Reyes Law Offices (omitted if no firm profile)
+  Counsel:     Atty. Maria G. Santos | IBP Roll No. 123456 | PTR No. 7654321
 ```
 
 ### 3.4 Component Tree (`src/pdf/`)

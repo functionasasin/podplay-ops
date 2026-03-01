@@ -808,7 +808,22 @@ Real Property Documents                            1 of 3
      Note: Obtained from RD-QC on 10 Feb 2026
   ☐  Latest Tax Declaration for Lot 45-A
   ☐  BIR Zonal Valuation for Quezon City (RDO 38)
-...
+
+BIR / Tax Documents                                0 of 5
+  ☐  BIR Form 1801 (Estate Tax Return)
+  ☐  TIN of the Estate (BIR-issued)
+  ☐  Certified True Copy of the Last Will and Testament (if testate)
+  ☐  Proof of payment of estate tax (BIR official receipt)
+  ☐  eCAR (Electronic Certificate Authorizing Registration)
+
+Other Documents                                    5 of 7
+  ☑  Extrajudicial Settlement of Estate (draft)
+  ☑  Affidavit of Publication (from newspaper)
+  ☑  Notarized Deed of Extrajudicial Settlement
+  ☑  Special Power of Attorney (for absentee heir)
+  ☑  Deed of Absolute Sale (for sold property)
+  ☐  Affidavit of No Creditors
+  ☐  Surety bond (if estate includes personal property > ₱5,000)
 ```
 
 ---

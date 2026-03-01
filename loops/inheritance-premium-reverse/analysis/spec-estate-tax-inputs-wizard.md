@@ -500,10 +500,10 @@ Pre-populates from inheritance wizard. User can override any field.
 | Marital Status | radio (5 options) | Yes | Pre-populated from `inheritanceInput.decedent.is_married` |
 | Property Regime | radio (3 options) | When married | Default ACP if marriage ≥ 1988-08-03; CPG if earlier |
 | Worldwide Gross Estate | number (₱) | When NRA + ELIT | In centavos; formatted as ₱ with comma separators |
-| Worldwide ELIT — Claims Against Estate | number (₱) | When NRA + ELIT | |
-| Worldwide ELIT — Claims vs Insolvent | number (₱) | When NRA + ELIT | |
-| Worldwide ELIT — Unpaid Mortgages | number (₱) | When NRA + ELIT | |
-| Worldwide ELIT — Casualty Losses | number (₱) | When NRA + ELIT | |
+| Worldwide ELIT — Claims Against Estate | number (₱) | When NRA + ELIT | Claims by creditors against the worldwide estate; in centavos |
+| Worldwide ELIT — Claims vs Insolvent | number (₱) | When NRA + ELIT | Amount owed by insolvent debtors of the decedent; in centavos |
+| Worldwide ELIT — Unpaid Mortgages | number (₱) | When NRA + ELIT | Outstanding mortgage balances on worldwide property at DOD |
+| Worldwide ELIT — Casualty Losses | number (₱) | When NRA + ELIT | Losses from fire, theft, or other casualty not covered by insurance |
 | Worldwide ELIT — Funeral Expenses | number (₱) | When NRA + PRE_TRAIN | Visible only if NRA and DOD < 2018-01-01 |
 | Worldwide ELIT — Judicial/Admin | number (₱) | When NRA + PRE_TRAIN | Visible only if NRA and DOD < 2018-01-01 |
 
@@ -691,7 +691,7 @@ Two sub-sections: Schedule 2 (financial) and Schedule 2A (tangible personal prop
 | Description | text | Yes | For vehicles: make, model, year, plate number |
 | Quantity | integer | Yes | Default 1 |
 | FMV (₱) | number | Yes | Total FMV for all units of this row |
-| Ownership | radio (2) | Yes | |
+| Ownership | radio (2) | Yes | Conjugal (Column B) or Exclusive (Column C); Conjugal hidden if SEPARATION regime |
 
 ### 3.6 Tab 5: Other Assets (Schedules 3, 4, and Sec. 87 Exempt)
 
@@ -789,22 +789,22 @@ Three sub-sections: taxable transfers, business interests, and Sec. 87 exempt as
 | FMV at Death (₱) | number | Yes | centavos |
 | Consideration Received (₱) | number | Yes | Default 0 |
 | Taxable Amount | computed display | — | `max(0, fmvAtDeath − considerationReceived)` shown live |
-| Ownership | radio (2) | Yes | |
+| Ownership | radio (2) | Yes | Conjugal or Exclusive; only exclusive transfers are includible under Sec. 85(B) NIRC |
 
 **Business interest fields (per row):**
 
 | Field | Type | Required | Notes |
 |-------|------|----------|-------|
-| Business Name | text | Yes | |
+| Business Name | text | Yes | Trade name or corporate name as registered with SEC/DTI |
 | Nature | text | Yes | Single proprietorship, partnership shares, corporate shares |
 | Net Equity (₱) | number | Yes | Engine floors at 0 if negative |
-| Ownership | radio (2) | Yes | |
+| Ownership | radio (2) | Yes | Conjugal or Exclusive; conjugal hidden if SEPARATION regime |
 
 **Sec. 87 exempt asset fields (per row):**
 
 | Field | Type | Required | Notes |
 |-------|------|----------|-------|
-| Description | text | Yes | |
+| Description | text | Yes | Asset name or description (e.g., "GSIS life insurance policy", "SSS benefit receivable") |
 | Exemption Type | select (4) | Yes | Maps to `Sec87ExemptAsset.exemptionType` |
 | FMV (₱) | number | No | For audit trail only; shown with "(not counted)" label |
 
@@ -949,7 +949,7 @@ Eight sub-sections. Sections 5G (funeral) and 5H (judicial/admin) are conditiona
 | Description | text | Yes | Name of insolvent debtor |
 | Amount in Gross Estate (₱) | number | Yes | Must match an asset row in Tabs 3 or 4 |
 | Uncollectible Amount (₱) | number | Yes | Deductible portion; ≤ amountInGrossEstate |
-| Ownership | radio (2) | Yes | |
+| Ownership | radio (2) | Yes | Conjugal or Exclusive; conjugal hidden if SEPARATION regime |
 
 **Section 5C — Mortgages, per row:**
 
@@ -965,18 +965,18 @@ Eight sub-sections. Sections 5G (funeral) and 5H (judicial/admin) are conditiona
 | Field | Type | Required | Notes |
 |-------|------|----------|-------|
 | Description | text | Yes | Tax type, period |
-| Amount (₱) | number | Yes | |
-| Ownership | radio (2) | Yes | |
+| Amount (₱) | number | Yes | Taxes accrued and unpaid at DOD (e.g., income tax for prior year) |
+| Ownership | radio (2) | Yes | Conjugal or Exclusive; conjugal hidden if SEPARATION regime |
 
 **Section 5D — Casualty Losses, per row:**
 
 | Field | Type | Required | Notes |
 |-------|------|----------|-------|
 | Description | text | Yes | Type of loss, cause |
-| Gross Loss (₱) | number | Yes | |
+| Gross Loss (₱) | number | Yes | Fair market value of loss before insurance recovery |
 | Insurance Recovery (₱) | number | Yes | Default 0 |
 | Net Loss | computed display | — | `max(0, grossLoss − insuranceRecovery)` shown live |
-| Ownership | radio (2) | Yes | |
+| Ownership | radio (2) | Yes | Conjugal or Exclusive; conjugal hidden if SEPARATION regime |
 
 **Section 5E — Vanishing Deduction, per row:**
 
@@ -986,11 +986,11 @@ Eight sub-sections. Sections 5G (funeral) and 5H (judicial/admin) are conditiona
 | Prior Transfer Type | radio (2) | Yes | Inheritance / Gift |
 | Date of Prior Transfer | date | Yes | Must be ≤ DOD; years elapsed computed live |
 | Prior FMV (₱) | number | Yes | FMV at time of prior inheritance/gift |
-| FMV at Decedent's DOD (₱) | number | Yes | |
+| FMV at Decedent's DOD (₱) | number | Yes | Current FMV used to cap the deductible amount at the lower of prior or current FMV |
 | Mortgage on Property (₱) | number | Yes | Default 0; should also appear in 5C |
 | Prior Tax Paid | boolean | Yes | Warning shown if false: "Vanishing deduction requires prior estate/donor's tax was paid" |
 | Philippine Situs | boolean | When NRA | Hidden for non-NRA decedents |
-| Ownership | radio (2) | Yes | |
+| Ownership | radio (2) | Yes | Conjugal or Exclusive; conjugal hidden if SEPARATION regime |
 | Computed deduction | display | — | `min(priorFMV, currentFMV) × VD_PCT[years]` shown live; years table: 1→100%, 2→80%, 3→60%, 4→40%, 5→20%, >5→0% |
 
 **Section 5F — Public Use Transfers, per row:**
@@ -999,8 +999,8 @@ Eight sub-sections. Sections 5G (funeral) and 5H (judicial/admin) are conditiona
 |-------|------|----------|-------|
 | Description | text | Yes | Nature of bequest |
 | Recipient | text | Yes | PH government entity name |
-| Amount (₱) | number | Yes | |
-| Ownership | radio (2) | Yes | |
+| Amount (₱) | number | Yes | Amount bequeathed to the government entity; must be ≤ net estate |
+| Ownership | radio (2) | Yes | Conjugal or Exclusive; conjugal hidden if SEPARATION regime |
 
 **Section 5G — Funeral Expenses (PRE_TRAIN only):**
 
@@ -1012,9 +1012,9 @@ Eight sub-sections. Sections 5G (funeral) and 5H (judicial/admin) are conditiona
 
 | Field | Type | Required | Notes |
 |-------|------|----------|-------|
-| Description | text | Yes | |
-| Amount (₱) | number | Yes | |
-| Ownership | radio (2) | Yes | |
+| Description | text | Yes | Nature of expense (e.g., "Attorney's fees for estate settlement", "Court filing fees") |
+| Amount (₱) | number | Yes | Actual amount paid or payable; must be supported by receipts |
+| Ownership | radio (2) | Yes | Conjugal or Exclusive; conjugal hidden if SEPARATION regime |
 
 ### 3.8 Tab 7: Special Deductions (Schedule 6)
 
@@ -1119,7 +1119,7 @@ Eight sub-sections. Sections 5G (funeral) and 5H (judicial/admin) are conditiona
 
 | Field | Type | Required | Notes |
 |-------|------|----------|-------|
-| Employer Name | text | Yes | |
+| Employer Name | text | Yes | Name of the employer as it appears on the SSS/GSIS or private retirement plan document |
 | Benefit Amount (₱) | number | Yes | Must also appear in Schedule 2 |
 
 **Foreign Tax Credit fields (per row):**

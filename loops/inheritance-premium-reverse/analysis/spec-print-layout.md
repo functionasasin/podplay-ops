@@ -534,8 +534,11 @@ export function PrintHeader({ input, firmProfile, generatedAt }: PrintHeaderProp
 +         generatedAt={`${generatedAt} (PHT)`}
 +       />
 
-        <ResultsHeader ... />
-        ...
+        <ResultsHeader input={input} output={output} />
+        <ShareBreakdownPanel output={output} />
+        <NarrativesSection output={output} />
+        <ComputationLogSection output={output} />
+        <WarningsSection output={output} />
       </div>
     );
   }

@@ -167,15 +167,15 @@ const PageFooter = ({ generatedAt }: FooterProps) => (
 ```
 ┌─────────────────────────────────────────────────────┐
 │  FIXED HEADER (every page)                          │
-│  [Firm Name]                    [Estate of: Name]   │
+│  Santos & Reyes Law Offices     Estate of: Juan dela Cruz│
 │  ─────────────────────────────────────────────────  │
 ├─────────────────────────────────────────────────────┤
 │  PAGE 1:                                            │
 │  SECTION 1: FIRM HEADER (first page only)           │
-│    [Logo]  Firm Name                                │
-│            Address | Phone | Email                  │
-│            Prepared by: [counsel_name]              │
-│            Date: [generation date]                  │
+│    [logo] Santos & Reyes Law Offices                │
+│           4F Salcedo Tower, Makati City | +63-2-8888-9999│
+│           Prepared by: Atty. Maria G. Santos        │
+│           Date: March 1, 2026                       │
 │  ─────────────────────────────────────────────────  │
 │  SECTION 2: CASE SUMMARY                            │
 │    Decedent: Juan dela Cruz                         │
@@ -481,7 +481,8 @@ determination by a licensed Philippine attorney. All figures are in
 Philippine Pesos (₱).
 
 This report was prepared using data provided by the user and has not been
-independently verified. [Firm Name] assumes no liability for any reliance
+independently verified. Santos & Reyes Law Offices (or the firm name from
+the active organization profile) assumes no liability for any reliance
 on this document without independent legal review.
 ```
 

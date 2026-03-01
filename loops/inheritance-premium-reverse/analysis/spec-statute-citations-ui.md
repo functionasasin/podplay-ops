@@ -523,7 +523,7 @@ The PDF export (`spec-pdf-export`) independently renders article descriptions in
 - [ ] Clicking the chevron expands a citation panel below that row
 - [ ] Clicking again collapses the panel
 - [ ] Multiple rows can be expanded simultaneously
-- [ ] Citation panel header reads "Statutory Basis — [heir name]"
+- [ ] Citation panel header reads "Statutory Basis — Maria dela Cruz" (i.e., the expanded heir's name interpolated into the header)
 - [ ] Each article in `legal_basis[]` is listed with: full citation name + description
 - [ ] Articles not in lookup show "See Philippine Civil Code for full text."
 

@@ -232,7 +232,7 @@ One PDF document with two major sections. The inheritance section is printed fir
 
 ```
 ┌────────────────────────────────────────────────────────┐
-│ [FIRM HEADER — logo, firm name, address]               │
+│ Santos & Reyes Law Offices | 4F Salcedo Tower, Makati City│
 │ ESTATE SETTLEMENT REPORT                               │
 │ Decedent: Juan Dela Cruz | Date of Death: 2024-03-15  │
 │ Prepared by: Atty. Maria Santos | Date: 2026-02-28    │

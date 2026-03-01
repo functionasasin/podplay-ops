@@ -136,18 +136,20 @@ In the distribution table, citations appear in the `Legal Basis` column:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│          [LAW FIRM NAME]                                    │
+│          SANTOS & REYES LAW OFFICES                         │
 │          Attorneys and Counselors at Law                    │
-│          [Street Address], [City], Philippines [ZIP]        │
-│          Tel: +63-[number] | Email: [email]                 │
-│          [Website if any]                                   │
-│                                              [Date]         │
+│          4F Salcedo Tower, Legaspi Village, Makati City 1229│
+│          Tel: +63-2-8888-9999 | Email: info@santosreyes.law │
+│          www.santosreyes.law                                │
+│                                        March 1, 2026        │
 ├─────────────────────────────────────────────────────────────┤
-│ To:    [Recipient Name / "TO WHOM IT MAY CONCERN"]          │
-│ Re:    [Matter Reference / Estate of: Decedent Name]        │
+│ To:    TO WHOM IT MAY CONCERN                               │
+│ Re:    Estate of: Juan dela Cruz y Santos                   │
 │ Doc:   Inheritance Distribution Analysis Report             │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+Note: The letterhead is populated from the firm profile stored in the `organizations` table. If no firm profile is configured, the platform omits the letterhead block entirely and uses only the report title.
 
 ### 4.2 Key Letterhead Elements
 
@@ -159,7 +161,7 @@ In the distribution table, citations appear in the `Legal Basis` column:
 | Contact | Phone, email (website optional) |
 | Roll number | IBP Roll No. of signing attorney (required on all legal documents) |
 | PTR number | Professional Tax Receipt number |
-| MCLE compliance | MCLE Compliance No. [number] |
+| MCLE compliance | MCLE Compliance No. in format VII-0012345 (series + sequence) |
 | Date | Right-aligned on same line or below contact info |
 
 ### 4.3 Attorney Signature Block
@@ -167,10 +169,10 @@ In the distribution table, citations appear in the `Legal Basis` column:
 ```
                               Very truly yours,
 
-                              ATTY. [FULL NAME]
-                              IBP Roll No. [number]
-                              PTR No. [number], [date issued], [city]
-                              MCLE Compliance No. [number]
+                              ATTY. MARIA G. SANTOS
+                              IBP Roll No. 123456
+                              PTR No. 7654321, January 5, 2026, Makati City
+                              MCLE Compliance No. VII-0012345
 ```
 
 **Platform implication:** The `spec-firm-branding` feature must capture:
@@ -234,22 +236,22 @@ Based on the above research, the recommended structure for the platform's primar
 ```
 INHERITANCE DISTRIBUTION ANALYSIS REPORT
 
-[FIRM LETTERHEAD]
-Date: [generated date]
+SANTOS & REYES LAW OFFICES | 4F Salcedo Tower, Legaspi Village, Makati City 1229
+Date: March 1, 2026
 
-ESTATE OF: [DECEDENT NAME]
-Date of Death: [DOD]
-Place of Death: [Place]
+ESTATE OF: JUAN DELA CRUZ Y SANTOS
+Date of Death: January 15, 2025
+Place of Death: Quezon City, Metro Manila
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 I. EXECUTIVE SUMMARY
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  Succession Type:  [Testate / Intestate]
-  Scenario Code:    [e.g., T-01]
-  Estate Regime:    [Absolute Community / Conjugal Partnership / Exclusive]
-  Total Estate:     ₱[amount]
-  Net Distributable: ₱[amount]
+  Succession Type:  Testate
+  Scenario Code:    T-03 (Spouse + Legitimate Children, With Will)
+  Estate Regime:    Absolute Community of Property
+  Total Estate:     ₱12,500,000.00
+  Net Distributable: ₱12,125,000.00
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 II. DISTRIBUTION TABLE
@@ -269,23 +271,33 @@ II. DISTRIBUTION TABLE
 III. PER-HEIR NARRATIVES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  [Heir name] is entitled to ₱[amount] representing [fraction] of
-  the net distributable estate pursuant to Article [n], New Civil
-  Code. [Expanded engine narrative text]
+  Juan dela Cruz is entitled to ₱3,125,000.00 representing one-fourth (1/4) of
+  the net distributable estate pursuant to Article 887, New Civil
+  Code. As a legitimate child, he is a compulsory heir entitled to the
+  legitime of one-half of the estate divided equally among all legitimate
+  children. In the presence of one surviving spouse and three other legitimate
+  children, his individual share is reduced to one-quarter of the net estate.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 IV. COMPUTATION LOG
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  Step 1: [pipeline step description]
-  Step 2: [pipeline step description]
-  ...
+  Step 1: Identify succession type                    Testate
+  Step 2: Classify heirs and apply filiation          4 compulsory heirs
+  Step 3: Apply preterition check                     None — all heirs named
+  Step 4: Compute legitime pool (Art. 888)            ₱6,250,000.00 (1/2 estate)
+  Step 5: Divide legitime among legitimate children   ₱3,125,000.00 each
+  Step 6: Compute spouse legitime (Art. 892)          ₱3,125,000.00 (= 1 child share)
+  Step 7: Compute free portion                        ₱6,250,000.00
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 V. WARNINGS & MANUAL REVIEW FLAGS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  [List of engine-generated warnings, if any]
+  Rendered only when engine returns warnings. Each warning displays:
+  ⚠ WARNING: Preterition detected — review heir list
+    One or more compulsory heirs not mentioned in the will. Preterition
+    annuls the institution of heirs (Art. 854, NCC). Recommend legal review.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 VI. ATTESTATION
@@ -296,20 +308,20 @@ VI. ATTESTATION
   (Republic Act No. 386) and the TRAIN Law (Republic Act No. 10963).
   This is a computation aid only and does not constitute legal advice.
 
-  Prepared by: [Firm Name]
-  Counsel:     Atty. [Name] | IBP Roll No. [n] | PTR No. [n]
+  Prepared by: Santos & Reyes Law Offices (or "—" if no firm profile configured)
+  Counsel:     Atty. Maria G. Santos | IBP Roll No. 123456 | PTR No. 7654321
 
-  Generated: [datetime] | Page X of Y
+  Generated: March 1, 2026, 9:00 AM (PHT) | Page X of Y
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ANNEX A: ESTATE TAX COMPUTATION SUMMARY (if computed)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  Gross Estate:          ₱[amount]
-  Total Deductions:      (₱[amount])
-  Net Taxable Estate:    ₱[amount]
-  Estate Tax Due (6%):   ₱[amount]
-  Filing Deadline:       [1 year from DOD]
+  Gross Estate:          ₱12,500,000.00
+  Total Deductions:      (₱375,000.00)
+  Net Taxable Estate:    ₱12,125,000.00
+  Estate Tax Due (6%):   ₱727,500.00
+  Filing Deadline:       Within 1 year from date of death (Art. 90, NIRC)
 ```
 
 ---

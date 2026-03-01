@@ -90,7 +90,7 @@ export interface IntakeFormData {
 
   // ── Section C: Settlement Track ─────────────────────────────────
   settlement_track: 'extrajudicial' | 'judicial' | null
-  // null = not yet determined (lawyer completes after intake)
+  // null = unselected; lawyer chooses 'extrajudicial' or 'judicial' after reviewing estate facts
 
   // ── Section D: Family Composition ───────────────────────────────
   family: IntakeFamily
