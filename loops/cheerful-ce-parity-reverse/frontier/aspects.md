@@ -3,9 +3,9 @@
 ## Statistics
 
 - **Total Aspects**: 36
-- **Analyzed**: 6
-- **Pending**: 30
-- **Convergence**: 17%
+- **Analyzed**: 7
+- **Pending**: 29
+- **Convergence**: 19%
 
 ---
 
@@ -19,7 +19,7 @@ Read existing cheerful-reverse specs + verify against source code. Produce raw c
 - [x] **w1-integrations** — Extract all integration capabilities: 8 sub-domains identified (Gmail OAuth, SMTP accounts, Google Sheets, Shopify/GoAffPro, Instantly/Composio, Slack operations, YouTube lookalike, Brand lookup). 23 total endpoints across webapp and backend. 0 existing CE tools. Key discoveries: Gmail OAuth is webapp-only (no backend endpoints), no Gmail disconnect exists, Instantly uses Composio broker, SMTP has full CRUD + bulk import with IMAP verification, Shopify uses GoAffPro proxy, Slack is primarily order approval webhook. Sources verified: `google_sheets.py`, `shopify.py`, `slack.py`, `instantly.py`, `smtp_account.py`, `user.py`, `youtube.py`, `brand.py`, webapp OAuth routes
 - [x] **w1-users-team** — Extract all user/team capabilities: 31 endpoints across 6 sub-domains (user settings, connected accounts, email signatures, team management, campaign assignments, onboarding). 0 existing CE tools — full gap. Key discoveries: email signatures have 6 endpoints with user-level vs campaign-specific model, SMTP has full CRUD + bulk import, onboarding is webapp-only (no backend endpoints), PUT /user/settings is a no-op placeholder, campaign assignment cascades on member removal. Sources verified: `user.py`, `team.py`, `email_signature.py`, `smtp_account.py`, webapp onboarding routes
 - [x] **w1-analytics** — Extract all analytics/dashboard capabilities: campaign metrics (creator count, response rate, emails sent, opt-in rate), active campaigns table, follow-up statistics, gifting/paid pipeline, per-campaign stats. Sources: `spec-webapp.md` (Dashboard), backend routes `analytics.py`, `dashboard.py`
-- [ ] **w1-search** — Extract all search/discovery capabilities: AI creator search (Apify/YouTube), semantic email search (pgvector), full-text email search, creator profile lookup. Sources: `spec-backend-api.md`, existing CE tools, backend routes `creators.py`, `search.py`
+- [x] **w1-search** — Extract all search/discovery capabilities: 8 tools total — 3 existing CE tools (search_emails, find_similar_emails, search_campaign_creators) + 5 new (IC keyword discovery, IC similar discovery, IC enrich, Apify profile, YouTube lookalike). CRITICAL: all 5 new tools need new /api/service/ routes — they currently use JWT auth only. Security gaps documented: several service routes ignore user_id entirely (only campaigns endpoint validates it); creators/search searches ALL campaigns globally. Sources: service.py, creator_search.py, youtube.py, influencer_club.py models verified.
 - [ ] **w1-workflows** — Extract all workflow/automation capabilities: workflow CRUD per campaign, workflow execution history, Temporal workflow triggering, campaign lifecycle state machine, follow-up scheduling. Sources: `spec-workflows.md`, `spec-backend-api.md` (Domain 3-4), backend routes `workflows.py`
 
 ## Wave 2: Tool Design (8 aspects)
