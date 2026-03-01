@@ -6,7 +6,7 @@ Implementation-ready specification for adding SSR (Semantic Similarity Rating) c
 
 Wave 1: Audit & Map — 5/5 complete
 Wave 2: Design — 7/7 complete
-Wave 3: Synthesis & Integration — 2/4 complete
+Wave 3: Synthesis & Integration — 3/4 complete
 
 ---
 
@@ -71,7 +71,7 @@ How SSR tools fit into Daimon.
 |------|--------|----------|
 | [catalog-registration.md](integration/catalog-registration.md) | ✅ Complete | 6 file changes with exact diffs: `platforms.py` (+`SSR`), `config.py` (`OpenAISettings` + `AppSettings.openai`), `context.py` (`ToolContext.openai_api_key`), `main.py` (constructor kwarg), `ssr/__init__.py` (new, re-exports 5 ToolDefs), `catalog.py` (SSR import block + 5 entries in `ALL_TOOLS`). Env var setup (`.env` + Fly.io). 4 verification scripts. Full file listing for 10 new files needed (4 in `ssr/`, 6 in `db/repositories/`). |
 | [workflow-design.md](integration/workflow-design.md) | ✅ Complete | No dedicated workflow type — SSR joins `ALL_TOOLS` as standard tools. Trigger: @mention or DM. No channel/user scoping. 13 keyword additions to `KEYWORD_PLATFORM_MAP` in `selection.py`. `<consumer-panel>` section added to `base.txt` (chaining rules, defaults, result presentation). `Platform.SSR` context string for `get_platform_context()` in `meta_tools.py`. 4 user flow chains (single-turn, reuse, comparison, explicit management). |
-| [discord-ux.md](integration/discord-ux.md) | 🔶 Partial | Discord UX — panel results rendering (message sizing, thread delivery thresholds, comparison format, character budget); full interactive flow pending w3-discord-ux |
+| [discord-ux.md](integration/discord-ux.md) | ✅ Complete | Discord UX — message sizing + thread delivery thresholds + comparison format + character budget (from w2); full progress indicator spec (pre/inter/post-tool text per operation, timing table, streaming rationale); complete error rendering for all 5 tools (24 error cases); panel list rendering (zero/one/many/persona-list/run-history formats); panel delete rendering + safety narration; thread creation decision algorithm (Option A: in-channel multi-message splitting); Unicode distribution bar algorithm (Python code + 6 examples); Discord markdown limitations; partial panel creation rendering |
 
 ---
 
