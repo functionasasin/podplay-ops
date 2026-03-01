@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 36
-- Analyzed: 27
-- Pending: 9
-- Convergence: 75%
+- Analyzed: 28
+- Pending: 8
+- Convergence: 78%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -40,7 +40,7 @@
 - [x] spec-case-export-zip — Export all case files (input JSON, output JSON, PDF) as a ZIP for offline archival. Legal obligation for PH lawyers. Depends: spec-pdf-export, spec-auth-persistence. [Discovered: auth-persistence-patterns]
 - [x] spec-conflict-check — Search existing clients/heirs before new case intake. PH bar ethics require conflict-of-interest screening. Depends: spec-client-profiles. [Discovered: crm-law-firm-patterns]
 - [x] spec-intake-form — Guided digital intake capturing decedent info, family composition, asset summary; pre-populates case wizard. Depends: spec-client-profiles. [Discovered: crm-law-firm-patterns]
-- [ ] spec-family-tree-visualizer — Interactive heir tree diagram (SVG/canvas) showing succession relationships, separate from distribution table. Reads: codebase-audit. [Discovered: crm-law-firm-patterns]
+- [x] spec-family-tree-visualizer — Interactive heir tree diagram (SVG/canvas) showing succession relationships, separate from distribution table. Reads: codebase-audit. [Discovered: crm-law-firm-patterns]
 - [ ] spec-deadline-tracker — Per-case deadline timeline: BIR 1-year filing deadline, 3-week newspaper publication window, eCAR receipt, RD filing window. Color-coded status (green/yellow/red). Depends: spec-auth-persistence. [Discovered: ph-practice-workflow]
 - [ ] spec-timeline-report — Visual settlement timeline (milestone list or Gantt) generated from case facts showing all stages a lawyer can share with clients. Depends: spec-auth-persistence. [Discovered: competitive-landscape]
 - [ ] spec-document-checklist — Per-case document checklist (PSA death cert, TCT/CCT, ITR, bank certs) with check-off status tracking. Depends: spec-auth-persistence. [Discovered: competitive-landscape]
