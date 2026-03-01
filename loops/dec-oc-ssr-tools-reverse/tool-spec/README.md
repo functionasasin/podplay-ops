@@ -5,7 +5,7 @@ Implementation-ready specification for adding SSR (Semantic Similarity Rating) c
 ## Status
 
 Wave 1: Audit & Map — 5/5 complete
-Wave 2: Design — 3/7 complete
+Wave 2: Design — 4/7 complete
 Wave 3: Synthesis & Integration — 0/4 complete
 
 ---
@@ -57,8 +57,8 @@ Database schema and Python type definitions.
 
 | File | Status | Contents |
 |------|--------|----------|
-| [supabase-schema.md](data-model/supabase-schema.md) | ⬜ Pending | Every table, column, type, constraint |
-| [migration.sql](data-model/migration.sql) | ⬜ Pending | Ready-to-run Supabase migration |
+| [supabase-schema.md](data-model/supabase-schema.md) | ✅ Complete | All 6 tables (ssr_panel, ssr_persona, ssr_run, ssr_response, ssr_score, ssr_anchor_set): every column with type/nullable/default/constraint, FK graph, 14 indexes, 2 updated_at triggers, 6 query pattern examples, repository file list |
+| [migration.sql](data-model/migration.sql) | ✅ Complete | Ready-to-run Supabase migration: 6 CREATE TABLE, 14 indexes, 2 triggers, 50 anchor statement seed rows (NULL embeddings — populated by seed script) |
 | [pydantic-models.md](data-model/pydantic-models.md) | ⬜ Pending | Python type definitions (Pydantic v2) |
 
 ---
