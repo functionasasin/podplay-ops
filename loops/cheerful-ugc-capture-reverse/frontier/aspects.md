@@ -5,9 +5,9 @@
 | Metric | Value |
 |--------|-------|
 | Total aspects | 18 |
-| Analyzed | 13 |
-| Pending | 5 |
-| Convergence | 72% |
+| Analyzed | 14 |
+| Pending | 4 |
+| Convergence | 78% |
 
 ---
 
@@ -32,7 +32,7 @@
 
 ## Wave 3: Options Cross-Product
 
-- [ ] `option-official-api-capture` — Full official API integration: mentions webhook + tags polling + Story capture (shared IG DM infra)
+- [x] `option-official-api-capture` — Full official API integration: mentions webhook + tags polling + Story capture (shared IG DM infra)
 - [ ] `option-ai-radar` — AI detection pipeline: vision + audio + OCR + candidate discovery, compute cost model
 - [ ] `option-third-party-service` — Buy-not-build: use Archive or similar as managed UGC engine, API/webhook ingestion
 - [ ] `option-hybrid-layered` — Layered approach: Layer 1 (official API, free) + Layer 2 (hashtags) + Layer 3 (AI radar, optional)
