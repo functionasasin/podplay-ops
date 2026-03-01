@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 36
-- Analyzed: 33
-- Pending: 3
-- Convergence: 92%
+- Analyzed: 34
+- Pending: 2
+- Convergence: 94%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -49,6 +49,6 @@
 ### Wave 3: Synthesis (depends: ALL Wave 2 complete)
 
 - [x] architecture-overview — Shared data model ERD, Supabase schema DDL, component hierarchy, API layer design, implementation dependency graph.
-- [ ] mega-spec-draft — Read ALL analysis/ files → synthesize into /docs/plans/inheritance-premium-spec.md.
+- [x] mega-spec-draft — Read ALL analysis/ files → synthesize into /docs/plans/inheritance-premium-spec.md.
 - [ ] placeholder-validation — **HARD GATE.** Exhaustive line-by-line scan of ALL analysis/ files and /docs/plans/inheritance-premium-spec.md for banned placeholder patterns (TODO, TBD, stubs, empty sections, deferral phrases, sample values). Must report PASS with zero findings before loop can converge. Depends: mega-spec-draft.
 - [ ] mega-spec-review — Validate spec completeness, cross-feature dependencies, implementation order, AND confirm placeholder-validation PASS. Write status/converged.txt only if ALL checks pass including zero placeholders. Depends: placeholder-validation.
