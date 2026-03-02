@@ -1,6 +1,6 @@
 # Exhaustive Test Vectors — Philippine Freelance Tax Optimizer
 
-**Status:** PARTIAL — Groups 1–12 complete (60 vectors + 13 cross-references). Groups 13–14 pending.
+**Status:** PARTIAL — Groups 1–13 complete (66 vectors + 13 cross-references). Group 14 pending.
 **Last updated:** 2026-03-02
 **Cross-references:**
 - Scenario codes: [domain/scenarios.md](../../domain/scenarios.md)
@@ -9316,4 +9316,618 @@ TaxComputationResult {
 5. **The tie-break rule INV-RC-05 (C > B > A) has three distinct application scenarios.** (a) C tied with B (TV-EX-G12-001 and TV-EX-G12-003): C wins. (b) C tied with A (TV-EX-G12-004): C wins. (c) A tied with B, C ineligible (TV-EX-G12-005): B wins. The engine must implement this as a priority ordering, not as a hard-coded "Path C always wins on tie."
 
 6. **VAT-registered taxpayers have only two eligible regime options.** Path C is categorically unavailable for VAT-registered taxpayers regardless of income level or expense ratio. The ineligibility_notification IN_VAT_REGISTERED must appear in the results. The tie-break between A and B applies only to eligible paths — the engine correctly ignores Path C's position in the ordering when it is not in the eligible set.
+
+---
+
+## GROUP 13: Late-Filing and Penalty Scenarios (SC-LATE)
+
+**4 scenario codes:** SC-LATE-1701, SC-LATE-1701Q-Q1, SC-LATE-2551Q, SC-CATCHUP-3YR
+
+**Purpose of this group:** Every vector tests the penalty computation module of the engine. These scenarios exercise:
+1. The three-component penalty formula (surcharge + interest + compromise) for returns with tax due
+2. The nil-return compromise penalty (returns with ₱0 balance payable)
+3. The CWT-offset edge case: IT exists but is fully covered by withholding, making balance payable ₱0 — still incurs nil compromise penalty when filed late
+4. Multi-year catch-up filing with compounding interest over different days-late periods
+5. Prescriptive period checks: 3-year ordinary (filed return, timely or late) vs. 10-year extraordinary (never-filed return)
+6. EOPT-reduced rates (10% surcharge, 6% interest for MICRO/SMALL) vs. standard rates (25%, 12% for MEDIUM/LARGE)
+
+**Input schema for penalty computations:** Uses `PenaltyComputation` struct from [engine/data-model.md](../data-model.md):
+- `tax_due`: Decimal — basic unpaid tax (balance_payable for IT returns; PT due for 2551Q returns)
+- `filing_deadline`: Date — from `FilingDeadlineInfo`
+- `actual_filing_date`: Date — from `TaxpayerInput.actual_filing_date`
+- `tier`: TaxpayerTier — MICRO / SMALL / MEDIUM / LARGE
+- `is_nil_return`: bool — true when tax_due == ₱0 (whether from zero income or full CWT offset)
+- `offense_count`: int — 1/2/3/4+ for nil return repeat offenses; irrelevant if `is_nil_return == false`
+
+**Output schema:** Uses `PenaltyStack` (surcharge / interest / compromise / total) inside `PenaltyResult`. See [engine/data-model.md Section 5.7](../data-model.md).
+
+**Interest formula (CR-017):** `interest = tax_due × annual_rate × (days_late / 365)`, rounded to nearest centavo. 365-day year (no leap-year adjustment per BIR practice).
+
+**Compromise penalty source (CR-020):** Table lookup. For returns with tax due: bracket by tax_due amount (RMO 7-2015 Annex A, Section 255). For nil returns: offense_count determines penalty (RMO 7-2015 Section 2.2).
+
+**Common characteristics for all Group 13 vectors:**
+- `return_type`: ORIGINAL (no penalty vectors use AMENDED)
+- `installment_elected`: false (all scenarios treat as single-payment obligation)
+- On-time filing: `PenaltyResult.applies = false`; all PenaltyStack fields = ₱0
+- All filing dates in this group are in 2025 or 2026; EOPT Act (RA 11976) effective January 22, 2024 → reduced rates apply to all these vectors
+
+---
+
+## TV-EX-G13-001: SC-LATE-1701 — Late Annual Filing (76 Days Late, SMALL Tier)
+
+**Scenario code:** SC-LATE-1701
+**Cross-reference:** Full vector in [edge-cases.md → TV-EDGE-008](edge-cases.md#tv-edge-008-sc-late-1701--late-annual-filing-penalty-76-days-late-small-tier).
+
+**Summary:**
+- **Tax year:** 2024; **Form:** 1701A (annual)
+- **Taxpayer tier:** SMALL (prior year gross ₱4,000,000)
+- **Basic IT due:** ₱85,000.00
+- **Filing deadline:** 2025-04-15; **Actual filing:** 2025-06-30; **Days late:** 76
+
+**Key values (from TV-EDGE-008):**
+
+| Component | Amount |
+|-----------|--------|
+| Surcharge (10% × ₱85,000) | ₱8,500.00 |
+| Interest (6% × 76/365 × ₱85,000) | ₱1,061.92 |
+| Compromise ("Over ₱50,000 – ₱100,000" bracket) | ₱15,000.00 |
+| **Total penalties** | **₱24,561.92** |
+| **Total amount due** | **₱109,561.92** |
+
+- `prescribed`: false (within 3-year ordinary period starting from actual late-filing date 2025-06-30)
+- `recommended_form`: Form 1701A Part IV-B
+- **Legal basis:** NIRC Sec. 248(A)(1) (surcharge); Sec. 249 (interest); RMO 7-2015 Annex A (compromise); RA 11976 EOPT (reduced rates for SMALL)
+
+**What this proves:** SMALL tier (₱3M–₱20M gross) receives the same EOPT-reduced penalty rates as MICRO tier: 10% surcharge and 6% annual interest. Full worked computation in TV-EDGE-008.
+
+---
+
+## TV-EX-G13-002: SC-LATE-1701Q-Q1 — Quarterly Q1 Filing Late (with Balance Payable, SMALL Tier)
+
+**Scenario code:** SC-LATE-1701Q-Q1
+**Description:** Freelance software consultant on 8% Path C, SMALL tier (prior year gross ₱4,000,000). Q1 2025 quarterly income tax return (Form 1701Q) filed June 1, 2025 — 17 calendar days past the May 15, 2025 deadline. Quarterly IT balance payable is ₱47,500 after crediting one client's CWT. Three-component penalty applies to the balance payable. This demonstrates the mechanics of late quarterly penalties and the disproportionate weight of the fixed compromise penalty relative to interest for short delinquencies.
+
+**Tax year:** 2025 (Q1 cumulative: January–March)
+**Filing period:** Q1 QUARTERLY
+**Return form:** Form 1701Q
+
+### Input (PenaltyComputation fields)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `taxpayer_tier` | `SMALL` | Prior year gross ₱4,000,000 (≥₱3M → SMALL) |
+| `income_type` | `PURELY_SE` | No compensation income |
+| `elected_regime` | `PATH_C` | 8% flat rate |
+| `gross_receipts_q1_cumulative` | ₱900,000.00 | Q1 gross receipts, Jan–Mar 2025 |
+| `eight_pct_tax_base_q1` | ₱650,000.00 | 900,000 − 250,000 = 650,000 (₱250K deduction applies in Q1) |
+| `quarterly_it_due` | ₱52,000.00 | 650,000 × 0.08 |
+| `prior_quarterly_payments` | ₱0.00 | Q1 is first quarter; no prior payments |
+| `cwt_credits_this_quarter` | ₱4,500.00 | One local client: 5% EWT (WI010) on ₱90,000 = ₱4,500; Form 2307 issued |
+| `balance_payable` | ₱47,500.00 | 52,000 − 0 − 4,500 = 47,500 |
+| `filing_deadline` | 2025-05-15 | Q1 1701Q deadline per NIRC Sec. 74(A)(1); RR 8-2018 |
+| `actual_filing_date` | 2025-06-01 | Date taxpayer actually filed |
+| `days_late` | 17 | June 1 − May 15 = 17 calendar days |
+| `is_nil_return` | false | balance_payable = ₱47,500 > ₱0 |
+| `offense_count` | 1 | Irrelevant (not nil return) |
+
+### Expected Intermediate Values
+
+**Penalty Step 1 — Surcharge (CR-016):**
+- Tier: SMALL → EOPT reduced surcharge rate = **10%** (same as MICRO under RA 11976)
+- Surcharge = ₱47,500 × 0.10 = **₱4,750.00**
+
+**Penalty Step 2 — Interest (CR-017):**
+- Tier: SMALL → EOPT reduced interest rate = **6% per annum**
+- Days late: 17
+- Interest = 47,500 × 0.06 × (17 / 365)
+  = 2,850 × (17 / 365)
+  = 48,450 / 365
+  = 132.7397... → **₱132.74** (rounded to nearest centavo)
+
+**Penalty Step 3 — Compromise Penalty (CR-020.1):**
+- Balance payable (= basic tax for bracket lookup): ₱47,500
+- Bracket: "Over ₱20,000 – ₱50,000" → standard compromise = **₱10,000**
+- Note: No automatic EOPT 50% reduction for Sec. 255 late-filing compromise (50% reduction applies only to Sec. 237/238 invoicing violations)
+
+**Total Penalty:**
+- Surcharge: ₱4,750.00
+- Interest: ₱132.74
+- Compromise: ₱10,000.00
+- Total penalties: **₱14,882.74**
+- Total amount due: 47,500 + 14,882.74 = **₱62,382.74**
+
+### Expected Output (PenaltyResult)
+
+| Field | Value |
+|-------|-------|
+| `applies` | `true` |
+| `days_late` | `17` |
+| `months_late` | `1` (ceil(17/30) = 1) |
+| `it_penalties.surcharge` | `4_750.00` |
+| `it_penalties.interest` | `132.74` |
+| `it_penalties.compromise` | `10_000.00` |
+| `it_penalties.total` | `62_382.74` (base 47,500 + surcharge 4,750 + interest 132.74 + compromise 10,000) |
+| `pt_penalties.surcharge` | `0.00` (Path C: no PT obligation — PT waived by 8% election) |
+| `pt_penalties.interest` | `0.00` |
+| `pt_penalties.compromise` | `0.00` |
+| `pt_penalties.total` | `0.00` |
+| `total_penalties` | `14_882.74` (surcharge + interest + compromise only, excluding base tax) |
+| `prescribed` | `false` (3-year ordinary period from actual filing date 2025-06-01 runs until 2028-06-01) |
+
+### Verification
+
+- **Surcharge:** 47,500 × 0.10 = **₱4,750.00** ✓
+- **Interest:** 47,500 × 0.06 = 2,850; 2,850 × 17 = 48,450; 48,450 / 365 = 132.7397... → **₱132.74** ✓
+- **Compromise bracket:** ₱47,500 → "Over ₱20,000 – ₱50,000" → **₱10,000** ✓
+- **Total penalties:** 4,750 + 132.74 + 10,000 = **₱14,882.74** ✓
+- **Total due:** 47,500 + 14,882.74 = **₱62,382.74** ✓
+- **Disproportionality note:** The compromise penalty (₱10,000) is 75× larger than the interest (₱132.74) despite only 17 days of delay. The compromise is bracket-based (flat per range), not proportional to days late. One day late and 30 days late in the same bracket produce the same compromise penalty.
+
+**Legal basis:** Sec. 248(A)(1) (surcharge); Sec. 249 (interest); RMO 7-2015 Annex A Section 255 (compromise); RA 11976 EOPT (reduced SMALL tier rates). Q1 1701Q deadline: NIRC Sec. 74(A)(1); RR 8-2018 Sec. 2(A)(1).
+
+---
+
+## TV-EX-G13-003: SC-LATE-1701Q-Q1 (Nil Balance — CWT Fully Offsets IT) — Nil Compromise Still Applies
+
+**Scenario code:** SC-LATE-1701Q-Q1 (CWT-offset sub-variant)
+**Description:** Freelance creative director on 8% Path C, MICRO tier. Q1 2025 quarterly income tax return (Form 1701Q) filed June 6, 2025 — 22 calendar days past the May 15, 2025 deadline. The taxpayer's quarterly IT is ₱28,000, but a single large corporate client withheld 5% EWT on the full ₱600,000 quarterly gross (= ₱30,000 CWT), making the balance payable ₱0. This is the most common taxpayer misconception: "My tax was fully covered by withholding, so there is no late penalty." Wrong — the ₱1,000 nil-return compromise penalty applies to the LATE FILING VIOLATION itself, independent of any unpaid tax.
+
+**Tax year:** 2025 (Q1 cumulative: January–March)
+**Filing period:** Q1 QUARTERLY
+**Return form:** Form 1701Q
+
+### Input (PenaltyComputation fields)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `taxpayer_tier` | `MICRO` | Prior year gross ₱1,200,000 (< ₱3M → MICRO) |
+| `income_type` | `PURELY_SE` | No compensation income |
+| `elected_regime` | `PATH_C` | 8% flat rate |
+| `gross_receipts_q1_cumulative` | ₱600,000.00 | Q1 gross receipts, Jan–Mar 2025 |
+| `eight_pct_tax_base_q1` | ₱350,000.00 | 600,000 − 250,000 = 350,000 |
+| `quarterly_it_due` | ₱28,000.00 | 350,000 × 0.08 |
+| `prior_quarterly_payments` | ₱0.00 | Q1 is first quarter |
+| `cwt_credits_this_quarter` | ₱30,000.00 | Large corporate client: 5% EWT (WI010) on ₱600,000 = ₱30,000; Form 2307 issued |
+| `balance_payable` | ₱0.00 | max(28,000 − 0 − 30,000, 0) = max(−2,000, 0) = ₱0; ₱2,000 excess CWT carried to Q2 |
+| `filing_deadline` | 2025-05-15 | Q1 1701Q deadline |
+| `actual_filing_date` | 2025-06-06 | Date filed |
+| `days_late` | 22 | June 6 − May 15 = 22 calendar days |
+| `is_nil_return` | true | balance_payable == ₱0 (even though underlying IT = ₱28,000 > 0; the UNPAID amount is ₱0) |
+| `offense_count` | 1 | First late/nil 1701Q filing for this taxpayer |
+
+### Expected Intermediate Values
+
+**Penalty Step 1 — Surcharge (CR-016):**
+- `is_nil_return = true` → surcharge is computed on the balance_payable (₱0) → **₱0.00**
+- Explanation: Surcharge is a percentage of the UNPAID tax. No unpaid tax = no surcharge.
+
+**Penalty Step 2 — Interest (CR-017):**
+- `is_nil_return = true` → interest on balance_payable (₱0) → **₱0.00**
+- Explanation: Interest accrues only on amounts owed and unpaid. ₱0 owed = ₱0 interest.
+
+**Penalty Step 3 — Compromise Penalty (CR-020.2):**
+- `is_nil_return = true` → use nil-return offense-based schedule (RMO 7-2015 Section 2.2)
+- `offense_count = 1` → **₱1,000.00**
+- Explanation: The compromise penalty targets the LATE FILING ACT, not the unpaid tax amount. The taxpayer violated NIRC Sec. 74 (obligation to file quarterly IT return by deadline) and NIRC Sec. 275 (failure to comply with administrative requirements). The ₱1,000 compromise settles this administrative violation.
+
+**Total Penalty:**
+- Surcharge: ₱0.00
+- Interest: ₱0.00
+- Compromise: ₱1,000.00
+- Total penalties: **₱1,000.00**
+- Total amount due: ₱0 + ₱1,000 = **₱1,000.00**
+
+### Expected Output (PenaltyResult)
+
+| Field | Value |
+|-------|-------|
+| `applies` | `true` |
+| `days_late` | `22` |
+| `months_late` | `1` (ceil(22/30) = 1) |
+| `it_penalties.surcharge` | `0.00` |
+| `it_penalties.interest` | `0.00` |
+| `it_penalties.compromise` | `1_000.00` |
+| `it_penalties.total` | `1_000.00` (₱0 base + ₱1,000 compromise) |
+| `pt_penalties.surcharge` | `0.00` |
+| `pt_penalties.interest` | `0.00` |
+| `pt_penalties.compromise` | `0.00` |
+| `pt_penalties.total` | `0.00` |
+| `total_penalties` | `1_000.00` |
+| `prescribed` | `false` |
+| **UI warning displayed:** | `"Your quarterly income tax was fully covered by withholding tax (CWT) credits. However, filing Form 1701Q after May 15 incurs a ₱1,000 compromise penalty under NIRC Sec. 275 / RMO 7-2015. Always file on time even when no payment is due."` |
+| **Carryforward note:** | `"₱2,000 excess CWT (₱30,000 withheld − ₱28,000 IT) carried forward to Q2 as prior_cwt_credit."` |
+
+### Verification
+
+- **Surcharge:** balance_payable = ₱0 → **₱0** ✓
+- **Interest:** balance_payable = ₱0 → **₱0** ✓
+- **Compromise:** is_nil_return = true, offense_count = 1 → **₱1,000** ✓
+- **Total:** ₱1,000 ✓
+
+**Critical distinction:** The engine must determine `is_nil_return` based on `balance_payable` (the net unpaid amount), NOT on `quarterly_it_due`. In this case, quarterly_it_due = ₱28,000 > ₱0 but balance_payable = ₱0 (fully offset by CWT). The engine must set `is_nil_return = (balance_payable == 0)`, not `(quarterly_it_due == 0)`.
+
+**Note on ₱2,000 carryforward:** The ₱2,000 excess CWT (₱30,000 − ₱28,000) is not refundable at the quarterly level. It is credited to Q2's balance payable computation as `prior_cwt_carryforward`. The Q1 1701Q form will show: quarterly IT ₱28,000, CWT credit ₱30,000, balance payable ₱0, and a note indicating ₱2,000 overpayment carried to Q2.
+
+**Legal basis:** NIRC Sec. 74(A)(1) (quarterly IT return obligation); Sec. 275 (administrative violation penalty); RMO 7-2015 Annex A Section 2.2 (₱1,000 nil first offense); Sec. 248(A) (surcharge applies only to "unpaid" tax — ₱0 unpaid = ₱0 surcharge); Sec. 249 (interest on "unpaid" amount — ₱0 unpaid = ₱0 interest).
+
+---
+
+## TV-EX-G13-004: SC-LATE-2551Q — Late Quarterly Percentage Tax Return, Nil PT (1st Offense)
+
+**Scenario code:** SC-LATE-2551Q
+**Description:** Freelance copywriter on Path B (OSD, graduated rates), MICRO tier. Q2 2025 percentage tax return (Form 2551Q) filed August 15, 2025 — 21 calendar days past the July 25, 2025 deadline. The taxpayer had ₱0 gross receipts in Q2 (took a two-month sabbatical). Despite ₱0 PT due, a nil 2551Q must still be filed by the 25th day following the quarter end. Failure to file on time incurs a ₱1,000 first-offense compromise penalty.
+
+**Tax year:** 2025 (Q2: April–June)
+**Filing period:** Q2 QUARTERLY
+**Return form:** Form 2551Q
+
+### Input (PenaltyComputation — 2551Q)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `taxpayer_tier` | `MICRO` | Prior year gross ₱800,000 (< ₱3M → MICRO) |
+| `income_type` | `PURELY_SE` | No compensation |
+| `elected_regime` | `PATH_B` | OSD elected — percentage tax applies; not on 8% |
+| `gross_receipts_q2` | ₱0.00 | No income earned April–June 2025 |
+| `pt_rate` | `0.03` | 3% standard rate (post-CREATE; effective July 1, 2023 onward) |
+| `pt_due_q2` | ₱0.00 | ₱0 × 0.03 = ₱0 |
+| `filing_deadline` | 2025-07-25 | Q2 2551Q deadline: 25 days after June 30 (NIRC Sec. 128) |
+| `actual_filing_date` | 2025-08-15 | Date taxpayer actually filed |
+| `days_late` | 21 | August 15 − July 25 = 21 calendar days |
+| `is_nil_return` | true | pt_due_q2 == ₱0 |
+| `offense_count` | 1 | First late 2551Q filing for this taxpayer |
+
+### Expected Intermediate Values
+
+**Penalty Step 1 — Surcharge:**
+- PT due = ₱0 → surcharge = **₱0.00**
+
+**Penalty Step 2 — Interest:**
+- PT due = ₱0 → interest = **₱0.00**
+
+**Penalty Step 3 — Compromise (CR-020.2):**
+- `is_nil_return = true`; `offense_count = 1` → **₱1,000.00**
+
+**Total Penalty:**
+- Total penalties: **₱1,000.00**
+- Total amount due (PT + penalties): ₱0 + ₱1,000 = **₱1,000.00**
+
+### Expected Output (PenaltyResult — 2551Q context)
+
+| Field | Value |
+|-------|-------|
+| `applies` | `true` |
+| `days_late` | `21` |
+| `months_late` | `1` (ceil(21/30) = 1) |
+| `pt_penalties.surcharge` | `0.00` |
+| `pt_penalties.interest` | `0.00` |
+| `pt_penalties.compromise` | `1_000.00` |
+| `pt_penalties.total` | `1_000.00` |
+| `total_penalties` | `1_000.00` |
+| `prescribed` | `false` |
+| **UI note:** | `"You earned no income this quarter, but Form 2551Q was still due July 25. Filing nil returns on time avoids the ₱1,000 compromise penalty."` |
+
+### Nil Return Offense Escalation Table (Displayed in UI for Repeat Context)
+
+| Offense Number | Compromise Penalty | Notes |
+|---------------|-------------------|-------|
+| 1st offense | ₱1,000 | Current vector |
+| 2nd offense | ₱5,000 | Same taxpayer, any subsequent late/unfiled 2551Q |
+| 3rd offense | ₱10,000 | |
+| 4th+ offense | Up to ₱25,000 (not subject to compromise — escalated to criminal prosecution under Sec. 255) | BIR refers to DOJ for criminal action |
+
+**Source:** RMO 7-2015 Annex A Section 2.2 (nil return offense schedule); NIRC Sec. 255 (criminal penalty: fine ≥ ₱10,000 + imprisonment 1–10 years for willful failure to file).
+
+### Verification
+
+- **Why file a nil 2551Q?** NIRC Sec. 128 requires quarterly PT returns regardless of whether income was earned. A period with ₱0 gross receipts still requires a return showing ₱0. The BIR needs the nil return as an affirmative declaration that no PT liability exists for the quarter.
+- **Compromise applies under Sec. 275:** The ₱1,000 compromise settles criminal liability for the administrative violation of failing to file a required return by its deadline.
+- Total penalties: **₱1,000** ✓
+
+**Legal basis:** NIRC Sec. 128 (quarterly PT return obligation — 25 days after quarter end); Sec. 275 (compromise for failure to comply); RMO 7-2015 Annex A Section 2.2 (nil offense schedule).
+
+---
+
+## TV-EX-G13-005: SC-LATE-2551Q (with PT Due) — Three-Component Penalty on Quarterly Percentage Tax
+
+**Scenario code:** SC-LATE-2551Q (PT-due sub-variant)
+**Description:** Freelance brand strategist on Path B (OSD), MICRO tier. Q1 2025 percentage tax return (Form 2551Q) filed May 15, 2025 — 20 calendar days past the April 25, 2025 deadline. Quarterly gross receipts ₱350,000 → PT = ₱10,500. All three penalty components apply: surcharge on the PT due, daily interest from the missed deadline, and a bracket-based compromise penalty.
+
+**Tax year:** 2025 (Q1: January–March)
+**Filing period:** Q1 QUARTERLY
+**Return form:** Form 2551Q
+
+### Input (PenaltyComputation — 2551Q)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `taxpayer_tier` | `MICRO` | Prior year gross ₱1,500,000 (< ₱3M → MICRO) |
+| `income_type` | `PURELY_SE` | No compensation |
+| `elected_regime` | `PATH_B` | OSD elected — PT applies; not on 8% |
+| `gross_receipts_q1` | ₱350,000.00 | Gross sales Jan–Mar 2025 (accrual basis per EOPT Act) |
+| `pt_rate` | `0.03` | 3% standard rate (RA 11534 CREATE: 1% COVID rate expired June 30, 2023; rate reverted to 3%) |
+| `pt_due_q1` | ₱10,500.00 | 350,000 × 0.03 |
+| `filing_deadline` | 2025-04-25 | Q1 2551Q deadline: 25 days after March 31 (NIRC Sec. 128) |
+| `actual_filing_date` | 2025-05-15 | Date filed |
+| `days_late` | 20 | May 15 − April 25 = 20 calendar days |
+| `is_nil_return` | false | pt_due_q1 = ₱10,500 > ₱0 |
+| `offense_count` | 1 | Irrelevant (not nil return) |
+
+### Expected Intermediate Values
+
+**Penalty Step 1 — Surcharge (CR-016):**
+- Tier: MICRO → EOPT reduced surcharge rate = **10%**
+- Surcharge = ₱10,500 × 0.10 = **₱1,050.00**
+
+**Penalty Step 2 — Interest (CR-017):**
+- Tier: MICRO → EOPT reduced interest rate = **6% per annum**
+- Days late: 20
+- Interest = 10,500 × 0.06 × (20 / 365)
+  = 630 × (20 / 365)
+  = 12,600 / 365
+  = 34.5205... → **₱34.52** (rounded to nearest centavo)
+
+**Penalty Step 3 — Compromise Penalty (CR-020.1):**
+- PT due: ₱10,500
+- Bracket: "Over ₱10,000 – ₱20,000" → **₱5,000**
+
+**Total Penalty:**
+- Surcharge: ₱1,050.00
+- Interest: ₱34.52
+- Compromise: ₱5,000.00
+- Total penalties: **₱6,084.52**
+- Total amount due: 10,500 + 6,084.52 = **₱16,584.52**
+
+### Expected Output (PenaltyResult — 2551Q context)
+
+| Field | Value |
+|-------|-------|
+| `applies` | `true` |
+| `days_late` | `20` |
+| `months_late` | `1` (ceil(20/30) = 1) |
+| `pt_penalties.surcharge` | `1_050.00` |
+| `pt_penalties.interest` | `34.52` |
+| `pt_penalties.compromise` | `5_000.00` |
+| `pt_penalties.total` | `16_584.52` (10,500 base + 1,050 + 34.52 + 5,000) |
+| `total_penalties` | `6_084.52` (surcharge + interest + compromise only, excluding base PT) |
+| `prescribed` | `false` (3-year ordinary period from actual filing date 2025-05-15 runs until 2028-05-15) |
+
+### Verification
+
+- **Surcharge:** 10,500 × 0.10 = **₱1,050.00** ✓
+- **Interest:** 10,500 × 0.06 = 630; 630 × 20 = 12,600; 12,600 / 365 = 34.5205... → **₱34.52** ✓
+- **Compromise:** ₱10,500 → "Over ₱10,000 – ₱20,000" → **₱5,000** ✓
+- **Total penalties:** 1,050 + 34.52 + 5,000 = **₱6,084.52** ✓
+- **Total amount due:** 10,500 + 6,084.52 = **₱16,584.52** ✓
+
+**Note on CREATE rate history:** The 1% COVID-relief PT rate (RA 11534 CREATE) was in effect July 1, 2020 – June 30, 2023. From July 1, 2023 onward, the standard 3% rate resumed. For Q1 2025, the rate is definitively 3%. The engine must verify `pt_rate = 0.03` for all periods from July 1, 2023 onward.
+
+**Legal basis:** Sec. 116 (quarterly PT at 3%); Sec. 128 (quarterly return deadline — 25 days after quarter end); Sec. 248(A) (10% surcharge for MICRO); Sec. 249 (6% interest for MICRO); RMO 7-2015 Annex A (compromise); RA 11976 EOPT (reduced rates).
+
+---
+
+## TV-EX-G13-006: SC-CATCHUP-3YR — 3-Year Voluntary Catch-Up Filing (Annual Returns, SMALL Tier)
+
+**Scenario code:** SC-CATCHUP-3YR
+**Description:** A freelance management consultant (SMALL tier, ₱3,200,000 annual gross) failed to file annual income tax returns (Form 1701) for Tax Years 2022, 2023, and 2024. In March 2026, the taxpayer voluntarily comes forward to file all three years simultaneously. This vector demonstrates: (1) year-by-year penalty computation with varying days_late, (2) the compounding effect of longer delinquency on interest, (3) prescriptive period check for non-filers (extraordinary 10-year period applies), and (4) total exposure accumulation across years.
+
+**Scope note:** This vector covers ANNUAL income tax returns (Form 1701) only. Quarterly 1701Q (9 returns: Q1/Q2/Q3 × 3 years) and quarterly 2551Q (12 returns: Q1–Q4 × 3 years) also require separate catch-up filings and incur their own penalties. The Quarterly Obligations section below summarizes the additional exposure without computing each return's full penalty breakdown.
+
+**Tax regime:** Path B (OSD) — 8% not available since gross ₱3,200,000 > ₱3,000,000 threshold
+**Taxpayer tier:** SMALL (₱3,200,000 annual gross; ₱3M ≤ gross < ₱20M ✓)
+**Voluntary disclosure date:** 2026-03-15
+
+### Annual IT Computation (Pre-Penalty — Identical for TY2022, TY2023, TY2024)
+
+| Component | Value | Derivation |
+|-----------|-------|-----------|
+| Annual gross receipts | ₱3,200,000.00 | Constant across all three years |
+| OSD (40% of gross) | ₱1,280,000.00 | 3,200,000 × 0.40 |
+| NTI (Path B) | ₱1,920,000.00 | 3,200,000 − 1,280,000 |
+| Income tax (bracket check) | ₱382,500.00 | NTI 1,920,000 ≤ 2,000,000 → bracket 4: 102,500 + (1,920,000 − 800,000) × 0.25 = 102,500 + 280,000 |
+| Path C eligible | false | Gross 3,200,000 > 3,000,000 → Path C ineligible (IN_EXCEEDS_3M_GROSS) |
+| Recommended form | Form 1701 | Path A/B; gross > ₱3M → ineligible for simplified 1701A |
+
+**Bracket 4 verification:** 1,920,000 is in bracket 4 (₱800,000–₱2,000,000).
+IT = 102,500 + (1,920,000 − 800,000) × 0.25 = 102,500 + (1,120,000 × 0.25) = 102,500 + 280,000 = **₱382,500** ✓
+
+### Filing Deadlines and Days Late
+
+| Tax Year | Annual Deadline | Voluntary Filing | Days Late | Calculation |
+|----------|----------------|-----------------|-----------|-------------|
+| TY2022 | 2023-04-15 | 2026-03-15 | 1,065 | Apr 15, 2023 → Apr 15, 2024 = 366 days (2024 leap year, Feb 29 included) + Apr 15, 2024 → Apr 15, 2025 = 365 days + Apr 15, 2025 → Mar 15, 2026 = 334 days = 1,065 |
+| TY2023 | 2024-04-15 | 2026-03-15 | 699 | Apr 15, 2024 → Apr 15, 2025 = 365 days + Apr 15, 2025 → Mar 15, 2026 = 334 days = 699 |
+| TY2024 | 2025-04-15 | 2026-03-15 | 334 | Apr 15, 2025 → Mar 15, 2026: Apr 16–30 = 15 days; May = 31; Jun = 30; Jul = 31; Aug = 31; Sep = 30; Oct = 31; Nov = 30; Dec = 31; Jan 2026 = 31; Feb = 28; Mar 1–15 = 15 = 334 |
+
+### Penalty Computation Parameters (All Years)
+
+- Tier: SMALL → EOPT reduced rates: surcharge = **10%**, interest = **6% per annum**
+- Annual IT (basic tax): ₱382,500 per year
+- Surcharge per year: 382,500 × 0.10 = **₱38,250**
+- Compromise bracket: ₱382,500 → "Over ₱100,000 – ₱500,000" → **₱20,000** per year
+- Daily interest base: 382,500 × 0.06 = ₱22,950 per year (at 6% p.a.)
+
+### Interest Computation per Year (CR-017: interest = 382,500 × 0.06 × (days/365))
+
+| Tax Year | Days Late | Numerator (22,950 × days) | Division (÷ 365) | Interest | Remainder Check |
+|----------|-----------|--------------------------|------------------|---------|----------------|
+| TY2022 | 1,065 | 22,950 × 1,065 = 24,441,750 | 24,441,750 / 365 | ₱66,963.70 | 365×66,963=24,441,495; rem 255; 255/365=0.698... → .70 |
+| TY2023 | 699 | 22,950 × 699 = 16,042,050 | 16,042,050 / 365 | ₱43,950.82 | 365×43,950=16,041,750; rem 300; 300/365=0.821... → .82 |
+| TY2024 | 334 | 22,950 × 334 = 7,665,300 | 7,665,300 / 365 | ₱21,000.82 | 365×21,000=7,665,000; rem 300; 300/365=0.821... → .82 |
+
+### Per-Year Penalty Summary
+
+| Component | TY2022 | TY2023 | TY2024 |
+|-----------|--------|--------|--------|
+| Basic IT (Form 1701) | ₱382,500.00 | ₱382,500.00 | ₱382,500.00 |
+| Surcharge (10%) | ₱38,250.00 | ₱38,250.00 | ₱38,250.00 |
+| Interest (6% × days/365) | ₱66,963.70 | ₱43,950.82 | ₱21,000.82 |
+| Compromise penalty | ₱20,000.00 | ₱20,000.00 | ₱20,000.00 |
+| Total penalties (this year) | ₱125,213.70 | ₱102,200.82 | ₱79,250.82 |
+| **Total payable (this year)** | **₱507,713.70** | **₱484,700.82** | **₱461,750.82** |
+
+### 3-Year Aggregate (Annual Returns Only)
+
+| Component | Total |
+|-----------|-------|
+| Basic IT (3 years) | ₱1,147,500.00 |
+| Total surcharges | ₱114,750.00 |
+| Total interest | ₱131,915.34 |
+| Total compromise penalties | ₱60,000.00 |
+| **Grand total penalties** | **₱306,665.34** |
+| **Grand total payable (IT + penalties, annual only)** | **₱1,454,165.34** |
+
+**Penalty as percentage of basic IT:** 306,665.34 / 1,147,500 = **26.73%** — penalties add approximately one-quarter to the total obligation.
+
+### Prescriptive Period Check
+
+| Tax Year | Return Status | Applicable Period | Period Starts | BIR Assessment Expiry |
+|----------|--------------|-------------------|---------------|----------------------|
+| TY2022 | Never filed | 10-year extraordinary (NIRC Sec. 222(a)) | 2026-03-15 (discovery date = voluntary disclosure date) | 2036-03-15 |
+| TY2023 | Never filed | 10-year extraordinary (NIRC Sec. 222(a)) | 2026-03-15 | 2036-03-15 |
+| TY2024 | Never filed | 10-year extraordinary (NIRC Sec. 222(a)) | 2026-03-15 | 2036-03-15 |
+
+**Post-filing prescriptive period:** Once each return is voluntarily filed on 2026-03-15, the ordinary 3-year assessment period starts from the actual filing date:
+- All 3 years (filed 2026-03-15): BIR ordinary period runs until **2029-03-15**
+
+**`prescribed` flag for each year:** `false` — all three years are within the extraordinary window. No years are prescribed.
+
+**Why TY2022 is not prescribed despite being 3 years old:** The 3-year ordinary period applies only when a return IS filed (period starts from the later of filing deadline or actual filing date). Since no return was filed for TY2022, the ordinary period never started. The 10-year extraordinary period applies instead (Sec. 222(a)), meaning BIR had until 2036 from discovery to assess TY2022 even before voluntary disclosure.
+
+### Quarterly Obligations Note (Not Detailed in This Vector)
+
+Additional returns required for each of the 3 years. The engine must list these in the catch-up exposure summary:
+
+**Form 1701Q (Quarterly Income Tax) — 9 returns total (Q1, Q2, Q3 × 3 years):**
+Under cumulative method (Path B, uniform ₱800,000 gross/quarter):
+- Q1 IT (3-month cumulative): NTI = 800,000 × 0.60 = 480,000; IT = 22,500 + (480,000−400,000) × 0.20 = **₱38,500**; Q1 balance = ₱38,500
+- Q2 IT (6-month cumulative): NTI = 1,600,000 × 0.60 = 960,000; IT = 102,500 + (960,000−800,000) × 0.25 = **₱142,500**; Q2 balance (if Q1 simultaneously paid) = 142,500 − 38,500 = ₱104,000
+- Q3 IT (9-month cumulative): NTI = 2,400,000 × 0.60 = 1,440,000; IT = 102,500 + (1,440,000−800,000) × 0.25 = **₱262,500**; Q3 balance (if Q1+Q2 simultaneously paid) = 262,500 − 142,500 = ₱120,000
+- Annual balance (full year): IT = ₱382,500 − ₱262,500 (Q1+Q2+Q3) = ₱120,000
+
+**Form 2551Q (Quarterly Percentage Tax) — 12 returns total (Q1–Q4 × 3 years):**
+- Each quarter: PT = ₱800,000 × 0.03 = ₱24,000
+- Each 2551Q late-filing penalty (if, e.g., 1 year late for TY2024 Q4): 3-component formula applies
+
+**Engine behavior for simultaneous catch-up:** The engine processes each return independently. `prior_quarterly_payments` for each 1701Q is populated with the sum of ACTUALLY PAID prior quarters. In a simultaneous filing, all quarterly returns are filed together — the engine does not auto-credit unfiled/unpaid quarterly returns against each other. It reports each return's balance_payable independently, then sums exposure. The RDO coordinates the order of payment.
+
+### Expected Final Output
+
+```
+CatchupPenaltyResult {
+  voluntary_filing_date: "2026-03-15",
+
+  annual_returns: [
+    {
+      tax_year: 2022,
+      form: FORM_1701,
+      basic_it_due: 382500.00,
+      filing_deadline: "2023-04-15",
+      days_late: 1065,
+      surcharge_rate: 0.10,
+      interest_rate_pa: 0.06,
+      penalty_stack: {
+        surcharge: 38250.00,
+        interest: 66963.70,
+        compromise: 20000.00,
+        total: 507713.70
+      },
+      prescribed: false,
+      prescriptive_period: "10-year extraordinary (non-filer); assessment window until 2036-03-15"
+    },
+    {
+      tax_year: 2023,
+      form: FORM_1701,
+      basic_it_due: 382500.00,
+      filing_deadline: "2024-04-15",
+      days_late: 699,
+      surcharge_rate: 0.10,
+      interest_rate_pa: 0.06,
+      penalty_stack: {
+        surcharge: 38250.00,
+        interest: 43950.82,
+        compromise: 20000.00,
+        total: 484700.82
+      },
+      prescribed: false,
+      prescriptive_period: "10-year extraordinary (non-filer); assessment window until 2036-03-15"
+    },
+    {
+      tax_year: 2024,
+      form: FORM_1701,
+      basic_it_due: 382500.00,
+      filing_deadline: "2025-04-15",
+      days_late: 334,
+      surcharge_rate: 0.10,
+      interest_rate_pa: 0.06,
+      penalty_stack: {
+        surcharge: 38250.00,
+        interest: 21000.82,
+        compromise: 20000.00,
+        total: 461750.82
+      },
+      prescribed: false,
+      prescriptive_period: "10-year extraordinary (non-filer); assessment window until 2036-03-15"
+    }
+  ],
+
+  annual_aggregate: {
+    basic_it_total: 1147500.00,
+    total_surcharges: 114750.00,
+    total_interest: 131915.34,
+    total_compromise: 60000.00,
+    grand_total_penalties: 306665.34,
+    grand_total_payable: 1454165.34,
+    penalty_pct_of_basic_it: 0.2673
+  },
+
+  quarterly_returns_note: "9 Form 1701Q (Q1/Q2/Q3 x 3yrs) and 12 Form 2551Q (Q1-Q4 x 3yrs) also require filing. Total quarterly tax due (1701Q) ≈ ₱262,500/year (Q1+Q2+Q3). Total PT (2551Q) = ₱96,000/year. Quarterly penalty computation required separately per return using same 3-component formula.",
+
+  warnings: ["WARN-016"],
+  abatement_note: "If late filing was caused by force majeure (typhoon, BIR eFPS system downtime, hospitalization), apply for penalty abatement via BIR Form 2105 under NIRC Sec. 204(B). Abatement is NOT available for fraud violations."
+}
+```
+
+### Verification
+
+- **IT bracket (all years):** NTI 1,920,000 ∈ bracket 4 (₱800K–₱2M). IT = 102,500 + 280,000 = **₱382,500** ✓
+- **Surcharge (all years):** 382,500 × 0.10 = **₱38,250** ✓
+- **Interest TY2022:** 22,950 × 1,065 / 365 = 24,441,750 / 365 → 65×66,963=24,441,495; rem 255/365=0.698 → **₱66,963.70** ✓
+- **Interest TY2023:** 22,950 × 699 / 365 = 16,042,050 / 365 → 365×43,950=16,041,750; rem 300/365=0.822 → **₱43,950.82** ✓
+- **Interest TY2024:** 22,950 × 334 / 365 = 7,665,300 / 365 → 365×21,000=7,665,000; rem 300/365=0.822 → **₱21,000.82** ✓
+- **Compromise (all years):** ₱382,500 → "Over ₱100,000 – ₱500,000" → **₱20,000** ✓
+- **Total interest:** 66,963.70 + 43,950.82 + 21,000.82 = **₱131,915.34** ✓
+- **Grand total penalties:** 114,750 + 131,915.34 + 60,000 = **₱306,665.34** ✓
+- **Grand total payable:** 1,147,500 + 306,665.34 = **₱1,454,165.34** ✓
+
+**Legal basis:** IT computation: NIRC Sec. 24(A); CR-002. OSD: NIRC Sec. 34(L); CR-005. Surcharge: Sec. 248(A)(1); RA 11976 EOPT (10% for SMALL). Interest: Sec. 249; RA 11976 (6% for SMALL). Compromise: RMO 7-2015 Annex A Sec. 2.1 (Sec. 255 schedule). Prescriptive period (non-filer): NIRC Sec. 222(a) (10-year from discovery; Sec. 203 ordinary period does not apply when no return was filed). Abatement: Sec. 204(B).
+
+---
+
+## GROUP 13 SUMMARY TABLE
+
+| Vector | Scenario | Return Form | Tier | Basic Tax Due | Days Late | Surcharge | Interest | Compromise | Total Penalties | Total Amount Due | Key Test Point |
+|--------|---------|------------|------|--------------|-----------|-----------|---------|-----------|----------------|-----------------|----------------|
+| TV-EX-G13-001 (→TV-EDGE-008) | SC-LATE-1701 | Form 1701A annual | SMALL | ₱85,000 | 76 | ₱8,500.00 | ₱1,061.92 | ₱15,000.00 | ₱24,561.92 | ₱109,561.92 | SMALL tier = same EOPT rates as MICRO; compromise "Over ₱50K–₱100K" bracket |
+| TV-EX-G13-002 | SC-LATE-1701Q-Q1 (balance due) | Form 1701Q Q1 | SMALL | ₱47,500 | 17 | ₱4,750.00 | ₱132.74 | ₱10,000.00 | ₱14,882.74 | ₱62,382.74 | Short 17-day delay; compromise (₱10K) is 75× larger than interest (₱132); "Over ₱20K–₱50K" bracket |
+| TV-EX-G13-003 | SC-LATE-1701Q-Q1 (nil balance, CWT offset) | Form 1701Q Q1 | MICRO | ₱0 (IT=₱28K, CWT=₱30K) | 22 | ₱0.00 | ₱0.00 | ₱1,000.00 | ₱1,000.00 | ₱1,000.00 | CWT fully offsets IT → balance ₱0; nil compromise still applies; common taxpayer misconception |
+| TV-EX-G13-004 | SC-LATE-2551Q (nil PT, 1st offense) | Form 2551Q Q2 | MICRO | ₱0 | 21 | ₱0.00 | ₱0.00 | ₱1,000.00 | ₱1,000.00 | ₱1,000.00 | Zero-income quarter still requires 2551Q filing; nil compromise ₱1,000 for 1st offense |
+| TV-EX-G13-005 | SC-LATE-2551Q (PT > 0) | Form 2551Q Q1 | MICRO | ₱10,500 | 20 | ₱1,050.00 | ₱34.52 | ₱5,000.00 | ₱6,084.52 | ₱16,584.52 | 3-component on quarterly PT; "Over ₱10K–₱20K" bracket; 3% CREATE rate (post-July 2023) |
+| TV-EX-G13-006 | SC-CATCHUP-3YR | Form 1701 × 3 years | SMALL | ₱382,500/yr | 1,065/699/334 | ₱38,250/yr | ₱66,963.70/₱43,950.82/₱21,000.82 | ₱20,000/yr | ₱306,665.34 total | ₱1,454,165.34 total | 3-year non-filer; interest compounds; extraordinary prescriptive period; voluntary disclosure |
+
+**Key insights validated in Group 13:**
+
+1. **SMALL tier receives the same reduced EOPT rates as MICRO tier.** Both tiers qualify for 10% surcharge (down from 25%) and 6% annual interest (down from 12%) under RA 11976. For freelancers transitioning from MICRO (< ₱3M) to SMALL (₱3M–₱20M) due to business growth, this continuity means no penalty shock at the ₱3M gross threshold.
+
+2. **A ₱0 balance payable STILL incurs the ₱1,000 nil-return compromise penalty when filed late (TV-EX-G13-003).** When CWT fully offsets income tax due, the balance payable is ₱0, so surcharge = ₱0 and interest = ₱0. But the LATE FILING VIOLATION itself — independent of any unpaid tax — triggers the ₱1,000 nil-return compromise under NIRC Sec. 275 / RMO 7-2015. The engine must determine `is_nil_return` based on `balance_payable` (net unpaid), not `quarterly_it_due` (gross quarterly tax).
+
+3. **The compromise penalty dominates for short delinquencies.** For TV-EX-G13-002 (17 days late, ₱47,500 balance), interest = ₱132.74 but compromise = ₱10,000 — a 75× ratio. Compromise penalties are bracket-based flat amounts, not proportional to days late or tax amount within a bracket. Filing one day late and 20 days late within the same bracket incur identical compromise penalties. The UI should highlight this to motivate on-time filing even for small delays.
+
+4. **Nil returns for 2551Q are mandatory even during zero-income quarters (TV-EX-G13-004).** A freelancer who earns nothing in a quarter must still file Form 2551Q by the 25th day of the following month to declare ₱0 PT. Failure to file triggers the ₱1,000 nil-return compromise (1st offense), escalating to ₱5,000, ₱10,000, and criminal prosecution on subsequent offenses. The 8% election eliminates this obligation entirely — a secondary benefit of Path C.
+
+5. **Multi-year non-filing creates substantial interest accumulation.** For TV-EX-G13-006, interest on TY2022 (₱66,963.70) is 3.19× the interest on TY2024 (₱21,000.82), proportional to the days-late ratio (1,065/334 = 3.19). The engine computes interest independently for each year, not as an average. A 3-year non-filer owes 26.73% of their basic tax in penalties — nearly one-quarter additional cost.
+
+6. **Non-filers face the 10-year extraordinary prescriptive period, not the 3-year ordinary period.** TY2022 would appear to be "beyond 3 years" from its April 15, 2023 deadline. But since no return was filed, NIRC Sec. 222(a) applies: the 10-year period starts from BIR's discovery date. When the taxpayer voluntarily discloses in 2026, discovery date = March 15, 2026, giving BIR until March 15, 2036 to assess TY2022. The engine must implement the `prescribed` check as: if no return was filed → extraordinary period from discovery date; if return was filed → ordinary period from actual filing date.
+
+7. **Quarterly obligations (1701Q, 2551Q) compound the catch-up exposure.** For SC-CATCHUP-3YR, the 9 quarterly 1701Q returns and 12 quarterly 2551Q returns add approximately ₱262,500/year (quarterly IT) and ₱96,000/year (quarterly PT) in base tax obligations, each with independent penalty computations. The total quarterly penalty exposure can be significant. The engine's catch-up exposure calculator must surface both annual and quarterly obligations explicitly, not just the annual return totals.
 
