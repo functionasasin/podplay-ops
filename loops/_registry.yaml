@@ -234,3 +234,11 @@ loops:
     status: converged
     created: 2026-03-01
     converged_at: "2026-03-01"
+  inheritance-premium-forward:
+    description: "Build 23 premium features (auth, PDF, CRM, tax integration, multi-seat) from inheritance-premium-reverse spec"
+    type: forward
+    schedule: "*/30 * * * *"
+    max_iterations: 50
+    timeout_minutes: 30
+    status: active
+    created: 2026-03-02
