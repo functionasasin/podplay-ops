@@ -3,7 +3,7 @@
 This directory contains the complete product specification. A forward loop can build the entire platform by reading ONLY this directory.
 
 **Last updated:** 2026-03-02
-**Convergence status:** IN PROGRESS (59/65 aspects analyzed — Wave 4 complete; Wave 5-6 pending)
+**Convergence status:** IN PROGRESS (60/65 aspects analyzed — Wave 4 complete; Wave 5 in progress)
 
 ---
 
@@ -87,7 +87,7 @@ This directory contains the complete product specification. A forward loop can b
 
 | File | Status | Description |
 |------|--------|-------------|
-| deployment/infrastructure.md | PENDING | What runs where |
+| [deployment/infrastructure.md](deployment/infrastructure.md) | COMPLETE | Architecture diagram, component inventory (Vercel/Fly.io/Supabase/Resend/Sentry/R2/Cloudflare), Fly.io fly.toml + Dockerfiles for API+PDF+batch workers, Vercel project config, Supabase connection pooling, email DNS records + 11 email templates, PayMongo + Stripe webhook setup, Sentry SDK config, Cloudflare R2 bucket lifecycle, secrets management + rotation policy, inbound/outbound networking matrix, disaster recovery (RTO/RPO table + 9 failure scenarios), monthly cost estimates (₱9,460/month baseline + scaling triggers) |
 | deployment/ci-cd.md | PENDING | Build/test/deploy pipeline |
 | deployment/monitoring.md | PENDING | Alerts, health checks, error tracking |
 | deployment/domains.md | PENDING | DNS, SSL, CDN |

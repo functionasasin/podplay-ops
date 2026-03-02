@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 65
-- Analyzed: 59
-- Pending: 6
-- Convergence: 91%
+- Analyzed: 60
+- Pending: 5
+- Convergence: 92%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -80,7 +80,7 @@ Design everything around the engine to make it a shippable product.
 
 ### Wave 5: Ship & Polish Design
 Design everything needed to launch and operate the product.
-- [ ] deployment-infra — Where each component runs, exact commands
+- [x] deployment-infra — Where each component runs, exact commands
 - [ ] ci-cd — Build, test, deploy pipeline
 - [ ] monitoring — Health checks, alerts, error tracking
 - [ ] design-system — Colors (hex), typography (fonts/sizes/weights), spacing, components
