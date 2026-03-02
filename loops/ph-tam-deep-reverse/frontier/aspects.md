@@ -14,7 +14,7 @@
 - [x] tam-property-civil — F1 (RPT), F2 (LBT), F3 (RPVARA), F4 (Maceda Law), G1 (Legal Interest), G2 (Prescriptive Periods), G3 (Marital Property), G4 (LEC), G5 (Life Insurance CSV); property owners + litigants; civil lawyers
 - [x] tam-onett-property-transfer — O-LRA-1 (ONETT Deadline), O-LRA-2 (ONETT Pipeline), O-LRA-3 (Zonal Value), O-LRA-4 (LRA Fees); BIR 1706 returns filed per year; real estate brokers + conveyancing lawyers
 - [x] tam-sss — A-SSS-1 through A-SSS-5 (Retirement, Maternity, Contributions, Sickness, Death); SSS members by category; HR officers + labor consultants
-- [ ] tam-philhealth-pagibig — B-PHI-1/2/3, C-HDMF-1/2/3; PhilHealth + Pag-IBIG member counts; HR + benefits officers
+- [x] tam-philhealth-pagibig — B-PHI-1/2/3, C-HDMF-1/2/3; PhilHealth + Pag-IBIG member counts; HR + benefits officers
 - [ ] tam-gsis — D-GSIS-1/2/3/4; GSIS active members + retirees; government HR officers
 - [ ] tam-ofw-migration — E-OFW-1/2/3, OWWA; OFW annual deployments from DMW/POEA statistics; recruitment agencies + OFW legal advocates
 - [ ] tam-maritime-seafarer — I-MAR-1/2/3/4; MARINA-registered seafarers + annual certifications; manning agencies + training centers
