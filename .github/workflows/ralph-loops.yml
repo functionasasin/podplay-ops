@@ -2,7 +2,7 @@ name: Ralph Loops
 
 on:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "0 6,18 * * *"   # 6am + 6pm UTC (2pm + 2am Manila)
   workflow_dispatch:
     inputs:
       loop:
@@ -55,7 +55,7 @@ jobs:
     strategy:
       matrix: ${{ fromJson(needs.discover.outputs.matrix) }}
       fail-fast: false
-    timeout-minutes: 30
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
         with:
@@ -88,58 +88,51 @@ jobs:
         if: steps.check.outputs.skip != 'true'
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
 
-      - name: Run iterations (up to 20 minutes)
+      - name: Run until convergence (6-hour window)
         if: steps.check.outputs.skip != 'true'
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           CHEERFUL_DATABASE_URL: ${{ secrets.CHEERFUL_DATABASE_URL }}
         run: |
           cd "loops/${{ matrix.loop }}"
-          DEADLINE=$(($(date +%s) + 1200))   # 20-minute budget
           FAILURES=0
+          ITERATION=0
 
-          while [ $(date +%s) -lt $DEADLINE ]; do
-            # Stop if already converged
+          while true; do
+            # Stop if converged
             if [ -f status/converged.txt ]; then
-              echo "Loop converged, stopping."
+              echo "Loop converged after $ITERATION iterations."
               break
             fi
 
-            # Stop if less than 90s left (not enough runway for another aspect)
-            REMAINING=$((DEADLINE - $(date +%s)))
-            if [ $REMAINING -lt 90 ]; then
-              echo "Less than 90s remaining — stopping cleanly. Remaining: ${REMAINING}s"
-              break
-            fi
+            ITERATION=$((ITERATION + 1))
+            echo "--- $(date '+%H:%M:%S') | Iteration $ITERATION ---"
 
-            echo "--- $(date '+%H:%M:%S') | Remaining: ${REMAINING}s ---"
-
-            # Run one aspect (cap each at 15 min — balances large aspects vs multi-aspect runs)
-            if timeout 900 bash -c '
+            # Run one aspect — no per-iteration cap, let it take as long as it needs
+            if bash -c '
               unset CLAUDECODE
               cat PROMPT.md | claude --print --dangerously-skip-permissions
             '; then
               FAILURES=0
             else
               EXIT_CODE=$?
-              [ "$EXIT_CODE" -eq 124 ] && echo "WARNING: aspect timed out" || echo "WARNING: aspect exited $EXIT_CODE"
+              echo "WARNING: iteration $ITERATION exited with code $EXIT_CODE"
               FAILURES=$((FAILURES + 1))
               [ $FAILURES -ge 3 ] && echo "3 consecutive failures — stopping." && break
             fi
 
-            # Claude commits itself inside the prompt — just push whatever is unpushed
+            # Push any local commits (including those made by claude)
             git add -A
             git diff --cached --quiet || git commit -m "loop(${{ matrix.loop }}): iteration"
-            # Push any local commits (including those made by claude)
             if git log origin/${{ github.ref_name }}..HEAD --oneline | grep -q .; then
               git pull --rebase origin "${{ github.ref_name }}" || true
-              git push || echo "WARNING: Push failed, will retry next run"
+              git push || echo "WARNING: Push failed"
             fi
 
             sleep 5
           done
 
-          echo "Time budget exhausted or loop finished."
+          echo "Done. Total iterations: $ITERATION"
 
       - name: Check convergence and notify
         if: steps.check.outputs.skip != 'true'
