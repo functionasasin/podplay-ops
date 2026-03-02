@@ -3,7 +3,7 @@
 This directory contains the complete product specification. A forward loop can build the entire platform by reading ONLY this directory.
 
 **Last updated:** 2026-03-02
-**Convergence status:** IN PROGRESS (53/54 aspects analyzed)
+**Convergence status:** IN PROGRESS (54/54 aspects analyzed — Wave 4 database-schema complete; Waves 4-6 remaining items pending)
 
 ---
 
@@ -69,7 +69,7 @@ This directory contains the complete product specification. A forward loop can b
 
 | File | Status | Description |
 |------|--------|-------------|
-| database/schema.md | PENDING | Every table, column, type, constraint |
+| [database/schema.md](database/schema.md) | COMPLETE | 12 PostgreSQL enum types; 12 tables (users, user_sessions, oauth_accounts, password_reset_tokens, email_verification_tokens, computations, computation_cwt_entries, computation_quarterly_payments, subscriptions, invoices, cpa_clients, cpa_client_computations, api_keys, audit_logs, pdf_exports); all CREATE TABLE DDL with every column type/constraint/default; 47 CREATE INDEX statements; constraints summary table (40 rows); storage estimates; 6 design decision rationale notes |
 | database/migrations.md | PENDING | Migration order, seed data |
 | database/indexes.md | PENDING | Query patterns and indexes |
 | database/retention.md | PENDING | Data retention policy |
