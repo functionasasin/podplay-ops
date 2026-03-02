@@ -1,6 +1,6 @@
 # Exhaustive Test Vectors — Philippine Freelance Tax Optimizer
 
-**Status:** PARTIAL — Groups 1–11 complete (59 vectors + 7 cross-references). Groups 12–14 pending.
+**Status:** PARTIAL — Groups 1–12 complete (60 vectors + 13 cross-references). Groups 13–14 pending.
 **Last updated:** 2026-03-02
 **Cross-references:**
 - Scenario codes: [domain/scenarios.md](../../domain/scenarios.md)
@@ -8913,4 +8913,407 @@ TaxComputationResult {
 5. **Dual employment creates systematic withholding gaps.** Second employers who compute withholding on their standalone payroll will almost always underwithhold when a first employer exists (TV-EX-G11-009). The ₱37,500 gap arises because ₱200,000 is below the ₱250K zero bracket in isolation but pushes combined compensation to ₱550,000 (bracket 3 at 20%). This is a common BIR audit trigger.
 
 6. **Path B at ₱2M combined NTI boundary (TV-EX-G11-005).** When business OSD NTI + compensation lands exactly at the ₱2,000,000 bracket 5 threshold, the bracket 5 marginal rate (30%) applies to ₱0 excess → IT = ₱402,500. This coincidental boundary contact is not an error — it is the correct bracket 4 maximum IT. The formula: 402,500 + (2,000,000 − 2,000,000) × 0.30 = 402,500 + 0 = ₱402,500.
+
+
+---
+
+## GROUP 12: Breakeven and Boundary Precision Scenarios (SC-BE)
+
+**7 scenario codes:** SC-BE-OSD-8-LO, SC-BE-OSD-WINS, SC-BE-OSD-8-HI, SC-BE-8-ITEMIZED-500K, SC-BE-OSD-ITEMIZED, SC-BELOW-250K, SC-AT-250K-EXACT
+
+**Purpose of this group:** Every vector tests the engine at an exact mathematical boundary where two tax paths produce equal total tax, or at the nearest integer values on each side of such a boundary. These vectors collectively prove that:
+1. The OSD-wins window (₱400,001–₱437,499 gross receipts) is exactly identified and its boundary values properly resolve via tie-break.
+2. The 8%/itemized crossover at 43.33% expense ratio is correctly computed.
+3. The OSD/itemized structural identity at exactly 40% expense ratio is resolved via tie-break.
+4. Below-threshold cases (gross < ₱250,000 and gross = ₱250,000) correctly floor the 8% base to zero and apply the zero-IT result.
+5. All tie-break rules (Path C > Path B > Path A per INV-RC-05) are applied consistently.
+
+**Common characteristics for Group 12 vectors (unless noted otherwise):**
+- `taxpayer_type`: PURELY_SE
+- `is_mixed_income`: false
+- `is_bmbe_registered`: false
+- `subject_to_sec_117_128`: false
+- `is_gpp_partner`: false
+- `taxable_compensation`: ₱0.00
+- `compensation_cwt`: ₱0.00
+- `cost_of_goods_sold`: ₱0.00
+- `prior_quarterly_payments`: ₱0.00
+- `cwt_2307_entries`: []
+- `prior_year_excess_cwt`: ₱0.00
+- `actual_filing_date`: 2026-04-15 (on-time)
+- `return_type`: ORIGINAL
+- `prior_payment_for_return`: ₱0.00
+- `sales_returns_allowances`: ₱0.00
+- `non_operating_income`: ₱0.00
+- `nolco_carryover`: ₱0.00
+- `elected_regime`: null (optimizer mode)
+- `filing_period`: ANNUAL
+- `tax_year`: 2025
+
+---
+
+## TV-EX-G12-001: SC-BE-OSD-8-LO — Lower Boundary: Tie at ₱400,000 → Path C Wins
+
+**Scenario code:** SC-BE-OSD-8-LO
+**Cross-reference:** Full vector in [edge-cases.md → TV-EDGE-003](edge-cases.md#tv-edge-003-sc-be-osd-8-lo--exact-tie-at-400000--path-c-wins-tie-break).
+
+**Summary:**
+- **Gross receipts:** ₱400,000.00
+- **Itemized expenses:** ₱0.00
+- **is_vat_registered:** false; **taxpayer_tier:** MICRO
+
+**Key values (from TV-EDGE-003):**
+
+| Path | IT | PT | Total | Eligible |
+|------|----|----|-------|---------|
+| Path A (Itemized) | ₱22,500.00 | ₱12,000.00 | ₱34,500.00 | Yes |
+| Path B (OSD) | ₱0.00 | ₱12,000.00 | ₱12,000.00 | Yes |
+| Path C (8%) | ₱12,000.00 | ₱0.00 | ₱12,000.00 | Yes |
+
+- **Tie:** Path B = Path C = ₱12,000.00
+- **Tie-break (INV-RC-05):** PATH_C wins
+- **savings_vs_next_best:** ₱0.00
+- **Recommended form:** Form 1701A Part IV-B
+- **Legal basis:** NIRC Sec. 24(A)(2)(b); CR-006; INV-RC-05
+
+**What this proves:** The lower boundary of the OSD-wins window is exactly ₱400,000. At this gross, Path B = Path C. The tie-break sends the recommendation to Path C. At ₱400,001, Path C immediately becomes cheaper than Path B (see TV-EX-G12-002). At ₱399,999, Path C would be even cheaper (further below the crossover).
+
+---
+
+## TV-EX-G12-002: SC-BE-OSD-WINS — OSD Beats 8% in the ₱400K–₱437.5K Window
+
+**Scenario code:** SC-BE-OSD-WINS
+**Cross-reference:** Full vector in [edge-cases.md → TV-EDGE-002](edge-cases.md#tv-edge-002-sc-be-osd-wins--osd-beats-8-in-the-narrow-400k4375k-window).
+
+**Summary:**
+- **Gross receipts:** ₱420,000.00
+- **Itemized expenses:** ₱0.00
+- **is_vat_registered:** false; **taxpayer_tier:** MICRO
+
+**Key values (from TV-EDGE-002):**
+
+| Path | IT | PT | Total | Eligible |
+|------|----|----|-------|---------|
+| Path A (Itemized) | ₱26,500.00 | ₱12,600.00 | ₱39,100.00 | Yes |
+| Path B (OSD) | ₱300.00 | ₱12,600.00 | ₱12,900.00 | Yes |
+| Path C (8%) | ₱13,600.00 | ₱0.00 | ₱13,600.00 | Yes |
+
+- **Recommended path:** PATH_B
+- **savings_vs_next_best:** ₱700.00 (vs. Path C)
+- **savings_vs_worst:** ₱26,200.00 (vs. Path A)
+- **Recommended form:** Form 1701A Part IV-A
+- **Legal basis:** NIRC Sec. 34(L); CR-005; CR-014
+
+**What this proves:** This is the ONLY gross-receipts range (₱400,001–₱437,499) for a purely self-employed service provider with no expenses where OSD outperforms 8%. The engine must recommend Path B here, not Path C. The maximum savings in this window is ₱833.33 (at the midpoint near ₱418,750). Below ₱400,001 and above ₱437,499, Path C is cheaper. The engine must identify this narrow reversal and recommend accordingly.
+
+---
+
+## TV-EX-G12-003: SC-BE-OSD-8-HI — Upper Boundary: Tie at ₱437,500 → Path C Wins
+
+**Scenario code:** SC-BE-OSD-8-HI
+**Cross-reference:** Full vector in [edge-cases.md → TV-EDGE-014](edge-cases.md#tv-edge-014-sc-be-osd-8-hi--exact-tie-at-437500--upper-boundary-of-osd-wins-window).
+
+**Summary:**
+- **Gross receipts:** ₱437,500.00
+- **Itemized expenses:** ₱0.00
+- **is_vat_registered:** false; **taxpayer_tier:** MICRO
+
+**Key values (from TV-EDGE-014):**
+
+| Path | IT | PT | Total | Eligible |
+|------|----|----|-------|---------|
+| Path A (Itemized) | ₱28,125.00 | ₱13,125.00 | ₱41,250.00 | Yes |
+| Path B (OSD) | ₱1,875.00 | ₱13,125.00 | ₱15,000.00 | Yes |
+| Path C (8%) | ₱15,000.00 | ₱0.00 | ₱15,000.00 | Yes |
+
+- **Tie:** Path B = Path C = ₱15,000.00
+- **Tie-break (INV-RC-05):** PATH_C wins
+- **savings_vs_next_best:** ₱0.00
+- **Recommended form:** Form 1701A Part IV-B
+- **Legal basis:** NIRC Sec. 24(A)(2)(b); CR-006; INV-RC-05
+
+**What this proves:** The upper boundary of the OSD-wins window is exactly ₱437,500. At this gross, Path B = Path C again. The tie-break sends the recommendation back to Path C. At ₱437,499, Path B is fractionally cheaper (OSD still wins within the window). At ₱437,501, Path C is fractionally cheaper. These three vectors (TV-EX-G12-001, TV-EX-G12-002, TV-EX-G12-003) together fully characterize the OSD-wins window from both boundaries through the interior.
+
+---
+
+## TV-EX-G12-004: SC-BE-8-ITEMIZED-500K — Exact Tie: 8% = Itemized at 43.33% Expense Ratio
+
+**Scenario code:** SC-BE-8-ITEMIZED-500K
+**Cross-reference:** Full vector in [edge-cases.md → TV-EDGE-004](edge-cases.md#tv-edge-004-sc-be-8-itemized-500k--exact-tie-8--itemized-at-4333-expense-ratio).
+
+**Summary:**
+- **Gross receipts:** ₱500,000.00
+- **Itemized expenses:** ₱216,667.00 (exactly 43.33% of gross)
+- **is_vat_registered:** false; **taxpayer_tier:** MICRO
+
+**Key values (from TV-EDGE-004):**
+
+| Path | NTI | IT | PT | Total | Eligible |
+|------|-----|----|----|-------|---------|
+| Path A (Itemized) | ₱283,333.00 | ₱5,000.00 | ₱15,000.00 | ₱20,000.00 | Yes |
+| Path B (OSD) | ₱300,000.00 | ₱7,500.00 | ₱15,000.00 | ₱22,500.00 | Yes |
+| Path C (8%) | n/a | ₱20,000.00 | ₱0.00 | ₱20,000.00 | Yes |
+
+- **Tie:** Path A = Path C = ₱20,000.00
+- **Tie-break (INV-RC-05):** PATH_C wins (8% preferred over itemized on equal total)
+- **savings_vs_next_best:** ₱0.00
+- **savings_vs_worst:** ₱2,500.00 (vs. Path B)
+- **Recommended form:** Form 1701A Part IV-B
+- **Legal basis:** NIRC Sec. 24(A)(2)(b); Sec. 34(A)-(K); CR-006; INV-RC-05
+
+**What this proves:** At exactly 43.33% expense ratio (₱216,667 / ₱500,000), Path A and Path C produce equal total tax. Below this ratio, Path C wins; above it, Path A wins. The tie-break correctly selects Path C because 8% is simpler to administer (no receipts required, no PT obligation). Path B is dominated by both at this expense level (OSD always produces higher NTI than itemized when itemized expenses > 40% of gross, which ₱216,667 is, since 43.33% > 40%).
+
+---
+
+## TV-EX-G12-005: SC-BE-OSD-ITEMIZED — Exact Tie: OSD = Itemized at 40% Expense Ratio (VAT Regime)
+
+**Scenario code:** SC-BE-OSD-ITEMIZED
+**Description:** A VAT-registered IT consultant earns ₱4,000,000 gross receipts (VAT-exclusive) with exactly ₱1,600,000 in documented business expenses (40% of gross). Because Path C is unavailable for VAT-registered taxpayers, the regime comparison reduces to Paths A vs. B only. At exactly 40% expenses, OSD (which deducts exactly 40% of gross) produces the same NTI as itemized (which deducts exactly ₱1,600,000 = 40% of gross). The totals are mathematically identical, and the tie-break resolves in favor of Path B (OSD preferred over itemized). This vector demonstrates: (1) the structural identity between OSD and itemized at the 40% crossover, (2) Path C ineligibility for VAT taxpayers, and (3) the INV-RC-05 tie-break ordering when C is absent.
+
+**Tax year:** 2025
+**Filing period:** ANNUAL
+
+### Input (fields differing from Group 12 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `taxpayer_class` | SERVICE_PROVIDER | IT consulting — no COGS |
+| `taxpayer_tier` | SMALL | ₱4,000,000 ≥ ₱3,000,000 → SMALL tier per EOPT |
+| `gross_receipts` | ₱4,000,000.00 | VAT-exclusive annual professional fees |
+| `is_vat_registered` | true | Gross exceeds ₱3M VAT threshold; taxpayer registered under Sec. 109 |
+| `itemized_expenses.total` | ₱1,600,000.00 | Exactly 40.00% of gross receipts (documented: salaries ₱900K, rent ₱300K, software ₱200K, professional fees ₱200K) |
+| All other itemized expense sub-fields | Sum to ₱1,600,000.00 | Valid allocation across allowable Sec. 34 categories |
+
+**Total net_gross_receipts:** ₱4,000,000.00 (no sales returns or allowances)
+
+### Expected Intermediate Values
+
+**PL-02:** net_gross_receipts = ₱4,000,000.00; taxpayer_tier = SMALL; income_type = PURELY_SE; taxpayer_class = SERVICE_PROVIDER
+
+**PL-04:** path_c_eligible = false; ineligibility_reasons = [REASON_VAT_REGISTERED]; path_c_status = INELIGIBLE
+
+**PL-05 (Itemized):**
+- `total_itemized_deductions` = ₱1,600,000.00 (exactly 40% of gross; all deductions substantiated)
+- `ear_cap` = ₱4,000,000 × 0.01 = ₱40,000.00 (service provider EAR cap); assumed not exceeded in this vector
+- `NOLCO_applied` = ₱0.00
+
+**PL-06 (OSD):**
+- `osd_amount` = ₱4,000,000 × 0.40 = **₱1,600,000.00**
+- `nti_path_b` = ₱4,000,000 − ₱1,600,000 = **₱2,400,000.00**
+
+**PL-07 (CWT):** total_cwt = ₱0.00; prior_quarterly_payments = ₱0.00
+
+**PL-08 (Path A — Itemized):**
+- `nti_path_a` = ₱4,000,000 − ₱1,600,000 = **₱2,400,000.00**
+- `income_tax_path_a` = graduated_tax_2023(₱2,400,000)
+  = ₱402,500 + (₱2,400,000 − ₱2,000,000) × 0.30
+  = ₱402,500 + ₱400,000 × 0.30
+  = ₱402,500 + ₱120,000
+  = **₱522,500.00** (bracket 5)
+- `percentage_tax_path_a` = ₱0.00 (VAT-registered; PT and VAT are mutually exclusive; VAT is filed separately, not included in income tax computation)
+- `total_tax_path_a` = **₱522,500.00**
+
+**PL-09 (Path B — OSD):**
+- `osd_amount` = **₱1,600,000.00**
+- `nti_path_b` = **₱2,400,000.00** (identical to Path A NTI by construction: OSD amount = itemized amount = 40% of gross)
+- `income_tax_path_b` = graduated_tax_2023(₱2,400,000)
+  = ₱402,500 + ₱400,000 × 0.30
+  = **₱522,500.00** (bracket 5; same as Path A because NTIs are equal)
+- `percentage_tax_path_b` = ₱0.00 (VAT-registered)
+- `total_tax_path_b` = **₱522,500.00**
+
+**PL-10 (Path C):** SKIPPED — path_c_eligible = false
+
+**PL-13 (Compare):**
+- Path A: ₱522,500.00
+- Path B: ₱522,500.00
+- Path C: INELIGIBLE
+- Tie condition: total_tax_path_a == total_tax_path_b (₱522,500 = ₱522,500) → TIE
+- Eligible paths in tie: {PATH_A, PATH_B}
+- Tie-break (INV-RC-05): Among eligible paths, C > B > A; since C is ineligible, PATH_B preferred over PATH_A
+- `recommended_path` = PATH_B
+- `savings_vs_next_best` = ₱0.00 (tie)
+- `savings_vs_worst` = ₱0.00 (only 2 eligible paths, both equal)
+- `tie_exists` = true
+
+**PL-14 (Balance Payable):**
+- `income_tax_due` = ₱522,500.00
+- `total_cwt_credits` = ₱0.00
+- `quarterly_it_paid` = ₱0.00
+- `balance_payable` = ₱522,500.00
+
+**PL-15:** form = FORM_1701; form_section = SCHEDULE_OSD (Part IV-A, Path B elected at annual)
+
+### Expected Final Output
+
+```
+TaxComputationResult {
+  tax_year: 2025,  filing_period: ANNUAL,
+  taxpayer_type: PURELY_SE,  taxpayer_tier: SMALL,
+
+  regime_comparison: {
+    path_a: {
+      eligible: true,
+      total_itemized_deductions: 1_600_000.00,
+      nti: 2_400_000.00,
+      income_tax: 522_500.00,
+      percentage_tax: 0.00,
+      total_tax: 522_500.00
+    },
+    path_b: {
+      eligible: true,
+      osd_amount: 1_600_000.00,
+      nti: 2_400_000.00,
+      income_tax: 522_500.00,
+      percentage_tax: 0.00,
+      total_tax: 522_500.00
+    },
+    path_c: {
+      eligible: false,
+      ineligibility_reasons: ["VAT_REGISTERED"],
+      total_tax: null
+    },
+    recommended_path: PATH_B,
+    savings_vs_next_best: 0.00,
+    savings_vs_worst: 0.00,
+    tie_exists: true,
+    tie_paths: ["PATH_A", "PATH_B"]
+  },
+
+  selected_path: PATH_B,
+  income_tax_due: 522_500.00,
+  percentage_tax_due: 0.00,
+  total_tax_due: 522_500.00,
+  compensation_tax_withheld: 0.00,
+  cwt_credits: 0.00,
+  quarterly_it_paid: 0.00,
+  balance_payable: 522_500.00,
+  overpayment: 0.00,
+  overpayment_disposition: null,
+  form: FORM_1701,  form_section: SCHEDULE_OSD,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [],
+  manual_review_flags: [],
+  ineligibility_notifications: [IN_VAT_REGISTERED]
+}
+```
+
+**IN_VAT_REGISTERED** notification displayed in results: "The 8% flat rate option (Path C) is not available because you are VAT-registered. Your regime choice is between Itemized Deductions (Path A) and Optional Standard Deduction (Path B)."
+
+### Verification
+
+**Why NTI is identical under Path A and Path B:**
+- Path A: NTI = Gross − Itemized = ₱4,000,000 − ₱1,600,000 = **₱2,400,000**
+- Path B: NTI = Gross × 0.60 = ₱4,000,000 × 0.60 = **₱2,400,000**
+- These are equal because OSD is defined as 40% of gross, so OSD_NTI = Gross − (Gross × 0.40) = Gross × 0.60; and when Itemized = exactly 40% × Gross, Itemized_NTI = Gross − (Gross × 0.40) = Gross × 0.60. The two formulas collapse to the same value whenever Itemized_expenses = 0.40 × Gross_receipts. ✓
+
+**Graduated tax verification:**
+- graduated_tax_2023(2,400,000) = 402,500 + (2,400,000 − 2,000,000) × 0.30 = 402,500 + 400,000 × 0.30 = 402,500 + 120,000 = **₱522,500** ✓
+
+**Tie-break correctness:**
+- INV-RC-05: ordering is C > B > A on equal total tax; C is ineligible; among {B, A}: B is preferred → PATH_B ✓
+
+**Why Path C is ineligible:**
+- is_vat_registered = true; per DT-11 (VAT vs OPT obligation), VAT-registered taxpayer cannot elect 8% option per NIRC Sec. 24(A)(2)(b) which limits the 8% option to taxpayers "whose annual gross sales or receipts and other non-operating income does not exceed the VAT threshold"; since they ARE VAT-registered, they have already crossed (or voluntarily entered) the VAT regime ✓
+
+**SMALL tier implications:**
+- taxpayer_tier = SMALL (₱3M ≤ gross < ₱20M per EOPT Act)
+- Surcharge rate: 10% (SMALL tier, reduced from 25% under EOPT); interest rate: 6% per annum
+- These apply only if penalties are triggered; this vector has no penalties ✓
+
+**What this vector specifically tests:**
+1. Path C ineligibility code VAT_REGISTERED is correctly generated
+2. Tie-break between two eligible paths (no C available) selects PATH_B per INV-RC-05
+3. OSD amount exactly equals total itemized amount when expense ratio = exactly 40%
+4. No percentage tax for VAT-registered taxpayer (VAT is a separate filing, not combined here)
+5. SMALL tier is correctly assigned when gross ≥ ₱3,000,000
+6. `tie_exists = true` and `tie_paths` array populated correctly
+
+**Legal basis:** NIRC Sec. 24(A)(2)(b) (8% option threshold); Sec. 34(L) (OSD 40%); Sec. 34(A)-(K) (itemized deductions); Sec. 116 and Sec. 109 (VAT/PT mutual exclusivity); RA 11976 EOPT (SMALL tier); INV-RC-05 (tie-break ordering); CR-031 (VAT vs OPT determination); CR-028 (regime comparison pseudocode).
+
+---
+
+## TV-EX-G12-006: SC-BELOW-250K — Gross Below ₱250,000; 8% Floors to Zero; Path C Wins by Eliminating PT
+
+**Scenario code:** SC-BELOW-250K
+**Cross-reference:** Full vector in [edge-cases.md → TV-EDGE-005](edge-cases.md#tv-edge-005-sc-below-250k--zero-income-tax-path-c-still-wins).
+
+**Summary:**
+- **Gross receipts:** ₱180,000.00
+- **Itemized expenses:** ₱0.00
+- **is_vat_registered:** false; **taxpayer_tier:** MICRO
+
+**Key values (from TV-EDGE-005):**
+
+| Path | 8% Base / NTI | IT | PT | Total | Eligible |
+|------|---------------|----|----|-------|---------|
+| Path A (Itemized) | ₱180,000 NTI | ₱0.00 | ₱5,400.00 | ₱5,400.00 | Yes |
+| Path B (OSD) | ₱108,000 NTI | ₱0.00 | ₱5,400.00 | ₱5,400.00 | Yes |
+| Path C (8%) | ₱0 (floored from −₱70,000) | ₱0.00 | ₱0.00 | ₱0.00 | Yes |
+
+- **Recommended path:** PATH_C
+- **savings_vs_next_best:** ₱5,400.00 (vs. Path B, tie-break: PATH_B over PATH_A)
+- **Recommended form:** Form 1701A Part IV-B
+- **Key implementation detail:** `eight_pct_base = max(gross_receipts − 250_000, 0) = max(−70_000, 0) = 0`; PT waiver applies even when 8% base is zero — the election, not the base amount, waives PT
+- **Legal basis:** NIRC Sec. 24(A)(2)(b); CR-006; INV-RC-05
+
+**What this proves:** Electing 8% when gross < ₱250,000 produces a total tax of exactly ₱0 because: (a) the 8% base is floored to zero (gross − ₱250K is negative), and (b) electing 8% waives the 3% PT obligation. All three paths yield ₱0 income tax (NTI below the ₱250,000 zero bracket for all paths). But Paths A and B still owe PT on the full gross. Path C eliminates this PT, making it strictly superior regardless of expense level.
+
+---
+
+## TV-EX-G12-007: SC-AT-250K-EXACT — Exactly ₱250,000 Gross; 8% Base = ₱0; Maximum PT Savings
+
+**Scenario code:** SC-AT-250K-EXACT
+**Cross-reference:** Full vector in [edge-cases.md → TV-EDGE-013](edge-cases.md#tv-edge-013-sc-at-250k-exact--exactly-250000-gross-8-base-floored-to-zero).
+
+**Summary:**
+- **Gross receipts:** ₱250,000.00
+- **Itemized expenses:** ₱0.00
+- **is_vat_registered:** false; **taxpayer_tier:** MICRO
+
+**Key values (from TV-EDGE-013):**
+
+| Path | 8% Base / NTI | IT | PT | Total | Eligible |
+|------|---------------|----|----|-------|---------|
+| Path A (Itemized) | ₱250,000 NTI | ₱0.00 | ₱7,500.00 | ₱7,500.00 | Yes |
+| Path B (OSD) | ₱150,000 NTI | ₱0.00 | ₱7,500.00 | ₱7,500.00 | Yes |
+| Path C (8%) | ₱0 (base = 250,000 − 250,000 = 0) | ₱0.00 | ₱0.00 | ₱0.00 | Yes |
+
+- **Recommended path:** PATH_C
+- **savings_vs_next_best:** ₱7,500.00 (maximum PT savings; at exactly ₱250,000 gross, the 8% IT is ₱0 AND the PT waiver is ₱7,500 — both benefits realized simultaneously)
+- **next_best_path:** PATH_B (tie between A and B → PATH_B wins INV-RC-05 tie-break)
+- **Recommended form:** Form 1701A Part IV-B
+- **Key implementation detail:** `eight_pct_base = max(250_000 − 250_000, 0) = max(0, 0) = 0`; income_tax_path_c = 0 × 0.08 = ₱0.00; PT waiver applies because 8% is elected, not because base > 0
+- **Note on Path A NTI:** graduated_tax_2023(250,000) = (250,000 − 250,000) × 0.15 = ₱0 (the 15% bracket is for NTI ABOVE ₱250,000; at exactly ₱250,000, the excess is ₱0)
+- **Legal basis:** NIRC Sec. 24(A)(1) (zero bracket floor); Sec. 24(A)(2)(b); CR-006; INV-RC-05
+
+**What this proves:** ₱250,000 is simultaneously the zero bracket floor for income tax and the deduction from gross for the 8% computation. When gross = ₱250,000: IT is ₱0 under all paths, 8% base is exactly ₱0, and the only differentiator is PT (₱7,500 owed under A/B but waived under C). This is the gross level where Path C produces the largest percentage savings over A/B relative to total tax owed (savings = 100% of total obligation).
+
+---
+
+## GROUP 12 SUMMARY TABLE
+
+| Vector | Scenario | Gross Receipts | Expenses | Expense % | VAT? | Eligible Paths | Optimal Path | Total Tax | Savings vs Next | Key Test Point |
+|--------|---------|---------------|---------|-----------|------|----------------|-------------|-----------|-----------------|----------------|
+| TV-EX-G12-001 (→TV-EDGE-003) | SC-BE-OSD-8-LO | ₱400,000 | ₱0 | 0% | No | A, B, C | Path C (tie-break) | ₱12,000 | ₱0.00 (tie B=C) | Lower OSD-wins boundary; tie at ₱12K; INV-RC-05 → C |
+| TV-EX-G12-002 (→TV-EDGE-002) | SC-BE-OSD-WINS | ₱420,000 | ₱0 | 0% | No | A, B, C | Path B (OSD wins!) | ₱12,900 | ₱700 vs C | OSD interior of window; only range where B beats C for zero-expense service provider |
+| TV-EX-G12-003 (→TV-EDGE-014) | SC-BE-OSD-8-HI | ₱437,500 | ₱0 | 0% | No | A, B, C | Path C (tie-break) | ₱15,000 | ₱0.00 (tie B=C) | Upper OSD-wins boundary; tie at ₱15K; INV-RC-05 → C |
+| TV-EX-G12-004 (→TV-EDGE-004) | SC-BE-8-ITEMIZED-500K | ₱500,000 | ₱216,667 | 43.33% | No | A, B, C | Path C (tie-break) | ₱20,000 | ₱0.00 (tie A=C) | 8%/itemized breakeven at 43.33% expense ratio; INV-RC-05 → C |
+| TV-EX-G12-005 (NEW) | SC-BE-OSD-ITEMIZED | ₱4,000,000 | ₱1,600,000 | 40.00% | Yes | A, B only | Path B (tie-break) | ₱522,500 | ₱0.00 (tie A=B) | OSD/itemized tie at exactly 40% expenses; C ineligible (VAT); INV-RC-05 → B over A |
+| TV-EX-G12-006 (→TV-EDGE-005) | SC-BELOW-250K | ₱180,000 | ₱0 | 0% | No | A, B, C | Path C | ₱0 | ₱5,400 vs A/B | Below ₱250K: 8% base floored to ₱0; PT waiver eliminates only remaining tax |
+| TV-EX-G12-007 (→TV-EDGE-013) | SC-AT-250K-EXACT | ₱250,000 | ₱0 | 0% | No | A, B, C | Path C | ₱0 | ₱7,500 vs B | Exactly ₱250K: 8% base = ₱0; max PT savings; IT ₱0 for all paths; only PT differentiates |
+
+**Key insights validated in Group 12:**
+
+1. **The OSD-wins window is exactly ₱400,001–₱437,499 (exclusive boundaries).** At both endpoints (₱400,000 and ₱437,500), Path B = Path C → INV-RC-05 tie-break sends recommendation to Path C. Inside the window, Path B strictly dominates Path C. Outside the window, Path C strictly dominates Path B. Maximum OSD advantage in the window is ₱833.33 (at gross ≈ ₱418,750). The engine must not simplify to "8% always beats OSD for service providers below ₱3M" — this window is a real counter-example.
+
+2. **The 8%/itemized breakeven is exactly 43.33% (₱216,667 on ₱500,000 gross).** At this exact expense ratio, Path A = Path C = ₱20,000 → INV-RC-05 sends recommendation to Path C (8% preferred over itemized even on tie, because it eliminates PT filing burden). Below 43.33%, Path C wins outright. Above 43.33%, Path A wins outright.
+
+3. **The OSD/itemized tie at exactly 40% expense ratio is correctly resolved.** When itemized expenses = exactly 40% × gross_receipts, OSD and itemized deductions produce the same NTI and therefore the same IT. This structural identity holds at any gross receipts level. When Path C is ineligible (VAT case), INV-RC-05 resolves the remaining tie in favor of Path B (OSD over itemized — OSD requires no receipt substantiation, simpler administration).
+
+4. **Below ₱250,000 gross, 8% is strictly dominant regardless of expense level.** The 8% election waives PT even when the 8% base is floored to zero. Paths A and B always owe PT on the full gross (3% × gross), while Path C owes ₱0 PT. Since IT is also ₱0 under Path C (8% base = max(gross − 250K, 0) = 0), Path C total = ₱0 for any gross ≤ ₱250,000. No set of expenses can make Path A or B cheaper in this range.
+
+5. **The tie-break rule INV-RC-05 (C > B > A) has three distinct application scenarios.** (a) C tied with B (TV-EX-G12-001 and TV-EX-G12-003): C wins. (b) C tied with A (TV-EX-G12-004): C wins. (c) A tied with B, C ineligible (TV-EX-G12-005): B wins. The engine must implement this as a priority ordering, not as a hard-coded "Path C always wins on tie."
+
+6. **VAT-registered taxpayers have only two eligible regime options.** Path C is categorically unavailable for VAT-registered taxpayers regardless of income level or expense ratio. The ineligibility_notification IN_VAT_REGISTERED must appear in the results. The tie-break between A and B applies only to eligible paths — the engine correctly ignores Path C's position in the ordering when it is not in the eligible set.
 
