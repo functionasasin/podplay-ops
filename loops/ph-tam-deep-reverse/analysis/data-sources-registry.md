@@ -197,8 +197,10 @@ Government employment (excluding military) is approximately 1.7–2.3M based on 
 | Active practicing nurses (subset) | 509,297 (53.55%) | PRC via GMA News | Mar 2023 | OFFICIAL |
 | Criminologists | 252,129 | Statista citing PRC | 2023 | OFFICIAL |
 | Certified Public Accountants (CPAs) | ~200,000 | BOA Chairman statement, Manila Times May 2023 | 2023 | ESTIMATED |
-| Lawyers (Roll of Attorneys, SC) | 84,236 | Supreme Court Roll of Attorneys | Nov 2022 | OFFICIAL |
-| Estimated lawyers (with 2023–2024 Bar passers) | ~91,000–92,000 | DERIVED: 84,236 + 3,812 (2023 Bar) + 3,962 (2024 Bar) | End-2024 | DERIVED |
+| Lawyers (Roll of Attorneys, SC) | 84,236 | Supreme Court Roll of Attorneys (deborjalaw.com masterlist) | Nov 2022 | OFFICIAL |
+| Estimated lawyers (with 2023–2024 Bar passers) | ~92,010 | DERIVED: 84,236 + 3,812 (2023 Bar) + 3,962 (2024 Bar) | End-2024 | DERIVED |
+| IBP active living members (as cited in IBP/Wikipedia) | ~40,000 | IBP / Wikipedia (2016 figure, now outdated) | 2016 | ESTIMATED |
+| Note: Roll numbers exceed 70,000 per recent admittee numbers | — | Respicio.ph / deborjalaw.com | 2024 | OFFICIAL |
 | New CPAs (May 2023 exam) | 2,239 | PRC exam announcements | May 2023 | OFFICIAL |
 | New CPAs (December 2024 exam) | 3,058 | PRC exam announcements | Dec 2024 | OFFICIAL |
 | New nurses (2024) | 37,098 | PRC/Politiko.com | 2024 | OFFICIAL |
@@ -223,29 +225,60 @@ Lawyers are regulated by the Supreme Court (not PRC). The Roll of Attorneys is m
 
 **Primary URL:** https://www.sec.gov.ph/registered-firms-individuals-and-statistics/company-registration-statistics/
 **Annual Report URL:** https://www.sec.gov.ph/about-us/annual-report/
+**Suspension Order PDF (Feb 2024):** https://www.sec.gov.ph/wp-content/uploads/2024/02/2024OrderSuspension_Corporations_Due_to_Non-filing_of_Reportorial_Requirementsmore_than_5_Years.pdf
+**Cumulative Stats PDF (end-2021):** https://sec.gov.ph/wp-content/uploads/2022/01/2022_Cumulative-Number-of-Registered-Corporations-and-Partnerships-as-of-31-December-2021.pdf
 **Data type:** Corporate registrations by type; active/inactive/delinquent/revoked counts
-**Latest year available:** 2023 (new registrations); cumulative total as of end-2021 (per SEC PDF)
+**Latest year available:** 2024 (new registrations + active total); compliance status as of early 2024
 
-### Published Statistics
+### Published Statistics — New Registrations
 
 | Data Point | Number | Source | Year | Confidence |
 |-----------|--------|--------|------|------------|
-| Total new company registrations | 49,506 | SEC press release / BusinessMirror | Full-year 2023 | OFFICIAL |
-| — Domestic stock corporations (new) | ~36,600 (74%) | SEC press release | 2023 | DERIVED |
-| — Domestic non-stock corporations (new) | ~10,400 (21%) | SEC press release | 2023 | DERIVED |
-| — Partnerships (new) | ~2,475 (5%) | SEC press release | 2023 | DERIVED |
-| — One Person Corporations (new, 2023) | ~6,794 (~14% of total) | SEC press release / Manila Bulletin | 2023 | DERIVED |
-| New OPC registrations (2024) | 8,640 | SEC via BusinessMirror Feb 2025 | 2024 | OFFICIAL |
-| Total active SEC-registered companies (end-2024) | 527,710 | SEC press release / BusinessMirror | End-2024 | OFFICIAL |
-| Total active SEC-registered companies (end-2023, derived) | ~478,000–480,000 | DERIVED: 527,710 − 52,304 new 2024 registrations | End-2023 | DERIVED |
-| Cumulative registered companies + partnerships (all time) | 1,119,919 | SEC PDF — Dec 31, 2021 | End-2021 | OFFICIAL |
+| Total new company registrations | 52,304 | SEC press release / BusinessWorld Feb 2025 | Full-year 2024 | OFFICIAL |
+| — Domestic stock corporations (new) | 39,146 (75%) | SEC press release | 2024 | OFFICIAL |
+| — Domestic non-stock corporations (new) | 10,782 (21%) | SEC press release | 2024 | OFFICIAL |
+| — Partnerships (new) | 2,376 (5%) | SEC press release | 2024 | OFFICIAL |
+| — One Person Corporations (new, 2024) | 8,640 (~17% of stock corps) | SEC press release | 2024 | OFFICIAL |
+| Total new company registrations | 49,506 | SEC press release | Full-year 2023 | OFFICIAL |
+| — One Person Corporations (new, 2023) | 6,794 | SEC press release | 2023 | OFFICIAL |
 | New registrations in full-year 2022 | 42,936 | SEC press releases | 2022 | OFFICIAL |
+
+### Published Statistics — Active Total & Compliance Status
+
+| Data Point | Number | Source | Year | Confidence |
+|-----------|--------|--------|------|------------|
+| Total active SEC-registered companies (end-2024) | 527,710 | SEC press release / BusinessWorld Feb 2025 | End-2024 | OFFICIAL |
+| Total active SEC-registered companies (end-2023, derived) | ~475,406 | DERIVED: 527,710 − 52,304 new 2024 registrations | End-2023 | DERIVED |
+| Corporations suspended (Feb 2024 batch order) | 117,885 | SEC Order dated Feb 16 2024 / Business Inquirer | Feb 2024 | OFFICIAL |
+| Corporations delinquent status | 298,335 | SEC via Philstar / SEC Region 7 data (Oct 2024) | 2024 | OFFICIAL |
+| Corporations at risk of revocation | 22,403 | SEC via Philstar Dec 2024 | End-2024 | OFFICIAL |
+| Corporations revoked (cumulative as of end-2021) | 272,848 | SEC Cumulative PDF | End-2021 | OFFICIAL |
+| Corporations suspended (as of end-2021, pre-2024 wave) | 74,161 | SEC Cumulative PDF | End-2021 | OFFICIAL |
+| Corporations dissolved (cumulative as of end-2021) | 17,313 | SEC Cumulative PDF | End-2021 | OFFICIAL |
+| Corporations expired (cumulative as of end-2021) | 16,402 | SEC Cumulative PDF | End-2021 | OFFICIAL |
+| Total inactive companies (cumulative as of end-2021) | 383,272 | SEC Cumulative PDF | End-2021 | OFFICIAL |
+| Cumulative all-time registered (active + inactive, end-2021) | 1,119,919 | SEC Cumulative PDF | End-2021 | OFFICIAL |
+| Non-stock corporations active (end-2021) | 191,704 | SEC Cumulative PDF | End-2021 | OFFICIAL |
+| Partnerships active (end-2021) | 114,843 | SEC Cumulative PDF | End-2021 | OFFICIAL |
+| — General Partnership | 98,334 | SEC Cumulative PDF | End-2021 | OFFICIAL |
+| — Limited Partnership | 12,284 | SEC Cumulative PDF | End-2021 | OFFICIAL |
+| — Professional Partnership | 4,188 | SEC Cumulative PDF | End-2021 | OFFICIAL |
+
+### Published Statistics — Compliance Programs
+
+| Data Point | Number | Source | Year | Confidence |
+|-----------|--------|--------|------|------------|
+| 2023 Amnesty Program participants (GIS/AFS compliance) | 81,700+ | SEC press release / Grant Thornton | 2023 | OFFICIAL |
+| ECIP 2024 applicants (by Nov 28, 2024) | 3,200+ | SEC / Business Inquirer Nov 2024 | 2024 | OFFICIAL |
+| HARBOR beneficial ownership: effective filing date | January 30, 2026 | SEC MC No. 15, Series of 2025 | 2026 | OFFICIAL |
+| HARBOR: scope of covered entities | All stock/non-stock corps, OPCs, partnerships, foreign corps | SEC MC No. 15, Series of 2025 | 2026 | OFFICIAL |
 
 ### Not Publicly Indexed
 
-- Active vs. inactive/delinquent/revoked breakdown for end-2023
-- Cumulative OPC total (all years since 2019 Revised Corporation Code)
-- ECIP (Easy to Do Business) enrollment count
+- Active vs. inactive/delinquent/revoked breakdown updated for end-2024 (the 527,710 is active only; suspended/delinquent/revoked figures cited above are from regional data and 2024 news)
+- Cumulative OPC total (all years since 2019 Revised Corporation Code; only annual new OPC counts are published)
+- GIS annual filer count (total distinct corporations filing GIS each year — not separately published)
+- AFS annual filer count (total distinct corporations filing AFS each year — not separately published)
 
 ---
 
@@ -522,7 +555,7 @@ IPOPHL publishes annual statistics on trademark applications and registrations. 
 |--------------|----------------------|--------|------------|
 | Tax — self-employed | BIR 1701/1701A/1701Q filers | 2,186,544 | OFFICIAL |
 | Tax — all individuals | BIR registered individual taxpayers | 28,120,000 | OFFICIAL |
-| Tax — corporate | SEC active companies (end-2023) | ~478,000–480,000 | DERIVED |
+| Tax — corporate | SEC active companies (end-2024) | 527,710 | OFFICIAL |
 | Tax — VAT | VAT-registered taxpayers (estimate) | ~1.7M–2.5M | ESTIMATED |
 | Labor — private employees | PSA LFS private establishment workers | 24,900,000 | DERIVED |
 | Labor — government employees | GSIS active members | 2,120,340 | OFFICIAL |
@@ -534,9 +567,9 @@ IPOPHL publishes annual statistics on trademark applications and registrations. 
 | Seafarers | Annual sea-based deployments | 578,626 | OFFICIAL |
 | Professionals (all, PRC) | Cumulative registered | >4,900,000 | OFFICIAL |
 | CPAs | Cumulative registered | ~200,000 | ESTIMATED |
-| Lawyers | Roll of Attorneys | 84,236 (base) ~91,000 end-2024 | OFFICIAL / DERIVED |
+| Lawyers | Roll of Attorneys (Supreme Court) | 84,236 (Nov 2022 base); ~92,010 est. end-2024 | OFFICIAL / DERIVED |
 | Nurses | Cumulative registered | 951,105 | OFFICIAL |
-| SEC corporations (active) | All types | ~478,000–480,000 | DERIVED |
+| SEC corporations (active) | All types | 527,710 (end-2024) | OFFICIAL |
 | Motor vehicles | Total registered (all types) | ~13,300,000 | DERIVED |
 | Sole proprietors (DTI) | Annual registrations | ~932,000 | OFFICIAL |
 | Business establishments (PSA) | Total registered | 1,109,684 | OFFICIAL |
@@ -556,6 +589,10 @@ The following key data points are **not publicly indexed** and require direct PD
 | SSS registered employer count | SSS Annual Report PDF |
 | SSS 2023 member breakdown by type | SSS Annual Report PDF |
 | PhilHealth registered employer count | PhilHealth Annual Report PDF |
+| SEC GIS annual filer count (distinct corps filing GIS) | SEC Annual Report PDF or SEC FOI |
+| SEC AFS annual filer count (distinct corps filing AFS) | SEC Annual Report PDF or SEC FOI |
+| SEC cumulative OPC total (all years since 2019 RCC) | SEC Annual Report PDF or FOI |
+| DOLE total establishments with 10+ workers (exact count) | DOLE-BWC Annual Report or PSA ISLE |
 | MARINA cumulative SIRB holder count | MARINA 2023 Statistical Report PDF |
 | NLRC nationwide annual case filing total | FOI request to NLRC |
 | LRA property transaction counts (2023) | LRA direct inquiry or FOI |
