@@ -250,3 +250,4 @@ CITY-INTRAMUROS,CTY-18,Intramuros (Manila Walled City),Representative stop: Intr
 CITY-MACAPAGAL-BLVD,CTY-19,Macapagal Blvd / PITX Approach,Southern coastal Manila Bay route stop; Macapagal Blvd,14.5241,120.9950,ZONE_3,0,
 CITY-ANTIPOLO-JUNCTION,CTY-20,Antipolo Junction (NCR border),Eastern NCR fringe; Sumulong Hwy near Antipolo; UV Express origin,14.6289,121.1148,ZONE_4,0,
 CITY-BACOOR-JUNCTION,CTY-21,Bacoor Junction (NCR border),Southern NCR fringe; Bacoor Cavite approach via PITX corridor,14.4551,120.9637,ZONE_4,0,
+BGC-MOA-TERMINAL,,SM Mall of Asia Terminal (BGC Bus),BGC Bus weekend route terminus near MOA; SM Mall of Asia Pasay,14.5353,120.9832,ZONE_1,0,
