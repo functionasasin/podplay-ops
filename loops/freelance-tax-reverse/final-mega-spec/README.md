@@ -3,7 +3,7 @@
 This directory contains the complete product specification. A forward loop can build the entire platform by reading ONLY this directory.
 
 **Last updated:** 2026-03-02
-**Convergence status:** IN PROGRESS (54/54 aspects analyzed — Wave 4 database-schema complete; Waves 4-6 remaining items pending)
+**Convergence status:** IN PROGRESS (55/65 aspects analyzed — Wave 4 api-endpoints complete; api-auth, premium, Wave 5-6 pending)
 
 ---
 
@@ -48,7 +48,7 @@ This directory contains the complete product specification. A forward loop can b
 
 | File | Status | Description |
 |------|--------|-------------|
-| api/endpoints.md | PENDING | Every route, method, request/response shape |
+| [api/endpoints.md](api/endpoints.md) | COMPLETE | 15 sections: base URLs + versioning, conventions (auth methods, content types, monetary string format, timestamps, pagination, idempotency), error format + HTTP status codes + full error code reference table, rate limits table (5 tiers × 3 endpoint groups with exact per-hour/per-day/per-min limits), Auth endpoints (POST /auth/register, /auth/login, /auth/logout, /auth/forgot-password, /auth/reset-password, /auth/verify-email, /auth/resend-verification, GET /auth/oauth/google, GET /auth/oauth/google/callback, GET /auth/me — each with full request body field table + response body + side effects + error table), User Profile endpoints (GET/PATCH /users/me, POST /users/me/change-password, DELETE /users/me — all fields, validation, effects), Core Compute endpoint POST /compute (full TaxpayerInput JSON schema with all nested objects: itemized_expenses 23 fields, QuarterlyPayment 4 fields, Form2307Entry 8 fields, DepreciationEntry 7 fields, NolcoEntry 3 fields; full worked example request; annotated TaxComputationResult response), Computation History (POST/GET/GET/:id/PATCH/:id/DELETE/:id /computations), PDF Export (POST /computations/:id/exports with 5 export types + white-label Enterprise option, GET status/download, GET list), CPA Client Management (GET/POST /clients, GET/PATCH/DELETE /clients/:id, GET/POST /clients/:id/computations — Enterprise + CPA role), Batch API (POST /batch/computations up to 50 items, GET /batch/:id status, GET /batch/:id/results with success/failed discrimination), API Key Management (GET/POST /api-keys, DELETE /api-keys/:id — 8 scopes defined), Billing (GET /billing/subscription, POST /billing/checkout, POST /billing/portal, GET /billing/invoices), Webhooks (POST /webhooks/stripe with 6 handled events, POST /webhooks/paymongo with 3 handled events), Health checks (GET /health liveness, GET /health/ready readiness with 3 checks) |
 | api/auth.md | PENDING | Auth model, roles, permissions, sessions |
 | api/rate-limiting.md | PENDING | Rate limits per tier, error responses |
 | api/webhooks.md | PENDING | Event notifications (if applicable) |
