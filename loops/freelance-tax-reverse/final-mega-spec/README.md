@@ -3,7 +3,7 @@
 This directory contains the complete product specification. A forward loop can build the entire platform by reading ONLY this directory.
 
 **Last updated:** 2026-03-02
-**Convergence status:** IN PROGRESS (56/65 aspects analyzed — Wave 4 api-endpoints + api-auth complete; premium, Wave 5-6 pending)
+**Convergence status:** IN PROGRESS (57/65 aspects analyzed — Wave 4 api-endpoints + api-auth + premium-tiers complete; premium pricing/features, Wave 5-6 pending)
 
 ---
 
@@ -78,7 +78,7 @@ This directory contains the complete product specification. A forward loop can b
 
 | File | Status | Description |
 |------|--------|-------------|
-| premium/tiers.md | PENDING | Free vs pro vs enterprise feature gating |
+| [premium/tiers.md](premium/tiers.md) | COMPLETE | Three-tier model (FREE/PRO/ENTERPRISE): exact feature list per tier; 5 quantified limit tables (compute rates, save limits, CWT entries, PDF expiry, API keys, batch limits); API gate enforcement logic (gate sequence pseudocode + 30-row endpoint gate mapping); frontend gate behavior (9 upgrade prompt scenarios with exact copy); plan resolution algorithm (Redis-cache + DB fallback pseudocode); trial logic (PRO 14-day, ENTERPRISE 7-day — eligibility, conversion, cancellation, re-entry detection); upgrade/downgrade rules (all 5 paths: FREE→PRO, PRO→ENT, PRO→FREE, ENT→PRO, ENT→FREE) with proration formula; 11-row subscription state machine; grace period behavior (3-day PAST_DUE window, lapse behavior); billing cycle definitions (monthly/annual with exact savings: PRO ₱401, ENT ₱2,989); PayMongo + Stripe dual-provider routing rules; 30-day money-back guarantee terms; contact-sales + self-serve enterprise flows; 15 validation invariants (TIER-V01 to TIER-V15) |
 | premium/pricing.md | PENDING | Price points, billing, trial logic |
 | premium/features-by-tier.md | PENDING | Feature matrix with gating rules |
 | premium/professional-features.md | PENDING | B2B features: batch, API, PDF, white-label |
