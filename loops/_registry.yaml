@@ -234,3 +234,11 @@ loops:
     status: converged
     created: 2026-03-01
     converged_at: "2026-03-01"
+  ph-tam-deep-reverse:
+    description: "Per-tool TAM analysis for all 148 PH compliance tools — direct scraped population data, consumer + professional segments, sourced numbers only"
+    type: reverse
+    schedule: "*/30 * * * *"
+    max_iterations: 60
+    timeout_minutes: 30
+    status: active
+    created: 2026-03-02
