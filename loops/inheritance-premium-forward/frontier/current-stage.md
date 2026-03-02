@@ -1,7 +1,7 @@
-# Current Stage: 12 (Case Notes)
+# Current Stage: 13 (Shareable Links)
 
 ## Spec Sections
-- §4.6 — Case Notes
+- §4.10 — Shareable Links
 
 ## Test Results (updated by loop)
 ```
@@ -20,4 +20,5 @@ No tests yet
 - Stage 9 completed 2026-03-02 (32/32 tests passing)
 - Stage 10 completed 2026-03-02 (71/71 tests passing)
 - Stage 11 completed 2026-03-02 (70/70 tests passing)
-- Stage 12 starting 2026-03-02
+- Stage 12 completed 2026-03-02 (27/27 tests passing)
+- Stage 13 starting 2026-03-02
