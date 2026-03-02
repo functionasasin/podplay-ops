@@ -3,7 +3,7 @@
 This directory contains the complete product specification. A forward loop can build the entire platform by reading ONLY this directory.
 
 **Last updated:** 2026-03-02
-**Convergence status:** IN PROGRESS (62/65 aspects analyzed — Wave 4 complete; Wave 5 in progress)
+**Convergence status:** IN PROGRESS (63/65 aspects analyzed — Wave 4 complete; Wave 5 in progress)
 
 ---
 
@@ -97,8 +97,8 @@ This directory contains the complete product specification. A forward loop can b
 
 | File | Status | Description |
 |------|--------|-------------|
-| ui/design-system.md | PENDING | Colors (hex), typography, spacing, radii |
-| ui/component-library.md | PENDING | Every UI component, props, variants |
+| [ui/design-system.md](ui/design-system.md) | COMPLETE | 15 sections: brand palette (10 brand shades #EFF6FF–#1E3A7B, semantic success/warning/danger/info in 5-shade sets, 12-shade neutral gray #FAFAF9–#1C1917), 6 peso-specific display tokens (peso-savings #059669, peso-tax-due #7C3AED, regime-optimal-bg #F0FDF4), typography (Inter + JetBrains Mono + 10-stop scale text-xs 12px to text-6xl 60px with exact rem/px/line-height/weight), spacing 18-stop base-4 scale (space-0 0px to space-32 128px), border radii 8 values (radius-none 0px to radius-full 9999px), 9 shadows (shadow-xs through shadow-xl + shadow-focus rings), border widths (0/1/2/4px), 5 motion tokens + prefers-reduced-motion rule, z-index 8-layer stack (z-base 0 to z-tooltip 600), 12-column grid system with container max-widths at 6 breakpoints, Heroicons 2.x iconography with 7 size tokens and 23 specific icon assignments, focus ring CSS spec, print styles (A4 portrait 15mm margins), dark mode (20 token overrides + color-scheme preference persistence), 6 loading state specs, 11-layer elevation hierarchy |
+| [ui/component-library.md](ui/component-library.md) | COMPLETE | 22 components: Button (5 variants × 3 sizes with exact hex colors and transition specs), Input (5 states, peso/percent auto-format), Select (options panel spec), Radio Group (card variant with badge + inline variant), Checkbox (18px box states), Toggle Switch (44×24px track with 150ms knob transition), Card (4 variants × 4 padding presets), Alert/Callout (4 variants with exact 4px left-border colors and icon assignments), Tooltip (neutral-900 bg, 400ms hover delay, Escape dismiss), Progress Stepper (horizontal desktop + mobile compact bar), Regime Comparison Table (optimal/non-optimal/ineligible/percentage-tax row visual states), Summary Card, Badge/Chip (6 variants × 2 sizes), Modal (5 sizes 400px–880px, focus trap), Toast (4 variants, bottom-right stack, 3-toast max), Data Table (TypeScript Column interface, skeleton state), Pagination (7-button max with ellipsis), Navigation Bar (64px header + mobile top-drawer), Accordion (max-height CSS animation), Empty State, Number Input with Live Computation Badge (debounced computation preview), File Upload (5 status states for 2307 CSV) |
 | ui/responsive.md | PENDING | Breakpoints, mobile-first behavior |
 | ui/accessibility.md | PENDING | WCAG, ARIA, keyboard nav |
 | ui/branding.md | PENDING | Logo, favicon, OG images, brand voice |
