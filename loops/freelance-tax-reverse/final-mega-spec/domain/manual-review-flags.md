@@ -494,6 +494,40 @@ Please consult a CPA to determine the correct treatment. Enter only the sales re
 
 ---
 
+## MRF-028: VAT-Registered Taxpayer Using Itemized Deductions — Creditable Input VAT May Have Been Double-Counted
+
+**Flag code:** MRF-028
+**Trigger:** `is_vat_registered = true` AND `selected_path = PATH_A` (itemized deductions used)
+
+**Why the engine cannot resolve this:**
+- VAT-registered taxpayers file quarterly VAT returns (BIR Form 2550Q) on which they claim creditable input VAT against output VAT. Input VAT creditable on the VAT return represents a tax recovery — it is NOT a cost of doing business for income tax purposes.
+- However, non-creditable input VAT (from non-VAT-registered suppliers, from exempt transactions, from purchases disallowed as VAT credits, or input VAT that has been denied on audit) IS a genuine business cost and CAN be deducted as an expense under NIRC Sec. 34(A) or 34(C).
+- The engine receives a lump-sum itemized expense figure from the user. It cannot determine what portion of those expenses already had their VAT component recovered through the quarterly VAT return vs. which portions represent non-creditable input VAT costs.
+- If the user entered the full invoice prices (inclusive of VAT) for supplier purchases, their expense deduction is inflated — the creditable input VAT portion should have been excluded.
+- If the user entered only the net (VAT-exclusive) amounts for deductible purchases, no adjustment is needed.
+- The engine cannot determine which approach the user followed without reviewing actual invoices and VAT return data.
+
+**Engine fallback behavior:**
+- Accept the expense figures as entered by the user.
+- Do NOT add or subtract any input VAT adjustment.
+- Display MRF-028 advisory to alert the user to verify their expense inputs.
+- Continue with the computation using the entered amounts.
+
+**User-facing text:**
+> "As a VAT-registered taxpayer claiming itemized deductions, please verify that your business expense figures are entered correctly for income tax purposes. Any input VAT that you already claimed as a credit on your quarterly VAT return (BIR Form 2550Q) should NOT be included in your income tax deduction — that VAT has already been recovered. Only include non-creditable input VAT (from non-VAT-registered suppliers, exempt purchases, or VAT credits you were not entitled to claim) as part of your deductible expenses. We have computed your income tax using the expense amounts you entered. If you are unsure whether your figures exclude creditable input VAT, consult your CPA or bookkeeper before filing."
+
+**Example:**
+- VAT-registered architect pays ₱112,000 to a VAT-registered supplier (₱100,000 + ₱12,000 VAT).
+- The ₱12,000 input VAT is credited on the quarterly VAT return.
+- For income tax itemized deduction: the deductible amount is ₱100,000 (net of VAT), NOT ₱112,000.
+- If the architect entered ₱112,000 in the expense field, income tax deduction is overstated by ₱12,000.
+- The architect should enter ₱100,000 in the expense field.
+- Exception: if the supplier is non-VAT-registered, the entire ₱112,000 (or the full invoice amount including any embedded taxes) is the cost of the purchase, and the full amount is deductible.
+
+**Legal basis:** NIRC Sec. 110(A) (creditable input tax); NIRC Sec. 34(A)(1) (ordinary and necessary business expenses); RR 16-2005 (VAT regulations); RMC 54-2014 (deductibility of non-creditable input VAT).
+
+---
+
 ## Cross-References
 
 - For edge cases where the engine CAN make a decision: See [edge-cases.md](edge-cases.md)

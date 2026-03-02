@@ -1,6 +1,6 @@
 # Exhaustive Test Vectors — Philippine Freelance Tax Optimizer
 
-**Status:** PARTIAL — Group 1 complete (12 vectors). Groups 2–14 pending.
+**Status:** PARTIAL — Groups 1–2 complete (14 vectors). Groups 3–14 pending.
 **Last updated:** 2026-03-02
 **Cross-references:**
 - Scenario codes: [domain/scenarios.md](../../domain/scenarios.md)
@@ -1115,3 +1115,429 @@ TaxComputationResult {
 3. Path A (Itemized) wins when the expense ratio brings NTI below ₱250K (zero IT bracket) and the PT is less than Path C's 8% base (TV-EX-G1-003, G1-006) OR when the expense ratio exceeds the breakeven (TV-EX-G1-009, G1-012).
 4. Savings from 8% vs OSD grow dramatically with income: ₱5K at ₱300K GR → ₱172.5K at ₱2.5M GR.
 5. EAR cap exactly at limit (TV-EX-G1-012) produces no disallowance — engine must handle boundary correctly.
+
+---
+
+## GROUP 2: Pure Service/Professional — Above ₱3M (VAT Registered, 8% NOT Available)
+
+**2 scenario codes:** SC-P-VH-O-VAT, SC-P-VH-I-VAT
+
+**Common characteristics for all Group 2 vectors:**
+- `taxpayer_type`: PURELY_SE
+- `is_mixed_income`: false
+- `is_vat_registered`: true (mandatory VAT registration; gross > ₱3,000,000)
+- `is_bmbe_registered`: false
+- `subject_to_sec_117_128`: false
+- `is_gpp_partner`: false
+- `taxable_compensation`: ₱0.00
+- `compensation_cwt`: ₱0.00
+- `cost_of_goods_sold`: ₱0.00 (pure service provider)
+- `taxpayer_class` (derived): SERVICE_PROVIDER
+- `income_type` (derived): PURELY_SE
+- `taxpayer_tier` (derived): SMALL (₱3,000,000 ≤ gross < ₱20,000,000)
+- `path_c_eligible` (derived): false (IN-02: gross > ₱3M; IN-03: VAT-registered)
+- `percentage_tax` (all paths): ₱0.00 (VAT-registered taxpayers do NOT pay percentage tax)
+- `non_operating_income`: ₱0.00
+- `fwt_income`: ₱0.00
+- `sales_returns_allowances`: ₱0.00
+- `return_type`: ORIGINAL
+- `prior_year_excess_cwt`: ₱0.00
+- `actual_filing_date`: null (on-time assumed)
+- `filing_period`: ANNUAL
+- `tax_year`: 2025
+
+**Input note for all Group 2 vectors:** `gross_receipts` values are VAT-EXCLUSIVE amounts (fees before adding 12% output VAT to clients). The engine wizard instructs VAT-registered users: "Enter your gross sales BEFORE VAT. Do not include the 12% VAT you collected from clients." See CR-033.
+
+---
+
+## TV-EX-G2-001: SC-P-VH-O-VAT — VAT-Registered Architect, ₱6M Gross, Path B (OSD) Wins
+
+**Scenario code:** SC-P-VH-O-VAT
+**Description:** Licensed architect earning ₱6,000,000 VAT-exclusive gross receipts annually (mandatory VAT registration since gross exceeds ₱3M). Has ₱1,500,000 documented business expenses (25% ratio). Because both IN-02 (gross > ₱3M) and IN-03 (VAT-registered) make Path C ineligible, the engine compares only Path A (Itemized) vs Path B (OSD). OSD provides a ₱2,400,000 deduction vs the ₱1,500,000 itemized — OSD produces lower NTI (₱3,600,000 vs ₱4,500,000), so Path B wins by ₱270,000. No percentage tax applies (VAT-registered). This is the most common result for VAT-registered service professionals: unless actual documented expenses exceed 40% of gross, OSD wins.
+
+Note: `basic.md` TV-BASIC-006 covers SC-P-VH-O-VAT with ₱5,000,000 gross and 20% expenses. This vector uses different inputs (₱6M gross, 25% expenses, 10% EWT withheld, quarterly payments) to provide an independent verification.
+
+**Tax year:** 2025
+**Filing period:** ANNUAL
+
+### Input (fields differing from Group 2 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `gross_receipts` | ₱6,000,000.00 | VAT-exclusive; output VAT (₱720,000 = ₱6M × 0.12) collected from clients and remitted separately via BIR Form 2550Q |
+| `itemized_expenses.salaries_wages` | ₱600,000.00 | 2 junior architects at ₱25,000/month × 12, including 13th month |
+| `itemized_expenses.rent` | ₱360,000.00 | Architecture studio ₱30,000/month × 12 |
+| `itemized_expenses.utilities` | ₱120,000.00 | Electricity for workstations/plotters ₱10,000/month |
+| `itemized_expenses.supplies` | ₱150,000.00 | Printing, plotting, physical model materials |
+| `itemized_expenses.communication` | ₱30,000.00 | Phone plan, broadband ₱2,500/month |
+| `itemized_expenses.depreciation` | ₱180,000.00 | CAD workstations × 3, plotters; straight-line over 5 years |
+| `itemized_expenses.taxes_and_licenses` | ₱30,000.00 | PRC annual renewal, UAP dues, BIR registration |
+| `itemized_expenses.ear_expense` | ₱30,000.00 | Client entertainment and meals (within 1% cap of ₱60,000) |
+| All other itemized expense fields | ₱0.00 | |
+| `prior_quarterly_payments` | [{ period: Q1_2025, amount: 150000.00 }, { period: Q2_2025, amount: 130000.00 }, { period: Q3_2025, amount: 100000.00 }] | Estimated quarterly Path B payments under 1701Q |
+| `cwt_2307_entries` | [{ atc: "WI011", income_payment: 2000000.00, tax_withheld: 200000.00, payor: "PQR Developers Corp", period: "2025-ANNUAL" }, { atc: "WI011", income_payment: 1000000.00, tax_withheld: 100000.00, payor: "STU Holdings Inc", period: "2025-ANNUAL" }] | 10% EWT (WI011): prior-year professional gross ≥ ₱3M → clients required to withhold at 10% under RR 2-98 Sec. 2.57.2. Remaining ₱3,000,000 paid by non-withholding individual clients (no 2307). |
+| `elected_regime` | null | Optimizer mode |
+| `osd_elected` | null | Engine recommends |
+| `prior_payment_for_return` | ₱0.00 | |
+
+**Total itemized expenses:** ₱1,500,000.00 (25.0% of gross receipts)
+**Total CWT credits from 2307s:** ₱300,000.00 (WI011 × 2 entries)
+
+### Expected Intermediate Values
+
+**PL-02 (Classification):**
+- `net_gross_receipts` = ₱6,000,000.00
+- `taxpayer_tier` = SMALL (₱3,000,000 ≤ ₱6,000,000 < ₱20,000,000)
+- `income_type` = PURELY_SE
+- `taxpayer_class` = SERVICE_PROVIDER (cost_of_goods_sold = ₱0)
+
+**PL-04 (Eligibility):**
+- `path_c_eligible` = false
+- `ineligibility_reasons` = [IN-02, IN-03]
+  - IN-02: "Gross receipts exceed ₱3,000,000. The 8% income tax option is only available to taxpayers with gross receipts/sales not exceeding ₱3,000,000."
+  - IN-03: "Taxpayer is VAT-registered. The 8% income tax option requires non-VAT registration. See NIRC Sec. 24(A)(2)(b) and RR 8-2018 Sec. 2(A)."
+
+**PL-05 (Itemized Deductions):**
+- `total_itemized_deductions` = 600,000 + 360,000 + 120,000 + 150,000 + 30,000 + 180,000 + 30,000 + 30,000 = ₱1,500,000.00
+- `ear_cap` = ₱6,000,000 × 0.01 = ₱60,000.00; ear_expense claimed = ₱30,000.00 ≤ ₱60,000.00 → no disallowance
+
+**PL-06 (OSD):**
+- `osd_amount` = ₱6,000,000.00 × 0.40 = ₱2,400,000.00
+- `nti_path_b` = ₱6,000,000.00 − ₱2,400,000.00 = ₱3,600,000.00
+
+**PL-07 (CWT):**
+- `total_cwt` = ₱200,000 + ₱100,000 = ₱300,000.00 (both WI011 entries)
+
+**PL-08 (Path A — Graduated + Itemized):**
+- `nti_path_a` = ₱6,000,000.00 − ₱1,500,000.00 = ₱4,500,000.00
+- `income_tax_path_a` = graduated_tax_2023(₱4,500,000)
+  = ₱402,500 + (₱4,500,000 − ₱2,000,000) × 0.30
+  = ₱402,500 + ₱2,500,000 × 0.30
+  = ₱402,500 + ₱750,000.00
+  = ₱1,152,500.00
+- `percentage_tax_path_a` = ₱0.00 (VAT-registered; OPT does not apply)
+- `total_tax_path_a` = ₱1,152,500.00
+
+**PL-09 (Path B — Graduated + OSD):**
+- `nti_path_b` = ₱3,600,000.00
+- `income_tax_path_b` = graduated_tax_2023(₱3,600,000)
+  = ₱402,500 + (₱3,600,000 − ₱2,000,000) × 0.30
+  = ₱402,500 + ₱1,600,000 × 0.30
+  = ₱402,500 + ₱480,000.00
+  = ₱882,500.00
+- `percentage_tax_path_b` = ₱0.00 (VAT-registered)
+- `total_tax_path_b` = ₱882,500.00
+
+**PL-10 (Path C):**
+- Ineligible; `total_tax_path_c` = null; `ineligibility_reasons` = [IN-02, IN-03]
+
+**PL-13 (Compare):**
+- Path A: ₱1,152,500.00
+- Path B: ₱882,500.00 ← MINIMUM
+- Path C: N/A (ineligible)
+- `recommended_path` = PATH_B
+- `savings_vs_next_best` = ₱1,152,500 − ₱882,500 = ₱270,000.00 (Path B saves vs Path A)
+- `savings_vs_worst` = ₱1,152,500 − ₱882,500 = ₱270,000.00 (only 2 eligible paths; worst = Path A)
+
+**PL-14 (Balance Payable):**
+- `income_tax_due` = ₱882,500.00
+- `total_cwt_credits` = ₱300,000.00
+- `quarterly_it_paid` = ₱150,000 + ₱130,000 + ₱100,000 = ₱380,000.00
+- `balance_payable` = ₱882,500 − ₱300,000 − ₱380,000 = ₱202,500.00
+- `overpayment` = ₱0.00
+
+**PL-15 (Form Selection):**
+- `form` = FORM_1701A (PURELY_SE + annual + graduated + OSD → 1701A)
+- `form_section` = PART_IV_A (graduated rates + OSD section)
+
+**PL-16 (Penalties):** ₱0.00 (on-time filing assumed)
+
+### Expected Final Output
+
+```
+TaxComputationResult {
+  tax_year: 2025,
+  filing_period: ANNUAL,
+  taxpayer_type: PURELY_SE,
+  taxpayer_tier: SMALL,
+
+  regime_comparison: {
+    path_a: {
+      eligible: true,
+      nti: 4500000.00,
+      itemized_deductions: 1500000.00,
+      income_tax: 1152500.00,
+      percentage_tax: 0.00,
+      total_tax: 1152500.00
+    },
+    path_b: {
+      eligible: true,
+      nti: 3600000.00,
+      osd_amount: 2400000.00,
+      income_tax: 882500.00,
+      percentage_tax: 0.00,
+      total_tax: 882500.00
+    },
+    path_c: {
+      eligible: false,
+      income_tax: null,
+      percentage_tax: null,
+      total_tax: null,
+      ineligibility_reasons: [
+        "IN-02: Gross receipts exceed ₱3,000,000. The 8% option requires gross receipts/sales not exceeding ₱3,000,000.",
+        "IN-03: Taxpayer is VAT-registered. The 8% option is only available to non-VAT-registered taxpayers per RR 8-2018 Sec. 2(A)."
+      ]
+    },
+    recommended_path: PATH_B,
+    savings_vs_next_best: 270000.00,
+    savings_vs_worst: 270000.00
+  },
+
+  selected_path: PATH_B,
+  income_tax_due: 882500.00,
+  percentage_tax_due: 0.00,
+  total_tax_due: 882500.00,
+
+  cwt_credits: 300000.00,
+  quarterly_it_paid: 380000.00,
+  balance_payable: 202500.00,
+  overpayment: 0.00,
+  overpayment_disposition: null,
+
+  form: FORM_1701A,
+  form_section: PART_IV_A,
+
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [],
+  manual_review_flags: [],
+  ineligibility_notifications: [IN-02, IN-03],
+  vat_obligation_notice: "As a VAT-registered taxpayer, you have a separate quarterly VAT filing obligation (BIR Form 2550Q, due on the 25th day after each quarter end). This tool computes income tax only. Your quarterly VAT payable (output VAT minus creditable input VAT) must be computed and filed separately."
+}
+```
+
+**No warnings fire:** WARN-002 does not fire (taxpayer IS VAT-registered, which is the correct status for ₱6M gross). WARN-003 does not fire (CWT entries are present). WARN-004 does not fire (expenses ₱1.5M, ratio 25% > 5%).
+
+### Verification
+
+- **EAR cap:** 1% × ₱6,000,000 = ₱60,000; claimed ₱30,000 ≤ ₱60,000 → no disallowance ✓
+- **Itemized total:** 600,000 + 360,000 + 120,000 + 150,000 + 30,000 + 180,000 + 30,000 + 30,000 = **₱1,500,000** ✓
+- **Path A NTI:** 6,000,000 − 1,500,000 = **₱4,500,000** ✓
+- **Path A IT:** bracket 5 (₱2M–₱8M): 402,500 + 2,500,000 × 0.30 = **₱1,152,500** ✓
+- **Path B OSD:** 6,000,000 × 0.40 = **₱2,400,000** ✓
+- **Path B NTI:** 6,000,000 − 2,400,000 = **₱3,600,000** ✓
+- **Path B IT:** bracket 5: 402,500 + 1,600,000 × 0.30 = **₱882,500** ✓
+- **OSD wins because:** OSD deduction (₱2,400,000) > Itemized deductions (₱1,500,000) → OSD NTI (₱3,600,000) < Itemized NTI (₱4,500,000). OSD breakeven: expenses must exceed 40% × ₱6M = ₱2,400,000 for Path A to win. ₱1,500,000 < ₱2,400,000 → Path B wins ✓
+- **Savings:** 1,152,500 − 882,500 = **₱270,000** ✓
+- **CWT:** WI011 at 10%: ₱200,000 + ₱100,000 = **₱300,000** ✓
+- **Quarterly paid:** 150,000 + 130,000 + 100,000 = **₱380,000** ✓
+- **Balance payable:** 882,500 − 300,000 − 380,000 = **₱202,500** ✓
+
+**Legal basis:** 8% ineligibility: NIRC Sec. 24(A)(2)(b), RR 8-2018 Sec. 2(A). OSD (40%): NIRC Sec. 34(L). Graduated rates (2023+): NIRC Sec. 24(A)(1), CR-002. VAT registration mandatory above ₱3M: NIRC Sec. 109(BB) as amended. PT waived for VAT-registered: NIRC Sec. 116 (OPT applies only to non-VAT taxpayers). 10% EWT: RR 2-98 Sec. 2.57.2(E) — professionals with prior-year gross ≥ ₱3M. Form 1701A for PURELY_SE + graduated + OSD: BIR Revenue Memorandum Circular No. 37-2019.
+
+---
+
+## TV-EX-G2-002: SC-P-VH-I-VAT — VAT-Registered Attorney, ₱4.5M Gross, Path A (Itemized) Wins
+
+**Scenario code:** SC-P-VH-I-VAT
+**Description:** Licensed attorney earning ₱4,500,000 VAT-exclusive annual gross receipts. Has ₱2,800,000 in substantiated business expenses (62.2% expense ratio). Because expenses exceed 40% of gross (the OSD deduction of ₱1,800,000), Path A (Itemized) produces a lower NTI (₱1,700,000) than Path B's OSD NTI (₱2,700,000). Path A income tax = ₱327,500 vs Path B = ₱612,500 — Path A saves ₱285,000. This is the first year the attorney's gross exceeded ₱3M, so CWT was withheld at 5% (WI010, prior-year gross < ₱3M). An MRF-028 advisory fires because the engine cannot verify that creditable input VAT has been excluded from the expense figures. Form 1701 (full itemized schedule) is required instead of 1701A.
+
+**Tax year:** 2025
+**Filing period:** ANNUAL
+
+### Input (fields differing from Group 2 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `gross_receipts` | ₱4,500,000.00 | VAT-exclusive legal fees; output VAT (₱540,000 = ₱4.5M × 0.12) collected from clients and remitted separately via BIR Form 2550Q |
+| `itemized_expenses.salaries_wages` | ₱1,500,000.00 | 4 support staff (legal assistants, paralegals): 3 full-time at ₱30K/month + 1 part-time at ₱15K/month × 12, including 13th month and mandatory benefits (SSS, PhilHealth, Pag-IBIG employer share) |
+| `itemized_expenses.rent` | ₱480,000.00 | Law office rental ₱40,000/month × 12 |
+| `itemized_expenses.utilities` | ₱120,000.00 | Electricity, internet, water ₱10,000/month |
+| `itemized_expenses.supplies` | ₱60,000.00 | Office supplies, legal forms, postage ₱5,000/month |
+| `itemized_expenses.communication` | ₱36,000.00 | Mobile plan, landline ₱3,000/month |
+| `itemized_expenses.depreciation` | ₱180,000.00 | Law library (digital and physical), computers × 4, office furniture; straight-line 5-year ₱900,000 asset cost basis |
+| `itemized_expenses.taxes_and_licenses` | ₱60,000.00 | IBP dues ₱12,000, MCLE compliance fees ₱8,000, BIR registration ₱500, business permit ₱5,000, documentary stamp taxes ₱34,500 |
+| `itemized_expenses.ear_expense` | ₱30,000.00 | Client entertainment and representation (within 1% × ₱4,500,000 = ₱45,000 cap) |
+| `itemized_expenses.other_expenses` | ₱334,000.00 | Legal research subscriptions (Westlaw/LexisNexis PH ₱120,000), bar association fees ₱15,000, litigation support services ₱80,000, bank charges ₱9,000, professional liability insurance ₱80,000, miscellaneous ₱30,000 |
+| All other itemized expense fields | ₱0.00 | |
+| `prior_quarterly_payments` | [{ period: Q1_2025, amount: 40000.00 }, { period: Q2_2025, amount: 35000.00 }, { period: Q3_2025, amount: 25000.00 }] | Estimated graduated quarterly IT payments under 1701Q; first year above ₱3M — conservative estimates |
+| `cwt_2307_entries` | [{ atc: "WI010", income_payment: 2000000.00, tax_withheld: 100000.00, payor: "PQR Corporation", period: "2025-ANNUAL" }, { atc: "WI010", income_payment: 1500000.00, tax_withheld: 75000.00, payor: "STU Holdings Inc", period: "2025-ANNUAL" }, { atc: "WI010", income_payment: 1000000.00, tax_withheld: 50000.00, payor: "VWX Inc", period: "2025-ANNUAL" }] | 5% EWT (WI010): attorney's prior-year gross was below ₱3M → 5% rate applies this year. Next year: clients must switch to 10% (WI011) since current-year gross ≥ ₱3M. |
+| `elected_regime` | null | Optimizer mode |
+| `osd_elected` | null | Engine recommends |
+| `prior_payment_for_return` | ₱0.00 | |
+
+**Total itemized expenses:** ₱2,800,000.00 (62.2% of gross receipts)
+**Total CWT credits from 2307s:** ₱225,000.00 (WI010 at 5% × 3 entries)
+
+### Expected Intermediate Values
+
+**PL-02 (Classification):**
+- `net_gross_receipts` = ₱4,500,000.00
+- `taxpayer_tier` = SMALL (₱3,000,000 ≤ ₱4,500,000 < ₱20,000,000)
+- `income_type` = PURELY_SE
+- `taxpayer_class` = SERVICE_PROVIDER (cost_of_goods_sold = ₱0)
+
+**PL-04 (Eligibility):**
+- `path_c_eligible` = false
+- `ineligibility_reasons` = [IN-02, IN-03]
+  - IN-02: "Gross receipts exceed ₱3,000,000. The 8% income tax option is only available to taxpayers with gross receipts/sales not exceeding ₱3,000,000."
+  - IN-03: "Taxpayer is VAT-registered. The 8% income tax option requires non-VAT registration. See NIRC Sec. 24(A)(2)(b) and RR 8-2018 Sec. 2(A)."
+
+**PL-05 (Itemized Deductions):**
+- Component verification: 1,500,000 + 480,000 + 120,000 + 60,000 + 36,000 + 180,000 + 60,000 + 30,000 + 334,000 = ₱2,800,000.00
+- `total_itemized_deductions` = ₱2,800,000.00
+- `ear_cap` = ₱4,500,000 × 0.01 = ₱45,000.00; ear_expense claimed = ₱30,000.00 ≤ ₱45,000.00 → no disallowance
+- `nolco_applied` = ₱0.00 (no prior year losses)
+
+**PL-06 (OSD):**
+- `osd_amount` = ₱4,500,000.00 × 0.40 = ₱1,800,000.00
+- `nti_path_b` = ₱4,500,000.00 − ₱1,800,000.00 = ₱2,700,000.00
+
+**PL-07 (CWT):**
+- `total_cwt` = ₱100,000 + ₱75,000 + ₱50,000 = ₱225,000.00
+
+**PL-08 (Path A — Graduated + Itemized):**
+- `nti_path_a` = ₱4,500,000.00 − ₱2,800,000.00 = ₱1,700,000.00
+- `income_tax_path_a` = graduated_tax_2023(₱1,700,000)
+  = ₱102,500 + (₱1,700,000 − ₱800,000) × 0.25
+  = ₱102,500 + ₱900,000 × 0.25
+  = ₱102,500 + ₱225,000.00
+  = ₱327,500.00
+- `percentage_tax_path_a` = ₱0.00 (VAT-registered)
+- `total_tax_path_a` = ₱327,500.00
+
+**PL-09 (Path B — Graduated + OSD):**
+- `nti_path_b` = ₱2,700,000.00
+- `income_tax_path_b` = graduated_tax_2023(₱2,700,000)
+  = ₱402,500 + (₱2,700,000 − ₱2,000,000) × 0.30
+  = ₱402,500 + ₱700,000 × 0.30
+  = ₱402,500 + ₱210,000.00
+  = ₱612,500.00
+- `percentage_tax_path_b` = ₱0.00 (VAT-registered)
+- `total_tax_path_b` = ₱612,500.00
+
+**PL-10 (Path C):**
+- Ineligible; `total_tax_path_c` = null; `ineligibility_reasons` = [IN-02, IN-03]
+
+**PL-13 (Compare):**
+- Path A: ₱327,500.00 ← MINIMUM
+- Path B: ₱612,500.00
+- Path C: N/A (ineligible)
+- `recommended_path` = PATH_A
+- `savings_vs_next_best` = ₱612,500 − ₱327,500 = ₱285,000.00 (Itemized saves vs OSD)
+- `savings_vs_worst` = ₱612,500 − ₱327,500 = ₱285,000.00 (only 2 eligible paths; worst = Path B)
+
+**PL-14 (Balance Payable):**
+- `income_tax_due` = ₱327,500.00
+- `total_cwt_credits` = ₱225,000.00
+- `quarterly_it_paid` = ₱40,000 + ₱35,000 + ₱25,000 = ₱100,000.00
+- `balance_payable` = ₱327,500 − ₱225,000 − ₱100,000 = ₱2,500.00
+- `overpayment` = ₱0.00
+
+**PL-15 (Form Selection):**
+- `form` = FORM_1701 (PURELY_SE with itemized deductions requires full 1701; 1701A does not include the Schedule on itemized deductions)
+- `form_section` = SCHEDULE_1_ITEMIZED (Schedule 1, deduction schedule for itemized)
+
+**PL-16 (Penalties):** ₱0.00 (on-time filing assumed)
+
+**MRF-028 fires** (trigger: `is_vat_registered = true` AND `selected_path = PATH_A`):
+> "As a VAT-registered taxpayer claiming itemized deductions, some of your business purchases may include input VAT that you already credited on your quarterly VAT return (BIR Form 2550Q). Input VAT that is creditable against your output VAT should NOT be included in your income tax deductions — it has already been recovered through your VAT return. Only non-creditable input VAT (from non-VAT-registered suppliers, exempt purchases, or input VAT claimed beyond the allowable input tax) may be deductible as a business expense for income tax purposes. We have computed your income tax based on the expenses you entered as entered. Please verify with a CPA that your expense figures exclude creditable input VAT before filing."
+
+### Expected Final Output
+
+```
+TaxComputationResult {
+  tax_year: 2025,
+  filing_period: ANNUAL,
+  taxpayer_type: PURELY_SE,
+  taxpayer_tier: SMALL,
+
+  regime_comparison: {
+    path_a: {
+      eligible: true,
+      nti: 1700000.00,
+      itemized_deductions: 2800000.00,
+      income_tax: 327500.00,
+      percentage_tax: 0.00,
+      total_tax: 327500.00
+    },
+    path_b: {
+      eligible: true,
+      nti: 2700000.00,
+      osd_amount: 1800000.00,
+      income_tax: 612500.00,
+      percentage_tax: 0.00,
+      total_tax: 612500.00
+    },
+    path_c: {
+      eligible: false,
+      income_tax: null,
+      percentage_tax: null,
+      total_tax: null,
+      ineligibility_reasons: [
+        "IN-02: Gross receipts exceed ₱3,000,000. The 8% option requires gross receipts/sales not exceeding ₱3,000,000.",
+        "IN-03: Taxpayer is VAT-registered. The 8% option is only available to non-VAT-registered taxpayers per RR 8-2018 Sec. 2(A)."
+      ]
+    },
+    recommended_path: PATH_A,
+    savings_vs_next_best: 285000.00,
+    savings_vs_worst: 285000.00
+  },
+
+  selected_path: PATH_A,
+  income_tax_due: 327500.00,
+  percentage_tax_due: 0.00,
+  total_tax_due: 327500.00,
+
+  cwt_credits: 225000.00,
+  quarterly_it_paid: 100000.00,
+  balance_payable: 2500.00,
+  overpayment: 0.00,
+  overpayment_disposition: null,
+
+  form: FORM_1701,
+  form_section: SCHEDULE_1_ITEMIZED,
+
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [],
+  manual_review_flags: [MRF-028],
+  ineligibility_notifications: [IN-02, IN-03],
+  vat_obligation_notice: "As a VAT-registered taxpayer, you have a separate quarterly VAT filing obligation (BIR Form 2550Q, due on the 25th day after each quarter end). This tool computes income tax only. Your quarterly VAT payable (output VAT minus creditable input VAT) must be computed and filed separately."
+}
+```
+
+**No WARN-003** (CWT entries present). **No WARN-004** (expense ratio 62.2% > 5%). No other warnings fire.
+
+### Verification
+
+- **Itemized total:** 1,500,000 + 480,000 + 120,000 + 60,000 + 36,000 + 180,000 + 60,000 + 30,000 + 334,000 = **₱2,800,000** ✓
+- **EAR cap:** 1% × ₱4,500,000 = ₱45,000; claimed ₱30,000 ≤ ₱45,000 → no disallowance ✓
+- **Path A NTI:** 4,500,000 − 2,800,000 = **₱1,700,000** ✓
+- **Path A bracket:** NTI ₱1,700,000 in bracket 4 (₱800,001–₱2,000,000): 102,500 + (1,700,000 − 800,000) × 0.25 = 102,500 + 225,000 = **₱327,500** ✓
+- **Path B OSD:** 4,500,000 × 0.40 = **₱1,800,000** ✓
+- **Path B NTI:** 4,500,000 − 1,800,000 = **₱2,700,000** ✓
+- **Path B bracket:** NTI ₱2,700,000 in bracket 5 (₱2,000,001–₱8,000,000): 402,500 + (2,700,000 − 2,000,000) × 0.30 = 402,500 + 210,000 = **₱612,500** ✓
+- **Itemized wins because:** E = ₱2,800,000 > OSD = ₱1,800,000 → NTI_A = ₱1,700,000 < NTI_B = ₱2,700,000 → IT_A < IT_B ✓
+- **Savings:** 612,500 − 327,500 = **₱285,000** ✓
+- **CWT:** WI010 at 5%: 100,000 + 75,000 + 50,000 = **₱225,000** ✓
+- **Quarterly paid:** 40,000 + 35,000 + 25,000 = **₱100,000** ✓
+- **Balance payable:** 327,500 − 225,000 − 100,000 = **₱2,500** ✓
+
+**Legal basis:** 8% ineligibility: NIRC Sec. 24(A)(2)(b), RR 8-2018 Sec. 2(A). OSD (40%): NIRC Sec. 34(L). Itemized deductions: NIRC Sec. 34(A)–(K). Graduated rates (2023+): NIRC Sec. 24(A)(1), CR-002. VAT registration: NIRC Sec. 109(BB). PT waived for VAT-registered: NIRC Sec. 116. 5% EWT for professionals (prior-year gross <₱3M): RR 2-98 Sec. 2.57.2(E). Form 1701 required for itemized deductions: BIR Form 1701 instructions; 1701A does not contain itemized deduction schedule.
+
+---
+
+## GROUP 2 SUMMARY TABLE
+
+| Vector | Scenario | GR (VAT-excl) | Expenses | Expense% | Optimal Path | Total Tax | Savings vs Next | Form |
+|--------|---------|--------------|---------|---------|-------------|-----------|-----------------|------|
+| TV-EX-G2-001 | SC-P-VH-O-VAT | ₱6,000,000 | ₱1,500,000 | 25.0% | Path B (OSD) | ₱882,500 | ₱270,000 vs A | 1701A |
+| TV-EX-G2-002 | SC-P-VH-I-VAT | ₱4,500,000 | ₱2,800,000 | 62.2% | Path A (Itemized) | ₱327,500 | ₱285,000 vs B | 1701 |
+
+**Key insights validated:**
+1. For VAT-registered taxpayers, Path C is always ineligible — both IN-02 (>₱3M) and IN-03 (VAT-registered) fire simultaneously.
+2. No percentage tax applies to VAT-registered taxpayers for any path — the OPT (3% under Sec. 116) is mutually exclusive with VAT registration.
+3. OSD breakeven for VAT-registered service professionals: Path A wins only when expenses exceed 40% of gross (same arithmetic as non-VAT; the PT cancellation removes the distortion that affects non-VAT breakeven analysis).
+4. Path B (OSD) wins when expenses < OSD deduction (TV-EX-G2-001: ₱1.5M expenses < ₱2.4M OSD).
+5. Path A (Itemized) wins when expenses > OSD deduction (TV-EX-G2-002: ₱2.8M expenses > ₱1.8M OSD).
+6. Form 1701A is used for Path B (OSD) even at large gross levels. Form 1701 is required for Path A (Itemized).
+7. MRF-028 fires for all VAT-registered Path A users to flag potential double-counting of creditable input VAT in the expense inputs.
