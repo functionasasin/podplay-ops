@@ -17,13 +17,26 @@ The two people currently running the company are the ones on client calls. Becau
 
 The founders are confusing output (fast PRs) with the infrastructure that enables it. They can ship because the fired engineers built a codebase AI can reason about. That's not trivial — most codebases aren't like that.
 
+Paul specifically — doesn't get that Josh and Derick set up the codebase so he can push PRs the way he does. Paolo has always had this vibe about Paul too (Paul is the reason Paolo almost got fired before).
+
 Their worldview is small. They want to optimize for feature velocity — "run a country" — when the real exponential is in autonomous systems that compound without human input. The reverse Ralph loops demonstrate this: they've produced 400+ KB of implementation-ready specs, competitive intelligence on 22 platforms, and file-level implementation plans that no amount of client calls could generate.
+
+Chris and Paul have horse blinders on. Thinking too narrowly — should have kept at least one of Josh/Derick as insurance to keep the codebase sanitary for LLMs. Weird they didn't even move them elsewhere in the org.
 
 ## The Pressure I Feel
 
 - If I maintain my previous standard (fast but confident), I risk looking "not responsive enough" — the same label that got my friends fired
 - If I just blast features to look productive, I'm shipping without confidence things work
 - Previously I was deliberate: fast but sure of what I was pushing. Now I feel like that deliberation is a liability.
+- I wasn't consulted on the firing decision. That says something about how they see me in the org.
+
+## Updated Resolve (2026-03-02)
+
+Conversation with [[Paolo]] confirmed what I was feeling. Cash flow is the official reason (deals didn't push through), but the deeper issue is Paul's hubris — confirmed by someone else on the team who's felt it too.
+
+I've lost faith in Chris and Paul as leaders on the Cheerful team. I get it's survival mode and they need to please customers, but the decision-making is short-sighted.
+
+If Cheerful takes off, it's all in my hands. I have the plans (the loops). Gloves off — making sure Derick and Josh's sacrifice isn't in vain.
 
 ## My Strategic Assets (The Loops)
 
