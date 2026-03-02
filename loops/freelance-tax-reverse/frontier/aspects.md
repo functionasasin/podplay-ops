@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 81
-- Analyzed: 74
-- Pending: 7
-- Convergence: 91%
+- Analyzed: 75
+- Pending: 6
+- Convergence: 93%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -98,7 +98,7 @@ Cross-cutting concerns and gap filling. Only start after Waves 2-5 are complete.
 - [x] data-model-reconciliation — Verify data model covers engine + frontend + API + database
 - [x] cross-reference-audit — Verify all file references and links are valid
 - [x] missing-spec-rate-limiting — Create api/rate-limiting.md: rate limits per tier (free/pro/enterprise), burst allowances, per-endpoint overrides, 429 response format, retry-after header, Redis sliding window algorithm spec
-- [ ] missing-spec-webhooks — Create api/webhooks.md: webhook event catalog (payment, subscription, batch job events), payload schema per event, HMAC-SHA256 signature validation, retry policy, event delivery guarantees
+- [x] missing-spec-webhooks — Create api/webhooks.md: webhook event catalog (payment, subscription, batch job events), payload schema per event, HMAC-SHA256 signature validation, retry policy, event delivery guarantees
 - [ ] missing-spec-migrations — Create database/migrations.md: Drizzle ORM migration file order, initial schema migration, seed data (admin user, test user, default subscription plans), migration naming convention
 - [ ] missing-spec-indexes — Create database/indexes.md: every index needed for production query performance, query patterns that require each index, index type (btree, gin, partial), expected cardinality
 - [ ] missing-spec-domains — Create deployment/domains.md: DNS records for taxoptimizer.ph (A/AAAA/CNAME), Cloudflare setup (proxy rules, WAF rules, page rules), SSL/TLS config, subdomain routing (api., www., staging., exports.)
