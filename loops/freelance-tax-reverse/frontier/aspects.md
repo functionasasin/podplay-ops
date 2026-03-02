@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 54
-- Analyzed: 50
-- Pending: 4
-- Convergence: 93%
+- Analyzed: 51
+- Pending: 3
+- Convergence: 94%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -68,7 +68,7 @@ Design the computation engine from the extracted domain rules.
 Design everything around the engine to make it a shippable product.
 - [x] user-journeys — Map every user type through every flow
 - [x] wizard-steps — Specify every input field, validation rule, conditional visibility, error message
-- [ ] results-views — Specify every output visualization, layout variant
+- [x] results-views — Specify every output visualization, layout variant
 - [ ] frontend-validation — Client-side validation, pre-submission warnings
 - [ ] frontend-copy — All user-facing text: labels, tooltips, errors, empty states, CTAs
 - [ ] database-schema — Every table, column, type, constraint, index

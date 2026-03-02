@@ -3,7 +3,7 @@
 This directory contains the complete product specification. A forward loop can build the entire platform by reading ONLY this directory.
 
 **Last updated:** 2026-03-02
-**Convergence status:** IN PROGRESS (50/54 aspects analyzed)
+**Convergence status:** IN PROGRESS (51/54 aspects analyzed)
 
 ---
 
@@ -59,8 +59,8 @@ This directory contains the complete product specification. A forward loop can b
 |------|--------|-------------|
 | [frontend/user-journeys.md](frontend/user-journeys.md) | COMPLETE | 8 user journeys (UJ-01 to UJ-08): First-Timer, Returning Annual Filer, Mixed Income Earner, VAT-Registered Professional, Quarterly Filer (1701Q), Platform Freelancer (Upwork/Fiverr), CPA/Bookkeeper, Late/Penalty Computation. Each journey: entry point, step-by-step screen flow, decision gates, output rendering, follow-up actions. Cross-journey decision gates (₱3M threshold, regime lock, CWT overpayment, MRF triggers, free/pro gating). Journey state machine (13 states). Mobile behavior and accessibility requirements. |
 | [frontend/wizard-steps.md](frontend/wizard-steps.md) | COMPLETE | Every wizard input step fully specified. 14 steps (WS-00 through WS-13): Mode Selection, Taxpayer Profile, Business Type, Tax Year & Period, Gross Receipts, Compensation Income (mixed income only), Expense Method, Itemized Expenses — General/Financial/Depreciation/NOLCO (4 sub-steps), Form 2307 CWT, Prior Quarterly Payments, Registration & VAT Status, Regime Election, Filing Details, Prior Year Credits. For every field: ID, label, type, placeholder, default, required flag, visibility condition, all validation rules, all error messages, help text. Step routing matrix (all user paths). 20 global cross-field validation constraints. 14 dynamic real-time advisories (DA-01 to DA-14). |
-| frontend/wizard-steps.md | PENDING | Every input field, validation, error message |
-| frontend/results-views.md | PENDING | Every output visualization, layout |
+| frontend/wizard-steps.md | (see above) | |
+| [frontend/results-views.md](frontend/results-views.md) | COMPLETE | Every output visualization and layout variant. 25 sections: Page Architecture (visibility matrix, data source mapping), Page Header/Context Bar, Warnings & Advisories Banner (17 WARN codes mapped to banner titles/messages/colors + MRF card), Regime Comparison Table (3-column layout, column spec, savings summary bar, proportional bar chart, ineligible path display with 5 IN-code texts), Recommended Regime Callout (optimizer mode + locked mode variants, per-path rationale text for all 6 scenarios), Tax Due & Credits Breakdown (PATH A/B/C ledger rows with full field spec, itemized deduction sub-table 19 rows, CWT detail table), Balance Payable/Overpayment/Zero (3 state layouts with all field specs), Installment Payment Option, Percentage Tax Summary (annual + quarterly breakdown), BIR Form Recommendation (3 form types with why-this-form text + required attachments), Penalty Summary (late filing variant), Manual Review Flags (per-flag card spec), Path Detail Accordion (PATH A/B/C computation detail rows, bracket applied tooltip), Action Bar (desktop sticky panel + mobile bottom bar, 6 actions specified). 8 display variants: RV-V1 (≤₱3M 8%-eligible), RV-V2 (VAT-registered), RV-V3 (mixed income), RV-V4 (quarterly 1701Q), RV-V5 (late filing + penalties), RV-V6 (zero/overpayment), RV-V7 (locked regime override), RV-V8 (compensation-only). Loading/error/empty states. Value formatting rules (peso, %, dates, mobile abbreviation). Mobile layout adaptations (swipe table, bottom sheet accordions, font scaling, 44px touch targets). |
 | frontend/validation-rules.md | PENDING | Client-side validation |
 | frontend/copy.md | PENDING | All user-facing text |
 | frontend/responsive-behavior.md | PENDING | Mobile/tablet/desktop behavior |
