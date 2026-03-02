@@ -16,7 +16,7 @@
 - [x] tam-sss — A-SSS-1 through A-SSS-5 (Retirement, Maternity, Contributions, Sickness, Death); SSS members by category; HR officers + labor consultants
 - [x] tam-philhealth-pagibig — B-PHI-1/2/3, C-HDMF-1/2/3; PhilHealth + Pag-IBIG member counts; HR + benefits officers
 - [x] tam-gsis — D-GSIS-1/2/3/4; GSIS active members + retirees; government HR officers
-- [ ] tam-ofw-migration — E-OFW-1/2/3, OWWA; OFW annual deployments from DMW/POEA statistics; recruitment agencies + OFW legal advocates
+- [x] tam-ofw-migration — E-OFW-1/2/3, OWWA; OFW annual deployments from DMW/POEA statistics; recruitment agencies + OFW legal advocates
 - [ ] tam-maritime-seafarer — I-MAR-1/2/3/4; MARINA-registered seafarers + annual certifications; manning agencies + training centers
 - [ ] tam-prc-professional — H-PRC-1/2/3; PRC-registered professionals by board (43 boards); CPD providers + professional associations
 - [ ] tam-transport-lto — G-LTO-1/2, J-CAP-1; registered motor vehicles by type from LTO; processing agents / fixers (disintermediation)
