@@ -3,7 +3,7 @@
 This directory contains the complete product specification. A forward loop can build the entire platform by reading ONLY this directory.
 
 **Last updated:** 2026-03-02
-**Convergence status:** IN PROGRESS (60/65 aspects analyzed — Wave 4 complete; Wave 5 in progress)
+**Convergence status:** IN PROGRESS (61/65 aspects analyzed — Wave 4 complete; Wave 5 in progress)
 
 ---
 
@@ -88,7 +88,7 @@ This directory contains the complete product specification. A forward loop can b
 | File | Status | Description |
 |------|--------|-------------|
 | [deployment/infrastructure.md](deployment/infrastructure.md) | COMPLETE | Architecture diagram, component inventory (Vercel/Fly.io/Supabase/Resend/Sentry/R2/Cloudflare), Fly.io fly.toml + Dockerfiles for API+PDF+batch workers, Vercel project config, Supabase connection pooling, email DNS records + 11 email templates, PayMongo + Stripe webhook setup, Sentry SDK config, Cloudflare R2 bucket lifecycle, secrets management + rotation policy, inbound/outbound networking matrix, disaster recovery (RTO/RPO table + 9 failure scenarios), monthly cost estimates (₱9,460/month baseline + scaling triggers) |
-| deployment/ci-cd.md | PENDING | Build/test/deploy pipeline |
+| [deployment/ci-cd.md](deployment/ci-cd.md) | COMPLETE | Single GitHub repository (`taxoptimizer-ph`) layout (backend `src/` + frontend `apps/frontend/`); all npm package scripts (backend + frontend); 4 GitHub Actions workflows: `ci.yml` (7 jobs: backend lint/typecheck, frontend lint/typecheck, engine unit tests, API integration tests with Postgres+Redis service containers, frontend tests, backend build check, frontend build check), `deploy-staging.yml` (CI checks → migrate staging → deploy API+PDF+batch to staging Fly apps → deploy frontend to Vercel staging alias), `deploy-production.yml` (CI checks → manual approval gate via GitHub Environment → migrate production → deploy API+PDF+batch → deploy frontend via Vercel CLI `--prod` → Sentry source map upload → smoke test with curl health + compute check), `nightly.yml` (exhaustive 80-scenario vectors + 68 fuzz properties at 10,000 iterations + Playwright E2E against staging + failure email notification); GitHub repository settings (branch protection for `main`/`staging`, 7 required status checks, GitHub Environments with production approval gate, Vercel auto-deploy disabled for `main`); 8 repository secrets + staging/production environment secrets with exact locations to find each value; local development setup (9 prerequisites, first-time setup commands, 4 dev server commands, test commands); database migration workflow (naming convention, create-migration steps, expand-contract rules, emergency rollback); manual deploy commands for all 5 components; rollback procedures per component with decision matrix (8 symptom rows) |
 | deployment/monitoring.md | PENDING | Alerts, health checks, error tracking |
 | deployment/domains.md | PENDING | DNS, SSL, CDN |
 | deployment/environment.md | PENDING | Environment variables, secrets |
