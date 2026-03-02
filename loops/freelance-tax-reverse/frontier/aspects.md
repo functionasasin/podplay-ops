@@ -1,10 +1,10 @@
 # Frontier — Philippine Freelance & Self-Employed Income Tax Optimizer
 
 ## Statistics
-- Total aspects discovered: 76
-- Analyzed: 72
-- Pending: 4
-- Convergence: 95%
+- Total aspects discovered: 81
+- Analyzed: 73
+- Pending: 8
+- Convergence: 90%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -96,8 +96,13 @@ Design everything needed to launch and operate the product.
 ### Wave 6: Synthesis & Completeness Audit
 Cross-cutting concerns and gap filling. Only start after Waves 2-5 are complete.
 - [x] data-model-reconciliation — Verify data model covers engine + frontend + API + database
-- [ ] cross-reference-audit — Verify all file references and links are valid
-- [ ] completeness-audit — Read every file in final-mega-spec/, check for gaps
+- [x] cross-reference-audit — Verify all file references and links are valid
+- [ ] missing-spec-rate-limiting — Create api/rate-limiting.md: rate limits per tier (free/pro/enterprise), burst allowances, per-endpoint overrides, 429 response format, retry-after header, Redis sliding window algorithm spec
+- [ ] missing-spec-webhooks — Create api/webhooks.md: webhook event catalog (payment, subscription, batch job events), payload schema per event, HMAC-SHA256 signature validation, retry policy, event delivery guarantees
+- [ ] missing-spec-migrations — Create database/migrations.md: Drizzle ORM migration file order, initial schema migration, seed data (admin user, test user, default subscription plans), migration naming convention
+- [ ] missing-spec-indexes — Create database/indexes.md: every index needed for production query performance, query patterns that require each index, index type (btree, gin, partial), expected cardinality
+- [ ] missing-spec-domains — Create deployment/domains.md: DNS records for taxoptimizer.ph (A/AAAA/CNAME), Cloudflare setup (proxy rules, WAF rules, page rules), SSL/TLS config, subdomain routing (api., www., staging., exports.)
+- [ ] completeness-audit — Read every file in final-mega-spec/, check for gaps. Depends: missing-spec-* aspects completed.
 - [ ] placeholder-validation — **HARD GATE.** Exhaustive line-by-line scan of ALL final-mega-spec/ files for banned placeholder patterns (TODO, TBD, FIXME, stubs, empty sections, deferral phrases, sample values, ellipsis-as-content). Must report PASS with zero findings before loop can converge. Fix all matches and re-scan in same iteration. Depends: completeness-audit.
 - [ ] convergence-check — Run final convergence checklist, either add new aspects or converge. Depends: placeholder-validation PASS.
 

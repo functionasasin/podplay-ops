@@ -2152,7 +2152,7 @@ If 8% elected:
 - Late 2551Q with tax due: THREE components (surcharge + interest + compromise)
 - Late 2551Q with ₱0 tax due (nil return): ONLY compromise penalty (₱1,000 / ₱5,000 / ₱10,000 by offense count), no surcharge or interest (₱0 × 10% = ₱0; ₱0 × 6% = ₱0)
 
-*Cross-references: [CR-034 (Form 2551Q engine)](../computation-rules.md) | [percentage-tax-rates.md Part 11](percentage-tax-rates.md) | [EC-VPT group (VAT/PT boundary)](edge-cases.md) | [CR-020 (penalty computation)](../computation-rules.md)*
+*Cross-references: [CR-034 (Form 2551Q engine)](computation-rules.md) | [percentage-tax-rates.md Part 11](lookup-tables/percentage-tax-rates.md) | [EC-VPT group (VAT/PT boundary)](edge-cases.md) | [CR-020 (penalty computation)](computation-rules.md)*
 
 ---
 

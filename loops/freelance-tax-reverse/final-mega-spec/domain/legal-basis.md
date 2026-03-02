@@ -269,7 +269,7 @@ Classification rules: Existing taxpayers (registered before 2023) classified by 
   - **Certificate issuance:** Platforms issue BIR Form 2307 (WI760) to sellers within 20 days after end of each quarter
   - **Seller registration:** Platforms PROHIBITED from allowing unregistered sellers; must collect BIR Form 2303 (Certificate of Registration) from all sellers
   - **DFSPs covered:** includes Payoneer, PayPal, GCash, Maya, PayMongo, Xendit, and similar payment and money transmission service providers
-- **Full source:** See [rr-16-2023-emarketplace.md](../../../input/sources/rr-16-2023-emarketplace.md)
+- **Full source:** See [rr-16-2023-emarketplace.md](../../input/sources/rr-16-2023-emarketplace.md)
 
 ---
 

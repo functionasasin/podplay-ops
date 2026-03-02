@@ -2188,9 +2188,9 @@ function is_life_insurance_deductible(
   - DT-06: Form 2551Q filing obligation
   - DT-09: Deduction method selection (itemized vs. OSD)
 - For edge cases (mid-year threshold crossing, first-year filers, tier boundaries, e-marketplace withholding, penalty scenarios, 8% option edge cases, itemized deduction edge cases): See [edge-cases.md](edge-cases.md)
-- For test vectors validating these computations: See [../engine/test-vectors/basic.md](../engine/test-vectors/basic.md) (PENDING)
+- For test vectors validating these computations: See [../engine/test-vectors/basic.md](../engine/test-vectors/basic.md)
 - For full legal text behind each rule: See [legal-basis.md](legal-basis.md)
-- For RR 16-2023 source material: See [../../../input/sources/rr-16-2023-emarketplace.md](../../../input/sources/rr-16-2023-emarketplace.md)
+- For RR 16-2023 source material: See [../../input/sources/rr-16-2023-emarketplace.md](../../input/sources/rr-16-2023-emarketplace.md)
 
 ---
 
