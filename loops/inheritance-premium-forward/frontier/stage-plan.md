@@ -1,6 +1,6 @@
 # Forward Ralph — Stage Plan (Inheritance Premium)
 
-Dev order: 1 → 2 → 3 → 4-9 (parallel) → 10 → 11 → 12-16 (parallel) → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24 → 25
+Dev order: 1 → 2 → 3 → 4-9 (parallel) → 10 → 11 → 12-16 (parallel) → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24 → 25 → 26
 
 | Stage | Name                        | Spec     | Test Filter                        | Depends On        | Status  |
 |-------|-----------------------------|----------|------------------------------------|--------------------|---------|
@@ -29,5 +29,6 @@ Dev order: 1 → 2 → 3 → 4-9 (parallel) → 10 → 11 → 12-16 (parallel) �
 | 23    | Estate Tax Inputs Wizard    | §4.23    | estate-tax\|tax-wizard             | 3                  | blocked |
 | 24    | BIR Form 1801 Integration   | §4.9     | bir\|form-1801\|tax-bridge         | 23, 11             | blocked |
 | 25    | Multi-Seat Firm Accounts    | §4.11    | multi-seat\|organization\|team     | all                | blocked |
+| 26    | Integration Sweep           | —        | integration-sweep                  | all                | blocked |
 
 Status values: blocked | pending | active | complete

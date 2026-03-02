@@ -127,6 +127,7 @@ You are a development agent in a forward ralph loop. Each time you run, you do O
 | 23 | Estate Tax Inputs Wizard | §4.23 | `estate-tax\|tax-wizard` | 3 | 5 |
 | 24 | BIR Form 1801 Integration | §4.9 | `bir\|form-1801\|tax-bridge` | 23, 11 | 5 |
 | 25 | Multi-Seat Firm Accounts | §4.11 | `multi-seat\|organization\|team` | all | 6 |
+| 26 | Integration Sweep | — | `integration-sweep` | all | Final |
 
 ## Stage Details
 
@@ -887,6 +888,40 @@ Add type-safe routing and restructure the app from single-page to multi-route.
 - Expired invitation shows error message
 - Role permissions: paralegal cannot finalize, readonly cannot edit
 - RLS: user in org A cannot see org B's cases
+
+---
+
+### Stage 26 — Integration Sweep
+
+**Purpose:** Eliminate all placeholders, stubs, and "coming in Stage X" text left behind by earlier stages. Ensure every route renders its real components and every module exports real implementations.
+
+**This stage has NO spec section.** It is a cleanup pass that wires together what previous stages built but didn't connect.
+
+**Tasks (each iteration picks ONE):**
+
+1. **Scan for placeholders** — Grep the entire `src/` directory for: `coming in`, `coming soon`, `placeholder`, `TODO`, `stub`, and any component that renders static text instead of importing its real implementation. List all findings.
+
+2. **Fix route pages** — For each route file (`src/routes/`) that still renders placeholder text instead of its real components:
+   - Import the real components built by the stage that owns that feature
+   - Wire up the context provider if needed (e.g., `FirmProfileProvider` for settings)
+   - Remove the placeholder text
+   - Update or delete any tests that assert placeholder text (e.g., router tests asserting "coming in Stage X")
+
+3. **Fix stub exports** — For any `src/types/`, `src/lib/`, or `src/utils/` file that still has stub functions or `// stub` comments, replace with the real implementation or remove if the real implementation lives elsewhere.
+
+4. **Update tests** — Replace any test assertions that check for placeholder strings with assertions that check for real rendered content. Tests from earlier stages that gated on placeholder text must be updated to reflect the final UI.
+
+5. **Full test suite** — Run `npx vitest run --reporter=verbose` and fix any failures introduced by the wiring changes.
+
+**Advance criteria:** Zero grep hits for placeholder/stub patterns in `src/` (excluding `node_modules/`, test mocks, and HTML `placeholder` attributes on form inputs). All tests pass.
+
+**Tests** (`src/__tests__/integration-sweep.test.tsx`):
+- No route under `src/routes/` renders text matching `/coming (in|soon)/i`
+- No exported function in `src/lib/` or `src/utils/` is a no-op stub
+- Settings page renders FirmProfileForm (not placeholder text)
+- Clients page renders ClientList (not placeholder text)
+- Deadlines page renders deadline content (not placeholder text)
+- All route pages import and render their real components
 
 ---
 
