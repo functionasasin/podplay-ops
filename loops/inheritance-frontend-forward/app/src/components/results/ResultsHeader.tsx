@@ -13,6 +13,8 @@ export interface ResultsHeaderProps {
   scenarioCode: ScenarioCode;
   successionType: SuccessionType;
   netDistributableEstate: Money;
+  decedentName: string;
+  dateOfDeath: string;
 }
 
 const SUCCESSION_LABELS: Record<SuccessionType, string> = {
@@ -29,7 +31,7 @@ const BADGE_CLASSES: Record<string, string> = {
   red: 'bg-red-100 text-red-800 border-red-200',
 };
 
-export function ResultsHeader({ scenarioCode, successionType, netDistributableEstate }: ResultsHeaderProps) {
+export function ResultsHeader({ scenarioCode, successionType, netDistributableEstate, decedentName, dateOfDeath }: ResultsHeaderProps) {
   const badgeColor = SUCCESSION_TYPE_BADGE_COLOR[successionType];
   const badgeClass = BADGE_CLASSES[badgeColor] ?? BADGE_CLASSES.blue;
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import { ResultsHeader } from '../ResultsHeader';
+import { formatDateOfDeath } from '../utils';
 import type { ScenarioCode, SuccessionType, Money } from '../../../types';
 
 // --------------------------------------------------------------------------
@@ -12,12 +13,16 @@ function renderHeader(overrides: {
   scenarioCode?: ScenarioCode;
   successionType?: SuccessionType;
   netDistributableEstate?: Money;
+  decedentName?: string;
+  dateOfDeath?: string;
 } = {}) {
   return render(
     <ResultsHeader
       scenarioCode={overrides.scenarioCode ?? 'I1'}
       successionType={overrides.successionType ?? 'Intestate'}
       netDistributableEstate={overrides.netDistributableEstate ?? { centavos: 500000000 }}
+      decedentName={overrides.decedentName ?? 'Juan dela Cruz'}
+      dateOfDeath={overrides.dateOfDeath ?? '2024-03-15'}
     />,
   );
 }
@@ -140,5 +145,73 @@ describe('results > ResultsHeader', () => {
       renderHeader();
       expect(screen.getByText(/Total Estate/i)).toBeInTheDocument();
     });
+  });
+
+  // --------------------------------------------------------------------------
+  // Stage 4 — Decedent Header (§4.13)
+  // --------------------------------------------------------------------------
+
+  describe('decedent header', () => {
+    it('renders "Estate of Juan dela Cruz" in the h1', () => {
+      renderHeader({ decedentName: 'Juan dela Cruz' });
+      expect(screen.getByText(/Estate of Juan dela Cruz/)).toBeInTheDocument();
+    });
+
+    it('renders "Estate of Maria Santos" for a different decedent', () => {
+      renderHeader({ decedentName: 'Maria Santos' });
+      expect(screen.getByText(/Estate of Maria Santos/)).toBeInTheDocument();
+    });
+
+    it('renders "Date of Death: 15 Mar 2024"', () => {
+      renderHeader({ dateOfDeath: '2024-03-15' });
+      expect(screen.getByText(/Date of Death: 15 Mar 2024/)).toBeInTheDocument();
+    });
+
+    it('renders DOD for a different date "01 Jan 2020"', () => {
+      renderHeader({ dateOfDeath: '2020-01-01' });
+      expect(screen.getByText(/Date of Death: 1 Jan 2020/)).toBeInTheDocument();
+    });
+
+    it('renders DOD for December "31 Dec 2025"', () => {
+      renderHeader({ dateOfDeath: '2025-12-31' });
+      expect(screen.getByText(/Date of Death: 31 Dec 2025/)).toBeInTheDocument();
+    });
+
+    it('falls back gracefully when decedent name is empty', () => {
+      renderHeader({ decedentName: '' });
+      // Should still render the header — just "Estate of" with no name
+      expect(screen.getByTestId('results-header')).toBeInTheDocument();
+      expect(screen.getByText(/Estate of/)).toBeInTheDocument();
+    });
+  });
+});
+
+// --------------------------------------------------------------------------
+// formatDateOfDeath utility tests (§4.13)
+// --------------------------------------------------------------------------
+
+describe('formatDateOfDeath', () => {
+  it('formats "2024-03-15" as "15 Mar 2024"', () => {
+    expect(formatDateOfDeath('2024-03-15')).toBe('15 Mar 2024');
+  });
+
+  it('formats "2020-01-01" as "1 Jan 2020"', () => {
+    expect(formatDateOfDeath('2020-01-01')).toBe('1 Jan 2020');
+  });
+
+  it('formats "2025-12-31" as "31 Dec 2025"', () => {
+    expect(formatDateOfDeath('2025-12-31')).toBe('31 Dec 2025');
+  });
+
+  it('formats "2023-06-09" as "9 Jun 2023"', () => {
+    expect(formatDateOfDeath('2023-06-09')).toBe('9 Jun 2023');
+  });
+
+  it('formats "2024-02-29" (leap day) as "29 Feb 2024"', () => {
+    expect(formatDateOfDeath('2024-02-29')).toBe('29 Feb 2024');
+  });
+
+  it('formats "1999-11-05" as "5 Nov 1999"', () => {
+    expect(formatDateOfDeath('1999-11-05')).toBe('5 Nov 1999');
   });
 });

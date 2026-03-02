@@ -27,6 +27,8 @@ export function ResultsView({ input, output, onEditInput }: ResultsViewProps) {
         scenarioCode={output.scenario_code}
         successionType={output.succession_type}
         netDistributableEstate={input.net_distributable_estate}
+        decedentName={input.decedent.name}
+        dateOfDeath={input.decedent.date_of_death}
       />
 
       <DistributionSection
