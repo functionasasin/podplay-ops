@@ -12,7 +12,7 @@
 - [x] tam-labor-separation — D4 (Retirement Pay RA7641), D5 (Separation Pay), D6 (Back Wages), D9 (SEnA); at-risk employees + NLRC case filers; labor lawyers
 - [x] tam-corporate-sec — E1 (SEC Navigator), E2 (SEC Lifecycle), E3 (HARBOR), E4 (AFS Filing), E5 (Capital Changes), E6 (OSH Staffing); SEC-registered active corporations by type; corporate secretaries + lawyers
 - [x] tam-property-civil — F1 (RPT), F2 (LBT), F3 (RPVARA), F4 (Maceda Law), G1 (Legal Interest), G2 (Prescriptive Periods), G3 (Marital Property), G4 (LEC), G5 (Life Insurance CSV); property owners + litigants; civil lawyers
-- [ ] tam-onett-property-transfer — O-LRA-1 (ONETT Deadline), O-LRA-2 (ONETT Pipeline), O-LRA-3 (Zonal Value), O-LRA-4 (LRA Fees); BIR 1706 returns filed per year; real estate brokers + conveyancing lawyers
+- [x] tam-onett-property-transfer — O-LRA-1 (ONETT Deadline), O-LRA-2 (ONETT Pipeline), O-LRA-3 (Zonal Value), O-LRA-4 (LRA Fees); BIR 1706 returns filed per year; real estate brokers + conveyancing lawyers
 - [ ] tam-sss — A-SSS-1 through A-SSS-5 (Retirement, Maternity, Contributions, Sickness, Death); SSS members by category; HR officers + labor consultants
 - [ ] tam-philhealth-pagibig — B-PHI-1/2/3, C-HDMF-1/2/3; PhilHealth + Pag-IBIG member counts; HR + benefits officers
 - [ ] tam-gsis — D-GSIS-1/2/3/4; GSIS active members + retirees; government HR officers
