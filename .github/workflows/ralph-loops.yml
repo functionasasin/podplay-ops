@@ -108,10 +108,10 @@ jobs:
             ITERATION=$((ITERATION + 1))
             echo "--- $(date '+%H:%M:%S') | Iteration $ITERATION ---"
 
-            # Run one aspect — no per-iteration cap, let it take as long as it needs
+            # Run one aspect — 30-minute per-aspect cap
             if bash -c '
               unset CLAUDECODE
-              cat PROMPT.md | claude --print --dangerously-skip-permissions
+              cat PROMPT.md | timeout 1800 claude --print --dangerously-skip-permissions
             '; then
               FAILURES=0
             else
