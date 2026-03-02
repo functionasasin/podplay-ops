@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 65
-- Analyzed: 57
-- Pending: 8
-- Convergence: 88%
+- Analyzed: 58
+- Pending: 7
+- Convergence: 89%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -75,7 +75,7 @@ Design everything around the engine to make it a shippable product.
 - [x] api-endpoints — Every route, method, request/response schema, error responses
 - [x] api-auth — Auth model, roles, permissions, session management
 - [x] premium-tiers — Free vs pro vs enterprise feature gating
-- [ ] premium-pricing — Price points, billing cycles, trial logic
+- [x] premium-pricing — Price points, billing cycles, trial logic
 - [ ] professional-features — B2B features: batch, API access, PDF export, white-label
 
 ### Wave 5: Ship & Polish Design
