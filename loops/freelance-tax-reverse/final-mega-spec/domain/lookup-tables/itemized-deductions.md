@@ -615,4 +615,4 @@ function compute_itemized_deductions(d: ItemizedDeductions, gross_receipts: deci
 - [manual-review-flags.md](../manual-review-flags.md) — MRF-003 (ordinary and necessary ambiguity), MRF-009 through MRF-013
 - [legal-basis.md](../legal-basis.md) — Section 2.4 (Sec. 34 deductions)
 - [osd-breakeven-table.md](osd-breakeven-table.md) — When itemized deductions beat OSD
-- [../engine/data-model.md](../../engine/data-model.md) — ItemizedDeductions struct definition (PENDING)
+- [../engine/data-model.md](../../engine/data-model.md) — `ItemizedExpenseInput` struct definition (see Section 3: Input Types)

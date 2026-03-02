@@ -116,8 +116,8 @@ const config: Config = {
   dialect: 'postgresql',
   dbCredentials: {
     url: process.env.DATABASE_URL!,
-    // DATABASE_URL format: postgresql://user:password@host:5432/taxoptimizer
-    // Example (Neon): postgresql://taxoptimizer:secret@ep-xxx.us-east-1.aws.neon.tech/taxoptimizer?sslmode=require
+    // DATABASE_URL format: postgresql://user:password@host:5432/taxklaro
+    // Example (Neon): postgresql://taxklaro:secret@ep-xxx.us-east-1.aws.neon.tech/taxklaro?sslmode=require
   },
   migrations: {
     table: '__drizzle_migrations',
@@ -1271,8 +1271,8 @@ const ARGON2ID_PARAMS = {
 const ADMIN_USER_ID    = '00000000-0000-0000-0000-000000000001';
 const CI_TEST_USER_ID  = '00000000-0000-0000-0000-000000000002';
 
-const ADMIN_EMAIL      = 'admin@taxoptimizer.ph';
-const CI_TEST_EMAIL    = 'ci-test@taxoptimizer.ph';
+const ADMIN_EMAIL      = 'admin@taxklaro.ph';
+const CI_TEST_EMAIL    = 'ci-test@taxklaro.ph';
 
 async function seed(): Promise<void> {
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -1312,7 +1312,7 @@ async function seed(): Promise<void> {
       emailVerified:  true,
       passwordHash:   adminPasswordHash,
       role:           'ADMIN',
-      firstName:      'TaxOptimizer',
+      firstName:      'TaxKlaro',
       lastName:       'Admin',
       middleName:     '',
       isActive:       true,
@@ -1391,7 +1391,7 @@ These variables are stored in different locations depending on environment:
 | Property | Admin User | CI Test User |
 |----------|-----------|-------------|
 | `id` | `00000000-0000-0000-0000-000000000001` | `00000000-0000-0000-0000-000000000002` |
-| `email` | `admin@taxoptimizer.ph` | `ci-test@taxoptimizer.ph` |
+| `email` | `admin@taxklaro.ph` | `ci-test@taxklaro.ph` |
 | `role` | `ADMIN` | `TAXPAYER` |
 | `email_verified` | `true` | `true` |
 | `plan` | `FREE` (upgradeable via admin UI) | `FREE` (used as-is in e2e tests) |
@@ -1432,7 +1432,7 @@ npx drizzle-kit migrate
 # From the apps/tax-optimizer/ directory:
 
 # Set required environment variables
-export DATABASE_URL="postgresql://postgres:password@localhost:5432/taxoptimizer"
+export DATABASE_URL="postgresql://postgres:password@localhost:5432/taxklaro"
 export ADMIN_SEED_PASSWORD="$(openssl rand -base64 32)"
 export CI_TEST_USER_PASSWORD="$(openssl rand -base64 32)"
 

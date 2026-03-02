@@ -1167,8 +1167,8 @@ The mobile bar has four icon buttons:
 | Action | Label | Availability | Behavior |
 |--------|-------|-------------|---------|
 | Save Computation | "Save Computation" | Free (requires account) | If logged in: saves computation to user's history with a generated name "{taxpayer_type_label} {tax_year} {filing_period_label}" and shows success toast "Computation saved." If not logged in: shows sign-up modal, then saves after signup. |
-| Download PDF Report | "Download PDF Report" | Pro subscription required | If Pro: triggers PDF generation and download (filename: "tax-optimizer-{tax_year}-{filing_period}-{timestamp}.pdf"). If free: shows upgrade modal "This feature requires TaxOptimizer Pro. See what you get →" |
-| Share Results Link | "Share Results Link" | Free | Generates a read-only shareable URL (e.g., "taxoptimizer.ph/result/{computation_id}") and copies to clipboard. Shows toast: "Link copied to clipboard. Anyone with this link can view your results (inputs are visible)." If not saved: saves computation first, then generates link. |
+| Download PDF Report | "Download PDF Report" | Pro subscription required | If Pro: triggers PDF generation and download (filename: "tax-optimizer-{tax_year}-{filing_period}-{timestamp}.pdf"). If free: shows upgrade modal "This feature requires TaxKlaro Pro. See what you get →" |
+| Share Results Link | "Share Results Link" | Free | Generates a read-only shareable URL (e.g., "taxklaro.ph/result/{computation_id}") and copies to clipboard. Shows toast: "Link copied to clipboard. Anyone with this link can view your results (inputs are visible)." If not saved: saves computation first, then generates link. |
 | Start New Computation | "Start New Computation" | Always | Resets wizard to WS-00 with all fields cleared. Does NOT require confirmation (no data loss risk if user has already saved or seen results). |
 | Compute Another Quarter | "Compute Another Quarter" | Shown when `filing_period == ANNUAL` | Pre-fills the wizard for a quarterly computation for the same tax year. Gross receipts field is cleared for user to enter Q1 data. Taxpayer profile fields are carried over. |
 | Find a CPA | "Find a CPA →" | Always | Opens external link to a curated list of CPAs who specialize in freelancer tax preparation (partner page). Label in panel: "Need help filing? Connect with a verified CPA who handles freelancer tax returns." |
@@ -1546,7 +1546,7 @@ Displayed when the compute endpoint returns a 5xx error or the network request f
 │  [Try Again]    [Go Back to Edit Inputs]                    │
 │                                                              │
 │  If this keeps happening, please email                       │
-│  support@taxoptimizer.ph with the error code above.         │
+│  support@taxklaro.ph with the error code above.         │
 └──────────────────────────────────────────────────────────────┘
 ```
 

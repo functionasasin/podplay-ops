@@ -256,14 +256,14 @@ Browser                    API Server                  Google OAuth
 | Parameter | Value |
 |-----------|-------|
 | `client_id` | `GOOGLE_CLIENT_ID` environment variable |
-| `redirect_uri` | `https://api.taxoptimizer.ph/v1/auth/oauth/google/callback` (must be registered in Google Cloud Console) |
+| `redirect_uri` | `https://api.taxklaro.ph/v1/auth/oauth/google/callback` (must be registered in Google Cloud Console) |
 | `response_type` | `code` |
 | `scope` | `openid email profile` |
 | `state` | A UUID generated for this OAuth session (stored in Redis with 30-minute TTL). Also encodes `redirect_after` URL base64url-encoded: `<uuid>:<base64url(redirect_after)>` |
 | `access_type` | `offline` (to obtain refresh token, for potential future use) |
 | `prompt` | `select_account` (forces Google account picker even if user is already signed in) |
 
-**Redirect validation:** The `redirect_after` URL parameter (provided by the browser's initial GET) must match `^https://taxoptimizer\.ph(/.*)?$` (regex). Any value that does not match is rejected with `400 ERR_VALIDATION_FAILED` and the flow is aborted before redirecting to Google. This prevents open redirect vulnerabilities.
+**Redirect validation:** The `redirect_after` URL parameter (provided by the browser's initial GET) must match `^https://taxklaro\.ph(/.*)?$` (regex). Any value that does not match is rejected with `400 ERR_VALIDATION_FAILED` and the flow is aborted before redirecting to Google. This prevents open redirect vulnerabilities.
 
 ### 3.3 Callback Processing
 
@@ -286,7 +286,7 @@ Content-Type: application/x-www-form-urlencoded
 code=<code>
 &client_id=<GOOGLE_CLIENT_ID>
 &client_secret=<GOOGLE_CLIENT_SECRET>
-&redirect_uri=https://api.taxoptimizer.ph/v1/auth/oauth/google/callback
+&redirect_uri=https://api.taxklaro.ph/v1/auth/oauth/google/callback
 &grant_type=authorization_code
 ```
 
@@ -528,8 +528,8 @@ Step 1: POST /auth/forgot-password { email: "user@example.com" }
        - INSERT INTO password_reset_tokens:
            user_id, token_hash, expires_at = NOW() + INTERVAL '1 hour'
        - Send transactional email to user.email:
-           Subject: "Reset Your TaxOptimizer Password"
-           Body: Contains link https://taxoptimizer.ph/reset-password?token={raw_reset_token}
+           Subject: "Reset Your TaxKlaro Password"
+           Body: Contains link https://taxklaro.ph/reset-password?token={raw_reset_token}
            Link expires in 1 hour.
     d. Return 200 OK: { "message": "If an account exists for this email, a password reset link has been sent." }
 
@@ -704,7 +704,7 @@ Token generation (at registration or on POST /auth/resend-verification):
      (Invalidate previous unused tokens for this user)
   4. INSERT INTO email_verification_tokens:
        user_id, token_hash, expires_at = NOW() + INTERVAL '24 hours'
-  5. Send email with link: https://taxoptimizer.ph/verify-email?token={raw_token}
+  5. Send email with link: https://taxklaro.ph/verify-email?token={raw_token}
 
 Token validation (at POST /auth/verify-email { token }):
   1. Compute hash = BLAKE2b-256(input_token)
@@ -746,7 +746,7 @@ All API responses include the following HTTP security headers:
 
 **CORS configuration:**
 ```
-Allowed origins: https://taxoptimizer.ph, https://www.taxoptimizer.ph, https://staging.taxoptimizer.ph
+Allowed origins: https://taxklaro.ph, https://www.taxklaro.ph, https://staging.taxklaro.ph
                  (localhost:3000, localhost:5173 in development mode only)
 Allowed methods: GET, POST, PATCH, PUT, DELETE, OPTIONS
 Allowed headers: Content-Type, X-CSRF-Token, Authorization, Idempotency-Key, Accept-Language
@@ -853,13 +853,13 @@ All auth-related environment variables. Values shown are examples or format desc
 | `APPLICATION_SECRET_KEY` | Yes | 32 bytes, hex-encoded (64 hex chars) | Master secret for CSRF token derivation (HMAC-SHA256 key) and OAuth token encryption (AES-256-GCM key). Rotated by: (1) generate new key, (2) update env, (3) deploy, (4) all existing sessions will produce new CSRF tokens; old sessions expire within 30 days. |
 | `GOOGLE_CLIENT_ID` | Yes | String (e.g., `123456789-abc.apps.googleusercontent.com`) | Google OAuth 2.0 client ID from Google Cloud Console → APIs & Services → Credentials. |
 | `GOOGLE_CLIENT_SECRET` | Yes | String (40 chars, e.g., `GOCSPX-AbCdEfGhIjKlMnOpQrStUv12345`) | Google OAuth 2.0 client secret. Keep secret; never expose to client. |
-| `GOOGLE_REDIRECT_URI` | Yes | URL string | Must match exactly: `https://api.taxoptimizer.ph/v1/auth/oauth/google/callback`. Also registered in Google Cloud Console. |
+| `GOOGLE_REDIRECT_URI` | Yes | URL string | Must match exactly: `https://api.taxklaro.ph/v1/auth/oauth/google/callback`. Also registered in Google Cloud Console. |
 | `ARGON2ID_DUMMY_HASH` | Yes | PHC string | Pre-computed Argon2id hash of a dummy password (e.g., "dummypassword123"). Used for timing normalization when user not found. Generate at startup if not set. |
-| `DATABASE_URL` | Yes | PostgreSQL connection string | `postgresql://user:password@host:5432/taxoptimizer?sslmode=require` |
+| `DATABASE_URL` | Yes | PostgreSQL connection string | `postgresql://user:password@host:5432/taxklaro?sslmode=require` |
 | `REDIS_URL` | Yes | Redis connection string | `rediss://user:password@host:6379` (TLS enforced in production). |
-| `SESSION_COOKIE_DOMAIN` | Yes | Domain string | `taxoptimizer.ph`. Cookie is set for this domain (covers api.taxoptimizer.ph and taxoptimizer.ph). |
-| `CORS_ALLOWED_ORIGINS` | Yes | Comma-separated URLs | `https://taxoptimizer.ph,https://www.taxoptimizer.ph,https://staging.taxoptimizer.ph` |
-| `EMAIL_FROM_ADDRESS` | Yes | Email address | `noreply@taxoptimizer.ph`. Used in From header for all transactional emails. |
-| `EMAIL_FROM_NAME` | Yes | String | `TaxOptimizer.ph`. Display name for transactional emails. |
+| `SESSION_COOKIE_DOMAIN` | Yes | Domain string | `taxklaro.ph`. Cookie is set for this domain (covers api.taxklaro.ph and taxklaro.ph). |
+| `CORS_ALLOWED_ORIGINS` | Yes | Comma-separated URLs | `https://taxklaro.ph,https://www.taxklaro.ph,https://staging.taxklaro.ph` |
+| `EMAIL_FROM_ADDRESS` | Yes | Email address | `noreply@taxklaro.ph`. Used in From header for all transactional emails. |
+| `EMAIL_FROM_NAME` | Yes | String | `TaxKlaro.ph`. Display name for transactional emails. |
 | `RESEND_API_KEY` | Yes | String (Resend.com API key format: `re_...`) | API key for Resend.com transactional email provider. |
 | `NODE_ENV` | Yes | `production`, `staging`, or `development` | Controls CORS localhost allowlist, cookie Secure flag, and log verbosity. |

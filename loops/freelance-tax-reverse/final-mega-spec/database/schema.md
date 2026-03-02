@@ -521,7 +521,7 @@ CREATE TABLE computations (
   share_token           VARCHAR(36)             NULL,
   -- UUID (with dashes) used as the public share token. Example: "f47ac10b-58cc-4372-a567-0e02b2c3d479".
   -- NULL if sharing has not been enabled for this computation.
-  -- The share URL is: https://taxoptimizer.ph/s/{share_token}
+  -- The share URL is: https://taxklaro.ph/s/{share_token}
   share_token_created_at TIMESTAMPTZ           NULL,
   -- When sharing was first enabled for this computation.
 
@@ -810,7 +810,7 @@ CREATE TABLE invoices (
 
   -- Description (for display in billing history)
   description           TEXT                   NOT NULL DEFAULT '',
-  -- Human-readable description, e.g., "TaxOptimizer Pro — Monthly (March 2026)".
+  -- Human-readable description, e.g., "TaxKlaro Pro — Monthly (March 2026)".
 
   created_at            TIMESTAMPTZ            NOT NULL DEFAULT NOW(),
   updated_at            TIMESTAMPTZ            NOT NULL DEFAULT NOW(),

@@ -1,6 +1,6 @@
 # Scenarios — Philippine Freelance & Self-Employed Income Tax Optimizer
 
-**Status:** EXPANDED — Groups 1-8 (initial), Groups 9-14 (added by scenario-enumeration aspect). Total: 80 scenario codes.
+**Status:** COMPLETE — Groups 1-8 (from worked-examples-fetch and eight-percent-option aspects), Groups 9-14 (added by scenario-enumeration aspect). Total: 80 scenario codes.
 **Last updated:** 2026-03-01
 
 Each scenario code corresponds to a distinct computation path and taxpayer profile. Every scenario code MUST have at least one test vector in [../engine/test-vectors/exhaustive.md](../engine/test-vectors/exhaustive.md).

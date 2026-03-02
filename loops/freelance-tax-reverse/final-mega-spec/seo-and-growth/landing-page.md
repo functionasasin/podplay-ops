@@ -29,7 +29,7 @@ These are the verbatim pain points from Filipino freelancer communities that the
 
 ---
 
-## Value Proposition (to be refined in Wave 5)
+## Value Proposition
 
 **Primary**: "The only Philippine tax tool that tells you which tax regime saves you the most money."
 
@@ -755,7 +755,7 @@ The following A/B tests should be run at launch to optimize conversion rate on t
 
 - A/B tests use PostHog `useFeatureFlag('hero-headline-test')` client-side.
 - Variant assignment is sticky (cookie-based, 30 days).
-- All variant copy is defined in [../frontend/copy.md](../frontend/copy.md) Section 3.1 (additional variant copy to be added to copy.md when tests are implemented).
+- All variant copy is defined in [../frontend/copy.md](../frontend/copy.md) Section 3.1. When implementing A/B tests, add test variants directly to copy.md Section 3.1 with variant labels (e.g., `hero_headline_v2`) before deploying the test.
 - The control variant is always the copy currently specified in copy.md Section 3.
 
 ---

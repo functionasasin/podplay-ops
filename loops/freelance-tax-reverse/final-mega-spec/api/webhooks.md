@@ -71,10 +71,10 @@
 
 ## 1. Overview
 
-TaxOptimizer sends **outbound webhook HTTP POST requests** to registered Enterprise subscriber URLs when significant events occur on their account: batch job state changes, subscription lifecycle events, and CPA client management events.
+TaxKlaro sends **outbound webhook HTTP POST requests** to registered Enterprise subscriber URLs when significant events occur on their account: batch job state changes, subscription lifecycle events, and CPA client management events.
 
 **What outbound webhooks are NOT:**
-- The inbound `POST /webhooks/stripe` and `POST /webhooks/paymongo` endpoints (defined in `endpoints.md §14`) — those are webhooks FROM Stripe/PayMongo TO TaxOptimizer and are unrelated to this spec.
+- The inbound `POST /webhooks/stripe` and `POST /webhooks/paymongo` endpoints (defined in `endpoints.md §14`) — those are webhooks FROM Stripe/PayMongo TO TaxKlaro and are unrelated to this spec.
 - Real-time computation streaming — individual computations do not emit webhook events; only batch jobs do.
 
 **Delivery method:** Each event is a single HTTP POST request with a JSON body to the registered URL. The request must receive a 2xx response within 30 seconds or it is considered failed.
@@ -100,7 +100,7 @@ Attempting to call webhook management endpoints (`/webhook-endpoints/*`) with a 
 
 ## 3. Webhook Endpoint Management API
 
-All endpoints in this section require Enterprise subscription. All route paths are relative to the API base URL `https://api.taxoptimizer.ph/v1`.
+All endpoints in this section require Enterprise subscription. All route paths are relative to the API base URL `https://api.taxklaro.ph/v1`.
 
 ### 3.1 `POST /webhook-endpoints`
 
@@ -311,7 +311,7 @@ Send a test event payload to the endpoint to verify connectivity and signature v
   "api_version": "2026-03-01",
   "livemode": true,
   "data": {
-    "message": "This is a test event from TaxOptimizer. Your webhook endpoint is working correctly.",
+    "message": "This is a test event from TaxKlaro. Your webhook endpoint is working correctly.",
     "endpoint_id": "whe_01hzxq2j3k4m5n6p7q8r9s0t1u"
   }
 }
@@ -428,7 +428,7 @@ Every outbound webhook POST body is a JSON object with the following top-level e
     "queued_at": "2026-03-02T15:44:00.000Z",
     "started_at": "2026-03-02T15:44:02.000Z",
     "completed_at": "2026-03-02T15:45:30.000Z",
-    "results_url": "https://api.taxoptimizer.ph/v1/batch/batch_01hzxq2j3k4m5n6p7q8r9s0t1x/results"
+    "results_url": "https://api.taxklaro.ph/v1/batch/batch_01hzxq2j3k4m5n6p7q8r9s0t1x/results"
   }
 }
 ```
@@ -438,12 +438,12 @@ Every outbound webhook POST body is a JSON object with the following top-level e
 | Header | Value |
 |--------|-------|
 | `Content-Type` | `application/json; charset=utf-8` |
-| `User-Agent` | `TaxOptimizer-Webhook/1.0 (+https://taxoptimizer.ph/docs/webhooks)` |
-| `X-TaxOptimizer-Signature` | `sha256=<hex_digest>` — see §7 |
-| `X-TaxOptimizer-Event` | Event type string. Example: `batch.job.completed` |
-| `X-TaxOptimizer-Delivery` | Delivery ID. Example: `whd_01hzxq2j3k4m5n6p7q8r9s0t1v` |
-| `X-TaxOptimizer-Event-Id` | Event ID. Example: `evt_01hzxq2j3k4m5n6p7q8r9s0t1w` |
-| `X-TaxOptimizer-Api-Version` | `2026-03-01` |
+| `User-Agent` | `TaxKlaro-Webhook/1.0 (+https://taxklaro.ph/docs/webhooks)` |
+| `X-TaxKlaro-Signature` | `sha256=<hex_digest>` — see §7 |
+| `X-TaxKlaro-Event` | Event type string. Example: `batch.job.completed` |
+| `X-TaxKlaro-Delivery` | Delivery ID. Example: `whd_01hzxq2j3k4m5n6p7q8r9s0t1v` |
+| `X-TaxKlaro-Event-Id` | Event ID. Example: `evt_01hzxq2j3k4m5n6p7q8r9s0t1w` |
+| `X-TaxKlaro-Api-Version` | `2026-03-01` |
 
 ---
 
@@ -500,7 +500,7 @@ All schemas below describe the `data` object inside the envelope (see §4.1).
   "label_prefix": "AY2025 Batch",
   "queued_at": "2026-03-02T14:30:00.000Z",
   "estimated_completion_seconds": 30,
-  "status_url": "https://api.taxoptimizer.ph/v1/batch/batch_01hzxq2j3k4m5n6p7q8r9s0t1x"
+  "status_url": "https://api.taxklaro.ph/v1/batch/batch_01hzxq2j3k4m5n6p7q8r9s0t1x"
 }
 ```
 
@@ -512,7 +512,7 @@ All schemas below describe the `data` object inside the envelope (see §4.1).
 | `label_prefix` | string | The `label_prefix` provided at submission. Empty string `""` if not provided. |
 | `queued_at` | string | ISO 8601 UTC timestamp when the batch was accepted. |
 | `estimated_completion_seconds` | integer | Server estimate of processing time in seconds. Always a positive integer. Based on `total_items × 1.2` seconds, minimum 5. |
-| `status_url` | string | Full HTTPS URL to poll for batch status. Format: `https://api.taxoptimizer.ph/v1/batch/{batch_id}`. |
+| `status_url` | string | Full HTTPS URL to poll for batch status. Format: `https://api.taxklaro.ph/v1/batch/{batch_id}`. |
 
 ---
 
@@ -525,7 +525,7 @@ All schemas below describe the `data` object inside the envelope (see §4.1).
   "total_items": 25,
   "queued_at": "2026-03-02T14:30:00.000Z",
   "started_at": "2026-03-02T14:30:02.000Z",
-  "status_url": "https://api.taxoptimizer.ph/v1/batch/batch_01hzxq2j3k4m5n6p7q8r9s0t1x"
+  "status_url": "https://api.taxklaro.ph/v1/batch/batch_01hzxq2j3k4m5n6p7q8r9s0t1x"
 }
 ```
 
@@ -553,7 +553,7 @@ All schemas below describe the `data` object inside the envelope (see §4.1).
   "started_at": "2026-03-02T14:30:02.000Z",
   "completed_at": "2026-03-02T14:30:32.000Z",
   "processing_duration_seconds": 30,
-  "results_url": "https://api.taxoptimizer.ph/v1/batch/batch_01hzxq2j3k4m5n6p7q8r9s0t1x/results"
+  "results_url": "https://api.taxklaro.ph/v1/batch/batch_01hzxq2j3k4m5n6p7q8r9s0t1x/results"
 }
 ```
 
@@ -599,7 +599,7 @@ All schemas below describe the `data` object inside the envelope (see §4.1).
       "error_message": "tax_year must be between 2018 and 2026"
     }
   ],
-  "results_url": "https://api.taxoptimizer.ph/v1/batch/batch_01hzxq2j3k4m5n6p7q8r9s0t1x/results"
+  "results_url": "https://api.taxklaro.ph/v1/batch/batch_01hzxq2j3k4m5n6p7q8r9s0t1x/results"
 }
 ```
 
@@ -656,7 +656,7 @@ All schemas below describe the `data` object inside the envelope (see §4.1).
       "error_message": "gross_receipts must be greater than or equal to 0"
     }
   ],
-  "results_url": "https://api.taxoptimizer.ph/v1/batch/batch_01hzxq2j3k4m5n6p7q8r9s0t1x/results"
+  "results_url": "https://api.taxklaro.ph/v1/batch/batch_01hzxq2j3k4m5n6p7q8r9s0t1x/results"
 }
 ```
 
@@ -711,7 +711,7 @@ Fired once per trial, 3 calendar days before trial end. Based on the daily job a
   "plan": "PRO",
   "trial_ends_at": "2026-03-16T14:30:00.000Z",
   "days_remaining": 3,
-  "upgrade_url": "https://taxoptimizer.ph/billing/upgrade"
+  "upgrade_url": "https://taxklaro.ph/billing/upgrade"
 }
 ```
 
@@ -722,7 +722,7 @@ Fired once per trial, 3 calendar days before trial end. Based on the daily job a
 | `plan` | string | `"PRO"` or `"ENTERPRISE"`. |
 | `trial_ends_at` | string | ISO 8601 UTC when the trial ends. |
 | `days_remaining` | integer | Always `3` for this event type (the event fires at exactly 3 days remaining). |
-| `upgrade_url` | string | Full HTTPS URL to the billing upgrade page. Always `https://taxoptimizer.ph/billing/upgrade`. |
+| `upgrade_url` | string | Full HTTPS URL to the billing upgrade page. Always `https://taxklaro.ph/billing/upgrade`. |
 
 ---
 
@@ -772,7 +772,7 @@ Fired once per trial, 3 calendar days before trial end. Based on the daily job a
 | Field | Type | Description |
 |-------|------|-------------|
 | `user_id` | string | UUID of the user. |
-| `subscription_id` | string | UUID of the TaxOptimizer subscription row. |
+| `subscription_id` | string | UUID of the TaxKlaro subscription row. |
 | `plan` | string | `"PRO"` or `"ENTERPRISE"`. |
 | `billing_cycle` | string | `"MONTHLY"` or `"ANNUAL"`. |
 | `amount_paid` | string | Amount charged for this billing cycle, as decimal string with 2 decimal places. Example: `"200.00"` for Pro monthly. |
@@ -805,7 +805,7 @@ Fired once per trial, 3 calendar days before trial end. Based on the daily job a
 | Field | Type | Description |
 |-------|------|-------------|
 | `user_id` | string | UUID of the user. |
-| `subscription_id` | string | UUID of the TaxOptimizer subscription row. |
+| `subscription_id` | string | UUID of the TaxKlaro subscription row. |
 | `plan` | string | `"PRO"` or `"ENTERPRISE"`. |
 | `billing_cycle` | string | `"MONTHLY"` or `"ANNUAL"`. |
 | `amount_paid` | string | Amount charged for this renewal cycle, decimal string 2 dp. |
@@ -833,14 +833,14 @@ Fired once per trial, 3 calendar days before trial end. Based on the daily job a
   "provider_invoice_id": "in_1QxxxxxxxxxxxxxxxxX",
   "new_status": "PAST_DUE",
   "grace_period_ends_at": "2026-04-05T00:00:00.000Z",
-  "update_payment_url": "https://taxoptimizer.ph/billing/update-payment"
+  "update_payment_url": "https://taxklaro.ph/billing/update-payment"
 }
 ```
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `user_id` | string | UUID of the user. |
-| `subscription_id` | string | UUID of the TaxOptimizer subscription row. |
+| `subscription_id` | string | UUID of the TaxKlaro subscription row. |
 | `plan` | string | `"PRO"` or `"ENTERPRISE"`. |
 | `billing_cycle` | string | `"MONTHLY"` or `"ANNUAL"`. |
 | `amount_attempted` | string | Amount that was attempted to be charged, decimal string 2 dp. |
@@ -850,7 +850,7 @@ Fired once per trial, 3 calendar days before trial end. Based on the daily job a
 | `provider_invoice_id` | string | The payment provider's invoice ID for the failed attempt. |
 | `new_status` | string | Always `"PAST_DUE"` for this event type. |
 | `grace_period_ends_at` | string | ISO 8601 UTC when the grace period ends. Computed as `now + 3 days`. After this, subscription status becomes `EXPIRED` if payment is not updated. |
-| `update_payment_url` | string | Full HTTPS URL to the payment update page. Always `https://taxoptimizer.ph/billing/update-payment`. |
+| `update_payment_url` | string | Full HTTPS URL to the payment update page. Always `https://taxklaro.ph/billing/update-payment`. |
 
 ---
 
@@ -954,7 +954,7 @@ Fired once per trial, 3 calendar days before trial end. Based on the daily job a
 |-------|------|-------------|
 | `cpa_user_id` | string | UUID of the CPA user who added the client. |
 | `client_id` | string | UUID of the `cpa_clients` row. This is the CPA-client relationship ID, not the client's user ID. |
-| `client_user_id` | string | UUID of the client's TaxOptimizer user account. |
+| `client_user_id` | string | UUID of the client's TaxKlaro user account. |
 | `display_name` | string | The display name set for this client in the CPA's roster. Max 200 chars. |
 | `added_at` | string | ISO 8601 UTC when the client was added. |
 
@@ -976,7 +976,7 @@ Fired once per trial, 3 calendar days before trial end. Based on the daily job a
 |-------|------|-------------|
 | `cpa_user_id` | string | UUID of the CPA user who removed the client. |
 | `client_id` | string | UUID of the now-deleted `cpa_clients` row. |
-| `client_user_id` | string | UUID of the client's TaxOptimizer user account. |
+| `client_user_id` | string | UUID of the client's TaxKlaro user account. |
 | `display_name` | string | The display name the client had in the CPA's roster at the time of removal. |
 | `removed_at` | string | ISO 8601 UTC when the removal occurred. |
 
@@ -984,12 +984,12 @@ Fired once per trial, 3 calendar days before trial end. Based on the daily job a
 
 ## 7. HMAC-SHA256 Signature Validation
 
-Every outbound webhook request includes an `X-TaxOptimizer-Signature` header. The receiver must validate this signature to confirm the request originated from TaxOptimizer and that the payload was not tampered with in transit.
+Every outbound webhook request includes an `X-TaxKlaro-Signature` header. The receiver must validate this signature to confirm the request originated from TaxKlaro and that the payload was not tampered with in transit.
 
 ### 7.1 Signature Header Format
 
 ```
-X-TaxOptimizer-Signature: sha256=a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4
+X-TaxKlaro-Signature: sha256=a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4
 ```
 
 - The value is always the literal string `sha256=` followed by exactly 64 lowercase hexadecimal characters.
@@ -997,7 +997,7 @@ X-TaxOptimizer-Signature: sha256=a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f
 
 ### 7.2 Signature Computation Algorithm
 
-TaxOptimizer computes the signature as follows, using the **raw request body bytes** (before any JSON parsing) and the endpoint's **secret key**:
+TaxKlaro computes the signature as follows, using the **raw request body bytes** (before any JSON parsing) and the endpoint's **secret key**:
 
 ```
 signature = HMAC-SHA256(key=endpoint_secret, message=raw_request_body_bytes)
@@ -1081,19 +1081,19 @@ Comparing buffers of different lengths is always a length-revealing side-channel
 
 ### 8.1 Retry Trigger Conditions
 
-A webhook delivery attempt is considered **failed** and eligible for retry when the TaxOptimizer delivery worker receives any of the following responses within the 30-second timeout window:
+A webhook delivery attempt is considered **failed** and eligible for retry when the TaxKlaro delivery worker receives any of the following responses within the 30-second timeout window:
 
 | Condition | Description |
 |-----------|-------------|
 | HTTP 5xx status code | Any 500–599 response. The receiving server encountered an error. |
-| HTTP 429 status code | The receiving server is rate-limiting TaxOptimizer's delivery. |
+| HTTP 429 status code | The receiving server is rate-limiting TaxKlaro's delivery. |
 | Connection refused | The endpoint URL's server is unreachable (DNS resolved but connection rejected). |
 | DNS resolution failure | The endpoint URL's hostname cannot be resolved. |
 | TLS/SSL handshake failure | SSL certificate invalid, expired, or hostname mismatch. |
 | Timeout after 30 seconds | No complete HTTP response received within 30 seconds of opening the connection. |
 | Connection reset | TCP connection reset by the receiver during request sending or response receipt. |
 
-A webhook delivery is considered **successful** (no retry) when the TaxOptimizer worker receives:
+A webhook delivery is considered **successful** (no retry) when the TaxKlaro worker receives:
 - Any HTTP 2xx status code (200, 201, 202, 204, etc.) within 30 seconds.
 
 HTTP 4xx responses (except 429) are considered **non-retryable failures**: they indicate a client error (invalid URL, authentication issue, etc.) that repeated delivery will not fix. The delivery is marked `FAILED` immediately and no retries are scheduled.
@@ -1148,7 +1148,7 @@ States:
 
 There is no automatic alerting or email to the Enterprise user when a delivery is `EXHAUSTED`. The user can monitor delivery status via:
 1. `GET /webhook-endpoints/:endpoint_id/deliveries` — delivery history API
-2. The TaxOptimizer dashboard under Settings → Webhooks → Delivery History
+2. The TaxKlaro dashboard under Settings → Webhooks → Delivery History
 
 If 3 or more deliveries to the same endpoint reach `EXHAUSTED` status within a 24-hour window, the endpoint is automatically **disabled** (`enabled = false`) and a `webhook.endpoint.auto_disabled` system event is logged to `webhook_deliveries` (but NOT delivered to any endpoint, since delivery is now disabled). Re-enabling the endpoint requires a `PATCH /webhook-endpoints/:endpoint_id` with `{ "enabled": true }`.
 
@@ -1160,13 +1160,13 @@ If 3 or more deliveries to the same endpoint reach `EXHAUSTED` status within a 2
 
 ### 9.1 At-Least-Once Delivery
 
-TaxOptimizer guarantees **at-least-once** delivery: each event will be delivered to each subscribed endpoint at least once, given that the endpoint is reachable within the retry window (approximately 2.6 hours).
+TaxKlaro guarantees **at-least-once** delivery: each event will be delivered to each subscribed endpoint at least once, given that the endpoint is reachable within the retry window (approximately 2.6 hours).
 
-**Not guaranteed:** Exactly-once delivery. In rare circumstances (e.g., network partition causing ambiguous delivery status), TaxOptimizer may dispatch a delivery attempt more than once for the same event. Receivers MUST be idempotent.
+**Not guaranteed:** Exactly-once delivery. In rare circumstances (e.g., network partition causing ambiguous delivery status), TaxKlaro may dispatch a delivery attempt more than once for the same event. Receivers MUST be idempotent.
 
 ### 9.2 Idempotency
 
-Each event has a stable, globally unique `id` in the envelope (the `evt_` prefixed string). Each delivery attempt has a unique `X-TaxOptimizer-Delivery` header value (the `whd_` prefixed string).
+Each event has a stable, globally unique `id` in the envelope (the `evt_` prefixed string). Each delivery attempt has a unique `X-TaxKlaro-Delivery` header value (the `whd_` prefixed string).
 
 Receivers should de-duplicate on `event.id` (not on `delivery_id`), storing successfully processed event IDs in a local set (with an expiry window of at least 72 hours to cover the full retry window). On receiving an event:
 
@@ -1180,12 +1180,12 @@ Receivers should de-duplicate on `event.id` (not on `delivery_id`), storing succ
 ### 9.3 Ordering
 
 - No ordering guarantee exists between different event types.
-- For a single resource and event type (e.g., successive `batch.job.*` events for the same `batch_id`), TaxOptimizer dispatches events in the order they occur. However, network conditions can cause out-of-order receipt.
+- For a single resource and event type (e.g., successive `batch.job.*` events for the same `batch_id`), TaxKlaro dispatches events in the order they occur. However, network conditions can cause out-of-order receipt.
 - Receivers should use `occurred_at` to determine event ordering when processing a stream of events for the same resource.
 
 ### 9.4 Event Persistence
 
-Events are stored in the database (`webhook_deliveries` table) for 30 days from the event's `occurred_at` timestamp. After 30 days, both the delivery records and the event payloads are deleted by the scheduled cleanup job. Receivers should not rely on TaxOptimizer's event history as their system of record.
+Events are stored in the database (`webhook_deliveries` table) for 30 days from the event's `occurred_at` timestamp. After 30 days, both the delivery records and the event payloads are deleted by the scheduled cleanup job. Receivers should not rely on TaxKlaro's event history as their system of record.
 
 ### 9.5 Disabled Endpoint Behavior
 
@@ -1482,4 +1482,4 @@ The following environment variables are required for the webhook delivery subsys
 
 ---
 
-*Cross-reference: `database/schema.md` must be updated to include the `webhook_delivery_status_enum`, `webhook_endpoints`, and `webhook_deliveries` DDL from §10 above. The `database/migrations.md` spec must include these tables in the initial migration.*
+*Cross-reference: `database/schema.md` includes the `webhook_delivery_status_enum`, `webhook_endpoints`, and `webhook_deliveries` DDL (see database/schema.md § Webhook tables). `database/migrations.md` file `0002_webhook_tables.sql` contains this schema. See [database/schema.md](../database/schema.md) and [database/migrations.md](../database/migrations.md) for the complete DDL.*

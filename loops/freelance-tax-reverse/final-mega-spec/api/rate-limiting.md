@@ -690,7 +690,7 @@ For requests with no valid auth cookie or API key, the client IP is the identifi
 ```
 function resolve_ip(request: Request) -> string:
   # Cloudflare sets CF-Connecting-IP with the real client IP for all requests
-  # through taxoptimizer.ph (all traffic must pass through Cloudflare per deployment config)
+  # through taxklaro.ph (all traffic must pass through Cloudflare per deployment config)
   ip = request.headers["CF-Connecting-IP"]
 
   if ip is null or ip is empty:
@@ -1150,7 +1150,7 @@ function apply_rate_limiting_with_fallback(request, auth_result):
     return ALLOWED  # Proceed to request handler
 ```
 
-**Rationale for fail-open:** TaxOptimizer is a tax computation service, not a security-critical authentication system. During a brief Redis outage, allowing requests is preferable to blocking all users (especially during peak filing season). The Cloudflare WAF (§16.3) provides abuse protection while Redis is unavailable.
+**Rationale for fail-open:** TaxKlaro is a tax computation service, not a security-critical authentication system. During a brief Redis outage, allowing requests is preferable to blocking all users (especially during peak filing season). The Cloudflare WAF (§16.3) provides abuse protection while Redis is unavailable.
 
 **Redis timeout:** The Upstash client is configured with a 2,000ms timeout. If a rate limit check takes longer than 2,000ms, it is treated as a Redis failure and the request is allowed through.
 

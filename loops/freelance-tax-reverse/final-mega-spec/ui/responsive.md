@@ -253,7 +253,7 @@ The global navigation has two states:
 ```
 ┌──────────────────────────────────────────┐
 │ [Logo]                        [≡ Menu]   │
-│  TaxOptimizer PH              (44×44px)  │
+│  TaxKlaro              (44×44px)  │
 └──────────────────────────────────────────┘
 ```
 

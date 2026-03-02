@@ -288,7 +288,7 @@ The following deductions are available only to corporations and NOT to individua
 
 **Section: What we do not compute**
 - Value-Added Tax (VAT) returns — use BIR eBIRForms or Taxumo/JuanTax for VAT
-- Corporate income tax — TaxOptimizer is for individuals only
+- Corporate income tax — TaxKlaro is for individuals only
 - Capital gains tax on real property (6%) or shares (15%)
 - Donor's tax, estate tax, documentary stamp tax, excise tax
 - Local business taxes imposed by LGUs

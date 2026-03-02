@@ -266,7 +266,7 @@ WHERE created_at < NOW() - INTERVAL '3 years'
 
 ### 8.1 R2 Object Retention
 
-PDF files are stored in Cloudflare R2 bucket `taxoptimizer-exports` (Singapore `apac` region). Each PDF object:
+PDF files are stored in Cloudflare R2 bucket `taxklaro-exports` (Singapore `apac` region). Each PDF object:
 - Has a key: `exports/{user_id}/{computation_id}/{template}/{timestamp}.pdf`
 - Is created when the user clicks "Download PDF" (or triggered by batch job)
 - Expires 30 days after creation via R2 object lifecycle rule

@@ -1256,7 +1256,7 @@ Each path detail accordion contains a `<dl>` (definition list) for key-value pai
   aria-describedby="modal_desc"
   id="upgrade-modal"
 >
-  <h2 id="modal_title" tabindex="-1">Upgrade to TaxOptimizer Pro</h2>
+  <h2 id="modal_title" tabindex="-1">Upgrade to TaxKlaro Pro</h2>
   <p id="modal_desc">
     Save your computations, export to PDF, and track quarterly payments with Pro.
   </p>
@@ -1326,7 +1326,7 @@ All SVG icons in the codebase must:
 
 | Image Type | Required Alt Text |
 |------------|------------------|
-| Logo (header) | `alt="TaxOptimizer — Philippine Freelance Tax Calculator"` |
+| Logo (header) | `alt="TaxKlaro — Philippine Freelance Tax Calculator"` |
 | Favicon | N/A (decorative) |
 | OG image (social share) | N/A (not rendered on page) |
 | Illustration on landing page (tax forms) | `alt="Illustration of BIR tax forms and a Philippine peso symbol"` |

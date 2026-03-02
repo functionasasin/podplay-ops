@@ -1,6 +1,6 @@
 # Decision Trees — Philippine Freelance & Self-Employed Income Tax Optimizer
 
-**Status:** PARTIAL (populated from eight-percent-option aspect; additional trees to be added in regime-comparison-logic, vat-vs-percentage-tax, mixed-income-rules, and other Wave 2 aspects)
+**Status:** COMPLETE (DT-01 through DT-17 fully specified)
 **Last updated:** 2026-03-01
 **Legal basis:** See [legal-basis.md](legal-basis.md)
 
@@ -676,6 +676,56 @@ START: Compute gross income (for VAT taxpayers: net of output VAT on receipts; V
 
 ---
 
+## DT-08: Mixed Income Annual Tax — Form and Reconciliation Selection
+
+**Legal basis:** NIRC Sec. 24(A)(1)(b), 24(A)(2)(b); RR 8-2018 Part II; RMC 50-2018; CR-029.
+
+**Root question:** Given a mixed income earner who has completed annual computation, which BIR form does the annual return use and what is the balance payable/refundable?
+
+```
+START: Has the taxpayer completed annual income tax computation for mixed income (compensation + business)?
+│
+├── NO → [ERROR: DT-08 requires completed mixed income computation. Route to DT-09 first.]
+│
+└── YES → Inputs: total_it_due (annual), quarterly_payments (sum of 1701Q paid), cwt_credits (total 2307), excess_cwt_prior (from prior year if refund not claimed)
+    │
+    ├── FORM SELECTION
+    │   Mixed income earner ALWAYS files Form 1701 (NOT 1701A).
+    │   [ACTION: Emit form_to_file = FORM_1701.
+    │    Legal basis: RR 8-2018 Sec. 3(A)(2) — 1701A is ONLY for pure self-employed
+    │    with single income source; any compensation income requires 1701.]
+    │
+    ├── ANNUAL TAX DUE COMPUTATION
+    │   total_credits = quarterly_payments + cwt_credits + excess_cwt_prior
+    │   balance = total_it_due − total_credits
+    │
+    ├── balance > 0 → [ACTION: BALANCE_PAYABLE = balance.
+    │    File Form 1701 with payment on or before April 15.
+    │    Payment options: full payment (OP 1), 2-installment (OP 2: 50% by April 15, 50% by July 15).
+    │    Legal basis: NIRC Sec. 56(A)(2) — installment option for individual taxpayers.]
+    │
+    ├── balance = 0 → [ACTION: NO_PAYMENT_DUE.
+    │    File Form 1701 with zero balance. No payment transaction needed.
+    │    This is a valid outcome; CWT/quarterly payments exactly covered annual tax.]
+    │
+    └── balance < 0 (total_credits > total_it_due) →
+        [ACTION: OVERPAYMENT = abs(balance).
+         Two options available to taxpayer — display both:]
+        │
+        ├── OPTION A: CARRY_FORWARD_CREDIT. Overpayment carried to Q1 next year.
+        │    Mark excess_cwt_carry = abs(balance). Applied in Q1 1701Q computation.
+        │    Legal basis: NIRC Sec. 76 (carry-forward election on annual ITR).
+        │
+        └── OPTION B: CLAIM_REFUND. Taxpayer applies for tax refund from BIR.
+             File BIR Form 1701 with "Refund" box ticked (Item 59 of Form 1701).
+             BIR processes refund within 90 days (EOPT Act Sec. 12 — accelerated refund).
+             Legal basis: NIRC Sec. 76 (refund election on annual ITR).
+             [FLAG: MRF-REFUND-PROCESS — BIR refund timing is uncertain; engine recommends
+              carry-forward as default for faster tax relief unless user explicitly elects refund.]
+```
+
+**Note:** The quarterly computation flow (how each quarterly payment is determined) is covered in DT-09 (Mixed Income Earner Complete Computation Flow). DT-08 covers only the final annual reconciliation and form selection step.
+
 ---
 
 ## DT-09: Mixed Income Earner — Complete Computation Flow
@@ -1080,17 +1130,6 @@ START: What is the taxpayer's indirect tax status for this quarter?
       Ref: NIRC Sec. 116; NIRC Sec. 236(G); DT-12 for registration timeline.
       See: MRF-019 (VAT transition quarter OPT/VAT split).]
 ```
-
----
-
-## Trees To Be Added in Future Aspects
-
-The following decision trees are planned but not yet written. They will be added when the corresponding aspects are analyzed:
-
-| Tree | Aspect That Will Create It | Brief Description |
-|------|---------------------------|-------------------|
-| DT-14: CWT Credit Application | creditable-withholding-tax | How to apply 2307 credits at quarterly and annual level |
-| DT-15: Quarterly vs Annual Filing Sequence | quarterly-filing-rules | Order of operations, cumulative method, installment payment decision |
 
 ---
 

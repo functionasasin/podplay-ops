@@ -1,6 +1,6 @@
 # Computation Rules — Philippine Freelance & Self-Employed Income Tax Optimizer
 
-**Status:** PARTIAL (populated from worked-examples-fetch pass; to be expanded in Wave 2 aspects)
+**Status:** COMPLETE (CR-001 through CR-056 fully specified)
 **Last updated:** 2026-02-28
 **Legal basis:** See [legal-basis.md](legal-basis.md)
 

@@ -37,15 +37,15 @@
 
 | Field | Value |
 |-------|-------|
-| Domain name | `taxoptimizer.ph` |
+| Domain name | `taxklaro.ph` |
 | TLD | `.ph` (Philippines ccTLD managed by dotPH / PH Domain Foundation) |
-| Registrar | [Philippine registrar of operator's choice — Namecheap, GoDaddy, or directly via dotPH] |
+| Registrar | Namecheap (supports .ph TLD registration via dotPH backend; account at namecheap.com) |
 | DNS provider | Cloudflare (authoritative nameservers after transfer to Cloudflare) |
 | Cloudflare plan | Pro ($20/month) — required for WAF, advanced bot protection, Page Rules >3 |
 
 ### 1.2 Nameserver Delegation
 
-After registering `taxoptimizer.ph` and adding the site to Cloudflare, update the domain's nameservers at the registrar to the two Cloudflare nameservers assigned to your Cloudflare account. These are displayed in Cloudflare Dashboard → taxoptimizer.ph → DNS → Nameservers. The format is always two nameservers from the set `*.ns.cloudflare.com`.
+After registering `taxklaro.ph` and adding the site to Cloudflare, update the domain's nameservers at the registrar to the two Cloudflare nameservers assigned to your Cloudflare account. These are displayed in Cloudflare Dashboard → taxklaro.ph → DNS → Nameservers. The format is always two nameservers from the set `*.ns.cloudflare.com`.
 
 **Example format (your actual values differ):**
 - `abby.ns.cloudflare.com`
@@ -70,7 +70,7 @@ Update these at the registrar's nameserver configuration panel. Propagation take
 
 ## 2. Complete DNS Record Table
 
-All records are in the `taxoptimizer.ph` zone. "Proxied" means Cloudflare orange-cloud proxy is ON (traffic flows through Cloudflare edge). "DNS only" means Cloudflare is only resolving the name without proxying.
+All records are in the `taxklaro.ph` zone. "Proxied" means Cloudflare orange-cloud proxy is ON (traffic flows through Cloudflare edge). "DNS only" means Cloudflare is only resolving the name without proxying.
 
 Records are listed in the exact order you should create them in the Cloudflare Dashboard → DNS → Records panel or via the Cloudflare API.
 
@@ -79,26 +79,26 @@ Records are listed in the exact order you should create them in the Cloudflare D
 | 1 | A | `@` | `76.76.21.21` | Auto | Proxied | Root domain → Vercel frontend (Vercel anycast IPv4) |
 | 2 | AAAA | `@` | `2606:4700:90:0:f22e:fbec:5bed:a9b9` | Auto | Proxied | Root domain → Vercel frontend (IPv6 via Vercel) |
 | 3 | CNAME | `www` | `cname.vercel-dns.com` | Auto | Proxied | www subdomain → Vercel (Vercel handles www→root redirect) |
-| 4 | CNAME | `api` | `taxoptimizer-api.fly.dev` | Auto | Proxied | API server → Fly.io production app |
+| 4 | CNAME | `api` | `taxklaro-api.fly.dev` | Auto | Proxied | API server → Fly.io production app |
 | 5 | CNAME | `staging` | `cname.vercel-dns.com` | Auto | Proxied | Staging frontend → Vercel preview environment |
-| 6 | CNAME | `api.staging` | `taxoptimizer-api-staging.fly.dev` | Auto | Proxied | Staging API server → Fly.io staging app |
+| 6 | CNAME | `api.staging` | `taxklaro-api-staging.fly.dev` | Auto | Proxied | Staging API server → Fly.io staging app |
 | 7 | CNAME | `exports` | Set via R2 Custom Domain UI (see §8.3) | Auto | Proxied | PDF exports R2 bucket public access |
 | 8 | TXT | `@` | `v=spf1 include:amazonses.com ~all` | 300 | DNS only | SPF record for outbound email via Resend |
 | 9 | CNAME | `resend._domainkey.mail` | `resend._domainkey.resend.com` | 300 | DNS only | Resend DKIM key (key 1 — fixed value) |
-| 10 | CNAME | `[selector].mail` | `[Resend-assigned target]` | 300 | DNS only | Resend DKIM key 2 (selector and target shown in Resend dashboard after domain add) |
-| 11 | TXT | `_dmarc` | `v=DMARC1; p=quarantine; rua=mailto:dmarc@taxoptimizer.ph; ruf=mailto:dmarc@taxoptimizer.ph; pct=100; adkim=s; aspf=s` | 300 | DNS only | DMARC email authentication policy |
-| 12 | MX | `mail` | `[operator's MX host]` (priority 10) | 300 | DNS only | Inbound MX for dmarc@taxoptimizer.ph address |
-| 13 | TXT | `_vercel` | `[Vercel verification token — shown in Vercel dashboard during domain add]` | 300 | DNS only | Vercel domain ownership verification |
+| 10 | CNAME | `s1._domainkey.mail` | `s1._domainkey.resend.com` | 300 | DNS only | Resend DKIM key 2 — exact Name and Content values provided by Resend Dashboard → Settings → Domains → taxklaro.ph after domain verification; format: `[selector]._domainkey.mail` → `[selector]._domainkey.resend.com` |
+| 11 | TXT | `_dmarc` | `v=DMARC1; p=quarantine; rua=mailto:dmarc@taxklaro.ph; ruf=mailto:dmarc@taxklaro.ph; pct=100; adkim=s; aspf=s` | 300 | DNS only | DMARC email authentication policy |
+| 12 | MX | `mail` | `ASPMX.L.GOOGLE.COM` (priority 1) | 300 | DNS only | Inbound MX for dmarc@taxklaro.ph address via Google Workspace |
+| 13 | TXT | `_vercel` | `vc-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX` (32-char hex token — exact value from Vercel Dashboard → taxklaro-ph project → Settings → Domains → Add taxklaro.ph → copy the displayed TXT value) | 300 | DNS only | Vercel domain ownership verification |
 | 14 | CAA | `@` | `0 issue "letsencrypt.org"` | 3600 | DNS only | Restrict TLS certificate issuance to Let's Encrypt |
 | 15 | CAA | `@` | `0 issue "digicert.com"` | 3600 | DNS only | Allow DigiCert (used by Cloudflare for its own edge cert) |
-| 16 | CAA | `@` | `0 issuewild "letsencrypt.org"` | 3600 | DNS only | Allow Let's Encrypt wildcard issuance (for *.taxoptimizer.ph) |
-| 17 | TXT | `@` | `google-site-verification=[token from Google Search Console]` | 300 | DNS only | Google Search Console domain ownership verification |
+| 16 | CAA | `@` | `0 issuewild "letsencrypt.org"` | 3600 | DNS only | Allow Let's Encrypt wildcard issuance (for *.taxklaro.ph) |
+| 17 | TXT | `@` | `google-site-verification=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX` (exact token from Google Search Console → Add property → taxklaro.ph → DNS verification method → copy the displayed value) | 300 | DNS only | Google Search Console domain ownership verification |
 
-**Notes on record 10 (Resend DKIM key 2):** When you add `mail.taxoptimizer.ph` to Resend Dashboard → Settings → Domains, Resend displays all required DNS records including the actual selector and CNAME target for the second DKIM key. Copy the exact name and content values shown by Resend. The selector format is typically `[resend-assigned-id]._domainkey.mail.taxoptimizer.ph`.
+**Notes on record 10 (Resend DKIM key 2):** When you add `mail.taxklaro.ph` to Resend Dashboard → Settings → Domains, Resend displays all required DNS records including the actual selector and CNAME target for the second DKIM key. Copy the exact name and content values shown by Resend. The selector format is `s1._domainkey.mail.taxklaro.ph` (Resend may assign a different selector label; use exactly what is shown in the dashboard).
 
-**Notes on record 12 (MX for mail subdomain):** The `dmarc@taxoptimizer.ph` address in the DMARC `rua` tag must be a real deliverable inbox. Use the operator's existing email provider (e.g., Gmail/Google Workspace, Zoho, Fastmail). The MX record for `mail.taxoptimizer.ph` points to that provider's MX server. If using Google Workspace: MX `mail.taxoptimizer.ph → ASPMX.L.GOOGLE.COM` priority 1.
+**Notes on record 12 (MX for mail subdomain):** The `dmarc@taxklaro.ph` address in the DMARC `rua` tag must be a real deliverable inbox. Use the operator's existing email provider (e.g., Gmail/Google Workspace, Zoho, Fastmail). The MX record for `mail.taxklaro.ph` points to that provider's MX server. If using Google Workspace: MX `mail.taxklaro.ph → ASPMX.L.GOOGLE.COM` priority 1.
 
-**Notes on record 13 (Vercel verification):** The `_vercel` TXT record is generated when you add `taxoptimizer.ph` as a custom domain in the Vercel project settings. Navigate to Vercel Dashboard → taxoptimizer-ph project → Settings → Domains → Add `taxoptimizer.ph`. Vercel shows the exact TXT value to copy.
+**Notes on record 13 (Vercel verification):** The `_vercel` TXT record is generated when you add `taxklaro.ph` as a custom domain in the Vercel project settings. Navigate to Vercel Dashboard → taxklaro-ph project → Settings → Domains → Add `taxklaro.ph`. Vercel shows the exact TXT value to copy.
 
 **Notes on record 17 (Google Search Console):** After adding the property in Google Search Console (property type: Domain property), select the DNS verification method. Google displays the exact `google-site-verification=...` TXT value to copy.
 
@@ -108,41 +108,41 @@ Records are listed in the exact order you should create them in the Cloudflare D
 
 | Subdomain | Origin Service | Fly.io App / Vercel Project | Proxy | Purpose |
 |-----------|---------------|----------------------------|-------|---------|
-| `taxoptimizer.ph` | Vercel | `taxoptimizer-ph` (production) | Proxied | Main frontend application |
-| `www.taxoptimizer.ph` | Vercel | `taxoptimizer-ph` (production) | Proxied | Redirects to `taxoptimizer.ph` (Vercel auto-redirect) |
-| `api.taxoptimizer.ph` | Fly.io | `taxoptimizer-api` | Proxied | Production REST API, all `/v1/*` routes |
-| `staging.taxoptimizer.ph` | Vercel | `taxoptimizer-ph` (staging environment) | Proxied | Staging frontend — `staging` branch deploys here |
-| `api.staging.taxoptimizer.ph` | Fly.io | `taxoptimizer-api-staging` | Proxied | Staging API server — mirrors production, uses staging DB |
-| `exports.taxoptimizer.ph` | Cloudflare R2 | `taxoptimizer-exports` bucket | Proxied | PDF export file downloads — pre-signed URLs use this base |
-| `mail.taxoptimizer.ph` | N/A (DNS-only) | N/A — used only for email DNS (SPF/DKIM/DMARC) | DNS only | Email authentication subdomain — not HTTP-accessible |
+| `taxklaro.ph` | Vercel | `taxklaro-ph` (production) | Proxied | Main frontend application |
+| `www.taxklaro.ph` | Vercel | `taxklaro-ph` (production) | Proxied | Redirects to `taxklaro.ph` (Vercel auto-redirect) |
+| `api.taxklaro.ph` | Fly.io | `taxklaro-api` | Proxied | Production REST API, all `/v1/*` routes |
+| `staging.taxklaro.ph` | Vercel | `taxklaro-ph` (staging environment) | Proxied | Staging frontend — `staging` branch deploys here |
+| `api.staging.taxklaro.ph` | Fly.io | `taxklaro-api-staging` | Proxied | Staging API server — mirrors production, uses staging DB |
+| `exports.taxklaro.ph` | Cloudflare R2 | `taxklaro-exports` bucket | Proxied | PDF export file downloads — pre-signed URLs use this base |
+| `mail.taxklaro.ph` | N/A (DNS-only) | N/A — used only for email DNS (SPF/DKIM/DMARC) | DNS only | Email authentication subdomain — not HTTP-accessible |
 
 **Traffic routing through Cloudflare:**
 
 ```
-User request to taxoptimizer.ph
+User request to taxklaro.ph
         │
         ▼
 Cloudflare Edge (global PoP closest to user)
         │
-        ├─── taxoptimizer.ph/* ──────────────► Vercel (sin1, Singapore)
+        ├─── taxklaro.ph/* ──────────────► Vercel (sin1, Singapore)
         │                                        Next.js 15 SSR/SSG
         │
-        ├─── api.taxoptimizer.ph/* ─────────► Fly.io (sin, Singapore)
+        ├─── api.taxklaro.ph/* ─────────► Fly.io (sin, Singapore)
         │                                        Node.js 22 / Express 5
         │
-        ├─── staging.taxoptimizer.ph/* ─────► Vercel (staging env)
+        ├─── staging.taxklaro.ph/* ─────► Vercel (staging env)
         │
-        ├─── api.staging.taxoptimizer.ph/* ─► Fly.io taxoptimizer-api-staging
+        ├─── api.staging.taxklaro.ph/* ─► Fly.io taxklaro-api-staging
         │
-        └─── exports.taxoptimizer.ph/* ─────► Cloudflare R2
-                                                taxoptimizer-exports bucket
+        └─── exports.taxklaro.ph/* ─────► Cloudflare R2
+                                                taxklaro-exports bucket
 ```
 
 ---
 
 ## 4. Cloudflare SSL/TLS Configuration
 
-All SSL settings are in Cloudflare Dashboard → `taxoptimizer.ph` → SSL/TLS.
+All SSL settings are in Cloudflare Dashboard → `taxklaro.ph` → SSL/TLS.
 
 ### 4.1 Encryption Mode
 
@@ -168,7 +168,7 @@ Navigate to: SSL/TLS → Edge Certificates → HTTP Strict Transport Security (H
 | HSTS Field | Value |
 |------------|-------|
 | Max Age | 31536000 seconds (1 year) |
-| Include Subdomains | On — applies HSTS to all *.taxoptimizer.ph |
+| Include Subdomains | On — applies HSTS to all *.taxklaro.ph |
 | Preload | Off initially — enable preload ONLY after the site has been live for >6 months with HSTS enabled, and after submitting to the HSTS Preload List (hstspreload.org). Enabling preload prematurely and then needing to disable HTTPS causes 1-year user lockout. |
 | No-Sniff Header | On — adds `X-Content-Type-Options: nosniff` |
 
@@ -179,19 +179,19 @@ Strict-Transport-Security: max-age=31536000; includeSubDomains
 
 ### 4.4 Origin Server Certificate (for Fly.io)
 
-Fly.io automatically issues and manages Let's Encrypt certificates for custom domains registered via `flyctl certs add`. The certificate covers `api.taxoptimizer.ph` and `api.staging.taxoptimizer.ph`. No manual certificate action is required.
+Fly.io automatically issues and manages Let's Encrypt certificates for custom domains registered via `flyctl certs add`. The certificate covers `api.taxklaro.ph` and `api.staging.taxklaro.ph`. No manual certificate action is required.
 
-Cloudflare's Full (strict) mode validates that the Fly.io origin presents a cert for `api.taxoptimizer.ph` signed by a trusted CA (Let's Encrypt qualifies).
+Cloudflare's Full (strict) mode validates that the Fly.io origin presents a cert for `api.taxklaro.ph` signed by a trusted CA (Let's Encrypt qualifies).
 
 ### 4.5 Cloudflare Origin Certificate (for Vercel)
 
-Vercel automatically provisions and renews a TLS certificate for `taxoptimizer.ph` and `staging.taxoptimizer.ph` after domain verification. The cert is issued by Let's Encrypt. No manual certificate action is required.
+Vercel automatically provisions and renews a TLS certificate for `taxklaro.ph` and `staging.taxklaro.ph` after domain verification. The cert is issued by Let's Encrypt. No manual certificate action is required.
 
 ---
 
 ## 5. Cloudflare Cache Rules
 
-Cache Rules are configured in Cloudflare Dashboard → `taxoptimizer.ph` → Caching → Cache Rules. Rules are evaluated in order from top to bottom; the first matching rule applies.
+Cache Rules are configured in Cloudflare Dashboard → `taxklaro.ph` → Caching → Cache Rules. Rules are evaluated in order from top to bottom; the first matching rule applies.
 
 ### 5.1 Cache Rules Table
 
@@ -199,15 +199,15 @@ Rules listed in evaluation order (Rule 1 evaluated first):
 
 | Rule # | Rule Name | Match Condition | Cache Action | Edge TTL | Browser TTL |
 |--------|-----------|----------------|-------------|----------|-------------|
-| 1 | `bypass-api` | Hostname equals `api.taxoptimizer.ph` | Bypass cache | N/A | N/A |
-| 2 | `bypass-staging-api` | Hostname equals `api.staging.taxoptimizer.ph` | Bypass cache | N/A | N/A |
+| 1 | `bypass-api` | Hostname equals `api.taxklaro.ph` | Bypass cache | N/A | N/A |
+| 2 | `bypass-staging-api` | Hostname equals `api.staging.taxklaro.ph` | Bypass cache | N/A | N/A |
 | 3 | `bypass-compute` | URI path equals `/compute` OR starts with `/dashboard` OR starts with `/settings` OR starts with `/history` OR starts with `/clients` | Bypass cache | N/A | N/A |
 | 4 | `cache-static-next` | URI path starts with `/_next/static/` | Cache everything | 86400s (24 hours) | 31536000s (1 year) |
 | 5 | `cache-next-images` | URI path starts with `/_next/image` | Cache everything | 86400s (24 hours) | 86400s (24 hours) |
 | 6 | `cache-blog` | URI path starts with `/blog/` AND URI path does not end with `/edit` | Cache everything | 3600s (1 hour) | 3600s (1 hour) |
 | 7 | `cache-marketing` | URI path equals `/` OR equals `/pricing` OR equals `/about` OR equals `/faq` OR starts with `/legal/` | Cache everything | 1800s (30 minutes) | 3600s (1 hour) |
 | 8 | `cache-sitemap-robots` | URI path equals `/sitemap.xml` OR equals `/robots.txt` OR equals `/favicon.ico` | Cache everything | 86400s (24 hours) | 86400s (24 hours) |
-| 9 | `bypass-exports` | Hostname equals `exports.taxoptimizer.ph` | Bypass cache | N/A | N/A |
+| 9 | `bypass-exports` | Hostname equals `exports.taxklaro.ph` | Bypass cache | N/A | N/A |
 
 ### 5.2 Legacy Page Rules (Backup Method)
 
@@ -215,13 +215,13 @@ If Cache Rules interface is unavailable during initial setup, configure the foll
 
 | # | URL Pattern | Setting | Value |
 |---|-------------|---------|-------|
-| 1 | `www.taxoptimizer.ph/*` | Forwarding URL (301 Permanent Redirect) | `https://taxoptimizer.ph/$1` |
-| 2 | `api.taxoptimizer.ph/*` | Cache Level | Bypass |
-| 3 | `taxoptimizer.ph/_next/static/*` | Cache Level, Browser Cache TTL, Edge Cache TTL | Cache Everything; 31536000s; 86400s |
-| 4 | `taxoptimizer.ph/blog/*` | Cache Level, Edge Cache TTL | Cache Everything; 3600s |
-| 5 | `taxoptimizer.ph/compute` | Cache Level | Bypass |
-| 6 | `taxoptimizer.ph/dashboard/*` | Cache Level | Bypass |
-| 7 | `staging.taxoptimizer.ph/*` | Security Level | High |
+| 1 | `www.taxklaro.ph/*` | Forwarding URL (301 Permanent Redirect) | `https://taxklaro.ph/$1` |
+| 2 | `api.taxklaro.ph/*` | Cache Level | Bypass |
+| 3 | `taxklaro.ph/_next/static/*` | Cache Level, Browser Cache TTL, Edge Cache TTL | Cache Everything; 31536000s; 86400s |
+| 4 | `taxklaro.ph/blog/*` | Cache Level, Edge Cache TTL | Cache Everything; 3600s |
+| 5 | `taxklaro.ph/compute` | Cache Level | Bypass |
+| 6 | `taxklaro.ph/dashboard/*` | Cache Level | Bypass |
+| 7 | `staging.taxklaro.ph/*` | Security Level | High |
 
 **Important:** The Cloudflare Pro plan includes 20 Page Rules. If additional rules are needed, use Cache Rules (unlimited).
 
@@ -234,7 +234,7 @@ After each production deployment, purge the Cloudflare cache for marketing/blog 
 curl -X POST "https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONE_ID}/purge_cache" \
   -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
   -H "Content-Type: application/json" \
-  --data '{"files":["https://taxoptimizer.ph/","https://taxoptimizer.ph/pricing","https://taxoptimizer.ph/about","https://taxoptimizer.ph/faq","https://taxoptimizer.ph/sitemap.xml"]}'
+  --data '{"files":["https://taxklaro.ph/","https://taxklaro.ph/pricing","https://taxklaro.ph/about","https://taxklaro.ph/faq","https://taxklaro.ph/sitemap.xml"]}'
 
 # Purge everything (use only when needed — increases origin load)
 curl -X POST "https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONE_ID}/purge_cache" \
@@ -247,7 +247,7 @@ curl -X POST "https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONE_ID}/p
 
 ## 6. Cloudflare WAF Configuration
 
-WAF rules are configured in Cloudflare Dashboard → `taxoptimizer.ph` → Security → WAF.
+WAF rules are configured in Cloudflare Dashboard → `taxklaro.ph` → Security → WAF.
 
 ### 6.1 Managed Rulesets
 
@@ -299,7 +299,7 @@ Navigate to: Security → WAF → Rate limiting rules → Create rule.
 | Field | Value |
 |-------|-------|
 | Rule name | `rate-limit-compute-ip` |
-| When incoming requests match | URI path equals `/v1/compute` AND Method equals `POST` AND Hostname equals `api.taxoptimizer.ph` |
+| When incoming requests match | URI path equals `/v1/compute` AND Method equals `POST` AND Hostname equals `api.taxklaro.ph` |
 | Rate limit requests | More than 60 requests in 60 seconds |
 | Counting expression | Same IP address |
 | Action | Block (429 Too Many Requests) for 120 seconds |
@@ -310,7 +310,7 @@ Navigate to: Security → WAF → Rate limiting rules → Create rule.
 | Field | Value |
 |-------|-------|
 | Rule name | `rate-limit-api-general` |
-| When incoming requests match | Hostname equals `api.taxoptimizer.ph` |
+| When incoming requests match | Hostname equals `api.taxklaro.ph` |
 | Rate limit requests | More than 1000 requests in 600 seconds (10 minutes) |
 | Counting expression | Same IP address |
 | Action | Block for 60 seconds |
@@ -321,7 +321,7 @@ Navigate to: Security → WAF → Rate limiting rules → Create rule.
 | Field | Value |
 |-------|-------|
 | Rule name | `rate-limit-batch` |
-| When incoming requests match | URI path starts with `/v1/batch` AND Hostname equals `api.taxoptimizer.ph` |
+| When incoming requests match | URI path starts with `/v1/batch` AND Hostname equals `api.taxklaro.ph` |
 | Rate limit requests | More than 10 requests in 60 seconds |
 | Counting expression | Same IP address |
 | Action | Block for 300 seconds |
@@ -332,7 +332,7 @@ Navigate to: Security → WAF → Rate limiting rules → Create rule.
 | Field | Value |
 |-------|-------|
 | Rule name | `rate-limit-webhooks` |
-| When incoming requests match | URI path starts with `/v1/billing/webhooks` AND Hostname equals `api.taxoptimizer.ph` |
+| When incoming requests match | URI path starts with `/v1/billing/webhooks` AND Hostname equals `api.taxklaro.ph` |
 | Rate limit requests | More than 100 requests in 60 seconds |
 | Counting expression | Same IP address |
 | Action | Block for 60 seconds |
@@ -345,7 +345,7 @@ Navigate to: Security → WAF → Rate limiting rules → Create rule.
 | Field | Value |
 |-------|-------|
 | Rule name | `block-origin-header-missing` |
-| When incoming requests match | Hostname equals `api.taxoptimizer.ph` AND NOT (Header `CF-Connecting-IP` exists) |
+| When incoming requests match | Hostname equals `api.taxklaro.ph` AND NOT (Header `CF-Connecting-IP` exists) |
 | Action | Block (403 Forbidden) |
 | Notes | All legitimate requests through Cloudflare include the CF-Connecting-IP header. Requests without it are bypassing Cloudflare (direct-to-origin). The API server checks the `ALLOWED_HOSTS` list, but this rule provides defense-in-depth. |
 
@@ -354,7 +354,7 @@ Navigate to: Security → WAF → Rate limiting rules → Create rule.
 | Field | Value |
 |-------|-------|
 | Rule name | `block-http-api` |
-| When incoming requests match | Hostname equals `api.taxoptimizer.ph` AND SSL is off |
+| When incoming requests match | Hostname equals `api.taxklaro.ph` AND SSL is off |
 | Action | Block (403 Forbidden) |
 | Notes | With "Always Use HTTPS" enabled, Cloudflare redirects HTTP to HTTPS for the frontend. For the API, rejecting plaintext is more appropriate than redirecting. |
 
@@ -372,14 +372,14 @@ Navigate to: Security → WAF → Rate limiting rules → Create rule.
 
 ## 7. Cloudflare Security Settings
 
-Navigate to: `taxoptimizer.ph` → Security → Settings.
+Navigate to: `taxklaro.ph` → Security → Settings.
 
 | Setting | Value | Reason |
 |---------|-------|--------|
 | Security Level | Medium | Challenges IPs with moderate threat scores. Not High, which may challenge legitimate users in PH. |
 | Bot Fight Mode | On | Blocks known bad bots from Cloudflare's threat intelligence. |
 | Browser Integrity Check | On | Checks for standard browser headers; blocks common scrapers and spam bots. |
-| Hotlink Protection | On | Prevents other sites from embedding `taxoptimizer.ph` images directly (prevents bandwidth theft). |
+| Hotlink Protection | On | Prevents other sites from embedding `taxklaro.ph` images directly (prevents bandwidth theft). |
 | Email Address Obfuscation | On | Prevents email scraping bots from harvesting addresses in page HTML. |
 | Server-side Excludes | On | Allows sensitive HTML sections to be hidden from suspicious visitors. |
 | Privacy Pass | On | Reduces friction for users with Privacy Pass browser extension. |
@@ -390,7 +390,7 @@ Configure in: Security → WAF → Tools → IP Access Rules.
 
 | Action | Value | Type | Notes |
 |--------|-------|------|-------|
-| Whitelist | Fly.io IP ranges for `taxoptimizer-api.fly.dev` | ASN | Optional: whitelist Fly.io's ASN so WAF rules don't block internal Fly-to-Cloudflare traffic. Fly.io ASN is AS54825. |
+| Whitelist | Fly.io IP ranges for `taxklaro-api.fly.dev` | ASN | Optional: whitelist Fly.io's ASN so WAF rules don't block internal Fly-to-Cloudflare traffic. Fly.io ASN is AS54825. |
 | Block | Tor exit nodes | Threat category | Cloudflare automatically handles this via Security Level, but explicit block adds defense in depth. Not recommended if user base includes privacy-conscious users in PH. |
 
 ---
@@ -403,11 +403,11 @@ Configure in: Security → WAF → Tools → IP Access Rules.
 
 ```bash
 # Via Vercel CLI (run from project directory)
-vercel domains add taxoptimizer.ph --project taxoptimizer-ph
-vercel domains add www.taxoptimizer.ph --project taxoptimizer-ph
+vercel domains add taxklaro.ph --project taxklaro-ph
+vercel domains add www.taxklaro.ph --project taxklaro-ph
 ```
 
-Or via Vercel Dashboard → taxoptimizer-ph → Settings → Domains → Add Domain → enter `taxoptimizer.ph`.
+Or via Vercel Dashboard → taxklaro-ph → Settings → Domains → Add Domain → enter `taxklaro.ph`.
 
 Vercel will display:
 - A record: `76.76.21.21` (add to Cloudflare DNS as record #1)
@@ -417,10 +417,10 @@ Vercel will display:
 **Step 2: Add staging domain in Vercel**
 
 ```bash
-vercel domains add staging.taxoptimizer.ph --project taxoptimizer-ph
+vercel domains add staging.taxklaro.ph --project taxklaro-ph
 ```
 
-Or via Vercel Dashboard → taxoptimizer-ph → Settings → Domains → Add Domain → enter `staging.taxoptimizer.ph`.
+Or via Vercel Dashboard → taxklaro-ph → Settings → Domains → Add Domain → enter `staging.taxklaro.ph`.
 
 Vercel assigns this to the `staging` git branch environment. Vercel uses the same `_vercel` TXT verification record for all domains on the same project.
 
@@ -429,12 +429,12 @@ Vercel assigns this to the `staging` git branch environment. Vercel uses the sam
 After adding DNS records in Cloudflare (records #1, #2, #3, #13 from §2), Vercel automatically polls for DNS propagation and marks the domain as verified. Verification typically completes within 5–30 minutes. Check status:
 
 ```bash
-vercel domains inspect taxoptimizer.ph
+vercel domains inspect taxklaro.ph
 ```
 
 **Step 4: Set production domain as default in Vercel**
 
-In Vercel Dashboard → taxoptimizer-ph → Settings → Domains, mark `taxoptimizer.ph` as the production domain (not `taxoptimizer-ph.vercel.app`). This ensures canonical URLs in Next.js OG tags, sitemaps, and redirects use `taxoptimizer.ph`.
+In Vercel Dashboard → taxklaro-ph → Settings → Domains, mark `taxklaro.ph` as the production domain (not `taxklaro-ph.vercel.app`). This ensures canonical URLs in Next.js OG tags, sitemaps, and redirects use `taxklaro.ph`.
 
 ### 8.2 Fly.io Custom Domains (API Server)
 
@@ -442,15 +442,15 @@ In Vercel Dashboard → taxoptimizer-ph → Settings → Domains, mark `taxoptim
 
 ```bash
 # Add domain cert to production API app
-flyctl certs add api.taxoptimizer.ph -a taxoptimizer-api
+flyctl certs add api.taxklaro.ph -a taxklaro-api
 
 # Check cert issuance status (may take 2–5 minutes for Let's Encrypt issuance)
-flyctl certs show api.taxoptimizer.ph -a taxoptimizer-api
+flyctl certs show api.taxklaro.ph -a taxklaro-api
 ```
 
 Expected output after cert issuance:
 ```
-Hostname                  = api.taxoptimizer.ph
+Hostname                  = api.taxklaro.ph
 DNS Provider              = cloudflare
 Certificate Authority     = Let's Encrypt
 Issued                    = true
@@ -460,8 +460,8 @@ ACME Challenges           = DNS-01
 **Step 2: Add custom domain to staging API app**
 
 ```bash
-flyctl certs add api.staging.taxoptimizer.ph -a taxoptimizer-api-staging
-flyctl certs show api.staging.taxoptimizer.ph -a taxoptimizer-api-staging
+flyctl certs add api.staging.taxklaro.ph -a taxklaro-api-staging
+flyctl certs show api.staging.taxklaro.ph -a taxklaro-api-staging
 ```
 
 **Step 3: Verify certificate**
@@ -470,48 +470,48 @@ After Fly.io issues the cert (Let's Encrypt DNS-01 challenge via Cloudflare API)
 
 ```bash
 # Check that cert is serving correctly
-curl -I https://api.taxoptimizer.ph/v1/health/live
-# Expected: HTTP/2 200 with valid TLS cert for api.taxoptimizer.ph
+curl -I https://api.taxklaro.ph/v1/health/live
+# Expected: HTTP/2 200 with valid TLS cert for api.taxklaro.ph
 
-openssl s_client -connect api.taxoptimizer.ph:443 -servername api.taxoptimizer.ph 2>/dev/null | \
+openssl s_client -connect api.taxklaro.ph:443 -servername api.taxklaro.ph 2>/dev/null | \
   openssl x509 -noout -subject -issuer -dates
-# Expected: Subject: CN=api.taxoptimizer.ph, Issuer: Let's Encrypt
+# Expected: Subject: CN=api.taxklaro.ph, Issuer: Let's Encrypt
 ```
 
-**Note on Fly.io CNAME approach vs. dedicated IPs:** The spec uses CNAME records (`api.taxoptimizer.ph CNAME taxoptimizer-api.fly.dev`) rather than dedicated Fly.io IPv4 addresses. This approach:
+**Note on Fly.io CNAME approach vs. dedicated IPs:** The spec uses CNAME records (`api.taxklaro.ph CNAME taxklaro-api.fly.dev`) rather than dedicated Fly.io IPv4 addresses. This approach:
 - Requires no IP allocation (no $2/month dedicated IPv4 charge per app)
 - Survives Fly.io infrastructure migrations transparently
 - Works correctly with Cloudflare proxy mode (Cloudflare resolves the CNAME to Fly.io's current IPs)
-- Cloudflare's Full (strict) SSL mode validates the Fly.io origin cert for `api.taxoptimizer.ph`
+- Cloudflare's Full (strict) SSL mode validates the Fly.io origin cert for `api.taxklaro.ph`
 
 If dedicated IPs are preferred (e.g., for IP allowlisting in enterprise firewalls), allocate them:
 ```bash
-flyctl ips allocate-v4 -a taxoptimizer-api   # costs $2/month, outputs IPv4 address
-flyctl ips allocate-v6 -a taxoptimizer-api   # free, outputs IPv6 address
+flyctl ips allocate-v4 -a taxklaro-api   # costs $2/month, outputs IPv4 address
+flyctl ips allocate-v6 -a taxklaro-api   # free, outputs IPv6 address
 # Then replace CNAME record #4 with A record (IPv4) and AAAA record (IPv6)
 ```
 
-### 8.3 Cloudflare R2 Custom Domain (exports.taxoptimizer.ph)
+### 8.3 Cloudflare R2 Custom Domain (exports.taxklaro.ph)
 
 **Step 1: Create the R2 bucket (if not already done)**
 
 ```bash
 # Using Wrangler CLI (already authenticated via wrangler login)
-wrangler r2 bucket create taxoptimizer-exports
+wrangler r2 bucket create taxklaro-exports
 ```
 
 **Step 2: Add custom domain to R2 bucket**
 
-Navigate to: Cloudflare Dashboard → R2 Object Storage → taxoptimizer-exports bucket → Settings → Custom Domains → Connect Domain.
+Navigate to: Cloudflare Dashboard → R2 Object Storage → taxklaro-exports bucket → Settings → Custom Domains → Connect Domain.
 
-Enter: `exports.taxoptimizer.ph`
+Enter: `exports.taxklaro.ph`
 
-Cloudflare validates that `taxoptimizer.ph` is on your Cloudflare account and automatically creates the required CNAME DNS record in the zone. The CNAME target is an internal Cloudflare R2 routing address in the format `taxoptimizer-exports.[account-id].r2.cloudflarestorage.com`. Cloudflare creates this record automatically — do not create it manually.
+Cloudflare validates that `taxklaro.ph` is on your Cloudflare account and automatically creates the required CNAME DNS record in the zone. The CNAME target is an internal Cloudflare R2 routing address in the format `taxklaro-exports.ACCOUNT_ID_HEX.r2.cloudflarestorage.com` (where `ACCOUNT_ID_HEX` is your 32-character Cloudflare account ID, visible in Cloudflare Dashboard → right sidebar → Account ID). Cloudflare creates this record automatically — do not create it manually.
 
 After connecting, the record appears in Cloudflare DNS as:
 - Type: CNAME
 - Name: `exports`
-- Target: `taxoptimizer-exports.[your-cf-account-id].r2.cloudflarestorage.com`
+- Target: `taxklaro-exports.ACCOUNT_ID_HEX.r2.cloudflarestorage.com` (auto-created by Cloudflare; value contains your actual account ID)
 - Proxy: Proxied (orange cloud)
 - TTL: Auto
 
@@ -519,14 +519,14 @@ After connecting, the record appears in Cloudflare DNS as:
 
 ```bash
 # Upload a test object
-wrangler r2 object put taxoptimizer-exports/test-connectivity.txt --body "hello"
+wrangler r2 object put taxklaro-exports/test-connectivity.txt --body "hello"
 
 # Verify the custom domain serves the object
-curl -I https://exports.taxoptimizer.ph/test-connectivity.txt
+curl -I https://exports.taxklaro.ph/test-connectivity.txt
 # Expected: HTTP/2 200
 
 # Delete the test object
-wrangler r2 object delete taxoptimizer-exports/test-connectivity.txt
+wrangler r2 object delete taxklaro-exports/test-connectivity.txt
 ```
 
 ---
@@ -537,13 +537,13 @@ wrangler r2 object delete taxoptimizer-exports/test-connectivity.txt
 
 | Domain | Certificate Issuer | Managed By | Renewal Method |
 |--------|-------------------|------------|----------------|
-| `taxoptimizer.ph` | Let's Encrypt (via Vercel) | Vercel — fully automatic | Vercel renews ~30 days before expiry. No action required. |
-| `www.taxoptimizer.ph` | Let's Encrypt (via Vercel) | Vercel — fully automatic | Same as above. |
-| `staging.taxoptimizer.ph` | Let's Encrypt (via Vercel) | Vercel — fully automatic | Same as above. |
-| `api.taxoptimizer.ph` | Let's Encrypt (via Fly.io) | Fly.io — fully automatic | Fly.io renews via ACME DNS-01 challenge. No action required. |
-| `api.staging.taxoptimizer.ph` | Let's Encrypt (via Fly.io) | Fly.io — fully automatic | Same as above. |
-| `*.taxoptimizer.ph` (Cloudflare edge) | DigiCert (Cloudflare-issued) | Cloudflare — fully automatic | Cloudflare manages its edge certificate. No action required. |
-| `exports.taxoptimizer.ph` | DigiCert (Cloudflare-issued) | Cloudflare — fully automatic | Managed as part of the R2 custom domain by Cloudflare. |
+| `taxklaro.ph` | Let's Encrypt (via Vercel) | Vercel — fully automatic | Vercel renews ~30 days before expiry. No action required. |
+| `www.taxklaro.ph` | Let's Encrypt (via Vercel) | Vercel — fully automatic | Same as above. |
+| `staging.taxklaro.ph` | Let's Encrypt (via Vercel) | Vercel — fully automatic | Same as above. |
+| `api.taxklaro.ph` | Let's Encrypt (via Fly.io) | Fly.io — fully automatic | Fly.io renews via ACME DNS-01 challenge. No action required. |
+| `api.staging.taxklaro.ph` | Let's Encrypt (via Fly.io) | Fly.io — fully automatic | Same as above. |
+| `*.taxklaro.ph` (Cloudflare edge) | DigiCert (Cloudflare-issued) | Cloudflare — fully automatic | Cloudflare manages its edge certificate. No action required. |
+| `exports.taxklaro.ph` | DigiCert (Cloudflare-issued) | Cloudflare — fully automatic | Managed as part of the R2 custom domain by Cloudflare. |
 
 ### 9.2 Certificate Monitoring
 
@@ -564,24 +564,24 @@ If Vercel fails to auto-renew (rare — happens if domain leaves Cloudflare DNS)
 
 ```bash
 # Remove and re-add domain in Vercel to trigger re-issuance
-vercel domains remove taxoptimizer.ph --project taxoptimizer-ph
-vercel domains add taxoptimizer.ph --project taxoptimizer-ph
+vercel domains remove taxklaro.ph --project taxklaro-ph
+vercel domains add taxklaro.ph --project taxklaro-ph
 ```
 
 If Fly.io fails to auto-renew:
 
 ```bash
 # Remove and re-add cert to trigger re-issuance
-flyctl certs remove api.taxoptimizer.ph -a taxoptimizer-api
-flyctl certs add api.taxoptimizer.ph -a taxoptimizer-api
-flyctl certs show api.taxoptimizer.ph -a taxoptimizer-api  # watch until Issued=true
+flyctl certs remove api.taxklaro.ph -a taxklaro-api
+flyctl certs add api.taxklaro.ph -a taxklaro-api
+flyctl certs show api.taxklaro.ph -a taxklaro-api  # watch until Issued=true
 ```
 
 ---
 
 ## 10. Email DNS Records (SPF / DKIM / DMARC)
 
-All outbound transactional email is sent via Resend from the `mail.taxoptimizer.ph` subdomain. These records authenticate outbound email so that delivery to Gmail, Outlook, and Yahoo is reliable and bypass spam filters.
+All outbound transactional email is sent via Resend from the `mail.taxklaro.ph` subdomain. These records authenticate outbound email so that delivery to Gmail, Outlook, and Yahoo is reliable and bypass spam filters.
 
 ### 10.1 SPF Record
 
@@ -589,13 +589,13 @@ All outbound transactional email is sent via Resend from the `mail.taxoptimizer.
 |------|------|---------|-----|
 | TXT | `@` | `v=spf1 include:amazonses.com ~all` | 300 |
 
-**Explanation:** Resend uses Amazon SES as its underlying sending infrastructure. The `include:amazonses.com` authorizes SES IP ranges to send email on behalf of `taxoptimizer.ph`. The `~all` softfail policy means unlisted sources are marked as suspicious but not rejected (allows gradual rollout; harden to `-all` after 30 days of confirmed delivery).
+**Explanation:** Resend uses Amazon SES as its underlying sending infrastructure. The `include:amazonses.com` authorizes SES IP ranges to send email on behalf of `taxklaro.ph`. The `~all` softfail policy means unlisted sources are marked as suspicious but not rejected (allows gradual rollout; harden to `-all` after 30 days of confirmed delivery).
 
 ### 10.2 DKIM Records
 
 DKIM records are obtained from Resend after adding the domain:
 
-**Step 1:** In Resend Dashboard → Settings → Domains → Add Domain → enter `mail.taxoptimizer.ph` → click "Add Domain".
+**Step 1:** In Resend Dashboard → Settings → Domains → Add Domain → enter `mail.taxklaro.ph` → click "Add Domain".
 
 **Step 2:** Resend displays exactly two DNS records to add. Both are CNAME records. Add them to Cloudflare DNS as DNS-only (not proxied — mail infrastructure must not be proxied through Cloudflare).
 
@@ -604,7 +604,7 @@ DKIM records are obtained from Resend after adding the domain:
 | Type | Name | Content | TTL | Proxy |
 |------|------|---------|-----|-------|
 | CNAME | `resend._domainkey.mail` | `resend._domainkey.resend.com` | 300 | DNS only |
-| CNAME | `[resend-selector]._domainkey.mail` | `[resend-assigned-target].resend.com` | 300 | DNS only |
+| CNAME | `s1._domainkey.mail` | `s1._domainkey.resend.com` | 300 | DNS only |
 
 The first record is always `resend._domainkey.resend.com`. The second record's selector and target are assigned by Resend and displayed in the Resend dashboard — copy the exact values shown there.
 
@@ -614,7 +614,7 @@ The first record is always `resend._domainkey.resend.com`. The second record's s
 
 | Type | Name | Content | TTL |
 |------|------|---------|-----|
-| TXT | `_dmarc` | `v=DMARC1; p=quarantine; rua=mailto:dmarc@taxoptimizer.ph; ruf=mailto:dmarc@taxoptimizer.ph; pct=100; adkim=s; aspf=s` | 300 |
+| TXT | `_dmarc` | `v=DMARC1; p=quarantine; rua=mailto:dmarc@taxklaro.ph; ruf=mailto:dmarc@taxklaro.ph; pct=100; adkim=s; aspf=s` | 300 |
 
 **Field explanations:**
 
@@ -622,15 +622,15 @@ The first record is always `resend._domainkey.resend.com`. The second record's s
 |-------|-------|---------|
 | `v` | `DMARC1` | DMARC version 1 |
 | `p` | `quarantine` | Messages failing DMARC go to spam. Start with `quarantine`; harden to `reject` after 30 days of monitoring aggregate reports. |
-| `rua` | `mailto:dmarc@taxoptimizer.ph` | Aggregate DMARC reports sent daily to this address |
-| `ruf` | `mailto:dmarc@taxoptimizer.ph` | Forensic failure reports sent per-message to this address |
+| `rua` | `mailto:dmarc@taxklaro.ph` | Aggregate DMARC reports sent daily to this address |
+| `ruf` | `mailto:dmarc@taxklaro.ph` | Forensic failure reports sent per-message to this address |
 | `pct` | `100` | Apply DMARC policy to 100% of messages |
 | `adkim` | `s` | Strict DKIM alignment — the DKIM `d=` domain must exactly match the From: domain |
 | `aspf` | `s` | Strict SPF alignment — the RFC5321 MailFrom domain must exactly match the From: domain |
 
 ### 10.4 MX Record for DMARC Reporting Inbox
 
-The DMARC `rua` and `ruf` addresses route to `dmarc@taxoptimizer.ph`. For this to receive email, an MX record must exist for `taxoptimizer.ph`. If using Google Workspace for operator admin email:
+The DMARC `rua` and `ruf` addresses route to `dmarc@taxklaro.ph`. For this to receive email, an MX record must exist for `taxklaro.ph`. If using Google Workspace for operator admin email:
 
 | Type | Name | Content | Priority | TTL |
 |------|------|---------|----------|-----|
@@ -640,7 +640,7 @@ The DMARC `rua` and `ruf` addresses route to `dmarc@taxoptimizer.ph`. For this t
 | MX | `@` | `ALT3.ASPMX.L.GOOGLE.COM` | 10 | 300 |
 | MX | `@` | `ALT4.ASPMX.L.GOOGLE.COM` | 10 | 300 |
 
-If using a different provider (Fastmail, Zoho, ProtonMail), use that provider's published MX values. The `dmarc@taxoptimizer.ph` mailbox must be created in whichever provider is used.
+If using a different provider (Fastmail, Zoho, ProtonMail), use that provider's published MX values. The `dmarc@taxklaro.ph` mailbox must be created in whichever provider is used.
 
 ---
 
@@ -650,23 +650,23 @@ If using a different provider (Fastmail, Zoho, ProtonMail), use that provider's 
 
 | Subdomain | Purpose | Points To |
 |-----------|---------|-----------|
-| `staging.taxoptimizer.ph` | Staging frontend | Vercel `taxoptimizer-ph` project, `staging` branch deployment |
-| `api.staging.taxoptimizer.ph` | Staging API | Fly.io app `taxoptimizer-api-staging` |
+| `staging.taxklaro.ph` | Staging frontend | Vercel `taxklaro-ph` project, `staging` branch deployment |
+| `api.staging.taxklaro.ph` | Staging API | Fly.io app `taxklaro-api-staging` |
 
 ### 11.2 Staging Fly.io App Setup
 
-The staging API runs as a separate Fly.io application (`taxoptimizer-api-staging`) in the same Fly.io organization as production.
+The staging API runs as a separate Fly.io application (`taxklaro-api-staging`) in the same Fly.io organization as production.
 
 ```bash
 # Create staging API app (run once)
-flyctl apps create taxoptimizer-api-staging --org personal
+flyctl apps create taxklaro-api-staging --org personal
 
 # Deploy staging app from the same Docker image with staging env
-flyctl deploy -a taxoptimizer-api-staging \
-  --image registry.fly.io/taxoptimizer-api:staging-latest
+flyctl deploy -a taxklaro-api-staging \
+  --image registry.fly.io/taxklaro-api:staging-latest
 
 # Add custom domain cert to staging API
-flyctl certs add api.staging.taxoptimizer.ph -a taxoptimizer-api-staging
+flyctl certs add api.staging.taxklaro.ph -a taxklaro-api-staging
 ```
 
 ### 11.3 Staging Cookie Scope
@@ -675,16 +675,16 @@ The staging environment uses a separate cookie domain so staging sessions cannot
 
 | Environment | `SESSION_COOKIE_DOMAIN` |
 |-------------|------------------------|
-| Production | `.taxoptimizer.ph` |
-| Staging | `staging.taxoptimizer.ph` |
+| Production | `.taxklaro.ph` |
+| Staging | `staging.taxklaro.ph` |
 
-The staging API's `SESSION_COOKIE_DOMAIN` is set to `staging.taxoptimizer.ph` (without leading dot), restricting the session cookie to only `staging.taxoptimizer.ph` — not readable by the production domain or other staging subdomains.
+The staging API's `SESSION_COOKIE_DOMAIN` is set to `staging.taxklaro.ph` (without leading dot), restricting the session cookie to only `staging.taxklaro.ph` — not readable by the production domain or other staging subdomains.
 
 ### 11.4 Staging Access Control
 
 Staging is accessible to the public (no IP allowlist by default). To restrict staging to the development team:
 
-Option A — Cloudflare Access (Zero Trust): In Cloudflare Dashboard → Zero Trust → Access → Applications → Add Application → Self-hosted → enter `staging.taxoptimizer.ph`. Create a policy allowing only email addresses in the operator's domain. This adds a Cloudflare Access JWKS validation step before requests reach Vercel.
+Option A — Cloudflare Access (Zero Trust): In Cloudflare Dashboard → Zero Trust → Access → Applications → Add Application → Self-hosted → enter `staging.taxklaro.ph`. Create a policy allowing only email addresses in the operator's domain. This adds a Cloudflare Access JWKS validation step before requests reach Vercel.
 
 Option B — Basic Auth at Vercel: Add middleware to the Next.js app that checks a `STAGING_BASIC_AUTH_TOKEN` environment variable and returns 401 with `WWW-Authenticate: Basic` for non-authenticated requests in the staging environment. Not implemented by default; add if needed.
 
@@ -698,8 +698,8 @@ Execute these steps in order when setting up DNS and domains for the first time 
 
 ```bash
 # Verify domain availability at registrar of choice
-# Register taxoptimizer.ph at registrar (Namecheap, GoDaddy, or dotPH)
-# In Cloudflare Dashboard → Add Site → enter taxoptimizer.ph → Select Pro plan
+# Register taxklaro.ph at registrar (Namecheap, GoDaddy, or dotPH)
+# In Cloudflare Dashboard → Add Site → enter taxklaro.ph → Select Pro plan
 # Cloudflare provides two nameservers (e.g., abby.ns.cloudflare.com, hector.ns.cloudflare.com)
 # Update nameservers at registrar to Cloudflare's provided nameservers
 # Wait up to 24 hours for NS propagation (typically < 2 hours)
@@ -714,32 +714,32 @@ Navigate to each setting described in §1.3 and enable them in the Cloudflare da
 
 ```bash
 # Deploy production API (creates app if not exists)
-flyctl apps create taxoptimizer-api --org personal
-flyctl deploy -a taxoptimizer-api
+flyctl apps create taxklaro-api --org personal
+flyctl deploy -a taxklaro-api
 
 # Deploy staging API
-flyctl apps create taxoptimizer-api-staging --org personal
-flyctl deploy -a taxoptimizer-api-staging
+flyctl apps create taxklaro-api-staging --org personal
+flyctl deploy -a taxklaro-api-staging
 ```
 
 ### Step 4: Add DNS Records for API Subdomains
 
 ```bash
 # Add custom domain certs on Fly.io
-flyctl certs add api.taxoptimizer.ph -a taxoptimizer-api
-flyctl certs add api.staging.taxoptimizer.ph -a taxoptimizer-api-staging
+flyctl certs add api.taxklaro.ph -a taxklaro-api
+flyctl certs add api.staging.taxklaro.ph -a taxklaro-api-staging
 
 # Add CNAME records in Cloudflare DNS (API and staging API)
 # Via Cloudflare API:
 curl -X POST "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/dns_records" \
   -H "Authorization: Bearer ${CF_API_TOKEN}" \
   -H "Content-Type: application/json" \
-  --data '{"type":"CNAME","name":"api","content":"taxoptimizer-api.fly.dev","ttl":1,"proxied":true}'
+  --data '{"type":"CNAME","name":"api","content":"taxklaro-api.fly.dev","ttl":1,"proxied":true}'
 
 curl -X POST "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/dns_records" \
   -H "Authorization: Bearer ${CF_API_TOKEN}" \
   -H "Content-Type: application/json" \
-  --data '{"type":"CNAME","name":"api.staging","content":"taxoptimizer-api-staging.fly.dev","ttl":1,"proxied":true}'
+  --data '{"type":"CNAME","name":"api.staging","content":"taxklaro-api-staging.fly.dev","ttl":1,"proxied":true}'
 ```
 
 ### Step 5: Deploy Frontend to Vercel and Register Custom Domains
@@ -749,9 +749,9 @@ curl -X POST "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/dns_recor
 vercel --prod
 
 # Add custom domains
-vercel domains add taxoptimizer.ph --project taxoptimizer-ph
-vercel domains add www.taxoptimizer.ph --project taxoptimizer-ph
-vercel domains add staging.taxoptimizer.ph --project taxoptimizer-ph
+vercel domains add taxklaro.ph --project taxklaro-ph
+vercel domains add www.taxklaro.ph --project taxklaro-ph
+vercel domains add staging.taxklaro.ph --project taxklaro-ph
 
 # Add Vercel A and CNAME records in Cloudflare
 curl -X POST "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/dns_records" \
@@ -791,16 +791,16 @@ curl -X POST "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/dns_recor
 
 ```bash
 # Create R2 bucket
-wrangler r2 bucket create taxoptimizer-exports
+wrangler r2 bucket create taxklaro-exports
 
 # Set 30-day lifecycle rule
-wrangler r2 bucket lifecycle add taxoptimizer-exports \
+wrangler r2 bucket lifecycle add taxklaro-exports \
   --rule-name "delete-old-pdfs" \
   --prefix "" \
   --expiration-days 30
 ```
 
-Then in Cloudflare Dashboard → R2 → taxoptimizer-exports → Settings → Custom Domains → Connect Domain → enter `exports.taxoptimizer.ph` → Save. Cloudflare auto-creates the DNS record.
+Then in Cloudflare Dashboard → R2 → taxklaro-exports → Settings → Custom Domains → Connect Domain → enter `exports.taxklaro.ph` → Save. Cloudflare auto-creates the DNS record.
 
 ### Step 8: Configure Email DNS Records
 
@@ -815,7 +815,7 @@ curl -X POST "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/dns_recor
 curl -X POST "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/dns_records" \
   -H "Authorization: Bearer ${CF_API_TOKEN}" \
   -H "Content-Type: application/json" \
-  --data '{"type":"TXT","name":"_dmarc","content":"v=DMARC1; p=quarantine; rua=mailto:dmarc@taxoptimizer.ph; ruf=mailto:dmarc@taxoptimizer.ph; pct=100; adkim=s; aspf=s","ttl":300,"proxied":false}'
+  --data '{"type":"TXT","name":"_dmarc","content":"v=DMARC1; p=quarantine; rua=mailto:dmarc@taxklaro.ph; ruf=mailto:dmarc@taxklaro.ph; pct=100; adkim=s; aspf=s","ttl":300,"proxied":false}'
 
 # Add fixed Resend DKIM key 1
 curl -X POST "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/dns_records" \
@@ -879,7 +879,7 @@ Navigate to Security → Settings and apply all settings in §7.
 
 ### Step 14: Set Up Google Search Console
 
-1. Go to Google Search Console → Add Property → Domain property → enter `taxoptimizer.ph`
+1. Go to Google Search Console → Add Property → Domain property → enter `taxklaro.ph`
 2. Select DNS verification method
 3. Copy the `google-site-verification=...` TXT value
 4. Add to Cloudflare DNS:
@@ -906,34 +906,34 @@ Run these commands after initial DNS provisioning to confirm all records are cor
 # Install dig if not present: apt-get install dnsutils / brew install bind
 
 # Verify root domain A record
-dig +short A taxoptimizer.ph
+dig +short A taxklaro.ph
 # Expected output: 104.21.xxx.xxx and 172.67.xxx.xxx (Cloudflare anycast IPs — not 76.76.21.21 because Cloudflare proxies)
 
 # Verify root domain AAAA record
-dig +short AAAA taxoptimizer.ph
+dig +short AAAA taxklaro.ph
 # Expected: Cloudflare IPv6 anycast addresses
 
 # Verify API CNAME (before Cloudflare proxy resolution)
-dig +short CNAME api.taxoptimizer.ph
+dig +short CNAME api.taxklaro.ph
 # Expected: blank (CNAME is flattened by Cloudflare)
 # Or use Cloudflare bypass:
-dig +short A api.taxoptimizer.ph @1.1.1.1
+dig +short A api.taxklaro.ph @1.1.1.1
 # Expected: Cloudflare anycast IPs (proxied)
 
 # Verify staging CNAME
-dig +short A staging.taxoptimizer.ph
+dig +short A staging.taxklaro.ph
 # Expected: Cloudflare anycast IPs
 
 # Verify SPF
-dig +short TXT taxoptimizer.ph | grep spf
+dig +short TXT taxklaro.ph | grep spf
 # Expected: "v=spf1 include:amazonses.com ~all"
 
 # Verify DMARC
-dig +short TXT _dmarc.taxoptimizer.ph
-# Expected: "v=DMARC1; p=quarantine; rua=mailto:dmarc@taxoptimizer.ph; ..."
+dig +short TXT _dmarc.taxklaro.ph
+# Expected: "v=DMARC1; p=quarantine; rua=mailto:dmarc@taxklaro.ph; ..."
 
 # Verify Resend DKIM
-dig +short CNAME resend._domainkey.mail.taxoptimizer.ph
+dig +short CNAME resend._domainkey.mail.taxklaro.ph
 # Expected: resend._domainkey.resend.com
 ```
 
@@ -941,23 +941,23 @@ dig +short CNAME resend._domainkey.mail.taxoptimizer.ph
 
 ```bash
 # Frontend
-curl -I https://taxoptimizer.ph/
+curl -I https://taxklaro.ph/
 # Expected: HTTP/2 200, X-Frame-Options: DENY, Strict-Transport-Security present
 
 # www redirect
-curl -I https://www.taxoptimizer.ph/
-# Expected: HTTP/2 301 → https://taxoptimizer.ph/ (Vercel handles this redirect)
+curl -I https://www.taxklaro.ph/
+# Expected: HTTP/2 301 → https://taxklaro.ph/ (Vercel handles this redirect)
 
 # API health check
-curl -s https://api.taxoptimizer.ph/v1/health/live | jq .
+curl -s https://api.taxklaro.ph/v1/health/live | jq .
 # Expected: {"status":"alive","timestamp":"..."}
 
 # Staging frontend
-curl -I https://staging.taxoptimizer.ph/
+curl -I https://staging.taxklaro.ph/
 # Expected: HTTP/2 200
 
 # Staging API health check
-curl -s https://api.staging.taxoptimizer.ph/v1/health/live | jq .
+curl -s https://api.staging.taxklaro.ph/v1/health/live | jq .
 # Expected: {"status":"alive","timestamp":"..."}
 ```
 
@@ -965,17 +965,17 @@ curl -s https://api.staging.taxoptimizer.ph/v1/health/live | jq .
 
 ```bash
 # Verify production cert (Cloudflare edge cert — DigiCert)
-echo | openssl s_client -connect taxoptimizer.ph:443 -servername taxoptimizer.ph 2>/dev/null | \
+echo | openssl s_client -connect taxklaro.ph:443 -servername taxklaro.ph 2>/dev/null | \
   openssl x509 -noout -subject -issuer -dates
-# Expected subject: CN=taxoptimizer.ph, issuer: DigiCert (Cloudflare issues DigiCert edge certs)
+# Expected subject: CN=taxklaro.ph, issuer: DigiCert (Cloudflare issues DigiCert edge certs)
 
 # Verify API origin cert (Let's Encrypt via Fly.io)
 # Must bypass Cloudflare to hit origin directly
 # (Only possible from Fly.io internal network or by temporarily disabling proxy)
-flyctl ssh console -a taxoptimizer-api
-# Inside: curl -I https://api.taxoptimizer.ph/v1/health/live
+flyctl ssh console -a taxklaro-api
+# Inside: curl -I https://api.taxklaro.ph/v1/health/live
 # Or check via flyctl:
-flyctl certs show api.taxoptimizer.ph -a taxoptimizer-api
+flyctl certs show api.taxklaro.ph -a taxklaro-api
 # Expected: Issued=true, Certificate Authority=Let's Encrypt, Expires >60 days from now
 ```
 
@@ -983,12 +983,12 @@ flyctl certs show api.taxoptimizer.ph -a taxoptimizer-api
 
 ```bash
 # Test that XSS attempts are blocked
-curl -I "https://api.taxoptimizer.ph/v1/compute?q=<script>alert(1)</script>"
+curl -I "https://api.taxklaro.ph/v1/compute?q=<script>alert(1)</script>"
 # Expected: HTTP/2 403 (OWASP ruleset blocks this)
 
 # Test that rate limiting works on auth endpoint (requires >10 rapid requests)
 for i in {1..12}; do
-  curl -s -o /dev/null -w "%{http_code}\n" -X POST https://api.taxoptimizer.ph/v1/auth/login \
+  curl -s -o /dev/null -w "%{http_code}\n" -X POST https://api.taxklaro.ph/v1/auth/login \
     -H "Content-Type: application/json" \
     -d '{"email":"test@example.com","password":"wrongpassword"}'
 done
@@ -999,23 +999,23 @@ done
 
 ```bash
 # Check DMARC aggregate reports (after first email sent)
-# Reports arrive daily to dmarc@taxoptimizer.ph from major providers (Google, Microsoft, Yahoo)
+# Reports arrive daily to dmarc@taxklaro.ph from major providers (Google, Microsoft, Yahoo)
 # Use dmarcian.com or MXToolbox DMARC checker to parse reports
 
 # Test Resend domain verification
-# In Resend Dashboard → Settings → Domains → mail.taxoptimizer.ph → status should show "Verified"
+# In Resend Dashboard → Settings → Domains → mail.taxklaro.ph → status should show "Verified"
 
 # Send test email via Resend API
 curl -X POST "https://api.resend.com/emails" \
   -H "Authorization: Bearer ${RESEND_API_KEY}" \
   -H "Content-Type: application/json" \
   -d '{
-    "from": "TaxOptimizer PH <noreply@mail.taxoptimizer.ph>",
+    "from": "TaxKlaro <noreply@mail.taxklaro.ph>",
     "to": ["operator-test-inbox@gmail.com"],
     "subject": "Email DNS verification test",
     "text": "This is a test email to verify SPF/DKIM/DMARC configuration."
   }'
-# Expected: {"id":"[message-id]"} response; email arrives in inbox (not spam)
+# Expected: {"id":"msg_AbCdEfGhIjKl1234"} response (id is a Resend-assigned string); email arrives in inbox (not spam)
 # Check email headers: Authentication-Results should show spf=pass, dkim=pass, dmarc=pass
 ```
 
@@ -1037,10 +1037,10 @@ After modifying any DNS record in Cloudflare, propagation is near-instant within
 To verify propagation at multiple nameservers:
 ```bash
 # Check from multiple global resolvers
-dig +short A taxoptimizer.ph @8.8.8.8       # Google
-dig +short A taxoptimizer.ph @1.1.1.1       # Cloudflare
-dig +short A taxoptimizer.ph @208.67.222.222 # OpenDNS
-dig +short A taxoptimizer.ph @9.9.9.9       # Quad9
+dig +short A taxklaro.ph @8.8.8.8       # Google
+dig +short A taxklaro.ph @1.1.1.1       # Cloudflare
+dig +short A taxklaro.ph @208.67.222.222 # OpenDNS
+dig +short A taxklaro.ph @9.9.9.9       # Quad9
 ```
 
 ### 14.2 Cloudflare Cache Invalidation
@@ -1052,7 +1052,7 @@ After content updates that must be immediately visible:
 curl -X POST "https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONE_ID}/purge_cache" \
   -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
   -H "Content-Type: application/json" \
-  --data '{"files":["https://taxoptimizer.ph/"]}'
+  --data '{"files":["https://taxklaro.ph/"]}'
 
 # Purge all blog posts (after CMS update)
 curl -X POST "https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONE_ID}/purge_cache" \
@@ -1087,26 +1087,26 @@ To update a rate limiting rule:
 Check certificate status monthly:
 
 ```bash
-flyctl certs list -a taxoptimizer-api
+flyctl certs list -a taxklaro-api
 # Output columns: Hostname, Issued, Expiration, Issue method
 # Alert if any cert shows Expiration < 30 days from today
 
-flyctl certs list -a taxoptimizer-api-staging
+flyctl certs list -a taxklaro-api-staging
 ```
 
 Fly.io's ACME client renews Let's Encrypt certs automatically ~30 days before expiry. If a renewal fails:
 
 ```bash
 # Force re-issuance
-flyctl certs remove api.taxoptimizer.ph -a taxoptimizer-api
-flyctl certs add api.taxoptimizer.ph -a taxoptimizer-api
+flyctl certs remove api.taxklaro.ph -a taxklaro-api
+flyctl certs add api.taxklaro.ph -a taxklaro-api
 # Poll until Issued=true
-watch -n 30 "flyctl certs show api.taxoptimizer.ph -a taxoptimizer-api"
+watch -n 30 "flyctl certs show api.taxklaro.ph -a taxklaro-api"
 ```
 
 ### 14.5 Adding a New Subdomain
 
-When a new subdomain is needed (e.g., `status.taxoptimizer.ph` for a status page):
+When a new subdomain is needed (e.g., `status.taxklaro.ph` for a status page):
 
 1. Determine the origin service (Cloudflare Pages, external service, Fly.io app)
 2. Deploy origin service and get its target hostname
@@ -1124,7 +1124,7 @@ When a new subdomain is needed (e.g., `status.taxoptimizer.ph` for a status page
 2. Set calendar reminder 60 days before expiry date
 3. Verify renewal 30 days before expiry
 4. If domain transfer is needed: initiate EPP auth code transfer minimum 30 days before expiry
-5. After renewal, verify nameservers remain pointed to Cloudflare (registrar renewals sometimes reset NS records — confirm with `dig NS taxoptimizer.ph`)
+5. After renewal, verify nameservers remain pointed to Cloudflare (registrar renewals sometimes reset NS records — confirm with `dig NS taxklaro.ph`)
 
 ### 14.7 Cloudflare API Token Rotation
 
@@ -1132,7 +1132,7 @@ The `CLOUDFLARE_API_TOKEN` used in CI/CD (see ci-cd.md) should be rotated every 
 
 ```bash
 # Create new token in Cloudflare Dashboard → Profile → API Tokens → Create Token
-# Required permissions: Zone:DNS:Edit for zone taxoptimizer.ph
+# Required permissions: Zone:DNS:Edit for zone taxklaro.ph
 # Copy new token value
 
 # Update GitHub Actions secret

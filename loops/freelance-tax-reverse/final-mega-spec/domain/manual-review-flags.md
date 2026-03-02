@@ -1,6 +1,6 @@
 # Manual Review Flags — Philippine Freelance & Self-Employed Income Tax Optimizer
 
-**Status:** INITIAL (seeded from rr-16-2023-emarketplace and eopt-taxpayer-tiers aspects; to be expanded in Wave 2)
+**Status:** COMPLETE (MRF-001 through MRF-021 fully specified)
 **Last updated:** 2026-02-28
 
 These are situations the engine CANNOT resolve with certainty. Instead of making a judgment call, the engine displays a flag/notice to the user and either (a) makes a conservative default assumption or (b) asks the user for clarification.

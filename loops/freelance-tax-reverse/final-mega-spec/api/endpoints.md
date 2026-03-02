@@ -38,11 +38,11 @@
 
 | Environment | Base URL |
 |-------------|----------|
-| Production | `https://api.taxoptimizer.ph/v1` |
-| Staging | `https://api.staging.taxoptimizer.ph/v1` |
+| Production | `https://api.taxklaro.ph/v1` |
+| Staging | `https://api.staging.taxklaro.ph/v1` |
 | Local development | `http://localhost:3001/v1` |
 
-All routes below are relative to the base URL. Example: `POST /auth/register` → `POST https://api.taxoptimizer.ph/v1/auth/register`.
+All routes below are relative to the base URL. Example: `POST /auth/register` → `POST https://api.taxklaro.ph/v1/auth/register`.
 
 ### 1.2 Versioning
 
@@ -315,7 +315,7 @@ Create a new user account with email and password.
 **Side effects:**
 - Creates row in `users` table with `email_verified = false`
 - Creates row in `email_verification_tokens` table
-- Sends verification email to `email` address with link: `https://taxoptimizer.ph/verify-email?token=<raw_token>`
+- Sends verification email to `email` address with link: `https://taxklaro.ph/verify-email?token=<raw_token>`
 - Does NOT create a session. User must call `POST /auth/login` after registering.
 
 **Errors:**
@@ -439,7 +439,7 @@ Send a password reset email.
 **Side effects (only if email exists in `users` table):**
 - Deletes any existing unexpired password reset tokens for this email
 - Creates row in `password_reset_tokens` table (expires after 1 hour)
-- Sends email with link: `https://taxoptimizer.ph/reset-password?token=<raw_token>`
+- Sends email with link: `https://taxklaro.ph/reset-password?token=<raw_token>`
 
 **Errors:**
 
@@ -570,7 +570,7 @@ Initiate Google OAuth 2.0 authorization flow.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `redirect_after` | string | No | URL to redirect to after successful OAuth. Default: `https://taxoptimizer.ph/dashboard`. Must be on `taxoptimizer.ph` domain (validated server-side). |
+| `redirect_after` | string | No | URL to redirect to after successful OAuth. Default: `https://taxklaro.ph/dashboard`. Must be on `taxklaro.ph` domain (validated server-side). |
 
 **Response: `302 Found`**
 
@@ -597,7 +597,7 @@ Google OAuth 2.0 callback handler. Called by Google after user authorizes.
 
 On success: Redirects to `redirect_after` URL (from original OAuth initiation) with session cookie set.
 
-On failure: Redirects to `https://taxoptimizer.ph/login?error=oauth_failed`.
+On failure: Redirects to `https://taxklaro.ph/login?error=oauth_failed`.
 
 **Side effects on success:**
 - Exchanges code for Google ID token via Google token endpoint
@@ -611,9 +611,9 @@ On failure: Redirects to `https://taxoptimizer.ph/login?error=oauth_failed`.
 
 | HTTP | Code | Redirect |
 |------|------|---------|
-| 302 | `ERR_OAUTH_STATE_MISMATCH` | `https://taxoptimizer.ph/login?error=csrf` |
-| 302 | `ERR_OAUTH_PROVIDER_ERROR` | `https://taxoptimizer.ph/login?error=oauth_failed` |
-| 302 | `ERR_DUPLICATE_EMAIL` | `https://taxoptimizer.ph/login?error=email_taken` (email from Google already registered with password) |
+| 302 | `ERR_OAUTH_STATE_MISMATCH` | `https://taxklaro.ph/login?error=csrf` |
+| 302 | `ERR_OAUTH_PROVIDER_ERROR` | `https://taxklaro.ph/login?error=oauth_failed` |
+| 302 | `ERR_DUPLICATE_EMAIL` | `https://taxklaro.ph/login?error=email_taken` (email from Google already registered with password) |
 
 ---
 
@@ -1413,7 +1413,7 @@ Generate a PDF export of a saved computation.
 | Field | Type | Required | Validation |
 |-------|------|----------|-----------|
 | `export_type` | string | Yes | `"SUMMARY"`, `"FORM_1701"`, `"FORM_1701A"`, `"FORM_1701Q"`, or `"FORM_2551Q"` |
-| `white_label_logo_url` | string or null | No | HTTPS URL of a PNG/JPG logo to embed. Max 1MB. Null uses default TaxOptimizer branding. Enterprise only. |
+| `white_label_logo_url` | string or null | No | HTTPS URL of a PNG/JPG logo to embed. Max 1MB. Null uses default TaxKlaro branding. Enterprise only. |
 
 **Validation rules:**
 - `"FORM_1701"` is only valid if computation's `form_type == "FORM_1701"`. Returns `422 ERR_VALIDATION_FAILED` with message `"FORM_1701 export not applicable for this computation. This computation uses Form 1701A."` otherwise.
@@ -1475,7 +1475,7 @@ Check the status of a pending export, or download the completed PDF.
   }
   ```
 
-- `status == "COMPLETE"`: Returns `302 Found` redirect to a signed S3 URL for the PDF file. The signed URL is valid for 60 minutes. Header: `Location: https://s3.ap-southeast-1.amazonaws.com/taxoptimizer-exports/...?X-Amz-Signature=...`. The client follows the redirect to download the PDF directly from S3.
+- `status == "COMPLETE"`: Returns `302 Found` redirect to a signed S3 URL for the PDF file. The signed URL is valid for 60 minutes. Header: `Location: https://s3.ap-southeast-1.amazonaws.com/taxklaro-exports/...?X-Amz-Signature=...`. The client follows the redirect to download the PDF directly from S3.
 
 - `status == "FAILED"`: Returns `200 OK` with JSON body:
   ```json
@@ -1592,7 +1592,7 @@ List all clients under the authenticated CPA.
 
 ### 10.2 `POST /clients`
 
-Add a client to the CPA's roster. The client must have a registered TaxOptimizer account.
+Add a client to the CPA's roster. The client must have a registered TaxKlaro account.
 
 **Authentication required:** Session cookie or API key. Requires CPA role + Enterprise.
 
@@ -1600,7 +1600,7 @@ Add a client to the CPA's roster. The client must have a registered TaxOptimizer
 
 | Field | Type | Required | Validation |
 |-------|------|----------|-----------|
-| `client_email` | string | Yes | Email of existing TaxOptimizer account. Must not already be in this CPA's client list. |
+| `client_email` | string | Yes | Email of existing TaxKlaro account. Must not already be in this CPA's client list. |
 | `display_name` | string | No | Custom display name for this client in CPA dashboard. Max 200 chars. Default: client's registered full name. |
 | `notes` | string | No | Free-text notes about this client. Max 2000 chars. Default: `""`. |
 
@@ -1710,7 +1710,7 @@ Returns updated client object (same shape as `GET /clients/:client_id` without `
 
 ### 10.5 `DELETE /clients/:client_id`
 
-Remove a client from the CPA's roster. Does NOT delete the client's TaxOptimizer account or computations.
+Remove a client from the CPA's roster. Does NOT delete the client's TaxKlaro account or computations.
 
 **Authentication required:** Session cookie or API key. Owning CPA only. Enterprise only.
 
@@ -2142,16 +2142,16 @@ Create a Stripe Checkout session to subscribe or upgrade.
 |-------|------|----------|-----------|
 | `plan` | string | Yes | `"PRO"` or `"ENTERPRISE"`. Cannot subscribe to `"FREE"` (that's the default). |
 | `billing_cycle` | string | Yes | `"MONTHLY"` or `"ANNUAL"` |
-| `success_url` | string | Yes | HTTPS URL on `taxoptimizer.ph` domain to redirect after successful payment |
-| `cancel_url` | string | Yes | HTTPS URL on `taxoptimizer.ph` domain to redirect if user cancels checkout |
+| `success_url` | string | Yes | HTTPS URL on `taxklaro.ph` domain to redirect after successful payment |
+| `cancel_url` | string | Yes | HTTPS URL on `taxklaro.ph` domain to redirect if user cancels checkout |
 
 **Example request:**
 ```json
 {
   "plan": "PRO",
   "billing_cycle": "MONTHLY",
-  "success_url": "https://taxoptimizer.ph/dashboard?subscription=success",
-  "cancel_url": "https://taxoptimizer.ph/pricing?subscription=cancelled"
+  "success_url": "https://taxklaro.ph/dashboard?subscription=success",
+  "cancel_url": "https://taxklaro.ph/pricing?subscription=cancelled"
 }
 ```
 
@@ -2190,11 +2190,11 @@ Create a Stripe Customer Portal session. Allows user to manage billing: update p
 
 | Field | Type | Required | Validation |
 |-------|------|----------|-----------|
-| `return_url` | string | Yes | HTTPS URL on `taxoptimizer.ph` to redirect when user exits portal |
+| `return_url` | string | Yes | HTTPS URL on `taxklaro.ph` to redirect when user exits portal |
 
 **Example request:**
 ```json
-{ "return_url": "https://taxoptimizer.ph/settings/billing" }
+{ "return_url": "https://taxklaro.ph/settings/billing" }
 ```
 
 **Response: `200 OK`**

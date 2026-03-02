@@ -38,14 +38,14 @@
 ```
                          ┌─────────────────────────────────────────────────────┐
                          │                   USERS                              │
-                         │  Browser (taxoptimizer.ph) / API client / CPA tool  │
+                         │  Browser (taxklaro.ph) / API client / CPA tool  │
                          └───────────────────────┬─────────────────────────────┘
                                                  │ HTTPS
                          ┌───────────────────────▼─────────────────────────────┐
                          │              Cloudflare (DNS + WAF + CDN)            │
-                         │  taxoptimizer.ph  /  api.taxoptimizer.ph             │
+                         │  taxklaro.ph  /  api.taxklaro.ph             │
                          └────┬──────────────────────────────┬──────────────────┘
-                              │ taxoptimizer.ph               │ api.taxoptimizer.ph
+                              │ taxklaro.ph               │ api.taxklaro.ph
                ┌──────────────▼────────────┐   ┌─────────────▼──────────────────┐
                │     Vercel (Frontend)      │   │       Fly.io (API Server)       │
                │  Next.js 15 (App Router)   │   │   Node.js 22 / Express 5.x     │
@@ -103,14 +103,14 @@
 
 ### 3.2 Vercel Project Configuration
 
-**Project name:** `taxoptimizer-ph`
+**Project name:** `taxklaro-ph`
 **Git branch → environment mapping:**
 
 | Branch | Vercel Environment | Domain |
 |--------|-------------------|--------|
-| `main` | Production | `taxoptimizer.ph` |
-| `staging` | Preview | `staging.taxoptimizer.ph` |
-| Any PR branch | Preview | `taxoptimizer-ph-git-<branch>-<team>.vercel.app` |
+| `main` | Production | `taxklaro.ph` |
+| `staging` | Preview | `staging.taxklaro.ph` |
+| Any PR branch | Preview | `taxklaro-ph-git-<branch>-<team>.vercel.app` |
 
 **Build command:**
 ```bash
@@ -132,13 +132,13 @@ All variables set in Vercel Dashboard → Project Settings → Environment Varia
 
 | Variable | Environments | Description |
 |----------|-------------|-------------|
-| `NEXT_PUBLIC_API_URL` | Production, Preview | `https://api.taxoptimizer.ph/v1` (Production) / `https://api.staging.taxoptimizer.ph/v1` (Preview) |
+| `NEXT_PUBLIC_API_URL` | Production, Preview | `https://api.taxklaro.ph/v1` (Production) / `https://api.staging.taxklaro.ph/v1` (Preview) |
 | `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | All | Google OAuth client ID for browser-side OAuth initiation |
 | `NEXT_PUBLIC_SENTRY_DSN` | All | Sentry DSN for client-side error tracking |
 | `NEXT_PUBLIC_PAYMONGO_PUBLIC_KEY` | All | PayMongo publishable key for client-side payment element |
 | `SENTRY_AUTH_TOKEN` | All | Sentry auth token for source map uploads during build |
-| `SENTRY_ORG` | All | `taxoptimizer-ph` |
-| `SENTRY_PROJECT` | All | `taxoptimizer-ph-frontend` |
+| `SENTRY_ORG` | All | `taxklaro-ph` |
+| `SENTRY_PROJECT` | All | `taxklaro-ph-frontend` |
 
 ### 3.4 Next.js Configuration (`next.config.js`)
 
@@ -166,7 +166,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: https://lh3.googleusercontent.com",
-              "connect-src 'self' https://api.taxoptimizer.ph https://sentry.io",
+              "connect-src 'self' https://api.taxklaro.ph https://sentry.io",
               "frame-src https://accounts.google.com https://js.paymongo.com",
             ].join('; ')
           },
@@ -193,7 +193,7 @@ npm install -g vercel@latest
 vercel login
 
 # Link project (one-time)
-vercel link --project taxoptimizer-ph
+vercel link --project taxklaro-ph
 
 # Deploy to production
 vercel --prod
@@ -226,7 +226,7 @@ vercel env pull .env.local
 ### 4.2 Fly.io Application Configuration (`fly.toml`)
 
 ```toml
-app = "taxoptimizer-api"
+app = "taxklaro-api"
 primary_region = "sin"
 
 [build]
@@ -301,7 +301,7 @@ curl -L https://fly.io/install.sh | sh
 flyctl auth login
 
 # Create app (one-time)
-flyctl apps create taxoptimizer-api --org taxoptimizer
+flyctl apps create taxklaro-api --org taxklaro
 
 # Set secrets (one-time per environment)
 flyctl secrets set \
@@ -319,26 +319,26 @@ flyctl secrets set \
   R2_ACCOUNT_ID="..." \
   R2_ACCESS_KEY_ID="..." \
   R2_SECRET_ACCESS_KEY="..." \
-  R2_BUCKET_NAME="taxoptimizer-exports" \
-  -a taxoptimizer-api
+  R2_BUCKET_NAME="taxklaro-exports" \
+  -a taxklaro-api
 
 # Deploy (CI uses this)
-flyctl deploy --remote-only -a taxoptimizer-api
+flyctl deploy --remote-only -a taxklaro-api
 
 # Scale to 2 instances (one-time after first deploy)
-flyctl scale count 2 -a taxoptimizer-api
+flyctl scale count 2 -a taxklaro-api
 
 # Check instance status
-flyctl status -a taxoptimizer-api
+flyctl status -a taxklaro-api
 
 # Tail live logs
-flyctl logs -a taxoptimizer-api
+flyctl logs -a taxklaro-api
 
 # SSH into a running machine
-flyctl ssh console -a taxoptimizer-api
+flyctl ssh console -a taxklaro-api
 
 # Rollback to previous image (get image from flyctl releases list)
-flyctl deploy --image registry.fly.io/taxoptimizer-api:<previous-version> -a taxoptimizer-api
+flyctl deploy --image registry.fly.io/taxklaro-api:<previous-version> -a taxklaro-api
 ```
 
 ### 4.5 Auto-scaling Rules
@@ -356,11 +356,11 @@ The API server, PDF worker, and batch worker all run in the same Fly.io organiza
 
 | Service | Internal Fly DNS |
 |---------|-----------------|
-| API server | `taxoptimizer-api.internal` |
-| PDF worker | `taxoptimizer-pdf.internal` |
-| Batch worker | `taxoptimizer-batch.internal` |
+| API server | `taxklaro-api.internal` |
+| PDF worker | `taxklaro-pdf.internal` |
+| Batch worker | `taxklaro-batch.internal` |
 
-The API server calls the PDF worker at `http://taxoptimizer-pdf.internal:3002/generate` and the batch worker at `http://taxoptimizer-batch.internal:3003/jobs`.
+The API server calls the PDF worker at `http://taxklaro-pdf.internal:3002/generate` and the batch worker at `http://taxklaro-batch.internal:3003/jobs`.
 
 ---
 
@@ -460,7 +460,7 @@ The PDF worker is a separate Fly.io application that runs Puppeteer (headless Ch
 ### 6.2 Fly.io Configuration (`fly-pdf.toml`)
 
 ```toml
-app = "taxoptimizer-pdf"
+app = "taxklaro-pdf"
 primary_region = "sin"
 
 [build]
@@ -560,19 +560,19 @@ The API server passes the PDF binary stream directly to Cloudflare R2 storage an
 
 ```bash
 # Create app (one-time)
-flyctl apps create taxoptimizer-pdf --org taxoptimizer
+flyctl apps create taxklaro-pdf --org taxklaro
 
 # Set secrets
 flyctl secrets set \
   R2_ACCOUNT_ID="..." \
   R2_ACCESS_KEY_ID="..." \
   R2_SECRET_ACCESS_KEY="..." \
-  R2_BUCKET_NAME="taxoptimizer-exports" \
+  R2_BUCKET_NAME="taxklaro-exports" \
   INTERNAL_API_SECRET="..." \
-  -a taxoptimizer-pdf
+  -a taxklaro-pdf
 
 # Deploy
-flyctl deploy --config fly-pdf.toml --remote-only -a taxoptimizer-pdf
+flyctl deploy --config fly-pdf.toml --remote-only -a taxklaro-pdf
 ```
 
 ---
@@ -587,7 +587,7 @@ The batch worker processes asynchronous computation jobs submitted by Enterprise
 
 ```bash
 # Create Upstash Redis extension for the batch worker (one-time)
-flyctl ext storage create --org taxoptimizer --name taxoptimizer-redis --app taxoptimizer-batch
+flyctl ext storage create --org taxklaro --name taxklaro-redis --app taxklaro-batch
 ```
 
 This creates a managed Upstash Redis instance in the same region (`sin`) as the batch worker. Fly.io injects `REDIS_URL` into the batch worker's environment automatically.
@@ -595,7 +595,7 @@ This creates a managed Upstash Redis instance in the same region (`sin`) as the 
 ### 7.3 Fly.io Configuration (`fly-batch.toml`)
 
 ```toml
-app = "taxoptimizer-batch"
+app = "taxklaro-batch"
 primary_region = "sin"
 
 [build]
@@ -653,10 +653,10 @@ CMD ["node", "dist/batch-server.js"]
 
 ```bash
 # Create app (one-time)
-flyctl apps create taxoptimizer-batch --org taxoptimizer
+flyctl apps create taxklaro-batch --org taxklaro
 
 # Create Redis extension (one-time)
-flyctl ext storage create --org taxoptimizer --name taxoptimizer-redis --app taxoptimizer-batch
+flyctl ext storage create --org taxklaro --name taxklaro-redis --app taxklaro-batch
 
 # Set secrets
 flyctl secrets set \
@@ -664,10 +664,10 @@ flyctl secrets set \
   INTERNAL_API_SECRET="..." \
   RESEND_API_KEY="..." \
   SENTRY_DSN="..." \
-  -a taxoptimizer-batch
+  -a taxklaro-batch
 
 # Deploy
-flyctl deploy --config fly-batch.toml --remote-only -a taxoptimizer-batch
+flyctl deploy --config fly-batch.toml --remote-only -a taxklaro-batch
 ```
 
 ---
@@ -678,36 +678,36 @@ flyctl deploy --config fly-batch.toml --remote-only -a taxoptimizer-batch
 
 - **Service:** Resend (transactional email)
 - **Plan:** Pro ($20/month — 50,000 emails/month)
-- **Sending domain:** `mail.taxoptimizer.ph` (subdomain of production domain)
-- **From address (transactional):** `noreply@mail.taxoptimizer.ph`
-- **From name (transactional):** `TaxOptimizer PH`
-- **Reply-to:** `support@taxoptimizer.ph`
+- **Sending domain:** `mail.taxklaro.ph` (subdomain of production domain)
+- **From address (transactional):** `noreply@mail.taxklaro.ph`
+- **From name (transactional):** `TaxKlaro`
+- **Reply-to:** `support@taxklaro.ph`
 
 ### 8.2 DNS Records for Resend
 
-The following DNS records must be added to the `taxoptimizer.ph` zone in Cloudflare:
+The following DNS records must be added to the `taxklaro.ph` zone in Cloudflare:
 
 | Type | Name | Value | TTL |
 |------|------|-------|-----|
-| TXT | `mail.taxoptimizer.ph` | `v=spf1 include:amazonses.com ~all` | 300 |
-| CNAME | `resend._domainkey.mail.taxoptimizer.ph` | `resend._domainkey.resend.com` | 300 |
-| CNAME | `em1234.mail.taxoptimizer.ph` | `u1234.wl234.sendgrid.net` (Resend provides actual value) | 300 |
-| TXT | `_dmarc.taxoptimizer.ph` | `v=DMARC1; p=quarantine; rua=mailto:dmarc@taxoptimizer.ph` | 300 |
+| TXT | `mail.taxklaro.ph` | `v=spf1 include:amazonses.com ~all` | 300 |
+| CNAME | `resend._domainkey.mail.taxklaro.ph` | `resend._domainkey.resend.com` | 300 |
+| CNAME | `em1234.mail.taxklaro.ph` | `u1234.wl234.sendgrid.net` (Resend provides actual value) | 300 |
+| TXT | `_dmarc.taxklaro.ph` | `v=DMARC1; p=quarantine; rua=mailto:dmarc@taxklaro.ph` | 300 |
 
-The actual CNAME values for DKIM are provided by Resend upon domain verification. The DMARC `rua` address `dmarc@taxoptimizer.ph` must be a functional mailbox (MX records pointing to the operator's email provider of choice).
+The actual CNAME values for DKIM are provided by Resend upon domain verification. The DMARC `rua` address `dmarc@taxklaro.ph` must be a functional mailbox (MX records pointing to the operator's email provider of choice).
 
 ### 8.3 Email Templates and Triggers
 
 | Template | Subject | Trigger |
 |----------|---------|---------|
-| `email-verification` | `Verify your TaxOptimizer PH email address` | POST /auth/register |
-| `password-reset` | `Reset your TaxOptimizer PH password` | POST /auth/forgot-password |
-| `welcome` | `Welcome to TaxOptimizer PH — here's what to do first` | Email verified |
+| `email-verification` | `Verify your TaxKlaro email address` | POST /auth/register |
+| `password-reset` | `Reset your TaxKlaro password` | POST /auth/forgot-password |
+| `welcome` | `Welcome to TaxKlaro — here's what to do first` | Email verified |
 | `subscription-activated` | `Your PRO subscription is now active` | Subscription created (PRO or ENT) |
 | `subscription-cancelling` | `Your subscription ends on [date]` | Subscription cancel-at-period-end set |
 | `subscription-expired` | `Your PRO subscription has ended` | Subscription status → EXPIRED |
-| `payment-failed` | `Action required: Payment failed for TaxOptimizer PH` | PayMongo/Stripe webhook: payment_intent.payment_failed |
-| `invoice-paid` | `Receipt for your TaxOptimizer PH subscription` | Invoice paid |
+| `payment-failed` | `Action required: Payment failed for TaxKlaro` | PayMongo/Stripe webhook: payment_intent.payment_failed |
+| `invoice-paid` | `Receipt for your TaxKlaro subscription` | Invoice paid |
 | `batch-complete` | `Your batch computation is ready` | Batch job status → COMPLETED |
 | `batch-failed` | `Your batch job encountered errors` | Batch job status → FAILED |
 
@@ -717,7 +717,7 @@ All email templates are React components rendered server-side using `@react-emai
 
 ```bash
 # Set Resend API key in production (Fly.io secret)
-flyctl secrets set RESEND_API_KEY="re_..." -a taxoptimizer-api
+flyctl secrets set RESEND_API_KEY="re_..." -a taxklaro-api
 
 # Verify domain (run once after adding DNS records)
 # Done via Resend dashboard, not CLI
@@ -731,7 +731,7 @@ flyctl secrets set RESEND_API_KEY="re_..." -a taxoptimizer-api
 
 - **Purpose:** Primary payment processor for Philippine users paying in PHP
 - **Supported methods:** GCash (LinkIntent), Maya (LinkIntent), Visa/Mastercard (PaymentIntent), BancNet
-- **Webhook endpoint:** `POST https://api.taxoptimizer.ph/v1/billing/webhooks/paymongo`
+- **Webhook endpoint:** `POST https://api.taxklaro.ph/v1/billing/webhooks/paymongo`
 - **Webhook signature validation:** `PAYMONGO_WEBHOOK_SECRET` environment variable (see environment.md)
 - **PayMongo webhook events subscribed:**
   - `payment.paid` — mark invoice paid, activate subscription
@@ -743,7 +743,7 @@ flyctl secrets set RESEND_API_KEY="re_..." -a taxoptimizer-api
 **PayMongo dashboard setup (one-time):**
 1. Create account at dashboard.paymongo.com
 2. Complete KYB with business registration documents (SEC/DTI registration, valid ID)
-3. Set webhook URL: `https://api.taxoptimizer.ph/v1/billing/webhooks/paymongo`
+3. Set webhook URL: `https://api.taxklaro.ph/v1/billing/webhooks/paymongo`
 4. Retrieve public key → set `NEXT_PUBLIC_PAYMONGO_PUBLIC_KEY` in Vercel
 5. Retrieve secret key → set `PAYMONGO_SECRET_KEY` in Fly.io
 6. Retrieve webhook signing secret → set `PAYMONGO_WEBHOOK_SECRET` in Fly.io
@@ -752,7 +752,7 @@ flyctl secrets set RESEND_API_KEY="re_..." -a taxoptimizer-api
 
 - **Purpose:** Fallback payment processor for non-Philippine users or failed PayMongo payments
 - **Supported methods:** Visa/Mastercard/Amex international, Apple Pay, Google Pay
-- **Webhook endpoint:** `POST https://api.taxoptimizer.ph/v1/billing/webhooks/stripe`
+- **Webhook endpoint:** `POST https://api.taxklaro.ph/v1/billing/webhooks/stripe`
 - **Webhook signature validation:** `STRIPE_WEBHOOK_SECRET` environment variable
 - **Stripe webhook events subscribed:**
   - `customer.subscription.created` — new Stripe subscription
@@ -781,7 +781,7 @@ stripe trigger invoice.payment_succeeded
 ```bash
 # Add webhook endpoint via Stripe CLI
 stripe webhook_endpoints create \
-  --url "https://api.taxoptimizer.ph/v1/billing/webhooks/stripe" \
+  --url "https://api.taxklaro.ph/v1/billing/webhooks/stripe" \
   --enabled-events "customer.subscription.created,customer.subscription.updated,customer.subscription.deleted,invoice.payment_succeeded,invoice.payment_failed,payment_intent.payment_failed"
 
 # Retrieve signing secret (shown once on creation)
@@ -796,12 +796,12 @@ stripe webhook_endpoints create \
 
 - **Service:** Sentry
 - **Plan:** Team ($26/month — 100K errors/month, 250K performance spans/month)
-- **Organization slug:** `taxoptimizer-ph`
+- **Organization slug:** `taxklaro-ph`
 - **Projects:**
-  - `taxoptimizer-ph-frontend` — Next.js client and server components
-  - `taxoptimizer-ph-api` — Express API server
-  - `taxoptimizer-ph-pdf` — PDF worker
-  - `taxoptimizer-ph-batch` — Batch worker
+  - `taxklaro-ph-frontend` — Next.js client and server components
+  - `taxklaro-ph-api` — Express API server
+  - `taxklaro-ph-pdf` — PDF worker
+  - `taxklaro-ph-batch` — Batch worker
 
 ### 10.2 Sentry SDK Initialization
 
@@ -859,7 +859,7 @@ Where `SENTRY_RELEASE` is set to the Git commit SHA: `export SENTRY_RELEASE=$(gi
 ### 11.1 Cloudflare R2 (PDF Storage)
 
 - **Purpose:** Store generated PDF exports for download
-- **Bucket name:** `taxoptimizer-exports`
+- **Bucket name:** `taxklaro-exports`
 - **Region:** Automatic (Cloudflare global; physically stored closest to Singapore)
 - **Access:** Private (no public access by default). API server generates pre-signed URLs valid for 24 hours.
 - **Retention:** PDFs deleted after 30 days (lifecycle rule — see database/retention.md)
@@ -874,10 +874,10 @@ npm install -g wrangler@latest
 wrangler login
 
 # Create bucket
-wrangler r2 bucket create taxoptimizer-exports
+wrangler r2 bucket create taxklaro-exports
 
 # Set lifecycle rule to delete objects after 30 days
-wrangler r2 bucket lifecycle add taxoptimizer-exports \
+wrangler r2 bucket lifecycle add taxklaro-exports \
   --rule-name "delete-old-pdfs" \
   --prefix "" \
   --expiration-days 30
@@ -889,18 +889,18 @@ wrangler r2 bucket lifecycle add taxoptimizer-exports \
 
 ### 11.2 Cloudflare CDN Configuration
 
-Cloudflare sits in front of both `taxoptimizer.ph` (proxied to Vercel) and `api.taxoptimizer.ph` (proxied to Fly.io).
+Cloudflare sits in front of both `taxklaro.ph` (proxied to Vercel) and `api.taxklaro.ph` (proxied to Fly.io).
 
 **Page Rules (configured in Cloudflare Dashboard → Rules → Page Rules):**
 
 | Pattern | Rule | Setting |
 |---------|------|---------|
-| `taxoptimizer.ph/blog/*` | Cache Level | Cache Everything; Edge TTL 3600s |
-| `taxoptimizer.ph/_next/static/*` | Cache Level | Cache Everything; Browser TTL 31536000s |
-| `taxoptimizer.ph/api/*` | Cache Level | Bypass |
-| `api.taxoptimizer.ph/*` | Cache Level | Bypass |
-| `taxoptimizer.ph/compute` | Cache Level | Bypass |
-| `taxoptimizer.ph/dashboard/*` | Cache Level | Bypass |
+| `taxklaro.ph/blog/*` | Cache Level | Cache Everything; Edge TTL 3600s |
+| `taxklaro.ph/_next/static/*` | Cache Level | Cache Everything; Browser TTL 31536000s |
+| `taxklaro.ph/api/*` | Cache Level | Bypass |
+| `api.taxklaro.ph/*` | Cache Level | Bypass |
+| `taxklaro.ph/compute` | Cache Level | Bypass |
+| `taxklaro.ph/dashboard/*` | Cache Level | Bypass |
 
 **WAF Rules (Cloudflare Dashboard → Security → WAF):**
 
@@ -965,9 +965,9 @@ All production secrets are stored in the respective platform's secret manager �
 |--------|-------------|--------------|-----------|
 | Internet | Cloudflare edge | TCP 443 (HTTPS) | All |
 | Cloudflare edge | Vercel | TCP 443 | Proxied DNS record |
-| Cloudflare edge | Fly.io `taxoptimizer-api` | TCP 443 | Proxied DNS record |
-| Fly 6PN | `taxoptimizer-pdf` port 3002 | TCP (private) | Only `taxoptimizer-api.internal` |
-| Fly 6PN | `taxoptimizer-batch` port 3003 | TCP (private) | Only `taxoptimizer-api.internal` |
+| Cloudflare edge | Fly.io `taxklaro-api` | TCP 443 | Proxied DNS record |
+| Fly 6PN | `taxklaro-pdf` port 3002 | TCP (private) | Only `taxklaro-api.internal` |
+| Fly 6PN | `taxklaro-batch` port 3003 | TCP (private) | Only `taxklaro-api.internal` |
 | Supabase | None (client-only) | N/A | App initiates; no inbound from Supabase |
 
 ### 13.2 Outbound Traffic
@@ -975,8 +975,8 @@ All production secrets are stored in the respective platform's secret manager �
 | Source | Destination | Purpose |
 |--------|-------------|---------|
 | API server | Supabase pooler | Database queries |
-| API server | `taxoptimizer-pdf.internal` | PDF generation requests |
-| API server | `taxoptimizer-batch.internal` | Batch job enqueue |
+| API server | `taxklaro-pdf.internal` | PDF generation requests |
+| API server | `taxklaro-batch.internal` | Batch job enqueue |
 | API server | `api.resend.com` | Email sending |
 | API server | `api.paymongo.com` | Payment operations |
 | API server | `api.stripe.com` | Payment operations |
@@ -1008,8 +1008,8 @@ All production secrets are stored in the respective platform's secret manager �
 | API server machine crash | Fly health check fails within 15s | Fly restarts machine within 30s; other machine handles traffic | Tail logs, investigate root cause |
 | Database connection loss | API returns 503 on DB queries | N/A (no auto-reconnect at infra level; app-level retry x3) | Check Supabase status page; verify connection string |
 | Supabase planned maintenance | Supabase status page | Maintenance window is Sunday 02:00–04:00 PHT; API returns 503 | Schedule known maintenance in advance; notify users |
-| PDF worker crash | PDF export requests fail (API returns 500) | Fly restarts PDF worker within 30s; pending export retried once by API | Check `taxoptimizer-pdf` logs; verify Chromium binary exists |
-| Batch worker crash | Bull job remains `active` without completion | Bull `stalled` detection after 30s; job re-queued automatically | Check `taxoptimizer-batch` logs; manually mark stalled jobs |
+| PDF worker crash | PDF export requests fail (API returns 500) | Fly restarts PDF worker within 30s; pending export retried once by API | Check `taxklaro-pdf` logs; verify Chromium binary exists |
+| Batch worker crash | Bull job remains `active` without completion | Bull `stalled` detection after 30s; job re-queued automatically | Check `taxklaro-batch` logs; manually mark stalled jobs |
 | R2 outage | PDF upload fails | API returns 500 for export requests | Retry manually after R2 recovery; no data loss (computation stored in DB) |
 | PayMongo outage | Payment fails | Frontend shows "Payment temporarily unavailable, try Stripe" | Monitor paymongostatuspage.com |
 | Vercel outage | Frontend unavailable | N/A (Vercel is sole frontend host) | Deploy to Cloudflare Pages as fallback (requires separate config, not pre-provisioned) |

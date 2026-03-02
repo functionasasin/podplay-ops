@@ -49,13 +49,13 @@ This file is the single canonical source for every string of text a user sees an
 
 ### 1.1 Product Name
 
-**Full product name:** TaxOptimizer PH
+**Full product name:** TaxKlaro
 
-**Short name (logo text, app title, browser tab prefix):** TaxOptimizer
+**Short name (logo text, app title, browser tab prefix):** TaxKlaro
 
-**Browser tab title format:** `{Page Name} — TaxOptimizer`
+**Browser tab title format:** `{Page Name} — TaxKlaro`
 
-**OG / social share title:** TaxOptimizer PH — Philippine Freelance & Self-Employed Tax Calculator
+**OG / social share title:** TaxKlaro — Philippine Freelance & Self-Employed Tax Calculator
 
 ### 1.2 Core Taglines
 
@@ -91,7 +91,7 @@ This file is the single canonical source for every string of text a user sees an
 
 | Element | Copy |
 |---------|------|
-| Logo alt text | "TaxOptimizer PH — Philippine Freelance Tax Calculator" |
+| Logo alt text | "TaxKlaro — Philippine Freelance Tax Calculator" |
 | Nav link 1 | "Compute Tax" |
 | Nav link 2 | "How It Works" |
 | Nav link 3 | "Pricing" |
@@ -108,7 +108,7 @@ This file is the single canonical source for every string of text a user sees an
 
 | Element | Copy |
 |---------|------|
-| Drawer header | "TaxOptimizer" |
+| Drawer header | "TaxKlaro" |
 | Menu item 1 | "Compute Tax" |
 | Menu item 2 | "How It Works" |
 | Menu item 3 | "Pricing" |
@@ -137,7 +137,7 @@ This file is the single canonical source for every string of text a user sees an
 | Legal | "Disclaimer", "Cookie Policy" |
 | Social | "Follow us on Facebook", "Follow us on Instagram", "Join our Telegram Group" |
 
-**Footer copyright line:** "© 2026 TaxOptimizer PH. Not affiliated with the Bureau of Internal Revenue."
+**Footer copyright line:** "© 2026 TaxKlaro. Not affiliated with the Bureau of Internal Revenue."
 
 **Footer disclaimer (compact version):** "Computations are for guidance only and do not constitute professional tax advice. Always verify with a licensed CPA or BIR before filing. See full [Disclaimer](/disclaimer)."
 
@@ -147,7 +147,7 @@ This file is the single canonical source for every string of text a user sees an
 
 ### 3.1 Hero Section
 
-**Browser tab title:** "Philippine Freelance Tax Calculator — TaxOptimizer PH"
+**Browser tab title:** "Philippine Freelance Tax Calculator — TaxKlaro"
 
 **Hero headline (H1):** "Find Your Lowest Legal Tax — In 30 Seconds"
 
@@ -181,7 +181,7 @@ This file is the single canonical source for every string of text a user sees an
 
 ### 3.3 Solution Section
 
-**Section heading (H2):** "TaxOptimizer Computes All Three Methods — Instantly"
+**Section heading (H2):** "TaxKlaro Computes All Three Methods — Instantly"
 
 **Section subheading:** "Enter your income and expenses. We compute your tax under every BIR-allowed method and show you exactly which one saves you the most."
 
@@ -230,7 +230,7 @@ This file is the single canonical source for every string of text a user sees an
 **Testimonial 1 quote:** "\"I had no idea the 8% option existed. This tool showed me I was overpaying by ₱35,000 every year. I could have bought a laptop with that.\""
 
 **Testimonial 2 attribution:** "Freelance web developer, Cebu"
-**Testimonial 2 quote:** "\"My CPA was charging ₱6,500/year just to file my return. I switched to TaxOptimizer and learned I could file the same return myself — and that I was on the wrong regime.\""
+**Testimonial 2 quote:** "\"My CPA was charging ₱6,500/year just to file my return. I switched to TaxKlaro and learned I could file the same return myself — and that I was on the wrong regime.\""
 
 **Testimonial 3 attribution:** "Licensed architect, Manila"
 **Testimonial 3 quote:** "\"Finally a tool that explains the difference between 8% and graduated rates in plain Filipino context. Every professional should run this before their Q1 filing.\""
@@ -273,7 +273,7 @@ This file is the single canonical source for every string of text a user sees an
 **Section heading (H2):** "Common Questions"
 
 **Q1:** "Is this tool accurate? Can I use it to actually file?"
-**A1:** "TaxOptimizer computes your tax using the exact formulas from the NIRC (National Internal Revenue Code), as amended by the TRAIN Law (RA 10963), EOPT Act (RA 11976), and CREATE Law (RA 11534). The computation engine is deterministic — it always produces the same output for the same inputs. However, this tool is a computation aid, not a filing platform. Always verify your results with a licensed CPA before filing, especially for complex cases."
+**A1:** "TaxKlaro computes your tax using the exact formulas from the NIRC (National Internal Revenue Code), as amended by the TRAIN Law (RA 10963), EOPT Act (RA 11976), and CREATE Law (RA 11534). The computation engine is deterministic — it always produces the same output for the same inputs. However, this tool is a computation aid, not a filing platform. Always verify your results with a licensed CPA before filing, especially for complex cases."
 
 **Q2:** "Is the 8% option always better?"
 **A2:** "No — but it is usually better for service-based freelancers earning below ₱3,000,000. The 8% option (Sec. 24(A)(2)(b) of the NIRC) beats the Graduated + OSD method at virtually every income level. However, if your actual business expenses exceed 57% of gross receipts (for income above ₱400,000), Graduated + Itemized Deductions may produce a lower tax. Run the optimizer to find out which is best for your specific numbers."
@@ -306,7 +306,7 @@ This file is the single canonical source for every string of text a user sees an
 
 ### 4.1 Sign Up Page
 
-**Page title (browser tab):** "Create Account — TaxOptimizer"
+**Page title (browser tab):** "Create Account — TaxKlaro"
 **Heading:** "Create Your Free Account"
 **Subheading:** "Save your computations, track quarterly filings, and access your tax history from any device."
 
@@ -347,7 +347,7 @@ This file is the single canonical source for every string of text a user sees an
 
 ### 4.2 Log In Page
 
-**Page title (browser tab):** "Log In — TaxOptimizer"
+**Page title (browser tab):** "Log In — TaxKlaro"
 **Heading:** "Welcome back"
 **Subheading:** "Log in to view your saved computations."
 
@@ -375,7 +375,7 @@ This file is the single canonical source for every string of text a user sees an
 
 ### 4.3 Forgot Password Page
 
-**Page title:** "Reset Password — TaxOptimizer"
+**Page title:** "Reset Password — TaxKlaro"
 **Heading:** "Reset your password"
 **Subheading:** "Enter your email address and we'll send you a link to create a new password."
 
@@ -393,7 +393,7 @@ This file is the single canonical source for every string of text a user sees an
 
 ### 4.4 Reset Password Page
 
-**Page title:** "Create New Password — TaxOptimizer"
+**Page title:** "Create New Password — TaxKlaro"
 **Heading:** "Create a new password"
 
 **Field: new_password**
@@ -1467,7 +1467,7 @@ Blue card (manual review flag):
 - Sub-label (Pro): "Formatted tax summary PDF"
 - Sub-label (Free): "Pro feature — upgrade to unlock"
 - Loading state: "Generating PDF…"
-- Success: Browser downloads file named "TaxOptimizer_{year}_{period}_{date}.pdf"
+- Success: Browser downloads file named "TaxKlaro_{year}_{period}_{date}.pdf"
 - Error toast: "PDF generation failed. Please try again."
 - Upgrade prompt (free user clicks): "Download PDF is a Pro feature. Upgrade to Pro for ₱200/month to access PDF exports, computation history, and quarterly tracking."
 - Upgrade CTA: "Upgrade to Pro"
@@ -1562,7 +1562,7 @@ Blue card (manual review flag):
 **Body:** "We encountered an unexpected error. Your inputs have not been lost."
 **CTA 1:** "Try again"
 **CTA 2:** "Contact support"
-**Support link:** "[support@taxoptimizer.ph](mailto:support@taxoptimizer.ph)"
+**Support link:** "[support@taxklaro.ph](mailto:support@taxklaro.ph)"
 
 ### 10.2 Computation Engine Error (422 — invalid inputs)
 
@@ -1623,7 +1623,7 @@ Blue card (manual review flag):
 | Password changed | "Password updated successfully." |
 | Plan upgraded | "You're now on Pro! Enjoy your new features." |
 | Plan cancelled | "Your plan has been cancelled. You have access through {end_date}." |
-| Email verified | "Email verified. Welcome to TaxOptimizer!" |
+| Email verified | "Email verified. Welcome to TaxKlaro!" |
 
 ### 11.2 Error Toasts
 
@@ -1679,12 +1679,12 @@ Blue card (manual review flag):
 
 **API Access gate (Professional tier):**
 - Heading: "API Access — Professional Feature"
-- Body: "Integrate TaxOptimizer's computation engine into your own software via REST API."
+- Body: "Integrate TaxKlaro's computation engine into your own software via REST API."
 - CTA: "See Professional Plan"
 
 ### 12.2 Upgrade Page
 
-**Page title:** "Upgrade Your Plan — TaxOptimizer"
+**Page title:** "Upgrade Your Plan — TaxKlaro"
 **Heading:** "Choose Your Plan"
 **Subheading:** "Upgrade anytime. Cancel anytime. All prices in Philippine Pesos."
 
@@ -1738,7 +1738,7 @@ Blue card (manual review flag):
 
 ### 13.1 Dashboard Page
 
-**Page title (browser tab):** "My Computations — TaxOptimizer"
+**Page title (browser tab):** "My Computations — TaxKlaro"
 **Page heading:** "My Computations"
 **Subheading:** "All your saved tax computations, organized by year."
 
@@ -1773,7 +1773,7 @@ Blue card (manual review flag):
 
 ### 13.2 Computation Detail Page
 
-**Page title:** "{year} {period} Computation — TaxOptimizer"
+**Page title:** "{year} {period} Computation — TaxKlaro"
 **Back link:** "← Back to My Computations"
 **Re-run CTA:** "Re-run with new inputs"
 **Share CTA:** "Share Results"
@@ -1785,7 +1785,7 @@ Blue card (manual review flag):
 
 ### 14.1 Account Settings Page
 
-**Page title:** "Account Settings — TaxOptimizer"
+**Page title:** "Account Settings — TaxKlaro"
 **Page heading:** "Account Settings"
 
 **Section headings:** "Profile", "Security", "Notifications", "Billing & Plan", "Danger Zone"
@@ -1844,20 +1844,20 @@ Blue card (manual review flag):
 
 ### 15.1 Email: Verify Your Account
 
-**Subject:** "Verify your TaxOptimizer account"
+**Subject:** "Verify your TaxKlaro account"
 **Preview text:** "Click to verify your email and activate your account."
 **Heading:** "Verify your email address"
-**Body:** "Thanks for signing up! Click the button below to verify your email address and activate your TaxOptimizer account."
+**Body:** "Thanks for signing up! Click the button below to verify your email address and activate your TaxKlaro account."
 **CTA button:** "Verify My Email"
 **Link expiry note:** "This link expires in 24 hours."
-**Footer note:** "If you didn't create a TaxOptimizer account, you can safely ignore this email."
+**Footer note:** "If you didn't create a TaxKlaro account, you can safely ignore this email."
 
 ### 15.2 Email: Password Reset
 
-**Subject:** "Reset your TaxOptimizer password"
+**Subject:** "Reset your TaxKlaro password"
 **Preview text:** "We received a request to reset your password."
 **Heading:** "Reset your password"
-**Body:** "We received a request to reset the password for the TaxOptimizer account associated with {email}. Click the button below to create a new password."
+**Body:** "We received a request to reset the password for the TaxKlaro account associated with {email}. Click the button below to create a new password."
 **CTA button:** "Reset My Password"
 **Link expiry note:** "This link expires in 1 hour."
 **Footer note:** "If you didn't request a password reset, you can safely ignore this email. Your current password will not change."
@@ -1873,14 +1873,14 @@ Blue card (manual review flag):
 **Body paragraph 2 (Form 1701Q — Q2):** "Your Q2 Quarterly Income Tax Return (Form 1701Q) covers January 1–June 30, {tax_year} (cumulative). The deadline is August 15, {tax_year}."
 **Body paragraph 2 (Form 1701Q — Q3):** "Your Q3 Quarterly Income Tax Return (Form 1701Q) covers January 1–September 30, {tax_year} (cumulative). The deadline is November 15, {tax_year}."
 **CTA button:** "Compute My Tax Now"
-**Footer note:** "You're receiving this because you enabled deadline reminders in your TaxOptimizer account settings. [Unsubscribe from reminders](/unsubscribe?type=reminders)."
+**Footer note:** "You're receiving this because you enabled deadline reminders in your TaxKlaro account settings. [Unsubscribe from reminders](/unsubscribe?type=reminders)."
 
 ### 15.4 Email: Welcome (Post-Signup)
 
-**Subject:** "Welcome to TaxOptimizer — your account is ready"
+**Subject:** "Welcome to TaxKlaro — your account is ready"
 **Preview text:** "Start comparing your tax options for free."
 **Heading:** "You're in, {first_name}!"
-**Body:** "Your TaxOptimizer account is set up and ready. You can now compute your income tax, compare all three BIR-allowed methods, and save your results."
+**Body:** "Your TaxKlaro account is set up and ready. You can now compute your income tax, compare all three BIR-allowed methods, and save your results."
 **CTA button:** "Compute My Tax Now — Free"
 **Feature list heading:** "What you can do right now:"
 **Feature 1:** "Compare 8% flat rate vs Graduated method"
@@ -1902,10 +1902,10 @@ Blue card (manual review flag):
 
 ### 15.6 Email: Payment Receipt
 
-**Subject:** "TaxOptimizer receipt for ₱{amount}"
+**Subject:** "TaxKlaro receipt for ₱{amount}"
 **Preview text:** "Your {plan_name} subscription payment was received."
 **Heading:** "Payment Received"
-**Body:** "Thank you for your payment of ₱{amount} for your TaxOptimizer {plan_name} plan."
+**Body:** "Thank you for your payment of ₱{amount} for your TaxKlaro {plan_name} plan."
 **Line item:** "{plan_name} — {billing_period}: ₱{amount}"
 **Next billing:** "Next billing date: {next_date}"
 **CTA:** "Manage Billing"
@@ -1921,11 +1921,11 @@ Blue card (manual review flag):
 **Expanded disclaimer (shown on results page in collapsed/expandable section):**
 
 Section heading: "Important Disclaimer"
-Body: "TaxOptimizer PH provides this computation for informational and planning purposes only. The results shown are based on the inputs you provided and are computed using the formulas contained in the National Internal Revenue Code (NIRC) as amended by the TRAIN Law (RA 10963), CREATE Law (RA 11534), and the EOPT Act (RA 11976). While we make every effort to keep the engine accurate and up to date, TaxOptimizer PH makes no representation, warranty, or guarantee that these computations are error-free, complete, or applicable to your specific tax situation. Tax laws change, BIR interpretations evolve, and individual circumstances vary. This tool does not constitute legal or tax advice and does not create a client-adviser relationship. You are solely responsible for verifying these results with a licensed Certified Public Accountant (CPA) or BIR before filing any return or remitting any payment. TaxOptimizer PH shall not be liable for any tax deficiency, interest, penalty, or other consequence arising from reliance on these computations without professional verification."
+Body: "TaxKlaro provides this computation for informational and planning purposes only. The results shown are based on the inputs you provided and are computed using the formulas contained in the National Internal Revenue Code (NIRC) as amended by the TRAIN Law (RA 10963), CREATE Law (RA 11534), and the EOPT Act (RA 11976). While we make every effort to keep the engine accurate and up to date, TaxKlaro makes no representation, warranty, or guarantee that these computations are error-free, complete, or applicable to your specific tax situation. Tax laws change, BIR interpretations evolve, and individual circumstances vary. This tool does not constitute legal or tax advice and does not create a client-adviser relationship. You are solely responsible for verifying these results with a licensed Certified Public Accountant (CPA) or BIR before filing any return or remitting any payment. TaxKlaro shall not be liable for any tax deficiency, interest, penalty, or other consequence arising from reliance on these computations without professional verification."
 
 ### 16.2 Footer Disclaimer
 
-**Full text:** "TaxOptimizer PH provides tax computation tools for informational purposes only. Computations do not constitute professional tax advice. Always consult a licensed CPA before filing. TaxOptimizer PH is not affiliated with the Bureau of Internal Revenue (BIR) or the Philippine government. © 2026 TaxOptimizer PH."
+**Full text:** "TaxKlaro provides tax computation tools for informational purposes only. Computations do not constitute professional tax advice. Always consult a licensed CPA before filing. TaxKlaro is not affiliated with the Bureau of Internal Revenue (BIR) or the Philippine government. © 2026 TaxKlaro."
 
 ---
 
@@ -1933,7 +1933,7 @@ Body: "TaxOptimizer PH provides this computation for informational and planning 
 
 ### 17.1 404 Not Found
 
-**Page title:** "Page Not Found — TaxOptimizer"
+**Page title:** "Page Not Found — TaxKlaro"
 **Heading:** "404 — Page not found"
 **Body:** "The page you're looking for doesn't exist or has been moved."
 **CTA 1:** "Go to Home →"
@@ -1941,16 +1941,16 @@ Body: "TaxOptimizer PH provides this computation for informational and planning 
 
 ### 17.2 Scheduled Maintenance Page
 
-**Page title:** "Down for Maintenance — TaxOptimizer"
+**Page title:** "Down for Maintenance — TaxKlaro"
 **Heading:** "We'll be right back"
-**Body:** "TaxOptimizer is undergoing scheduled maintenance. We expect to be back in {estimated_duration}."
-**Status note:** "Check our [status page](https://status.taxoptimizer.ph) for real-time updates."
+**Body:** "TaxKlaro is undergoing scheduled maintenance. We expect to be back in {estimated_duration}."
+**Status note:** "Check our [status page](https://status.taxklaro.ph) for real-time updates."
 
 ### 17.3 Unplanned Outage Page
 
 **Heading:** "Temporarily unavailable"
 **Body:** "We're experiencing an issue and working to resolve it as quickly as possible. Your saved computations are safe."
-**Status note:** "Check our [status page](https://status.taxoptimizer.ph) for updates."
+**Status note:** "Check our [status page](https://status.taxklaro.ph) for updates."
 
 ---
 

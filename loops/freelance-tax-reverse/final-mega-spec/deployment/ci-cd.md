@@ -29,10 +29,10 @@
 
 ## 1. Repository Structure
 
-All code lives in a single GitHub repository named `taxoptimizer-ph`. The layout below is the complete directory structure the forward loop must create.
+All code lives in a single GitHub repository named `taxklaro-ph`. The layout below is the complete directory structure the forward loop must create.
 
 ```
-taxoptimizer-ph/
+taxklaro-ph/
 │
 ├── .github/
 │   └── workflows/
@@ -181,13 +181,13 @@ dist/
 
 | Component | Production Fly App | Staging Fly App |
 |-----------|-------------------|----------------|
-| API server | `taxoptimizer-api` | `taxoptimizer-api-staging` |
-| PDF worker | `taxoptimizer-pdf` | `taxoptimizer-pdf-staging` |
-| Batch worker | `taxoptimizer-batch` | `taxoptimizer-batch-staging` |
-| Frontend | Vercel `main` branch → `taxoptimizer.ph` | Vercel `staging` branch → `staging.taxoptimizer.ph` |
-| Database | Supabase project `taxoptimizer-prod` | Supabase project `taxoptimizer-staging` |
+| API server | `taxklaro-api` | `taxklaro-api-staging` |
+| PDF worker | `taxklaro-pdf` | `taxklaro-pdf-staging` |
+| Batch worker | `taxklaro-batch` | `taxklaro-batch-staging` |
+| Frontend | Vercel `main` branch → `taxklaro.ph` | Vercel `staging` branch → `staging.taxklaro.ph` |
+| Database | Supabase project `taxklaro-prod` | Supabase project `taxklaro-staging` |
 
-Staging Fly apps are configured with the same `fly.toml`/`fly-pdf.toml`/`fly-batch.toml` files but deployed with the staging app name flag: `flyctl deploy -a taxoptimizer-api-staging`.
+Staging Fly apps are configured with the same `fly.toml`/`fly-pdf.toml`/`fly-batch.toml` files but deployed with the staging app name flag: `flyctl deploy -a taxklaro-api-staging`.
 
 ---
 
@@ -197,7 +197,7 @@ Staging Fly apps are configured with the same `fly.toml`/`fly-pdf.toml`/`fly-bat
 
 ```json
 {
-  "name": "taxoptimizer-api",
+  "name": "taxklaro-api",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -236,7 +236,7 @@ Staging Fly apps are configured with the same `fly.toml`/`fly-pdf.toml`/`fly-bat
 
 ```json
 {
-  "name": "taxoptimizer-frontend",
+  "name": "taxklaro-frontend",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -479,7 +479,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: ci_test_db_password_2026
-          POSTGRES_DB: taxoptimizer_test
+          POSTGRES_DB: taxklaro_test
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -498,7 +498,7 @@ jobs:
           - 6379:6379
     env:
       NODE_ENV: test
-      DATABASE_URL: postgres://postgres:ci_test_db_password_2026@localhost:5432/taxoptimizer_test
+      DATABASE_URL: postgres://postgres:ci_test_db_password_2026@localhost:5432/taxklaro_test
       REDIS_URL: redis://localhost:6379
       JWT_SECRET: ci-test-jwt-secret-must-be-at-least-32-chars
       SESSION_SECRET: ci-test-session-secret-at-least-32-chars
@@ -515,12 +515,12 @@ jobs:
       STRIPE_WEBHOOK_SECRET: whsec_ci_test_dummy_stripe_webhook_secret
       SESSION_COOKIE_DOMAIN: localhost
       CORS_ALLOWED_ORIGINS: http://localhost:3000
-      EMAIL_FROM_ADDRESS: noreply@mail.taxoptimizer.ph
-      EMAIL_FROM_NAME: TaxOptimizer PH
+      EMAIL_FROM_ADDRESS: noreply@mail.taxklaro.ph
+      EMAIL_FROM_NAME: TaxKlaro
       R2_ACCOUNT_ID: ci-test-r2-account-id
       R2_ACCESS_KEY_ID: ci-test-r2-access-key
       R2_SECRET_ACCESS_KEY: ci-test-r2-secret-key
-      R2_BUCKET_NAME: taxoptimizer-exports-test
+      R2_BUCKET_NAME: taxklaro-exports-test
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -537,7 +537,7 @@ jobs:
       - name: Run database migrations on test DB
         run: npm run db:migrate
         env:
-          DATABASE_URL: postgres://postgres:ci_test_db_password_2026@localhost:5432/taxoptimizer_test
+          DATABASE_URL: postgres://postgres:ci_test_db_password_2026@localhost:5432/taxklaro_test
 
       - name: Run API integration tests
         run: npm run test:api -- --reporter=verbose
@@ -626,7 +626,7 @@ jobs:
         env:
           # Build-time variables — real values set in Vercel project settings;
           # these dummy values allow CI build to succeed for compilation check.
-          NEXT_PUBLIC_API_URL: https://api.taxoptimizer.ph/v1
+          NEXT_PUBLIC_API_URL: https://api.taxklaro.ph/v1
           NEXT_PUBLIC_GOOGLE_CLIENT_ID: 000000000000-citest.apps.googleusercontent.com
           NEXT_PUBLIC_SENTRY_DSN: https://abc123@o0000000.ingest.sentry.io/0
           NEXT_PUBLIC_PAYMONGO_PUBLIC_KEY: pk_test_ci_dummy_key
@@ -646,10 +646,10 @@ jobs:
 **What it does:**
 1. Runs all CI checks (same as ci.yml)
 2. Runs database migrations against the staging Supabase instance
-3. Deploys API server → `taxoptimizer-api-staging`
-4. Deploys PDF worker → `taxoptimizer-pdf-staging`
-5. Deploys batch worker → `taxoptimizer-batch-staging`
-6. Deploys frontend → Vercel `staging` environment (maps to `staging.taxoptimizer.ph`)
+3. Deploys API server → `taxklaro-api-staging`
+4. Deploys PDF worker → `taxklaro-pdf-staging`
+5. Deploys batch worker → `taxklaro-batch-staging`
+6. Deploys frontend → Vercel `staging` environment (maps to `staging.taxklaro.ph`)
 7. Uploads Sentry source maps for staging
 
 **Full YAML:**
@@ -705,7 +705,7 @@ jobs:
   # Deploy API server (staging)
   # ─────────────────────────────────────────────
   deploy-api-staging:
-    name: Deploy API → taxoptimizer-api-staging
+    name: Deploy API → taxklaro-api-staging
     runs-on: ubuntu-22.04
     needs: [migrate-staging]
     environment: staging
@@ -717,7 +717,7 @@ jobs:
         uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Deploy API server to staging
-        run: flyctl deploy --remote-only -a taxoptimizer-api-staging
+        run: flyctl deploy --remote-only -a taxklaro-api-staging
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
@@ -725,7 +725,7 @@ jobs:
   # Deploy PDF worker (staging)
   # ─────────────────────────────────────────────
   deploy-pdf-staging:
-    name: Deploy PDF Worker → taxoptimizer-pdf-staging
+    name: Deploy PDF Worker → taxklaro-pdf-staging
     runs-on: ubuntu-22.04
     needs: [migrate-staging]
     environment: staging
@@ -737,7 +737,7 @@ jobs:
         uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Deploy PDF worker to staging
-        run: flyctl deploy --config fly-pdf.toml --remote-only -a taxoptimizer-pdf-staging
+        run: flyctl deploy --config fly-pdf.toml --remote-only -a taxklaro-pdf-staging
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
@@ -745,7 +745,7 @@ jobs:
   # Deploy batch worker (staging)
   # ─────────────────────────────────────────────
   deploy-batch-staging:
-    name: Deploy Batch Worker → taxoptimizer-batch-staging
+    name: Deploy Batch Worker → taxklaro-batch-staging
     runs-on: ubuntu-22.04
     needs: [migrate-staging]
     environment: staging
@@ -757,7 +757,7 @@ jobs:
         uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Deploy batch worker to staging
-        run: flyctl deploy --config fly-batch.toml --remote-only -a taxoptimizer-batch-staging
+        run: flyctl deploy --config fly-batch.toml --remote-only -a taxklaro-batch-staging
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
@@ -765,7 +765,7 @@ jobs:
   # Deploy frontend to Vercel staging
   # ─────────────────────────────────────────────
   deploy-frontend-staging:
-    name: Deploy Frontend → staging.taxoptimizer.ph
+    name: Deploy Frontend → staging.taxklaro.ph
     runs-on: ubuntu-22.04
     needs: [deploy-api-staging]
     environment: staging
@@ -798,21 +798,21 @@ jobs:
         working-directory: apps/frontend
         run: npm run build
         env:
-          NEXT_PUBLIC_API_URL: https://api.staging.taxoptimizer.ph/v1
+          NEXT_PUBLIC_API_URL: https://api.staging.taxklaro.ph/v1
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: taxoptimizer-ph
-          SENTRY_PROJECT: taxoptimizer-ph-frontend
+          SENTRY_ORG: taxklaro-ph
+          SENTRY_PROJECT: taxklaro-ph-frontend
 
       - name: Deploy to Vercel (preview/staging environment)
         working-directory: apps/frontend
         run: |
           DEPLOY_URL=$(vercel --token ${{ secrets.VERCEL_TOKEN }} \
-            --env NEXT_PUBLIC_API_URL=https://api.staging.taxoptimizer.ph/v1 \
+            --env NEXT_PUBLIC_API_URL=https://api.staging.taxklaro.ph/v1 \
             2>&1 | tail -1)
           echo "Staging deployment URL: $DEPLOY_URL"
 
-          # Alias to staging.taxoptimizer.ph
-          vercel alias $DEPLOY_URL staging.taxoptimizer.ph --token ${{ secrets.VERCEL_TOKEN }}
+          # Alias to staging.taxklaro.ph
+          vercel alias $DEPLOY_URL staging.taxklaro.ph --token ${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
@@ -850,8 +850,8 @@ jobs:
           npx @sentry/cli releases finalize "$SENTRY_RELEASE"
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: taxoptimizer-ph
-          SENTRY_PROJECT: taxoptimizer-ph-api
+          SENTRY_ORG: taxklaro-ph
+          SENTRY_PROJECT: taxklaro-ph-api
 ```
 
 ---
@@ -869,7 +869,7 @@ jobs:
 2. Requires manual approval via GitHub Environment protection (configured in GitHub Settings → Environments → production → Required reviewers)
 3. Runs database migrations against production Supabase
 4. Deploys API, PDF worker, batch worker to production Fly.io apps
-5. Deploys frontend to Vercel production (`taxoptimizer.ph`)
+5. Deploys frontend to Vercel production (`taxklaro.ph`)
 6. Uploads Sentry source maps for production
 
 **Full YAML:**
@@ -938,7 +938,7 @@ jobs:
   # Deploy API server (production)
   # ─────────────────────────────────────────────
   deploy-api:
-    name: Deploy API → taxoptimizer-api
+    name: Deploy API → taxklaro-api
     runs-on: ubuntu-22.04
     needs: [migrate-production]
     environment: production
@@ -950,7 +950,7 @@ jobs:
         uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Deploy API server
-        run: flyctl deploy --remote-only -a taxoptimizer-api
+        run: flyctl deploy --remote-only -a taxklaro-api
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
@@ -958,7 +958,7 @@ jobs:
   # Deploy PDF worker (production)
   # ─────────────────────────────────────────────
   deploy-pdf:
-    name: Deploy PDF Worker → taxoptimizer-pdf
+    name: Deploy PDF Worker → taxklaro-pdf
     runs-on: ubuntu-22.04
     needs: [migrate-production]
     environment: production
@@ -970,7 +970,7 @@ jobs:
         uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Deploy PDF worker
-        run: flyctl deploy --config fly-pdf.toml --remote-only -a taxoptimizer-pdf
+        run: flyctl deploy --config fly-pdf.toml --remote-only -a taxklaro-pdf
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
@@ -978,7 +978,7 @@ jobs:
   # Deploy batch worker (production)
   # ─────────────────────────────────────────────
   deploy-batch:
-    name: Deploy Batch Worker → taxoptimizer-batch
+    name: Deploy Batch Worker → taxklaro-batch
     runs-on: ubuntu-22.04
     needs: [migrate-production]
     environment: production
@@ -990,7 +990,7 @@ jobs:
         uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Deploy batch worker
-        run: flyctl deploy --config fly-batch.toml --remote-only -a taxoptimizer-batch
+        run: flyctl deploy --config fly-batch.toml --remote-only -a taxklaro-batch
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
@@ -998,7 +998,7 @@ jobs:
   # Deploy frontend to Vercel production
   # ─────────────────────────────────────────────
   deploy-frontend:
-    name: Deploy Frontend → taxoptimizer.ph
+    name: Deploy Frontend → taxklaro.ph
     runs-on: ubuntu-22.04
     needs: [deploy-api]
     environment: production
@@ -1024,13 +1024,13 @@ jobs:
         working-directory: apps/frontend
         run: npm run build
         env:
-          NEXT_PUBLIC_API_URL: https://api.taxoptimizer.ph/v1
+          NEXT_PUBLIC_API_URL: https://api.taxklaro.ph/v1
           NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
           NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
           NEXT_PUBLIC_PAYMONGO_PUBLIC_KEY: ${{ secrets.NEXT_PUBLIC_PAYMONGO_PUBLIC_KEY }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: taxoptimizer-ph
-          SENTRY_PROJECT: taxoptimizer-ph-frontend
+          SENTRY_ORG: taxklaro-ph
+          SENTRY_PROJECT: taxklaro-ph-frontend
 
       - name: Deploy to Vercel (production)
         working-directory: apps/frontend
@@ -1072,8 +1072,8 @@ jobs:
           npx @sentry/cli releases finalize "$SENTRY_RELEASE"
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: taxoptimizer-ph
-          SENTRY_PROJECT: taxoptimizer-ph-api
+          SENTRY_ORG: taxklaro-ph
+          SENTRY_PROJECT: taxklaro-ph-api
 
   # ─────────────────────────────────────────────
   # Post-deployment smoke test
@@ -1090,7 +1090,7 @@ jobs:
       - name: Health check — API liveness
         run: |
           HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-            https://api.taxoptimizer.ph/v1/health/live)
+            https://api.taxklaro.ph/v1/health/live)
           if [ "$HTTP_CODE" != "200" ]; then
             echo "API health check FAILED: HTTP $HTTP_CODE"
             exit 1
@@ -1100,18 +1100,18 @@ jobs:
       - name: Health check — API readiness
         run: |
           HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-            https://api.taxoptimizer.ph/v1/health/ready)
+            https://api.taxklaro.ph/v1/health/ready)
           if [ "$HTTP_CODE" != "200" ]; then
             echo "API readiness check FAILED: HTTP $HTTP_CODE"
             echo "Response body:"
-            curl -s https://api.taxoptimizer.ph/v1/health/ready
+            curl -s https://api.taxklaro.ph/v1/health/ready
             exit 1
           fi
           echo "API readiness OK (HTTP 200)"
 
       - name: Health check — Frontend
         run: |
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://taxoptimizer.ph)
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://taxklaro.ph)
           if [ "$HTTP_CODE" != "200" ]; then
             echo "Frontend health check FAILED: HTTP $HTTP_CODE"
             exit 1
@@ -1120,7 +1120,7 @@ jobs:
 
       - name: Compute smoke test — POST /v1/compute (unauthenticated basic)
         run: |
-          RESPONSE=$(curl -s -X POST https://api.taxoptimizer.ph/v1/compute \
+          RESPONSE=$(curl -s -X POST https://api.taxklaro.ph/v1/compute \
             -H "Content-Type: application/json" \
             -d '{
               "taxpayer_type": "PURELY_SE",
@@ -1163,7 +1163,7 @@ jobs:
 1. Runs the full exhaustive test suite (all 80 scenario vectors across 14 groups)
 2. Runs the fuzz/property-based tests (10,000 iterations per property, 68 properties)
 3. Runs Playwright E2E tests against the staging environment
-4. Reports failures to Sentry and sends an email to `ops@taxoptimizer.ph` if any tests fail
+4. Reports failures to Sentry and sends an email to `ops@taxklaro.ph` if any tests fail
 
 **Full YAML:**
 
@@ -1251,7 +1251,7 @@ jobs:
   # Playwright E2E tests (against staging)
   # ─────────────────────────────────────────────
   e2e-tests:
-    name: E2E — Playwright Tests (staging.taxoptimizer.ph)
+    name: E2E — Playwright Tests (staging.taxklaro.ph)
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     steps:
@@ -1277,10 +1277,10 @@ jobs:
         working-directory: apps/frontend
         run: npm run test:e2e
         env:
-          PLAYWRIGHT_BASE_URL: https://staging.taxoptimizer.ph
-          E2E_TEST_USER_EMAIL: e2e-test@taxoptimizer.ph
+          PLAYWRIGHT_BASE_URL: https://staging.taxklaro.ph
+          E2E_TEST_USER_EMAIL: e2e-test@taxklaro.ph
           E2E_TEST_USER_PASSWORD: ${{ secrets.E2E_TEST_USER_PASSWORD }}
-          E2E_PRO_USER_EMAIL: e2e-pro@taxoptimizer.ph
+          E2E_PRO_USER_EMAIL: e2e-pro@taxklaro.ph
           E2E_PRO_USER_PASSWORD: ${{ secrets.E2E_PRO_USER_PASSWORD }}
 
       - name: Upload Playwright test report
@@ -1306,9 +1306,9 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.RESEND_API_KEY }}" \
             -H "Content-Type: application/json" \
             -d '{
-              "from": "noreply@mail.taxoptimizer.ph",
-              "to": ["ops@taxoptimizer.ph"],
-              "subject": "ALERT: Nightly tests failed — TaxOptimizer PH",
+              "from": "noreply@mail.taxklaro.ph",
+              "to": ["ops@taxklaro.ph"],
+              "subject": "ALERT: Nightly tests failed — TaxKlaro",
               "html": "<p>One or more nightly tests failed.</p><p>Run ID: ${{ github.run_id }}</p><p>View details at: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}</p>"
             }'
 ```
@@ -1353,7 +1353,7 @@ Configure in: **Repository Settings → Environments**
 
 | Setting | Value |
 |---------|-------|
-| Required reviewers | 1 reviewer from the `@taxoptimizer-ph/deployers` team |
+| Required reviewers | 1 reviewer from the `@taxklaro-ph/deployers` team |
 | Wait timer | 0 minutes |
 | Deployment branches | Selected branches: `main` only |
 | Environment secrets | (all production secrets — see §8) |
@@ -1369,7 +1369,7 @@ Configure in: **Repository Settings → Environments**
 ### 7.3 Vercel GitHub Integration Settings
 
 In Vercel project settings → Git:
-- **Connect repository:** `github.com/taxoptimizer-ph/taxoptimizer-ph`
+- **Connect repository:** `github.com/taxklaro-ph/taxklaro-ph`
 - **Production branch:** `main`
 - **Auto-deploy on push to `main`:** **DISABLED** — production deploys are controlled by `deploy-production.yml`
 - **Auto-deploy on push to other branches:** **ENABLED** for PR preview deployments only
@@ -1389,14 +1389,14 @@ Secrets that differ between staging and production are stored as **Environment S
 
 | Secret Name | Description | How to Obtain |
 |-------------|-------------|---------------|
-| `FLY_API_TOKEN` | Fly.io API token for CI deployments. Has deploy access to all apps in the `taxoptimizer` org. | Fly.io Dashboard → Account → Access Tokens → Create token. Name: `ci-deploy`. Scope: Organization (taxoptimizer). |
+| `FLY_API_TOKEN` | Fly.io API token for CI deployments. Has deploy access to all apps in the `taxklaro` org. | Fly.io Dashboard → Account → Access Tokens → Create token. Name: `ci-deploy`. Scope: Organization (taxklaro). |
 | `VERCEL_TOKEN` | Vercel API token for CLI deployments. | Vercel Dashboard → Account Settings → Tokens → Create token. Name: `ci-deploy`. Scope: Full Account. |
 | `VERCEL_ORG_ID` | Vercel organization/team ID. Format: `team_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx` (32 hex chars). | Vercel Dashboard → Team Settings → General → Team ID. |
-| `VERCEL_PROJECT_ID` | Vercel project ID for `taxoptimizer-ph`. Format: `prj_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`. | Vercel Dashboard → Project Settings → General → Project ID. |
+| `VERCEL_PROJECT_ID` | Vercel project ID for `taxklaro-ph`. Format: `prj_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`. | Vercel Dashboard → Project Settings → General → Project ID. |
 | `SENTRY_AUTH_TOKEN` | Sentry auth token for source map uploads. | Sentry Dashboard → Settings → Auth Tokens → Create Internal Integration Token. Scopes: `project:releases`, `org:read`. |
 | `RESEND_API_KEY` | Resend API key for nightly-test failure notifications (shared across environments). | Resend Dashboard → API Keys → Create API key. Name: `ci-notifications`. Permission: Sending access. |
-| `E2E_TEST_USER_PASSWORD` | Password for the Playwright E2E test user account (`e2e-test@taxoptimizer.ph`) on staging. Must be set in staging DB before first nightly run. Minimum 12 characters. | Set manually: generate a secure 16-char password, create the user account in staging, store the same password here. |
-| `E2E_PRO_USER_PASSWORD` | Password for the Playwright E2E PRO-tier test user (`e2e-pro@taxoptimizer.ph`) on staging. | Same as above for the PRO-tier test account. |
+| `E2E_TEST_USER_PASSWORD` | Password for the Playwright E2E test user account (`e2e-test@taxklaro.ph`) on staging. Must be set in staging DB before first nightly run. Minimum 12 characters. | Set manually: generate a secure 16-char password, create the user account in staging, store the same password here. |
+| `E2E_PRO_USER_PASSWORD` | Password for the Playwright E2E PRO-tier test user (`e2e-pro@taxklaro.ph`) on staging. | Same as above for the PRO-tier test account. |
 
 ### 8.2 Production Environment Secrets
 
@@ -1406,7 +1406,7 @@ Store under **Settings → Environments → production → Secrets**:
 |-------------|-------------|---------------|
 | `DATABASE_DIRECT_URL` | Supabase direct (non-pooler) connection string for production DB migrations. Format: `postgres://postgres.[project-ref]:[password]@db.[project-ref].supabase.co:5432/postgres` | Supabase Dashboard → Project → Settings → Database → Connection string → URI (session mode). |
 | `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Google OAuth 2.0 client ID (public). Format: `XXXXXXXXXX-abcdefghijklmnopqrstuvwxyz123456.apps.googleusercontent.com` | Google Cloud Console → APIs & Services → Credentials → OAuth 2.0 Client IDs. |
-| `NEXT_PUBLIC_SENTRY_DSN` | Sentry DSN for frontend error tracking. Format: `https://[key]@[org].ingest.sentry.io/[project-id]` | Sentry Dashboard → taxoptimizer-ph-frontend → Settings → Client Keys (DSN). |
+| `NEXT_PUBLIC_SENTRY_DSN` | Sentry DSN for frontend error tracking. Format: `https://[key]@[org].ingest.sentry.io/[project-id]` | Sentry Dashboard → taxklaro-ph-frontend → Settings → Client Keys (DSN). |
 | `NEXT_PUBLIC_PAYMONGO_PUBLIC_KEY` | PayMongo publishable key (public). Format: `pk_live_xxxxxxxxxxxxxxxxxxxxxxxx` | PayMongo Dashboard → Developers → API Keys → Live publishable key. |
 
 ### 8.3 Staging Environment Secrets
@@ -1438,8 +1438,8 @@ The following tools must be installed on the developer's machine before running 
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/taxoptimizer-ph/taxoptimizer-ph.git
-cd taxoptimizer-ph
+git clone https://github.com/taxklaro-ph/taxklaro-ph.git
+cd taxklaro-ph
 
 # 2. Install backend dependencies
 npm ci
@@ -1455,7 +1455,7 @@ npx supabase start
 DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:54322/postgres" npm run db:migrate
 
 # 6. Start a local Redis instance (required for batch worker)
-docker run -d --name taxoptimizer-redis -p 6379:6379 redis:7-alpine
+docker run -d --name taxklaro-redis -p 6379:6379 redis:7-alpine
 
 # 7. Copy environment file template and fill in values
 cp .env.example .env.local
@@ -1548,7 +1548,7 @@ npm run test:coverage
 npx supabase stop
 
 # Stop Redis
-docker stop taxoptimizer-redis && docker rm taxoptimizer-redis
+docker stop taxklaro-redis && docker rm taxklaro-redis
 
 # Stop Stripe CLI webhook forwarder
 # Kill the background process: find its PID and kill it
@@ -1641,27 +1641,27 @@ Use these commands when the CI/CD pipeline is unavailable or for emergency hotfi
 flyctl auth login
 
 # Deploy to production
-flyctl deploy --remote-only -a taxoptimizer-api
+flyctl deploy --remote-only -a taxklaro-api
 
 # Deploy to staging
-flyctl deploy --remote-only -a taxoptimizer-api-staging
+flyctl deploy --remote-only -a taxklaro-api-staging
 
 # Deploy a specific Docker image (for rollback)
-flyctl deploy --image registry.fly.io/taxoptimizer-api:<git-sha> -a taxoptimizer-api
+flyctl deploy --image registry.fly.io/taxklaro-api:<git-sha> -a taxklaro-api
 ```
 
 ### 11.2 Deploy PDF Worker Manually
 
 ```bash
-flyctl deploy --config fly-pdf.toml --remote-only -a taxoptimizer-pdf
-flyctl deploy --config fly-pdf.toml --remote-only -a taxoptimizer-pdf-staging
+flyctl deploy --config fly-pdf.toml --remote-only -a taxklaro-pdf
+flyctl deploy --config fly-pdf.toml --remote-only -a taxklaro-pdf-staging
 ```
 
 ### 11.3 Deploy Batch Worker Manually
 
 ```bash
-flyctl deploy --config fly-batch.toml --remote-only -a taxoptimizer-batch
-flyctl deploy --config fly-batch.toml --remote-only -a taxoptimizer-batch-staging
+flyctl deploy --config fly-batch.toml --remote-only -a taxklaro-batch
+flyctl deploy --config fly-batch.toml --remote-only -a taxklaro-batch-staging
 ```
 
 ### 11.4 Deploy Frontend Manually
@@ -1679,7 +1679,7 @@ vercel --prod --token $VERCEL_TOKEN
 
 # Deploy to staging (creates preview deployment, then alias)
 DEPLOY_URL=$(vercel --token $VERCEL_TOKEN 2>&1 | tail -1)
-vercel alias $DEPLOY_URL staging.taxoptimizer.ph --token $VERCEL_TOKEN
+vercel alias $DEPLOY_URL staging.taxklaro.ph --token $VERCEL_TOKEN
 ```
 
 ### 11.5 Run Database Migrations Manually
@@ -1696,20 +1696,20 @@ DATABASE_URL=$STAGING_DATABASE_DIRECT_URL npm run db:migrate
 
 ```bash
 # API server status and recent logs
-flyctl status -a taxoptimizer-api
-flyctl logs -a taxoptimizer-api
+flyctl status -a taxklaro-api
+flyctl logs -a taxklaro-api
 
 # PDF worker status
-flyctl status -a taxoptimizer-pdf
+flyctl status -a taxklaro-pdf
 
 # Batch worker status
-flyctl status -a taxoptimizer-batch
+flyctl status -a taxklaro-batch
 
 # List recent Vercel deployments
 vercel ls --token $VERCEL_TOKEN
 
 # List recent Fly.io releases (for rollback reference)
-flyctl releases list -a taxoptimizer-api
+flyctl releases list -a taxklaro-api
 ```
 
 ---
@@ -1722,22 +1722,22 @@ flyctl releases list -a taxoptimizer-api
 
 ```bash
 # Step 1: List recent releases to find the previous working image
-flyctl releases list -a taxoptimizer-api
+flyctl releases list -a taxklaro-api
 # Output shows: VERSION  STATUS  DESCRIPTION  USER  DATE
 # e.g.:
 # v42      complete  Deployed   ci    2026-03-02T10:00:00Z  ← current (bad)
 # v41      complete  Deployed   ci    2026-03-01T09:00:00Z  ← rollback target
 
 # Step 2: Find the image for v41
-flyctl releases show v41 -a taxoptimizer-api
-# Shows: Image = registry.fly.io/taxoptimizer-api:<sha>
+flyctl releases show v41 -a taxklaro-api
+# Shows: Image = registry.fly.io/taxklaro-api:<sha>
 
 # Step 3: Deploy the previous image
-flyctl deploy --image registry.fly.io/taxoptimizer-api:<sha-from-v41> -a taxoptimizer-api
+flyctl deploy --image registry.fly.io/taxklaro-api:<sha-from-v41> -a taxklaro-api
 
 # Step 4: Verify health checks pass
-flyctl status -a taxoptimizer-api
-curl -s https://api.taxoptimizer.ph/v1/health/ready
+flyctl status -a taxklaro-api
+curl -s https://api.taxklaro.ph/v1/health/ready
 
 # Step 5: If the bad deploy included a database migration, run a
 # compensating migration (see §10.4). Do NOT revert migrations automatically.
@@ -1749,16 +1749,16 @@ curl -s https://api.taxoptimizer.ph/v1/health/ready
 
 ```bash
 # Step 1: List recent Vercel deployments
-vercel ls taxoptimizer-ph --token $VERCEL_TOKEN
+vercel ls taxklaro-ph --token $VERCEL_TOKEN
 # Output: URL    STATE   AGE
-# e.g.: taxoptimizer-ph-abc123.vercel.app   READY   5m  ← current
-#       taxoptimizer-ph-xyz789.vercel.app   READY   1d  ← rollback target
+# e.g.: taxklaro-ph-abc123.vercel.app   READY   5m  ← current
+#       taxklaro-ph-xyz789.vercel.app   READY   1d  ← rollback target
 
 # Step 2: Alias production domain back to the previous deployment
-vercel alias taxoptimizer-ph-xyz789.vercel.app taxoptimizer.ph --token $VERCEL_TOKEN
+vercel alias taxklaro-ph-xyz789.vercel.app taxklaro.ph --token $VERCEL_TOKEN
 
 # Step 3: Verify
-curl -s -o /dev/null -w "%{http_code}" https://taxoptimizer.ph
+curl -s -o /dev/null -w "%{http_code}" https://taxklaro.ph
 # Expected: 200
 ```
 
@@ -1784,7 +1784,7 @@ DATABASE_URL=$DATABASE_DIRECT_URL npm run db:migrate
 **If data was corrupted (requires PITR):**
 
 Use Supabase Point-in-Time Recovery:
-1. Log in to Supabase Dashboard → taxoptimizer-prod project
+1. Log in to Supabase Dashboard → taxklaro-prod project
 2. Navigate to Project Settings → Database → Backups
 3. Click "Restore" → Select "Point in time"
 4. Enter the exact timestamp to restore to (must be within last 7 days)

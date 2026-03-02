@@ -754,7 +754,7 @@ if underdecl_pct > 0.30:
 
 ---
 
-*Additional 8% edge cases may be discovered during regime-comparison-logic, quarterly-filing-rules, and annual-reconciliation aspects. EC-E, EC-M, EC-Q, EC-C, EC-F groups to be added in the Wave 2 edge-cases aspect.*
+All 8% edge cases are fully documented. Additional groups covering regime comparison (EC-RC), mixed income (EC-M), quarterly filing (EC-QF), CWT (EC-CWT), and annual reconciliation (EC-AR) are documented in their respective sections below.
 
 ---
 

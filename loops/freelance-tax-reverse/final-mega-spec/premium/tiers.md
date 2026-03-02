@@ -136,7 +136,7 @@ PRO includes everything in FREE plus the following additions.
 | Export trigger | `POST /computations/:id/exports` |
 | Export types available | `SUMMARY`, `FORM_1701_PREFILL`, `FORM_1701A_PREFILL`, `FORM_1701Q_PREFILL`, `CWT_SCHEDULE` |
 | Download link expiry | 30 days from export generation |
-| Branding on PDF | TaxOptimizer PH logo and footer. Enterprise-only option to replace with white-label logo. |
+| Branding on PDF | TaxKlaro logo and footer. Enterprise-only option to replace with white-label logo. |
 | File format | PDF (A4 portrait) |
 | Multiple exports per computation | Yes; each export creates a new `pdf_exports` row |
 | Storage | Stored in object storage (Cloudflare R2); accessible via signed URL |
@@ -222,8 +222,8 @@ ENTERPRISE includes everything in PRO plus the following additions.
 |----------|-------|
 | Feature trigger | `white_label_logo_url` parameter on `POST /computations/:id/exports` |
 | Logo requirements | HTTPS URL; PNG or JPG; max 1 MB; recommended dimensions 300px × 100px |
-| Placement | Top-left corner of PDF, replacing TaxOptimizer PH branding |
-| Footer | "Powered by TaxOptimizer PH" retained in small text (required by license) |
+| Placement | Top-left corner of PDF, replacing TaxKlaro branding |
+| Footer | "Powered by TaxKlaro" retained in small text (required by license) |
 | Download expiry | 365 days (vs. 30 days for PRO) |
 | Per-export white-label scope | White-label is per-export, not per-account global setting. A CPA can white-label some exports and use default branding on others. |
 
@@ -254,7 +254,7 @@ CPA client management requires BOTH (a) `plan = 'ENTERPRISE'` AND (b) `role = 'C
 
 | Property | Value |
 |----------|-------|
-| Support channel | Dedicated email: enterprise@taxoptimizer.ph |
+| Support channel | Dedicated email: enterprise@taxklaro.ph |
 | Response time SLA | 1 business day (Philippine Standard Time, Mon–Fri 8am–6pm) |
 | Standard (FREE/PRO) support response time | 3 business days |
 | Issue escalation | Enterprise accounts can request a scheduled 30-minute support call via email |
@@ -431,8 +431,8 @@ When a user attempts to access a gated feature, the frontend shows an upgrade pr
 | FREE (auth'd) | Quarterly tracking dashboard | Pro gate: "Quarterly Tracking — Pro Feature": "Track your filing status, deadlines, and payments across all quarters in one place." CTA: "Upgrade to Pro" |
 | PRO | Add 51st Form 2307 entry | "Enterprise required for more than 50 Form 2307 entries": "You have {count} Form 2307 entries. Pro supports up to 50. Upgrade to Professional for unlimited entries." CTA: "See Professional Plan" |
 | PRO | Access batch processing | "Batch Processing — Professional Feature": "Process multiple client returns in a single session. Available on the Professional plan for CPAs and bookkeepers." CTA: "See Professional Plan" |
-| PRO | Access API keys | "API Access — Professional Feature": "Integrate TaxOptimizer's computation engine into your own software via REST API." CTA: "See Professional Plan" |
-| PRO | White-label PDF export | "White-Label PDFs — Professional Feature": "Replace TaxOptimizer branding with your own logo on all exported PDFs." CTA: "See Professional Plan" |
+| PRO | Access API keys | "API Access — Professional Feature": "Integrate TaxKlaro's computation engine into your own software via REST API." CTA: "See Professional Plan" |
+| PRO | White-label PDF export | "White-Label PDFs — Professional Feature": "Replace TaxKlaro branding with your own logo on all exported PDFs." CTA: "See Professional Plan" |
 | FREE (auth'd) | Monthly save limit reached (10th save) | Toast (amber): "You've used {count}/10 computations on the free plan this month. Your result was computed but not saved. Upgrade to Pro to save unlimited computations." CTA in toast: "Upgrade to Pro" |
 
 ### 7.2 Upgrade Modal Structure
@@ -591,7 +591,7 @@ If count = 0: show "Start Free N-Day Trial" CTA.
 8. Provider sends webhook to `POST /webhooks/paymongo` or `POST /webhooks/stripe`.
 9. Webhook handler updates `subscriptions` row: `plan = 'PRO'`, `status = 'TRIALING'` (if trial) or `status = 'ACTIVE'` (if direct upgrade), sets `current_period_start`, `current_period_end`, `billing_cycle`.
 10. Cache invalidation: `redis.del("plan:" + user_id)`.
-11. User is redirected to success page at `https://taxoptimizer.ph/upgrade/success?plan=PRO`.
+11. User is redirected to success page at `https://taxklaro.ph/upgrade/success?plan=PRO`.
 
 ### 10.2 Upgrade (PRO → ENTERPRISE)
 
@@ -737,7 +737,7 @@ Annual PRO and annual ENTERPRISE plans include a 30-day money-back guarantee:
 
 - **Eligible plans:** Annual PRO (₱1,999) and annual ENTERPRISE (₱14,999) only. Monthly plans are not eligible.
 - **Claim window:** Within 30 calendar days of the annual payment date (i.e., within 30 days of `invoices.invoice_date`).
-- **Process:** User emails support@taxoptimizer.ph with subject "Refund Request" and their account email. Support processes the refund within 5 business days.
+- **Process:** User emails support@taxklaro.ph with subject "Refund Request" and their account email. Support processes the refund within 5 business days.
 - **Refund amount:** Full amount of the annual payment (₱1,999 or ₱14,999). No pro-rata deduction.
 - **After refund:** Subscription status is set to `EXPIRED` immediately. Plan reverts to `FREE`. API keys are suspended. Saved computations retained per the 90-day retention policy.
 - **One refund per account:** A user who has received a refund may not claim another refund on a future annual plan purchase.
@@ -758,7 +758,7 @@ The ENTERPRISE plan CTA on the pricing page is "Contact Sales" (vs. "Upgrade to 
    - Number of clients (select: 1–10 / 11–50 / 51–200 / 200+)
    - Message (optional)
 3. On submit, the form data is sent to `POST /contact/sales` (no auth required).
-4. The API creates a row in an internal `sales_leads` table (not in the public schema) and sends an email notification to enterprise@taxoptimizer.ph.
+4. The API creates a row in an internal `sales_leads` table (not in the public schema) and sends an email notification to enterprise@taxklaro.ph.
 5. The user receives an acknowledgment email: "We received your inquiry. Our team will respond within 1 business day."
 6. Sales follow-up: manual by a team member; provisioning ENTERPRISE access is done via admin panel (`PATCH /admin/users/:id/subscription`).
 

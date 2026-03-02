@@ -5899,7 +5899,7 @@ TaxComputationResult {
 | Q1 | ₱200,000 | ₱300,000 | ₱16,000 | ₱24,000 | **₱8,000** | ₱2,902.58 |
 | Q2 | ₱600,000 | ₱700,000 | ₱32,000 | ₱32,000 | **₱0** | ₱0 |
 | Q3 | ₱1,000,000 | ₱1,100,000 | ₱32,000 | ₱32,000 | **₱0** | ₱0 |
-| Annual | ₱1,400,000 | ₱1,500,000 | (pending) | ₱12,000 balance | ₱12,000 | ₱0 (on time) |
+| Annual | ₱1,400,000 | ₱1,500,000 | ₱0 (annual return not yet filed when Q1 amendment was processed) | ₱12,000 balance | ₱12,000 | ₱0 (on time) |
 
 **Total additional tax from amendment:** ₱8,000 (Q1 only) + ₱12,000 (annual) = ₱20,000
 **Total penalties paid:** ₱2,902.58 (Q1 only)

@@ -44,7 +44,7 @@ The API server exposes three health check endpoints. All three are implemented i
 ```json
 {
   "status": "ok",
-  "service": "taxoptimizer-api",
+  "service": "taxklaro-api",
   "timestamp": "2026-03-02T10:00:00.000Z"
 }
 ```
@@ -53,7 +53,7 @@ The API server exposes three health check endpoints. All three are implemented i
 ```json
 {
   "status": "draining",
-  "service": "taxoptimizer-api",
+  "service": "taxklaro-api",
   "timestamp": "2026-03-02T10:00:00.000Z"
 }
 ```
@@ -66,13 +66,13 @@ router.get('/live', (_req, res) => {
   if (process.env.DRAINING === 'true') {
     return res.status(503).json({
       status: 'draining',
-      service: 'taxoptimizer-api',
+      service: 'taxklaro-api',
       timestamp: new Date().toISOString(),
     });
   }
   return res.status(200).json({
     status: 'ok',
-    service: 'taxoptimizer-api',
+    service: 'taxklaro-api',
     timestamp: new Date().toISOString(),
   });
 });
@@ -90,7 +90,7 @@ router.get('/live', (_req, res) => {
 ```json
 {
   "status": "ready",
-  "service": "taxoptimizer-api",
+  "service": "taxklaro-api",
   "timestamp": "2026-03-02T10:00:00.000Z",
   "checks": {
     "database": "ok",
@@ -103,7 +103,7 @@ router.get('/live', (_req, res) => {
 ```json
 {
   "status": "not_ready",
-  "service": "taxoptimizer-api",
+  "service": "taxklaro-api",
   "timestamp": "2026-03-02T10:00:00.000Z",
   "checks": {
     "database": "error",
@@ -123,7 +123,7 @@ router.get('/ready', async (_req, res) => {
     const latency = Date.now() - start;
     return res.status(200).json({
       status: 'ready',
-      service: 'taxoptimizer-api',
+      service: 'taxklaro-api',
       timestamp: new Date().toISOString(),
       checks: { database: 'ok', database_latency_ms: latency },
     });
@@ -131,7 +131,7 @@ router.get('/ready', async (_req, res) => {
     const latency = Date.now() - start;
     return res.status(503).json({
       status: 'not_ready',
-      service: 'taxoptimizer-api',
+      service: 'taxklaro-api',
       timestamp: new Date().toISOString(),
       checks: {
         database: 'error',
@@ -158,7 +158,7 @@ router.get('/ready', async (_req, res) => {
 ```json
 {
   "status": "healthy",
-  "service": "taxoptimizer-api",
+  "service": "taxklaro-api",
   "timestamp": "2026-03-02T10:00:00.000Z",
   "version": "1.0.0",
   "git_sha": "a1b2c3d4",
@@ -174,7 +174,7 @@ router.get('/ready', async (_req, res) => {
 ```json
 {
   "status": "degraded",
-  "service": "taxoptimizer-api",
+  "service": "taxklaro-api",
   "timestamp": "2026-03-02T10:00:00.000Z",
   "version": "1.0.0",
   "git_sha": "a1b2c3d4",
@@ -220,7 +220,7 @@ router.get('/ready', async (_req, res) => {
 ```json
 {
   "status": "ok",
-  "service": "taxoptimizer-api",
+  "service": "taxklaro-api",
   "timestamp": "2026-03-02T10:00:00.000Z",
   "test": "SC-PURE-01-smoke",
   "computation_ms": 4,
@@ -234,7 +234,7 @@ router.get('/ready', async (_req, res) => {
 ```json
 {
   "status": "engine_mismatch",
-  "service": "taxoptimizer-api",
+  "service": "taxklaro-api",
   "timestamp": "2026-03-02T10:00:00.000Z",
   "test": "SC-PURE-01-smoke",
   "computation_ms": 4,
@@ -249,7 +249,7 @@ router.get('/ready', async (_req, res) => {
 ```json
 {
   "status": "engine_error",
-  "service": "taxoptimizer-api",
+  "service": "taxklaro-api",
   "timestamp": "2026-03-02T10:00:00.000Z",
   "test": "SC-PURE-01-smoke",
   "error": "ERR_ASSERT_PATH_C_EXCEEDS_GROSS"
@@ -266,8 +266,8 @@ router.get('/ready', async (_req, res) => {
 
 - **Service:** BetterUptime (betterstack.com/better-uptime)
 - **Plan:** Free tier — 30 monitors, 3-minute check interval, 1 status page, unlimited team members, phone call + SMS + email alerts
-- **Account email:** `ops@taxoptimizer.ph`
-- **Team workspace name:** `TaxOptimizer PH`
+- **Account email:** `ops@taxklaro.ph`
+- **Team workspace name:** `TaxKlaro`
 
 The BetterUptime free plan is sufficient for MVP (30 monitors, 3-minute minimum interval). If requirements exceed free plan limits, upgrade to Starter ($24/month) for 1-minute intervals and heartbeat monitors.
 
@@ -279,7 +279,7 @@ All monitors are configured via BetterUptime Dashboard → Monitors → New Moni
 | Field | Value |
 |-------|-------|
 | Name | `API Server — Liveness` |
-| URL | `https://api.taxoptimizer.ph/v1/health/live` |
+| URL | `https://api.taxklaro.ph/v1/health/live` |
 | Method | `GET` |
 | Check interval | 3 minutes |
 | Request timeout | 10 seconds |
@@ -295,7 +295,7 @@ All monitors are configured via BetterUptime Dashboard → Monitors → New Moni
 | Field | Value |
 |-------|-------|
 | Name | `API Server — Readiness (DB check)` |
-| URL | `https://api.taxoptimizer.ph/v1/health/ready` |
+| URL | `https://api.taxklaro.ph/v1/health/ready` |
 | Method | `GET` |
 | Check interval | 3 minutes |
 | Request timeout | 15 seconds |
@@ -311,12 +311,12 @@ All monitors are configured via BetterUptime Dashboard → Monitors → New Moni
 | Field | Value |
 |-------|-------|
 | Name | `Frontend — Home Page` |
-| URL | `https://taxoptimizer.ph/` |
+| URL | `https://taxklaro.ph/` |
 | Method | `GET` |
 | Check interval | 3 minutes |
 | Request timeout | 10 seconds |
 | Expected HTTP status | `200` |
-| Expected response body | `TaxOptimizer PH` (substring match in HTML title) |
+| Expected response body | `TaxKlaro` (substring match in HTML title) |
 | Alert after | 2 consecutive failures |
 | Recovery confirmation | 1 successful check |
 | Team | All team members |
@@ -327,7 +327,7 @@ All monitors are configured via BetterUptime Dashboard → Monitors → New Moni
 | Field | Value |
 |-------|-------|
 | Name | `Frontend — Pricing Page` |
-| URL | `https://taxoptimizer.ph/pricing` |
+| URL | `https://taxklaro.ph/pricing` |
 | Method | `GET` |
 | Check interval | 5 minutes |
 | Request timeout | 10 seconds |
@@ -343,7 +343,7 @@ All monitors are configured via BetterUptime Dashboard → Monitors → New Moni
 | Field | Value |
 |-------|-------|
 | Name | `Engine Smoke Test — SC-PURE-01` |
-| URL | `https://api.taxoptimizer.ph/v1/health/smoke` |
+| URL | `https://api.taxklaro.ph/v1/health/smoke` |
 | Method | `GET` |
 | Request headers | `Authorization: Bearer <MONITORING_API_KEY>` |
 | Check interval | 5 minutes |
@@ -362,8 +362,8 @@ Configure in BetterUptime Dashboard → Team → Notification Channels.
 
 | Channel | Type | Destination | Used For |
 |---------|------|-------------|----------|
-| Slack Production Alerts | Slack | `#production-alerts` in `taxoptimizer-team.slack.com` | All monitor failures |
-| Ops Email | Email | `ops@taxoptimizer.ph` | P1 (down) incidents only |
+| Slack Production Alerts | Slack | `#production-alerts` in `taxklaro-team.slack.com` | All monitor failures |
+| Ops Email | Email | `ops@taxklaro.ph` | P1 (down) incidents only |
 
 **Slack webhook setup:**
 1. In Slack: Apps → BetterUptime → Add to Slack → Select `#production-alerts`
@@ -376,16 +376,16 @@ Configure in BetterUptime Dashboard → Team → Notification Channels.
 ### 2.4 Monitor Configuration (Staging)
 
 Staging monitors are identical to production except:
-- URLs use `staging.taxoptimizer.ph` and `api.staging.taxoptimizer.ph`
+- URLs use `staging.taxklaro.ph` and `api.staging.taxklaro.ph`
 - Alert channel: `#staging-alerts` in Slack (not `#production-alerts`)
 - No phone/SMS alerts (staging failures are not on-call events)
 - Check interval: 5 minutes (less critical)
 
 | Monitor Name (Staging) | URL |
 |------------------------|-----|
-| `[Staging] API Liveness` | `https://api.staging.taxoptimizer.ph/v1/health/live` |
-| `[Staging] API Readiness` | `https://api.staging.taxoptimizer.ph/v1/health/ready` |
-| `[Staging] Frontend` | `https://staging.taxoptimizer.ph/` |
+| `[Staging] API Liveness` | `https://api.staging.taxklaro.ph/v1/health/live` |
+| `[Staging] API Readiness` | `https://api.staging.taxklaro.ph/v1/health/ready` |
+| `[Staging] Frontend` | `https://staging.taxklaro.ph/` |
 
 ---
 
@@ -395,10 +395,10 @@ Staging monitors are identical to production except:
 
 - **Service:** Axiom (axiom.co)
 - **Plan:** Free — 500 GB ingestion/month, 30-day retention, unlimited queries
-- **Account email:** `ops@taxoptimizer.ph`
-- **Organization name:** `taxoptimizer-ph`
-- **Dataset name:** `taxoptimizer-production`
-- **Staging dataset name:** `taxoptimizer-staging`
+- **Account email:** `ops@taxklaro.ph`
+- **Organization name:** `taxklaro-ph`
+- **Dataset name:** `taxklaro-production`
+- **Staging dataset name:** `taxklaro-staging`
 
 ### 3.2 Log Drain Setup
 
@@ -409,35 +409,35 @@ Fly.io machines stream logs via `stdout`/`stderr`. Axiom ingests them via a Fly.
 ```bash
 # 1. Create Axiom API token (in Axiom Dashboard → Settings → API Tokens → New)
 #    Name: fly-log-drain-production
-#    Permissions: ingest:taxoptimizer-production
+#    Permissions: ingest:taxklaro-production
 #    → Copy token value
 
 # 2. Create Fly.io log drain for API server
 flyctl log-drains create \
   --type https \
-  --url "https://cloud.axiom.co/api/v1/datasets/taxoptimizer-production/ingest" \
+  --url "https://cloud.axiom.co/api/v1/datasets/taxklaro-production/ingest" \
   --header "Authorization=Bearer <axiom-ingest-token>" \
   --header "Content-Type=application/x-ndjson" \
-  -a taxoptimizer-api
+  -a taxklaro-api
 
 # 3. Create log drain for PDF worker
 flyctl log-drains create \
   --type https \
-  --url "https://cloud.axiom.co/api/v1/datasets/taxoptimizer-production/ingest" \
+  --url "https://cloud.axiom.co/api/v1/datasets/taxklaro-production/ingest" \
   --header "Authorization=Bearer <axiom-ingest-token>" \
   --header "Content-Type=application/x-ndjson" \
-  -a taxoptimizer-pdf
+  -a taxklaro-pdf
 
 # 4. Create log drain for Batch worker
 flyctl log-drains create \
   --type https \
-  --url "https://cloud.axiom.co/api/v1/datasets/taxoptimizer-production/ingest" \
+  --url "https://cloud.axiom.co/api/v1/datasets/taxklaro-production/ingest" \
   --header "Authorization=Bearer <axiom-ingest-token>" \
   --header "Content-Type=application/x-ndjson" \
-  -a taxoptimizer-batch
+  -a taxklaro-batch
 
 # 5. Verify drain is active
-flyctl log-drains list -a taxoptimizer-api
+flyctl log-drains list -a taxklaro-api
 ```
 
 The Axiom ingest token is stored in Fly.io secrets for reference but is not consumed by the application — it is used only in the `flyctl log-drains create` command above.
@@ -621,7 +621,7 @@ Sentry projects are already configured in `infrastructure.md §10`. This section
 
 ### 4.1 API Server Alert Rules
 
-Configure in: Sentry Dashboard → `taxoptimizer-ph-api` project → Alerts → Alert Rules
+Configure in: Sentry Dashboard → `taxklaro-ph-api` project → Alerts → Alert Rules
 
 **Rule 1: High API Error Volume**
 | Setting | Value |
@@ -630,8 +630,8 @@ Configure in: Sentry Dashboard → `taxoptimizer-ph-api` project → Alerts → 
 | Metric | `Number of errors in 5-minute window` |
 | Threshold | Warning: > 20 errors; Critical: > 100 errors |
 | Environment | `production` |
-| Action (Warning) | Notify Slack `#production-alerts`: `⚠️ High error volume on taxoptimizer-api: {count} errors in 5 minutes` |
-| Action (Critical) | Notify Slack `#production-alerts` AND email `ops@taxoptimizer.ph` |
+| Action (Warning) | Notify Slack `#production-alerts`: `⚠️ High error volume on taxklaro-api: {count} errors in 5 minutes` |
+| Action (Critical) | Notify Slack `#production-alerts` AND email `ops@taxklaro.ph` |
 | Resolve threshold | < 5 errors in 5-minute window |
 
 **Rule 2: API Performance Regression — Compute Endpoint**
@@ -643,7 +643,7 @@ Configure in: Sentry Dashboard → `taxoptimizer-ph-api` project → Alerts → 
 | Threshold | Warning: > 2000ms; Critical: > 5000ms |
 | Environment | `production` |
 | Action (Warning) | Notify Slack `#production-alerts`: `⚠️ /v1/compute p95 is {value}ms — investigate DB or engine performance` |
-| Action (Critical) | Notify Slack `#production-alerts` AND email `ops@taxoptimizer.ph` |
+| Action (Critical) | Notify Slack `#production-alerts` AND email `ops@taxklaro.ph` |
 
 **Rule 3: API Performance Regression — General**
 | Setting | Value |
@@ -668,7 +668,7 @@ Configure in: Sentry Dashboard → `taxoptimizer-ph-api` project → Alerts → 
 | Rule name | `Unhandled Promise Rejection` |
 | Condition | `Error contains "UnhandledPromiseRejectionWarning"` OR `Error type is UnhandledRejection` |
 | Environment | `production` |
-| Action | Notify Slack `#production-alerts` AND email `ops@taxoptimizer.ph` |
+| Action | Notify Slack `#production-alerts` AND email `ops@taxklaro.ph` |
 
 **Rule 6: Assertion Failures (Engine Internal Errors)**
 | Setting | Value |
@@ -676,11 +676,11 @@ Configure in: Sentry Dashboard → `taxoptimizer-ph-api` project → Alerts → 
 | Rule name | `Engine Assertion Failure` |
 | Condition | `Error message contains "ERR_ASSERT_"` |
 | Environment | `production` |
-| Action | Notify Slack `#production-alerts` AND email `ops@taxoptimizer.ph`: `🚨 Engine assertion failure — indicates a computation bug: {error.message}` |
+| Action | Notify Slack `#production-alerts` AND email `ops@taxklaro.ph`: `🚨 Engine assertion failure — indicates a computation bug: {error.message}` |
 
 ### 4.2 Frontend Alert Rules
 
-Configure in: Sentry Dashboard → `taxoptimizer-ph-frontend` project → Alerts → Alert Rules
+Configure in: Sentry Dashboard → `taxklaro-ph-frontend` project → Alerts → Alert Rules
 
 **Rule 7: High Frontend Error Volume**
 | Setting | Value |
@@ -690,7 +690,7 @@ Configure in: Sentry Dashboard → `taxoptimizer-ph-frontend` project → Alerts
 | Threshold | Warning: > 50 errors; Critical: > 200 errors |
 | Environment | `production` |
 | Action (Warning) | Notify Slack `#production-alerts` |
-| Action (Critical) | Notify Slack `#production-alerts` AND email `ops@taxoptimizer.ph` |
+| Action (Critical) | Notify Slack `#production-alerts` AND email `ops@taxklaro.ph` |
 
 **Rule 8: Frontend Performance (Core Web Vitals)**
 | Setting | Value |
@@ -703,7 +703,7 @@ Configure in: Sentry Dashboard → `taxoptimizer-ph-frontend` project → Alerts
 
 ### 4.3 Batch Worker Alert Rules
 
-Configure in: Sentry Dashboard → `taxoptimizer-ph-batch` project → Alerts → Alert Rules
+Configure in: Sentry Dashboard → `taxklaro-ph-batch` project → Alerts → Alert Rules
 
 **Rule 9: Batch Job Failure Spike**
 | Setting | Value |
@@ -720,10 +720,10 @@ All production Sentry projects use auto-assignment based on code ownership (`COD
 
 ```
 # .github/CODEOWNERS
-src/engine/         @taxoptimizer-ph/engineering
-src/api/routes/     @taxoptimizer-ph/engineering
-src/frontend/       @taxoptimizer-ph/engineering
-src/workers/        @taxoptimizer-ph/engineering
+src/engine/         @taxklaro-ph/engineering
+src/api/routes/     @taxklaro-ph/engineering
+src/frontend/       @taxklaro-ph/engineering
+src/workers/        @taxklaro-ph/engineering
 ```
 
 ---
@@ -734,19 +734,19 @@ src/workers/        @taxoptimizer-ph/engineering
 
 Fly.io provides built-in metrics accessible at: `fly.io/apps/<app-name>/metrics`
 
-**Access:** Log in to fly.io → Select organization `taxoptimizer` → Navigate to each app → Metrics tab.
+**Access:** Log in to fly.io → Select organization `taxklaro` → Navigate to each app → Metrics tab.
 
 **Key metrics to review in the Fly.io dashboard (no alert configuration available on pay-as-you-go — monitoring via BetterUptime and Sentry):**
 
 | Metric | Dashboard Location | Warning Threshold | Action |
 |--------|-------------------|-------------------|--------|
-| CPU utilization | Apps → `taxoptimizer-api` → Metrics → CPU | > 85% sustained for 10 min | Scale to 3 machines or investigate hot path |
-| Memory utilization | Apps → `taxoptimizer-api` → Metrics → Memory | > 90% | Increase VM memory or investigate memory leak |
-| Machine restarts | Apps → `taxoptimizer-api` → Metrics → Restarts | > 3 in 1 hour | Investigate crash logs in Axiom |
-| HTTP request rate | Apps → `taxoptimizer-api` → Metrics → Requests | Informational only | N/A |
-| HTTP error rate | Apps → `taxoptimizer-api` → Metrics → Errors | > 5% of requests | Investigate Sentry |
-| PDF Worker CPU | Apps → `taxoptimizer-pdf` → Metrics → CPU | > 95% (Chromium is CPU-intensive) | Queue PDF requests; scale to 2 instances |
-| Batch Worker memory | Apps → `taxoptimizer-batch` → Metrics → Memory | > 80% | Check for Bull queue accumulation |
+| CPU utilization | Apps → `taxklaro-api` → Metrics → CPU | > 85% sustained for 10 min | Scale to 3 machines or investigate hot path |
+| Memory utilization | Apps → `taxklaro-api` → Metrics → Memory | > 90% | Increase VM memory or investigate memory leak |
+| Machine restarts | Apps → `taxklaro-api` → Metrics → Restarts | > 3 in 1 hour | Investigate crash logs in Axiom |
+| HTTP request rate | Apps → `taxklaro-api` → Metrics → Requests | Informational only | N/A |
+| HTTP error rate | Apps → `taxklaro-api` → Metrics → Errors | > 5% of requests | Investigate Sentry |
+| PDF Worker CPU | Apps → `taxklaro-pdf` → Metrics → CPU | > 95% (Chromium is CPU-intensive) | Queue PDF requests; scale to 2 instances |
+| Batch Worker memory | Apps → `taxklaro-batch` → Metrics → Memory | > 80% | Check for Bull queue accumulation |
 
 ### 5.2 Fly.io Machine Health Checks
 
@@ -918,12 +918,12 @@ rm backup-verify.dump
 
 ### 7.1 PayMongo Webhook Health
 
-PayMongo sends webhooks to `POST https://api.taxoptimizer.ph/v1/billing/webhooks/paymongo`. Webhook delivery failures mean subscription state changes are not processed.
+PayMongo sends webhooks to `POST https://api.taxklaro.ph/v1/billing/webhooks/paymongo`. Webhook delivery failures mean subscription state changes are not processed.
 
 **PayMongo Webhook Monitoring (manual, weekly check):**
 1. Log in to dashboard.paymongo.com
 2. Navigate to Developers → Webhooks
-3. Click the webhook for `api.taxoptimizer.ph/v1/billing/webhooks/paymongo`
+3. Click the webhook for `api.taxklaro.ph/v1/billing/webhooks/paymongo`
 4. Review the "Recent Deliveries" tab
 5. Any failed deliveries (status ≠ 200) must be investigated and replayed manually
 
@@ -952,7 +952,7 @@ Stripe automatically retries failed webhooks for 72 hours (up to 15 attempts wit
 **Manual check (weekly):**
 1. Log in to dashboard.stripe.com
 2. Navigate to Developers → Webhooks
-3. Click endpoint for `api.taxoptimizer.ph/v1/billing/webhooks/stripe`
+3. Click endpoint for `api.taxklaro.ph/v1/billing/webhooks/stripe`
 4. Review "Recent Events" — all should show green checkmarks
 5. Any red failures: click "Resend" to replay
 
@@ -1002,7 +1002,7 @@ Compare the expected revenue figure against PayMongo and Stripe dashboard MRR. A
 
 ### 8.1 Purpose
 
-A read-only admin dashboard at `https://taxoptimizer.ph/admin/metrics` displays key business metrics. Access is restricted by `X-Admin-Key` header matching the `ADMIN_API_KEY` environment variable. The page is a Next.js server component that fetches from a dedicated read-only API endpoint `GET /v1/admin/metrics`.
+A read-only admin dashboard at `https://taxklaro.ph/admin/metrics` displays key business metrics. Access is restricted by `X-Admin-Key` header matching the `ADMIN_API_KEY` environment variable. The page is a Next.js server component that fetches from a dedicated read-only API endpoint `GET /v1/admin/metrics`.
 
 ### 8.2 Metrics Tracked (Daily Snapshot)
 
@@ -1055,15 +1055,15 @@ cron.schedule('55 15 * * *', async () => {
 
 ### 8.5 Admin Dashboard UI
 
-URL: `https://taxoptimizer.ph/admin/metrics`
+URL: `https://taxklaro.ph/admin/metrics`
 Auth: Basic HTTP auth with `ADMIN_API_KEY` as password and `admin` as username (handled by Cloudflare Access rule in production, not the Next.js layer).
 
 Cloudflare Access setup (one-time):
 1. Cloudflare Dashboard → Zero Trust → Access → Applications → Add
-2. Application name: `TaxOptimizer Admin`
-3. Application domain: `taxoptimizer.ph/admin/*`
-4. Identity providers: One-time PIN (email `ops@taxoptimizer.ph`)
-5. Policy: Allow emails matching `ops@taxoptimizer.ph`
+2. Application name: `TaxKlaro Admin`
+3. Application domain: `taxklaro.ph/admin/*`
+4. Identity providers: One-time PIN (email `ops@taxklaro.ph`)
+5. Policy: Allow emails matching `ops@taxklaro.ph`
 
 The `/admin/metrics` Next.js page does NOT implement its own auth — it relies entirely on Cloudflare Access blocking unauthenticated requests before they reach Vercel.
 
@@ -1073,9 +1073,9 @@ The `/admin/metrics` Next.js page does NOT implement its own auth — it relies 
 
 ### 9.1 Configuration
 
-- **URL:** `https://status.taxoptimizer.ph`
+- **URL:** `https://status.taxklaro.ph`
 - **Provider:** BetterUptime (same account as monitors in §2)
-- **DNS:** CNAME record in Cloudflare: `status.taxoptimizer.ph` → `statuspage.betteruptime.com`
+- **DNS:** CNAME record in Cloudflare: `status.taxklaro.ph` → `statuspage.betteruptime.com`
 
 **DNS record (add in Cloudflare Dashboard → DNS → Records):**
 
@@ -1124,7 +1124,7 @@ When BetterUptime detects a monitor failure and auto-creates an incident:
 | Channel | Type | Who Receives | Used For |
 |---------|------|-------------|----------|
 | Slack `#production-alerts` | Team channel | All engineers | All alerts (primary) |
-| Email `ops@taxoptimizer.ph` | Email | Operator | P1 (critical) alerts only |
+| Email `ops@taxklaro.ph` | Email | Operator | P1 (critical) alerts only |
 | BetterUptime SMS | SMS | Operator phone number | P1 (service down) only |
 | BetterUptime Phone Call | Voice call | Operator phone number | P1 (service down) only |
 
@@ -1224,36 +1224,36 @@ At MVP stage with a solo operator, there is one on-call person. As the team grow
 
 **Step 1: Check Fly.io machine status**
 ```bash
-flyctl status -a taxoptimizer-api
+flyctl status -a taxklaro-api
 ```
 Expected output shows 2 machines in state `started`. If state is `failed` or `stopped` for any machine:
 ```bash
 # Check recent logs for crash reason
-flyctl logs -a taxoptimizer-api --no-tail | tail -100
+flyctl logs -a taxklaro-api --no-tail | tail -100
 
 # Restart the crashed machine
-flyctl machine restart <machine-id> -a taxoptimizer-api
+flyctl machine restart <machine-id> -a taxklaro-api
 ```
 
 **Step 2: If both machines are stopped (auto-stop fired at wrong time)**
 ```bash
 # Start machines manually
-flyctl machine start <machine-id-1> -a taxoptimizer-api
-flyctl machine start <machine-id-2> -a taxoptimizer-api
+flyctl machine start <machine-id-1> -a taxklaro-api
+flyctl machine start <machine-id-2> -a taxklaro-api
 ```
 
 **Step 3: If machines are running but health check fails (deployment issue)**
 ```bash
 # Get list of recent deployments
-flyctl releases list -a taxoptimizer-api
+flyctl releases list -a taxklaro-api
 
 # Rollback to previous release
-flyctl deploy --image registry.fly.io/taxoptimizer-api:<previous-version> -a taxoptimizer-api
+flyctl deploy --image registry.fly.io/taxklaro-api:<previous-version> -a taxklaro-api
 ```
 
 **Step 4: Verify recovery**
 ```bash
-curl -s https://api.taxoptimizer.ph/v1/health/live | jq .
+curl -s https://api.taxklaro.ph/v1/health/live | jq .
 # Expected: { "status": "ok", ... }
 ```
 
@@ -1268,7 +1268,7 @@ curl -s https://api.taxoptimizer.ph/v1/health/live | jq .
 **Step 2: If Supabase is healthy, check connection string**
 ```bash
 # Verify DATABASE_URL secret is correctly set
-flyctl secrets list -a taxoptimizer-api | grep DATABASE_URL
+flyctl secrets list -a taxklaro-api | grep DATABASE_URL
 # Should show the secret name (not the value)
 
 # Verify the connection works from a local machine
@@ -1280,13 +1280,13 @@ psql "$DATABASE_DIRECT_URL" -c "SELECT version();"
 - If count is ≥ 28 (PgBouncer Pro limit): all connection slots are occupied
   ```bash
   # Restart API machines to reset connection pools
-  flyctl machine restart <machine-id-1> -a taxoptimizer-api
-  flyctl machine restart <machine-id-2> -a taxoptimizer-api
+  flyctl machine restart <machine-id-1> -a taxklaro-api
+  flyctl machine restart <machine-id-2> -a taxklaro-api
   ```
 
 **Step 4: Verify recovery**
 ```bash
-curl -s https://api.taxoptimizer.ph/v1/health/ready | jq .
+curl -s https://api.taxklaro.ph/v1/health/ready | jq .
 # Expected: { "status": "ready", "checks": { "database": "ok" }, ... }
 ```
 
@@ -1299,7 +1299,7 @@ This is the most serious alert — it indicates the tax computation engine is pr
 **Step 1: Confirm the failure manually**
 ```bash
 curl -s -H "Authorization: Bearer $MONITORING_API_KEY" \
-  https://api.taxoptimizer.ph/v1/health/smoke | jq .
+  https://api.taxklaro.ph/v1/health/smoke | jq .
 ```
 
 If `"match": false`: Engine is producing wrong output. Check the `diff` field for which values are wrong.
@@ -1308,27 +1308,27 @@ If `"status": "engine_error"`: Engine is throwing an assertion error. Check Sent
 
 **Step 2: Check recent deployments**
 ```bash
-flyctl releases list -a taxoptimizer-api
+flyctl releases list -a taxklaro-api
 ```
 If the failure correlates with a recent deployment:
 ```bash
 # Immediate rollback
-flyctl deploy --image registry.fly.io/taxoptimizer-api:<previous-version> -a taxoptimizer-api
+flyctl deploy --image registry.fly.io/taxklaro-api:<previous-version> -a taxklaro-api
 
 # Verify smoke test passes after rollback
 curl -s -H "Authorization: Bearer $MONITORING_API_KEY" \
-  https://api.taxoptimizer.ph/v1/health/smoke | jq .
+  https://api.taxklaro.ph/v1/health/smoke | jq .
 ```
 
 **Step 3: If not a deployment issue, investigate in Sentry**
-- Open Sentry → `taxoptimizer-ph-api` project → Issues → filter by `ERR_ASSERT_`
+- Open Sentry → `taxklaro-ph-api` project → Issues → filter by `ERR_ASSERT_`
 - Find the specific assertion failure and note the input that triggered it
 - This is a computation bug and requires a code fix
 
 **Step 4: If the engine bug cannot be fixed immediately, disable the compute endpoint**
 ```bash
 # Set COMPUTE_DISABLED=true in Fly.io secrets
-flyctl secrets set COMPUTE_DISABLED=true -a taxoptimizer-api
+flyctl secrets set COMPUTE_DISABLED=true -a taxklaro-api
 ```
 The API server checks this env variable in `POST /v1/compute` and returns `503` with a user-friendly message: `"Tax computation is temporarily unavailable for maintenance. Please try again in a few minutes."` This prevents users from receiving wrong results.
 
@@ -1337,7 +1337,7 @@ The API server checks this env variable in `POST /v1/compute` and returns `503` 
 **Trigger:** Sentry Alert Rule 1 fires (> 100 errors in 5-minute window for P1, > 20 for P2).
 
 **Step 1: Open Sentry Issues tab**
-- Navigate to Sentry → `taxoptimizer-ph-api` → Issues
+- Navigate to Sentry → `taxklaro-ph-api` → Issues
 - Sort by "Events" descending
 - Identify the top error type driving the spike
 
@@ -1348,8 +1348,8 @@ The API server checks this env variable in `POST /v1/compute` and returns `503` 
 | `ERR_DB_CONNECTION` | Database connectivity issue | Follow Runbook 12.2 |
 | `ERR_ASSERT_*` | Engine assertion failure | Follow Runbook 12.3 |
 | `TypeError: Cannot read properties of undefined` | Null reference in new code | Rollback deployment |
-| `ECONNREFUSED :3002` | PDF worker is down | `flyctl machine restart -a taxoptimizer-pdf` |
-| `ECONNREFUSED :3003` | Batch worker is down | `flyctl machine restart -a taxoptimizer-batch` |
+| `ECONNREFUSED :3002` | PDF worker is down | `flyctl machine restart -a taxklaro-pdf` |
+| `ECONNREFUSED :3003` | Batch worker is down | `flyctl machine restart -a taxklaro-batch` |
 | `PaymentError: signature mismatch` | Webhook secret rotated | Update `PAYMONGO_WEBHOOK_SECRET` in Fly.io secrets |
 
 **Step 3: Check Axiom logs for the specific request pattern**
@@ -1364,8 +1364,8 @@ The API server checks this env variable in `POST /v1/compute` and returns `503` 
 
 **Step 4: If no immediate fix, roll back to previous deployment**
 ```bash
-flyctl releases list -a taxoptimizer-api
-flyctl deploy --image registry.fly.io/taxoptimizer-api:<previous-stable-version> -a taxoptimizer-api
+flyctl releases list -a taxklaro-api
+flyctl deploy --image registry.fly.io/taxklaro-api:<previous-stable-version> -a taxklaro-api
 ```
 
 ### 12.5 Runbook: Frontend Down (P1)
@@ -1373,7 +1373,7 @@ flyctl deploy --image registry.fly.io/taxoptimizer-api:<previous-stable-version>
 **Trigger:** BetterUptime Monitor 3 (Frontend Home Page) fires.
 
 **Step 1: Check Vercel deployment status**
-- Open `vercel.com/taxoptimizer-ph/taxoptimizer-ph/deployments`
+- Open `vercel.com/taxklaro-ph/taxklaro-ph/deployments`
 - Check if the latest production deployment shows "Ready" or "Error"
 
 **Step 2: If latest Vercel deployment is in "Error" state**
@@ -1382,12 +1382,12 @@ flyctl deploy --image registry.fly.io/taxoptimizer-api:<previous-stable-version>
 # (Vercel Dashboard → Deployments → find last "Ready" deployment → kebab menu → Promote to Production)
 
 # Or via CLI:
-vercel rollback [previous-deployment-url] --scope taxoptimizer-ph
+vercel rollback [previous-deployment-url] --scope taxklaro-ph
 ```
 
 **Step 3: If Vercel is healthy, check Cloudflare**
-- Open Cloudflare Dashboard → `taxoptimizer.ph` → DNS
-- Verify the CNAME or A record for `taxoptimizer.ph` is pointing to Vercel
+- Open Cloudflare Dashboard → `taxklaro.ph` → DNS
+- Verify the CNAME or A record for `taxklaro.ph` is pointing to Vercel
 - Check Cloudflare status at `cloudflarestatus.com`
 
 **Step 4: If Cloudflare is experiencing issues**
@@ -1396,7 +1396,7 @@ vercel rollback [previous-deployment-url] --scope taxoptimizer-ph
 
 **Step 5: Verify recovery**
 ```bash
-curl -s -o /dev/null -w "%{http_code}" https://taxoptimizer.ph/
+curl -s -o /dev/null -w "%{http_code}" https://taxklaro.ph/
 # Expected: 200
 ```
 
@@ -1406,24 +1406,24 @@ curl -s -o /dev/null -w "%{http_code}" https://taxoptimizer.ph/
 
 **Step 1: Get crash logs**
 ```bash
-flyctl logs -a taxoptimizer-api --no-tail | grep -E "(Error|FATAL|crash|OOM)" | tail -50
+flyctl logs -a taxklaro-api --no-tail | grep -E "(Error|FATAL|crash|OOM)" | tail -50
 ```
 
 **Step 2: Common crash causes**
 
 | Log pattern | Cause | Fix |
 |-------------|-------|-----|
-| `Killed` (no other context) | OOM (out of memory) | Scale VM memory: `flyctl scale memory 4096 -a taxoptimizer-api` |
+| `Killed` (no other context) | OOM (out of memory) | Scale VM memory: `flyctl scale memory 4096 -a taxklaro-api` |
 | `FATAL ERROR: Reached heap limit` | Node.js heap OOM | Increase `--max-old-space-size`: add `ENV NODE_OPTIONS="--max-old-space-size=1536"` to Dockerfile |
 | `Error: ENOTFOUND db.*.supabase.co` | DNS resolution failure for Supabase | Usually transient; if persistent, check Supabase status |
-| `Error: listen EADDRINUSE :3001` | Port conflict (should not happen on Fly) | Force restart: `flyctl machine restart <id> -a taxoptimizer-api` |
+| `Error: listen EADDRINUSE :3001` | Port conflict (should not happen on Fly) | Force restart: `flyctl machine restart <id> -a taxklaro-api` |
 
 **Step 3: If cause is unclear, deploy with debug logging**
 ```bash
-flyctl secrets set LOG_LEVEL=debug -a taxoptimizer-api
-flyctl deploy --remote-only -a taxoptimizer-api
+flyctl secrets set LOG_LEVEL=debug -a taxklaro-api
+flyctl deploy --remote-only -a taxklaro-api
 # Wait 5 minutes, check logs, then restore
-flyctl secrets set LOG_LEVEL=info -a taxoptimizer-api
+flyctl secrets set LOG_LEVEL=info -a taxklaro-api
 ```
 
 ### 12.7 Runbook: Database Storage Approaching Limit (P3→P1)

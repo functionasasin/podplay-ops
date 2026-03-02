@@ -84,11 +84,11 @@ Philippine payment providers and Stripe represent PHP amounts as integers in cen
 
 **Price anchoring:** The ₱200/month price point is below the psychological ₱250 threshold (the same ₱250,000 annual exemption that is prominent throughout the tool's output). A freelancer who sees "₱250,000 personal exemption" throughout the tool will not balk at ₱200/month.
 
-**Market positioning:** Taxumo charges ₱2,499–₱4,248/quarter (₱833–₱1,416/month) and does not offer regime comparison. At ₱200/month, TaxOptimizer PH is 4–7× cheaper than Taxumo for equivalent value, and delivers more value (regime comparison is the differentiator).
+**Market positioning:** Taxumo charges ₱2,499–₱4,248/quarter (₱833–₱1,416/month) and does not offer regime comparison. At ₱200/month, TaxKlaro is 4–7× cheaper than Taxumo for equivalent value, and delivers more value (regime comparison is the differentiator).
 
 ### 2.2 ENTERPRISE at ₱1,499/month
 
-**CPA economics:** A CPA with 15 clients each paying ₱3,000/year in ITR fees earns ₱45,000/year from filing returns. The CPA also spends 1–2 hours per client on arithmetic that TaxOptimizer automates. At ₱1,499/month (₱17,988/year), the tool replaces 60–120 hours of manual computation. Even if the CPA charges only ₱500/hour for this time, the tool pays for itself with 36 client ITR filings.
+**CPA economics:** A CPA with 15 clients each paying ₱3,000/year in ITR fees earns ₱45,000/year from filing returns. The CPA also spends 1–2 hours per client on arithmetic that TaxKlaro automates. At ₱1,499/month (₱17,988/year), the tool replaces 60–120 hours of manual computation. Even if the CPA charges only ₱500/hour for this time, the tool pays for itself with 36 client ITR filings.
 
 **Batching premium:** ENTERPRISE's batch computation feature (50 items/batch, 5 concurrent batches) enables a CPA to process an entire practice in minutes. This time-value premium justifies the 7.5× markup over PRO.
 
@@ -213,7 +213,7 @@ Not supported mid-period. If a user wants to switch from annual to monthly:
 | Day 0 (trial start) | `trial_started_at` set | "Your Professional trial has started" | Welcome. Highlights batch processing, API keys, CPA client management, white-label PDFs. How to apply for CPA role. |
 | Day 5 | `trial_ends_at - INTERVAL '2 days'` background job | "Your Professional trial ends in 2 days" | Reminder. CTA: "Keep Professional — ₱1,499/month or ₱14,999/year". |
 | Day 7 (trial end) | `trial_ends_at` background job | "Your Professional trial has ended" | Two variants: (a) billed — "You've been billed ₱1,499. Professional subscription active."; (b) failed — "Update payment method to keep Professional access." |
-| Day 10 (3 days post-expiry, if lapsed) | `trial_ends_at + INTERVAL '3 days'` | "Reconnect with your clients on TaxOptimizer" | Notes client data is retained. CTA: "Reactivate Professional". |
+| Day 10 (3 days post-expiry, if lapsed) | `trial_ends_at + INTERVAL '3 days'` | "Reconnect with your clients on TaxKlaro" | Notes client data is retained. CTA: "Reactivate Professional". |
 
 ### 4.3 Trial Re-Entry Detection Algorithm
 
@@ -280,7 +280,7 @@ Step 5: Frontend redirects to checkout_url
   - For trial: provider shows "₱0 charged today; ₱200 on {trial_end_date}"
 
 Step 6: Provider redirects to success_url
-  - success_url = "https://taxoptimizer.ph/upgrade/success?plan=PRO&session_id={session_id}"
+  - success_url = "https://taxklaro.ph/upgrade/success?plan=PRO&session_id={session_id}"
 
 Step 7: Provider sends webhook to POST /webhooks/paymongo or /webhooks/stripe
   - Webhook handler: updates subscriptions row, invalidates plan cache
@@ -348,12 +348,12 @@ Step 4: POST /contact/sales
   Request: { name, email, company_name, client_count, message }
   Action:
     - Insert into sales_leads table (internal, not public schema)
-    - Send email to enterprise@taxoptimizer.ph with lead details
+    - Send email to enterprise@taxklaro.ph with lead details
     - Send acknowledgment email to the user's provided email address:
-        Subject: "We received your TaxOptimizer Professional inquiry"
+        Subject: "We received your TaxKlaro Professional inquiry"
         Body: "Thank you, {name}. Our team will respond within 1 Philippine business day
                (Mon–Fri, 8am–6pm PST). In the meantime, you can start a free 7-day trial
-               of the Professional plan at: https://taxoptimizer.ph/upgrade/enterprise"
+               of the Professional plan at: https://taxklaro.ph/upgrade/enterprise"
   Response: { "success": true }
 
 Step 5: Acknowledgment page at /upgrade/enterprise/contact/success
@@ -416,10 +416,10 @@ PayMongo organizes subscriptions via "billing plans" within the PayMongo Subscri
 
 | Internal key | PayMongo Billing Plan ID | Description | Amount (centavos) | Interval |
 |-------------|------------------------|-------------|------------------|---------|
-| `pro_monthly_paymongo` | `bpln_taxopt_pro_monthly` | TaxOptimizer Pro — Monthly | 20000 | month |
-| `pro_annual_paymongo` | `bpln_taxopt_pro_annual` | TaxOptimizer Pro — Annual | 199900 | year |
-| `enterprise_monthly_paymongo` | `bpln_taxopt_ent_monthly` | TaxOptimizer Professional — Monthly | 149900 | month |
-| `enterprise_annual_paymongo` | `bpln_taxopt_ent_annual` | TaxOptimizer Professional — Annual | 1499900 | year |
+| `pro_monthly_paymongo` | `bpln_taxopt_pro_monthly` | TaxKlaro Pro — Monthly | 20000 | month |
+| `pro_annual_paymongo` | `bpln_taxopt_pro_annual` | TaxKlaro Pro — Annual | 199900 | year |
+| `enterprise_monthly_paymongo` | `bpln_taxopt_ent_monthly` | TaxKlaro Professional — Monthly | 149900 | month |
+| `enterprise_annual_paymongo` | `bpln_taxopt_ent_annual` | TaxKlaro Professional — Annual | 1499900 | year |
 
 **PayMongo Webhook events handled:**
 
@@ -452,15 +452,15 @@ The server calls PayMongo's Create Checkout Session endpoint with these fixed pa
         }
       ],
       "payment_method_types": ["card", "gcash", "maya", "dob", "brankas_landbank", "brankas_eastwest"],
-      "success_url": "https://taxoptimizer.ph/upgrade/success?plan={plan}&session_id={CHECKOUT_SESSION_ID}",
-      "cancel_url": "https://taxoptimizer.ph/upgrade?cancelled=true",
+      "success_url": "https://taxklaro.ph/upgrade/success?plan={plan}&session_id={CHECKOUT_SESSION_ID}",
+      "cancel_url": "https://taxklaro.ph/upgrade?cancelled=true",
       "metadata": {
         "user_id": "{user.id}",
         "plan": "{plan}",
         "billing_cycle": "{billing_cycle}",
         "start_trial": "{true|false}"
       },
-      "description": "TaxOptimizer PH — {plan_display_name}"
+      "description": "TaxKlaro — {plan_display_name}"
     }
   }
 }
@@ -523,8 +523,8 @@ For Stripe subscriptions, the server calls Stripe's `POST /v1/subscriptions` or 
     }
   },
   "customer_email": "{user.email}",
-  "success_url": "https://taxoptimizer.ph/upgrade/success?plan={plan}&session_id={CHECKOUT_SESSION_ID}",
-  "cancel_url": "https://taxoptimizer.ph/upgrade?cancelled=true",
+  "success_url": "https://taxklaro.ph/upgrade/success?plan={plan}&session_id={CHECKOUT_SESSION_ID}",
+  "cancel_url": "https://taxklaro.ph/upgrade?cancelled=true",
   "metadata": {
     "user_id": "{user.id}"
   }
@@ -550,7 +550,7 @@ For Stripe subscriptions, the server calls Stripe's `POST /v1/subscriptions` or 
 
 ### 9.1 VAT Registration Status
 
-TaxOptimizer PH is a Philippine VAT-registered entity. Digital services sold to Philippine consumers are subject to 12% VAT under the NIRC as amended. All listed prices are **VAT-inclusive** (gross price). This is the standard display practice for Philippine B2C digital products.
+TaxKlaro is a Philippine VAT-registered entity. Digital services sold to Philippine consumers are subject to 12% VAT under the NIRC as amended. All listed prices are **VAT-inclusive** (gross price). This is the standard display practice for Philippine B2C digital products.
 
 ### 9.2 VAT Breakdown by Plan
 
@@ -570,7 +570,7 @@ For ENTERPRISE subscribers who are themselves VAT-registered businesses:
 - The subscriber's TIN is collected during ENTERPRISE checkout (optional for PRO, required for ENTERPRISE VAT invoice requests).
 - TIN field in the checkout session: optional string field `tin` passed in `metadata`.
 - If TIN is provided, the invoice PDF renders the TIN field in the billing details section.
-- ORs (Official Receipts): TaxOptimizer PH issues electronic ORs via the payment provider's receipt system. For ENTERPRISE subscribers requesting a formal BIR-registered OR, they must email billing@taxoptimizer.ph. Manual OR issuance takes 3 business days.
+- ORs (Official Receipts): TaxKlaro issues electronic ORs via the payment provider's receipt system. For ENTERPRISE subscribers requesting a formal BIR-registered OR, they must email billing@taxklaro.ph. Manual OR issuance takes 3 business days.
 
 ### 9.4 Pricing Display (VAT-inclusive Disclosure)
 
@@ -599,7 +599,7 @@ The sequence number resets to `000001` each calendar day. The `invoices.invoice_
 Every invoice PDF contains these sections in order:
 
 **Header:**
-- TaxOptimizer PH logo (top-left)
+- TaxKlaro logo (top-left)
 - "OFFICIAL RECEIPT" label (top-right)
 - Invoice number
 - Invoice date (YYYY-MM-DD)
@@ -612,8 +612,8 @@ Every invoice PDF contains these sections in order:
 - Address: {user.billing_address if provided, else blank row omitted}
 
 **Seller Details (right column):**
-- TaxOptimizer PH
-- billing@taxoptimizer.ph
+- TaxKlaro
+- billing@taxklaro.ph
 - {company TIN: registered at time of issuance}
 - {company registered address}
 
@@ -621,7 +621,7 @@ Every invoice PDF contains these sections in order:
 
 | # | Description | Qty | Unit Price | Amount |
 |---|-------------|-----|-----------|--------|
-| 1 | TaxOptimizer PH — {plan_display_name} ({billing_cycle_label}) | 1 | ₱{net_price} | ₱{net_price} |
+| 1 | TaxKlaro — {plan_display_name} ({billing_cycle_label}) | 1 | ₱{net_price} | ₱{net_price} |
 
 Where:
 - `plan_display_name` = "Pro" or "Professional"
@@ -640,8 +640,8 @@ Where:
 
 **Footer:**
 - "This is a system-generated official receipt."
-- "For inquiries, contact billing@taxoptimizer.ph"
-- "TaxOptimizer PH is not a tax advisory firm. See taxoptimizer.ph/legal/disclaimer."
+- "For inquiries, contact billing@taxklaro.ph"
+- "TaxKlaro is not a tax advisory firm. See taxklaro.ph/legal/disclaimer."
 
 ### 10.3 Invoice Delivery
 
@@ -728,7 +728,7 @@ When a promo code is applied:
 2. On `POST /billing/checkout`, if `promo_code` field is provided, server validates again (server-side) and applies the coupon via the payment provider's API:
    - PayMongo: `coupon_id` parameter on the checkout session
    - Stripe: `coupon` parameter on the checkout session
-3. The payment provider handles the discount at checkout; TaxOptimizer PH does not manually adjust invoice amounts.
+3. The payment provider handles the discount at checkout; TaxKlaro does not manually adjust invoice amounts.
 4. After successful payment, `promo_codes.current_uses` is incremented atomically:
    ```sql
    UPDATE promo_codes SET current_uses = current_uses + 1 WHERE code = $1
@@ -756,7 +756,7 @@ The following promo codes are configured at launch:
 | Eligible plans | PRO Annual (₱1,999) and ENTERPRISE Annual (₱14,999) only |
 | Ineligible plans | PRO Monthly (₱200) and ENTERPRISE Monthly (₱1,499) |
 | Claim window | Within 30 calendar days of the invoice date of the annual payment |
-| Request channel | Email to support@taxoptimizer.ph with subject line "Refund Request" and account email in body |
+| Request channel | Email to support@taxklaro.ph with subject line "Refund Request" and account email in body |
 | Response time | 5 Philippine business days |
 | Refund amount | Full amount of the annual payment charged. No pro-rata deduction. |
 | Refund method | Refunded to the original payment method (card, GCash, Maya) |
@@ -781,9 +781,9 @@ Cancelling a trial before `trial_ends_at` results in zero charge. This is not a 
 
 If a user files a payment dispute (chargeback) with their bank or payment provider:
 - The subscription is immediately suspended (`status = 'PAST_DUE'`).
-- TaxOptimizer PH responds to the dispute with the user's purchase record.
-- If the dispute is resolved against TaxOptimizer PH (chargeback granted): subscription is set to `EXPIRED`.
-- If the dispute is resolved in TaxOptimizer PH's favor: subscription resumes per normal rules.
+- TaxKlaro responds to the dispute with the user's purchase record.
+- If the dispute is resolved against TaxKlaro (chargeback granted): subscription is set to `EXPIRED`.
+- If the dispute is resolved in TaxKlaro's favor: subscription resumes per normal rules.
 - Users who file fraudulent chargebacks are flagged in the internal `users.fraud_flag` field and may be banned from re-subscribing.
 
 ---
@@ -858,12 +858,12 @@ When `invoice.payment_failed` (Stripe) or `payment.failed` (PayMongo) webhook is
 5. Email sent immediately:
 
 **Email — Payment Failed:**
-- Subject: "Payment failed for your TaxOptimizer {plan} subscription"
-- Body: "We couldn't process your payment of ₱{amount} on {date}. We'll try again within 3 days. Update your payment method at: https://taxoptimizer.ph/settings/billing. You'll keep full access to {plan} features during this time."
+- Subject: "Payment failed for your TaxKlaro {plan} subscription"
+- Body: "We couldn't process your payment of ₱{amount} on {date}. We'll try again within 3 days. Update your payment method at: https://taxklaro.ph/settings/billing. You'll keep full access to {plan} features during this time."
 
 ### 14.2 Dunning Retry Schedule
 
-The payment provider handles retries. TaxOptimizer PH configures the following retry logic:
+The payment provider handles retries. TaxKlaro configures the following retry logic:
 
 | Retry | Timing | Notes |
 |-------|--------|-------|
@@ -880,8 +880,8 @@ If all retries fail within 3 days:
 4. Email sent:
 
 **Email — Subscription Expired:**
-- Subject: "Your TaxOptimizer {plan} subscription has ended"
-- Body: "We couldn't process payment after 3 attempts. Your subscription has ended and you've been moved to the Free plan. Your saved computations are retained. Reactivate at: https://taxoptimizer.ph/upgrade"
+- Subject: "Your TaxKlaro {plan} subscription has ended"
+- Body: "We couldn't process payment after 3 attempts. Your subscription has ended and you've been moved to the Free plan. Your saved computations are retained. Reactivate at: https://taxklaro.ph/upgrade"
 
 ### 14.4 In-App Dunning Banners
 

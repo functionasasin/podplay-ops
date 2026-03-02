@@ -78,7 +78,7 @@ The following table lists every feature in the product and its availability per 
 | PDF download link valid for 30 days | — | — | ✓ | — |
 | PDF download link valid for 365 days | — | — | — | ✓ |
 | White-label PDF exports (custom logo) | — | — | — | ✓ |
-| TaxOptimizer PH branded PDF exports | — | — | ✓ | ✓ |
+| TaxKlaro branded PDF exports | — | — | ✓ | ✓ |
 | **FILING TRACKING AND REMINDERS** | | | | |
 | Deadline reminder email (7 days before) | — | ✓ | ✓ | ✓ |
 | Deadline reminder email (1 day before) | — | — | ✓ | ✓ |
@@ -116,7 +116,7 @@ The following table lists every feature in the product and its availability per 
 | **SUPPORT** | | | | |
 | Community documentation (self-serve) | ✓ | ✓ | ✓ | ✓ |
 | Email support | — | ✓ (3 business day SLA) | ✓ (3 business day SLA) | ✓ (1 business day SLA) |
-| Priority support email address | — | — | — | enterprise@taxoptimizer.ph |
+| Priority support email address | — | — | — | enterprise@taxklaro.ph |
 | Scheduled support call (30 min) | — | — | — | ✓ (on request) |
 
 **Legend:** ✓ = available; — = not available; values in parentheses indicate limits or conditions.
@@ -212,7 +212,7 @@ The 10-save-per-month cap is enforced at the API layer:
 - **Fonts:** IBM Plex Sans (headers), IBM Plex Mono (numeric fields), sourced from Google Fonts CDN at build time (embedded in PDF for offline rendering).
 - **Color scheme:** Matches the design system (see [ui/design-system.md](../ui/design-system.md)) — primary color headers, gray table backgrounds, red for amounts due, green for amounts refundable.
 - **Generation endpoint:** `POST /computations/:id/exports`
-- **Storage:** Cloudflare R2 bucket `taxoptimizer-exports`, path `{user_id}/{computation_id}/{export_id}.pdf`
+- **Storage:** Cloudflare R2 bucket `taxklaro-exports`, path `{user_id}/{computation_id}/{export_id}.pdf`
 - **Signed URL expiry:** 30 days (PRO), 365 days (ENTERPRISE)
 - **Re-generation:** Each call to `POST /computations/:id/exports` with the same `type` creates a new export row. Old export rows for the same type and computation are retained but marked `superseded: true`.
 
@@ -222,8 +222,8 @@ The 10-save-per-month cap is enforced at the API layer:
 |----------|-------|
 | Trigger | `white_label_logo_url` parameter on POST /computations/:id/exports |
 | Logo format | PNG or JPEG; HTTPS URL; max 1 MB; recommended 300px × 100px |
-| Placement | Top-left corner, replacing TaxOptimizer PH logo |
-| Footer retention | "Powered by TaxOptimizer PH" retained in 8pt gray text at bottom of every page |
+| Placement | Top-left corner, replacing TaxKlaro logo |
+| Footer retention | "Powered by TaxKlaro" retained in 8pt gray text at bottom of every page |
 | Per-export scope | White-label is per-export, not a global account setting |
 | Logo fetching | Server fetches the logo URL at PDF generation time; cached for 24 hours per URL |
 | Error handling | If logo URL is unreachable (HTTP 4xx/5xx or timeout > 5s), PDF is generated without logo and `export.white_label_status = 'LOGO_FETCH_FAILED'` is set. No error returned to client — the export still succeeds. |
@@ -335,7 +335,7 @@ See [premium/professional-features.md](professional-features.md) for full specif
 
 The CPA role is not self-granted. Process:
 1. User calls `POST /users/me/request-cpa-role` with `{ reason: string, license_number: string }`.
-2. An internal notification is sent to admin@taxoptimizer.ph.
+2. An internal notification is sent to admin@taxklaro.ph.
 3. Admin approves via `PATCH /admin/users/:id/role` within 1 business day.
 4. User receives email: "Your CPA role has been approved. You can now access client management features."
 5. Session cache is invalidated; user must re-login for the role to take effect (or wait up to 5 minutes for cache expiry).
@@ -381,10 +381,10 @@ X-Subscription-Plan: PRO
 
 | Tier | Channel | SLA | Additional |
 |------|---------|-----|-----------|
-| Anonymous | Documentation only (taxoptimizer.ph/docs) | None | No ticket submission |
-| FREE | Email: support@taxoptimizer.ph | 3 Philippine business days response | Support hours: Mon–Fri 8am–6pm PST |
-| PRO | Email: support@taxoptimizer.ph | 3 Philippine business days response | Support hours: Mon–Fri 8am–6pm PST |
-| ENTERPRISE | Email: enterprise@taxoptimizer.ph | 1 Philippine business day response | + Scheduled 30-minute call on request |
+| Anonymous | Documentation only (taxklaro.ph/docs) | None | No ticket submission |
+| FREE | Email: support@taxklaro.ph | 3 Philippine business days response | Support hours: Mon–Fri 8am–6pm PST |
+| PRO | Email: support@taxklaro.ph | 3 Philippine business days response | Support hours: Mon–Fri 8am–6pm PST |
+| ENTERPRISE | Email: enterprise@taxklaro.ph | 1 Philippine business day response | + Scheduled 30-minute call on request |
 
 **Philippine business days:** Monday through Friday, 8:00 AM to 6:00 PM Philippine Standard Time (UTC+8). Excludes Philippine national holidays.
 

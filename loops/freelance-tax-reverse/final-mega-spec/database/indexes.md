@@ -323,7 +323,7 @@ CREATE INDEX user_sessions_expires_at_idx
 
 **Query patterns supported:**
 - `SELECT user_id FROM oauth_accounts WHERE provider = 'google' AND provider_user_id = $1` — Google OAuth callback: find existing account linked to this Google sub
-- Uniqueness enforcement: prevent two TaxOptimizer users from linking the same Google account
+- Uniqueness enforcement: prevent two TaxKlaro users from linking the same Google account
 
 **Cardinality:** ~30,000 rows, ~30,000 distinct `(provider, provider_user_id)` pairs (one account per Google sub per user).
 
