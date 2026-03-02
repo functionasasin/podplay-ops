@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 65
-- Analyzed: 55
-- Pending: 10
-- Convergence: 85%
+- Analyzed: 56
+- Pending: 9
+- Convergence: 86%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -73,7 +73,7 @@ Design everything around the engine to make it a shippable product.
 - [x] frontend-copy — All user-facing text: labels, tooltips, errors, empty states, CTAs
 - [x] database-schema — Every table, column, type, constraint, index
 - [x] api-endpoints — Every route, method, request/response schema, error responses
-- [ ] api-auth — Auth model, roles, permissions, session management
+- [x] api-auth — Auth model, roles, permissions, session management
 - [ ] premium-tiers — Free vs pro vs enterprise feature gating
 - [ ] premium-pricing — Price points, billing cycles, trial logic
 - [ ] professional-features — B2B features: batch, API access, PDF export, white-label
