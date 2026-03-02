@@ -10,6 +10,8 @@ export function getRepresentedName(
   share: InheritanceShare,
   persons: Person[],
 ): string | null {
-  // Stub — to be implemented in the next iteration
-  return null;
+  if (share.inherits_by !== 'Representation') return null;
+  if (share.represents === null) return 'representing deceased heir';
+  const parent = persons.find((p) => p.id === share.represents);
+  return parent ? `representing ${parent.name}` : 'representing deceased heir';
 }
