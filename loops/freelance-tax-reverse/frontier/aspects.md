@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 76
-- Analyzed: 64
-- Pending: 12
-- Convergence: 84%
+- Analyzed: 65
+- Pending: 11
+- Convergence: 86%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -85,7 +85,7 @@ Design everything needed to launch and operate the product.
 - [x] monitoring — Health checks, alerts, error tracking
 - [x] design-system — Colors (hex), typography (fonts/sizes/weights), spacing, components
 - [x] responsive-design — Breakpoints, mobile behavior, touch targets
-- [ ] accessibility — WCAG compliance, ARIA labels, keyboard nav
+- [x] accessibility — WCAG compliance, ARIA labels, keyboard nav
 - [ ] branding — Logo concepts, favicon, OG images, brand voice
 - [ ] legal-disclaimers — Exact disclaimer text for tax computation tools
 - [ ] terms-and-privacy — ToS structure, privacy policy sections
