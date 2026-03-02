@@ -1,6 +1,6 @@
 # Exhaustive Test Vectors — Philippine Freelance Tax Optimizer
 
-**Status:** PARTIAL — Groups 1–8 complete (36 vectors + 6 cross-references). Groups 9–14 pending.
+**Status:** PARTIAL — Groups 1–9 complete (47 vectors + 6 cross-references). Groups 10–14 pending.
 **Last updated:** 2026-03-02
 **Cross-references:**
 - Scenario codes: [domain/scenarios.md](../../domain/scenarios.md)
@@ -5954,4 +5954,1178 @@ TaxComputationResult {
 5. **PT (Form 2551Q) is always a separate obligation from IT (Form 1701Q).** TV-EX-G8-002 and TV-EX-G8-003 show PT filings on separate deadlines (April 25, July 25, October 25, January 25) while 1701Q deadlines are May 15, August 15, November 15. The engine tracks them independently. PT under Path B/A is not affected by the IT amendment cascade.
 
 6. **Bracket escalation under OSD is visible and important to display.** TV-EX-G8-002 shows Q1 in bracket 1 (₱0 IT), Q2 entering bracket 2 (15% marginal), Q3 entering bracket 3 (20% marginal), and annual staying in bracket 3. This escalation is why quarterly payments are not simply ¼ of the annual liability — Q1 pays ₱0, Q2 pays more than Q3 on an incremental basis (Q2 incremental ₱16,500 vs Q3 incremental ₱34,000 — higher because Q3's marginal rate is higher).
+
+---
+
+## GROUP 9: Business/Trading Taxpayers (SC-B)
+
+**11 scenario codes:** SC-B-ML-8, SC-B-ML-O, SC-B-ML-I, SC-B-MH-8, SC-B-MH-O, SC-B-MH-I, SC-B-H-8, SC-B-H-O, SC-B-H-I, SC-B-VH-O-VAT, SC-B-VH-I-VAT
+
+**The defining difference from Group 1 (service providers):**
+
+Trading taxpayers (sellers of goods) have `cost_of_goods_sold > 0`, which the engine uses to set `taxpayer_class = TRADER`. This changes the OSD base computation:
+
+| Field | SERVICE_PROVIDER | TRADER |
+|-------|-----------------|--------|
+| `gross_income` | = `net_gross_receipts` | = `net_gross_receipts − cost_of_goods_sold` |
+| OSD base (Path B) | 40% × `net_gross_receipts` | 40% × `gross_income` (= 40% × (sales − COGS)) |
+| Path A NTI base | `gross_receipts − expenses` | `gross_receipts − COGS − operating_expenses` |
+| Path C base | `gross_receipts − ₱250,000` | `gross_receipts − ₱250,000` (COGS not deducted for 8%) |
+| PT base | `gross_receipts` | `gross_receipts` (gross SALES) |
+| EAR cap | 1% of gross receipts (service) | 0.5% of net sales (goods) |
+
+**Critical insight:** For traders with high COGS, the 8% option is expensive because it ignores COGS — the rate applies to gross SALES, not gross income. By contrast, OSD and itemized both deduct COGS before computing NTI. As COGS ratio rises, OSD and itemized become increasingly advantageous over 8%.
+
+**OSD vs Itemized breakeven for TRADER (Path B vs Path A):**
+For a trader, OSD beats itemized when: operating_expenses < 0.40 × gross_income.
+Itemized beats OSD when: operating_expenses > 0.40 × gross_income (i.e., when OE exceeds 40% of the gross income figure after subtracting COGS).
+
+**Common characteristics for all Group 9 vectors (differences from Group 1 defaults noted):**
+- `taxpayer_type`: PURELY_SE
+- `is_mixed_income`: false
+- `is_bmbe_registered`: false
+- `subject_to_sec_117_128`: false
+- `is_gpp_partner`: false
+- `taxable_compensation`: ₱0.00
+- `compensation_cwt`: ₱0.00
+- `taxpayer_class` (derived): **TRADER** (because `cost_of_goods_sold > 0`)
+- `income_type` (derived): PURELY_SE
+- `sales_returns_allowances`: ₱0.00
+- `non_operating_income`: ₱0.00
+- `fwt_income`: ₱0.00
+- `prior_quarterly_payments`: []
+- `cwt_2307_entries`: []
+- `prior_year_excess_cwt`: ₱0.00
+- `actual_filing_date`: null (on-time assumed)
+- `return_type`: ORIGINAL
+- `prior_payment_for_return`: ₱0.00
+- `elected_regime`: null (optimizer mode)
+- `filing_period`: ANNUAL
+- `tax_year`: 2025
+
+---
+
+## TV-EX-G9-001: SC-B-ML-8 — Online Retailer, Low COGS, 8% Optimal
+
+**Scenario code:** SC-B-ML-8
+**Description:** Online seller of digital goods (stock photo bundles, design templates) with ₱700,000 gross sales and only ₱50,000 COGS (stock licenses, asset purchases). Operating expenses ₱50,000 (platform fees, advertising). COGS is so low (7.1%) that the 8% option on gross sales is cheaper than OSD — even though OSD reduces the base by COGS before applying 40%. Demonstrates that the low-COGS digital goods business most resembles a service provider, making 8% the clear winner.
+
+### Input (fields differing from Group 9 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `gross_receipts` | ₱700,000.00 | Gross sales of digital goods |
+| `cost_of_goods_sold` | ₱50,000.00 | Stock license purchases, asset acquisition cost |
+| `itemized_expenses.advertising` | ₱30,000.00 | Marketplace listing fees, paid ads |
+| `itemized_expenses.communication` | ₱10,000.00 | Internet, cloud storage subscriptions |
+| `itemized_expenses.taxes_and_licenses` | ₱10,000.00 | BIR registration, local business permit |
+| All other itemized expense fields | ₱0.00 | |
+| `is_vat_registered` | false | |
+| `taxpayer_tier` (derived) | MICRO | Gross sales < ₱3,000,000 |
+
+**Total operating expenses (excluding COGS):** ₱50,000.00
+**Total itemized (COGS + OE):** ₱100,000.00
+
+### Expected Intermediate Values
+
+**PL-02:** net_gross_receipts = ₱700,000.00; gross_income = ₱700,000 − ₱50,000 = **₱650,000.00**; taxpayer_class = TRADER; taxpayer_tier = MICRO; income_type = PURELY_SE
+
+**PL-04:** path_c_eligible = true; ineligibility_reasons = []
+
+**PL-05:** COGS = ₱50,000.00; other itemized operating expenses = ₱50,000.00; total_path_a_deductions = ₱100,000.00; EAR cap = 0.5% × ₱700,000 = ₱3,500.00 (goods rate); no EAR expenses claimed; NOLCO = ₱0.00
+
+**PL-06 (OSD for TRADER):** osd_base = gross_income = ₱650,000.00; osd_amount = ₱650,000 × 0.40 = **₱260,000.00**; nti_path_b = ₱650,000 − ₱260,000 = **₱390,000.00**
+
+**PL-07:** total_cwt = ₱0.00
+
+**PL-08 (Path A — Graduated + Itemized):** nti_path_a = ₱700,000 − ₱50,000 − ₱50,000 = **₱600,000.00**; income_tax = 22,500 + (600,000 − 400,000) × 0.20 = 22,500 + 40,000 = **₱62,500.00**; pt = ₱700,000 × 0.03 = **₱21,000.00**; total_path_a = **₱83,500.00**
+
+**PL-09 (Path B — Graduated + OSD):** nti_path_b = ₱390,000.00; income_tax = (390,000 − 250,000) × 0.15 = **₱21,000.00** (bracket 2); pt = **₱21,000.00**; total_path_b = **₱42,000.00**
+
+**PL-10 (Path C — 8% Flat):** path_c_base = max(700,000 − 250,000, 0) = **₱450,000.00**; income_tax = 450,000 × 0.08 = **₱36,000.00**; pt = **₱0.00** (waived); total_path_c = **₱36,000.00**
+
+**PL-13:** recommended_path = PATH_C; savings_vs_next_best = ₱42,000 − ₱36,000 = **₱6,000.00**; savings_vs_worst = ₱83,500 − ₱36,000 = **₱47,500.00**
+
+**PL-14:** balance_payable = ₱36,000.00 − ₱0.00 CWT − ₱0.00 quarterly = **₱36,000.00**
+
+**PL-15:** form = FORM_1701A; form_section = PART_IV_B (8% rate section, purely SE)
+
+**PL-16:** total_penalties = ₱0.00 (on-time)
+
+### Expected Final Output
+
+```
+TaxComputationResult {
+  tax_year: 2025,  filing_period: ANNUAL,
+  taxpayer_type: PURELY_SE,  taxpayer_tier: MICRO,
+  taxpayer_class: TRADER,
+
+  gross_income: 650000.00,
+  cost_of_goods_sold: 50000.00,
+
+  regime_comparison: {
+    path_a: { eligible: true, nti: 600000.00,
+              income_tax: 62500.00, percentage_tax: 21000.00, total_tax: 83500.00 },
+    path_b: { eligible: true, nti: 390000.00, osd_base: 650000.00, osd_amount: 260000.00,
+              income_tax: 21000.00, percentage_tax: 21000.00, total_tax: 42000.00 },
+    path_c: { eligible: true, tax_base: 450000.00, income_tax: 36000.00,
+              percentage_tax: 0.00, total_tax: 36000.00, ineligibility_reasons: [] },
+    recommended_path: PATH_C,
+    savings_vs_next_best: 6000.00,
+    savings_vs_worst: 47500.00
+  },
+
+  selected_path: PATH_C,
+  income_tax_due: 36000.00,
+  percentage_tax_due: 0.00,
+  total_tax_due: 36000.00,
+  cwt_credits: 0.00,
+  quarterly_it_paid: 0.00,
+  balance_payable: 36000.00,
+  overpayment: 0.00,
+  overpayment_disposition: null,
+  form: FORM_1701A,  form_section: PART_IV_B,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [WARN_004],
+  manual_review_flags: [],  ineligibility_notifications: []
+}
+```
+
+**WARN_004** fires: total expenses / gross_receipts = 100,000 / 700,000 = 14.3% — within normal range but the low-expense ratio is noted.
+
+### Verification
+
+- TRADER OSD base = gross_income = 700,000 − 50,000 = **₱650,000** ✓ (not gross_sales)
+- Path B OSD = 650,000 × 0.40 = **₱260,000** ✓; NTI = 650,000 − 260,000 = **₱390,000** ✓
+- Path B IT: (390,000 − 250,000) × 0.15 = 140,000 × 0.15 = **₱21,000** ✓ (bracket 2)
+- Path C base = 700,000 − 250,000 = **₱450,000** ✓ (COGS NOT deducted for 8%)
+- Path C IT = 450,000 × 0.08 = **₱36,000** ✓
+- Path A NTI = 700,000 − 50,000 − 50,000 = **₱600,000** ✓; IT = 22,500 + 200,000 × 0.20 = **₱62,500** ✓
+- Path C wins: 36,000 < 42,000 < 83,500 ✓
+
+**Legal basis:** TRADER OSD base: NIRC Sec. 34(L) — "40% of gross income"; gross income for goods = gross sales − COGS per Sec. 32. 8% option base: NIRC Sec. 24(A)(2)(b) — "gross sales or receipts" (no COGS deduction). PT waiver: RR 8-2018.
+
+---
+
+## TV-EX-G9-002: SC-B-ML-O — Physical Goods Retailer, High COGS, OSD Optimal
+
+**Scenario code:** SC-B-ML-O
+**Description:** Clothing retailer sourcing wholesale inventory with ₱800,000 gross sales and ₱400,000 COGS (50%). When COGS is 50%, the OSD is applied to only ₱400,000 (gross income), reducing NTI to ₱240,000 — just below the ₱250,000 zero-tax threshold. This eliminates income tax entirely. The 8% option ignores the ₱400,000 COGS and taxes ₱550,000 at 8% = ₱44,000, far more than the ₱24,000 total under OSD (PT only). Demonstrates that high-COGS traders should almost always choose OSD or itemized over 8%.
+
+### Input (fields differing from Group 9 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `gross_receipts` | ₱800,000.00 | Gross sales (wholesale-to-retail) |
+| `cost_of_goods_sold` | ₱400,000.00 | Wholesale purchase cost of goods sold |
+| `itemized_expenses.rent` | ₱36,000.00 | Market stall rental ₱3,000/month × 12 |
+| `itemized_expenses.utilities` | ₱12,000.00 | Electricity and water at stall |
+| `itemized_expenses.taxes_and_licenses` | ₱12,000.00 | Business permit, BIR COR renewal |
+| All other itemized expense fields | ₱0.00 | |
+| `is_vat_registered` | false | |
+| `taxpayer_tier` (derived) | MICRO | |
+
+**Total operating expenses (excluding COGS):** ₱60,000.00
+**Total itemized (COGS + OE):** ₱460,000.00
+
+### Expected Intermediate Values
+
+**PL-02:** net_gross_receipts = ₱800,000.00; gross_income = ₱800,000 − ₱400,000 = **₱400,000.00**; taxpayer_class = TRADER; taxpayer_tier = MICRO
+
+**PL-04:** path_c_eligible = true; ineligibility_reasons = []
+
+**PL-05:** COGS = ₱400,000.00; operating expenses = ₱60,000.00; total_path_a_deductions = ₱460,000.00; EAR cap = 0.5% × ₱800,000 = ₱4,000.00; NOLCO = ₱0.00
+
+**PL-06 (OSD for TRADER):** osd_base = ₱400,000.00; osd_amount = ₱400,000 × 0.40 = **₱160,000.00**; nti_path_b = ₱400,000 − ₱160,000 = **₱240,000.00**
+
+**PL-08 (Path A):** nti_path_a = ₱800,000 − ₱400,000 − ₱60,000 = **₱340,000.00**; income_tax = (340,000 − 250,000) × 0.15 = **₱13,500.00** (bracket 2); pt = ₱800,000 × 0.03 = **₱24,000.00**; total_path_a = **₱37,500.00**
+
+**PL-09 (Path B):** nti_path_b = ₱240,000.00 (below ₱250,000 threshold); income_tax = **₱0.00**; pt = **₱24,000.00**; total_path_b = **₱24,000.00**
+
+**PL-10 (Path C):** path_c_base = max(800,000 − 250,000, 0) = **₱550,000.00**; income_tax = 550,000 × 0.08 = **₱44,000.00**; pt = **₱0.00**; total_path_c = **₱44,000.00**
+
+**PL-13:** recommended_path = PATH_B; savings_vs_next_best = ₱37,500 − ₱24,000 = **₱13,500.00**; savings_vs_worst = ₱44,000 − ₱24,000 = **₱20,000.00**
+
+**PL-14:** balance_payable = **₱24,000.00**
+
+**PL-15:** form = FORM_1701A; form_section = PART_IV_A (graduated + OSD)
+
+**PL-16:** total_penalties = ₱0.00
+
+### Expected Final Output
+
+```
+TaxComputationResult {
+  tax_year: 2025,  filing_period: ANNUAL,
+  taxpayer_type: PURELY_SE,  taxpayer_tier: MICRO,
+  taxpayer_class: TRADER,
+
+  gross_income: 400000.00,
+  cost_of_goods_sold: 400000.00,
+
+  regime_comparison: {
+    path_a: { eligible: true, nti: 340000.00,
+              income_tax: 13500.00, percentage_tax: 24000.00, total_tax: 37500.00 },
+    path_b: { eligible: true, nti: 240000.00, osd_base: 400000.00, osd_amount: 160000.00,
+              income_tax: 0.00, percentage_tax: 24000.00, total_tax: 24000.00 },
+    path_c: { eligible: true, tax_base: 550000.00, income_tax: 44000.00,
+              percentage_tax: 0.00, total_tax: 44000.00, ineligibility_reasons: [] },
+    recommended_path: PATH_B,
+    savings_vs_next_best: 13500.00,
+    savings_vs_worst: 20000.00
+  },
+
+  selected_path: PATH_B,
+  income_tax_due: 0.00,
+  percentage_tax_due: 24000.00,
+  total_tax_due: 24000.00,
+  cwt_credits: 0.00,
+  quarterly_it_paid: 0.00,
+  balance_payable: 24000.00,
+  overpayment: 0.00,
+  overpayment_disposition: null,
+  form: FORM_1701A,  form_section: PART_IV_A,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [],
+  manual_review_flags: [],  ineligibility_notifications: []
+}
+```
+
+### Verification
+
+- TRADER gross_income = 800,000 − 400,000 = **₱400,000** ✓
+- Path B OSD = 400,000 × 0.40 = **₱160,000** ✓; NTI = 400,000 − 160,000 = **₱240,000** ✓
+- Path B NTI ₱240,000 < ₱250,000 → IT = **₱0.00** ✓
+- Path B total = 0 + 24,000 = **₱24,000** ✓
+- Path C base = 800,000 − 250,000 = **₱550,000** ✓ (COGS not subtracted!)
+- Path C IT = 550,000 × 0.08 = **₱44,000** ✓
+- Path B < Path A (₱24,000 < ₱37,500) < Path C (₱44,000) ✓
+- OSD eliminates IT by reducing NTI below ₱250K zero-bracket ✓
+
+**Key insight documented:** 8% ignores COGS → charges 8% on ₱550,000 gross = ₱44,000. OSD on gross_income (₱400,000) → NTI ₱240,000 → ₱0 IT → only PT ₱24,000. OSD saves ₱20,000 over 8% for this trader.
+
+**Legal basis:** NIRC Sec. 34(L); NIRC Sec. 32(B) (gross income definition for goods: sales − COGS); NIRC Sec. 24(A)(2)(b).
+
+---
+
+## TV-EX-G9-003: SC-B-ML-I — High-Cost Goods Retailer, Very High COGS, Tie Between A and B
+
+**Scenario code:** SC-B-ML-I
+**Description:** Electronics reseller (camera bodies, lenses) with ₱800,000 gross sales and ₱600,000 COGS (75%). Operating expenses ₱100,000. When COGS is this high, both itemized (Path A) and OSD (Path B) produce NTIs below the ₱250,000 zero-tax threshold, making both paths equal in total tax (only PT applies). The engine correctly recommends Path B by tie-breaking rule (PATH_B > PATH_A when totals are equal). Path C charges 8% on gross sales ignoring the ₱600,000 COGS — a ₱20,000 penalty for choosing the wrong path.
+
+### Input (fields differing from Group 9 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `gross_receipts` | ₱800,000.00 | Gross sales of camera equipment |
+| `cost_of_goods_sold` | ₱600,000.00 | Camera bodies and lenses purchased for resale |
+| `itemized_expenses.advertising` | ₱30,000.00 | Social media ads, product photography |
+| `itemized_expenses.communication` | ₱20,000.00 | Internet, phone |
+| `itemized_expenses.taxes_and_licenses` | ₱20,000.00 | Business permit, BIR fees |
+| `itemized_expenses.transportation` | ₱30,000.00 | Delivery costs to buyers |
+| All other itemized expense fields | ₱0.00 | |
+| `is_vat_registered` | false | |
+| `taxpayer_tier` (derived) | MICRO | |
+
+**Total operating expenses (excluding COGS):** ₱100,000.00
+**Total itemized (COGS + OE):** ₱700,000.00
+
+### Expected Intermediate Values
+
+**PL-02:** net_gross_receipts = ₱800,000.00; gross_income = ₱800,000 − ₱600,000 = **₱200,000.00**; taxpayer_class = TRADER; taxpayer_tier = MICRO
+
+**PL-04:** path_c_eligible = true; ineligibility_reasons = []
+
+**PL-05:** COGS = ₱600,000.00; operating expenses = ₱100,000.00; EAR cap = 0.5% × ₱800,000 = ₱4,000.00; no EAR expenses claimed; NOLCO = ₱0.00
+
+**PL-06 (OSD for TRADER):** osd_base = ₱200,000.00; osd_amount = ₱200,000 × 0.40 = **₱80,000.00**; nti_path_b = ₱200,000 − ₱80,000 = **₱120,000.00**
+
+**Breakeven check (Path A vs Path B):** OSD beats itemized when OE < 0.40 × gross_income. 0.40 × ₱200,000 = ₱80,000; actual OE = ₱100,000 > ₱80,000 → **Itemized has lower NTI than OSD** (₱100,000 < ₱120,000). However, BOTH NTIs are below ₱250,000, so IT = ₱0 for both → tie.
+
+**PL-08 (Path A):** nti_path_a = ₱800,000 − ₱600,000 − ₱100,000 = **₱100,000.00**; income_tax = **₱0.00** (below ₱250K); pt = ₱800,000 × 0.03 = **₱24,000.00**; total_path_a = **₱24,000.00**
+
+**PL-09 (Path B):** nti_path_b = **₱120,000.00**; income_tax = **₱0.00**; pt = **₱24,000.00**; total_path_b = **₱24,000.00**
+
+**PL-10 (Path C):** path_c_base = max(800,000 − 250,000, 0) = **₱550,000.00**; income_tax = 550,000 × 0.08 = **₱44,000.00**; pt = **₱0.00**; total_path_c = **₱44,000.00**
+
+**PL-13:** recommended_path = PATH_B (tie-break: PATH_B preferred over PATH_A when totals equal per INV-RC-03); savings_vs_next_best = **₱0.00** (tied with Path A); savings_vs_worst = ₱44,000 − ₱24,000 = **₱20,000.00**
+
+**PL-14:** balance_payable = **₱24,000.00**
+
+**PL-15:** form = FORM_1701A; form_section = PART_IV_A (Path B recommended)
+
+**PL-16:** total_penalties = ₱0.00
+
+### Expected Final Output
+
+```
+TaxComputationResult {
+  tax_year: 2025,  filing_period: ANNUAL,
+  taxpayer_type: PURELY_SE,  taxpayer_tier: MICRO,
+  taxpayer_class: TRADER,
+
+  gross_income: 200000.00,
+  cost_of_goods_sold: 600000.00,
+
+  regime_comparison: {
+    path_a: { eligible: true, nti: 100000.00,
+              income_tax: 0.00, percentage_tax: 24000.00, total_tax: 24000.00 },
+    path_b: { eligible: true, nti: 120000.00, osd_base: 200000.00, osd_amount: 80000.00,
+              income_tax: 0.00, percentage_tax: 24000.00, total_tax: 24000.00 },
+    path_c: { eligible: true, tax_base: 550000.00, income_tax: 44000.00,
+              percentage_tax: 0.00, total_tax: 44000.00, ineligibility_reasons: [] },
+    recommended_path: PATH_B,
+    savings_vs_next_best: 0.00,
+    savings_vs_worst: 20000.00
+  },
+
+  selected_path: PATH_B,
+  income_tax_due: 0.00,
+  percentage_tax_due: 24000.00,
+  total_tax_due: 24000.00,
+  cwt_credits: 0.00,
+  quarterly_it_paid: 0.00,
+  balance_payable: 24000.00,
+  overpayment: 0.00,
+  overpayment_disposition: null,
+  form: FORM_1701A,  form_section: PART_IV_A,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [],
+  manual_review_flags: [],  ineligibility_notifications: []
+}
+```
+
+### Verification
+
+- gross_income = 800,000 − 600,000 = **₱200,000** ✓
+- OE > 0.40 × GI: 100,000 > 80,000 → itemized gives lower NTI than OSD ✓
+- Path A NTI = 800,000 − 600,000 − 100,000 = **₱100,000** < ₱250K → IT = **₱0** ✓
+- Path B NTI = 200,000 × 0.60 = **₱120,000** < ₱250K → IT = **₱0** ✓
+- Both totals = ₱24,000; tie → PATH_B wins per INV-RC-03 ✓
+- savings_vs_next_best = 0 (tie displayed in UI as "Equally optimal — Path B selected by default") ✓
+
+**Legal basis:** NIRC Sec. 34(L) (OSD on gross income). Tie-breaking rule: CR-028 Section 5 — "On equal total tax, path rank: C > B > A". Path C not eligible here (it would cost more). Between B and A at equal cost: B wins.
+
+---
+
+## TV-EX-G9-004: SC-B-MH-8 — E-Commerce Seller, Medium Gross, Low COGS, 8% Wins
+
+**Scenario code:** SC-B-MH-8
+**Description:** Online seller of digital software licenses and SaaS subscriptions (rebundled products) with ₱1,500,000 gross sales and only ₱200,000 COGS (13.3% ratio). Low COGS means the 8% option (applied to gross sales − ₱250K) is far cheaper than OSD or itemized. Both OSD and itemized produce high NTIs because deductible amounts are small relative to gross sales. 8% saves ₱43,500 over OSD and ₱147,500 over itemized.
+
+### Input (fields differing from Group 9 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `gross_receipts` | ₱1,500,000.00 | Annual gross sales of software/digital products |
+| `cost_of_goods_sold` | ₱200,000.00 | Software license acquisition cost |
+| `itemized_expenses.advertising` | ₱60,000.00 | Digital marketing, SEO tools |
+| `itemized_expenses.communication` | ₱24,000.00 | Internet, cloud servers, email services |
+| `itemized_expenses.taxes_and_licenses` | ₱16,000.00 | BIR registration, permits, platform fees |
+| All other itemized expense fields | ₱0.00 | |
+| `is_vat_registered` | false | |
+| `taxpayer_tier` (derived) | MICRO | |
+
+**Total operating expenses (excluding COGS):** ₱100,000.00
+**Total itemized (COGS + OE):** ₱300,000.00
+
+### Expected Intermediate Values
+
+**PL-02:** net_gross_receipts = ₱1,500,000.00; gross_income = ₱1,500,000 − ₱200,000 = **₱1,300,000.00**; taxpayer_class = TRADER; taxpayer_tier = MICRO
+
+**PL-04:** path_c_eligible = true; ineligibility_reasons = []
+
+**PL-05:** COGS = ₱200,000.00; operating expenses = ₱100,000.00; EAR cap = 0.5% × ₱1,500,000 = ₱7,500.00; no EAR expenses claimed; NOLCO = ₱0.00
+
+**PL-06 (OSD):** osd_base = ₱1,300,000.00; osd_amount = ₱1,300,000 × 0.40 = **₱520,000.00**; nti_path_b = ₱1,300,000 − ₱520,000 = **₱780,000.00**
+
+**PL-08 (Path A):** nti_path_a = ₱1,500,000 − ₱200,000 − ₱100,000 = **₱1,200,000.00**; income_tax = 102,500 + (1,200,000 − 800,000) × 0.25 = 102,500 + 100,000 = **₱202,500.00** (bracket 4); pt = ₱1,500,000 × 0.03 = **₱45,000.00**; total_path_a = **₱247,500.00**
+
+**PL-09 (Path B):** nti_path_b = ₱780,000.00; income_tax = 22,500 + (780,000 − 400,000) × 0.20 = 22,500 + 76,000 = **₱98,500.00** (bracket 3); pt = **₱45,000.00**; total_path_b = **₱143,500.00**
+
+**PL-10 (Path C):** path_c_base = max(1,500,000 − 250,000, 0) = **₱1,250,000.00**; income_tax = 1,250,000 × 0.08 = **₱100,000.00**; pt = **₱0.00**; total_path_c = **₱100,000.00**
+
+**PL-13:** recommended_path = PATH_C; savings_vs_next_best = ₱143,500 − ₱100,000 = **₱43,500.00**; savings_vs_worst = ₱247,500 − ₱100,000 = **₱147,500.00**
+
+**PL-14:** balance_payable = **₱100,000.00**
+
+**PL-15:** form = FORM_1701A; form_section = PART_IV_B
+
+**PL-16:** total_penalties = ₱0.00
+
+### Expected Final Output
+
+```
+TaxComputationResult {
+  tax_year: 2025,  filing_period: ANNUAL,
+  taxpayer_type: PURELY_SE,  taxpayer_tier: MICRO,
+  taxpayer_class: TRADER,
+
+  gross_income: 1300000.00,
+  cost_of_goods_sold: 200000.00,
+
+  regime_comparison: {
+    path_a: { eligible: true, nti: 1200000.00,
+              income_tax: 202500.00, percentage_tax: 45000.00, total_tax: 247500.00 },
+    path_b: { eligible: true, nti: 780000.00, osd_base: 1300000.00, osd_amount: 520000.00,
+              income_tax: 98500.00, percentage_tax: 45000.00, total_tax: 143500.00 },
+    path_c: { eligible: true, tax_base: 1250000.00, income_tax: 100000.00,
+              percentage_tax: 0.00, total_tax: 100000.00, ineligibility_reasons: [] },
+    recommended_path: PATH_C,
+    savings_vs_next_best: 43500.00,
+    savings_vs_worst: 147500.00
+  },
+
+  selected_path: PATH_C,
+  income_tax_due: 100000.00,
+  percentage_tax_due: 0.00,
+  total_tax_due: 100000.00,
+  cwt_credits: 0.00,
+  quarterly_it_paid: 0.00,
+  balance_payable: 100000.00,
+  overpayment: 0.00,
+  overpayment_disposition: null,
+  form: FORM_1701A,  form_section: PART_IV_B,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [],
+  manual_review_flags: [],  ineligibility_notifications: []
+}
+```
+
+### Verification
+
+- gross_income = 1,500,000 − 200,000 = **₱1,300,000** ✓
+- Path B NTI = 1,300,000 × 0.60 = **₱780,000** ✓; IT = 22,500 + (780,000 − 400,000) × 0.20 = 22,500 + 76,000 = **₱98,500** ✓
+- Path A NTI = 1,500,000 − 300,000 = **₱1,200,000** ✓; IT = 102,500 + (1,200,000 − 800,000) × 0.25 = 102,500 + 100,000 = **₱202,500** ✓
+- Path C base = 1,500,000 − 250,000 = **₱1,250,000** ✓; IT = 1,250,000 × 0.08 = **₱100,000** ✓
+- PATH_C wins: 100,000 < 143,500 < 247,500 ✓
+
+**Legal basis:** NIRC Sec. 24(A)(2)(b) (8% on gross sales). NIRC Sec. 34(L) (OSD on gross income). CR-028 (regime comparison).
+
+---
+
+## TV-EX-G9-005: SC-B-MH-O — General Merchandise Retailer, Medium Gross, High COGS, OSD Optimal
+
+**Scenario code:** SC-B-MH-O
+**Description:** Hardware/tools retailer with ₱1,500,000 gross sales and ₱750,000 COGS (50%). OSD applied to gross income of ₱750,000 yields NTI of ₱450,000 — in bracket 3 (20% marginal), producing IT ₱32,500 plus PT ₱45,000 = ₱77,500 total. The 8% option on ₱1,250,000 (gross minus ₱250K) = ₱100,000. OSD saves ₱22,500 over 8%. Demonstrates that mid-range retailers with ~50% COGS should strongly prefer OSD or itemized over the 8% flat rate.
+
+### Input (fields differing from Group 9 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `gross_receipts` | ₱1,500,000.00 | Gross sales of hardware, tools, construction supplies |
+| `cost_of_goods_sold` | ₱750,000.00 | Wholesale purchase cost (50% COGS ratio) |
+| `itemized_expenses.rent` | ₱60,000.00 | Store rent ₱5,000/month × 12 |
+| `itemized_expenses.utilities` | ₱24,000.00 | Electricity, water |
+| `itemized_expenses.taxes_and_licenses` | ₱16,000.00 | Business permit, BIR COR |
+| All other itemized expense fields | ₱0.00 | |
+| `is_vat_registered` | false | |
+| `taxpayer_tier` (derived) | MICRO | |
+
+**Total operating expenses (excluding COGS):** ₱100,000.00
+**Total itemized (COGS + OE):** ₱850,000.00
+
+### Expected Intermediate Values
+
+**PL-02:** net_gross_receipts = ₱1,500,000.00; gross_income = ₱1,500,000 − ₱750,000 = **₱750,000.00**; taxpayer_class = TRADER; taxpayer_tier = MICRO
+
+**PL-04:** path_c_eligible = true; ineligibility_reasons = []
+
+**PL-05:** COGS = ₱750,000.00; operating expenses = ₱100,000.00; EAR cap = 0.5% × ₱1,500,000 = ₱7,500.00; NOLCO = ₱0.00
+
+**PL-06 (OSD):** osd_base = ₱750,000.00; osd_amount = ₱750,000 × 0.40 = **₱300,000.00**; nti_path_b = ₱750,000 − ₱300,000 = **₱450,000.00**
+
+**PL-08 (Path A):** nti_path_a = ₱1,500,000 − ₱750,000 − ₱100,000 = **₱650,000.00**; income_tax = 22,500 + (650,000 − 400,000) × 0.20 = 22,500 + 50,000 = **₱72,500.00** (bracket 3); pt = ₱1,500,000 × 0.03 = **₱45,000.00**; total_path_a = **₱117,500.00**
+
+**PL-09 (Path B):** nti_path_b = ₱450,000.00; income_tax = 22,500 + (450,000 − 400,000) × 0.20 = 22,500 + 10,000 = **₱32,500.00** (bracket 3); pt = **₱45,000.00**; total_path_b = **₱77,500.00**
+
+**PL-10 (Path C):** path_c_base = max(1,500,000 − 250,000, 0) = **₱1,250,000.00**; income_tax = 1,250,000 × 0.08 = **₱100,000.00**; pt = **₱0.00**; total_path_c = **₱100,000.00**
+
+**PL-13:** recommended_path = PATH_B; savings_vs_next_best = ₱100,000 − ₱77,500 = **₱22,500.00**; savings_vs_worst = ₱117,500 − ₱77,500 = **₱40,000.00**
+
+**PL-14:** balance_payable = **₱77,500.00**
+
+**PL-15:** form = FORM_1701A; form_section = PART_IV_A (OSD)
+
+**PL-16:** total_penalties = ₱0.00
+
+### Expected Final Output
+
+```
+TaxComputationResult {
+  tax_year: 2025,  filing_period: ANNUAL,
+  taxpayer_type: PURELY_SE,  taxpayer_tier: MICRO,
+  taxpayer_class: TRADER,
+
+  gross_income: 750000.00,
+  cost_of_goods_sold: 750000.00,
+
+  regime_comparison: {
+    path_a: { eligible: true, nti: 650000.00,
+              income_tax: 72500.00, percentage_tax: 45000.00, total_tax: 117500.00 },
+    path_b: { eligible: true, nti: 450000.00, osd_base: 750000.00, osd_amount: 300000.00,
+              income_tax: 32500.00, percentage_tax: 45000.00, total_tax: 77500.00 },
+    path_c: { eligible: true, tax_base: 1250000.00, income_tax: 100000.00,
+              percentage_tax: 0.00, total_tax: 100000.00, ineligibility_reasons: [] },
+    recommended_path: PATH_B,
+    savings_vs_next_best: 22500.00,
+    savings_vs_worst: 40000.00
+  },
+
+  selected_path: PATH_B,
+  income_tax_due: 32500.00,
+  percentage_tax_due: 45000.00,
+  total_tax_due: 77500.00,
+  cwt_credits: 0.00,
+  quarterly_it_paid: 0.00,
+  balance_payable: 77500.00,
+  overpayment: 0.00,
+  overpayment_disposition: null,
+  form: FORM_1701A,  form_section: PART_IV_A,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [],
+  manual_review_flags: [],  ineligibility_notifications: []
+}
+```
+
+### Verification
+
+- gross_income = 1,500,000 − 750,000 = **₱750,000** ✓
+- Path B OSD = 750,000 × 0.40 = **₱300,000** ✓; NTI = **₱450,000** ✓
+- Path B IT = 22,500 + (450,000 − 400,000) × 0.20 = 22,500 + 10,000 = **₱32,500** ✓ (bracket 3, 20% on excess over ₱400K)
+- Path B total = 32,500 + 45,000 = **₱77,500** ✓
+- PATH_B wins: 77,500 < 100,000 < 117,500 ✓
+
+**Legal basis:** NIRC Sec. 34(L) (OSD). NIRC Sec. 116 (3% PT on gross sales). NIRC Sec. 24(A)(2)(b).
+
+---
+
+## TV-EX-G9-006: SC-B-MH-I — Importer/Distributor, Very High COGS, Itemized Wins
+
+**Scenario code:** SC-B-MH-I
+**Description:** Small electronics importer with ₱1,500,000 gross sales and ₱1,050,000 COGS (70% ratio). High operating expenses ₱200,000 (freight, customs documentation, warehousing) exceed 40% of gross income (40% × ₱450,000 = ₱180,000 < ₱200,000) — so itemized gives a lower NTI than OSD. NTI under itemized = ₱250,000 exactly (₱0 IT); under OSD = ₱270,000 (₱3,000 IT). Itemized saves ₱3,000 over OSD. Both save ₱55,000 over the 8% option.
+
+### Input (fields differing from Group 9 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `gross_receipts` | ₱1,500,000.00 | Gross sales of imported electronics |
+| `cost_of_goods_sold` | ₱1,050,000.00 | Import purchase cost (70% COGS ratio) |
+| `itemized_expenses.transportation` | ₱80,000.00 | Freight, customs brokerage fees |
+| `itemized_expenses.rent` | ₱60,000.00 | Warehouse rental ₱5,000/month × 12 |
+| `itemized_expenses.utilities` | ₱24,000.00 | Warehouse electricity, internet |
+| `itemized_expenses.taxes_and_licenses` | ₱36,000.00 | Import duties (not VAT-creditable), business permit |
+| All other itemized expense fields | ₱0.00 | |
+| `is_vat_registered` | false | |
+| `taxpayer_tier` (derived) | MICRO | |
+
+**Total operating expenses (excluding COGS):** ₱200,000.00
+**Total itemized (COGS + OE):** ₱1,250,000.00
+
+### Expected Intermediate Values
+
+**PL-02:** net_gross_receipts = ₱1,500,000.00; gross_income = ₱1,500,000 − ₱1,050,000 = **₱450,000.00**; taxpayer_class = TRADER; taxpayer_tier = MICRO
+
+**PL-04:** path_c_eligible = true; ineligibility_reasons = []
+
+**PL-05:** COGS = ₱1,050,000.00; operating expenses = ₱200,000.00; total_path_a_deductions = ₱1,250,000.00; EAR cap = 0.5% × ₱1,500,000 = ₱7,500.00; NOLCO = ₱0.00
+
+**Itemized vs OSD check:** 0.40 × gross_income = 0.40 × ₱450,000 = ₱180,000; actual OE = ₱200,000 > ₱180,000 → **itemized produces lower NTI** than OSD
+
+**PL-06 (OSD):** osd_base = ₱450,000.00; osd_amount = ₱450,000 × 0.40 = **₱180,000.00**; nti_path_b = ₱450,000 − ₱180,000 = **₱270,000.00**
+
+**PL-08 (Path A):** nti_path_a = ₱1,500,000 − ₱1,050,000 − ₱200,000 = **₱250,000.00**; income_tax = graduated_tax_2023(250,000) = **₱0.00** (≤ ₱250,000 bracket, inclusive zero); pt = ₱1,500,000 × 0.03 = **₱45,000.00**; total_path_a = **₱45,000.00**
+
+**PL-09 (Path B):** nti_path_b = ₱270,000.00; income_tax = (270,000 − 250,000) × 0.15 = **₱3,000.00** (bracket 2); pt = **₱45,000.00**; total_path_b = **₱48,000.00**
+
+**PL-10 (Path C):** path_c_base = max(1,500,000 − 250,000, 0) = **₱1,250,000.00**; income_tax = 1,250,000 × 0.08 = **₱100,000.00**; pt = **₱0.00**; total_path_c = **₱100,000.00**
+
+**PL-13:** recommended_path = PATH_A; savings_vs_next_best = ₱48,000 − ₱45,000 = **₱3,000.00** (vs Path B); savings_vs_worst = ₱100,000 − ₱45,000 = **₱55,000.00** (vs Path C)
+
+**PL-14:** balance_payable = **₱45,000.00**
+
+**PL-15:** form = FORM_1701; form_section = PART_IV (itemized — requires Form 1701, not 1701A)
+
+**PL-16:** total_penalties = ₱0.00
+
+### Expected Final Output
+
+```
+TaxComputationResult {
+  tax_year: 2025,  filing_period: ANNUAL,
+  taxpayer_type: PURELY_SE,  taxpayer_tier: MICRO,
+  taxpayer_class: TRADER,
+
+  gross_income: 450000.00,
+  cost_of_goods_sold: 1050000.00,
+
+  regime_comparison: {
+    path_a: { eligible: true, nti: 250000.00,
+              income_tax: 0.00, percentage_tax: 45000.00, total_tax: 45000.00 },
+    path_b: { eligible: true, nti: 270000.00, osd_base: 450000.00, osd_amount: 180000.00,
+              income_tax: 3000.00, percentage_tax: 45000.00, total_tax: 48000.00 },
+    path_c: { eligible: true, tax_base: 1250000.00, income_tax: 100000.00,
+              percentage_tax: 0.00, total_tax: 100000.00, ineligibility_reasons: [] },
+    recommended_path: PATH_A,
+    savings_vs_next_best: 3000.00,
+    savings_vs_worst: 55000.00
+  },
+
+  selected_path: PATH_A,
+  income_tax_due: 0.00,
+  percentage_tax_due: 45000.00,
+  total_tax_due: 45000.00,
+  cwt_credits: 0.00,
+  quarterly_it_paid: 0.00,
+  balance_payable: 45000.00,
+  overpayment: 0.00,
+  overpayment_disposition: null,
+  form: FORM_1701,  form_section: PART_IV,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [],
+  manual_review_flags: [],  ineligibility_notifications: []
+}
+```
+
+### Verification
+
+- gross_income = 1,500,000 − 1,050,000 = **₱450,000** ✓
+- 0.40 × GI = 180,000 < OE = 200,000 → itemized gives lower NTI ✓
+- Path A NTI = 1,500,000 − 1,050,000 − 200,000 = **₱250,000** ✓; graduated(250,000) = **₱0** ✓ (≤ ₱250K)
+- Path B OSD = 450,000 × 0.40 = **₱180,000** ✓; NTI = **₱270,000** ✓; IT = (270,000 − 250,000) × 0.15 = **₱3,000** ✓
+- PATH_A wins: 45,000 < 48,000 < 100,000 ✓
+- Form = FORM_1701 (itemized requires Form 1701) ✓
+
+**Legal basis:** NIRC Sec. 34(A)–(K) (itemized deductions including COGS). Itemized wins when OE > 40% × GI: confirmed for this vector.
+
+---
+
+## TV-EX-G9-007: SC-B-H-8 — E-Commerce Seller, High Gross, Very Low COGS, 8% Wins
+
+**Scenario code:** SC-B-H-8
+**Description:** High-earning digital goods seller (ebooks, online courses, software) with ₱2,500,000 gross sales and only ₱200,000 COGS (8% ratio). Minimal COGS makes this functionally similar to a service provider. The 8% flat rate on ₱2,250,000 (gross minus ₱250K) = ₱180,000 wins decisively over OSD (NTI ₱1,380,000 → IT ₱247,500 + PT ₱75,000 = ₱322,500). 8% saves ₱142,500 over OSD at this income level.
+
+### Input (fields differing from Group 9 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `gross_receipts` | ₱2,500,000.00 | Gross sales of digital content products |
+| `cost_of_goods_sold` | ₱200,000.00 | Platform content licensing, asset purchases |
+| `itemized_expenses.advertising` | ₱60,000.00 | Paid ads, influencer promotions |
+| `itemized_expenses.communication` | ₱24,000.00 | Cloud hosting, internet |
+| `itemized_expenses.taxes_and_licenses` | ₱16,000.00 | BIR registration, permits |
+| All other itemized expense fields | ₱0.00 | |
+| `is_vat_registered` | false | |
+| `taxpayer_tier` (derived) | MICRO | Gross sales ₱2.5M < ₱3M |
+
+**Total operating expenses (excluding COGS):** ₱100,000.00
+**Total itemized (COGS + OE):** ₱300,000.00
+
+### Expected Intermediate Values
+
+**PL-02:** net_gross_receipts = ₱2,500,000.00; gross_income = ₱2,500,000 − ₱200,000 = **₱2,300,000.00**; taxpayer_class = TRADER; taxpayer_tier = MICRO
+
+**PL-04:** path_c_eligible = true; ineligibility_reasons = []
+
+**PL-05:** COGS = ₱200,000.00; operating expenses = ₱100,000.00; EAR cap = 0.5% × ₱2,500,000 = ₱12,500.00; NOLCO = ₱0.00
+
+**PL-06 (OSD):** osd_base = ₱2,300,000.00; osd_amount = ₱2,300,000 × 0.40 = **₱920,000.00**; nti_path_b = ₱2,300,000 − ₱920,000 = **₱1,380,000.00**
+
+**PL-08 (Path A):** nti_path_a = ₱2,500,000 − ₱200,000 − ₱100,000 = **₱2,200,000.00**; income_tax = 402,500 + (2,200,000 − 2,000,000) × 0.30 = 402,500 + 60,000 = **₱462,500.00** (bracket 5); pt = ₱2,500,000 × 0.03 = **₱75,000.00**; total_path_a = **₱537,500.00**
+
+**PL-09 (Path B):** nti_path_b = ₱1,380,000.00; income_tax = 102,500 + (1,380,000 − 800,000) × 0.25 = 102,500 + 145,000 = **₱247,500.00** (bracket 4); pt = **₱75,000.00**; total_path_b = **₱322,500.00**
+
+**PL-10 (Path C):** path_c_base = max(2,500,000 − 250,000, 0) = **₱2,250,000.00**; income_tax = 2,250,000 × 0.08 = **₱180,000.00**; pt = **₱0.00**; total_path_c = **₱180,000.00**
+
+**PL-13:** recommended_path = PATH_C; savings_vs_next_best = ₱322,500 − ₱180,000 = **₱142,500.00**; savings_vs_worst = ₱537,500 − ₱180,000 = **₱357,500.00**
+
+**PL-14:** balance_payable = **₱180,000.00**
+
+**PL-15:** form = FORM_1701A; form_section = PART_IV_B
+
+**PL-16:** total_penalties = ₱0.00
+
+### Expected Final Output
+
+```
+TaxComputationResult {
+  tax_year: 2025,  filing_period: ANNUAL,
+  taxpayer_type: PURELY_SE,  taxpayer_tier: MICRO,
+  taxpayer_class: TRADER,
+
+  gross_income: 2300000.00,
+  cost_of_goods_sold: 200000.00,
+
+  regime_comparison: {
+    path_a: { eligible: true, nti: 2200000.00,
+              income_tax: 462500.00, percentage_tax: 75000.00, total_tax: 537500.00 },
+    path_b: { eligible: true, nti: 1380000.00, osd_base: 2300000.00, osd_amount: 920000.00,
+              income_tax: 247500.00, percentage_tax: 75000.00, total_tax: 322500.00 },
+    path_c: { eligible: true, tax_base: 2250000.00, income_tax: 180000.00,
+              percentage_tax: 0.00, total_tax: 180000.00, ineligibility_reasons: [] },
+    recommended_path: PATH_C,
+    savings_vs_next_best: 142500.00,
+    savings_vs_worst: 357500.00
+  },
+
+  selected_path: PATH_C,
+  income_tax_due: 180000.00,
+  percentage_tax_due: 0.00,
+  total_tax_due: 180000.00,
+  cwt_credits: 0.00,
+  quarterly_it_paid: 0.00,
+  balance_payable: 180000.00,
+  overpayment: 0.00,
+  overpayment_disposition: null,
+  form: FORM_1701A,  form_section: PART_IV_B,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [],
+  manual_review_flags: [],  ineligibility_notifications: []
+}
+```
+
+### Verification
+
+- gross_income = 2,500,000 − 200,000 = **₱2,300,000** ✓
+- Path B OSD = 2,300,000 × 0.40 = **₱920,000** ✓; NTI = **₱1,380,000** ✓
+- Path B IT = 102,500 + (1,380,000 − 800,000) × 0.25 = 102,500 + 145,000 = **₱247,500** ✓
+- Path A NTI = 2,500,000 − 300,000 = **₱2,200,000** ✓; IT = 402,500 + (2,200,000 − 2,000,000) × 0.30 = 402,500 + 60,000 = **₱462,500** ✓ (bracket 5: ₱2M–₱8M at 30%)
+- Path C = 2,250,000 × 0.08 = **₱180,000** ✓; PATH_C wins ✓
+
+**Legal basis:** NIRC Sec. 24(A)(2)(b). 8% rate schedule; TRAIN rate table brackets 4–5.
+
+---
+
+## TV-EX-G9-008: SC-B-H-O — Large Retailer, High Gross, Medium-High COGS, OSD Optimal
+
+**Scenario code:** SC-B-H-O
+**Description:** General merchandise retailer (sporting goods, household items) with ₱2,500,000 gross sales and ₱1,375,000 COGS (55%). OSD on gross income ₱1,125,000 yields NTI ₱675,000 → IT ₱77,500 + PT ₱75,000 = ₱152,500. The 8% option gives ₱180,000 (₱2,250,000 × 8%). OSD saves ₱27,500. This is the typical large retailer scenario — COGS is significant enough that OSD's application to the smaller gross income base outperforms the 8% flat rate, even though 8% eliminates PT.
+
+### Input (fields differing from Group 9 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `gross_receipts` | ₱2,500,000.00 | Gross sales of sporting goods and household items |
+| `cost_of_goods_sold` | ₱1,375,000.00 | Wholesale inventory cost (55% COGS ratio) |
+| `itemized_expenses.rent` | ₱60,000.00 | Store rent ₱5,000/month × 12 |
+| `itemized_expenses.utilities` | ₱24,000.00 | Electricity, water |
+| `itemized_expenses.taxes_and_licenses` | ₱16,000.00 | Business permit, BIR COR |
+| All other itemized expense fields | ₱0.00 | |
+| `is_vat_registered` | false | |
+| `taxpayer_tier` (derived) | MICRO | |
+
+**Total operating expenses (excluding COGS):** ₱100,000.00
+**Total itemized (COGS + OE):** ₱1,475,000.00
+
+### Expected Intermediate Values
+
+**PL-02:** net_gross_receipts = ₱2,500,000.00; gross_income = ₱2,500,000 − ₱1,375,000 = **₱1,125,000.00**; taxpayer_class = TRADER; taxpayer_tier = MICRO
+
+**PL-04:** path_c_eligible = true; ineligibility_reasons = []
+
+**PL-05:** COGS = ₱1,375,000.00; operating expenses = ₱100,000.00; EAR cap = 0.5% × ₱2,500,000 = ₱12,500.00; NOLCO = ₱0.00
+
+**Itemized vs OSD check:** 0.40 × GI = 0.40 × ₱1,125,000 = ₱450,000; OE = ₱100,000 < ₱450,000 → OSD gives lower NTI than itemized
+
+**PL-06 (OSD):** osd_base = ₱1,125,000.00; osd_amount = ₱1,125,000 × 0.40 = **₱450,000.00**; nti_path_b = ₱1,125,000 − ₱450,000 = **₱675,000.00**
+
+**PL-08 (Path A):** nti_path_a = ₱2,500,000 − ₱1,375,000 − ₱100,000 = **₱1,025,000.00**; income_tax = 102,500 + (1,025,000 − 800,000) × 0.25 = 102,500 + 56,250 = **₱158,750.00** (bracket 4); pt = ₱2,500,000 × 0.03 = **₱75,000.00**; total_path_a = **₱233,750.00**
+
+**PL-09 (Path B):** nti_path_b = ₱675,000.00; income_tax = 22,500 + (675,000 − 400,000) × 0.20 = 22,500 + 55,000 = **₱77,500.00** (bracket 3); pt = **₱75,000.00**; total_path_b = **₱152,500.00**
+
+**PL-10 (Path C):** path_c_base = max(2,500,000 − 250,000, 0) = **₱2,250,000.00**; income_tax = 2,250,000 × 0.08 = **₱180,000.00**; pt = **₱0.00**; total_path_c = **₱180,000.00**
+
+**PL-13:** recommended_path = PATH_B; savings_vs_next_best = ₱180,000 − ₱152,500 = **₱27,500.00**; savings_vs_worst = ₱233,750 − ₱152,500 = **₱81,250.00**
+
+**PL-14:** balance_payable = **₱152,500.00**
+
+**PL-15:** form = FORM_1701A; form_section = PART_IV_A
+
+**PL-16:** total_penalties = ₱0.00
+
+### Expected Final Output
+
+```
+TaxComputationResult {
+  tax_year: 2025,  filing_period: ANNUAL,
+  taxpayer_type: PURELY_SE,  taxpayer_tier: MICRO,
+  taxpayer_class: TRADER,
+
+  gross_income: 1125000.00,
+  cost_of_goods_sold: 1375000.00,
+
+  regime_comparison: {
+    path_a: { eligible: true, nti: 1025000.00,
+              income_tax: 158750.00, percentage_tax: 75000.00, total_tax: 233750.00 },
+    path_b: { eligible: true, nti: 675000.00, osd_base: 1125000.00, osd_amount: 450000.00,
+              income_tax: 77500.00, percentage_tax: 75000.00, total_tax: 152500.00 },
+    path_c: { eligible: true, tax_base: 2250000.00, income_tax: 180000.00,
+              percentage_tax: 0.00, total_tax: 180000.00, ineligibility_reasons: [] },
+    recommended_path: PATH_B,
+    savings_vs_next_best: 27500.00,
+    savings_vs_worst: 81250.00
+  },
+
+  selected_path: PATH_B,
+  income_tax_due: 77500.00,
+  percentage_tax_due: 75000.00,
+  total_tax_due: 152500.00,
+  cwt_credits: 0.00,
+  quarterly_it_paid: 0.00,
+  balance_payable: 152500.00,
+  overpayment: 0.00,
+  overpayment_disposition: null,
+  form: FORM_1701A,  form_section: PART_IV_A,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [],
+  manual_review_flags: [],  ineligibility_notifications: []
+}
+```
+
+### Verification
+
+- gross_income = 2,500,000 − 1,375,000 = **₱1,125,000** ✓
+- OE = 100,000 < 0.40 × 1,125,000 = 450,000 → OSD gives lower NTI than itemized ✓
+- Path B OSD = 1,125,000 × 0.40 = **₱450,000** ✓; NTI = **₱675,000** ✓
+- Path B IT = 22,500 + (675,000 − 400,000) × 0.20 = 22,500 + 55,000 = **₱77,500** ✓ (bracket 3)
+- PATH_B wins: 152,500 < 180,000 < 233,750 ✓
+
+**Legal basis:** NIRC Sec. 34(L). NIRC Sec. 116. TRAIN graduated rate schedule (2023+).
+
+---
+
+## TV-EX-G9-009: SC-B-H-I — Distributor, High Gross, Very High COGS, Itemized Wins
+
+**Scenario code:** SC-B-H-I
+**Description:** Industrial supplies distributor with ₱2,500,000 gross sales and ₱2,000,000 COGS (80% ratio). High operating expenses ₱300,000 (freight/logistics, storage, sales staff) exceed 40% of gross income (40% × ₱500,000 = ₱200,000 < ₱300,000). Itemized reduces NTI to ₱200,000 (below ₱250K, IT = ₱0). OSD reduces NTI only to ₱300,000 (IT = ₱7,500). Itemized saves ₱7,500 over OSD and ₱105,000 over 8%.
+
+### Input (fields differing from Group 9 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `gross_receipts` | ₱2,500,000.00 | Gross sales of industrial/construction supplies |
+| `cost_of_goods_sold` | ₱2,000,000.00 | Purchase cost of distributed goods (80% ratio) |
+| `itemized_expenses.transportation` | ₱120,000.00 | Freight, trucking, fuel |
+| `itemized_expenses.rent` | ₱72,000.00 | Warehouse rental ₱6,000/month × 12 |
+| `itemized_expenses.utilities` | ₱36,000.00 | Warehouse electricity, water |
+| `itemized_expenses.communication` | ₱24,000.00 | Phone, internet |
+| `itemized_expenses.taxes_and_licenses` | ₱48,000.00 | Business permit, BIR COR, local taxes |
+| All other itemized expense fields | ₱0.00 | |
+| `is_vat_registered` | false | |
+| `taxpayer_tier` (derived) | MICRO | |
+
+**Total operating expenses (excluding COGS):** ₱300,000.00
+**Total itemized (COGS + OE):** ₱2,300,000.00
+
+### Expected Intermediate Values
+
+**PL-02:** net_gross_receipts = ₱2,500,000.00; gross_income = ₱2,500,000 − ₱2,000,000 = **₱500,000.00**; taxpayer_class = TRADER; taxpayer_tier = MICRO
+
+**PL-04:** path_c_eligible = true; ineligibility_reasons = []
+
+**PL-05:** COGS = ₱2,000,000.00; operating expenses = ₱300,000.00; EAR cap = 0.5% × ₱2,500,000 = ₱12,500.00; NOLCO = ₱0.00
+
+**Itemized vs OSD check:** 0.40 × GI = 0.40 × ₱500,000 = ₱200,000; actual OE = ₱300,000 > ₱200,000 → **itemized gives lower NTI than OSD**
+
+**PL-06 (OSD):** osd_base = ₱500,000.00; osd_amount = ₱500,000 × 0.40 = **₱200,000.00**; nti_path_b = ₱500,000 − ₱200,000 = **₱300,000.00**
+
+**PL-08 (Path A):** nti_path_a = ₱2,500,000 − ₱2,000,000 − ₱300,000 = **₱200,000.00**; income_tax = graduated_tax_2023(200,000) = **₱0.00** (below ₱250K); pt = ₱2,500,000 × 0.03 = **₱75,000.00**; total_path_a = **₱75,000.00**
+
+**PL-09 (Path B):** nti_path_b = ₱300,000.00; income_tax = (300,000 − 250,000) × 0.15 = **₱7,500.00** (bracket 2); pt = **₱75,000.00**; total_path_b = **₱82,500.00**
+
+**PL-10 (Path C):** path_c_base = max(2,500,000 − 250,000, 0) = **₱2,250,000.00**; income_tax = 2,250,000 × 0.08 = **₱180,000.00**; pt = **₱0.00**; total_path_c = **₱180,000.00**
+
+**PL-13:** recommended_path = PATH_A; savings_vs_next_best = ₱82,500 − ₱75,000 = **₱7,500.00**; savings_vs_worst = ₱180,000 − ₱75,000 = **₱105,000.00**
+
+**PL-14:** balance_payable = **₱75,000.00**
+
+**PL-15:** form = FORM_1701; form_section = PART_IV
+
+**PL-16:** total_penalties = ₱0.00
+
+### Expected Final Output
+
+```
+TaxComputationResult {
+  tax_year: 2025,  filing_period: ANNUAL,
+  taxpayer_type: PURELY_SE,  taxpayer_tier: MICRO,
+  taxpayer_class: TRADER,
+
+  gross_income: 500000.00,
+  cost_of_goods_sold: 2000000.00,
+
+  regime_comparison: {
+    path_a: { eligible: true, nti: 200000.00,
+              income_tax: 0.00, percentage_tax: 75000.00, total_tax: 75000.00 },
+    path_b: { eligible: true, nti: 300000.00, osd_base: 500000.00, osd_amount: 200000.00,
+              income_tax: 7500.00, percentage_tax: 75000.00, total_tax: 82500.00 },
+    path_c: { eligible: true, tax_base: 2250000.00, income_tax: 180000.00,
+              percentage_tax: 0.00, total_tax: 180000.00, ineligibility_reasons: [] },
+    recommended_path: PATH_A,
+    savings_vs_next_best: 7500.00,
+    savings_vs_worst: 105000.00
+  },
+
+  selected_path: PATH_A,
+  income_tax_due: 0.00,
+  percentage_tax_due: 75000.00,
+  total_tax_due: 75000.00,
+  cwt_credits: 0.00,
+  quarterly_it_paid: 0.00,
+  balance_payable: 75000.00,
+  overpayment: 0.00,
+  overpayment_disposition: null,
+  form: FORM_1701,  form_section: PART_IV,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [],
+  manual_review_flags: [],  ineligibility_notifications: []
+}
+```
+
+### Verification
+
+- gross_income = 2,500,000 − 2,000,000 = **₱500,000** ✓
+- OE = 300,000 > 0.40 × 500,000 = 200,000 → itemized beats OSD ✓
+- Path A NTI = 2,500,000 − 2,000,000 − 300,000 = **₱200,000** ✓; < ₱250K → IT = **₱0** ✓
+- Path B OSD = 500,000 × 0.40 = **₱200,000** ✓; NTI = **₱300,000** ✓; IT = (300,000−250,000) × 0.15 = **₱7,500** ✓
+- PATH_A wins: 75,000 < 82,500 < 180,000 ✓
+- Form = FORM_1701 (itemized deductions chosen) ✓
+
+**Legal basis:** NIRC Sec. 34(A)–(K). Itemized wins when OE > 40% × gross_income for traders.
+
+---
+
+## TV-EX-G9-010: SC-B-VH-O-VAT — VAT-Registered Retailer, Over ₱3M, OSD Optimal
+
+**Scenario code:** SC-B-VH-O-VAT
+**Description:** VAT-registered general retailer (household appliances) with ₱5,000,000 VAT-exclusive gross sales and ₱3,000,000 COGS. Path C (8%) is not available (VAT-registered). Comparing only Path A (itemized) vs Path B (OSD): OSD on gross income ₱2,000,000 yields NTI ₱1,200,000 → IT ₱202,500. Itemized yields NTI ₱1,800,000 → IT ₱352,500. No PT (VAT-registered). OSD saves ₱150,000.
+
+### Input (fields differing from Group 9 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `gross_receipts` | ₱5,000,000.00 | VAT-exclusive gross sales (amounts DO NOT include the 12% VAT output) |
+| `cost_of_goods_sold` | ₱3,000,000.00 | VAT-exclusive COGS (60% ratio) |
+| `itemized_expenses.rent` | ₱96,000.00 | Store rent ₱8,000/month × 12 |
+| `itemized_expenses.utilities` | ₱48,000.00 | Electricity, water |
+| `itemized_expenses.salaries` | ₱36,000.00 | Part-time helper ₱3,000/month × 12 |
+| `itemized_expenses.taxes_and_licenses` | ₱20,000.00 | Business permit, BIR fees |
+| All other itemized expense fields | ₱0.00 | |
+| `is_vat_registered` | **true** | Gross sales > ₱3M triggers mandatory VAT registration |
+| `taxpayer_tier` (derived) | SMALL | ₱3M ≤ gross sales < ₱20M |
+
+**Total operating expenses (excluding COGS):** ₱200,000.00
+**Total itemized (COGS + OE):** ₱3,200,000.00
+
+### Expected Intermediate Values
+
+**PL-02:** net_gross_receipts = ₱5,000,000.00; gross_income = ₱5,000,000 − ₱3,000,000 = **₱2,000,000.00**; taxpayer_class = TRADER; taxpayer_tier = SMALL
+
+**PL-04:** path_c_eligible = **false**; ineligibility_reasons = [INELIG_VAT_REGISTERED]
+
+**PL-05:** COGS = ₱3,000,000.00; operating expenses = ₱200,000.00; EAR cap = 0.5% × ₱5,000,000 = ₱25,000.00; NOLCO = ₱0.00
+
+**PL-06 (OSD):** osd_base = ₱2,000,000.00; osd_amount = ₱2,000,000 × 0.40 = **₱800,000.00**; nti_path_b = ₱2,000,000 − ₱800,000 = **₱1,200,000.00**
+
+**PL-08 (Path A):** nti_path_a = ₱5,000,000 − ₱3,000,000 − ₱200,000 = **₱1,800,000.00**; income_tax = 102,500 + (1,800,000 − 800,000) × 0.25 = 102,500 + 250,000 = **₱352,500.00** (bracket 4); pt = **₱0.00** (VAT-registered — no OPT); total_path_a = **₱352,500.00**
+
+**PL-09 (Path B):** nti_path_b = ₱1,200,000.00; income_tax = 102,500 + (1,200,000 − 800,000) × 0.25 = 102,500 + 100,000 = **₱202,500.00** (bracket 4); pt = **₱0.00**; total_path_b = **₱202,500.00**
+
+**PL-10 (Path C):** eligible = false; total_path_c = null; ineligibility_reasons = [INELIG_VAT_REGISTERED]
+
+**PL-13:** recommended_path = PATH_B; savings_vs_next_best = ₱352,500 − ₱202,500 = **₱150,000.00** (vs Path A only, Path C ineligible); savings_vs_worst = **₱150,000.00** (same)
+
+**PL-14:** balance_payable = **₱202,500.00**
+
+**PL-15:** form = FORM_1701; form_section = PART_IV_A (VAT-registered taxpayers use Form 1701 regardless of OSD/itemized election)
+
+**PL-16:** total_penalties = ₱0.00
+
+### Expected Final Output
+
+```
+TaxComputationResult {
+  tax_year: 2025,  filing_period: ANNUAL,
+  taxpayer_type: PURELY_SE,  taxpayer_tier: SMALL,
+  taxpayer_class: TRADER,
+
+  gross_income: 2000000.00,
+  cost_of_goods_sold: 3000000.00,
+
+  regime_comparison: {
+    path_a: { eligible: true, nti: 1800000.00,
+              income_tax: 352500.00, percentage_tax: 0.00, total_tax: 352500.00 },
+    path_b: { eligible: true, nti: 1200000.00, osd_base: 2000000.00, osd_amount: 800000.00,
+              income_tax: 202500.00, percentage_tax: 0.00, total_tax: 202500.00 },
+    path_c: { eligible: false, tax_base: null, income_tax: null,
+              percentage_tax: null, total_tax: null,
+              ineligibility_reasons: [INELIG_VAT_REGISTERED] },
+    recommended_path: PATH_B,
+    savings_vs_next_best: 150000.00,
+    savings_vs_worst: 150000.00
+  },
+
+  selected_path: PATH_B,
+  income_tax_due: 202500.00,
+  percentage_tax_due: 0.00,
+  total_tax_due: 202500.00,
+  cwt_credits: 0.00,
+  quarterly_it_paid: 0.00,
+  balance_payable: 202500.00,
+  overpayment: 0.00,
+  overpayment_disposition: null,
+  form: FORM_1701,  form_section: PART_IV_A,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [],
+  manual_review_flags: [],
+  ineligibility_notifications: [IN_VAT_REGISTERED_NO_PATH_C]
+}
+```
+
+### Verification
+
+- gross_income = 5,000,000 − 3,000,000 = **₱2,000,000** ✓
+- Path B OSD = 2,000,000 × 0.40 = **₱800,000** ✓; NTI = **₱1,200,000** ✓
+- Path B IT = 102,500 + (1,200,000 − 800,000) × 0.25 = 102,500 + 100,000 = **₱202,500** ✓
+- Path A NTI = 5,000,000 − 3,000,000 − 200,000 = **₱1,800,000** ✓; IT = 102,500 + (1,800,000−800,000)×0.25 = 102,500+250,000 = **₱352,500** ✓
+- PT = ₱0 for both (VAT-registered) ✓
+- PATH_C ineligible (VAT registered) ✓; form = FORM_1701 ✓
+- PATH_B wins: 202,500 < 352,500 ✓
+
+**Legal basis:** NIRC Sec. 108–115 (VAT). NIRC Sec. 24(A)(2)(b) — 8% option not available when VAT-registered. NIRC Sec. 34(L) (OSD on gross income). VAT-exclusive reporting: RR 16-2005.
+
+---
+
+## TV-EX-G9-011: SC-B-VH-I-VAT — VAT-Registered Importer, Over ₱3M, Itemized Wins
+
+**Scenario code:** SC-B-VH-I-VAT
+**Description:** VAT-registered importer (high-end furniture) with ₱4,000,000 VAT-exclusive gross sales and ₱3,000,000 COGS (75% ratio). Operating expenses ₱600,000 (customs, warehouse, logistics) exceed 40% of gross income (40% × ₱1,000,000 = ₱400,000 < ₱600,000) — itemized wins. Path A NTI = ₱400,000 → IT ₱22,500. Path B NTI = ₱600,000 → IT ₱62,500. Itemized saves ₱40,000. Path C not available (VAT registered). No PT for either path.
+
+### Input (fields differing from Group 9 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `gross_receipts` | ₱4,000,000.00 | VAT-exclusive gross sales |
+| `cost_of_goods_sold` | ₱3,000,000.00 | Import cost of furniture (75% COGS ratio) |
+| `itemized_expenses.transportation` | ₱200,000.00 | Customs brokerage, freight, inland transport |
+| `itemized_expenses.rent` | ₱180,000.00 | Showroom + warehouse rental ₱15,000/month × 12 |
+| `itemized_expenses.utilities` | ₱60,000.00 | Electricity for showroom/warehouse |
+| `itemized_expenses.salaries` | ₱120,000.00 | Part-time sales assistant ₱10,000/month × 12 |
+| `itemized_expenses.taxes_and_licenses` | ₱40,000.00 | Business permit, BIR fees, import duties (non-VAT) |
+| All other itemized expense fields | ₱0.00 | |
+| `is_vat_registered` | **true** | |
+| `taxpayer_tier` (derived) | SMALL | |
+
+**Total operating expenses (excluding COGS):** ₱600,000.00
+**Total itemized (COGS + OE):** ₱3,600,000.00
+
+### Expected Intermediate Values
+
+**PL-02:** net_gross_receipts = ₱4,000,000.00; gross_income = ₱4,000,000 − ₱3,000,000 = **₱1,000,000.00**; taxpayer_class = TRADER; taxpayer_tier = SMALL
+
+**PL-04:** path_c_eligible = **false**; ineligibility_reasons = [INELIG_VAT_REGISTERED]
+
+**PL-05:** COGS = ₱3,000,000.00; operating expenses = ₱600,000.00; EAR cap = 0.5% × ₱4,000,000 = ₱20,000.00; NOLCO = ₱0.00
+
+**Itemized vs OSD check:** 0.40 × GI = 0.40 × ₱1,000,000 = ₱400,000; OE = ₱600,000 > ₱400,000 → **itemized beats OSD**
+
+**PL-06 (OSD):** osd_base = ₱1,000,000.00; osd_amount = ₱1,000,000 × 0.40 = **₱400,000.00**; nti_path_b = ₱1,000,000 − ₱400,000 = **₱600,000.00**
+
+**PL-08 (Path A):** nti_path_a = ₱4,000,000 − ₱3,000,000 − ₱600,000 = **₱400,000.00**; income_tax = (400,000 − 250,000) × 0.15 = **₱22,500.00** (bracket 2, exactly ₱400K uses bracket 2 since condition is ≤ ₱400,000); pt = **₱0.00** (VAT); total_path_a = **₱22,500.00**
+
+**PL-09 (Path B):** nti_path_b = ₱600,000.00; income_tax = 22,500 + (600,000 − 400,000) × 0.20 = 22,500 + 40,000 = **₱62,500.00** (bracket 3); pt = **₱0.00**; total_path_b = **₱62,500.00**
+
+**PL-10 (Path C):** eligible = false; ineligibility_reasons = [INELIG_VAT_REGISTERED]
+
+**PL-13:** recommended_path = PATH_A; savings_vs_next_best = ₱62,500 − ₱22,500 = **₱40,000.00**; savings_vs_worst = **₱40,000.00**
+
+**PL-14:** balance_payable = **₱22,500.00**
+
+**PL-15:** form = FORM_1701; form_section = PART_IV (itemized, VAT-registered)
+
+**PL-16:** total_penalties = ₱0.00
+
+### Expected Final Output
+
+```
+TaxComputationResult {
+  tax_year: 2025,  filing_period: ANNUAL,
+  taxpayer_type: PURELY_SE,  taxpayer_tier: SMALL,
+  taxpayer_class: TRADER,
+
+  gross_income: 1000000.00,
+  cost_of_goods_sold: 3000000.00,
+
+  regime_comparison: {
+    path_a: { eligible: true, nti: 400000.00,
+              income_tax: 22500.00, percentage_tax: 0.00, total_tax: 22500.00 },
+    path_b: { eligible: true, nti: 600000.00, osd_base: 1000000.00, osd_amount: 400000.00,
+              income_tax: 62500.00, percentage_tax: 0.00, total_tax: 62500.00 },
+    path_c: { eligible: false, tax_base: null, income_tax: null,
+              percentage_tax: null, total_tax: null,
+              ineligibility_reasons: [INELIG_VAT_REGISTERED] },
+    recommended_path: PATH_A,
+    savings_vs_next_best: 40000.00,
+    savings_vs_worst: 40000.00
+  },
+
+  selected_path: PATH_A,
+  income_tax_due: 22500.00,
+  percentage_tax_due: 0.00,
+  total_tax_due: 22500.00,
+  cwt_credits: 0.00,
+  quarterly_it_paid: 0.00,
+  balance_payable: 22500.00,
+  overpayment: 0.00,
+  overpayment_disposition: null,
+  form: FORM_1701,  form_section: PART_IV,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [],
+  manual_review_flags: [],
+  ineligibility_notifications: [IN_VAT_REGISTERED_NO_PATH_C]
+}
+```
+
+### Verification
+
+- gross_income = 4,000,000 − 3,000,000 = **₱1,000,000** ✓
+- OE = 600,000 > 0.40 × 1,000,000 = 400,000 → itemized beats OSD ✓
+- Path A NTI = 4,000,000 − 3,000,000 − 600,000 = **₱400,000** ✓; bracket 2: (400,000−250,000)×0.15 = **₱22,500** ✓
+- Path B OSD = 1,000,000 × 0.40 = **₱400,000** ✓; NTI = **₱600,000** ✓; IT = 22,500 + (600,000−400,000)×0.20 = 22,500 + 40,000 = **₱62,500** ✓
+- PT = ₱0 for both paths (VAT-registered) ✓
+- PATH_A wins: 22,500 < 62,500 ✓
+
+**Legal basis:** NIRC Sec. 34(A)–(K) (itemized). NIRC Sec. 34(L) (OSD on gross income). VAT: NIRC Sec. 105. 8% ineligible when VAT-registered: NIRC Sec. 24(A)(2)(b) (gross receipts must not exceed ₱3M).
+
+---
+
+## GROUP 9 SUMMARY TABLE
+
+| Vector | Scenario | Gross Sales | COGS Ratio | Winner | Total Tax | Key Insight |
+|--------|---------|-------------|-----------|--------|-----------|-------------|
+| TV-EX-G9-001 | SC-B-ML-8 | ₱700,000 | 7.1% | Path C | ₱36,000 | Low COGS digital goods → 8% wins like service |
+| TV-EX-G9-002 | SC-B-ML-O | ₱800,000 | 50% | Path B | ₱24,000 | 50% COGS → OSD eliminates IT (NTI < ₱250K) |
+| TV-EX-G9-003 | SC-B-ML-I | ₱800,000 | 75% | Path B (tie) | ₱24,000 | Very high COGS → B and A tied; Path B wins by rule |
+| TV-EX-G9-004 | SC-B-MH-8 | ₱1,500,000 | 13.3% | Path C | ₱100,000 | Low COGS e-commerce → 8% saves ₱43,500 vs OSD |
+| TV-EX-G9-005 | SC-B-MH-O | ₱1,500,000 | 50% | Path B | ₱77,500 | 50% COGS → OSD saves ₱22,500 vs 8% |
+| TV-EX-G9-006 | SC-B-MH-I | ₱1,500,000 | 70% | Path A | ₱45,000 | OE > 40% × GI → itemized beats OSD by ₱3,000 |
+| TV-EX-G9-007 | SC-B-H-8 | ₱2,500,000 | 8% | Path C | ₱180,000 | Very low COGS → 8% saves ₱142,500 vs OSD |
+| TV-EX-G9-008 | SC-B-H-O | ₱2,500,000 | 55% | Path B | ₱152,500 | 55% COGS → OSD saves ₱27,500 vs 8% |
+| TV-EX-G9-009 | SC-B-H-I | ₱2,500,000 | 80% | Path A | ₱75,000 | 80% COGS, high OE → itemized saves ₱7,500 vs OSD |
+| TV-EX-G9-010 | SC-B-VH-O-VAT | ₱5,000,000 | 60% | Path B | ₱202,500 | VAT: no 8%; OSD saves ₱150,000 vs itemized |
+| TV-EX-G9-011 | SC-B-VH-I-VAT | ₱4,000,000 | 75% | Path A | ₱22,500 | VAT: no 8%; itemized saves ₱40,000 vs OSD |
+
+**Key insights for Group 9:**
+
+1. **COGS ratio determines the 8% vs OSD winner for traders.** Low COGS (< ~25–30%) → 8% wins because gross_income ≈ gross_sales, so OSD and 8% give similar NTIs but 8% also eliminates PT. High COGS (> ~30%) → OSD or itemized wins because OSD is applied to the much-smaller gross_income, yielding significantly lower NTI than 8%'s gross_sales base.
+
+2. **The critical TRADER OSD computation.** For SERVICE_PROVIDER: OSD = 40% × gross_receipts. For TRADER: OSD = 40% × (gross_sales − COGS) = 40% × gross_income. This single difference is the most common miscomputation in Philippine tax. The engine must distinguish `taxpayer_class = TRADER` (cost_of_goods_sold > 0) from SERVICE_PROVIDER and apply the correct OSD base.
+
+3. **Itemized beats OSD for traders when OE > 40% × gross_income.** This threshold is lower than most practitioners expect. For a 70% COGS retailer with ₱1.5M sales (GI = ₱450K), even ₱180,001 in operating expenses would mean itemized beats OSD. High-COGS traders with significant warehouse, logistics, or sales expenses often benefit from itemized.
+
+4. **Path C (8%) ignores COGS completely.** Tax base = gross_sales − ₱250,000. This is extremely expensive for traders with 50%+ COGS because it effectively taxes both cost of goods AND profit at 8%. A retailer with ₱1.5M gross, ₱750K COGS, electing 8% pays tax on ₱1.25M instead of the ₱750K gross income. This is the core education gap for trading taxpayers.
+
+5. **VAT-registered traders: only Path A vs Path B.** When gross sales exceed ₱3M, VAT registration is mandatory. The 8% option disappears. The Path A vs Path B comparison for VAT-registered traders uses VAT-exclusive amounts for all income and COGS figures. No PT applies (VAT replaces it).
+
+6. **Tie-breaking (TV-EX-G9-003) uses rule PATH_B > PATH_A.** When Path A and Path B produce equal total tax (both NTIs fall below ₱250K → same IT = ₱0 → same PT), the engine recommends PATH_B because OSD requires no documentation burden, unlike itemized which requires substantiated receipts. The UI should label this: "Both paths give the same tax — OSD recommended (no receipts needed)."
 
