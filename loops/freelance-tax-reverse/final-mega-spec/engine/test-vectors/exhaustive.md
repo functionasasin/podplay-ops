@@ -1,6 +1,6 @@
 # Exhaustive Test Vectors — Philippine Freelance Tax Optimizer
 
-**Status:** PARTIAL — Groups 1–4 complete (22 vectors + 2 cross-references to edge-cases.md). Groups 5–14 pending.
+**Status:** PARTIAL — Groups 1–5 complete (25 vectors + 2 cross-references to edge-cases.md). Groups 6–14 pending.
 **Last updated:** 2026-03-02
 **Cross-references:**
 - Scenario codes: [domain/scenarios.md](../../domain/scenarios.md)
@@ -3031,3 +3031,612 @@ TaxComputationResult {
 5. All Group 4 vectors use Form 1701A (not Form 1701) because all are purely self-employed (no compensation income) and the recommended regime is 8% or OSD (both filed on 1701A).
 6. First-year taxpayers always use EWT rate 5% (prior-year gross = ₱0, which is below ₱3M threshold). This affects any 2307 entries in the same year (no Group 4 vectors have CWT — see Group 5 for CWT scenarios).
 7. The `no_prior_quarters_required` flag and `skipped_quarters` list in the output must be populated correctly by the engine to prevent UI confusion and to inform the compliance calendar displayed to the user after computation.
+
+---
+
+## GROUP 5: CWT-Heavy Scenarios
+
+**3 scenario codes:** SC-P-ML-8-CWT, SC-P-ML-O-CWT, SC-P-ML-8-CWT-PLATFORM
+
+**Common characteristics for all Group 5 vectors:**
+- `taxpayer_type`: PURELY_SE
+- `is_mixed_income`: false
+- `is_vat_registered`: false
+- `is_bmbe_registered`: false
+- `subject_to_sec_117_128`: false
+- `is_gpp_partner`: false
+- `taxable_compensation`: ₱0.00
+- `compensation_cwt`: ₱0.00
+- `cost_of_goods_sold`: ₱0.00
+- `taxpayer_class` (derived): SERVICE_PROVIDER
+- `income_type` (derived): PURELY_SE
+- `taxpayer_tier` (derived): MICRO (all GR < ₱3,000,000)
+- `path_c_eligible` (derived): true
+- `non_operating_income`: ₱0.00
+- `fwt_income`: ₱0.00
+- `sales_returns_allowances`: ₱0.00
+- `prior_year_excess_cwt`: ₱0.00
+- `return_type`: ORIGINAL
+- `filing_period`: ANNUAL
+- `tax_year`: 2025
+- `actual_filing_date`: null (on-time assumed)
+
+**What distinguishes Group 5:** Significant Form 2307 CWT entries that meaningfully affect balance payable. In SC-P-ML-8-CWT, CWT exceeds annual IT under Path C, producing a refundable overpayment. In SC-P-ML-O-CWT, the quarterly Item 57/58 CWT tracking is demonstrated across three quarterly returns. In SC-P-ML-8-CWT-PLATFORM, two distinct ATC codes (WI760 platform + WI010 professional) are aggregated.
+
+**Balance payable formula (used in all vectors):**
+```
+balance_payable_raw = income_tax_due + percentage_tax_due - cwt_credits - quarterly_it_paid
+balance_payable     = max(balance_payable_raw, 0)
+overpayment         = max(-balance_payable_raw, 0)
+```
+CWT credits (Form 2307 — WI010, WI760, etc.) offset income tax on the annual ITR. Percentage tax is filed separately via quarterly Form 2551Q. When PT > 0, the `balance_payable` figure includes the PT component as a reminder of the total annual obligation; the UI must note that PT is filed separately.
+
+---
+
+## TV-EX-G5-001: SC-P-ML-8-CWT — 8% Freelancer, CWT Exceeds Annual IT (Overpayment)
+
+**Scenario code:** SC-P-ML-8-CWT
+**Description:** HR consultant earning ₱600,000 annually from two regular corporate clients. Both clients are required to withhold 5% EWT (ATC WI010) because the consultant's prior-year gross was below ₱3,000,000. The 5% EWT on all ₱600,000 gross produces ₱30,000 total CWT — exceeding the 8% annual income tax of ₱28,000 by ₱2,000. All three quarterly 1701Q returns are NIL (₱0 payable) because the cumulative CWT offset the cumulative income tax at every quarterly checkpoint. At annual filing, the engine shows an overpayment of ₱2,000 and recommends CARRY_OVER (default for overpayments ≤ ₱50,000). This vector demonstrates: (1) quarterly NIL returns from CWT offset; (2) CWT > IT → WARN-009; (3) overpayment disposition election.
+
+**CWT crossover arithmetic:** At ₱600,000 gross, 5% CWT = ₱30,000 vs 8% IT on ₱350,000 base = ₱28,000. The CWT exceeds the IT. The general crossover gross is: gross × 0.05 = (gross − 250,000) × 0.08 → 0.05g = 0.08g − 20,000 → g = 20,000 / 0.03 = ₱666,667. Below ₱666,667 gross, a purely 5% CWT taxpayer will always have CWT > 8% IT (overpayment).
+
+### Input (fields differing from Group 5 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `gross_receipts` | ₱600,000.00 | Annual professional service fees |
+| All itemized expense fields | ₱0.00 | No business receipts kept |
+| `elected_regime` | null | Optimizer mode — engine recommends |
+| `cwt_2307_entries` | 8 entries (see table) | 2 clients × 4 quarters at 5% WI010 |
+| `prior_quarterly_payments` | [{quarter:1, amount:0.00}, {quarter:2, amount:0.00}, {quarter:3, amount:0.00}] | All three quarterly IT returns filed NIL |
+
+**CWT entries (Form 2307):**
+
+| # | ATC | Payor | Period | Income Payment | Tax Withheld |
+|---|-----|-------|--------|----------------|--------------|
+| 1 | WI010 | Alpha Corp | Q1 2025 (Jan–Mar) | ₱75,000.00 | ₱3,750.00 |
+| 2 | WI010 | Beta Inc | Q1 2025 (Jan–Mar) | ₱75,000.00 | ₱3,750.00 |
+| 3 | WI010 | Alpha Corp | Q2 2025 (Apr–Jun) | ₱75,000.00 | ₱3,750.00 |
+| 4 | WI010 | Beta Inc | Q2 2025 (Apr–Jun) | ₱75,000.00 | ₱3,750.00 |
+| 5 | WI010 | Alpha Corp | Q3 2025 (Jul–Sep) | ₱75,000.00 | ₱3,750.00 |
+| 6 | WI010 | Beta Inc | Q3 2025 (Jul–Sep) | ₱75,000.00 | ₱3,750.00 |
+| 7 | WI010 | Alpha Corp | Q4 2025 (Oct–Dec) | ₱75,000.00 | ₱3,750.00 |
+| 8 | WI010 | Beta Inc | Q4 2025 (Oct–Dec) | ₱75,000.00 | ₱3,750.00 |
+
+**Total income_payments across all 2307s:** ₱600,000.00 (matches gross_receipts)
+**Total tax withheld:** ₱30,000.00 (5.000% of ₱600,000)
+**Rate validation:** WI010 = 5% professional EWT (consultant's prior-year gross < ₱3M; RR 2-98 Sec. 2.57.2(E))
+
+**Total itemized expenses:** ₱0.00
+
+### Expected Intermediate Values
+
+**PL-02:** net_gross_receipts = ₱600,000.00; taxpayer_tier = MICRO; income_type = PURELY_SE; taxpayer_class = SERVICE_PROVIDER
+
+**PL-04:** path_c_eligible = true; ineligibility_reasons = []
+
+**PL-05:** total_itemized_deductions = ₱0.00; ear_cap = ₱600,000 × 0.01 = ₱6,000.00; nolco_applied = ₱0.00
+
+**PL-06:** osd_amount = ₱600,000 × 0.40 = ₱240,000.00; nti_path_b = ₱360,000.00
+
+**PL-07 (CWT aggregation):**
+- cwt_by_atc = {WI010: ₱30,000.00}
+- income_tax_cwt = ₱30,000.00 (WI010 classified as INCOME_TAX_CWT)
+- pt_cwt = ₱0.00
+- total_cwt = ₱30,000.00
+
+**PL-08 (Path A):**
+- nti_path_a = ₱600,000.00 (no itemized deductions)
+- income_tax = graduated_tax_2023(600,000) = 22,500 + (600,000 − 400,000) × 0.20 = 22,500 + 40,000 = ₱62,500.00
+- pt = ₱600,000 × 0.03 = ₱18,000.00
+- total_path_a = ₱80,500.00
+
+**PL-09 (Path B):**
+- nti_path_b = ₱360,000.00
+- income_tax = graduated_tax_2023(360,000) = (360,000 − 250,000) × 0.15 = ₱16,500.00
+- pt = ₱18,000.00
+- total_path_b = ₱34,500.00
+
+**PL-10 (Path C):**
+- eight_pct_base = max(600,000 − 250,000, 0) = ₱350,000.00
+- income_tax = ₱350,000 × 0.08 = ₱28,000.00
+- pt = ₱0.00
+- total_path_c = ₱28,000.00
+
+**PL-13:**
+- Path A: ₱80,500.00
+- Path B: ₱34,500.00
+- Path C: ₱28,000.00 ← MINIMUM
+- recommended_path = PATH_C
+- savings_vs_next_best = ₱34,500 − ₱28,000 = ₱6,500.00 (vs Path B)
+- savings_vs_worst = ₱80,500 − ₱28,000 = ₱52,500.00
+
+**PL-14 (Balance — Path C):**
+- income_tax_due = ₱28,000.00
+- percentage_tax_due = ₱0.00 (Path C waives PT)
+- total_tax_due = ₱28,000.00
+- cwt_credits = ₱30,000.00
+- quarterly_it_paid = ₱0.00
+- balance_payable_raw = 28,000 + 0 − 30,000 − 0 = −₱2,000.00
+- balance_payable = max(−2,000, 0) = ₱0.00
+- overpayment = max(2,000, 0) = ₱2,000.00
+- overpayment_disposition = CARRY_OVER (overpayment ≤ ₱50,000 → engine default is CARRY_OVER per OverpaymentDisposition rules; fastest and simplest option; mark Item 29 on Form 1701A)
+
+**WARN-009 fires (WARN_CWT_EXCEEDS_IT_DUE):** "Your creditable withholding tax (₱30,000) exceeds your income tax due (₱28,000) under the recommended 8% rate. Overpayment = ₱2,000. Options: (1) Carry over to 2026 [recommended — mark Item 29a on Form 1701A; credit applies against your 2026 Q1 1701Q]; (2) File for cash refund via BIR Form 1914 [attach original 2307s; 90–120 day process, RDO approval required]; (3) Apply for Tax Credit Certificate via BIR Form 1926 [transferable; used against other taxes]. Select your election on Form 1701A Item 29."
+
+**PL-15:** form = FORM_1701A; form_section = PART_IV_B (8% flat rate section)
+
+**PL-16 (Penalties):** ₱0.00 (on-time)
+
+**Quarterly 8% tracker (computed for each quarterly 1701Q, referenced by quarterly filing UI):**
+
+| Quarter | Cumul. Gross | 8% Base | Cumul. IT | CWT to Date | Q Payable |
+|---------|-------------|---------|----------|------------|-----------|
+| Q1 (Jan–Mar) | ₱150,000.00 | max(150,000−250,000, 0) = ₱0.00 | ₱0.00 | ₱7,500.00 | ₱0.00 (NIL) |
+| Q2 (Jan–Jun) | ₱300,000.00 | 300,000−250,000 = ₱50,000.00 | ₱4,000.00 | ₱15,000.00 | ₱0.00 (NIL) |
+| Q3 (Jan–Sep) | ₱450,000.00 | 450,000−250,000 = ₱200,000.00 | ₱16,000.00 | ₱22,500.00 | ₱0.00 (NIL) |
+| Annual | ₱600,000.00 | 600,000−250,000 = ₱350,000.00 | ₱28,000.00 | ₱30,000.00 | ₱0.00 (overpmt ₱2,000) |
+
+Q1 quarterly detail: cumul_it = 0 (base = ₱0); CWT = ₱7,500; payable = max(0 − 7,500, 0) = ₱0
+Q2 quarterly detail: cumul_it = 50,000 × 0.08 = ₱4,000; CWT = ₱15,000; payable = max(4,000 − 15,000, 0) = ₱0
+Q3 quarterly detail: cumul_it = 200,000 × 0.08 = ₱16,000; CWT = ₱22,500; payable = max(16,000 − 22,500, 0) = ₱0
+
+### Expected Final Output
+
+```
+TaxComputationResult {
+  tax_year: 2025,  filing_period: ANNUAL,
+  taxpayer_type: PURELY_SE,  taxpayer_tier: MICRO,
+
+  regime_comparison: {
+    path_a: { eligible: true, nti: 600000.00, income_tax: 62500.00,
+              percentage_tax: 18000.00, total_tax: 80500.00 },
+    path_b: { eligible: true, nti: 360000.00, osd_amount: 240000.00,
+              income_tax: 16500.00, percentage_tax: 18000.00, total_tax: 34500.00 },
+    path_c: { eligible: true, tax_base: 350000.00, income_tax: 28000.00,
+              percentage_tax: 0.00, total_tax: 28000.00, ineligibility_reasons: [] },
+    recommended_path: PATH_C,
+    savings_vs_next_best: 6500.00,
+    savings_vs_worst: 52500.00
+  },
+
+  selected_path: PATH_C,
+  income_tax_due: 28000.00,
+  percentage_tax_due: 0.00,
+  total_tax_due: 28000.00,
+  cwt_credits: 30000.00,
+  cwt_by_atc: { WI010: 30000.00 },
+  quarterly_it_paid: 0.00,
+  balance_payable: 0.00,
+  overpayment: 2000.00,
+  overpayment_disposition: CARRY_OVER,
+  form: FORM_1701A,  form_section: PART_IV_B,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [WARN-009],
+  manual_review_flags: [],  ineligibility_notifications: [],
+
+  quarterly_tracker: [
+    { quarter: 1, cumul_gross: 150000.00, eight_pct_base: 0.00, cumul_it: 0.00,
+      cwt_to_date: 7500.00, quarterly_payable: 0.00 },
+    { quarter: 2, cumul_gross: 300000.00, eight_pct_base: 50000.00, cumul_it: 4000.00,
+      cwt_to_date: 15000.00, quarterly_payable: 0.00 },
+    { quarter: 3, cumul_gross: 450000.00, eight_pct_base: 200000.00, cumul_it: 16000.00,
+      cwt_to_date: 22500.00, quarterly_payable: 0.00 }
+  ]
+}
+```
+
+### Verification
+
+- **Path C IT:** max(600,000 − 250,000, 0) × 0.08 = 350,000 × 0.08 = **₱28,000.00** ✓
+- **Path B NTI:** 360,000; bracket 2: (360,000 − 250,000) × 0.15 = **₱16,500.00**; PT = 600,000 × 0.03 = **₱18,000.00**; total = **₱34,500.00** ✓
+- **CWT sum:** 8 entries × ₱3,750 = **₱30,000.00** ✓; all WI010 at 5% of ₱75,000 = ₱3,750 ✓
+- **Q1 base:** max(150,000 − 250,000, 0) = **₱0** ✓; Q1 IT = ₱0; payable = max(0 − 7,500, 0) = **₱0** ✓
+- **Q2 IT:** 50,000 × 0.08 = **₱4,000** ✓; payable = max(4,000 − 15,000, 0) = **₱0** ✓
+- **Q3 IT:** 200,000 × 0.08 = **₱16,000** ✓; payable = max(16,000 − 22,500, 0) = **₱0** ✓
+- **Overpayment:** CWT ₱30,000 − IT ₱28,000 = **₱2,000** ✓
+- **Crossover validation:** At GR = ₱666,667: CWT = 666,667 × 0.05 = ₱33,333; IT = (666,667 − 250,000) × 0.08 = 416,667 × 0.08 = ₱33,333; equal at crossover ✓; at ₱600,000 < ₱666,667 → CWT > IT → overpayment confirmed ✓
+- **CARRY_OVER correct:** overpayment ₱2,000 ≤ ₱50,000 threshold ✓
+- **Form 1701A:** purely SE, 8% regime, no compensation → correct ✓
+
+**Legal basis:** 8% option: NIRC Sec. 24(A)(2)(b); CR-010. CWT credit against IT: NIRC Sec. 58; CR-009. WI010 5% professional EWT: RR 2-98 Sec. 2.57.2(E). Overpayment carry-over: NIRC Sec. 76; OverpaymentDisposition.CARRY_OVER. Form 1701A: BIR RA 11976 EOPT.
+
+---
+
+## TV-EX-G5-002: SC-P-ML-O-CWT — OSD Elected (Locked), CWT Reduces IT Balance, Quarterly Item 57/58 Tracking
+
+**Scenario code:** SC-P-ML-O-CWT
+**Description:** Business development consultant earning ₱900,000 annually, who elected OSD on the Q1 2025 Form 1701Q (irrevocable PATH_B election for the year). Two regular corporate clients issue quarterly Form 2307 at 5% EWT (WI010), totaling ₱45,000 CWT for the year. The annual OSD income tax is ₱50,500. After applying CWT credits, the income tax balance is ₱5,500. Total balance payable including percentage tax obligation is ₱32,500 (of which ₱27,000 PT is filed separately via quarterly Form 2551Q). This vector demonstrates: (1) locked OSD election and opportunity cost vs Path C; (2) quarterly 1701Q CWT tracking via Item 57 (prior-quarter cumulative CWT) and Item 58 (current quarter new CWT); (3) all three quarterly returns are NIL because CWT exceeded cumulative IT at every quarter.
+
+### Input (fields differing from Group 5 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `gross_receipts` | ₱900,000.00 | Annual BD consulting fees |
+| All itemized expense fields | ₱0.00 | OSD elected; no itemized tracking needed |
+| `elected_regime` | PATH_B | Elected OSD on Q1 2025 Form 1701Q |
+| `osd_elected` | true | OSD irrevocable for TY 2025 |
+| `cwt_2307_entries` | 8 entries (see table) | 2 clients × 4 quarters at 5% WI010 |
+| `prior_quarterly_payments` | [{quarter:1, amount:0.00}, {quarter:2, amount:0.00}, {quarter:3, amount:0.00}] | All NIL returns filed |
+
+**CWT entries (Form 2307):**
+
+| # | ATC | Payor | Period | Income Payment | Tax Withheld |
+|---|-----|-------|--------|----------------|--------------|
+| 1 | WI010 | Corp A | Q1 2025 (Jan–Mar) | ₱100,000.00 | ₱5,000.00 |
+| 2 | WI010 | Corp B | Q1 2025 (Jan–Mar) | ₱100,000.00 | ₱5,000.00 |
+| 3 | WI010 | Corp A | Q2 2025 (Apr–Jun) | ₱125,000.00 | ₱6,250.00 |
+| 4 | WI010 | Corp B | Q2 2025 (Apr–Jun) | ₱125,000.00 | ₱6,250.00 |
+| 5 | WI010 | Corp A | Q3 2025 (Jul–Sep) | ₱125,000.00 | ₱6,250.00 |
+| 6 | WI010 | Corp B | Q3 2025 (Jul–Sep) | ₱125,000.00 | ₱6,250.00 |
+| 7 | WI010 | Corp A | Q4 2025 (Oct–Dec) | ₱100,000.00 | ₱5,000.00 |
+| 8 | WI010 | Corp B | Q4 2025 (Oct–Dec) | ₱100,000.00 | ₱5,000.00 |
+
+**Quarterly gross breakdown:**
+- Q1 (Jan–Mar): ₱200,000 (Corp A ₱100K + Corp B ₱100K); CWT = ₱10,000
+- Q2 (Apr–Jun): ₱250,000 (Corp A ₱125K + Corp B ₱125K); CWT = ₱12,500
+- Q3 (Jul–Sep): ₱250,000 (Corp A ₱125K + Corp B ₱125K); CWT = ₱12,500
+- Q4 (Oct–Dec): ₱200,000 (Corp A ₱100K + Corp B ₱100K); CWT = ₱10,000
+- Annual total: ₱900,000; total CWT = ₱45,000
+
+**Total itemized expenses:** ₱0.00 (OSD elected; irrelevant)
+
+### Expected Intermediate Values
+
+**PL-02:** net_gross_receipts = ₱900,000.00; taxpayer_tier = MICRO; income_type = PURELY_SE
+
+**PL-04:** path_c_eligible = true (₱900K ≤ ₱3M, not VAT-registered); locked_regime = PATH_B (OSD elected Q1 1701Q; ineligible to switch to Path C this year)
+
+**PL-05:** total_itemized_deductions = ₱0.00 (N/A; OSD elected)
+
+**PL-06:** osd_amount = ₱900,000 × 0.40 = ₱360,000.00; nti_path_b = ₱540,000.00
+
+**PL-07 (CWT):**
+- cwt_by_atc = {WI010: ₱45,000.00}
+- income_tax_cwt = ₱45,000.00; pt_cwt = ₱0.00
+- total_cwt = ₱45,000.00
+
+**PL-08 (Path A — comparison only; locked regime is B):**
+- nti_path_a = ₱900,000.00 (no itemized deductions)
+- income_tax = graduated_tax_2023(900,000) = 102,500 + (900,000 − 800,000) × 0.25 = 102,500 + 25,000 = ₱127,500.00
+- pt = ₱900,000 × 0.03 = ₱27,000.00
+- total_path_a = ₱154,500.00
+
+**PL-09 (Path B — locked elected path):**
+- nti_path_b = ₱540,000.00
+- income_tax = graduated_tax_2023(540,000) = 22,500 + (540,000 − 400,000) × 0.20 = 22,500 + 28,000 = ₱50,500.00
+- pt = ₱27,000.00
+- total_path_b = ₱77,500.00
+
+**PL-10 (Path C — counterfactual comparison; cannot be selected this year):**
+- eight_pct_base = max(900,000 − 250,000, 0) = ₱650,000.00
+- income_tax = ₱650,000 × 0.08 = ₱52,000.00
+- pt = ₱0.00
+- total_path_c = ₱52,000.00
+
+**PL-13:**
+- Locked path: PATH_B (₱77,500)
+- Would-be optimal (unlocked): PATH_C (₱52,000)
+- opportunity_cost = ₱77,500 − ₱52,000 = ₱25,500.00 (tax overpaid due to OSD election vs 8%)
+- recommended_path_if_unlocked = PATH_C
+- savings_vs_worst_if_unlocked = ₱154,500 − ₱52,000 = ₱102,500.00
+
+**PL-14 (Balance — Path B locked):**
+- income_tax_due = ₱50,500.00
+- percentage_tax_due = ₱27,000.00 (filed separately via quarterly 2551Q)
+- total_tax_due = ₱77,500.00
+- cwt_credits = ₱45,000.00
+- quarterly_it_paid = ₱0.00
+- balance_payable_raw = 50,500 + 27,000 − 45,000 − 0 = ₱32,500.00
+- balance_payable = ₱32,500.00 (= IT balance ₱5,500 + PT ₱27,000; see note)
+- overpayment = ₱0.00
+- Note: Of the ₱32,500 balance: ₱5,500 is income tax balance on annual Form 1701A. ₱27,000 is percentage tax — filed separately via Form 2551Q (Q1: ₱6,000 due Apr 25; Q2: ₱7,500 due Jul 25; Q3: ₱7,500 due Oct 25; Q4: ₱6,000 due Jan 25, 2026). If all quarterly 2551Q returns were filed on time, actual cash due at annual 1701A filing is ₱5,500 (IT only).
+
+**WARN-004 fires (WARN_VERY_LOW_EXPENSES):** Advisory: "You elected the Optional Standard Deduction (40% of gross receipts). No itemized expense records are required. Note: had you elected the 8% flat rate instead, your total tax for 2025 would be ₱52,000 (vs ₱77,500 under OSD) — a savings of ₱25,500. The OSD election on your Q1 2025 Form 1701Q is irrevocable for tax year 2025. For tax year 2026, elect 8% on your first quarterly Form 1701Q (due May 15, 2026) to realize this savings, unless your 2026 business expenses are expected to exceed 40% of gross receipts."
+
+**PL-15:** form = FORM_1701A; form_section = PART_IV_A (OSD graduated rate section)
+
+**PL-16 (Penalties):** ₱0.00 (on-time)
+
+**Quarterly 1701Q OSD tracker (Item 57 = prior-quarter cumulative CWT; Item 58 = new current-quarter CWT):**
+
+**Q1 1701Q (filed on/before May 15, 2025):**
+- Item 36 (current quarter gross): ₱200,000.00
+- OSD (Q1 portion = Item 40): ₱200,000 × 0.40 = ₱80,000.00
+- Item 41 (NTI, Q1 portion): ₱120,000.00
+- Item 42 (prior NTI carryforward): ₱0.00 (first quarter)
+- Item 43 (cumulative NTI): ₱120,000.00
+- Item 44 (cumulative IT): graduated_tax_2023(120,000) = ₱0.00 (below ₱250K)
+- Item 57 (prior-quarter CWT): ₱0.00
+- Item 58 (current quarter new CWT): ₱10,000.00 (Corp A Q1 ₱5,000 + Corp B Q1 ₱5,000)
+- Item 59 (cumulative CWT): ₱10,000.00
+- Q1 payable: max(0 − 10,000, 0) = ₱0.00 (NIL return filed)
+
+**Q2 1701Q (filed on/before August 15, 2025):**
+- Item 36 (current quarter gross): ₱250,000.00
+- OSD (Q2 portion): ₱250,000 × 0.40 = ₱100,000.00
+- Item 41 (NTI, Q2 portion): ₱150,000.00
+- Item 42 (prior NTI carryforward = Q1 cumul NTI): ₱120,000.00
+- Item 43 (cumulative NTI): ₱270,000.00 (= 120,000 + 150,000)
+- Item 44 (cumulative IT): graduated_tax_2023(270,000) = (270,000 − 250,000) × 0.15 = ₱3,000.00
+- Item 57 (prior-quarter CWT = Q1 cumul CWT): ₱10,000.00
+- Item 58 (current quarter new CWT): ₱12,500.00 (Corp A Q2 ₱6,250 + Corp B Q2 ₱6,250)
+- Item 59 (cumulative CWT): ₱22,500.00
+- Q2 payable: max(3,000 − 22,500, 0) = ₱0.00 (NIL return filed)
+
+**Q3 1701Q (filed on/before November 15, 2025):**
+- Item 36 (current quarter gross): ₱250,000.00
+- OSD (Q3 portion): ₱250,000 × 0.40 = ₱100,000.00
+- Item 41 (NTI, Q3 portion): ₱150,000.00
+- Item 42 (prior NTI carryforward = Q2 cumul NTI): ₱270,000.00
+- Item 43 (cumulative NTI): ₱420,000.00 (= 270,000 + 150,000)
+- Item 44 (cumulative IT): graduated_tax_2023(420,000) = 22,500 + (420,000 − 400,000) × 0.20 = 22,500 + 4,000 = ₱26,500.00
+- Item 57 (prior-quarter CWT = Q1+Q2 cumul CWT): ₱22,500.00
+- Item 58 (current quarter new CWT): ₱12,500.00 (Corp A Q3 ₱6,250 + Corp B Q3 ₱6,250)
+- Item 59 (cumulative CWT): ₱35,000.00
+- Q3 payable: max(26,500 − 35,000, 0) = ₱0.00 (NIL return filed)
+
+### Expected Final Output
+
+```
+TaxComputationResult {
+  tax_year: 2025,  filing_period: ANNUAL,
+  taxpayer_type: PURELY_SE,  taxpayer_tier: MICRO,
+  locked_regime: true,  elected_regime: PATH_B,
+
+  regime_comparison: {
+    path_a: { eligible: true, nti: 900000.00, income_tax: 127500.00,
+              percentage_tax: 27000.00, total_tax: 154500.00 },
+    path_b: { eligible: true, nti: 540000.00, osd_amount: 360000.00,
+              income_tax: 50500.00, percentage_tax: 27000.00, total_tax: 77500.00 },
+    path_c: { eligible: true, tax_base: 650000.00, income_tax: 52000.00,
+              percentage_tax: 0.00, total_tax: 52000.00, ineligibility_reasons: [],
+              note: "Path C cannot be selected this year (OSD elected on Q1 1701Q). Shown for comparison only." },
+    recommended_path_if_unlocked: PATH_C,
+    locked_path: PATH_B,
+    opportunity_cost: 25500.00,
+    savings_vs_worst_if_unlocked: 102500.00
+  },
+
+  selected_path: PATH_B,
+  income_tax_due: 50500.00,
+  percentage_tax_due: 27000.00,
+  total_tax_due: 77500.00,
+  cwt_credits: 45000.00,
+  cwt_by_atc: { WI010: 45000.00 },
+  quarterly_it_paid: 0.00,
+  balance_payable: 32500.00,
+  balance_payable_breakdown: {
+    income_tax_balance: 5500.00,
+    percentage_tax_total: 27000.00,
+    pt_note: "PT ₱27,000 filed separately via quarterly Form 2551Q. Cash due at annual 1701A: ₱5,500 income tax only."
+  },
+  overpayment: 0.00,
+  overpayment_disposition: null,
+  form: FORM_1701A,  form_section: PART_IV_A,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [WARN-004],
+  manual_review_flags: [],  ineligibility_notifications: [],
+
+  quarterly_tracker: [
+    { quarter: 1, cumul_gross: 200000.00, cumul_nti: 120000.00, cumul_it: 0.00,
+      item_57_prior_cwt: 0.00, item_58_new_cwt: 10000.00, item_59_cumul_cwt: 10000.00,
+      quarterly_payable: 0.00 },
+    { quarter: 2, cumul_gross: 450000.00, cumul_nti: 270000.00, cumul_it: 3000.00,
+      item_57_prior_cwt: 10000.00, item_58_new_cwt: 12500.00, item_59_cumul_cwt: 22500.00,
+      quarterly_payable: 0.00 },
+    { quarter: 3, cumul_gross: 700000.00, cumul_nti: 420000.00, cumul_it: 26500.00,
+      item_57_prior_cwt: 22500.00, item_58_new_cwt: 12500.00, item_59_cumul_cwt: 35000.00,
+      quarterly_payable: 0.00 }
+  ]
+}
+```
+
+### Verification
+
+- **Path B NTI:** 900,000 × 0.60 = 540,000; bracket 3: 22,500 + (540,000 − 400,000) × 0.20 = 22,500 + 28,000 = **₱50,500** ✓
+- **PT:** 900,000 × 0.03 = **₱27,000** ✓; total Path B = **₱77,500** ✓
+- **Path C (counterfactual):** (900,000 − 250,000) × 0.08 = 650,000 × 0.08 = **₱52,000** ✓
+- **Opportunity cost:** 77,500 − 52,000 = **₱25,500** ✓
+- **CWT:** 8 entries: Q1 ₱10,000 + Q2 ₱12,500 + Q3 ₱12,500 + Q4 ₱10,000 = **₱45,000** ✓
+- **IT balance:** 50,500 − 45,000 = **₱5,500** ✓
+- **Q1 cumul IT:** graduated(120,000) = ₱0 ✓; payable = max(0 − 10,000, 0) = **₱0** ✓
+- **Q2 cumul NTI:** 120,000 + 150,000 = 270,000; IT = (270,000 − 250,000) × 0.15 = **₱3,000** ✓; payable = max(3,000 − 22,500, 0) = **₱0** ✓
+- **Q3 cumul NTI:** 270,000 + 150,000 = 420,000; IT = 22,500 + 20,000 × 0.20 = **₱26,500** ✓; payable = max(26,500 − 35,000, 0) = **₱0** ✓
+- **Item 57 Q2 = Q1 cumul CWT = ₱10,000** ✓; Item 58 Q2 = Q2 new CWT = ₱12,500 ✓; Item 59 Q2 = ₱22,500 ✓
+- **Item 57 Q3 = Q1+Q2 cumul CWT = ₱22,500** ✓; Item 58 Q3 = Q3 new CWT = ₱12,500 ✓; Item 59 Q3 = ₱35,000 ✓
+- **Balance formula:** 50,500 + 27,000 − 45,000 − 0 = **₱32,500** ✓ (income tax balance ₱5,500 + PT ₱27,000)
+
+**Legal basis:** OSD election irrevocable: RR 8-2018 Sec. 2(B)(2)(a). OSD rate (40%): NIRC Sec. 34(L). CWT credit against IT: NIRC Sec. 58; CR-009. Quarterly CWT Items 57/58: BIR Form 1701Q Instructions. Cumulative OSD method: NIRC Sec. 74; CR-008. PT (3%): NIRC Sec. 116. PT quarterly via Form 2551Q: NIRC Sec. 128. Form 1701A: BIR RA 11976 EOPT.
+
+---
+
+## TV-EX-G5-003: SC-P-ML-8-CWT-PLATFORM — Upwork/Payoneer (WI760) Plus Local Client (WI010), 8% Regime
+
+**Scenario code:** SC-P-ML-8-CWT-PLATFORM
+**Description:** Web developer earning ₱800,000 from Upwork (paid via Payoneer) plus ₱200,000 from a local Philippine corporate client. Total gross receipts = ₱1,000,000. Under the 8% regime. Payoneer withholds under RR 16-2023: the Payoneer Form 2307 shows an income payment equal to 50% of the net remittance (₱720,000) = ₱360,000, and a tax withheld of 1% of that base = ₱3,600 (effective 0.5% of net remittance; 0.45% of contract value). The local client withholds 5% EWT (WI010): ₱10,000. Total CWT = ₱13,600. Path C (8%) is optimal; balance payable = ₱46,400. This vector demonstrates: (1) two distinct ATC codes aggregated (WI760 platform + WI010 professional); (2) the 2307 income payment field on the Payoneer 2307 (₱360,000) differs from the Upwork gross receipts (₱800,000) and from the net remittance (₱720,000); (3) the Upwork service fee is deductible under Path A but irrelevant for Path C.
+
+**RR 16-2023 threshold check:** Payoneer cumulative remittances = ₱720,000 > ₱500,000 annual threshold AND no Sworn Declaration submitted → withholding applies to all Payoneer remittances. (Engine conservative approach: if annual cumulative > ₱500K, apply withholding retroactively to full year's remittances, per CR-019 conservative engine rule.) Combined platform gross receipts = ₱720,000 > ₱500,000 → withholding triggered.
+
+### Input (fields differing from Group 5 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `gross_receipts` | ₱1,000,000.00 | ₱800,000 Upwork contract value + ₱200,000 local client |
+| All itemized expense fields | ₱0.00 | No documented expenses entered; Upwork fee excluded from optimizer input |
+| `elected_regime` | null | Optimizer mode |
+| `cwt_2307_entries` | 3 entries (see table) | WI760 (Payoneer annual) + WI010 (local client Q2 + Q4) |
+| `prior_quarterly_payments` | [{quarter:1, amount:0.00}, {quarter:2, amount:0.00}, {quarter:3, amount:0.00}] | No cash quarterly IT payments |
+
+**CWT entries (Form 2307):**
+
+| # | ATC | Payor | Period | Income Payment | Tax Withheld | Notes |
+|---|-----|-------|--------|----------------|--------------|-------|
+| 1 | WI760 | Payoneer (E-commerce Philippines Inc.) | Annual 2025 (Jan–Dec) | ₱360,000.00 | ₱3,600.00 | 50% of ₱720,000 net remittance; 1% of ₱360,000 taxable base |
+| 2 | WI010 | Delta Corp | Q2 2025 (Apr–Jun) | ₱100,000.00 | ₱5,000.00 | 5% professional EWT |
+| 3 | WI010 | Delta Corp | Q4 2025 (Oct–Dec) | ₱100,000.00 | ₱5,000.00 | 5% professional EWT |
+
+**Payoneer 2307 derivation:**
+- Upwork contract value (gross receipts for BIR): ₱800,000.00
+- Upwork service fee (10% of contract): ₱80,000.00
+- Net remittance to Payoneer → freelancer: ₱720,000.00
+- Taxable base on 2307: ₱720,000 × 0.50 = ₱360,000.00 (per CR-019 formula)
+- Tax withheld on 2307: ₱360,000 × 0.01 = ₱3,600.00 (1% of taxable base)
+- Effective rate vs net remittance: ₱3,600 / ₱720,000 = 0.500%
+- Effective rate vs contract value: ₱3,600 / ₱800,000 = 0.450%
+
+**Total CWT:** ₱3,600 (WI760) + ₱5,000 (WI010 Q2) + ₱5,000 (WI010 Q4) = ₱13,600.00
+
+**Note on itemized deductions:** Upwork service fee ₱80,000 (10% of contract) is deductible under Path A as a business expense. This is NOT entered in the vector (no expenses input). If entered, Path A NTI would be ₱920,000 (vs ₱1,000,000) and total Path A = graduated(920,000) + PT = [102,500 + (920,000−800,000)×0.25] + 30,000 = 132,500 + 30,000 = ₱162,500 — still far above Path C (₱60,000).
+
+**Total itemized expenses:** ₱0.00
+
+### Expected Intermediate Values
+
+**PL-02:** net_gross_receipts = ₱1,000,000.00; taxpayer_tier = MICRO; income_type = PURELY_SE
+
+**PL-04:** path_c_eligible = true; ineligibility_reasons = []
+
+**PL-05:** total_itemized_deductions = ₱0.00; ear_cap = ₱1,000,000 × 0.01 = ₱10,000.00; nolco_applied = ₱0.00
+
+**PL-06:** osd_amount = ₱1,000,000 × 0.40 = ₱400,000.00; nti_path_b = ₱600,000.00
+
+**PL-07 (CWT aggregation):**
+- WI760 entry: income_payment = ₱360,000 (NOT ₱800,000 — engine must NOT add ₱360K to gross_receipts; it is already included in the ₱1,000,000 gross_receipts input); tax_withheld = ₱3,600
+- WI010 entries: two entries totaling income_payment ₱200,000; tax_withheld ₱10,000
+- cwt_by_atc = {WI760: ₱3,600.00, WI010: ₱10,000.00}
+- income_tax_cwt = ₱13,600.00 (both ATC codes classified as INCOME_TAX_CWT; neither is PT_CWT)
+- pt_cwt = ₱0.00
+- total_cwt = ₱13,600.00
+- MRF flag check: WI760 is a known ATC code (RR 16-2023); engine does NOT fire WARN-017
+
+**PL-08 (Path A):**
+- nti_path_a = ₱1,000,000.00 (no itemized deductions entered)
+- income_tax = graduated_tax_2023(1,000,000) = 102,500 + (1,000,000 − 800,000) × 0.25 = 102,500 + 50,000 = ₱152,500.00
+- pt = ₱1,000,000 × 0.03 = ₱30,000.00
+- total_path_a = ₱182,500.00
+
+**PL-09 (Path B):**
+- nti_path_b = ₱600,000.00
+- income_tax = graduated_tax_2023(600,000) = 22,500 + (600,000 − 400,000) × 0.20 = 22,500 + 40,000 = ₱62,500.00
+- pt = ₱30,000.00
+- total_path_b = ₱92,500.00
+
+**PL-10 (Path C):**
+- eight_pct_base = max(1,000,000 − 250,000, 0) = ₱750,000.00
+- income_tax = ₱750,000 × 0.08 = ₱60,000.00
+- pt = ₱0.00
+- total_path_c = ₱60,000.00
+
+**PL-13:**
+- Path A: ₱182,500
+- Path B: ₱92,500
+- Path C: ₱60,000 ← MINIMUM
+- recommended_path = PATH_C
+- savings_vs_next_best = ₱92,500 − ₱60,000 = ₱32,500.00 (vs Path B)
+- savings_vs_worst = ₱182,500 − ₱60,000 = ₱122,500.00
+
+**PL-14 (Balance — Path C):**
+- income_tax_due = ₱60,000.00
+- percentage_tax_due = ₱0.00
+- total_tax_due = ₱60,000.00
+- cwt_credits = ₱13,600.00
+- quarterly_it_paid = ₱0.00
+- balance_payable_raw = 60,000 + 0 − 13,600 − 0 = ₱46,400.00
+- balance_payable = ₱46,400.00
+- overpayment = ₱0.00
+
+**WARN-004 fires (WARN_VERY_LOW_EXPENSES):** Advisory: "No business expenses were entered. Upwork charges a 10% service fee (₱80,000 on ₱800,000 gross) which is deductible under Path A (Itemized Deductions). Entering this under itemized_expenses.other_expenses would reduce Path A total tax from ₱182,500 to ₱162,500 — still ₱102,500 more than Path C (₱60,000). Consider recording the fee for documentation purposes even though it does not affect the regime recommendation."
+
+**PL-15:** form = FORM_1701A; form_section = PART_IV_B (8% section)
+
+**PL-16 (Penalties):** ₱0.00 (on-time)
+
+### Expected Final Output
+
+```
+TaxComputationResult {
+  tax_year: 2025,  filing_period: ANNUAL,
+  taxpayer_type: PURELY_SE,  taxpayer_tier: MICRO,
+
+  regime_comparison: {
+    path_a: { eligible: true, nti: 1000000.00, income_tax: 152500.00,
+              percentage_tax: 30000.00, total_tax: 182500.00 },
+    path_b: { eligible: true, nti: 600000.00, osd_amount: 400000.00,
+              income_tax: 62500.00, percentage_tax: 30000.00, total_tax: 92500.00 },
+    path_c: { eligible: true, tax_base: 750000.00, income_tax: 60000.00,
+              percentage_tax: 0.00, total_tax: 60000.00, ineligibility_reasons: [] },
+    recommended_path: PATH_C,
+    savings_vs_next_best: 32500.00,
+    savings_vs_worst: 122500.00
+  },
+
+  selected_path: PATH_C,
+  income_tax_due: 60000.00,
+  percentage_tax_due: 0.00,
+  total_tax_due: 60000.00,
+  cwt_credits: 13600.00,
+  cwt_by_atc: { WI760: 3600.00, WI010: 10000.00 },
+  quarterly_it_paid: 0.00,
+  balance_payable: 46400.00,
+  overpayment: 0.00,
+  overpayment_disposition: null,
+  form: FORM_1701A,  form_section: PART_IV_B,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [WARN-004],
+  manual_review_flags: [],  ineligibility_notifications: [],
+
+  platform_cwt_detail: {
+    upwork_contract_value: 800000.00,
+    upwork_service_fee_10pct: 80000.00,
+    payoneer_net_remittance: 720000.00,
+    payoneer_2307_income_payment: 360000.00,
+    payoneer_2307_tax_withheld: 3600.00,
+    effective_rate_vs_net_remittance_pct: 0.500,
+    effective_rate_vs_contract_pct: 0.450,
+    rr_16_2023_threshold_exceeded: true,
+    withholding_basis: "Combined Payoneer remittances ₱720,000 > ₱500,000 annual threshold (condition_3 met)"
+  }
+}
+```
+
+### Verification
+
+- **Path C IT:** 750,000 × 0.08 = **₱60,000** ✓
+- **Path B:** NTI = 600,000; IT = 22,500 + 200,000 × 0.20 = **₱62,500**; PT = **₱30,000**; total = **₱92,500** ✓
+- **Path A IT:** 102,500 + (1,000,000 − 800,000) × 0.25 = 102,500 + 50,000 = **₱152,500**; total = **₱182,500** ✓
+- **WI760 taxable base:** ₱720,000 × 0.50 = **₱360,000** ✓; CWT = ₱360,000 × 0.01 = **₱3,600** ✓
+- **Effective rate:** ₱3,600 / ₱720,000 = **0.500%** of net remittance ✓; ₱3,600 / ₱800,000 = **0.450%** of contract ✓
+- **WI010 total:** 2 × ₱100,000 × 0.05 = **₱10,000** ✓
+- **Total CWT:** 3,600 + 10,000 = **₱13,600** ✓
+- **Balance:** 60,000 − 13,600 = **₱46,400** ✓
+- **Threshold check:** ₱720,000 > ₱500,000 → withholding applies; no Sworn Declaration → condition_2 and condition_3 both met ✓
+- **Both ATC codes classified as INCOME_TAX_CWT:** WI760 (e-marketplace withholding, credits against IT per RR 16-2023); WI010 (professional fee withholding, credits against IT per RR 2-98) ✓
+- **WARN-017 does NOT fire:** WI760 is a recognized ATC code in the engine's ATC lookup table ✓
+
+**Legal basis:** RR 16-2023 Sec. 3 (e-marketplace CWT); RMC 8-2024 (threshold and application rules); CR-019 (withholding formula and 2307 mechanics). WI010 5%: RR 2-98 Sec. 2.57.2(E). 8% option: NIRC Sec. 24(A)(2)(b). CWT vs PT classification: WI760 → income_tax_cwt (RR 16-2023); WI010 → income_tax_cwt (NIRC Sec. 58). Form 1701A: BIR RA 11976 EOPT.
+
+---
+
+## GROUP 5 SUMMARY TABLE
+
+| Vector | Scenario | GR | CWT | CWT ATCs | IT (Optimal) | Balance | Overpayment | Key Feature |
+|--------|---------|-----|-----|----------|-------------|---------|-------------|-------------|
+| TV-EX-G5-001 | SC-P-ML-8-CWT | ₱600,000 | ₱30,000 | WI010 only | ₱28,000 (8%) | ₱0 | ₱2,000 (CARRY_OVER) | CWT > IT; WARN-009; all NIL quarterly |
+| TV-EX-G5-002 | SC-P-ML-O-CWT | ₱900,000 | ₱45,000 | WI010 only | ₱50,500 (OSD, locked) | ₱32,500 (IT ₱5,500 + PT ₱27,000) | ₱0 | Item 57/58 tracking; locked OSD; ₱25,500 opp. cost vs 8% |
+| TV-EX-G5-003 | SC-P-ML-8-CWT-PLATFORM | ₱1,000,000 | ₱13,600 | WI760 ₱3,600 + WI010 ₱10,000 | ₱60,000 (8%) | ₱46,400 | ₱0 | Dual CWT types; Payoneer 2307 50% base mechanics |
+
+**Key insights validated:**
+
+1. **CWT offsets income tax only.** Under 8% (Path C, PT = ₱0), CWT directly reduces balance and can produce overpayment. Under OSD (Path B, PT > ₱0), CWT first exhausts IT down to its floor, leaving PT as a separate obligation filed via quarterly Form 2551Q.
+
+2. **8% CWT crossover at ₱666,667 gross (all-5%-CWT scenario).** Below this, 5% CWT exceeds 8% IT, producing overpayment. At ₱600,000 gross: CWT ₱30,000 > IT ₱28,000 → overpayment ₱2,000. Above ₱666,667, the 8% IT exceeds CWT, leaving a positive balance payable.
+
+3. **Quarterly NIL returns from CWT offset.** When cumulative CWT ≥ cumulative IT at the quarterly checkpoint, quarterly payable = ₱0. The quarterly 1701Q is still filed (NIL return) — it is never omitted. Form 2551Q for PT is also filed quarterly regardless of CWT credits.
+
+4. **Item 57 vs Item 58 on Form 1701Q.** Item 57 = cumulative CWT from all PRIOR quarters (imported from prior return's Item 59). Item 58 = NEW 2307s received THIS quarter. Item 59 = Item 57 + Item 58 = running cumulative. The engine tracks this per-quarter split to correctly populate both fields on the quarterly return.
+
+5. **WI760 (Payoneer/RR 16-2023) 2307 mechanics.** The 2307 income_payment = 50% of net remittance (NOT 50% of contract value and NOT the full gross receipts). Tax withheld = 1% of that base. Effective rate = 0.5% of net remittance. Gross receipts for income tax purposes remains the full contract value. The ₱80,000 Upwork service fee is deductible under Path A but absorbed into Path C's 8% flat rate computation without separate recognition.
+
+6. **Both WI760 and WI010 are classified as INCOME_TAX_CWT.** Neither is PT_CWT. They aggregate into total_cwt_credits and offset income tax on the annual ITR. WARN-017 fires only if an unknown ATC code is entered (neither WI760 nor WI010 trigger it).
+

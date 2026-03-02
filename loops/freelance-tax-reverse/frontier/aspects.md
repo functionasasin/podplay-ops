@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 54
-- Analyzed: 37
-- Pending: 17
-- Convergence: 69%
+- Analyzed: 38
+- Pending: 16
+- Convergence: 70%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -52,7 +52,7 @@ Design the computation engine from the extracted domain rules.
 - [x] test-vectors-g2 — Exhaustive vectors: Group 2 (Pure Service/Professional, above ₱3M VAT — 2 codes)
 - [x] test-vectors-g3 — Exhaustive vectors: Group 3 (Mixed Income earners — 5 codes)
 - [x] test-vectors-g4 — Exhaustive vectors: Group 4 (First-year/new registrants — 5 codes)
-- [ ] test-vectors-g5 — Exhaustive vectors: Group 5 (CWT-heavy scenarios — 3 codes)
+- [x] test-vectors-g5 — Exhaustive vectors: Group 5 (CWT-heavy scenarios — 3 codes)
 - [ ] test-vectors-g6 — Exhaustive vectors: Group 6 (Threshold crossing — 2 codes)
 - [ ] test-vectors-g7 — Exhaustive vectors: Group 7 (Special deduction scenarios)
 - [ ] test-vectors-g8 — Exhaustive vectors: Group 8 (Quarterly-cycle-specific scenarios)
