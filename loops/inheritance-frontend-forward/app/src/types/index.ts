@@ -569,6 +569,14 @@ export interface UserProfile {
 
 export type AutoSaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
+export interface CaseNote {
+  id: string;
+  case_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+}
+
 /** Valid case status transitions */
 export const VALID_STATUS_TRANSITIONS: Record<CaseStatus, CaseStatus[]> = {
   draft: ['computed'],
