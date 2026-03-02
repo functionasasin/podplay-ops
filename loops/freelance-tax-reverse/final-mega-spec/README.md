@@ -3,7 +3,7 @@
 This directory contains the complete product specification. A forward loop can build the entire platform by reading ONLY this directory.
 
 **Last updated:** 2026-03-02
-**Convergence status:** IN PROGRESS (44/54 aspects analyzed)
+**Convergence status:** IN PROGRESS (49/54 aspects analyzed)
 
 ---
 
@@ -57,7 +57,7 @@ This directory contains the complete product specification. A forward loop can b
 
 | File | Status | Description |
 |------|--------|-------------|
-| frontend/user-journeys.md | PENDING | Every user type, every flow |
+| [frontend/user-journeys.md](frontend/user-journeys.md) | COMPLETE | 8 user journeys (UJ-01 to UJ-08): First-Timer, Returning Annual Filer, Mixed Income Earner, VAT-Registered Professional, Quarterly Filer (1701Q), Platform Freelancer (Upwork/Fiverr), CPA/Bookkeeper, Late/Penalty Computation. Each journey: entry point, step-by-step screen flow, decision gates, output rendering, follow-up actions. Cross-journey decision gates (₱3M threshold, regime lock, CWT overpayment, MRF triggers, free/pro gating). Journey state machine (13 states). Mobile behavior and accessibility requirements. |
 | frontend/wizard-steps.md | PENDING | Every input field, validation, error message |
 | frontend/results-views.md | PENDING | Every output visualization, layout |
 | frontend/validation-rules.md | PENDING | Client-side validation |

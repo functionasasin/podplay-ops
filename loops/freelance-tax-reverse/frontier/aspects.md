@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 54
-- Analyzed: 48
-- Pending: 6
-- Convergence: 89%
+- Analyzed: 49
+- Pending: 5
+- Convergence: 91%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -66,7 +66,7 @@ Design the computation engine from the extracted domain rules.
 
 ### Wave 4: Full-Stack Product Design
 Design everything around the engine to make it a shippable product.
-- [ ] user-journeys — Map every user type through every flow
+- [x] user-journeys — Map every user type through every flow
 - [ ] wizard-steps — Specify every input field, validation rule, conditional visibility, error message
 - [ ] results-views — Specify every output visualization, layout variant
 - [ ] frontend-validation — Client-side validation, pre-submission warnings
