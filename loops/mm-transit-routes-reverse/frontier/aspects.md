@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 106
-- Analyzed: 98
-- Pending: 8
-- Convergence: 92%
+- Analyzed: 99
+- Pending: 7
+- Convergence: 93%
 
 ---
 
@@ -139,7 +139,7 @@
 - [x] Generate routes.txt — all validated routes with type, color codes, names
 - [x] Generate stops.txt — all stop locations with lat/lon coordinates
 - [x] Generate stop_times.txt — estimated arrival/departure times per stop
-- [ ] Generate shapes.txt — route geometry from best available sources
+- [x] Generate shapes.txt — route geometry from best available sources
 - [ ] Generate trips.txt — trip patterns for each route
 - [ ] Generate fare_attributes.txt and fare_rules.txt — fare structure per route/mode
 - [ ] Generate frequencies.txt — headway estimates for peak/off-peak
