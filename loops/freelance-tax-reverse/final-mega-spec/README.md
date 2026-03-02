@@ -3,7 +3,7 @@
 This directory contains the complete product specification. A forward loop can build the entire platform by reading ONLY this directory.
 
 **Last updated:** 2026-03-02
-**Convergence status:** IN PROGRESS (49/54 aspects analyzed)
+**Convergence status:** IN PROGRESS (50/54 aspects analyzed)
 
 ---
 
@@ -58,6 +58,7 @@ This directory contains the complete product specification. A forward loop can b
 | File | Status | Description |
 |------|--------|-------------|
 | [frontend/user-journeys.md](frontend/user-journeys.md) | COMPLETE | 8 user journeys (UJ-01 to UJ-08): First-Timer, Returning Annual Filer, Mixed Income Earner, VAT-Registered Professional, Quarterly Filer (1701Q), Platform Freelancer (Upwork/Fiverr), CPA/Bookkeeper, Late/Penalty Computation. Each journey: entry point, step-by-step screen flow, decision gates, output rendering, follow-up actions. Cross-journey decision gates (₱3M threshold, regime lock, CWT overpayment, MRF triggers, free/pro gating). Journey state machine (13 states). Mobile behavior and accessibility requirements. |
+| [frontend/wizard-steps.md](frontend/wizard-steps.md) | COMPLETE | Every wizard input step fully specified. 14 steps (WS-00 through WS-13): Mode Selection, Taxpayer Profile, Business Type, Tax Year & Period, Gross Receipts, Compensation Income (mixed income only), Expense Method, Itemized Expenses — General/Financial/Depreciation/NOLCO (4 sub-steps), Form 2307 CWT, Prior Quarterly Payments, Registration & VAT Status, Regime Election, Filing Details, Prior Year Credits. For every field: ID, label, type, placeholder, default, required flag, visibility condition, all validation rules, all error messages, help text. Step routing matrix (all user paths). 20 global cross-field validation constraints. 14 dynamic real-time advisories (DA-01 to DA-14). |
 | frontend/wizard-steps.md | PENDING | Every input field, validation, error message |
 | frontend/results-views.md | PENDING | Every output visualization, layout |
 | frontend/validation-rules.md | PENDING | Client-side validation |
