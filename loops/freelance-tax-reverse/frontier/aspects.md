@@ -48,7 +48,20 @@ Design the computation engine from the extracted domain rules.
 - [x] error-states — Define every invalid input state and the engine's response
 - [x] test-vectors-basic — Write happy-path test vectors (one per common scenario)
 - [x] test-vectors-edge — Write edge-case test vectors
-- [ ] test-vectors-exhaustive — Write one test vector per scenario code
+- [ ] test-vectors-g1 — Exhaustive vectors: Group 1 (Pure Service/Professional, below ₱3M, 8% eligible — 12 codes)
+- [ ] test-vectors-g2 — Exhaustive vectors: Group 2 (Pure Service/Professional, above ₱3M VAT — 2 codes)
+- [ ] test-vectors-g3 — Exhaustive vectors: Group 3 (Mixed Income earners — 5 codes)
+- [ ] test-vectors-g4 — Exhaustive vectors: Group 4 (First-year/new registrants — 5 codes)
+- [ ] test-vectors-g5 — Exhaustive vectors: Group 5 (CWT-heavy scenarios — 3 codes)
+- [ ] test-vectors-g6 — Exhaustive vectors: Group 6 (Threshold crossing — 2 codes)
+- [ ] test-vectors-g7 — Exhaustive vectors: Group 7 (Special deduction scenarios)
+- [ ] test-vectors-g8 — Exhaustive vectors: Group 8 (Quarterly-cycle-specific scenarios)
+- [ ] test-vectors-g9 — Exhaustive vectors: Group 9 (Business/trading taxpayers SC-B)
+- [ ] test-vectors-g10 — Exhaustive vectors: Group 10 (Combined service + trading SC-COMBO)
+- [ ] test-vectors-g11 — Exhaustive vectors: Group 11 (Additional mixed income sub-scenarios)
+- [ ] test-vectors-g12 — Exhaustive vectors: Group 12 (Breakeven and boundary precision SC-BE)
+- [ ] test-vectors-g13 — Exhaustive vectors: Group 13 (Late-filing and penalty scenarios SC-LATE)
+- [ ] test-vectors-g14 — Exhaustive vectors: Group 14 (Platform freelancer specifics SC-PLAT)
 - [ ] fuzz-properties — Define invariants for randomized testing
 
 ### Wave 4: Full-Stack Product Design
