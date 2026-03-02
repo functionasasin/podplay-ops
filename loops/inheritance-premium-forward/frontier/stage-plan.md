@@ -13,8 +13,8 @@ Dev order: 1 → 2 → 3 → 4-9 (parallel) → 10 → 11 → 12-16 (parallel) �
 | 7     | Statute Citations UI        | §4.5     | statute-citations\|ncc-article     | —                  | complete |
 | 8     | Print Layout                | §4.7     | print                              | —                  | complete |
 | 9     | Donation Summary            | §4.15    | donation-summary                   | —                  | complete |
-| 10    | Firm Branding               | §4.4     | firm-branding\|settings            | 3                  | active |
-| 11    | PDF Export                  | §4.1     | pdf                                | 7, 6, 4, 5, 9, 10 | blocked |
+| 10    | Firm Branding               | §4.4     | firm-branding\|settings            | 3                  | complete |
+| 11    | PDF Export                  | §4.1     | pdf                                | 7, 6, 4, 5, 9, 10 | active |
 | 12    | Case Notes                  | §4.6     | case-notes                         | 3                  | blocked |
 | 13    | Shareable Links             | §4.10    | share\|shareable                   | 3                  | blocked |
 | 14    | Case Export ZIP             | §4.16    | zip\|export-archive                | 11, 3              | blocked |

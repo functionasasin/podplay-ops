@@ -1,7 +1,7 @@
-# Current Stage: 10 (Firm Branding)
+# Current Stage: 11 (PDF Export)
 
 ## Spec Sections
-- §4.4 — Firm Branding
+- §4.1 — PDF Export
 
 ## Test Results (updated by loop)
 ```
@@ -18,4 +18,5 @@ No tests yet
 - Stage 7 completed 2026-03-02 (36/36 tests passing)
 - Stage 8 completed 2026-03-02 (19/19 tests passing)
 - Stage 9 completed 2026-03-02 (32/32 tests passing)
-- Stage 10 starting 2026-03-02
+- Stage 10 completed 2026-03-02 (71/71 tests passing)
+- Stage 11 starting 2026-03-02
