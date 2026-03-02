@@ -1018,6 +1018,36 @@ Soft warnings do NOT abort computation. They are attached to `TaxComputationResu
 
 ---
 
+### WARN_OVERPAYMENT_CARRY_OVER_DEFAULTED
+
+| Attribute | Value |
+|-----------|-------|
+| Code | `WARN_OVERPAYMENT_CARRY_OVER_DEFAULTED` |
+| Original code | WARN-018 |
+| Condition | `total_it_credits > income_tax_due` AND `overpayment_amount <= 50000.00` AND `input.overpayment_preference is null` |
+| Severity | INFORMATIONAL |
+| User-facing message | "You have an overpayment of ₱{overpayment_amount}. Since this is ₱50,000 or below, we've defaulted to carrying it over as a credit to your {next_tax_year} income tax. To change this to a cash refund (BIR Form 1914, 90–120 days) or a Tax Credit Certificate (BIR Form 1926), select your preference and re-run the computation. Note: once you file the return, your overpayment election is irrevocable per NIRC Sec. 76." |
+| Field | `overpayment_disposition` (set to `CARRY_OVER`) |
+| Action required by user | Optional. Confirm the carry-over default or choose a different disposition (REFUND or TCC). |
+| When fires | PL-17 output assembly, after `BalanceResult` is resolved. Fires only for ANNUAL filing periods (not quarterly). |
+
+---
+
+### WARN_OVERPAYMENT_ELECTION_REQUIRED
+
+| Attribute | Value |
+|-----------|-------|
+| Code | `WARN_OVERPAYMENT_ELECTION_REQUIRED` |
+| Original code | WARN-019 |
+| Condition | `total_it_credits > income_tax_due` AND `overpayment_amount > 50000.00` AND `input.overpayment_preference is null` |
+| Severity | ADVISORY |
+| User-facing message | "You have a significant overpayment of ₱{overpayment_amount}. You must choose how to handle this before filing: (1) Carry over to TY{next_tax_year} as an income tax credit — fastest option, no BIR application required; (2) Apply for a cash refund via BIR Form 1914 — 90–120 days processing; (3) Request a Tax Credit Certificate (TCC) via BIR Form 1926 — same processing time as refund, but the certificate is usable against any future BIR tax. Your election is irrevocable once the return is filed (NIRC Sec. 76). Re-run this computation with your `overpayment_preference` set before submitting." |
+| Field | `overpayment_disposition` (set to `PENDING_ELECTION` — return is NOT ready to file) |
+| Action required by user | Required. Must choose CARRY_OVER, REFUND, or TCC and re-run with `overpayment_preference` set. |
+| When fires | PL-17 output assembly. Fires only for ANNUAL filing periods (not quarterly). |
+
+---
+
 ## 7. Ineligibility Notification Codes (IN-*)
 
 These are not errors — they are informational messages attached to `TaxComputationResult.ineligibility_notes` explaining why Path C (8%) was skipped. The computation continues with Paths A and B.
@@ -1139,6 +1169,8 @@ The complete MRF flag definitions are in [domain/manual-review-flags.md](../doma
 | `WARN_EAR_CAP_APPLIED` | WARN-015 | INFORMATIONAL | EAR capped per Sec. 34(A) |
 | `WARN_VEHICLE_DEPRECIATION_CAPPED` | WARN-016 | INFORMATIONAL | Vehicle depreciation capped at ₱2.4M |
 | `WARN_UNKNOWN_ATC_CODE` | WARN-017 | ADVISORY | Unknown ATC code, credit not applied |
+| `WARN_OVERPAYMENT_CARRY_OVER_DEFAULTED` | WARN-018 | INFORMATIONAL | Overpayment ≤ ₱50K; engine defaulted to carry-over |
+| `WARN_OVERPAYMENT_ELECTION_REQUIRED` | WARN-019 | ADVISORY | Overpayment > ₱50K; taxpayer must elect disposition before filing |
 
 ---
 
@@ -1164,6 +1196,7 @@ The following table shows which errors each pipeline step can produce and what t
 | PL-14: Balance Computation | ERR_ASSERT_BALANCE_ARITHMETIC, ERR_ASSERT_INSTALLMENT_ARITHMETIC | WARN_CWT_EXCEEDS_IT_DUE | Assertion aborts; warning attached to result. |
 | PL-15: Form Field Mapping | None | None | Cannot fail; all field mappings are deterministic from prior steps. |
 | PL-16: Penalty Computation | None | None | If penalty computation produces unexpected results, engine logs but does not abort — penalty is informational only. |
+| PL-17: Final Output Assembly | None | WARN_OVERPAYMENT_CARRY_OVER_DEFAULTED (overpayment ≤ ₱50K, no preference), WARN_OVERPAYMENT_ELECTION_REQUIRED (overpayment > ₱50K, no preference) | Overpayment warnings attached for ANNUAL filings only. PENDING_ELECTION disposition blocks "ready to file" state. |
 
 ---
 
@@ -1334,6 +1367,7 @@ This section defines exactly how each error/warning category is rendered in the 
 | `WARN_CHARITABLE_NOT_ACCREDITED` | "Charitable Contribution Not Deductible" |
 | `WARN_BAD_DEBTS_CASH_BASIS` | "Bad Debts Not Deductible on Cash Basis" |
 | `WARN_UNKNOWN_ATC_CODE` | "Unrecognized CWT Certificate Code" |
+| `WARN_OVERPAYMENT_ELECTION_REQUIRED` | "Action Required — Choose Overpayment Disposition" |
 
 ### 12.6 Informational Warnings
 
@@ -1348,6 +1382,7 @@ This section defines exactly how each error/warning category is rendered in the 
 | `WARN_ZERO_INCOME` | "Zero Income Entered" |
 | `WARN_EAR_CAP_APPLIED` | "Entertainment Expense Capped" |
 | `WARN_VEHICLE_DEPRECIATION_CAPPED` | "Vehicle Depreciation Ceiling Applied" |
+| `WARN_OVERPAYMENT_CARRY_OVER_DEFAULTED` | "Overpayment Defaulted to Carry-Over — Confirm Before Filing" |
 
 ### 12.7 Manual Review Flags
 

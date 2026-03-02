@@ -187,13 +187,27 @@ How to compute annual depreciation for business assets.
 
 ### 2.14 OverpaymentDisposition
 
-How the taxpayer wishes to handle an overpayment at annual filing.
+How the taxpayer wishes to handle an overpayment at annual filing. This enum appears as the `overpayment_disposition` field in `TaxComputationResult` and is `null` when there is no overpayment (`disposition != OVERPAYMENT`).
+
+**Engine auto-assignment rule (PL-17):**
+```
+if disposition == OVERPAYMENT:
+  if input.overpayment_preference is not null:
+    overpayment_disposition = input.overpayment_preference   // taxpayer passed explicit preference
+  elif overpayment_amount <= 50000.00:
+    overpayment_disposition = CARRY_OVER                     // engine default for small overpayments
+  else:
+    overpayment_disposition = PENDING_ELECTION               // >₱50K: must prompt taxpayer before filing
+else:
+  overpayment_disposition = null
+```
 
 | Variant | Description | Process |
 |---------|-------------|---------|
-| `CARRY_OVER` | Apply excess credit to the following year's income tax. Default recommendation for overpayments ≤ ₱50,000. | Mark Item 29 on 1701/1701A; retain Form 2307 copies. |
-| `REFUND` | Request cash refund from BIR. For overpayments > ₱50,000. Slow process (90–120 days). | File BIR Form 1914; attach original 2307s; requires Revenue District Officer approval. |
-| `TCC` | Tax Credit Certificate — BIR-issued certificate usable against future taxes. | File Form 1926; issued by BIR; transferable to other taxpayers. |
+| `CARRY_OVER` | Apply excess credit to the following year's income tax. Engine default for overpayments ≤ ₱50,000. No separate BIR application required. | Mark "To be Carried Over as Tax Credit for Next Year/Quarter" checkbox on Form 1701/1701A. Applied as prior-year excess credit on next year's return. |
+| `REFUND` | Request cash refund from BIR. Used for overpayments > ₱50,000 when taxpayer prefers cash. Process takes 90–120 days. | File BIR Form 1914; attach original 2307 copies; requires Revenue District Officer approval. Amounts ≤ ₱1,000,000 may qualify for automatic refund under EOPT Act. |
+| `TCC` | Tax Credit Certificate — BIR-issued certificate usable against any future BIR tax liability (income tax, VAT, percentage tax). | File BIR Form 1926 after filing ITR. Same processing time as REFUND. Cannot be transferred except to wholly-owned subsidiaries. |
+| `PENDING_ELECTION` | Engine cannot auto-default. Overpayment > ₱50,000 AND taxpayer has not passed `overpayment_preference` in input. UI must prompt the taxpayer to choose CARRY_OVER, REFUND, or TCC before the return is finalized. The return should NOT be marked as ready to file while this state persists. | UI displays an overpayment election step after the regime recommendation. Once taxpayer selects, re-run with `overpayment_preference` set; result will show the elected variant. |
 
 ---
 
@@ -244,6 +258,14 @@ struct TaxpayerInput {
   actual_filing_date: Date | null         // Optional. null = assume on-time filing; skip PL-16 entirely. Non-null = compute penalties if past deadline.
   return_type: ReturnType                 // Required. ORIGINAL | AMENDED.
   prior_payment_for_return: Decimal       // Required. ₱0 or greater. For AMENDED returns: amount already paid on original return. Credited against new balance. Zero for ORIGINAL returns.
+
+  // --- Overpayment Preference ---
+  overpayment_preference: OverpaymentDisposition | null
+  // Optional. Only relevant for ANNUAL filing when an overpayment is possible.
+  // Allowed non-null values: CARRY_OVER | REFUND | TCC (NOT PENDING_ELECTION — that is an engine output, not a valid input).
+  // null = engine applies auto-default rule: CARRY_OVER if overpayment ≤ ₱50,000; PENDING_ELECTION if > ₱50,000.
+  // When non-null: engine uses this value directly and sets TaxComputationResult.overpayment_disposition to this value.
+  // For quarterly filings (Q1/Q2/Q3): must be null (overpayment elections are made only on the annual return).
 }
 ```
 
@@ -263,6 +285,8 @@ struct TaxpayerInput {
 | `prior_payment_for_return` | ≥ ₱0 |
 | `prior_quarterly_payments` length | 0–3 entries for ANNUAL; 0–(quarter−1) entries for quarterly |
 | If PURELY_SE | `taxable_compensation == 0` (VAL-008) |
+| `overpayment_preference` | If non-null: must be CARRY_OVER, REFUND, or TCC (NOT PENDING_ELECTION) |
+| `overpayment_preference` | Must be null if `filing_period != ANNUAL` |
 | If COMPENSATION_ONLY | `gross_receipts == 0` (VAL-007) |
 | If MIXED_INCOME | `taxable_compensation > 0` AND `gross_receipts > 0` |
 
@@ -1233,6 +1257,11 @@ struct TaxComputationResult {
   balance: Decimal                     // Amount payable (₱0 if overpayment).
   disposition: BalanceDisposition      // BALANCE_PAYABLE | ZERO_BALANCE | OVERPAYMENT
   overpayment: Decimal                 // Refundable amount (₱0 if balance payable).
+  overpayment_disposition: OverpaymentDisposition | null
+  // null if disposition != OVERPAYMENT.
+  // CARRY_OVER if overpayment ≤ ₱50,000 and no preference given (engine default).
+  // PENDING_ELECTION if overpayment > ₱50,000 and input.overpayment_preference is null.
+  // CARRY_OVER | REFUND | TCC if input.overpayment_preference was set.
   installment_eligible: bool
   installment_first_due: Decimal       // Due April 15.
   installment_second_due: Decimal      // Due July 15.
@@ -1364,6 +1393,7 @@ This table maps every type to the pipeline step(s) that produce or consume it.
 | `FormMappingResult` | PL-15 | PL-17 | Yes (via form_type, form_output, pt_form_output) |
 | `PenaltyStack` | PL-16 | PL-16 (aggregation), PL-17 | Yes (via penalties) |
 | `PenaltyResult` | PL-16 | PL-17 | Yes (via penalties) |
+| `OverpaymentDisposition` | PL-17 (derived from input.overpayment_preference + overpayment_amount) | PL-17 output assembly | Yes (via TaxComputationResult.overpayment_disposition) |
 | `TaxComputationResult` | PL-17 | API response | This IS the final output |
 | `Form1701Output` | PL-15 | PL-17 | Yes (via form_output) |
 | `Form1701AOutput` | PL-15 | PL-17 | Yes (via form_output) |

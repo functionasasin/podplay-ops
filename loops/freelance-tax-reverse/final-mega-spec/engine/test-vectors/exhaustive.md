@@ -5626,11 +5626,14 @@ TaxComputationResult {
   quarterly_it_paid: 36000.00,
   balance_payable: 0.00,
   overpayment: 8000.00,
-  overpayment_disposition: TAXPAYER_ELECTION_REQUIRED,
+  overpayment_disposition: CARRY_OVER,
+  // ₱8,000 ≤ ₱50,000 threshold → engine auto-defaults to CARRY_OVER per OverpaymentDisposition rules.
   form: FORM_1701A,
   form_section: PART_IV_B,
   penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
-  warnings: [WARN_OVERPAYMENT_ELECTION_REQUIRED],
+  warnings: [WARN_OVERPAYMENT_CARRY_OVER_DEFAULTED],
+  // WARN-018: total credits (CWT ₱80,000 + quarterly ₱36,000 = ₱116,000) > IT ₱108,000 → overpayment ₱8,000.
+  // Engine defaulted to CARRY_OVER. UI must confirm election before presenting final form.
   manual_review_flags: []
 }
 ```
@@ -5924,8 +5927,8 @@ TaxComputationResult {
 - Scenario: OSD path (Path B), ₱1,200,000 annual GR, ₱120,000 total annual CWT (10% EWT from corporate clients)
 - Q3 payable: ₱0.00 (cumulative CWT exceeds cumulative IT)
 - Annual overpayment: ₱33,500.00 (CWT ₱120,000 − IT ₱86,500 = ₱33,500 after all quarterly payments)
-- Overpayment disposition: TAXPAYER_ELECTION_REQUIRED (refund, TCC, or carryover to next year)
-- WARN_OVERPAYMENT_ELECTION_REQUIRED fires at annual
+- Overpayment disposition: CARRY_OVER (₱33,500 ≤ ₱50,000 → engine auto-defaults to carry-over per OverpaymentDisposition rules)
+- WARN_OVERPAYMENT_CARRY_OVER_DEFAULTED (WARN-018) fires at annual to prompt UI to confirm election
 
 ---
 

@@ -166,9 +166,10 @@ CREATE TYPE balance_disposition_enum AS ENUM (
 
 -- 2.13 Overpayment disposition (mirrors OverpaymentDisposition in data-model.md §2.14)
 CREATE TYPE overpayment_disposition_enum AS ENUM (
-  'CARRY_OVER',  -- Apply excess credit to next year. Default for overpayments ≤ ₱50,000.
-  'REFUND',      -- Request cash refund via BIR Form 1914. 90–120 day processing.
-  'TCC'          -- Tax Credit Certificate via BIR Form 1926. Transferable to other taxpayers.
+  'CARRY_OVER',        -- Apply excess credit to next year. Default for overpayments ≤ ₱50,000.
+  'REFUND',            -- Request cash refund via BIR Form 1914. 90–120 day processing.
+  'TCC',               -- Tax Credit Certificate via BIR Form 1926. Transferable to other taxpayers.
+  'PENDING_ELECTION'   -- Overpayment > ₱50,000 and taxpayer has not yet chosen. UI must prompt before filing.
 );
 ```
 
@@ -479,6 +480,10 @@ CREATE TABLE computations (
   -- Net amount owed to BIR after credits. ₱0 if ZERO_BALANCE or OVERPAYMENT. NULL if not COMPLETE.
   overpayment_amount    NUMERIC(15,2)           NULL,
   -- Net overpayment. ₱0 if BALANCE_PAYABLE or ZERO_BALANCE. NULL if not COMPLETE.
+  overpayment_disposition overpayment_disposition_enum NULL,
+  -- How the taxpayer elected to handle overpayment. NULL if balance_disposition != OVERPAYMENT or not COMPLETE.
+  -- CARRY_OVER: default for ≤₱50,000 overpayment. REFUND/TCC: taxpayer explicit choice. PENDING_ELECTION: >₱50,000 and user has not chosen yet.
+  -- Used for analytics: "what percentage of overpayers chose carry-over vs refund vs TCC?"
   total_credits         NUMERIC(15,2)           NULL,
   -- Sum of all credits (CWT + quarterly payments + prior year carry-over). NULL if not COMPLETE.
   penalty_total         NUMERIC(15,2)           NULL,
@@ -535,6 +540,7 @@ CREATE TABLE computations (
   CONSTRAINT computations_cwt_total_nn       CHECK (cwt_total >= 0),
   CONSTRAINT computations_balance_nn         CHECK (balance_payable IS NULL OR balance_payable >= 0),
   CONSTRAINT computations_overpayment_nn     CHECK (overpayment_amount IS NULL OR overpayment_amount >= 0),
+  CONSTRAINT computations_overpayment_disp   CHECK (overpayment_disposition IS NULL OR balance_disposition = 'OVERPAYMENT'),
   CONSTRAINT computations_share_token_uuid   CHECK (
     share_token IS NULL OR share_token ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
   ),
@@ -1431,6 +1437,7 @@ CREATE INDEX pdf_exports_expiry_idx
 | computations | computations_share_token_uuid | CHECK | share_token is valid UUID format |
 | computations | computations_label_length | CHECK | label ≤ 200 characters |
 | computations | computations_engine_version_fmt | CHECK | engine_version is X.Y.Z format |
+| computations | computations_overpayment_disp   | CHECK | overpayment_disposition IS NULL OR balance_disposition = 'OVERPAYMENT' |
 | computation_cwt_entries | cwt_entries_computation_fk | FK | References computations(id) ON DELETE CASCADE |
 | computation_cwt_entries | cwt_entries_tax_withheld | CHECK | 0 ≤ tax_withheld ≤ income_payment |
 | computation_cwt_entries | cwt_entries_period_order | CHECK | period_to ≥ period_from |
