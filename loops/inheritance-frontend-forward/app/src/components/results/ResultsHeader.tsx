@@ -7,7 +7,7 @@ import { formatPeso } from '../../types';
 import { Badge } from '../ui/badge';
 import { Alert, AlertTitle, AlertDescription } from '../ui/alert';
 import { Separator } from '../ui/separator';
-import { SUCCESSION_TYPE_BADGE_COLOR } from './utils';
+import { SUCCESSION_TYPE_BADGE_COLOR, formatDateOfDeath } from './utils';
 
 export interface ResultsHeaderProps {
   scenarioCode: ScenarioCode;
@@ -38,8 +38,14 @@ export function ResultsHeader({ scenarioCode, successionType, netDistributableEs
   return (
     <div data-testid="results-header">
       <h1 className="font-serif text-xl sm:text-2xl font-bold text-primary tracking-tight">
-        Philippine Inheritance Distribution
+        Estate of {decedentName}
       </h1>
+      <p className="text-sm text-muted-foreground mt-1">
+        Date of Death: {formatDateOfDeath(dateOfDeath)}
+      </p>
+      <p className="text-xs text-muted-foreground mt-0.5">
+        Philippine Inheritance Distribution
+      </p>
 
       <Separator className="my-4" />
 
