@@ -6,7 +6,7 @@
 ## Per-Tool TAM Clusters
 - [x] tam-tax-self-employed — A1 (Self-Employed IT Optimizer), A2 (Corporate IT), A5 (Compensation IT); BIR-registered taxpayer counts by type; CPA/tax agent population
 - [x] tam-tax-property — A3 (CGT Real Property), A4 (CGT Shares), C1 (Donor's Tax), C4 (DST), C5 (Property Transfer Tax); BIR returns filed per form; real estate lawyers + transfer agents
-- [ ] tam-tax-business-compliance — B1 (Form Navigator), B2 (Penalty), B3 (Calendar), B4 (Withholding Agent), B5 (Quarterly IT), B6 (2307 Tracker), B7 (eBIRForms); VAT-registered + withholding agent counts; bookkeepers/accounting firms
+- [x] tam-tax-business-compliance — B1 (Form Navigator), B2 (Penalty), B3 (Calendar), B4 (Withholding Agent), B5 (Quarterly IT), B6 (2307 Tracker), B7 (eBIRForms); VAT-registered + withholding agent counts; bookkeepers/accounting firms
 - [ ] tam-tax-indirect — C2 (VAT Engine), C3 (VAT Refund); VAT-registered taxpayer count from BIR; VAT practitioners
 - [ ] tam-labor-payroll — D1 (Payroll Premiums), D2 (13th Month), D3 (Final Pay), D7 (Govt Contributions), D8 (Min Wage); private sector employees from DOLE establishment survey; HR officers + payroll firms
 - [ ] tam-labor-separation — D4 (Retirement Pay RA7641), D5 (Separation Pay), D6 (Back Wages), D9 (SEnA); at-risk employees + NLRC case filers; labor lawyers
