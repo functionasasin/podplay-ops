@@ -1,6 +1,6 @@
 # Exhaustive Test Vectors — Philippine Freelance Tax Optimizer
 
-**Status:** PARTIAL — Groups 1–7 complete (29 vectors + 4 cross-references to edge-cases.md). Groups 8–14 pending.
+**Status:** PARTIAL — Groups 1–8 complete (36 vectors + 6 cross-references). Groups 9–14 pending.
 **Last updated:** 2026-03-02
 **Cross-references:**
 - Scenario codes: [domain/scenarios.md](../../domain/scenarios.md)
@@ -4657,4 +4657,1301 @@ TaxComputationResult {
 4. **The EAR cap does not change which path is optimal in this scenario.** Even without the cap (full ₱60K allowed), Path C wins by ₱87,500. The cap adds ₱10,500 to Path A's cost but does not change the winner. This is true for most sub-₱3M taxpayers — EAR cap is a compliance issue, not a regime selection issue.
 
 5. **Path A beats Path B when allowed expense ratio > 40%.** In TV-EX-G7-003, allowed expenses = 41.0% (after cap), which is above the OSD rate of 40%. This means Path A provides a larger deduction than Path B OSD, producing lower NTI and lower IT under Path A. Both still lose to Path C. The tie point (Path A = Path B) is exactly 40% expense ratio (see SC-BE-OSD-ITEMIZED in edge-cases.md).
+
+---
+
+## GROUP 8: Quarterly-Cycle–Specific Scenarios
+
+**7 scenario codes:** SC-QC-8-3Q, SC-QC-OSD-3Q, SC-QC-ITEMIZED-3Q, SC-QC-NIL-Q1, SC-QC-CWT-SHIFT, SC-QC-AMENDMENT, SC-QC-OVERPY-Q3
+
+These vectors exercise the multi-quarter cumulative computation engine specifically. All quarterly computations use Form 1701Q. There is no Q4 1701Q — the annual return (Form 1701 or 1701A, due April 15) covers Q4. PT (Form 2551Q) is filed separately; its quarterly deadlines are independent of 1701Q deadlines.
+
+**Cumulative method rule (CR-010):**
+- Each 1701Q covers income from January 1 to end of that quarter (cumulative).
+- For OSD: `payable[q] = max(graduated_tax(cumul_GR[q] × 0.60) − cumul_CWT[q] − cumul_prior_payments[q], 0)`
+- For 8% quarterly (NO ₱250K deduction at quarterly level): `payable[q] = max(cumul_GR[q] × 0.08 − cumul_CWT[q] − cumul_prior_payments[q], 0)`
+- ₱250K deduction is applied ONLY at the annual 1701A for 8% taxpayers; quarterly returns may overstate tax slightly.
+- For Itemized: `payable[q] = max(graduated_tax(cumul_GR[q] − cumul_expenses[q]) − cumul_CWT[q] − cumul_prior_payments[q], 0)`
+
+**Common Group 8 input defaults (all quarterly vectors):**
+
+| Field | Value |
+|-------|-------|
+| `taxpayer_type` | `PURELY_SE` |
+| `is_mixed_income` | false |
+| `is_vat_registered` | false |
+| `is_bmbe_registered` | false |
+| `subject_to_sec_117_128` | false |
+| `is_gpp_partner` | false |
+| `taxable_compensation` | ₱0.00 |
+| `compensation_cwt` | ₱0.00 |
+| `cost_of_goods_sold` | ₱0.00 |
+| `non_operating_income` | ₱0.00 |
+| `fwt_income` | ₱0.00 |
+| `sales_returns_allowances` | ₱0.00 |
+| `prior_year_excess_cwt` | ₱0.00 |
+| `return_type` | `ORIGINAL` (unless stated otherwise) |
+| `actual_filing_date` | null (on-time assumed unless stated) |
+| `tax_year` | 2025 |
+
+---
+
+## TV-EX-G8-001: SC-QC-8-3Q — Quarterly Cycle, 8% Option, Three Quarters + Annual
+
+**Scenario code:** SC-QC-8-3Q
+**Cross-reference:** This scenario is fully covered by **TV-BASIC-007** in [basic.md](basic.md). That vector specifies all four periods (Q1, Q2, Q3, Annual) for a purely SE freelancer earning ₱200,000/quarter (₱800,000 annualized) on Path C (8%).
+
+**Key values from TV-BASIC-007 for cross-index:**
+- Q1 payable: ₱0.00 (NIL — cumul GR ₱200K < ₱250K so no 8% base yet)
+- Q2 payable: ₱12,000.00 (cumul GR ₱400K → base ₱150K × 8%)
+- Q3 payable: ₱16,000.00 (cumul IT ₱28K − prior ₱12K)
+- Annual IT: ₱44,000.00 (base ₱550K × 8%; balance ₱16K after ₱28K prior payments)
+- Form used: FORM_1701Q (Q1–Q3); FORM_1701A (annual)
+
+---
+
+## TV-EX-G8-002: SC-QC-OSD-3Q — Quarterly Cycle, Graduated + OSD, Three Quarters + Annual
+
+**Scenario code:** SC-QC-OSD-3Q
+**Description:** Purely self-employed IT consultant elected Path B (OSD) at Q1. Annual gross receipts ₱1,200,000, earned evenly at ₱300,000 per quarter, no business expenses tracked (taxpayer chose OSD to avoid documentation). Demonstrates: (1) cumulative OSD quarterly computation via Schedule I of Form 1701Q; (2) Q1 NIL return when cumulative NTI falls below ₱250,000; (3) bracket escalation across Q1→Q2→Q3 as cumulative NTI rises; (4) annual reconciliation showing balance payable; (5) separate quarterly PT obligation (Form 2551Q). At annual, engine shows Path C (₱76,000) was ₱46,500 cheaper than elected Path B (₱122,500) — illustrating the cost of not using the optimizer.
+
+**Tax year:** 2025
+**Elected regime:** PATH_B (OSD — elected at Q1; binding for the full year)
+
+**Common additional inputs (all periods):**
+- `elected_regime`: PATH_B
+- `osd_elected`: true
+- `itemized_expenses` (all sub-fields): ₱0.00
+- `cwt_2307_entries`: []
+
+### Period 1 — Q1 Filing (filing_period: Q1)
+
+**Q1 inputs:**
+
+| Field | Value |
+|-------|-------|
+| `filing_period` | Q1 |
+| `gross_receipts` | ₱300,000.00 (Q1 only) |
+| `prior_quarterly_payments` | [] |
+
+**Q1 Intermediate Values:**
+- Cumulative GR: ₱300,000.00
+- Cumulative OSD: ₱300,000 × 0.40 = ₱120,000.00
+- Cumulative NTI: ₱300,000 × 0.60 = ₱180,000.00
+- Cumulative IT: graduated_tax_2023(₱180,000) = ₱0.00 (bracket 1; NTI < ₱250,000)
+- Cumulative CWT: ₱0.00
+- Cumulative prior payments: ₱0.00
+- Q1 payable: max(₱0 − ₱0 − ₱0, 0) = **₱0.00** (NIL return)
+- Q1 2551Q PT: ₱300,000 × 0.03 = ₱9,000.00 (due April 25, 2025 — separate form)
+
+**Expected Q1 Output:**
+```
+TaxComputationResult {
+  filing_period: Q1,
+  tax_year: 2025,
+  taxpayer_type: PURELY_SE,
+  taxpayer_tier: MICRO,
+  selected_path: PATH_B,
+  cumulative_gross_receipts: 300000.00,
+  cumulative_osd: 120000.00,
+  cumulative_nti: 180000.00,
+  cumulative_it_due: 0.00,
+  cumulative_cwt_credits: 0.00,
+  cumulative_quarterly_paid: 0.00,
+  income_tax_due: 0.00,
+  balance_payable: 0.00,
+  form: FORM_1701Q,
+  schedule: SCHEDULE_I_OSD,
+  warnings: [],
+  manual_review_flags: []
+}
+```
+
+Note: NIL 1701Q — still mandatory. BIR Form 1701Q must be filed by **May 15, 2025** showing ₱0 tax due.
+
+### Period 2 — Q2 Filing (filing_period: Q2)
+
+**Q2 inputs:**
+
+| Field | Value |
+|-------|-------|
+| `filing_period` | Q2 |
+| `gross_receipts` | ₱600,000.00 (cumulative Jan 1 – Jun 30) |
+| `prior_quarterly_payments` | `[{ period: Q1, amount_paid: 0.00 }]` |
+
+**Q2 Intermediate Values:**
+- Cumulative GR: ₱600,000.00
+- Cumulative OSD: ₱600,000 × 0.40 = ₱240,000.00
+- Cumulative NTI: ₱600,000 × 0.60 = ₱360,000.00
+- Cumulative IT: graduated_tax_2023(₱360,000)
+  = (₱360,000 − ₱250,000) × 0.15
+  = ₱110,000 × 0.15
+  = **₱16,500.00** (bracket 2)
+- Cumulative CWT: ₱0.00
+- Prior quarterly IT paid (Q1): ₱0.00
+- Q2 payable: max(₱16,500 − ₱0 − ₱0, 0) = **₱16,500.00**
+- Q2 2551Q PT: ₱300,000 × 0.03 = ₱9,000.00 (due July 25, 2025 — separate form)
+
+**Expected Q2 Output:**
+```
+TaxComputationResult {
+  filing_period: Q2,
+  selected_path: PATH_B,
+  cumulative_gross_receipts: 600000.00,
+  cumulative_osd: 240000.00,
+  cumulative_nti: 360000.00,
+  cumulative_it_due: 16500.00,
+  cumulative_cwt_credits: 0.00,
+  cumulative_quarterly_paid: 0.00,
+  income_tax_due: 16500.00,
+  balance_payable: 16500.00,
+  form: FORM_1701Q,
+  schedule: SCHEDULE_I_OSD,
+  warnings: []
+}
+```
+
+### Period 3 — Q3 Filing (filing_period: Q3)
+
+**Q3 inputs:**
+
+| Field | Value |
+|-------|-------|
+| `filing_period` | Q3 |
+| `gross_receipts` | ₱900,000.00 (cumulative Jan 1 – Sep 30) |
+| `prior_quarterly_payments` | `[{ period: Q1, amount_paid: 0.00 }, { period: Q2, amount_paid: 16500.00 }]` |
+
+**Q3 Intermediate Values:**
+- Cumulative GR: ₱900,000.00
+- Cumulative OSD: ₱900,000 × 0.40 = ₱360,000.00
+- Cumulative NTI: ₱900,000 × 0.60 = ₱540,000.00
+- Cumulative IT: graduated_tax_2023(₱540,000)
+  = ₱22,500 + (₱540,000 − ₱400,000) × 0.20
+  = ₱22,500 + ₱28,000.00
+  = **₱50,500.00** (bracket 3)
+- Cumulative CWT: ₱0.00
+- Prior quarterly IT paid (Q1 + Q2): ₱0 + ₱16,500 = ₱16,500.00
+- Q3 payable: max(₱50,500 − ₱0 − ₱16,500, 0) = **₱34,000.00**
+- Q3 2551Q PT: ₱300,000 × 0.03 = ₱9,000.00 (due October 25, 2025 — separate form)
+
+**Expected Q3 Output:**
+```
+TaxComputationResult {
+  filing_period: Q3,
+  selected_path: PATH_B,
+  cumulative_gross_receipts: 900000.00,
+  cumulative_osd: 360000.00,
+  cumulative_nti: 540000.00,
+  cumulative_it_due: 50500.00,
+  cumulative_cwt_credits: 0.00,
+  cumulative_quarterly_paid: 16500.00,
+  income_tax_due: 50500.00,
+  balance_payable: 34000.00,
+  form: FORM_1701Q,
+  schedule: SCHEDULE_I_OSD,
+  warnings: []
+}
+```
+
+### Period 4 — Annual Reconciliation (filing_period: ANNUAL)
+
+**Annual inputs:**
+
+| Field | Value |
+|-------|-------|
+| `filing_period` | ANNUAL |
+| `gross_receipts` | ₱1,200,000.00 (full year Jan 1 – Dec 31) |
+| `prior_quarterly_payments` | `[{ period: Q1, amount_paid: 0.00 }, { period: Q2, amount_paid: 16500.00 }, { period: Q3, amount_paid: 34000.00 }]` |
+| `elected_regime` | null (optimizer mode at annual — user may reconsider) |
+
+**Annual Regime Comparison (optimizer runs all 3 paths):**
+
+Path A (Itemized — ₱0 expenses, so NTI = full gross):
+- `business_nti_path_a` = ₱1,200,000.00
+- `income_tax_path_a` = graduated_tax_2023(₱1,200,000) = ₱102,500 + (₱1,200,000 − ₱800,000) × 0.25 = ₱102,500 + ₱100,000 = **₱202,500.00**
+- `percentage_tax_path_a` = ₱1,200,000 × 0.03 = ₱36,000.00
+- `total_tax_path_a` = **₱238,500.00**
+
+Path B (OSD — elected):
+- `osd_amount` = ₱1,200,000 × 0.40 = ₱480,000.00
+- `business_nti_path_b` = ₱720,000.00
+- `income_tax_path_b` = graduated_tax_2023(₱720,000) = ₱22,500 + (₱720,000 − ₱400,000) × 0.20 = ₱22,500 + ₱64,000 = **₱86,500.00**
+- `percentage_tax_path_b` = ₱36,000.00
+- `total_tax_path_b` = **₱122,500.00**
+
+Path C (8% flat):
+- `path_c_eligible` = true (GR ₱1,200,000 ≤ ₱3,000,000; not VAT-registered)
+- `income_tax_path_c` = (₱1,200,000 − ₱250,000) × 0.08 = ₱950,000 × 0.08 = **₱76,000.00**
+- `percentage_tax_path_c` = ₱0.00 (waived under 8%)
+- `total_tax_path_c` = **₱76,000.00** ← MINIMUM
+
+- `recommended_path` = PATH_C
+- `savings_vs_next_best` = ₱122,500 − ₱76,000 = **₱46,500.00** (vs Path B elected)
+- `savings_vs_worst` = ₱238,500 − ₱76,000 = **₱162,500.00** (vs Path A)
+
+**Annual Balance Payable (on elected Path B):**
+- `income_tax_due` (Path B): ₱86,500.00
+- `total_cwt_business`: ₱0.00
+- `quarterly_it_paid`: ₱0 + ₱16,500 + ₱34,000 = ₱50,500.00
+- `balance_payable`: ₱86,500 − ₱50,500 = **₱36,000.00**
+- `percentage_tax_due`: ₱36,000.00 (already paid via 4× ₱9,000 Form 2551Q)
+- `form` = FORM_1701A, `form_section` = SCHEDULE_3A_OSD
+
+**Expected Annual Final Output:**
+```
+TaxComputationResult {
+  tax_year: 2025,  filing_period: ANNUAL,
+  taxpayer_type: PURELY_SE,  taxpayer_tier: MICRO,
+
+  regime_comparison: {
+    path_a: {
+      eligible: true,
+      business_nti: 1200000.00,
+      itemized_deductions: 0.00,
+      income_tax: 202500.00,
+      percentage_tax: 36000.00,
+      total_tax: 238500.00
+    },
+    path_b: {
+      eligible: true,
+      osd_amount: 480000.00,
+      business_nti_osd: 720000.00,
+      income_tax: 86500.00,
+      percentage_tax: 36000.00,
+      total_tax: 122500.00
+    },
+    path_c: {
+      eligible: true,
+      income_tax_business: 76000.00,
+      percentage_tax: 0.00,
+      total_tax: 76000.00,
+      ineligibility_reasons: []
+    },
+    recommended_path: PATH_C,
+    savings_vs_next_best: 46500.00,
+    savings_vs_worst: 162500.00
+  },
+
+  selected_path: PATH_B,
+  income_tax_due: 86500.00,
+  percentage_tax_due: 36000.00,
+  total_tax_due: 122500.00,
+  cwt_credits: 0.00,
+  quarterly_it_paid: 50500.00,
+  balance_payable: 36000.00,
+  overpayment: 0.00,
+  form: FORM_1701A,
+  form_section: SCHEDULE_3A_OSD,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [],
+  manual_review_flags: []
+}
+```
+
+### Quarterly Cycle Summary Table
+
+| Period | Cumul GR | Cumul OSD | Cumul NTI | Cumul IT | Prior Paid | Payable | 2551Q PT |
+|--------|---------|-----------|----------|---------|-----------|---------|----------|
+| Q1 | ₱300,000 | ₱120,000 | ₱180,000 | ₱0.00 | ₱0.00 | **₱0.00 (NIL)** | ₱9,000 (Apr 25) |
+| Q2 | ₱600,000 | ₱240,000 | ₱360,000 | ₱16,500 | ₱0.00 | **₱16,500** | ₱9,000 (Jul 25) |
+| Q3 | ₱900,000 | ₱360,000 | ₱540,000 | ₱50,500 | ₱16,500 | **₱34,000** | ₱9,000 (Oct 25) |
+| Annual | ₱1,200,000 | ₱480,000 | ₱720,000 | ₱86,500 | ₱50,500 | **₱36,000** | ₱9,000 (Jan 25) |
+
+**Total IT paid across year:** ₱0 + ₱16,500 + ₱34,000 + ₱36,000 = ₱86,500 = Annual IT ✓
+**Total PT paid across year:** ₱9,000 × 4 = ₱36,000 = Annual PT ✓
+**INV-009:** cumulative quarterly paid ₱50,500 ≤ annual IT ₱86,500 ✓
+
+### Verification
+
+- **Q1 NTI:** ₱300,000 × 0.60 = **₱180,000** < ₱250,000 → IT = **₱0.00** ✓
+- **Q2 NTI:** ₱600,000 × 0.60 = **₱360,000**; IT = (₱360,000 − ₱250,000) × 0.15 = **₱16,500** ✓
+- **Q3 NTI:** ₱900,000 × 0.60 = **₱540,000**; IT = ₱22,500 + (₱540,000 − ₱400,000) × 0.20 = **₱50,500** ✓
+- **Annual NTI:** ₱1,200,000 × 0.60 = **₱720,000**; IT = ₱22,500 + ₱64,000 = **₱86,500** ✓
+- **Q2 payable:** ₱16,500 − ₱0 = **₱16,500** ✓
+- **Q3 payable:** ₱50,500 − ₱16,500 = **₱34,000** ✓
+- **Annual balance:** ₱86,500 − ₱50,500 = **₱36,000** ✓
+- **Optimizer insight:** WARN_OSD_NOT_OPTIMAL does NOT fire (OSD was user-elected; engine shows comparison table; savings_vs_next_best = ₱46,500 is displayed in results view). The taxpayer over-paid ₱46,500 for the year versus the optimal 8% election.
+- **PT independence:** All four 2551Q filings are on separate deadlines from 1701Q; OSD election does not affect PT computation — PT is 3% of gross quarterly sales regardless of deduction method.
+
+**Legal basis:** Quarterly cumulative OSD method: NIRC Sec. 74-76; BIR Form 1701Q Schedule I. OSD rate: NIRC Sec. 34(L). Graduated tax: CR-002. PT: NIRC Sec. 116, 3% rate effective July 2023 post-CREATE. Annual reconciliation: CR-011/CR-049.
+
+---
+
+## TV-EX-G8-003: SC-QC-ITEMIZED-3Q — Quarterly Cycle, Graduated + Itemized (Path A Wins), Three Quarters + Annual
+
+**Scenario code:** SC-QC-ITEMIZED-3Q
+**Description:** Architectural consultant earning ₱500,000 per quarter (₱2,000,000 annual) with high recurring expenses — ₱350,000 per quarter (₱1,400,000 annual, 70% expense ratio). Elected Path A (Itemized) at Q1. Demonstrates: (1) cumulative itemized deduction tracking quarterly; (2) Q1 NIL return when cumulative NTI < ₱250,000 despite ₱500,000 gross income; (3) bracket escalation across Q2→Q3 as cumulative NTI rises; (4) Path A wins at annual (total ₱122,500) over Path C (₱140,000) and Path B (₱262,500) — one of the few scenarios where itemized beats 8%.
+
+Expense composition (₱350,000/quarter):
+- `salaries_wages`: ₱200,000.00/quarter (2 full-time draftsmen × ₱100,000/quarter)
+- `rent`: ₱60,000.00/quarter (studio space ₱20,000/month × 3)
+- `utilities`: ₱30,000.00/quarter (electricity, internet)
+- `depreciation`: ₱40,000.00/quarter (CAD workstations ₱800,000 ÷ 5 years ÷ 4 quarters)
+- `supplies`: ₱20,000.00/quarter (drafting materials, printing)
+
+**Tax year:** 2025
+**Elected regime:** PATH_A (Itemized)
+
+**Common additional inputs (all periods):**
+- `elected_regime`: PATH_A
+- `osd_elected`: false
+- `cwt_2307_entries`: []
+
+### Period 1 — Q1 Filing (filing_period: Q1)
+
+**Q1 inputs:**
+
+| Field | Value |
+|-------|-------|
+| `filing_period` | Q1 |
+| `gross_receipts` | ₱500,000.00 (Q1 only) |
+| `itemized_expenses.salaries_wages` | ₱200,000.00 |
+| `itemized_expenses.rent` | ₱60,000.00 |
+| `itemized_expenses.utilities` | ₱30,000.00 |
+| `itemized_expenses.depreciation` | ₱40,000.00 |
+| `itemized_expenses.supplies` | ₱20,000.00 |
+| All other itemized expense fields | ₱0.00 |
+| `prior_quarterly_payments` | [] |
+
+**Q1 Intermediate Values:**
+- Cumulative GR: ₱500,000.00
+- Cumulative itemized expenses: ₱200,000 + ₱60,000 + ₱30,000 + ₱40,000 + ₱20,000 = ₱350,000.00
+- EAR cap check: ₱500,000 × 0.01 = ₱5,000; no EAR claimed → no cap issue
+- Cumulative NTI: ₱500,000 − ₱350,000 = ₱150,000.00
+- Cumulative IT: graduated_tax_2023(₱150,000) = **₱0.00** (bracket 1; NTI < ₱250,000)
+- Q1 payable: max(₱0 − ₱0 − ₱0, 0) = **₱0.00** (NIL)
+- Q1 2551Q PT: ₱500,000 × 0.03 = ₱15,000.00 (due April 25, 2025 — separate form)
+
+**Expected Q1 Output:**
+```
+TaxComputationResult {
+  filing_period: Q1,
+  selected_path: PATH_A,
+  cumulative_gross_receipts: 500000.00,
+  cumulative_itemized_deductions: 350000.00,
+  cumulative_nti: 150000.00,
+  cumulative_it_due: 0.00,
+  income_tax_due: 0.00,
+  balance_payable: 0.00,
+  form: FORM_1701Q,
+  schedule: SCHEDULE_I_ITEMIZED,
+  warnings: []
+}
+```
+
+### Period 2 — Q2 Filing (filing_period: Q2)
+
+**Q2 inputs:**
+
+| Field | Value |
+|-------|-------|
+| `filing_period` | Q2 |
+| `gross_receipts` | ₱1,000,000.00 (cumulative Jan 1 – Jun 30) |
+| `itemized_expenses.salaries_wages` | ₱400,000.00 (cumulative) |
+| `itemized_expenses.rent` | ₱120,000.00 (cumulative) |
+| `itemized_expenses.utilities` | ₱60,000.00 (cumulative) |
+| `itemized_expenses.depreciation` | ₱80,000.00 (cumulative) |
+| `itemized_expenses.supplies` | ₱40,000.00 (cumulative) |
+| `prior_quarterly_payments` | `[{ period: Q1, amount_paid: 0.00 }]` |
+
+**Q2 Intermediate Values:**
+- Cumulative GR: ₱1,000,000.00
+- Cumulative itemized expenses: ₱400,000 + ₱120,000 + ₱60,000 + ₱80,000 + ₱40,000 = ₱700,000.00
+- EAR cap check: ₱1,000,000 × 0.01 = ₱10,000; no EAR claimed
+- Cumulative NTI: ₱1,000,000 − ₱700,000 = ₱300,000.00
+- Cumulative IT: graduated_tax_2023(₱300,000)
+  = (₱300,000 − ₱250,000) × 0.15
+  = **₱7,500.00** (bracket 2)
+- Prior quarterly IT paid (Q1): ₱0.00
+- Q2 payable: max(₱7,500 − ₱0 − ₱0, 0) = **₱7,500.00**
+- Q2 2551Q PT: ₱500,000 × 0.03 = ₱15,000.00 (due July 25, 2025 — separate form)
+
+**Expected Q2 Output:**
+```
+TaxComputationResult {
+  filing_period: Q2,
+  selected_path: PATH_A,
+  cumulative_gross_receipts: 1000000.00,
+  cumulative_itemized_deductions: 700000.00,
+  cumulative_nti: 300000.00,
+  cumulative_it_due: 7500.00,
+  cumulative_quarterly_paid: 0.00,
+  income_tax_due: 7500.00,
+  balance_payable: 7500.00,
+  form: FORM_1701Q,
+  schedule: SCHEDULE_I_ITEMIZED
+}
+```
+
+### Period 3 — Q3 Filing (filing_period: Q3)
+
+**Q3 inputs:**
+
+| Field | Value |
+|-------|-------|
+| `filing_period` | Q3 |
+| `gross_receipts` | ₱1,500,000.00 (cumulative Jan 1 – Sep 30) |
+| `itemized_expenses.salaries_wages` | ₱600,000.00 (cumulative) |
+| `itemized_expenses.rent` | ₱180,000.00 (cumulative) |
+| `itemized_expenses.utilities` | ₱90,000.00 (cumulative) |
+| `itemized_expenses.depreciation` | ₱120,000.00 (cumulative) |
+| `itemized_expenses.supplies` | ₱60,000.00 (cumulative) |
+| `prior_quarterly_payments` | `[{ period: Q1, amount_paid: 0.00 }, { period: Q2, amount_paid: 7500.00 }]` |
+
+**Q3 Intermediate Values:**
+- Cumulative GR: ₱1,500,000.00
+- Cumulative itemized expenses: ₱600,000 + ₱180,000 + ₱90,000 + ₱120,000 + ₱60,000 = ₱1,050,000.00
+- EAR cap check: ₱1,500,000 × 0.01 = ₱15,000; no EAR claimed
+- Cumulative NTI: ₱1,500,000 − ₱1,050,000 = ₱450,000.00
+- Cumulative IT: graduated_tax_2023(₱450,000)
+  = ₱22,500 + (₱450,000 − ₱400,000) × 0.20
+  = ₱22,500 + ₱10,000.00
+  = **₱32,500.00** (bracket 3)
+- Prior quarterly IT paid (Q1 + Q2): ₱0 + ₱7,500 = ₱7,500.00
+- Q3 payable: max(₱32,500 − ₱0 − ₱7,500, 0) = **₱25,000.00**
+- Q3 2551Q PT: ₱500,000 × 0.03 = ₱15,000.00 (due October 25, 2025 — separate form)
+
+**Expected Q3 Output:**
+```
+TaxComputationResult {
+  filing_period: Q3,
+  selected_path: PATH_A,
+  cumulative_gross_receipts: 1500000.00,
+  cumulative_itemized_deductions: 1050000.00,
+  cumulative_nti: 450000.00,
+  cumulative_it_due: 32500.00,
+  cumulative_quarterly_paid: 7500.00,
+  income_tax_due: 32500.00,
+  balance_payable: 25000.00,
+  form: FORM_1701Q,
+  schedule: SCHEDULE_I_ITEMIZED
+}
+```
+
+### Period 4 — Annual Reconciliation (filing_period: ANNUAL)
+
+**Annual inputs:**
+
+| Field | Value |
+|-------|-------|
+| `filing_period` | ANNUAL |
+| `gross_receipts` | ₱2,000,000.00 (full year) |
+| `itemized_expenses.salaries_wages` | ₱800,000.00 |
+| `itemized_expenses.rent` | ₱240,000.00 |
+| `itemized_expenses.utilities` | ₱120,000.00 |
+| `itemized_expenses.depreciation` | ₱160,000.00 |
+| `itemized_expenses.supplies` | ₱80,000.00 |
+| `prior_quarterly_payments` | `[{ period: Q1, amount_paid: 0.00 }, { period: Q2, amount_paid: 7500.00 }, { period: Q3, amount_paid: 25000.00 }]` |
+| `elected_regime` | null (optimizer mode at annual) |
+
+**Annual Regime Comparison:**
+
+Path A (Itemized):
+- `total_itemized_deductions` = ₱800,000 + ₱240,000 + ₱120,000 + ₱160,000 + ₱80,000 = ₱1,400,000.00
+- EAR cap check: ₱2,000,000 × 0.01 = ₱20,000; no EAR claimed → no cap
+- `business_nti_path_a` = ₱2,000,000 − ₱1,400,000 = **₱600,000.00**
+- `income_tax_path_a` = graduated_tax_2023(₱600,000)
+  = ₱22,500 + (₱600,000 − ₱400,000) × 0.20
+  = ₱22,500 + ₱40,000.00
+  = **₱62,500.00**
+- `percentage_tax_path_a` = ₱2,000,000 × 0.03 = **₱60,000.00**
+- `total_tax_path_a` = **₱122,500.00** ← MINIMUM
+
+Path B (OSD):
+- `osd_amount` = ₱2,000,000 × 0.40 = ₱800,000.00
+- `business_nti_path_b` = **₱1,200,000.00**
+- `income_tax_path_b` = graduated_tax_2023(₱1,200,000)
+  = ₱102,500 + (₱1,200,000 − ₱800,000) × 0.25
+  = ₱102,500 + ₱100,000.00
+  = **₱202,500.00**
+- `percentage_tax_path_b` = **₱60,000.00**
+- `total_tax_path_b` = **₱262,500.00**
+
+Path C (8%):
+- `path_c_eligible` = true (GR ₱2,000,000 ≤ ₱3,000,000)
+- `income_tax_path_c` = (₱2,000,000 − ₱250,000) × 0.08 = ₱1,750,000 × 0.08 = **₱140,000.00**
+- `percentage_tax_path_c` = ₱0.00
+- `total_tax_path_c` = **₱140,000.00**
+
+- `recommended_path` = PATH_A
+- `savings_vs_next_best` = ₱140,000 − ₱122,500 = **₱17,500.00** (vs Path C)
+- `savings_vs_worst` = ₱262,500 − ₱122,500 = **₱140,000.00** (vs Path B)
+
+**Annual Balance Payable (on Path A):**
+- `income_tax_due`: ₱62,500.00
+- `total_cwt_business`: ₱0.00
+- `quarterly_it_paid`: ₱0 + ₱7,500 + ₱25,000 = ₱32,500.00
+- `balance_payable`: ₱62,500 − ₱32,500 = **₱30,000.00**
+
+**Expected Annual Final Output:**
+```
+TaxComputationResult {
+  tax_year: 2025,  filing_period: ANNUAL,
+  taxpayer_type: PURELY_SE,  taxpayer_tier: SMALL,
+
+  regime_comparison: {
+    path_a: {
+      eligible: true,
+      business_nti: 600000.00,
+      itemized_deductions: 1400000.00,
+      income_tax: 62500.00,
+      percentage_tax: 60000.00,
+      total_tax: 122500.00
+    },
+    path_b: {
+      eligible: true,
+      osd_amount: 800000.00,
+      business_nti_osd: 1200000.00,
+      income_tax: 202500.00,
+      percentage_tax: 60000.00,
+      total_tax: 262500.00
+    },
+    path_c: {
+      eligible: true,
+      income_tax_business: 140000.00,
+      percentage_tax: 0.00,
+      total_tax: 140000.00,
+      ineligibility_reasons: []
+    },
+    recommended_path: PATH_A,
+    savings_vs_next_best: 17500.00,
+    savings_vs_worst: 140000.00
+  },
+
+  selected_path: PATH_A,
+  income_tax_due: 62500.00,
+  percentage_tax_due: 60000.00,
+  total_tax_due: 122500.00,
+  cwt_credits: 0.00,
+  quarterly_it_paid: 32500.00,
+  balance_payable: 30000.00,
+  overpayment: 0.00,
+  form: FORM_1701,
+  form_section: SCHEDULE_3A_ITEMIZED,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [],
+  manual_review_flags: []
+}
+```
+
+Note: `taxpayer_tier` = SMALL at annual because annual GR ₱2,000,000 ≥ ₱3,000,000? No — ₱2M < ₱3M → MICRO. Wait: EOPT tier: MICRO = GR < ₱3M. So tier = MICRO. But quarterly tiers use each quarter's cumulative. At Q3, cumulative GR = ₱1,500,000 → MICRO. Annual GR = ₱2,000,000 → MICRO. Corrected: `taxpayer_tier` = MICRO for all periods.
+
+**Corrected expected annual output field:** `taxpayer_tier: MICRO`
+
+### Quarterly Cycle Summary Table
+
+| Period | Cumul GR | Cumul Expenses | Cumul NTI | Cumul IT | Prior Paid | Payable | 2551Q PT |
+|--------|---------|---------------|----------|---------|-----------|---------|----------|
+| Q1 | ₱500,000 | ₱350,000 | ₱150,000 | ₱0.00 | ₱0.00 | **₱0.00 (NIL)** | ₱15,000 (Apr 25) |
+| Q2 | ₱1,000,000 | ₱700,000 | ₱300,000 | ₱7,500 | ₱0.00 | **₱7,500** | ₱15,000 (Jul 25) |
+| Q3 | ₱1,500,000 | ₱1,050,000 | ₱450,000 | ₱32,500 | ₱7,500 | **₱25,000** | ₱15,000 (Oct 25) |
+| Annual | ₱2,000,000 | ₱1,400,000 | ₱600,000 | ₱62,500 | ₱32,500 | **₱30,000** | ₱15,000 (Jan 25) |
+
+**Total IT paid:** ₱0 + ₱7,500 + ₱25,000 + ₱30,000 = ₱62,500 = Annual IT ✓
+**Total PT paid (4× 2551Q):** ₱15,000 × 4 = ₱60,000 = Annual PT ✓
+**INV-009:** ₱32,500 ≤ ₱62,500 ✓
+
+### Verification
+
+- **Q1 NTI:** 500,000 − 350,000 = **₱150,000** < ₱250K → IT = **₱0.00** ✓
+- **Q2 NTI:** 1,000,000 − 700,000 = **₱300,000**; IT = (300,000−250,000)×0.15 = **₱7,500** ✓
+- **Q3 NTI:** 1,500,000 − 1,050,000 = **₱450,000**; IT = 22,500 + 50,000×0.20 = **₱32,500** ✓
+- **Annual NTI:** 2,000,000 − 1,400,000 = **₱600,000**; IT = 22,500 + 200,000×0.20 = **₱62,500** ✓
+- **Path A vs C breakeven:** expense ratio must exceed ~(GR−PT)/(GR) threshold for 8% line. At GR=₱2M: Path C = ₱140,000; Path A < ₱140,000 when IT_A < ₱80,000 → NTI_A < ₱680,000 → expenses > ₱1,320,000 = 66% of GR. Actual expense ratio: ₱1,400,000/₱2,000,000 = **70%** > 66% → Path A wins ✓
+- **Expense ratio > OSD (40%):** 70% > 40% → allowed itemized > OSD → Path A NTI (₱600K) < Path B NTI (₱1,200K) → Path A IT (₱62,500) < Path B IT (₱202,500) ✓
+- **Taxpayer tier at annual:** ₱2,000,000 < ₱3,000,000 → MICRO ✓
+
+**Legal basis:** Cumulative itemized quarterly method: NIRC Sec. 74-76; BIR Form 1701Q Schedule I. Itemized deductions: NIRC Sec. 34(A)-(K). Graduated tax: CR-002. PT: NIRC Sec. 116. Annual 1701 (itemized filers always use 1701, not 1701A): BIR RR 8-2018.
+
+---
+
+## TV-EX-G8-004: SC-QC-NIL-Q1 — Zero Q1 Income, 8% Rate, NIL Q1 Return Required
+
+**Scenario code:** SC-QC-NIL-Q1
+**Description:** Freelance video editor who registered in January 2025 but landed no clients in Q1 (January–March). First income arrives in April (Q2). Uses 8% option elected at Q1 even though Q1 gross is ₱0. Demonstrates: (1) NIL Q1 1701Q is still mandatory even with zero income — failure to file triggers ₱1,000 compromise penalty; (2) ₱250K deduction does NOT apply at quarterly level; Q2 cumulative gross ₱600,000 × 8% = ₱48,000 payable with no adjustment for the Q1 nil period; (3) ₱250K is applied ONLY at annual, reducing final IT.
+
+**Income pattern:** Q1 ₱0, Q2 ₱600,000 (cumul), Q3 ₱1,100,000 (cumul), Annual ₱1,500,000
+
+### Period 1 — Q1 Filing (filing_period: Q1)
+
+**Q1 inputs:**
+
+| Field | Value |
+|-------|-------|
+| `filing_period` | Q1 |
+| `gross_receipts` | ₱0.00 |
+| `elected_regime` | PATH_C |
+| `prior_quarterly_payments` | [] |
+| `cwt_2307_entries` | [] |
+| All itemized expense fields | ₱0.00 |
+
+**Q1 Intermediate Values:**
+- Cumulative GR: ₱0.00
+- Path C quarterly IT (no ₱250K at quarterly): ₱0.00 × 0.08 = ₱0.00
+- Cumulative CWT: ₱0.00
+- Q1 payable: **₱0.00** (NIL)
+- Q1 2551Q PT: ₱0.00 × 0.03 = ₱0.00 (NIL PT return also required — separate form, due April 25)
+
+**Expected Q1 Output:**
+```
+TaxComputationResult {
+  filing_period: Q1,
+  selected_path: PATH_C,
+  cumulative_gross_receipts: 0.00,
+  cumulative_8pct_it: 0.00,
+  income_tax_due: 0.00,
+  balance_payable: 0.00,
+  form: FORM_1701Q,
+  schedule: SCHEDULE_II_8PCT,
+  warnings: []
+}
+```
+
+Note: **NIL 1701Q must be filed by May 15, 2025.** Failure to file even a NIL quarterly return constitutes a late/non-filing violation. Compromise penalty (1st offense): ₱1,000.00 per CR-020.2. The engine must display a compliance reminder on the Q1 NIL result: "A ₱0 return must still be submitted to the BIR by May 15, 2025."
+
+### Period 2 — Q2 Filing (filing_period: Q2)
+
+**Q2 inputs:**
+
+| Field | Value |
+|-------|-------|
+| `filing_period` | Q2 |
+| `gross_receipts` | ₱600,000.00 (cumulative Jan 1 – Jun 30; all earned in Q2) |
+| `prior_quarterly_payments` | `[{ period: Q1, amount_paid: 0.00 }]` |
+| `cwt_2307_entries` | [] |
+
+**Q2 Intermediate Values:**
+- Cumulative GR: ₱600,000.00
+- Path C quarterly IT (NO ₱250K deduction at quarterly): ₱600,000 × 0.08 = **₱48,000.00**
+- Note: ₱250K is NOT subtracted here — deduction is annual-only per CR-010
+- Cumulative CWT: ₱0.00
+- Prior quarterly IT paid (Q1): ₱0.00
+- Q2 payable: max(₱48,000 − ₱0 − ₱0, 0) = **₱48,000.00**
+
+**Expected Q2 Output:**
+```
+TaxComputationResult {
+  filing_period: Q2,
+  selected_path: PATH_C,
+  cumulative_gross_receipts: 600000.00,
+  cumulative_8pct_it: 48000.00,
+  cumulative_cwt_credits: 0.00,
+  cumulative_quarterly_paid: 0.00,
+  income_tax_due: 48000.00,
+  balance_payable: 48000.00,
+  form: FORM_1701Q,
+  schedule: SCHEDULE_II_8PCT
+}
+```
+
+### Period 3 — Q3 Filing (filing_period: Q3)
+
+**Q3 inputs:**
+
+| Field | Value |
+|-------|-------|
+| `filing_period` | Q3 |
+| `gross_receipts` | ₱1,100,000.00 (cumulative Jan 1 – Sep 30) |
+| `prior_quarterly_payments` | `[{ period: Q1, amount_paid: 0.00 }, { period: Q2, amount_paid: 48000.00 }]` |
+| `cwt_2307_entries` | [] |
+
+**Q3 Intermediate Values:**
+- Cumulative GR: ₱1,100,000.00
+- Path C quarterly IT (no ₱250K): ₱1,100,000 × 0.08 = **₱88,000.00**
+- Cumulative CWT: ₱0.00
+- Prior quarterly IT paid: ₱0 + ₱48,000 = ₱48,000.00
+- Q3 payable: max(₱88,000 − ₱0 − ₱48,000, 0) = **₱40,000.00**
+
+**Expected Q3 Output:**
+```
+TaxComputationResult {
+  filing_period: Q3,
+  selected_path: PATH_C,
+  cumulative_gross_receipts: 1100000.00,
+  cumulative_8pct_it: 88000.00,
+  cumulative_cwt_credits: 0.00,
+  cumulative_quarterly_paid: 48000.00,
+  income_tax_due: 88000.00,
+  balance_payable: 40000.00,
+  form: FORM_1701Q,
+  schedule: SCHEDULE_II_8PCT
+}
+```
+
+### Period 4 — Annual Reconciliation (filing_period: ANNUAL)
+
+**Annual inputs:**
+
+| Field | Value |
+|-------|-------|
+| `filing_period` | ANNUAL |
+| `gross_receipts` | ₱1,500,000.00 (full year; Q4 income ₱400,000) |
+| `prior_quarterly_payments` | `[{ period: Q1, amount_paid: 0.00 }, { period: Q2, amount_paid: 48000.00 }, { period: Q3, amount_paid: 40000.00 }]` |
+| `elected_regime` | null (optimizer mode) |
+
+**Annual IT under Path C (with ₱250K deduction applied for first time):**
+- `path_c_eligible` = true (₱1,500,000 ≤ ₱3,000,000)
+- Annual IT = max(₱1,500,000 − ₱250,000, 0) × 0.08 = ₱1,250,000 × 0.08 = **₱100,000.00**
+- Total quarterly paid: ₱0 + ₱48,000 + ₱40,000 = **₱88,000.00**
+- Balance payable: ₱100,000 − ₱88,000 = **₱12,000.00**
+
+**Annual Path Comparison (optimizer mode):**
+- Path A (₱0 expenses): NTI = ₱1,500,000; IT = ₱102,500 + ₱700,000×0.25 = ₱277,500; PT = ₱45,000; Total = **₱322,500**
+- Path B (OSD): NTI = ₱1,500,000 × 0.60 = ₱900,000; IT = ₱102,500 + ₱100,000×0.25 = ₱127,500; PT = ₱45,000; Total = **₱172,500**
+- Path C: (₱1,500,000 − ₱250,000) × 0.08 = **₱100,000** ← MINIMUM
+- `recommended_path` = PATH_C
+- `savings_vs_next_best` = ₱172,500 − ₱100,000 = **₱72,500** (vs B)
+
+**Expected Annual Final Output:**
+```
+TaxComputationResult {
+  tax_year: 2025,  filing_period: ANNUAL,
+  taxpayer_type: PURELY_SE,  taxpayer_tier: MICRO,
+
+  regime_comparison: {
+    path_a: { eligible: true, business_nti: 1500000.00, income_tax: 277500.00, percentage_tax: 45000.00, total_tax: 322500.00 },
+    path_b: { eligible: true, osd_amount: 600000.00, business_nti_osd: 900000.00, income_tax: 127500.00, percentage_tax: 45000.00, total_tax: 172500.00 },
+    path_c: { eligible: true, income_tax_business: 100000.00, percentage_tax: 0.00, total_tax: 100000.00, ineligibility_reasons: [] },
+    recommended_path: PATH_C,
+    savings_vs_next_best: 72500.00,
+    savings_vs_worst: 222500.00
+  },
+
+  selected_path: PATH_C,
+  income_tax_due: 100000.00,
+  percentage_tax_due: 0.00,
+  total_tax_due: 100000.00,
+  cwt_credits: 0.00,
+  quarterly_it_paid: 88000.00,
+  balance_payable: 12000.00,
+  overpayment: 0.00,
+  form: FORM_1701A,
+  form_section: PART_IV_B,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [],
+  manual_review_flags: []
+}
+```
+
+### Quarterly Cycle Summary Table
+
+| Period | Cumul GR | Quarterly IT (no ₱250K) | Prior Paid | Payable | Note |
+|--------|---------|------------------------|-----------|---------|------|
+| Q1 | ₱0 | ₱0.00 | ₱0.00 | **₱0.00 (NIL)** | Still must file by May 15 |
+| Q2 | ₱600,000 | ₱48,000.00 | ₱0.00 | **₱48,000** | First payment; all Q2 income |
+| Q3 | ₱1,100,000 | ₱88,000.00 | ₱48,000.00 | **₱40,000** | Incremental only |
+| Annual | ₱1,500,000 | ₱100,000 (₱250K applied) | ₱88,000.00 | **₱12,000** | ₱250K deduction finally applied |
+
+**Key insight:** The ₱250K deduction during Q2 and Q3 quarterly payments was NOT applied. As a result, the taxpayer slightly overpaid at quarterly level (₱88,000 paid vs ₱100,000 × Q3/annual ratio of ₱73,333). The ₱250K deduction at annual corrects this — the balance payable is only ₱12,000 instead of the ₱20,000 that would result if ₱250K were ignored annually too. The quarterly "overpayment" versus the annualized proportional amount is by design (CR-010).
+
+### Verification
+
+- **Q1 IT:** ₱0 × 0.08 = **₱0.00** ✓ (NIL return)
+- **Q2 IT:** ₱600,000 × 0.08 = **₱48,000** ✓ (no ₱250K at quarterly)
+- **Q3 IT:** ₱1,100,000 × 0.08 = **₱88,000**; payable = **₱40,000** ✓
+- **Annual IT:** (₱1,500,000 − ₱250,000) × 0.08 = **₱100,000** ✓
+- **Balance:** ₱100,000 − ₱88,000 = **₱12,000** ✓
+- **INV-009:** ₱88,000 ≤ ₱100,000 ✓
+
+**Legal basis:** NIL return obligation: NIRC Sec. 51(A)(1) (returns required regardless of tax due); compromise penalty for non-filing: RMO 7-2015. Quarterly 8% computation (no ₱250K): CR-010 (Schedule II). Annual ₱250K deduction application: NIRC Sec. 24(A)(2)(b); CR-011.
+
+---
+
+## TV-EX-G8-005: SC-QC-CWT-SHIFT — Q1 Form 2307 Delivered Late; Appears in Q2 CWT
+
+**Scenario code:** SC-QC-CWT-SHIFT
+**Description:** Freelance developer earns ₱400,000/quarter (₱1,600,000 annual) from one recurring corporate client on 8% option. Client is required to withhold 5% EWT (₱20,000/quarter per WI010) and issue Form 2307 within 20 days after the quarter end. In practice, the client delays: Q1 2307 (covering January–March 2025) is physically delivered to the taxpayer in late July 2025, **after** the Q1 1701Q due date (May 15). Taxpayer files Q1 without the 2307. In Q2 filing, taxpayer includes BOTH the late Q1 2307 and the Q2 2307.
+
+Demonstrates: (1) Q1 filed without CWT → Q1 payable = full quarterly IT; (2) Q2 filed with cumulative CWT (Q1 + Q2 amounts) → Q2 payable = ₱0 (CWT + prior paid exceeds cumulative IT); (3) the cumulative method self-corrects without requiring an amended Q1; (4) Q3 and annual computations resume normally; (5) a small overpayment at annual arises because Q1 IT was paid without the CWT credit — flows to overpayment election.
+
+**Income and CWT pattern:**
+- Q1: GR ₱400,000, CWT ₱20,000 (5%) — but 2307 received late (July); Q1 filed without CWT
+- Q2: GR ₱400,000, CWT ₱20,000 (5%); Q2 2307 received on time; Q1 2307 also received by now
+- Q3: GR ₱400,000, CWT ₱20,000 (5%); 2307 received on time
+- Q4: GR ₱400,000, CWT ₱20,000 (5%); 2307 received on time
+- Annual total GR: ₱1,600,000; Annual total CWT: ₱80,000
+
+### Period 1 — Q1 Filing (due May 15; Q1 2307 not yet received)
+
+**Q1 inputs:**
+
+| Field | Value |
+|-------|-------|
+| `filing_period` | Q1 |
+| `gross_receipts` | ₱400,000.00 |
+| `elected_regime` | PATH_C |
+| `cwt_2307_entries` | [] (Q1 2307 not yet in taxpayer's possession) |
+| `prior_quarterly_payments` | [] |
+
+**Q1 Intermediate Values:**
+- Cumulative GR: ₱400,000.00
+- Path C quarterly IT (no ₱250K): ₱400,000 × 0.08 = **₱32,000.00**
+- Cumulative CWT: ₱0.00 (no 2307 available)
+- Q1 payable: max(₱32,000 − ₱0 − ₱0, 0) = **₱32,000.00**
+- Q1 paid: ₱32,000.00
+
+**Expected Q1 Output:**
+```
+TaxComputationResult {
+  filing_period: Q1,
+  selected_path: PATH_C,
+  cumulative_gross_receipts: 400000.00,
+  cumulative_8pct_it: 32000.00,
+  cumulative_cwt_credits: 0.00,
+  income_tax_due: 32000.00,
+  balance_payable: 32000.00,
+  form: FORM_1701Q,
+  schedule: SCHEDULE_II_8PCT
+}
+```
+
+Note: WARN-003 fires: "PATH_C elected, 0 CWT credits. Verify no Form 2307 is expected from clients." Engine cannot know the 2307 is coming late; the warning prompts the taxpayer to check.
+
+### Period 2 — Q2 Filing (taxpayer now has both Q1 and Q2 Form 2307)
+
+**Q2 inputs:**
+
+| Field | Value |
+|-------|-------|
+| `filing_period` | Q2 |
+| `gross_receipts` | ₱800,000.00 (cumulative Jan 1 – Jun 30) |
+| `cwt_2307_entries` | `[{ quarter: Q1, atc: WI010, amount: 20000.00, payor: "ABC Corp" }, { quarter: Q2, atc: WI010, amount: 20000.00, payor: "ABC Corp" }]` |
+| `prior_quarterly_payments` | `[{ period: Q1, amount_paid: 32000.00 }]` |
+
+**Q2 Intermediate Values:**
+- Cumulative GR: ₱800,000.00
+- Path C quarterly IT (no ₱250K): ₱800,000 × 0.08 = **₱64,000.00**
+- Cumulative CWT (Q1 + Q2 2307s, both included now): ₱20,000 + ₱20,000 = **₱40,000.00**
+- Prior quarterly IT paid (Q1 actual payment): ₱32,000.00
+- Q2 payable: max(₱64,000 − ₱40,000 − ₱32,000, 0) = max(−₱8,000, 0) = **₱0.00**
+
+**Expected Q2 Output:**
+```
+TaxComputationResult {
+  filing_period: Q2,
+  selected_path: PATH_C,
+  cumulative_gross_receipts: 800000.00,
+  cumulative_8pct_it: 64000.00,
+  cumulative_cwt_credits: 40000.00,
+  cumulative_quarterly_paid: 32000.00,
+  income_tax_due: 64000.00,
+  balance_payable: 0.00,
+  form: FORM_1701Q,
+  schedule: SCHEDULE_II_8PCT
+}
+```
+
+Note: Q2 payable is ₱0. No amended Q1 is needed. The cumulative method absorbs the late Q1 CWT naturally in Q2. The ₱8,000 "excess" (cumul CWT + prior paid − cumul IT) cannot be refunded mid-year; it simply results in ₱0 payable for Q2.
+
+### Period 3 — Q3 Filing (normal)
+
+**Q3 inputs:**
+
+| Field | Value |
+|-------|-------|
+| `filing_period` | Q3 |
+| `gross_receipts` | ₱1,200,000.00 (cumulative Jan 1 – Sep 30) |
+| `cwt_2307_entries` | `[{ quarter: Q1, atc: WI010, amount: 20000.00 }, { quarter: Q2, atc: WI010, amount: 20000.00 }, { quarter: Q3, atc: WI010, amount: 20000.00 }]` |
+| `prior_quarterly_payments` | `[{ period: Q1, amount_paid: 32000.00 }, { period: Q2, amount_paid: 0.00 }]` |
+
+**Q3 Intermediate Values:**
+- Cumulative GR: ₱1,200,000.00
+- Path C quarterly IT: ₱1,200,000 × 0.08 = **₱96,000.00**
+- Cumulative CWT (Q1 + Q2 + Q3): ₱20,000 + ₱20,000 + ₱20,000 = **₱60,000.00**
+- Prior IT paid (Q1 + Q2): ₱32,000 + ₱0 = ₱32,000.00
+- Q3 payable: max(₱96,000 − ₱60,000 − ₱32,000, 0) = max(₱4,000, 0) = **₱4,000.00**
+
+**Expected Q3 Output:**
+```
+TaxComputationResult {
+  filing_period: Q3,
+  selected_path: PATH_C,
+  cumulative_gross_receipts: 1200000.00,
+  cumulative_8pct_it: 96000.00,
+  cumulative_cwt_credits: 60000.00,
+  cumulative_quarterly_paid: 32000.00,
+  income_tax_due: 96000.00,
+  balance_payable: 4000.00,
+  form: FORM_1701Q,
+  schedule: SCHEDULE_II_8PCT
+}
+```
+
+### Period 4 — Annual Reconciliation (filing_period: ANNUAL)
+
+**Annual inputs:**
+
+| Field | Value |
+|-------|-------|
+| `filing_period` | ANNUAL |
+| `gross_receipts` | ₱1,600,000.00 |
+| `cwt_2307_entries` | All 4 quarters: Q1–Q4, each ₱20,000 (WI010), total ₱80,000 |
+| `prior_quarterly_payments` | Q1 ₱32,000 + Q2 ₱0 + Q3 ₱4,000 = total ₱36,000 |
+| `elected_regime` | null |
+
+**Annual IT under Path C:**
+- Annual IT = (₱1,600,000 − ₱250,000) × 0.08 = ₱1,350,000 × 0.08 = **₱108,000.00**
+- Total CWT: 4 × ₱20,000 = ₱80,000.00
+- Total quarterly paid: ₱32,000 + ₱0 + ₱4,000 = ₱36,000.00
+- Balance raw: ₱108,000 − ₱80,000 − ₱36,000 = −₱8,000.00
+- Balance payable: max(−₱8,000, 0) = **₱0.00**
+- Overpayment: max(₱8,000, 0) = **₱8,000.00**
+
+Path comparison:
+- Path A (₱0 expenses): NTI ₱1,600,000; IT = ₱102,500 + ₱800,000×0.25 = ₱302,500; PT ₱48,000; Total ₱350,500
+- Path B: NTI ₱960,000; IT = ₱102,500 + ₱160,000×0.25 = ₱142,500; PT ₱48,000; Total ₱190,500
+- Path C: **₱108,000** ← MINIMUM
+- `recommended_path` = PATH_C; `savings_vs_next_best` = ₱190,500 − ₱108,000 = **₱82,500**
+
+**Expected Annual Final Output:**
+```
+TaxComputationResult {
+  tax_year: 2025,  filing_period: ANNUAL,
+  taxpayer_type: PURELY_SE,  taxpayer_tier: MICRO,
+
+  regime_comparison: {
+    path_a: { income_tax: 302500.00, percentage_tax: 48000.00, total_tax: 350500.00 },
+    path_b: { osd_amount: 640000.00, business_nti_osd: 960000.00, income_tax: 142500.00, percentage_tax: 48000.00, total_tax: 190500.00 },
+    path_c: { income_tax_business: 108000.00, percentage_tax: 0.00, total_tax: 108000.00 },
+    recommended_path: PATH_C,
+    savings_vs_next_best: 82500.00,
+    savings_vs_worst: 242500.00
+  },
+
+  selected_path: PATH_C,
+  income_tax_due: 108000.00,
+  percentage_tax_due: 0.00,
+  total_tax_due: 108000.00,
+  cwt_credits: 80000.00,
+  quarterly_it_paid: 36000.00,
+  balance_payable: 0.00,
+  overpayment: 8000.00,
+  overpayment_disposition: TAXPAYER_ELECTION_REQUIRED,
+  form: FORM_1701A,
+  form_section: PART_IV_B,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [WARN_OVERPAYMENT_ELECTION_REQUIRED],
+  manual_review_flags: []
+}
+```
+
+### Quarterly Cycle Summary Table
+
+| Period | Cumul GR | Cumul 8% IT | Cumul CWT | Prior Paid | Payable | Note |
+|--------|---------|------------|----------|-----------|---------|------|
+| Q1 | ₱400,000 | ₱32,000 | ₱0 | ₱0 | **₱32,000** | No 2307 yet; WARN-003 fires |
+| Q2 | ₱800,000 | ₱64,000 | ₱40,000 | ₱32,000 | **₱0.00** | Q1 late 2307 + Q2 2307 absorbed; formula: 64K−40K−32K = −8K → ₱0 |
+| Q3 | ₱1,200,000 | ₱96,000 | ₱60,000 | ₱32,000 | **₱4,000** | Self-corrects; normal Q3 |
+| Annual | ₱1,600,000 | ₱108,000 | ₱80,000 | ₱36,000 | **₱0** + ₱8,000 OVP | ₱250K applied; overpayment election |
+
+### Verification
+
+- **Q2 formula:** 64,000 − 40,000 − 32,000 = **−₱8,000** → payable = ₱0 ✓ (cumulative excess, not refunded mid-year)
+- **Q3 formula:** 96,000 − 60,000 − 32,000 = **₱4,000** ✓
+- **Annual IT (with ₱250K):** (1,600,000 − 250,000) × 0.08 = **₱108,000** ✓
+- **Annual balance:** 108,000 − 80,000 − 36,000 = **−₱8,000** → overpayment ₱8,000 ✓
+- **Total payments made:** ₱32,000 (Q1) + ₱0 (Q2) + ₱4,000 (Q3) + ₱0 (annual) = ₱36,000
+- **Total credits (CWT):** ₱80,000
+- **Grand total paid + credited:** ₱36,000 + ₱80,000 = ₱116,000 > annual IT ₱108,000 → overpayment ₱8,000 ✓
+- **No amended returns needed:** Q1 was correctly filed as ₱0 CWT (taxpayer did not yet have the 2307). The cumulative method absorbed the late 2307 in Q2 without amendment. This is the designed behavior of the cumulative quarterly system.
+- **Overpayment source:** The Q1 payment of ₱32,000 was computed without the ₱20,000 CWT credit. Had the 2307 been on time, Q1 payable would have been max(₱32,000 − ₱20,000 − ₱0, 0) = ₱12,000. The ₱20,000 excess credit was absorbed in Q2, but the ₱8,000 net overpayment (from the annual ₱250K deduction) carries to annual.
+
+**Legal basis:** 2307 issuance deadline: BIR RR 2-1998 as amended (20 days after end of taxable quarter). Cumulative CWT crediting: NIRC Sec. 58(E); CR-009. Quarterly 8% computation: CR-010. Annual overpayment election: CR-054. WARN_OVERPAYMENT_ELECTION_REQUIRED: error-states.md WARN-012.
+
+---
+
+## TV-EX-G8-006: SC-QC-AMENDMENT — Q1 Gross Understated by ₱100K; Amendment Cascade Q1→Q2→Q3
+
+**Scenario code:** SC-QC-AMENDMENT
+**Description:** Freelance content writer using 8% option files Q1 with understated gross (₱200,000 instead of actual ₱300,000 — a client invoice was misattributed to Q2). The error is discovered after Q2 has already been filed. Q1, Q2, and Q3 must all be amended. This vector shows: (1) original Q1/Q2/Q3 filings with wrong figures; (2) the Q1 amendment showing additional tax + penalties; (3) the Q2 amendment showing corrected Item 50 reference — critically, Q2 payable happens to be identical under the amendment because the ₱100K shift from Q1 to correctly Q1 is offset by Q2's own income; (4) the Q3 amendment with corrected cumulative figures; (5) the annual reconciliation with correct full-year figures.
+
+**Income (actual, after correction):** Q1 ₱300,000; Q2 ₱400,000; Q3 ₱400,000; Q4 ₱400,000 = ₱1,500,000 annual
+**Income as originally filed (wrong):** Q1 ₱200,000 (understated by ₱100,000); Q2–Q4 correct
+
+**Amendment filing date:** Q1 amended August 1, 2025 (77 days after May 15 due date)
+
+### Stage 1 — Original Q1 Filing (WRONG — filed May 15)
+
+**Original Q1 inputs:**
+
+| Field | Value |
+|-------|-------|
+| `filing_period` | Q1 |
+| `gross_receipts` | ₱200,000.00 (WRONG — actual ₱300,000) |
+| `elected_regime` | PATH_C |
+| `return_type` | ORIGINAL |
+
+**Original Q1 Computation:**
+- Cumulative GR: ₱200,000.00 (wrong)
+- Path C quarterly IT: ₱200,000 × 0.08 = ₱16,000.00
+- Q1 payable: **₱16,000.00** (paid May 15)
+
+### Stage 2 — Original Q2 Filing (WRONG — filed using wrong Q1 cumulative)
+
+**Original Q2 inputs:**
+
+| Field | Value |
+|-------|-------|
+| `filing_period` | Q2 |
+| `gross_receipts` | ₱600,000.00 (cumulative: wrong ₱200K Q1 + correct ₱400K Q2) |
+| `prior_quarterly_payments` | `[{ period: Q1, amount_paid: 16000.00 }]` |
+| `return_type` | ORIGINAL |
+
+**Original Q2 Computation:**
+- Cumulative GR: ₱600,000.00 (wrong — based on wrong Q1)
+- Path C IT: ₱600,000 × 0.08 = ₱48,000.00
+- Prior paid: ₱16,000.00
+- Q2 payable: **₱32,000.00** (paid August 15)
+
+### Stage 3 — Original Q3 Filing (WRONG — using wrong cumulative from Q2)
+
+**Original Q3 inputs:**
+
+| Field | Value |
+|-------|-------|
+| `filing_period` | Q3 |
+| `gross_receipts` | ₱1,000,000.00 (cumulative: wrong ₱600K + correct ₱400K Q3) |
+| `prior_quarterly_payments` | `[{ period: Q1, amount_paid: 16000.00 }, { period: Q2, amount_paid: 32000.00 }]` |
+| `return_type` | ORIGINAL |
+
+**Original Q3 Computation:**
+- Cumulative GR: ₱1,000,000.00 (wrong)
+- Path C IT: ₱1,000,000 × 0.08 = ₱80,000.00
+- Prior paid: ₱16,000 + ₱32,000 = ₱48,000.00
+- Q3 payable: **₱32,000.00** (paid November 15)
+
+**Total originally paid Q1+Q2+Q3:** ₱16,000 + ₱32,000 + ₱32,000 = ₱80,000.00
+
+### Stage 4 — Q1 Amendment (Filed August 1, 2025 — 77 days late)
+
+**Q1 Amendment inputs:**
+
+| Field | Value |
+|-------|-------|
+| `filing_period` | Q1 |
+| `gross_receipts` | ₱300,000.00 (CORRECTED) |
+| `elected_regime` | PATH_C |
+| `return_type` | AMENDED |
+| `prior_payment_for_return` | ₱16,000.00 (original Q1 payment) |
+| `actual_filing_date` | 2025-08-01 |
+| `taxpayer_tier` | MICRO |
+
+**Q1 Amendment Computation:**
+- Corrected cumulative GR: ₱300,000.00
+- Corrected Path C IT: ₱300,000 × 0.08 = **₱24,000.00**
+- Previously paid: ₱16,000.00
+- Additional tax due on amendment: ₱24,000 − ₱16,000 = **₱8,000.00**
+
+**Penalties on additional ₱8,000 (CR-016, CR-017, CR-020):**
+- Days late: May 15 to August 1 = 78 days (31 May − 15 = 16 days in May + 30 June + 31 July + 1 August = 78 days)
+- Surcharge (MICRO, amended return with deficiency): 10% × ₱8,000 = **₱800.00**
+- Interest: 6% per annum × (78/365) × ₱8,000 = 0.06 × 0.213699 × ₱8,000 = **₱102.58**
+- Compromise: per CR-020 Table 2 (with tax due), tax due bracket ₱5,001–₱10,000 → ₱2,000.00 compromise
+- Total penalties: ₱800 + ₱102.58 + ₱2,000 = **₱2,902.58**
+- Total payable on amendment: ₱8,000 + ₱2,902.58 = **₱10,902.58**
+
+**Expected Q1 Amendment Output:**
+```
+TaxComputationResult {
+  filing_period: Q1,
+  return_type: AMENDED,
+  selected_path: PATH_C,
+  corrected_gross_receipts: 300000.00,
+  corrected_cumulative_it: 24000.00,
+  original_it_paid: 16000.00,
+  additional_tax_due: 8000.00,
+  penalties: {
+    surcharge: 800.00,
+    interest: 102.58,
+    compromise: 2000.00,
+    total: 2902.58
+  },
+  total_amount_due_on_amendment: 10902.58,
+  form: FORM_1701Q,
+  schedule: SCHEDULE_II_8PCT
+}
+```
+
+### Stage 5 — Q2 Amendment (required to correct Item 50 reference)
+
+**Q2 Amendment inputs:**
+
+| Field | Value |
+|-------|-------|
+| `filing_period` | Q2 |
+| `gross_receipts` | ₱700,000.00 (cumulative: corrected ₱300K Q1 + ₱400K Q2) |
+| `prior_quarterly_payments` | `[{ period: Q1, amount_paid: 24000.00 }]` (corrected Q1 total paid) |
+| `return_type` | AMENDED |
+
+**Q2 Amendment Computation:**
+- Corrected cumulative GR: ₱700,000.00
+- Corrected Path C IT: ₱700,000 × 0.08 = **₱56,000.00**
+- Prior paid (corrected Q1 total): ₱24,000.00
+- Corrected Q2 payable: max(₱56,000 − ₱24,000, 0) = **₱32,000.00**
+- Original Q2 payable: ₱32,000.00
+- Additional payment required: ₱32,000 − ₱32,000 = **₱0.00** (no additional payment)
+
+**Expected Q2 Amendment Output:**
+```
+TaxComputationResult {
+  filing_period: Q2,
+  return_type: AMENDED,
+  selected_path: PATH_C,
+  corrected_cumulative_gross: 700000.00,
+  corrected_cumulative_it: 56000.00,
+  corrected_prior_paid: 24000.00,
+  corrected_payable: 32000.00,
+  original_payable: 32000.00,
+  additional_payment_due: 0.00,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  form: FORM_1701Q,
+  schedule: SCHEDULE_II_8PCT
+}
+```
+
+Note: Q2 amendment is required even though no additional payment is due. The BIR official record must show the corrected Item 36 (cumulative GR) = ₱700,000 and Item 50 reference (prior paid) = ₱24,000. Without the amended Q2, the official Q2 on file shows cumulative GR ₱600,000 which contradicts the amended Q1. No penalties apply because no additional tax is payable on the Q2 amendment.
+
+### Stage 6 — Q3 Amendment (required to correct cumulative reference)
+
+**Q3 Amendment inputs:**
+
+| Field | Value |
+|-------|-------|
+| `filing_period` | Q3 |
+| `gross_receipts` | ₱1,100,000.00 (cumulative: corrected ₱700K Q1+Q2 + ₱400K Q3) |
+| `prior_quarterly_payments` | `[{ period: Q1, amount_paid: 24000.00 }, { period: Q2, amount_paid: 32000.00 }]` |
+| `return_type` | AMENDED |
+
+**Q3 Amendment Computation:**
+- Corrected cumulative GR: ₱1,100,000.00
+- Corrected Path C IT: ₱1,100,000 × 0.08 = **₱88,000.00**
+- Prior paid (corrected Q1 + Q2): ₱24,000 + ₱32,000 = ₱56,000.00
+- Corrected Q3 payable: max(₱88,000 − ₱56,000, 0) = **₱32,000.00**
+- Original Q3 payable: ₱32,000.00
+- Additional payment: **₱0.00** (no additional payment)
+
+**Expected Q3 Amendment Output:**
+```
+TaxComputationResult {
+  filing_period: Q3,
+  return_type: AMENDED,
+  selected_path: PATH_C,
+  corrected_cumulative_gross: 1100000.00,
+  corrected_cumulative_it: 88000.00,
+  corrected_prior_paid: 56000.00,
+  corrected_payable: 32000.00,
+  original_payable: 32000.00,
+  additional_payment_due: 0.00,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  form: FORM_1701Q,
+  schedule: SCHEDULE_II_8PCT
+}
+```
+
+### Period 7 — Annual Reconciliation (using corrected figures)
+
+**Annual inputs:**
+
+| Field | Value |
+|-------|-------|
+| `filing_period` | ANNUAL |
+| `gross_receipts` | ₱1,500,000.00 (corrected full year) |
+| `prior_quarterly_payments` | Q1 ₱24,000 + Q2 ₱32,000 + Q3 ₱32,000 = total ₱88,000 |
+| `elected_regime` | null |
+
+**Annual IT:**
+- Path C IT = (₱1,500,000 − ₱250,000) × 0.08 = ₱1,250,000 × 0.08 = **₱100,000.00**
+- Total quarterly paid: ₱88,000.00
+- Balance: ₱100,000 − ₱88,000 = **₱12,000.00**
+
+Path comparison (₱0 expenses):
+- Path A: NTI ₱1,500,000; IT ₱277,500; PT ₱45,000; Total **₱322,500**
+- Path B: NTI ₱900,000; IT ₱127,500; PT ₱45,000; Total **₱172,500**
+- Path C: **₱100,000** ← MINIMUM
+
+**Expected Annual Final Output:**
+```
+TaxComputationResult {
+  tax_year: 2025,  filing_period: ANNUAL,
+  selected_path: PATH_C,
+  income_tax_due: 100000.00,
+  percentage_tax_due: 0.00,
+  total_tax_due: 100000.00,
+  cwt_credits: 0.00,
+  quarterly_it_paid: 88000.00,
+  balance_payable: 12000.00,
+  overpayment: 0.00,
+  form: FORM_1701A,
+  form_section: PART_IV_B,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [],
+  manual_review_flags: []
+}
+```
+
+### Amendment Cascade Summary Table
+
+| Return | GR (Filed) | GR (Corrected) | Payable (Orig) | Payable (Amended) | Additional Due | Penalties |
+|--------|-----------|---------------|---------------|------------------|---------------|-----------|
+| Q1 | ₱200,000 | ₱300,000 | ₱16,000 | ₱24,000 | **₱8,000** | ₱2,902.58 |
+| Q2 | ₱600,000 | ₱700,000 | ₱32,000 | ₱32,000 | **₱0** | ₱0 |
+| Q3 | ₱1,000,000 | ₱1,100,000 | ₱32,000 | ₱32,000 | **₱0** | ₱0 |
+| Annual | ₱1,400,000 | ₱1,500,000 | (pending) | ₱12,000 balance | ₱12,000 | ₱0 (on time) |
+
+**Total additional tax from amendment:** ₱8,000 (Q1 only) + ₱12,000 (annual) = ₱20,000
+**Total penalties paid:** ₱2,902.58 (Q1 only)
+
+### Verification
+
+- **Q1 original:** ₱200,000 × 0.08 = **₱16,000** ✓
+- **Q1 amended:** ₱300,000 × 0.08 = **₱24,000**; additional = **₱8,000** ✓
+- **Q1 penalties:** surcharge 10%×8K = **₱800**; interest 6%×(78/365)×8K = **₱102.58**; compromise bracket ₱5K–₱10K = **₱2,000** ✓
+- **Q2 amended:** ₱700,000 × 0.08 = ₱56,000; prior paid ₱24,000; payable = **₱32,000** = original ₱32,000 → no additional ✓
+- **Q3 amended:** ₱1,100,000 × 0.08 = ₱88,000; prior paid ₱56,000; payable = **₱32,000** = original ₱32,000 → no additional ✓
+- **Annual:** (₱1,500,000 − ₱250,000) × 0.08 = **₱100,000**; balance = 100,000 − 88,000 = **₱12,000** ✓
+- **Why Q2/Q3 amendments have ₱0 additional:** The ₱100K shift was entirely in Q1. While cumulative GR for Q2 and Q3 increased by ₱100K each, the cumulative prior_paid also increased by ₱8,000 (Q1 amendment payment). The net effect on Q2/Q3 payable is ₱100,000 × 0.08 − ₱8,000 = ₱8,000 − ₱8,000 = ₱0 additional. This mathematical identity holds whenever the amendment corrects only Q1 and the prior-period reference is updated correctly. ✓
+
+**Legal basis:** Amended return procedure: NIRC Sec. 6(A); BIR RR 3-2024 (amended return processing under EOPT). Surcharge on deficiency: NIRC Sec. 248(A)(3), 10% for MICRO/SMALL under RA 11976. Interest on deficiency: NIRC Sec. 249(B) as amended by RA 11976, 6% per annum. Compromise penalty: RMO 7-2015 Annex A Table 2.
+
+---
+
+## TV-EX-G8-007: SC-QC-OVERPY-Q3 — Q3 CWT Accumulation Exceeds IT Due; Zero Q3 Payment; Annual Overpayment
+
+**Scenario code:** SC-QC-OVERPY-Q3
+**Cross-reference:** This scenario is fully covered by **TV-EDGE-010** in [edge-cases.md](edge-cases.md). That vector specifies all four periods for a taxpayer where cumulative CWT at Q3 exceeds cumulative IT, resulting in Q3 payable = ₱0, with the overpayment carried to annual reconciliation.
+
+**Key values from TV-EDGE-010 for cross-index:**
+- Scenario: OSD path (Path B), ₱1,200,000 annual GR, ₱120,000 total annual CWT (10% EWT from corporate clients)
+- Q3 payable: ₱0.00 (cumulative CWT exceeds cumulative IT)
+- Annual overpayment: ₱33,500.00 (CWT ₱120,000 − IT ₱86,500 = ₱33,500 after all quarterly payments)
+- Overpayment disposition: TAXPAYER_ELECTION_REQUIRED (refund, TCC, or carryover to next year)
+- WARN_OVERPAYMENT_ELECTION_REQUIRED fires at annual
+
+---
+
+## GROUP 8 SUMMARY TABLE
+
+| Vector | Scenario | Key Feature | Periods | Key Insight |
+|--------|---------|------------|---------|-------------|
+| TV-EX-G8-001 | SC-QC-8-3Q | 8% quarterly cumulative (cross-ref) | Q1–Q3 + Annual | Q1 NIL; ₱250K applied only at annual |
+| TV-EX-G8-002 | SC-QC-OSD-3Q | OSD quarterly, bracket escalation | Q1–Q3 + Annual | Q1 NIL (NTI<250K); cumulative NTI rises Q2→Q3; Path C was ₱46,500 cheaper |
+| TV-EX-G8-003 | SC-QC-ITEMIZED-3Q | Itemized quarterly, Path A wins | Q1–Q3 + Annual | Q1 NIL; 70% expense ratio → Path A beats Path C by ₱17,500 |
+| TV-EX-G8-004 | SC-QC-NIL-Q1 | Zero Q1 income | Q1–Q3 + Annual | NIL Q1 still mandatory; ₱250K deduction waits until annual |
+| TV-EX-G8-005 | SC-QC-CWT-SHIFT | Late Q1 2307 absorbed in Q2 | Q1–Q3 + Annual | Q2 payable = ₱0; no amendment needed; overpayment at annual |
+| TV-EX-G8-006 | SC-QC-AMENDMENT | Q1 understatement cascade | Q1–Q3 amended + Annual | Only Q1 has additional tax + penalties; Q2/Q3 payable unchanged |
+| TV-EX-G8-007 | SC-QC-OVERPY-Q3 | CWT exceeds IT at Q3 (cross-ref) | Q1–Q3 + Annual | Q3 payable = ₱0; overpayment election at annual |
+
+**Key insights for Group 8:**
+
+1. **Q1 NIL returns are common and mandatory.** In TV-EX-G8-002, cumulative NTI at Q1 (₱180,000) is below the ₱250,000 bracket threshold, producing ₱0 IT. In TV-EX-G8-003, cumulative NTI (₱150,000) is below ₱250,000. In TV-EX-G8-004, income is zero. All three require a NIL 1701Q to be filed by May 15. Failure to file results in a ₱1,000 compromise penalty (1st offense) per RMO 7-2015.
+
+2. **The ₱250,000 deduction under 8% is ANNUAL ONLY.** At Q2 and Q3, the 8% rate is applied to cumulative gross receipts with NO ₱250,000 subtraction. This means quarterly payments slightly overstate the proportional tax. The annual return corrects this by applying the ₱250,000 deduction for the first and only time. Vectors TV-EX-G8-001 and TV-EX-G8-004 both demonstrate this: Q2 and Q3 quarterly IT = cumul_GR × 8% with no deduction; annual IT = (annual_GR − ₱250,000) × 8%.
+
+3. **The cumulative method self-corrects for late CWT without amendments.** TV-EX-G8-005 demonstrates that when a Form 2307 is received after the Q1 filing deadline, the taxpayer simply includes it in Q2 as part of cumulative CWT. The Q2 formula (cumul_IT − cumul_CWT − prior_paid) naturally absorbs both the Q1 and Q2 CWT, resulting in Q2 payable = ₱0. The taxpayer does NOT need to amend Q1. The overpayment that results (Q1 paid without the CWT credit) surfaces at annual reconciliation.
+
+4. **Amendment cascade is required even when no additional tax is due.** TV-EX-G8-006 shows that when Q1 is amended, Q2 and Q3 must also be amended to update the cumulative GR figures and prior-payment references — even though the Q2 and Q3 payable amounts happen to be identical in this case. This maintains consistent official records. Penalties apply only to the Q1 amendment deficiency (₱8,000 × 10% surcharge + interest + compromise).
+
+5. **PT (Form 2551Q) is always a separate obligation from IT (Form 1701Q).** TV-EX-G8-002 and TV-EX-G8-003 show PT filings on separate deadlines (April 25, July 25, October 25, January 25) while 1701Q deadlines are May 15, August 15, November 15. The engine tracks them independently. PT under Path B/A is not affected by the IT amendment cascade.
+
+6. **Bracket escalation under OSD is visible and important to display.** TV-EX-G8-002 shows Q1 in bracket 1 (₱0 IT), Q2 entering bracket 2 (15% marginal), Q3 entering bracket 3 (20% marginal), and annual staying in bracket 3. This escalation is why quarterly payments are not simply ¼ of the annual liability — Q1 pays ₱0, Q2 pays more than Q3 on an incremental basis (Q2 incremental ₱16,500 vs Q3 incremental ₱34,000 — higher because Q3's marginal rate is higher).
 

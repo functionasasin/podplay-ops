@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 54
-- Analyzed: 40
-- Pending: 14
-- Convergence: 74%
+- Analyzed: 41
+- Pending: 13
+- Convergence: 76%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -55,7 +55,7 @@ Design the computation engine from the extracted domain rules.
 - [x] test-vectors-g5 — Exhaustive vectors: Group 5 (CWT-heavy scenarios — 3 codes)
 - [x] test-vectors-g6 — Exhaustive vectors: Group 6 (Threshold crossing — 2 codes)
 - [x] test-vectors-g7 — Exhaustive vectors: Group 7 (Special deduction scenarios)
-- [ ] test-vectors-g8 — Exhaustive vectors: Group 8 (Quarterly-cycle-specific scenarios)
+- [x] test-vectors-g8 — Exhaustive vectors: Group 8 (Quarterly-cycle-specific scenarios)
 - [ ] test-vectors-g9 — Exhaustive vectors: Group 9 (Business/trading taxpayers SC-B)
 - [ ] test-vectors-g10 — Exhaustive vectors: Group 10 (Combined service + trading SC-COMBO)
 - [ ] test-vectors-g11 — Exhaustive vectors: Group 11 (Additional mixed income sub-scenarios)
