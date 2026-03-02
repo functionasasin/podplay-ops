@@ -2,8 +2,8 @@
 
 ## Statistics
 - Total aspects: 106
-- Analyzed: 97
-- Pending: 9
+- Analyzed: 98
+- Pending: 8
 - Convergence: 92%
 
 ---
@@ -138,7 +138,7 @@
 - [x] Generate agency.txt — list all operators/agencies
 - [x] Generate routes.txt — all validated routes with type, color codes, names
 - [x] Generate stops.txt — all stop locations with lat/lon coordinates
-- [ ] Generate stop_times.txt — estimated arrival/departure times per stop
+- [x] Generate stop_times.txt — estimated arrival/departure times per stop
 - [ ] Generate shapes.txt — route geometry from best available sources
 - [ ] Generate trips.txt — trip patterns for each route
 - [ ] Generate fare_attributes.txt and fare_rules.txt — fare structure per route/mode
