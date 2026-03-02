@@ -1,7 +1,7 @@
-# Current Stage: 11 (PDF Export)
+# Current Stage: 12 (Case Notes)
 
 ## Spec Sections
-- §4.1 — PDF Export
+- §4.6 — Case Notes
 
 ## Test Results (updated by loop)
 ```
@@ -19,4 +19,5 @@ No tests yet
 - Stage 8 completed 2026-03-02 (19/19 tests passing)
 - Stage 9 completed 2026-03-02 (32/32 tests passing)
 - Stage 10 completed 2026-03-02 (71/71 tests passing)
-- Stage 11 starting 2026-03-02
+- Stage 11 completed 2026-03-02 (70/70 tests passing)
+- Stage 12 starting 2026-03-02
