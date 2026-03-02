@@ -187,8 +187,9 @@ loops:
     schedule: "*/30 * * * *"
     max_iterations: 60
     timeout_minutes: 30
-    status: active
+    status: converged
     created: 2026-02-28
+    converged_at: "2026-03-02"
   cheerful-ig-dm-spec:
     description: "Direct Meta API + Parallel Tables → exhaustive file-level implementation spec for developer handoff"
     type: reverse
