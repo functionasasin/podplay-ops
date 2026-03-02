@@ -1,13 +1,13 @@
-# Current Stage: 1 (Supabase + Deps Setup)
+# Current Stage: 2 (TanStack Router + Layout)
 
 ## Spec Sections
-- Premium spec: docs/plans/inheritance-premium-spec.md §3 (Data Model)
-- Initialize Supabase, create initial migration, install @supabase/supabase-js
+- No specific spec section — infrastructure stage
+- Install TanStack Router, create route tree, restructure App.tsx with layout
 
 ## Test Results (updated by loop)
 ```
-7 passed (7 total) — src/lib/__tests__/supabase.test.ts
+(no tests yet)
 ```
 
 ## Work Log
-- **iter-1** (2026-03-02): Supabase init, 001_initial_schema.sql (all 9 tables, 6 enums, RLS policies, triggers), @supabase/supabase-js@2 installed, src/lib/supabase.ts client, .env.local.example, 7 passing tests
+- Stage 1 completed 2026-03-02 (7/7 tests passing)

@@ -4,8 +4,8 @@ Dev order: 1 → 2 → 3 → 4-9 (parallel) → 10 → 11 → 12-16 (parallel) �
 
 | Stage | Name                        | Spec     | Test Filter                        | Depends On        | Status  |
 |-------|-----------------------------|----------|------------------------------------|--------------------|---------|
-| 1     | Supabase + Deps Setup       | —        | supabase                           | —                  | pending |
-| 2     | TanStack Router + Layout    | —        | router\|layout                     | 1                  | blocked |
+| 1     | Supabase + Deps Setup       | —        | supabase                           | —                  | complete |
+| 2     | TanStack Router + Layout    | —        | router\|layout                     | 1                  | pending |
 | 3     | Auth & Persistence          | §4.2     | auth\|cases\|auto-save\|dashboard  | 1, 2               | blocked |
 | 4     | Decedent Header             | §4.13    | decedent-header                    | —                  | blocked |
 | 5     | Representation Display      | §4.14    | representation                     | —                  | blocked |
