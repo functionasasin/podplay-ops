@@ -253,7 +253,9 @@ describe('firm-branding > LogoUpload', () => {
   });
 
   it('rejects non-image file type and shows error', async () => {
-    const user = userEvent.setup();
+    // applyAccept: false bypasses userEvent's accept-attribute filtering
+    // so the file reaches our JS validation handler
+    const user = userEvent.setup({ applyAccept: false });
     renderUpload();
     const pdfFile = makeFile('doc.pdf', 'application/pdf', 100_000);
     const input = screen.getByLabelText(/logo|upload/i) as HTMLInputElement;
