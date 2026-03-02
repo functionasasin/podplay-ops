@@ -1,6 +1,6 @@
 # Exhaustive Test Vectors — Philippine Freelance Tax Optimizer
 
-**Status:** PARTIAL — Groups 1–6 complete (26 vectors + 4 cross-references to edge-cases.md). Groups 7–14 pending.
+**Status:** PARTIAL — Groups 1–7 complete (29 vectors + 4 cross-references to edge-cases.md). Groups 8–14 pending.
 **Last updated:** 2026-03-02
 **Cross-references:**
 - Scenario codes: [domain/scenarios.md](../../domain/scenarios.md)
@@ -3972,4 +3972,689 @@ TaxComputationResult {
 4. **At GR = ₱2,900,000 (no expenses), Path C saves ₱212,500 vs OSD.** The scenarios.md note stating "₱76,000–₱83,800 advantage for 8%" in the SC-NEAR-3M description is incorrect; those savings figures correspond to the ₱1.5M–₱1.6M gross range. Correct savings at ₱2.8M–₱2.999M are approximately ₱202,500–₱222,500 (the savings grow as GR approaches ₱3M because both the 8% base and the OSD NTI increase, but the graduated rate on NTI grows faster than 8% on the incremental base).
 
 5. **The buffer analysis is a user-value feature.** For near-₱3M earners, displaying the exact peso buffer (e.g., "You have ₱100,000 remaining before the 8% option is lost") is high-value information that existing tools do not provide. The `threshold_proximity_analysis` block enables the frontend to render a dedicated "Threshold Watch" card when WARN-001 fires.
+
+---
+
+## GROUP 7: Special Deduction Scenarios
+
+**3 scenario codes:** SC-NOLCO, SC-ZERO-EXPENSE, SC-HIGH-ENTERTAIN
+
+**What distinguishes Group 7:** These scenarios test deduction-specific rules that change which path is optimal — NOLCO carry-over (only available under Path A), zero-expense structure (cleanest case for 8% dominance), and EAR cap enforcement (RR 10-2002 disallowance of excess entertainment expenses). Each vector has a single key deduction rule as its central test point.
+
+**Common characteristics for all Group 7 vectors (except where noted):**
+- `taxpayer_type`: PURELY_SE
+- `is_mixed_income`: false
+- `is_vat_registered`: false
+- `is_bmbe_registered`: false
+- `subject_to_sec_117_128`: false
+- `is_gpp_partner`: false
+- `taxable_compensation`: ₱0.00
+- `compensation_cwt`: ₱0.00
+- `cost_of_goods_sold`: ₱0.00
+- `taxpayer_class` (derived): SERVICE_PROVIDER
+- `income_type` (derived): PURELY_SE
+- `taxpayer_tier` (derived): MICRO (all GR < ₱3,000,000)
+- `path_c_eligible` (derived): true
+- `non_operating_income`: ₱0.00
+- `fwt_income`: ₱0.00
+- `sales_returns_allowances`: ₱0.00
+- `prior_year_excess_cwt`: ₱0.00
+- `return_type`: ORIGINAL
+- `actual_filing_date`: null (on-time assumed)
+- `filing_period`: ANNUAL
+- `tax_year`: 2025
+
+---
+
+## TV-EX-G7-001: SC-NOLCO — Prior Year NOLCO Makes Path A Optimal
+
+**Scenario code:** SC-NOLCO
+**Description:** Digital marketing consultant with ₱1,200,000 annual gross receipts and ₱400,000 current-year itemized business expenses (33.3% ratio). Without NOLCO, Path C (₱76,000) would win decisively. However, the taxpayer incurred net operating losses in 2022 (₱300,000) and 2023 (₱200,000) filed under Path A for those years, creating ₱500,000 of carry-over NOLCO available in TY2025. Applying NOLCO (FIFO order: 2022 first) reduces Path A NTI from ₱800,000 to ₱300,000, yielding IT of only ₱7,500. Combined with PT of ₱36,000, Path A total = ₱43,500 — beating Path C (₱76,000) by ₱32,500. This vector demonstrates: (1) NOLCO only deductible under Path A; (2) FIFO application (2022 before 2023); (3) NOLCO cannot reduce NTI below ₱0; (4) both NOLCO entries fully consumed in TY2025; (5) all quarterly 1701Q returns are NIL because proportional NOLCO keeps cumulative NTI below ₱250,000 through Q3.
+
+**NOLCO availability rule (NIRC Sec. 34(D), as referenced in itemized-deductions.md Part 5):** NOLCO deduction is available only when filing under Path A (Itemized Deductions). If the taxpayer switches to Path B (OSD) or Path C (8%) for any year, NOLCO from prior itemized years is **suspended** (not forfeited) during that year and the 3-year expiry clock does not pause. If returning to Path A in a later year, unexpired NOLCO resumes.
+
+**2022 NOLCO expiry note:** The TY2022 NOLCO entry (₱300,000) may be carried over to TY2023, TY2024, and TY2025 (three consecutive taxable years). TY2025 is the **last year** this entry may be used. If not consumed in TY2025, the ₱300,000 expires.
+
+### Input (fields differing from Group 7 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `gross_receipts` | ₱1,200,000.00 | Annual digital marketing retainers and project fees |
+| `itemized_expenses.salaries_wages` | ₱180,000.00 | 1 project assistant at ₱15,000/month × 12 |
+| `itemized_expenses.rent` | ₱60,000.00 | Shared coworking desk ₱5,000/month × 12 |
+| `itemized_expenses.utilities` | ₱36,000.00 | Broadband and electricity ₱3,000/month |
+| `itemized_expenses.communication` | ₱24,000.00 | Mobile plan, collaboration tools ₱2,000/month |
+| `itemized_expenses.supplies` | ₱60,000.00 | Software subscriptions (Adobe CC, project mgmt), consumables |
+| `itemized_expenses.taxes_and_licenses` | ₱15,000.00 | BIR ARF ₱500, city business permit ₱14,500 |
+| `itemized_expenses.other_expenses` | ₱25,000.00 | Bank charges, professional memberships, insurance |
+| All other itemized expense fields | ₱0.00 | |
+| `itemized_expenses.nolco_available` | See NOLCO entries below | Prior year losses eligible for carry-over |
+| `cwt_2307_entries` | [] | No withholding agents; all clients are individuals |
+| `prior_quarterly_payments` | [{period: Q1_2025, amount: 0.00}, {period: Q2_2025, amount: 0.00}, {period: Q3_2025, amount: 0.00}] | All quarterly 1701Q returns filed NIL (see quarterly analysis below) |
+| `elected_regime` | null | Optimizer mode — engine recommends |
+
+**Current-year itemized deductions total:** ₱180,000 + ₱60,000 + ₱36,000 + ₱24,000 + ₱60,000 + ₱15,000 + ₱25,000 = **₱400,000.00**
+
+**NOLCO entries (input):**
+
+| # | origin_year | amount | remaining | Expiry | Notes |
+|---|------------|--------|-----------|--------|-------|
+| 1 | 2022 | ₱300,000.00 | ₱300,000.00 | TY2025 (last year) | 2022 net operating loss; prior years TY2023 and TY2024 used ₱0 (taxpayer was on Path B / OSD both years — NOLCO suspended, not forfeited; TY2025 is the 3rd carry-over year regardless of suspension) |
+| 2 | 2023 | ₱200,000.00 | ₱200,000.00 | TY2026 | 2023 net operating loss; first year of use |
+
+**Total NOLCO available:** ₱500,000.00
+
+**Quarterly income distribution assumed (evenly spread, ₱300,000 per quarter):**
+
+| Quarter | Quarterly GR | Cumulative GR |
+|---------|-------------|--------------|
+| Q1 (Jan–Mar 2025) | ₱300,000.00 | ₱300,000.00 |
+| Q2 (Apr–Jun 2025) | ₱300,000.00 | ₱600,000.00 |
+| Q3 (Jul–Sep 2025) | ₱300,000.00 | ₱900,000.00 |
+| Q4 (Oct–Dec 2025) | ₱300,000.00 | ₱1,200,000.00 |
+
+### Expected Intermediate Values (Annual)
+
+**PL-02:**
+- `net_gross_receipts` = ₱1,200,000.00
+- `taxpayer_tier` = MICRO (₱1,200,000 < ₱3,000,000 strict)
+- `income_type` = PURELY_SE
+- `taxpayer_class` = SERVICE_PROVIDER
+
+**PL-04:**
+- `path_c_eligible` = true
+- `ineligibility_reasons` = []
+
+**PL-05 (Itemized Deductions — Path A computation):**
+- `ear_cap` = ₱1,200,000 × 0.01 = ₱12,000.00; no EAR expense claimed → disallowance = ₱0
+- `total_current_year_deductions` = ₱400,000.00 (all categories before NOLCO)
+- `net_income_before_nolco` = ₱1,200,000 − ₱400,000 = ₱800,000.00
+- **NOLCO FIFO application** (apply_nolco([2022: ₱300K, 2023: ₱200K], ₱800,000)):
+  - Iteration 1 — 2022 entry: use = min(₱800,000, ₱300,000) = ₱300,000; remaining_income = ₱500,000; entry remaining = ₱0
+  - Iteration 2 — 2023 entry: use = min(₱500,000, ₱200,000) = ₱200,000; remaining_income = ₱300,000; entry remaining = ₱0
+  - `nolco_applied` = ₱500,000.00 (full NOLCO consumed)
+- `net_taxable_income_path_a` = ₱800,000 − ₱500,000 = **₱300,000.00**
+- `total_allowable_deductions_path_a` = ₱400,000 + ₱500,000 = ₱900,000.00
+
+**PL-06 (OSD — Path B, no NOLCO):**
+- `osd_amount` = ₱1,200,000 × 0.40 = ₱480,000.00
+- `nti_path_b` = ₱720,000.00
+- Note: NOLCO is **not available** under Path B (OSD replaces all deductions, including NOLCO)
+
+**PL-07 (CWT):**
+- `total_cwt` = ₱0.00 (no 2307 entries)
+
+**PL-08 (Path A — Graduated + Itemized + NOLCO):**
+- `nti_path_a` = ₱300,000.00
+- `income_tax_path_a` = graduated_tax_2023(₱300,000) = (₱300,000 − ₱250,000) × 0.15 = **₱7,500.00**
+- `percentage_tax_path_a` = ₱1,200,000 × 0.03 = **₱36,000.00**
+- `total_tax_path_a` = **₱43,500.00**
+
+**PL-09 (Path B — Graduated + OSD, no NOLCO):**
+- `nti_path_b` = ₱720,000.00
+- `income_tax_path_b` = graduated_tax_2023(₱720,000) = ₱22,500 + (₱720,000 − ₱400,000) × 0.20 = 22,500 + 64,000 = **₱86,500.00**
+- `percentage_tax_path_b` = **₱36,000.00**
+- `total_tax_path_b` = **₱122,500.00**
+
+**PL-10 (Path C — 8% Flat, no NOLCO):**
+- `eight_pct_base` = ₱1,200,000 − ₱250,000 = ₱950,000.00
+- `income_tax_path_c` = ₱950,000 × 0.08 = **₱76,000.00**
+- `percentage_tax_path_c` = **₱0.00** (waived under 8%)
+- `total_tax_path_c` = **₱76,000.00**
+
+**PL-13 (Compare):**
+- Path A: ₱43,500.00 ← **MINIMUM** (NOLCO-enhanced)
+- Path B: ₱122,500.00
+- Path C: ₱76,000.00
+- `recommended_path` = PATH_A
+- `savings_vs_next_best` = ₱76,000 − ₱43,500 = **₱32,500.00** (vs Path C)
+- `savings_vs_worst` = ₱122,500 − ₱43,500 = **₱79,000.00** (vs Path B)
+- **Without NOLCO counterfactual:** Path A without NOLCO = graduated_tax_2023(₱800,000) + ₱36,000 = ₱102,500 + ₱36,000 = ₱138,500 (loses to Path C ₱76,000); NOLCO application saves ₱95,000 on Path A and changes the winner from C to A.
+
+**PL-14 (Balance Payable):**
+- `income_tax_due` = ₱7,500.00
+- `percentage_tax_due` = ₱36,000.00 (filed separately via quarterly Form 2551Q)
+- `total_tax_due` = ₱43,500.00
+- `cwt_credits` = ₱0.00
+- `quarterly_it_paid` = ₱0.00 (all quarterly 1701Q NIL; see quarterly tracker below)
+- `balance_payable_raw` = ₱7,500 + ₱36,000 − ₱0 − ₱0 = ₱43,500.00
+- `balance_payable` = ₱43,500.00
+- `overpayment` = ₱0.00
+
+**PL-15 (Form Selection):**
+- `form` = FORM_1701 (itemized deductions require Form 1701; NOLCO is reported on Schedule 2)
+- `form_section` = PART_IV
+
+**PL-16 (Penalties):** ₱0.00 (on-time filing assumed)
+
+**Warning generation:**
+- WARN-003 (`WARN_NO_2307_ENTRIES`): **fires** — Path A is recommended and no CWT entries were provided. Message: "No creditable withholding tax certificates (BIR Form 2307) were entered. If any of your clients withheld taxes on your professional fees, enter those amounts to reduce your income tax due."
+- WARN-011 (`WARN_NOLCO_UNDER_PATH_A_ONLY`): does **NOT** fire — condition is `recommended_path == PATH_B OR PATH_C`; here recommended_path == PATH_A, so the warning is suppressed (NOLCO is already being applied under the recommended path).
+
+**Quarterly 1701Q tracker (Path A, proportional NOLCO):**
+
+At each quarterly 1701Q, the engine applies NOLCO proportionally: `quarterly_nolco = total_nolco_available × (cumul_gross / annual_gross_estimate)`. For annual_gross_estimate = ₱1,200,000 and total_nolco = ₱500,000:
+
+| Quarter | Cumul GR | Cumul Expenses | NTI Before NOLCO | Proportional NOLCO | NTI After NOLCO | Cumul IT | Prior Paid | Q Payable |
+|---------|---------|---------------|-----------------|-------------------|----------------|---------|------------|-----------|
+| Q1 | ₱300,000 | ₱100,000 | ₱200,000 | ₱500K × 25% = ₱125,000 | ₱75,000 | ₱0.00 | ₱0.00 | ₱0.00 (NIL) |
+| Q2 | ₱600,000 | ₱200,000 | ₱400,000 | ₱500K × 50% = ₱250,000 | ₱150,000 | ₱0.00 | ₱0.00 | ₱0.00 (NIL) |
+| Q3 | ₱900,000 | ₱300,000 | ₱600,000 | ₱500K × 75% = ₱375,000 | ₱225,000 | ₱0.00 | ₱0.00 | ₱0.00 (NIL) |
+| Annual | ₱1,200,000 | ₱400,000 | ₱800,000 | ₱500,000 (full) | ₱300,000 | ₱7,500.00 | ₱0.00 | ₱7,500.00 |
+
+Q1 graduated_tax_2023(₱75,000) = ₱0 (below ₱250K) → payable ₱0. NIL return filed by May 15, 2025.
+Q2 graduated_tax_2023(₱150,000) = ₱0 (below ₱250K) → payable ₱0. NIL return filed by August 15, 2025.
+Q3 graduated_tax_2023(₱225,000) = ₱0 (below ₱250K) → payable ₱0. NIL return filed by November 15, 2025.
+Annual graduated_tax_2023(₱300,000) = ₱7,500 − ₱0 prior paid = ₱7,500 balance. Plus PT reminder ₱36,000.
+
+### Expected Final Output
+
+```
+TaxComputationResult {
+  tax_year: 2025,  filing_period: ANNUAL,
+  taxpayer_type: PURELY_SE,  taxpayer_tier: MICRO,
+
+  regime_comparison: {
+    path_a: {
+      eligible: true,
+      nti_before_nolco: 800000.00,
+      nolco_applied: 500000.00,
+      nti: 300000.00,
+      total_allowable_deductions: 900000.00,
+      income_tax: 7500.00,
+      percentage_tax: 36000.00,
+      total_tax: 43500.00
+    },
+    path_b: {
+      eligible: true,
+      nti: 720000.00,
+      osd_amount: 480000.00,
+      nolco_note: "NOLCO not available under Path B (OSD replaces all deductions per NIRC Sec. 34(L))",
+      income_tax: 86500.00,
+      percentage_tax: 36000.00,
+      total_tax: 122500.00
+    },
+    path_c: {
+      eligible: true,
+      tax_base: 950000.00,
+      nolco_note: "NOLCO not available under Path C (8% flat rate has no deductions per NIRC Sec. 24(A)(2)(b))",
+      income_tax: 76000.00,
+      percentage_tax: 0.00,
+      total_tax: 76000.00,
+      ineligibility_reasons: []
+    },
+    recommended_path: PATH_A,
+    savings_vs_next_best: 32500.00,
+    savings_vs_worst: 79000.00,
+    nolco_enables_path_a_win: true
+  },
+
+  selected_path: PATH_A,
+  income_tax_due: 7500.00,
+  percentage_tax_due: 36000.00,
+  total_tax_due: 43500.00,
+  cwt_credits: 0.00,
+  quarterly_it_paid: 0.00,
+  balance_payable: 43500.00,
+  overpayment: 0.00,
+  overpayment_disposition: null,
+  form: FORM_1701,  form_section: PART_IV,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [WARN-003],
+  manual_review_flags: [],  ineligibility_notifications: [],
+
+  nolco_breakdown: {
+    entries_input: [
+      { origin_year: 2022, amount: 300000.00, remaining_before: 300000.00, applied: 300000.00, remaining_after: 0.00, expires: "TY2025" },
+      { origin_year: 2023, amount: 200000.00, remaining_before: 200000.00, applied: 200000.00, remaining_after: 0.00, expires: "TY2026" }
+    ],
+    total_nolco_applied: 500000.00,
+    net_income_before_nolco: 800000.00,
+    net_income_after_nolco: 300000.00
+  },
+
+  quarterly_tracker: [
+    { quarter: 1, cumul_gross: 300000.00, cumul_expenses: 100000.00,
+      nti_before_nolco: 200000.00, proportional_nolco: 125000.00, nti_after_nolco: 75000.00,
+      cumul_it: 0.00, prior_paid: 0.00, quarterly_payable: 0.00, is_nil: true },
+    { quarter: 2, cumul_gross: 600000.00, cumul_expenses: 200000.00,
+      nti_before_nolco: 400000.00, proportional_nolco: 250000.00, nti_after_nolco: 150000.00,
+      cumul_it: 0.00, prior_paid: 0.00, quarterly_payable: 0.00, is_nil: true },
+    { quarter: 3, cumul_gross: 900000.00, cumul_expenses: 300000.00,
+      nti_before_nolco: 600000.00, proportional_nolco: 375000.00, nti_after_nolco: 225000.00,
+      cumul_it: 0.00, prior_paid: 0.00, quarterly_payable: 0.00, is_nil: true },
+    { quarter: "annual_reconciliation", total_gross: 1200000.00, total_expenses: 400000.00,
+      nti_before_nolco: 800000.00, total_nolco_applied: 500000.00, nti_after_nolco: 300000.00,
+      annual_it: 7500.00, total_prior_paid: 0.00, annual_it_balance: 7500.00,
+      pt_reminder: 36000.00 }
+  ]
+}
+```
+
+### Verification
+
+- **Path A NTI before NOLCO:** 1,200,000 − 400,000 = **₱800,000.00** ✓
+- **NOLCO FIFO:** 2022 entry applied first (₱300K), remaining income ₱500K; 2023 entry applied next (₱200K), remaining income ₱300K; total applied = **₱500,000.00** ✓
+- **Path A NTI after NOLCO:** 800,000 − 500,000 = **₱300,000.00** ✓
+- **Path A IT:** (300,000 − 250,000) × 0.15 = **₱7,500.00** ✓ (bracket 2)
+- **PT:** 1,200,000 × 0.03 = **₱36,000.00** ✓; total Path A = **₱43,500.00** ✓
+- **Path B NTI:** 1,200,000 × 0.60 = **₱720,000.00** ✓; IT = 22,500 + (720,000−400,000)×0.20 = 22,500 + 64,000 = **₱86,500.00** ✓; total B = **₱122,500.00** ✓
+- **Path C base:** 1,200,000 − 250,000 = **₱950,000.00** ✓; IT = **₱76,000.00** ✓
+- **Savings vs C:** 76,000 − 43,500 = **₱32,500.00** ✓; savings vs B = **₱79,000.00** ✓
+- **Q1 proportional NOLCO:** 500,000 × (300,000 / 1,200,000) = **₱125,000** ✓; NTI = 200,000 − 125,000 = **₱75,000** < ₱250K → IT = ₱0 ✓
+- **Q2 proportional NOLCO:** 500,000 × (600,000 / 1,200,000) = **₱250,000** ✓; NTI = 400,000 − 250,000 = **₱150,000** < ₱250K → IT = ₱0 ✓
+- **Q3 proportional NOLCO:** 500,000 × (900,000 / 1,200,000) = **₱375,000** ✓; NTI = 600,000 − 375,000 = **₱225,000** < ₱250K → IT = ₱0 ✓
+- **All quarterly IT = ₱0:** NOLCO keeps every quarter's cumulative NTI below ₱250K threshold → correct NIL returns ✓
+- **Annual balance = IT only:** ₱7,500 (income tax); ₱36,000 PT filed separately via 4 quarterly 2551Q returns ✓
+- **WARN-011 suppressed:** recommended_path = PATH_A, so the "NOLCO only available under Path A" advisory does not fire ✓
+- **2022 NOLCO expiry:** fully consumed in TY2025 (last eligible year) → no expiry waste ✓
+- **2023 NOLCO expiry:** also fully consumed in TY2025; expires TY2026 unused is now zero ✓
+- **Form 1701 (not 1701A):** itemized deductions require Schedule 2 on Form 1701; Form 1701A does not have itemized deductions schedule ✓
+
+**Legal basis:** NOLCO: NIRC Sec. 34(D) (net operating loss carry-over, 3 consecutive years). NOLCO suspension during OSD/8% years: BIR RR No. 10-2003 Sec. 4. NOLCO FIFO application: itemized-deductions.md Part 5. EAR cap: RR 10-2002 Sec. 3 (1% of gross receipts for service providers). NOLCO not available under OSD: NIRC Sec. 34(L) ("in lieu of itemized deductions"). NOLCO not available under 8%: NIRC Sec. 24(A)(2)(b) (no deductions under 8% flat rate). Graduated tax rates: CR-002. PT: NIRC Sec. 116. Form 1701: BIR RA 11976 EOPT.
+
+---
+
+## TV-EX-G7-002: SC-ZERO-EXPENSE — Online Freelancer, Zero Expenses, 8% Wins by Maximum Margin
+
+**Scenario code:** SC-ZERO-EXPENSE
+**Description:** Fiverr/online graphic designer earning ₱800,000 annual gross receipts with zero documented business expenses. This is the purest demonstration of 8% dominance: when expenses = 0, Path A (NTI = full gross) yields the highest IT; Path B (OSD creates 40% deduction) is better but still loses to Path C. At ₱800,000 gross with zero expenses, Path C (₱44,000) saves ₱18,500 vs OSD (₱62,500) and ₱82,500 vs itemized (₱126,500). This vector also demonstrates the quarterly 8% tracker when Q1 gross is below the ₱250,000 exemption threshold (Q1 produces a NIL quarterly return because cumulative gross ₱150,000 < ₱250,000). WARN-004 fires because expense ratio = 0%, which is a reminder to verify that no deductible business expenses were incurred.
+
+**Zero-expense business model note:** Online freelancers on global platforms (Fiverr, 99designs, DesignCrowd) who work entirely from home with client-provided tools often have genuinely zero deductible expenses. Software subscriptions, equipment, and home office expenses may exist but are often not documented for tax purposes, or the freelancer deliberately accepts zero deductions to remain on Path C without documentation burden. This is valid and common.
+
+### Input (fields differing from Group 7 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `gross_receipts` | ₱800,000.00 | Annual Fiverr project completions + direct client fees; all received via GCash and PayPal |
+| All itemized expense fields | ₱0.00 | No business receipts; no subscriptions documented |
+| `itemized_expenses.nolco_available` | [] | No prior losses |
+| `cwt_2307_entries` | [] | All clients are individuals (non-withholding) |
+| `prior_quarterly_payments` | [{period: Q1_2025, amount: 0.00}, {period: Q2_2025, amount: 8000.00}, {period: Q3_2025, amount: 16000.00}] | Q1 NIL (cumul GR below ₱250K); Q2 and Q3 payable (see quarterly tracker) |
+| `elected_regime` | null | Optimizer mode |
+
+**Total itemized expenses:** ₱0.00 (0.0% of gross receipts)
+
+**Quarterly income distribution (Fiverr income — slow Q1, steady build):**
+
+| Quarter | Quarterly GR | Cumulative GR |
+|---------|-------------|--------------|
+| Q1 (Jan–Mar 2025) | ₱150,000.00 | ₱150,000.00 |
+| Q2 (Apr–Jun 2025) | ₱200,000.00 | ₱350,000.00 |
+| Q3 (Jul–Sep 2025) | ₱200,000.00 | ₱550,000.00 |
+| Q4 (Oct–Dec 2025) | ₱250,000.00 | ₱800,000.00 |
+
+### Expected Intermediate Values
+
+**PL-02:**
+- `net_gross_receipts` = ₱800,000.00
+- `taxpayer_tier` = MICRO
+- `income_type` = PURELY_SE
+- `taxpayer_class` = SERVICE_PROVIDER
+
+**PL-04:**
+- `path_c_eligible` = true; `ineligibility_reasons` = []
+
+**PL-05 (Itemized Deductions):**
+- `total_itemized_deductions` = ₱0.00
+- `ear_cap` = ₱800,000 × 0.01 = ₱8,000.00; no EAR expense claimed
+- `nolco_applied` = ₱0.00
+- `net_income_before_nolco` = ₱800,000 − ₱0 = ₱800,000.00
+
+**PL-06 (OSD):**
+- `osd_amount` = ₱800,000 × 0.40 = ₱320,000.00
+- `nti_path_b` = ₱480,000.00
+
+**PL-07 (CWT):** `total_cwt` = ₱0.00
+
+**PL-08 (Path A):**
+- `nti_path_a` = ₱800,000.00 (no deductions)
+- `income_tax_path_a` = graduated_tax_2023(₱800,000) = ₱22,500 + (₱800,000 − ₱400,000) × 0.20 = 22,500 + 80,000 = **₱102,500.00**
+- `percentage_tax_path_a` = ₱800,000 × 0.03 = **₱24,000.00**
+- `total_tax_path_a` = **₱126,500.00**
+
+**PL-09 (Path B):**
+- `nti_path_b` = ₱480,000.00
+- `income_tax_path_b` = graduated_tax_2023(₱480,000) = ₱22,500 + (₱480,000 − ₱400,000) × 0.20 = 22,500 + 16,000 = **₱38,500.00**
+- `percentage_tax_path_b` = **₱24,000.00**
+- `total_tax_path_b` = **₱62,500.00**
+
+**PL-10 (Path C):**
+- `eight_pct_base` = ₱800,000 − ₱250,000 = ₱550,000.00
+- `income_tax_path_c` = ₱550,000 × 0.08 = **₱44,000.00**
+- `percentage_tax_path_c` = **₱0.00** (waived)
+- `total_tax_path_c` = **₱44,000.00**
+
+**PL-13 (Compare):**
+- Path A: ₱126,500.00
+- Path B: ₱62,500.00
+- Path C: ₱44,000.00 ← **MINIMUM**
+- `recommended_path` = PATH_C
+- `savings_vs_next_best` = ₱62,500 − ₱44,000 = **₱18,500.00** (vs Path B)
+- `savings_vs_worst` = ₱126,500 − ₱44,000 = **₱82,500.00** (vs Path A)
+
+**PL-14 (Balance Payable — Path C):**
+- `income_tax_due` = ₱44,000.00
+- `percentage_tax_due` = ₱0.00
+- `total_tax_due` = ₱44,000.00
+- `cwt_credits` = ₱0.00
+- `quarterly_it_paid` = ₱0 + ₱8,000 + ₱16,000 = ₱24,000.00
+- `balance_payable_raw` = ₱44,000 + ₱0 − ₱0 − ₱24,000 = ₱20,000.00
+- `balance_payable` = ₱20,000.00
+- `overpayment` = ₱0.00
+
+**PL-15 (Form Selection):**
+- `form` = FORM_1701A (pure SE, 8% rate elected, no itemized deductions, no NOLCO)
+- `form_section` = PART_IV_B
+
+**PL-16 (Penalties):** ₱0.00
+
+**Warning generation:**
+- WARN-004 (`WARN_VERY_LOW_EXPENSES`): **fires** — total itemized expenses = ₱0.00 = 0.0% of gross receipts, below the 5% advisory threshold. Message: "No business expenses were entered (0.0% of gross receipts). If you incurred any deductible business expenses (software subscriptions, equipment, internet, professional fees), entering them may reduce your tax. Under the recommended 8% flat rate, deductions are not used in the computation, but they appear on Form 1701A for completeness."
+- WARN-003 (`WARN_NO_2307_ENTRIES`): does **NOT** fire — WARN-003 condition requires recommended_path = PATH_A; here PATH_C is recommended.
+
+**Quarterly 8% tracker (cumulative method, CR-008):**
+
+| Quarter | Cumul GR | 8% Base (max(GR−250K,0)) | Cumul IT Due | Prior Q Paid | Q Payable | Notes |
+|---------|---------|------------------------|------------|-------------|-----------|-------|
+| Q1 (Jan–Mar) | ₱150,000.00 | max(150,000−250,000, 0) = ₱0.00 | ₱0.00 | ₱0.00 | ₱0.00 (NIL) | Cumul GR below ₱250K exemption; no tax payable |
+| Q2 (Apr–Jun) | ₱350,000.00 | 350,000−250,000 = ₱100,000.00 | ₱8,000.00 | ₱0.00 | **₱8,000.00** | First non-NIL quarter; GR crosses ₱250K |
+| Q3 (Jul–Sep) | ₱550,000.00 | 550,000−250,000 = ₱300,000.00 | ₱24,000.00 | ₱8,000.00 | **₱16,000.00** | Cumulative method: 24,000 − 8,000 |
+| Annual | ₱800,000.00 | 800,000−250,000 = ₱550,000.00 | ₱44,000.00 | ₱24,000.00 | **₱20,000.00** | Annual balance = 44,000 − 24,000 |
+
+**Total quarterly IT paid:** ₱0 + ₱8,000 + ₱16,000 = **₱24,000.00**
+**Annual balance payable:** ₱44,000 − ₱24,000 = **₱20,000.00** (due April 15, 2026)
+
+### Expected Final Output
+
+```
+TaxComputationResult {
+  tax_year: 2025,  filing_period: ANNUAL,
+  taxpayer_type: PURELY_SE,  taxpayer_tier: MICRO,
+
+  regime_comparison: {
+    path_a: { eligible: true, nti: 800000.00, itemized_deductions: 0.00,
+              income_tax: 102500.00, percentage_tax: 24000.00, total_tax: 126500.00 },
+    path_b: { eligible: true, nti: 480000.00, osd_amount: 320000.00,
+              income_tax: 38500.00, percentage_tax: 24000.00, total_tax: 62500.00 },
+    path_c: { eligible: true, tax_base: 550000.00, income_tax: 44000.00,
+              percentage_tax: 0.00, total_tax: 44000.00, ineligibility_reasons: [] },
+    recommended_path: PATH_C,
+    savings_vs_next_best: 18500.00,
+    savings_vs_worst: 82500.00
+  },
+
+  selected_path: PATH_C,
+  income_tax_due: 44000.00,
+  percentage_tax_due: 0.00,
+  total_tax_due: 44000.00,
+  cwt_credits: 0.00,
+  quarterly_it_paid: 24000.00,
+  balance_payable: 20000.00,
+  overpayment: 0.00,
+  overpayment_disposition: null,
+  form: FORM_1701A,  form_section: PART_IV_B,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [WARN-004],
+  manual_review_flags: [],  ineligibility_notifications: [],
+
+  quarterly_tracker: [
+    { quarter: 1, cumul_gross: 150000.00, eight_pct_base: 0.00,
+      cumul_it_due: 0.00, prior_paid: 0.00, quarterly_payable: 0.00, is_nil: true,
+      note: "Cumulative gross ₱150,000 below ₱250,000 8% exemption; tax base = 0" },
+    { quarter: 2, cumul_gross: 350000.00, eight_pct_base: 100000.00,
+      cumul_it_due: 8000.00, prior_paid: 0.00, quarterly_payable: 8000.00, is_nil: false },
+    { quarter: 3, cumul_gross: 550000.00, eight_pct_base: 300000.00,
+      cumul_it_due: 24000.00, prior_paid: 8000.00, quarterly_payable: 16000.00, is_nil: false },
+    { quarter: "annual_reconciliation", total_gross: 800000.00, eight_pct_base: 550000.00,
+      annual_it: 44000.00, total_prior_paid: 24000.00, annual_balance: 20000.00 }
+  ]
+}
+```
+
+### Verification
+
+- **Path A NTI:** 800,000 (no expenses); IT = graduated_tax_2023(800,000) = 22,500 + (800,000 − 400,000) × 0.20 = 22,500 + 80,000 = **₱102,500.00** ✓; PT = **₱24,000.00** ✓; total = **₱126,500.00** ✓
+- **Path B NTI:** 800,000 × 0.60 = **₱480,000.00** ✓; IT = 22,500 + 80,000 × 0.20 = **₱38,500.00** ✓; total = **₱62,500.00** ✓
+- **Path C base:** 800,000 − 250,000 = **₱550,000.00** ✓; IT = **₱44,000.00** ✓
+- **Q1 base:** max(150,000 − 250,000, 0) = **₱0** ✓; payable = ₱0 (NIL) ✓
+- **Q2 base:** 350,000 − 250,000 = **₱100,000** ✓; IT = 100,000 × 0.08 = **₱8,000** ✓; prior paid = ₱0; payable = **₱8,000** ✓
+- **Q3 base:** 550,000 − 250,000 = **₱300,000** ✓; IT = 300,000 × 0.08 = **₱24,000** cumul ✓; prior paid ₱8,000; payable = **₱16,000** ✓
+- **Annual balance:** 44,000 − 24,000 = **₱20,000** ✓
+- **WARN-004:** expenses 0% < 5% threshold → fires ✓; WARN-003 does NOT fire (PATH_C recommended, not PATH_A) ✓
+- **OSD vs 8% comparison at ₱800K:** OSD saves ₱64,000 vs itemized (102,500−38,500) but 8% saves additional ₱18,500 vs OSD → 8% saves ₱82,500 total vs doing nothing (itemized with ₱0 expenses) ✓
+
+**Legal basis:** 8% flat rate: NIRC Sec. 24(A)(2)(b) as amended by TRAIN. ₱250,000 exemption threshold: same section. PT waiver: RR 8-2018 Sec. 2(B). WARN-004: error-states.md WARN_VERY_LOW_EXPENSES. Quarterly cumulative method: NIRC Sec. 74-76; CR-008. Form 1701A: BIR RA 11976 EOPT.
+
+---
+
+## TV-EX-G7-003: SC-HIGH-ENTERTAIN — EAR Cap Applied (₱42,000 Disallowed), Path C Wins
+
+**Scenario code:** SC-HIGH-ENTERTAIN
+**Description:** Marketing and public relations consultant earning ₱1,800,000 annual gross receipts who claims ₱60,000 in entertainment, amusement, and recreation (EAR) expenses. The statutory EAR cap for service providers is 1% of gross receipts = ₱18,000 per RR 10-2002 Sec. 3. The ₱42,000 excess over the cap is automatically disallowed, reducing total allowable itemized deductions from ₱780,000 (claimed) to ₱738,000 (allowed). Even with the cap applied, Path A total (₱222,000) still loses to Path C (₱124,000) by ₱98,000. This vector demonstrates: (1) EAR cap computation and disallowance; (2) WARN-015 fires with exact peso amounts; (3) Path C remains optimal despite substantial documented expenses at 41% of gross; (4) counterfactual without cap still shows Path C winning (cap adds ₱10,500 extra to Path A but does not change winner).
+
+**EAR cap rule (RR 10-2002 Sec. 3):**
+- Service provider: EAR cap = 1.0% of gross receipts
+- Goods seller: EAR cap = 0.5% of net sales (gross sales − sales returns and allowances)
+- Mixed (service + goods): cap computed separately on each income stream, then summed
+- EAR includes: client entertainment meals, events, golf, transportation expenses for entertainment purposes
+- EAR does NOT include: ordinary transportation (to work, between offices — deductible under travel); ordinary meals (not entertainment-related)
+- The cap applies to the TOTAL of all EAR expenses, not per-category
+
+**Counterfactual analysis (if full ₱60,000 EAR were allowed — no cap):**
+- Total deductions = ₱780,000 (41% would become uncapped)
+- Path A NTI = 1,800,000 − 780,000 = ₱1,020,000
+- Path A IT = 102,500 + (1,020,000 − 800,000) × 0.25 = 102,500 + 55,000 = ₱157,500
+- Path A total = ₱157,500 + ₱54,000 = ₱211,500
+- Path C = ₱124,000 — **still wins by ₱87,500** even without the EAR cap
+- EAR cap costs the taxpayer ₱10,500 in additional Path A tax (₱222,000 − ₱211,500)
+
+### Input (fields differing from Group 7 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `gross_receipts` | ₱1,800,000.00 | Annual PR consulting retainers and project fees |
+| `itemized_expenses.salaries_wages` | ₱480,000.00 | 2 junior staff: account manager ₱25,000/mo + coordinator ₱15,000/mo × 12 |
+| `itemized_expenses.rent` | ₱120,000.00 | Small office unit ₱10,000/month × 12 |
+| `itemized_expenses.utilities` | ₱60,000.00 | Electricity, internet, water ₱5,000/month |
+| `itemized_expenses.communication` | ₱36,000.00 | Business phones, collaboration tools ₱3,000/month |
+| `itemized_expenses.ear_expense` | ₱60,000.00 | Client entertainment (dinners, events, golf): ₱5,000/month; EXCEEDS 1% cap |
+| `itemized_expenses.other_expenses` | ₱24,000.00 | Bank service charges, professional liability insurance |
+| All other itemized expense fields | ₱0.00 | |
+| `cwt_2307_entries` | [] | All clients pay gross fees; no withholding |
+| `prior_quarterly_payments` | [] | No quarterly 1701Q payments made |
+| `elected_regime` | null | Optimizer mode |
+
+**Total claimed itemized expenses:** ₱480,000 + ₱120,000 + ₱60,000 + ₱36,000 + ₱60,000 + ₱24,000 = **₱780,000.00** (43.3% of gross receipts)
+
+### Expected Intermediate Values
+
+**PL-02:**
+- `net_gross_receipts` = ₱1,800,000.00
+- `taxpayer_tier` = MICRO
+- `income_type` = PURELY_SE
+- `taxpayer_class` = SERVICE_PROVIDER
+
+**PL-04:**
+- `path_c_eligible` = true; `ineligibility_reasons` = []
+
+**PL-05 (Itemized Deductions — EAR Cap Applied):**
+- `ear_cap` = ₱1,800,000 × 0.01 = **₱18,000.00** (service provider: 1% of gross receipts per RR 10-2002 Sec. 3)
+- `ear_expense_claimed` = ₱60,000.00
+- `ear_disallowance` = max(₱60,000 − ₱18,000, 0) = **₱42,000.00**
+- `ear_expense_allowed` = ₱18,000.00
+- `total_itemized_claimed` = ₱780,000.00
+- `total_itemized_deductions_allowed` = ₱780,000 − ₱42,000 = **₱738,000.00** (41.0% of GR)
+- `nolco_applied` = ₱0.00
+- `net_income_before_nolco` = ₱1,800,000 − ₱738,000 = **₱1,062,000.00**
+
+**WARN-015 fires here** (PL-05 step): `WARN_EAR_CAP_APPLIED` — "Entertainment, amusement, and recreation expenses claimed (₱60,000) exceed the statutory cap of ₱18,000 (1.0% of ₱1,800,000 gross receipts, per RR 10-2002 Sec. 3 for service providers). ₱42,000 has been disallowed and added back. Only ₱18,000 is deductible as entertainment, amusement, and recreation expense."
+
+**PL-06 (OSD):**
+- `osd_amount` = ₱1,800,000 × 0.40 = **₱720,000.00**
+- `nti_path_b` = ₱1,800,000 − ₱720,000 = **₱1,080,000.00**
+
+**PL-07 (CWT):**
+- `total_cwt` = ₱0.00
+
+**PL-08 (Path A — Itemized with EAR cap applied):**
+- `nti_path_a` = **₱1,062,000.00**
+- `income_tax_path_a` = graduated_tax_2023(₱1,062,000)
+  = ₱102,500 + (₱1,062,000 − ₱800,000) × 0.25
+  = ₱102,500 + ₱262,000 × 0.25
+  = ₱102,500 + ₱65,500.00
+  = **₱168,000.00**
+- `percentage_tax_path_a` = ₱1,800,000 × 0.03 = **₱54,000.00**
+- `total_tax_path_a` = **₱222,000.00**
+
+**PL-09 (Path B — OSD, EAR cap does not apply to OSD):**
+- `nti_path_b` = **₱1,080,000.00**
+- `income_tax_path_b` = graduated_tax_2023(₱1,080,000)
+  = ₱102,500 + (₱1,080,000 − ₱800,000) × 0.25
+  = ₱102,500 + ₱70,000.00
+  = **₱172,500.00**
+- `percentage_tax_path_b` = **₱54,000.00**
+- `total_tax_path_b` = **₱226,500.00**
+
+**PL-10 (Path C):**
+- `eight_pct_base` = ₱1,800,000 − ₱250,000 = **₱1,550,000.00**
+- `income_tax_path_c` = ₱1,550,000 × 0.08 = **₱124,000.00**
+- `percentage_tax_path_c` = **₱0.00** (waived)
+- `total_tax_path_c` = **₱124,000.00**
+
+**PL-13 (Compare):**
+- Path A: ₱222,000.00
+- Path B: ₱226,500.00
+- Path C: ₱124,000.00 ← **MINIMUM**
+- `recommended_path` = PATH_C
+- `savings_vs_next_best` = ₱222,000 − ₱124,000 = **₱98,000.00** (vs Path A, the second-cheapest)
+- `savings_vs_worst` = ₱226,500 − ₱124,000 = **₱102,500.00** (vs Path B, the most expensive)
+
+**Note on Path A vs Path B ordering:** At 41% allowed expense ratio (after cap), Path A NTI (₱1,062,000) is LOWER than Path B NTI (₱1,080,000) because 41% > OSD rate of 40%. However, because OSD has no PT interaction and path A does not either, Path A IT (₱168,000) < Path B IT (₱172,500). Yet Path A total (₱222,000) < Path B total (₱226,500). This is consistent: allowed itemized > OSD deduction (₱738K > ₱720K) → Path A NTI lower → Path A IT lower → Path A total lower. Path A narrowly beats Path B when allowed expense ratio > 40% (the OSD rate).
+
+**PL-14 (Balance Payable — Path C):**
+- `income_tax_due` = ₱124,000.00
+- `percentage_tax_due` = ₱0.00
+- `total_tax_due` = ₱124,000.00
+- `cwt_credits` = ₱0.00
+- `quarterly_it_paid` = ₱0.00
+- `balance_payable` = ₱124,000.00
+- `overpayment` = ₱0.00
+
+**PL-15 (Form Selection):**
+- `form` = FORM_1701A (purely SE, 8% rate, no NOLCO, no itemized on final form)
+- `form_section` = PART_IV_B
+
+**PL-16 (Penalties):** ₱0.00
+
+**Warning generation:**
+- WARN-015 (`WARN_EAR_CAP_APPLIED`): **fires** (at PL-05) — EAR claimed ₱60,000 > cap ₱18,000; ₱42,000 disallowed
+- WARN-004 (`WARN_VERY_LOW_EXPENSES`): does **NOT** fire — allowed expenses ₱738,000 / ₱1,800,000 = 41.0% > 5% threshold
+- WARN-003 (`WARN_NO_2307_ENTRIES`): does **NOT** fire — PATH_C recommended, not PATH_A
+
+### Expected Final Output
+
+```
+TaxComputationResult {
+  tax_year: 2025,  filing_period: ANNUAL,
+  taxpayer_type: PURELY_SE,  taxpayer_tier: MICRO,
+
+  regime_comparison: {
+    path_a: {
+      eligible: true,
+      nti: 1062000.00,
+      itemized_deductions_claimed: 780000.00,
+      ear_cap_disallowance: 42000.00,
+      itemized_deductions_allowed: 738000.00,
+      income_tax: 168000.00,
+      percentage_tax: 54000.00,
+      total_tax: 222000.00
+    },
+    path_b: {
+      eligible: true,
+      nti: 1080000.00,
+      osd_amount: 720000.00,
+      income_tax: 172500.00,
+      percentage_tax: 54000.00,
+      total_tax: 226500.00
+    },
+    path_c: {
+      eligible: true,
+      tax_base: 1550000.00,
+      income_tax: 124000.00,
+      percentage_tax: 0.00,
+      total_tax: 124000.00,
+      ineligibility_reasons: []
+    },
+    recommended_path: PATH_C,
+    savings_vs_next_best: 98000.00,
+    savings_vs_worst: 102500.00
+  },
+
+  selected_path: PATH_C,
+  income_tax_due: 124000.00,
+  percentage_tax_due: 0.00,
+  total_tax_due: 124000.00,
+  cwt_credits: 0.00,
+  quarterly_it_paid: 0.00,
+  balance_payable: 124000.00,
+  overpayment: 0.00,
+  overpayment_disposition: null,
+  form: FORM_1701A,  form_section: PART_IV_B,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [WARN-015],
+  manual_review_flags: [],  ineligibility_notifications: [],
+
+  ear_cap_detail: {
+    ear_expense_claimed: 60000.00,
+    ear_cap: 18000.00,
+    ear_cap_basis: "1.0% of gross_receipts = 0.01 × 1,800,000",
+    ear_cap_rule: "RR 10-2002 Sec. 3 — service provider",
+    ear_disallowance: 42000.00,
+    ear_expense_allowed: 18000.00,
+    total_itemized_before_cap: 780000.00,
+    total_itemized_after_cap: 738000.00
+  }
+}
+```
+
+### Verification
+
+- **EAR cap:** 1% × 1,800,000 = **₱18,000.00** ✓; claimed ₱60,000 > ₱18,000 → disallowance = **₱42,000.00** ✓; allowed = **₱18,000.00** ✓
+- **Total allowed deductions:** 780,000 − 42,000 = **₱738,000.00** ✓ (41.0% of GR)
+- **Path A NTI:** 1,800,000 − 738,000 = **₱1,062,000.00** ✓
+- **Path A IT:** bracket 4: 102,500 + (1,062,000 − 800,000) × 0.25 = 102,500 + 65,500 = **₱168,000.00** ✓
+- **PT:** 1,800,000 × 0.03 = **₱54,000.00** ✓; total A = **₱222,000.00** ✓
+- **Path B NTI:** 1,800,000 × 0.60 = **₱1,080,000.00** ✓; IT = 102,500 + 70,000 = **₱172,500.00** ✓; total B = **₱226,500.00** ✓
+- **Path C base:** 1,800,000 − 250,000 = **₱1,550,000.00** ✓; IT = **₱124,000.00** ✓
+- **Path A < Path B (when allowed_exp > OSD):** ₱738K > ₱720K (OSD amount) → allowed itemized > OSD → Path A NTI (₱1,062K) < Path B NTI (₱1,080K) → Path A IT < Path B IT → Path A total (₱222K) < Path B total (₱226.5K) ✓
+- **Savings vs next best (A):** 222,000 − 124,000 = **₱98,000.00** ✓
+- **Savings vs worst (B):** 226,500 − 124,000 = **₱102,500.00** ✓
+- **Counterfactual (no cap, full ₱60K):** NTI = 1,020,000; IT = 102,500 + 55,000 = 157,500; total A = 211,500; Path C still wins by ₱87,500; cap adds ₱10,500 to Path A cost ✓
+- **WARN-015 fires:** ₱60,000 > ₱18,000 EAR cap → fires at PL-05 step ✓
+- **Expense ratio note:** 738,000/1,800,000 = 41.0% exactly; OSD gives 40% deduction; Path A beats Path B because 41% > 40%; at exactly 40% expense ratio, Paths A and B tie (see SC-BE-OSD-ITEMIZED in edge-cases.md) ✓
+
+**Legal basis:** EAR cap: RR 10-2002 Sec. 3 (service providers: 1% of gross receipts; goods sellers: 0.5% of net sales). Itemized deductions basis: NIRC Sec. 34(A)(1)(a). Graduated tax: CR-002. PT waiver under 8%: NIRC Sec. 24(A)(2)(b). WARN-015: error-states.md `WARN_EAR_CAP_APPLIED`. Form 1701A: BIR RA 11976 EOPT.
+
+---
+
+## GROUP 7 SUMMARY TABLE
+
+| Vector | Scenario | GR | Key Deduction Feature | Optimal Path | Total Tax | Savings vs Next | Key Insight |
+|--------|---------|-----|----------------------|-------------|-----------|-----------------|-------------|
+| TV-EX-G7-001 | SC-NOLCO | ₱1,200,000 | ₱500K NOLCO applied → NTI ₱300K | Path A (Itemized) | ₱43,500 | ₱32,500 vs C | NOLCO changes winner from C to A; all quarterly returns NIL |
+| TV-EX-G7-002 | SC-ZERO-EXPENSE | ₱800,000 | Zero expenses; 8% requires no documentation | Path C (8%) | ₱44,000 | ₱18,500 vs B | Q1 NIL (GR below ₱250K); WARN-004 fires; Path A worst when expenses = 0 |
+| TV-EX-G7-003 | SC-HIGH-ENTERTAIN | ₱1,800,000 | EAR cap ₱18K (claimed ₱60K); ₱42K disallowed | Path C (8%) | ₱124,000 | ₱98,000 vs A | EAR cap raises Path A by ₱10,500; Path C wins regardless; WARN-015 fires |
+
+**Key insights for Group 7:**
+
+1. **NOLCO is the only deduction that can flip the regime recommendation from C to A.** In TV-EX-G7-001, without NOLCO, Path C wins at ₱76,000. With ₱500,000 of prior losses applied under Path A, the IT collapses to ₱7,500, making Path A the winner at ₱43,500. The optimizer must present the NOLCO-enhanced Path A cost (not the hypothetical without NOLCO) in the comparison table. WARN-011 fires only when NOLCO is entered but Path C/B is still recommended — not when Path A wins.
+
+2. **Zero-expense freelancers get maximum 8% savings.** At zero expenses, Path A NTI equals gross receipts, putting the taxpayer in the highest possible graduated bracket for their income level. Path B OSD reduces this by 40%, but 8% still wins by ₱18,500 at ₱800K gross because the 8% base is taxed at only 8% while the OSD NTI (₱480K) is taxed at 20% marginal rate. The Q1 NIL return (cumul GR ₱150K < ₱250K exemption) demonstrates that early-year taxpayers with low Q1 income pay nothing on that quarter under Path C.
+
+3. **EAR cap enforcement uses PL-05 (itemized deductions step) — before the regime comparison.** The engine computes allowed deductions first, then all three paths. Path A receives the capped amount; Paths B and C are unaffected by EAR (OSD is 40% of gross regardless; 8% has no deductions). When EAR cap fires, the results table must display both claimed and allowed amounts, so the taxpayer understands why Path A's cost is higher than their expense inputs suggest.
+
+4. **The EAR cap does not change which path is optimal in this scenario.** Even without the cap (full ₱60K allowed), Path C wins by ₱87,500. The cap adds ₱10,500 to Path A's cost but does not change the winner. This is true for most sub-₱3M taxpayers — EAR cap is a compliance issue, not a regime selection issue.
+
+5. **Path A beats Path B when allowed expense ratio > 40%.** In TV-EX-G7-003, allowed expenses = 41.0% (after cap), which is above the OSD rate of 40%. This means Path A provides a larger deduction than Path B OSD, producing lower NTI and lower IT under Path A. Both still lose to Path C. The tie point (Path A = Path B) is exactly 40% expense ratio (see SC-BE-OSD-ITEMIZED in edge-cases.md).
 
