@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 106
-- Analyzed: 101
-- Pending: 5
-- Convergence: 95%
+- Analyzed: 102
+- Pending: 4
+- Convergence: 96%
 
 ---
 
@@ -142,7 +142,7 @@
 - [x] Generate shapes.txt — route geometry from best available sources
 - [x] Generate trips.txt — trip patterns for each route
 - [x] Generate fare_attributes.txt and fare_rules.txt — fare structure per route/mode
-- [ ] Generate frequencies.txt — headway estimates for peak/off-peak
+- [x] Generate frequencies.txt — headway estimates for peak/off-peak
 - [ ] Generate calendar.txt — service patterns (weekday vs weekend vs holiday)
 - [ ] GTFS validation — run against GTFS specification, fix errors
 - [ ] Coverage quality report — stats on routes mapped, confidence distribution, known gaps
