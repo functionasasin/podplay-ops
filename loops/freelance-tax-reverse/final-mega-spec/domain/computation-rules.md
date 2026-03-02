@@ -4133,7 +4133,9 @@ function generate_form_2551q(input: Form2551QInput) -> Form2551QOutput:
   // STEP 12: Construct and return output
   return Form2551QOutput(
     item_1_calendar_year      = input.is_calendar_year,
-    item_2_year_ended         = f"12/{input.taxable_year}" if input.is_calendar_year else f"...",
+    // Individual self-employed taxpayers in the Philippines must use calendar year (Jan 1–Dec 31)
+    // per NIRC. The engine validates is_calendar_year = true at PL-01; this branch is unreachable.
+    item_2_year_ended         = f"12/{input.taxable_year}",   // Calendar year: always "12/YYYY"
     item_3_quarter            = {Q1: "1st", Q2: "2nd", Q3: "3rd", Q4: "4th"}[input.quarter],
     item_4_amended            = input.is_amended,
     item_5_sheets_attached    = 0,
@@ -4236,7 +4238,19 @@ function generate_annual_pt_schedule(
           quarterly_gross_sales = quarterly_gross_sales[0],
           income_tax_rate_election = EIGHT_PERCENT,
           government_cwt_pct_tax = govt_cwt_per_quarter[0],
-          // ... other taxpayer fields from taxpayer struct
+          taxpayer_tin          = taxpayer.tin,
+          taxpayer_name         = f"{taxpayer.last_name}, {taxpayer.first_name} {taxpayer.middle_name}".strip(),
+          rdo_code              = taxpayer.rdo_code,
+          registered_address    = taxpayer.registered_address,
+          zip_code              = taxpayer.zip_code,
+          line_of_business      = taxpayer.line_of_business,
+          telephone_number      = taxpayer.telephone_number,
+          email_address         = taxpayer.email_address,
+          is_calendar_year      = true,             // always true for individual taxpayers
+          is_amended            = false,
+          prior_payment_on_original_return = 0,
+          other_credits         = 0,
+          other_credits_description = "",
         )
         quarters_output.append(generate_form_2551q(input))
       else:
@@ -4260,7 +4274,19 @@ function generate_annual_pt_schedule(
       quarterly_gross_sales = quarterly_gross_sales[q_index],
       income_tax_rate_election = q1_election,
       government_cwt_pct_tax = govt_cwt_per_quarter[q_index],
-      // ... other taxpayer fields from taxpayer struct
+      taxpayer_tin          = taxpayer.tin,
+      taxpayer_name         = f"{taxpayer.last_name}, {taxpayer.first_name} {taxpayer.middle_name}".strip(),
+      rdo_code              = taxpayer.rdo_code,
+      registered_address    = taxpayer.registered_address,
+      zip_code              = taxpayer.zip_code,
+      line_of_business      = taxpayer.line_of_business,
+      telephone_number      = taxpayer.telephone_number,
+      email_address         = taxpayer.email_address,
+      is_calendar_year      = true,             // always true for individual taxpayers
+      is_amended            = false,
+      prior_payment_on_original_return = 0,
+      other_credits         = 0,
+      other_credits_description = "",
     )
     quarters_output.append(generate_form_2551q(input))
 
@@ -5843,25 +5869,54 @@ function compute_1701Q_mixed_income(
   
   if regime == "EIGHT_PCT":
     return compute_1701Q_eight_percent(
-      is_purely_self_employed = false,  // FORCES Item 52 = ₱0
+      quarter                     = quarter,
+      taxable_year                = taxable_year,
+      is_purely_self_employed     = false,          // FORCES Item 52 = ₱0 (no ₱250K deduction)
       gross_receipts_this_quarter = business_gross_receipts,
-      prior_cumulative_gross = prior_cumulative_gross,
-      ... // other fields
+      non_op_income_this_quarter  = 0,              // non-op income excluded from quarterly 1701Q business calc
+      prior_cumulative_gross      = prior_cumulative_gross,
+      prior_year_excess_credits   = prior_year_excess_credits,
+      tax_paid_prior_quarters     = tax_paid_prior_quarters,
+      cwt_claimed_prior_quarters  = cwt_claimed_prior_quarters,
+      cwt_new_this_quarter        = cwt_new_this_quarter,
+      foreign_tax_credits         = 0,
+      other_credits               = 0,
     )
-  
+
   elif regime == "GRADUATED_OSD":
-    return compute_1701Q_graduated_osd(
-      cumulative_gross_receipts = business_gross_receipts,  // current quarter
-      prior_quarters_nti = prior_quarters_business_nti,
-      ... // other fields
-    )
-  
+    return compute_1701Q_graduated_osd(QuarterlyOSDInput(
+      taxpayer_id                  = "",             // not needed for computation; caller sets if required
+      taxable_year                 = taxable_year,
+      quarter                      = quarter,
+      is_mixed_income              = true,           // always true in this function
+      is_trader                    = false,          // mixed income business assumed service-based
+      cumulative_gross_receipts    = business_gross_receipts,
+      cumulative_cost_of_sales     = 0,              // service provider; no COGS
+      cumulative_non_op_income     = 0,              // non-op income excluded from quarterly business calc
+      prior_year_excess_credits    = prior_year_excess_credits,
+      tax_paid_prior_quarters      = tax_paid_prior_quarters,
+      cwt_claimed_prior_quarters   = cwt_claimed_prior_quarters,
+      cwt_new_this_quarter         = cwt_new_this_quarter,
+      prior_year_amended_payment   = 0,              // not an amendment
+      foreign_tax_credits          = 0,
+      other_credits                = 0,
+    ))
+
   elif regime == "GRADUATED_ITEMIZED":
     return compute_1701Q_graduated_itemized(
-      gross_receipts_this_quarter = business_gross_receipts,
+      quarter                       = quarter,
+      taxable_year                  = taxable_year,
+      gross_receipts_this_quarter   = business_gross_receipts,
+      cost_of_sales_this_quarter    = 0,             // service provider; no COGS
       allowable_deductions_this_qtr = business_deductions_this_qtr,
-      prior_quarters_nti = prior_quarters_business_nti,
-      ... // other fields
+      non_op_income_this_quarter    = 0,             // non-op income excluded from quarterly business calc
+      prior_quarters_nti            = prior_quarters_business_nti,
+      prior_year_excess_credits     = prior_year_excess_credits,
+      tax_paid_prior_quarters       = tax_paid_prior_quarters,
+      cwt_claimed_prior_quarters    = cwt_claimed_prior_quarters,
+      cwt_new_this_quarter          = cwt_new_this_quarter,
+      foreign_tax_credits           = 0,
+      other_credits                 = 0,
     )
 ```
 
@@ -5982,9 +6037,50 @@ function compute_first_quarter_mid_year_registrant(
       foreign_tax_credits = 0,
       other_credits = 0,
     )
-  else:
-    // Similar for graduated paths with ₱0 prior NTI and ₱0 prior payments
-    ...
+  elif regime == "GRADUATED_OSD":
+    // OSD (40% of gross receipts). No itemized deductions needed.
+    // Prior NTI = ₱0 (no prior quarterly returns for this new registrant in this taxable year).
+    return compute_1701Q_graduated_osd(QuarterlyOSDInput(
+      taxpayer_id                  = "",
+      taxable_year                 = current_year,
+      quarter                      = quarter_of_registration,
+      is_mixed_income              = not is_purely_se,
+      is_trader                    = false,          // service-based assumed for first-quarter
+      cumulative_gross_receipts    = receipts_from_registration,
+      cumulative_cost_of_sales     = 0,              // service provider; no COGS
+      cumulative_non_op_income     = 0,              // no non-operating income in first quarter
+      prior_year_excess_credits    = 0,              // no prior year for new registrant
+      tax_paid_prior_quarters      = 0,              // no prior quarterly returns this year
+      cwt_claimed_prior_quarters   = 0,
+      cwt_new_this_quarter         = sum_cwt_since_registration,
+      prior_year_amended_payment   = 0,
+      foreign_tax_credits          = 0,
+      other_credits                = 0,
+    ))
+
+  elif regime == "GRADUATED_ITEMIZED":
+    // Itemized deductions. The caller must separately compute sum of allowable deductions
+    // from registration date to quarter end and pass as allowable_deductions_this_qtr.
+    // For this first return, prior_quarters_nti = ₱0.
+    return compute_1701Q_graduated_itemized(
+      quarter                       = quarter_of_registration,
+      taxable_year                  = current_year,
+      gross_receipts_this_quarter   = receipts_from_registration,
+      cost_of_sales_this_quarter    = 0,             // service provider; no COGS
+      allowable_deductions_this_qtr = sum_itemized_deductions_since_registration,
+      non_op_income_this_quarter    = 0,
+      prior_quarters_nti            = 0,             // no prior quarters this year
+      prior_year_excess_credits     = 0,             // no prior year for new registrant
+      tax_paid_prior_quarters       = 0,
+      cwt_claimed_prior_quarters    = 0,
+      cwt_new_this_quarter          = sum_cwt_since_registration,
+      foreign_tax_credits           = 0,
+      other_credits                 = 0,
+    )
+  // NOTE: sum_cwt_since_registration and sum_itemized_deductions_since_registration are
+  // computed by the caller from the CWT entries and expense records collected since
+  // registration_date. They are not parameters of this simplified helper function;
+  // the caller must prepare them before calling this function.
 ```
 
 ### CR-047.3: Short Taxable Year Flag

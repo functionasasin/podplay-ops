@@ -381,17 +381,17 @@ Place as a second `<script type="application/ld+json">` on the homepage:
 
 ### 4.3 Blog Post Schema (Article)
 
-Template — insert into every blog post page. Replace variables with actual values per post:
+Example below uses Post 1 data (slug: `8-percent-income-tax-option-philippines`, published 2026-01-15). Replace `headline`, `description`, `url`, `datePublished`, `dateModified`, `image`, and `keywords` per each post's metadata from [content-strategy.md](../seo-and-growth/content-strategy.md) Section 3.
 
 ```json
 {
   "@context": "https://schema.org",
   "@type": "Article",
-  "headline": "ACTUAL POST TITLE HERE",
-  "description": "ACTUAL META DESCRIPTION HERE",
-  "url": "https://taxklaro.ph/blog/SLUG-HERE",
-  "datePublished": "2026-MM-DD",
-  "dateModified": "2026-MM-DD",
+  "headline": "8% Income Tax Option Philippines 2026: Complete Freelancer Guide",
+  "description": "Should you choose the 8% flat income tax option? Learn eligibility rules (≤₱3M gross), how to elect it, why it saves money, and when it doesn't. Free calculator included.",
+  "url": "https://taxklaro.ph/blog/8-percent-income-tax-option-philippines",
+  "datePublished": "2026-01-15",
+  "dateModified": "2026-01-15",
   "author": {
     "@type": "Organization",
     "name": "TaxKlaro",
@@ -410,16 +410,16 @@ Template — insert into every blog post page. Replace variables with actual val
   },
   "mainEntityOfPage": {
     "@type": "WebPage",
-    "@id": "https://taxklaro.ph/blog/SLUG-HERE"
+    "@id": "https://taxklaro.ph/blog/8-percent-income-tax-option-philippines"
   },
   "image": {
     "@type": "ImageObject",
-    "url": "https://taxklaro.ph/og/blog/SLUG-HERE.png",
+    "url": "https://taxklaro.ph/og/blog/8-percent-income-tax-option-philippines.png",
     "width": 1200,
     "height": 630
   },
   "inLanguage": "en-PH",
-  "keywords": "COMMA-SEPARATED KEYWORDS FOR THIS POST",
+  "keywords": "8% income tax option philippines, 8 percent tax option bir, freelancer tax option philippines, rr 8-2018 8 percent option",
   "about": {
     "@type": "Thing",
     "name": "Philippine Income Tax"
@@ -427,7 +427,7 @@ Template — insert into every blog post page. Replace variables with actual val
 }
 ```
 
-Additional FAQPage schema for blog posts with FAQ sections:
+Additional FAQPage schema for blog posts with FAQ sections. Example uses Post 1 FAQ data. Populate one object per Q&A pair per each post's FAQ section.
 
 ```json
 {
@@ -436,10 +436,10 @@ Additional FAQPage schema for blog posts with FAQ sections:
   "mainEntity": [
     {
       "@type": "Question",
-      "name": "FAQ QUESTION 1 TEXT",
+      "name": "Can I use the 8% option if I have a day job?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "FAQ ANSWER 1 TEXT — written as a complete answer, 40–300 words."
+        "text": "Yes. Mixed-income earners (employees with freelance income) can elect the 8% option on their business income. However, the ₱250,000 deduction does NOT apply — the 8% rate is applied directly to gross receipts. Compensation income is still taxed at graduated rates from your employer's withholding (Form 2316). You must file Form 1701 (not 1701A) at year-end."
       }
     }
   ]
@@ -701,28 +701,30 @@ Place on homepage:
 
 ### 5.2 Blog Post OG Tags Template
 
+Example below uses Post 1 data (slug: `8-percent-income-tax-option-philippines`, published 2026-01-15). Replace the 7 per-post values (`og:url`, `og:title`, `og:description`, `og:image`, `og:image:alt`, `article:published_time`, `article:modified_time`) per each post from [content-strategy.md](../seo-and-growth/content-strategy.md) Section 3. The twitter:card tags mirror the og tags.
+
 ```html
 <meta property="og:type" content="article" />
-<meta property="og:url" content="https://taxklaro.ph/blog/SLUG" />
-<meta property="og:title" content="POST TITLE" />
-<meta property="og:description" content="POST META DESCRIPTION" />
-<meta property="og:image" content="https://taxklaro.ph/og/blog/SLUG.png" />
+<meta property="og:url" content="https://taxklaro.ph/blog/8-percent-income-tax-option-philippines" />
+<meta property="og:title" content="8% Income Tax Option Philippines 2026: Complete Freelancer Guide" />
+<meta property="og:description" content="Should you choose the 8% flat income tax option? Learn eligibility rules (≤₱3M gross), how to elect it, why it saves money, and when it doesn't. Free calculator included." />
+<meta property="og:image" content="https://taxklaro.ph/og/blog/8-percent-income-tax-option-philippines.png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
-<meta property="og:image:alt" content="TaxKlaro Blog — POST TITLE" />
+<meta property="og:image:alt" content="TaxKlaro Blog — 8% Income Tax Option Philippines 2026: Complete Freelancer Guide" />
 <meta property="og:site_name" content="TaxKlaro" />
 <meta property="og:locale" content="en_PH" />
-<meta property="article:published_time" content="2026-MM-DD" />
-<meta property="article:modified_time" content="2026-MM-DD" />
+<meta property="article:published_time" content="2026-01-15" />
+<meta property="article:modified_time" content="2026-01-15" />
 <meta property="article:author" content="https://taxklaro.ph/" />
 <meta property="article:section" content="Philippine Tax Guides" />
 <meta property="article:tag" content="BIR, income tax, freelancer, Philippines" />
 
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:site" content="@taxklaro" />
-<meta name="twitter:title" content="POST TITLE" />
-<meta name="twitter:description" content="POST META DESCRIPTION" />
-<meta name="twitter:image" content="https://taxklaro.ph/og/blog/SLUG.png" />
+<meta name="twitter:title" content="8% Income Tax Option Philippines 2026: Complete Freelancer Guide" />
+<meta name="twitter:description" content="Should you choose the 8% flat income tax option? Learn eligibility rules (≤₱3M gross), how to elect it, why it saves money, and when it doesn't. Free calculator included." />
+<meta name="twitter:image" content="https://taxklaro.ph/og/blog/8-percent-income-tax-option-philippines.png" />
 ```
 
 ### 5.3 Results Page OG Tags (Dynamic, Server-Rendered)
@@ -834,26 +836,27 @@ Full content of `public/sitemap.xml` — regenerated on each deployment:
 
 Template for `sitemap-blog.xml` — generated programmatically from the blog CMS/filesystem. Each blog post entry follows this pattern, with `<lastmod>` updated whenever the post is modified:
 
+The `<lastmod>` value for each entry must be the ISO 8601 date (YYYY-MM-DD) of the last edit to the post content, not the server crawl date. The value is set at publication and updated on each revision. The sitemap generator reads each post's `dateModified` frontmatter/CMS field to populate `<lastmod>`.
+
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://taxklaro.ph/blog/8-percent-income-tax-option-philippines</loc>
-    <lastmod>2026-MM-DD</lastmod>
+    <lastmod>2026-01-15</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://taxklaro.ph/blog/8-percent-vs-graduated-income-tax-calculator</loc>
-    <lastmod>2026-MM-DD</lastmod>
+    <loc>https://taxklaro.ph/blog/8-percent-vs-graduated-income-tax-philippines</loc>
+    <lastmod>2026-01-22</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.8</priority>
   </url>
-  <!-- ... one entry per blog post, in publication order ... -->
 </urlset>
 ```
 
-The `sitemap-blog.xml` must include one `<url>` entry for every blog post listed in Section 2.2. The `<lastmod>` value must be the ISO 8601 date of the last edit to the post content, not the server crawl date.
+The `sitemap-blog.xml` must include one `<url>` entry for every blog post listed in Section 2.2 of [content-strategy.md](../seo-and-growth/content-strategy.md). The complete list of 20 blog posts with their planned publication dates is defined there. The sitemap generator must iterate over all published posts in publication order to produce the full file.
 
 ### 6.4 Canonical URLs
 

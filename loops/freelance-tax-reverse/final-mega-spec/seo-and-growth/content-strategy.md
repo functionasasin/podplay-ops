@@ -1266,6 +1266,9 @@ Every blog post published on TaxKlaro must pass this checklist before going live
 ### Blog Post Schema.org Templates
 
 **FAQPage JSON-LD (add to all posts with a Q&A section)**:
+
+Example below uses Post 1 FAQ data. Replace `name` and `text` per each post's FAQ section. Add one object per question. All FAQ questions and answers for each post are specified in Section 3 of this document.
+
 ```json
 {
   "@context": "https://schema.org",
@@ -1273,10 +1276,10 @@ Every blog post published on TaxKlaro must pass this checklist before going live
   "mainEntity": [
     {
       "@type": "Question",
-      "name": "[QUESTION_TEXT]",
+      "name": "Can I use the 8% option if I have a day job (mixed income earner)?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "[ANSWER_TEXT — plain text, no HTML]"
+        "text": "Yes. Mixed-income earners (employees with freelance income) can elect the 8% option on their business income. However, the ₱250,000 deduction does NOT apply — the 8% rate is applied directly to gross receipts with no exemption. Compensation income is still taxed at the graduated rates from your employer's withholding (Form 2316). You must file Form 1701 (not 1701A) at year-end."
       }
     }
   ]
@@ -1284,31 +1287,47 @@ Every blog post published on TaxKlaro must pass this checklist before going live
 ```
 
 **HowTo JSON-LD (add to all step-by-step instructional posts)**:
+
+Example below uses Post 4 (how to file 1701Q) data. Replace `name`, `description`, and `step` entries per each instructional post's outline. Each H2 section in the post becomes one HowToStep.
+
 ```json
 {
   "@context": "https://schema.org",
   "@type": "HowTo",
-  "name": "[POST_TITLE]",
-  "description": "[META_DESCRIPTION]",
+  "name": "How to File BIR Form 1701Q for Freelancers Philippines 2026: Step-by-Step Guide",
+  "description": "Step-by-step guide to filing BIR Form 1701Q as a freelancer. Covers both 8% and graduated computation methods, cumulative totals, CWT credits, and where to pay.",
   "step": [
     {
       "@type": "HowToStep",
-      "name": "[STEP_NAME]",
-      "text": "[STEP_DESCRIPTION]"
+      "name": "Determine which schedule to use (8% or Graduated)",
+      "text": "If you elected the 8% income tax option on your first Q1 Form 1701Q, use Schedule II (Items 47–59). If you elected the graduated rate, use Schedule I (Items 36–49). Your Q1 return determines your regime for the entire year."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Enter your cumulative gross receipts year-to-date",
+      "text": "For Schedule II (8%): enter cumulative gross receipts for the year in Item 47 (current quarter period only) and retrieve Item 51 from your prior quarter return for Item 50. For Schedule I (Graduated + OSD): enter the cumulative gross receipts (Jan 1 to end of this quarter) in Item 36."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Apply credits (CWT and prior quarter payments)",
+      "text": "Enter your Form 2307 tax withheld amounts in Items 57–58. Enter the actual amount you paid on your prior quarterly returns in Item 56. The engine computes your balance due automatically."
     }
   ]
 }
 ```
 
 **BlogPosting JSON-LD (add to all blog posts)**:
+
+Example below uses Post 1 data (slug: `8-percent-income-tax-option-philippines`, published: 2026-01-15). Replace `headline`, `description`, `url`, `datePublished`, `dateModified`, and `image` per each post's metadata from Section 3 of this document.
+
 ```json
 {
   "@context": "https://schema.org",
   "@type": "BlogPosting",
-  "headline": "[SEO_TITLE]",
-  "description": "[META_DESCRIPTION]",
-  "datePublished": "[YYYY-MM-DD]",
-  "dateModified": "[YYYY-MM-DD]",
+  "headline": "8% Income Tax Option Philippines 2026: Complete Freelancer Guide",
+  "description": "Should you choose the 8% flat income tax option? Learn eligibility rules (≤₱3M gross), how to elect it, why it saves money, and when it doesn't. Free calculator included.",
+  "datePublished": "2026-01-15",
+  "dateModified": "2026-01-15",
   "author": {
     "@type": "Organization",
     "name": "TaxKlaro",
@@ -1319,10 +1338,10 @@ Every blog post published on TaxKlaro must pass this checklist before going live
     "name": "TaxKlaro",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://taxklaro.ph/logo.png"
+      "url": "https://taxklaro.ph/brand/logo-lockup-light.png"
     }
   },
-  "image": "https://taxklaro.ph/blog/[SLUG]/og-image.png"
+  "image": "https://taxklaro.ph/og/blog/8-percent-income-tax-option-philippines.png"
 }
 ```
 

@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 81
-- Analyzed: 79
-- Pending: 2
-- Convergence: 98%
+- Analyzed: 80
+- Pending: 1
+- Convergence: 99%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -103,7 +103,7 @@ Cross-cutting concerns and gap filling. Only start after Waves 2-5 are complete.
 - [x] missing-spec-indexes — Create database/indexes.md: every index needed for production query performance, query patterns that require each index, index type (btree, gin, partial), expected cardinality
 - [x] missing-spec-domains — Create deployment/domains.md: DNS records for taxoptimizer.ph (A/AAAA/CNAME), Cloudflare setup (proxy rules, WAF rules, page rules), SSL/TLS config, subdomain routing (api., www., staging., exports.)
 - [x] completeness-audit — Read every file in final-mega-spec/, check for gaps. Depends: missing-spec-* aspects completed.
-- [ ] placeholder-validation — **HARD GATE.** Exhaustive line-by-line scan of ALL final-mega-spec/ files for banned placeholder patterns (TODO, TBD, FIXME, stubs, empty sections, deferral phrases, sample values, ellipsis-as-content). Must report PASS with zero findings before loop can converge. Fix all matches and re-scan in same iteration. Depends: completeness-audit.
+- [x] placeholder-validation — **HARD GATE.** Exhaustive line-by-line scan of ALL final-mega-spec/ files for banned placeholder patterns (TODO, TBD, FIXME, stubs, empty sections, deferral phrases, sample values, ellipsis-as-content). Must report PASS with zero findings before loop can converge. Fix all matches and re-scan in same iteration. Depends: completeness-audit.
 - [ ] convergence-check — Run final convergence checklist, either add new aspects or converge. Depends: placeholder-validation PASS.
 
 ## Recently Analyzed
