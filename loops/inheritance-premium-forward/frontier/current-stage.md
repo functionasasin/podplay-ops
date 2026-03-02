@@ -1,7 +1,7 @@
-# Current Stage: 7 (Statute Citations UI)
+# Current Stage: 8 (Print Layout)
 
 ## Spec Sections
-- §4.5 — Statute Citations UI
+- §4.7 — Print Layout
 
 ## Test Results (updated by loop)
 ```
@@ -15,4 +15,5 @@ No tests yet
 - Stage 4 completed 2026-03-02 (32/32 tests passing)
 - Stage 5 completed 2026-03-02 (10/10 tests passing)
 - Stage 6 completed 2026-03-02 (17/17 tests passing)
-- Stage 7 starting 2026-03-02
+- Stage 7 completed 2026-03-02 (36/36 tests passing)
+- Stage 8 starting 2026-03-02
