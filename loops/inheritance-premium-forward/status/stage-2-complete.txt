@@ -1,0 +1,11 @@
+Stage 2 — TanStack Router + Layout: COMPLETE
+Completed: 2026-03-02
+Tests: 14/14 passing (router.test.tsx)
+- Root layout: sidebar nav links, branding
+- Index route: dashboard page, sign-in prompt
+- /cases/new: wizard container
+- /auth: sign-in card
+- /share/:token: shared case, no auth required
+- /cases/:caseId: case editor with ID
+- /clients, /deadlines, /settings: placeholder pages
+- Layout structure: 5 nav items, correct paths
