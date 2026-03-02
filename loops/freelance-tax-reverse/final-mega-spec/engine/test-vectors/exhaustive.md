@@ -1,6 +1,6 @@
 # Exhaustive Test Vectors — Philippine Freelance Tax Optimizer
 
-**Status:** PARTIAL — Groups 1–3 complete (19 vectors). Groups 4–14 pending.
+**Status:** PARTIAL — Groups 1–4 complete (22 vectors + 2 cross-references to edge-cases.md). Groups 5–14 pending.
 **Last updated:** 2026-03-02
 **Cross-references:**
 - Scenario codes: [domain/scenarios.md](../../domain/scenarios.md)
@@ -2434,3 +2434,600 @@ TaxComputationResult {
 5. Form 1701 is mandatory for ALL mixed income earners regardless of regime elected — no exception (Rule MIR-01).
 6. PT (3%) is waived under Path C (8%) for both pure SE and mixed income: this is a key Path C advantage that partially offsets the ₱250K deduction prohibition cost.
 7. MRF-028 fires for all VAT-registered Path A users to flag potential double-counting of creditable input VAT in the expense inputs.
+
+---
+
+## GROUP 4: First-Year / New Registrants
+
+**5 scenario codes:** SC-FIRST-8, SC-FIRST-O, SC-FIRST-MID-Q2, SC-FIRST-MID-Q3, SC-FIRST-MID-Q4
+
+**Cross-reference note:**
+- **SC-FIRST-MID-Q2** is fully specified in [edge-cases.md](edge-cases.md) as **TV-EDGE-009** (mid-year Q2 registrant, 8% elected, ₱850K gross, balance ₱20,000).
+- **SC-FIRST-MID-Q4** is fully specified in [edge-cases.md](edge-cases.md) as **TV-EDGE-016** (Q4 registrant, ₱220K gross, no quarterly returns, 8% wins with ₱0 tax).
+- This section provides the 3 remaining vectors: SC-FIRST-8, SC-FIRST-O, SC-FIRST-MID-Q3.
+
+**Common characteristics for all Group 4 vectors:**
+- `is_first_year_registrant`: true
+- `prior_year_gross_receipts`: ₱0.00 (no prior year in business)
+- `taxpayer_type`: PURELY_SE
+- `is_mixed_income`: false
+- `is_vat_registered`: false (all below ₱3,000,000)
+- `is_bmbe_registered`: false
+- `subject_to_sec_117_128`: false
+- `is_gpp_partner`: false
+- `cost_of_goods_sold`: ₱0.00 (service providers)
+- `taxable_compensation`: ₱0.00
+- `compensation_cwt`: ₱0.00
+- `taxpayer_tier` (derived): MICRO (default for first-year taxpayers with no prior-year data; actual tier based on first-year gross if it exceeds ₱3M, but all Group 4 vectors are below ₱3M)
+- `taxpayer_class` (derived): SERVICE_PROVIDER
+- `income_type` (derived): PURELY_SE
+- `path_c_eligible` (derived): true (gross ≤ ₱3M, not VAT-registered)
+- `prior_year_excess_cwt`: ₱0.00
+- `return_type`: ORIGINAL
+- `prior_payment_for_return`: ₱0.00
+- `sales_returns_allowances`: ₱0.00
+- `non_operating_income`: ₱0.00
+- `fwt_income`: ₱0.00
+- `nolco_carryover`: ₱0.00 (first year, no prior losses)
+- EWT rate from clients: 5% (new taxpayer; prior-year gross = ₱0 → falls below ₱3M threshold for rate determination)
+- `tax_year`: 2025
+
+**First-year election mechanics (applies to all Group 4):**
+- The 8% or OSD election is made on the **first quarterly 1701Q return** for the registration year.
+- For Q1 registrants (SC-FIRST-8, SC-FIRST-O): the election quarter is Q1; the Q1 1701Q (due May 15) is the election return.
+- For Q2 registrants (SC-FIRST-MID-Q2): the election quarter is Q2; Q2 1701Q (due August 15) is the election return.
+- For Q3 registrants (SC-FIRST-MID-Q3): the election quarter is Q3; Q3 1701Q (due November 15) is the election return.
+- For Q4 registrants (SC-FIRST-MID-Q4): no quarterly return is filed for the registration year; the election is made on the annual 1701/1701A (due April 15 of the following year).
+- Once elected on the first quarterly return, the election is **irrevocable** for the rest of the taxable year.
+- The engine must NOT flag missing 1701Q returns for quarters before the registration quarter.
+
+---
+
+## TV-EX-G4-001: SC-FIRST-8 — Q1 Registrant, Full-Year, 8% Elected
+
+**Scenario code:** SC-FIRST-8
+**Description:** A newly registered freelance graphic designer (personal brand studio) who registers with the BIR on February 10, 2025 (Q1). She elects the 8% flat rate on her first Q1 1701Q (due May 15, 2025). The election is irrevocable for TY2025. She earns ₱900,000 total across the year (₱180,000 in Q1, rising each quarter). This is the canonical happy-path first-year scenario showing the full three-quarter cycle plus annual reconciliation. Q1 yields a NIL return (gross below ₱250K); Q2 and Q3 generate payments; annual shows a balance due.
+
+**Tax year:** 2025
+**Filing period:** ANNUAL
+
+### Input (fields differing from Group 4 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `gross_receipts` | ₱900,000.00 | Full-year gross (Feb 10 – Dec 31, 2025) |
+| `registration_quarter` | `1` | Registered February 10, 2025 (Q1 = Jan–Mar) |
+| `elected_regime` | `ELECT_EIGHT_PCT` | Elected 8% on Q1 1701Q (May 15, 2025) |
+| All itemized expense fields | ₱0.00 each | No business expenses claimed |
+| `cwt_2307_entries` | `[]` | No withholding clients in first year |
+| `prior_quarterly_payments` | `[{Q1: 0.00}, {Q2: 12,000.00}, {Q3: 20,000.00}]` | See quarterly computation below |
+| `actual_filing_date` | `2026-04-15` | Filed on time |
+
+**Quarterly gross breakdown:**
+- Q1 (Feb 10 – Mar 31, 2025): ₱180,000.00
+- Q2 (Apr – Jun, 2025): ₱220,000.00
+- Q3 (Jul – Sep, 2025): ₱250,000.00
+- Q4 (Oct – Dec, 2025): ₱250,000.00
+- **Total TY2025: ₱900,000.00**
+
+### Quarterly Computation (Supplementary — for traceability)
+
+**Q1 1701Q (first return — 8% election made here; due May 15, 2025):**
+- Cumulative gross (Q1 only): ₱180,000.00
+- 8% base: `max(180,000 − 250,000, 0) = ₱0.00` (gross below ₱250K threshold)
+- Cumulative IT due: ₱0.00 × 0.08 = **₱0.00**
+- Prior quarterly IT paid: ₱0.00
+- **Q1 balance payable: ₱0.00** — NIL return; must still be filed by May 15, 2025
+- 8% election signified on this return; irrevocable for TY2025
+
+**Q2 1701Q (cumulative Jan 1 – Jun 30; due August 15, 2025):**
+- Cumulative gross (Q1+Q2): ₱180,000 + ₱220,000 = ₱400,000.00
+- 8% base: `max(400,000 − 250,000, 0) = ₱150,000.00`
+- Cumulative IT due: ₱150,000 × 0.08 = **₱12,000.00**
+- Prior quarterly IT paid: ₱0.00 (Q1 was NIL)
+- **Q2 balance payable: ₱12,000.00**
+
+**Q3 1701Q (cumulative Jan 1 – Sep 30; due November 15, 2025):**
+- Cumulative gross (Q1+Q2+Q3): ₱400,000 + ₱250,000 = ₱650,000.00
+- 8% base: `max(650,000 − 250,000, 0) = ₱400,000.00`
+- Cumulative IT due: ₱400,000 × 0.08 = **₱32,000.00**
+- Prior quarterly IT paid: ₱0.00 + ₱12,000.00 = ₱12,000.00
+- **Q3 balance payable: ₱32,000 − ₱12,000 = ₱20,000.00**
+
+**Total quarterly IT payments: ₱0 + ₱12,000 + ₱20,000 = ₱32,000.00**
+
+### Expected Intermediate Values (Annual)
+
+**PL-02 Classification:**
+- `income_type = PURELY_SE`
+- `taxpayer_class = SERVICE_PROVIDER`
+- `taxpayer_tier = MICRO`
+- `is_first_year_registrant = true`; `registration_quarter = 1`
+- `path_c_eligible = true` (₱900,000 ≤ ₱3M; elected Path C)
+- Engine suppresses missing-Q0 warnings; first quarterly return was Q1
+
+**PL-04 (8% Eligibility):** eligible = true; no ineligibility reasons; gross ≤ ₱3M, not VAT-registered, purely SE
+
+**PL-10 Path C (8% — elected and optimal):**
+- `eight_pct_base = max(900,000 − 250,000, 0) = 650,000`
+- `income_tax_path_c = 650,000 × 0.08 = 52,000.00`
+- `pt_path_c = 0.00` (8% waives PT per NIRC Sec. 24(A)(2)(b))
+- `total_tax_path_c = 52,000.00`
+
+**PL-09 Path B (OSD — comparison only):**
+- `osd_amount = 900,000 × 0.40 = 360,000`
+- `nti_path_b = 900,000 × 0.60 = 540,000`
+- `income_tax_path_b = graduated_tax_2023(540,000) = 22,500 + (540,000 − 400,000) × 0.20 = 22,500 + 28,000 = 50,500`
+- `pt_path_b = 900,000 × 0.03 = 27,000`
+- `total_tax_path_b = 50,500 + 27,000 = 77,500`
+
+**PL-08 Path A (no expenses — comparison only):**
+- `nti_path_a = 900,000 − 0 = 900,000`
+- `income_tax_path_a = graduated_tax_2023(900,000) = 102,500 + (900,000 − 800,000) × 0.25 = 102,500 + 25,000 = 127,500`
+- `pt_path_a = 900,000 × 0.03 = 27,000`
+- `total_tax_path_a = 127,500 + 27,000 = 154,500`
+
+**PL-13:** `recommended_path = PATH_C`; `selected_path = PATH_C` (elected and optimal); `savings_vs_next_best = 77,500 − 52,000 = 25,500` (vs Path B OSD); `savings_vs_worst = 154,500 − 52,000 = 102,500`
+
+**PL-14 Credits:**
+- `quarterly_it_paid = 32,000.00`
+- `cwt_credits = 0.00`
+- `prior_year_excess_cwt = 0.00`
+- `annual_it_due = 52,000.00`
+- `balance_payable = 52,000 − 32,000 − 0 = 20,000.00`
+
+**PL-15:** `form = FORM_1701A`; `form_section = PART_IV_B` (8% option section of 1701A)
+
+### Expected Final Output (TaxComputationResult)
+
+```
+TaxComputationResult {
+  tax_year: 2025,
+  filing_period: ANNUAL,
+  taxpayer_type: PURELY_SE,
+  taxpayer_tier: MICRO,
+  is_first_year_registrant: true,
+  registration_quarter: 1,
+  first_quarterly_return_was: "Q1 1701Q (due May 15, 2025)",
+  no_prior_quarters_required: true,
+
+  regime_comparison: {
+    path_a: {
+      eligible: true,
+      nti: 900000.00,
+      income_tax: 127500.00,
+      percentage_tax: 27000.00,
+      total_tax: 154500.00
+    },
+    path_b: {
+      eligible: true,
+      nti: 540000.00,
+      osd_amount: 360000.00,
+      income_tax: 50500.00,
+      percentage_tax: 27000.00,
+      total_tax: 77500.00
+    },
+    path_c: {
+      eligible: true,
+      tax_base: 650000.00,
+      income_tax: 52000.00,
+      percentage_tax: 0.00,
+      total_tax: 52000.00,
+      ineligibility_reasons: []
+    },
+    recommended_path: PATH_C,
+    savings_vs_next_best: 25500.00,
+    savings_vs_worst: 102500.00
+  },
+
+  selected_path: PATH_C,
+  locked_regime: false,
+
+  income_tax_due: 52000.00,
+  percentage_tax_due: 0.00,
+  total_tax_due: 52000.00,
+
+  cwt_credits: 0.00,
+  quarterly_it_paid: 32000.00,
+  balance_payable: 20000.00,
+  overpayment: 0.00,
+  overpayment_disposition: null,
+
+  form: FORM_1701A,
+  form_section: PART_IV_B,
+
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [],
+  manual_review_flags: [],
+  ineligibility_notifications: []
+}
+```
+
+### Verification
+
+- **Q1 cumulative IT:** max(180,000 − 250,000, 0) × 0.08 = **₱0.00** ✓ (NIL)
+- **Q2 cumulative IT:** (400,000 − 250,000) × 0.08 = ₱12,000; less prior ₱0 → **₱12,000 payable** ✓
+- **Q3 cumulative IT:** (650,000 − 250,000) × 0.08 = ₱32,000; less prior ₱12,000 → **₱20,000 payable** ✓
+- **Total quarterly paid:** ₱0 + ₱12,000 + ₱20,000 = **₱32,000** ✓
+- **Annual IT (Path C):** (900,000 − 250,000) × 0.08 = ₱650,000 × 0.08 = **₱52,000** ✓
+- **Annual balance:** ₱52,000 − ₱32,000 = **₱20,000** ✓
+- **Path B total:** graduated_tax_2023(540,000) = 22,500 + 140,000×0.20 = **₱50,500** IT; PT = **₱27,000**; total = **₱77,500** ✓
+- **Path C savings vs OSD:** 77,500 − 52,000 = **₱25,500** ✓
+- **Form 1701A** (not Form 1701): purely SE, 8% elected, no compensation income ✓
+
+**Legal basis:** 8% election on first 1701Q: RR No. 8-2018 Sec. 2(B)(2); 8% base formula: NIRC Sec. 24(A)(2)(b); ₱250K deduction applied at annual not quarterly: BIR Form 1701Q Schedule II Item 52 (cumulative base reduced once at each quarter per the form); quarterly cumulative method: NIRC Sec. 74-76; Form 1701A: BIR Rev. Regs. on EOPT (RA 11976) — simplified annual return for 8% pure SE; no Q0 requirement: BIR COR-based registration timing rules.
+
+---
+
+## TV-EX-G4-002: SC-FIRST-O — Q1 Registrant, OSD Elected (Suboptimal), Full-Year
+
+**Scenario code:** SC-FIRST-O
+**Description:** A newly registered sole proprietor providing bookkeeping services who registers with the BIR on January 15, 2025 (Q1). Without guidance, she checks "OSD" on her Q1 1701Q (due May 15, 2025) because she has no receipts to substantiate expenses. The OSD election is irrevocable for TY2025. Her annual gross is ₱600,000 across four quarters. This vector demonstrates: (1) three quarterly OSD computations under the cumulative method; (2) the engine showing the locked regime with missed savings; (3) Path C (8%) would have saved ₱6,500 — a significant first-year teaching moment. Q1 and Q2 are NIL returns (cumulative NTI below ₱250K); Q3 generates the first payment of ₱3,000.
+
+**Tax year:** 2025
+**Filing period:** ANNUAL
+
+### Input (fields differing from Group 4 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `gross_receipts` | ₱600,000.00 | Full-year gross (Jan 15 – Dec 31, 2025) |
+| `registration_quarter` | `1` | Registered January 15, 2025 (Q1 = Jan–Mar) |
+| `elected_regime` | `ELECT_OSD` | OSD elected on Q1 1701Q (May 15, 2025); irrevocable |
+| All itemized expense fields | ₱0.00 each | No documented expenses (OSD is automatic) |
+| `cwt_2307_entries` | `[]` | No withholding clients |
+| `prior_quarterly_payments` | `[{Q1: 0.00}, {Q2: 0.00}, {Q3: 3000.00}]` | See quarterly computation below |
+| `actual_filing_date` | `2026-04-15` | Filed on time |
+
+**Quarterly gross breakdown:**
+- Q1 (Jan 15 – Mar 31, 2025): ₱120,000.00 (partial quarter from registration date)
+- Q2 (Apr – Jun, 2025): ₱150,000.00
+- Q3 (Jul – Sep, 2025): ₱180,000.00
+- Q4 (Oct – Dec, 2025): ₱150,000.00
+- **Total TY2025: ₱600,000.00**
+
+**PT obligation (2551Q — filed separately, not part of 1701A income tax return):**
+- Q1 2551Q (due April 25, 2025): ₱120,000 × 0.03 = ₱3,600
+- Q2 2551Q (due July 25, 2025): ₱150,000 × 0.03 = ₱4,500
+- Q3 2551Q (due October 25, 2025): ₱180,000 × 0.03 = ₱5,400
+- Q4 2551Q (due January 25, 2026): ₱150,000 × 0.03 = ₱4,500
+- **Total PT for TY2025: ₱18,000.00** (already paid quarterly before annual filing)
+
+### Quarterly Computation — OSD Cumulative Method (Supplementary)
+
+**Q1 1701Q (first return — OSD election made here; due May 15, 2025):**
+- Cumulative gross (Q1): ₱120,000.00
+- OSD = ₱120,000 × 0.40 = ₱48,000
+- Cumulative NTI = ₱120,000 × 0.60 = ₱72,000
+- Cumulative IT = `graduated_tax_2023(72,000) = ₱0.00` (below ₱250K threshold)
+- Prior quarterly IT paid: ₱0.00
+- **Q1 balance payable: ₱0.00** — NIL return; must still be filed by May 15, 2025
+- OSD election signified on this return; irrevocable for TY2025
+
+**Q2 1701Q (cumulative Jan 1 – Jun 30; due August 15, 2025):**
+- Cumulative gross (Q1+Q2): ₱120,000 + ₱150,000 = ₱270,000.00
+- OSD = ₱270,000 × 0.40 = ₱108,000
+- Cumulative NTI = ₱270,000 × 0.60 = ₱162,000
+- Cumulative IT = `graduated_tax_2023(162,000) = ₱0.00` (below ₱250K threshold)
+- Prior quarterly IT paid: ₱0.00
+- **Q2 balance payable: ₱0.00** — NIL return; must still be filed by August 15, 2025
+
+**Q3 1701Q (cumulative Jan 1 – Sep 30; due November 15, 2025):**
+- Cumulative gross (Q1+Q2+Q3): ₱270,000 + ₱180,000 = ₱450,000.00
+- OSD = ₱450,000 × 0.40 = ₱180,000
+- Cumulative NTI = ₱450,000 × 0.60 = ₱270,000
+- Cumulative IT = `graduated_tax_2023(270,000) = (270,000 − 250,000) × 0.15 = 20,000 × 0.15 = ₱3,000`
+- Prior quarterly IT paid: ₱0.00
+- **Q3 balance payable: ₱3,000.00**
+
+**Total quarterly IT payments: ₱0 + ₱0 + ₱3,000 = ₱3,000.00**
+
+### Expected Intermediate Values (Annual)
+
+**PL-02 Classification:**
+- `income_type = PURELY_SE`; `taxpayer_class = SERVICE_PROVIDER`; `taxpayer_tier = MICRO`
+- `is_first_year_registrant = true`; `registration_quarter = 1`
+- `path_c_eligible = true` (₱600,000 ≤ ₱3M) — shown for comparison; OSD is locked
+
+**PL-09 Path B (OSD — elected and locked):**
+- `osd_amount = 600,000 × 0.40 = 240,000`
+- `nti_path_b = 600,000 × 0.60 = 360,000`
+- `income_tax_path_b = graduated_tax_2023(360,000) = (360,000 − 250,000) × 0.15 = 110,000 × 0.15 = 16,500`
+- `pt_path_b = 600,000 × 0.03 = 18,000`
+- `total_tax_path_b = 16,500 + 18,000 = 34,500`
+
+**PL-10 Path C (8% — comparison only):**
+- `eight_pct_base = max(600,000 − 250,000, 0) = 350,000`
+- `income_tax_path_c = 350,000 × 0.08 = 28,000`
+- `pt_path_c = 0`
+- `total_tax_path_c = 28,000`
+
+**PL-08 Path A (no expenses — comparison only):**
+- `nti_path_a = 600,000`
+- `income_tax_path_a = graduated_tax_2023(600,000) = 22,500 + (600,000 − 400,000) × 0.20 = 22,500 + 40,000 = 62,500`
+- `pt_path_a = 600,000 × 0.03 = 18,000`
+- `total_tax_path_a = 62,500 + 18,000 = 80,500`
+
+**PL-13 (locked OSD mode):**
+- `recommended_path = PATH_C` (optimal — for informational display)
+- `selected_path = PATH_B` (locked: OSD elected on Q1 1701Q, irrevocable)
+- `missed_savings = 34,500 − 28,000 = 6,500`
+- `locked_regime_reason = "OSD elected on first 1701Q (Q1 2025). Election is irrevocable for TY2025."`
+
+**PL-14 Credits (income tax only — PT handled via 2551Q):**
+- `quarterly_it_paid = 3,000.00`
+- `cwt_credits = 0.00`
+- `annual_it_due = 16,500.00`
+- `balance_payable = 16,500 − 3,000 = 13,500.00` (income tax balance only; full-year PT ₱18,000 already paid via four quarterly 2551Q filings)
+
+**PL-15:** `form = FORM_1701A`; `form_section = PART_IV_A` (OSD section)
+
+### Expected Final Output (TaxComputationResult)
+
+```
+TaxComputationResult {
+  tax_year: 2025,
+  filing_period: ANNUAL,
+  taxpayer_type: PURELY_SE,
+  taxpayer_tier: MICRO,
+  is_first_year_registrant: true,
+  registration_quarter: 1,
+  first_quarterly_return_was: "Q1 1701Q (due May 15, 2025)",
+  no_prior_quarters_required: true,
+
+  regime_comparison: {
+    path_a: {
+      eligible: true,
+      nti: 600000.00,
+      income_tax: 62500.00,
+      percentage_tax: 18000.00,
+      total_tax: 80500.00
+    },
+    path_b: {
+      eligible: true,
+      nti: 360000.00,
+      osd_amount: 240000.00,
+      income_tax: 16500.00,
+      percentage_tax: 18000.00,
+      total_tax: 34500.00
+    },
+    path_c: {
+      eligible: true,
+      tax_base: 350000.00,
+      income_tax: 28000.00,
+      percentage_tax: 0.00,
+      total_tax: 28000.00,
+      ineligibility_reasons: []
+    },
+    recommended_path: PATH_C,
+    savings_vs_next_best: 6500.00,
+    savings_vs_worst: 52500.00
+  },
+
+  selected_path: PATH_B,
+  locked_regime: true,
+  locked_regime_reason: "OSD elected on first 1701Q (Q1 2025). Election is irrevocable for TY2025.",
+  missed_savings: 6500.00,
+
+  income_tax_due: 16500.00,
+  percentage_tax_due: 18000.00,
+  total_tax_due: 34500.00,
+
+  cwt_credits: 0.00,
+  quarterly_it_paid: 3000.00,
+  balance_payable: 13500.00,
+  overpayment: 0.00,
+  overpayment_disposition: null,
+
+  form: FORM_1701A,
+  form_section: PART_IV_A,
+
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [WARN-004],
+  manual_review_flags: [],
+  ineligibility_notifications: []
+}
+```
+
+**WARN-004** fires: taxpayer is on a locked suboptimal regime (OSD); missed_savings = ₱6,500. The UI must display this prominently as an amber advisory card with the message: "You elected OSD this year. The 8% rate would have saved you ₱6,500. For TY2026, consider electing 8% on your Q1 1701Q if your gross remains below ₱3,000,000."
+
+### Verification
+
+- **Path B annual NTI:** 600,000 × 0.60 = **₱360,000** ✓
+- **Path B IT:** graduated_tax_2023(360,000) = (360,000 − 250,000) × 0.15 = **₱16,500** ✓
+- **Path B PT:** 600,000 × 0.03 = **₱18,000** ✓; total = **₱34,500** ✓
+- **Path C IT:** (600,000 − 250,000) × 0.08 = **₱28,000** ✓; total = **₱28,000** ✓
+- **Missed savings:** 34,500 − 28,000 = **₱6,500** ✓
+- **Q1 cumulative NTI:** 120,000 × 0.60 = 72,000 < 250,000 → IT = **₱0.00** ✓ (NIL)
+- **Q2 cumulative NTI:** 270,000 × 0.60 = 162,000 < 250,000 → IT = **₱0.00** ✓ (NIL)
+- **Q3 cumulative NTI:** 450,000 × 0.60 = 270,000; IT = (270,000 − 250,000) × 0.15 = **₱3,000** ✓
+- **Annual IT balance:** 16,500 − 3,000 = **₱13,500** ✓
+- **Total PT (4 quarters):** 3,600 + 4,500 + 5,400 + 4,500 = **₱18,000** ✓
+- **Total tax burden (IT + PT):** 16,500 + 18,000 = **₱34,500** ✓
+
+**Legal basis:** OSD election irrevocability: RR No. 8-2018 Sec. 2(B)(1) "the election once made, shall be irrevocable for the taxable year for which the election was made"; OSD 40% of gross: NIRC Sec. 34(L); Graduated rates: NIRC Sec. 24(A)(2)(a) 2023 schedule; PT 3%: NIRC Sec. 116 (CREATE rate restored July 1, 2023); Quarterly OSD cumulative method: NIRC Sec. 74-76; Form 1701A OSD: BIR Form 1701A Part IV-A.
+
+---
+
+## TV-EX-G4-003: SC-FIRST-MID-Q3 — Registered July–September; First Return is Q3
+
+**Scenario code:** SC-FIRST-MID-Q3
+**Description:** A freelance software developer who registers with the BIR on August 5, 2025 (Q3). No quarterly returns are required for Q1 or Q2 because she was not yet registered. Her first quarterly return is the Q3 1701Q (due November 15, 2025), which is also her election quarter. She elects 8% on this first return. Total TY2025 gross is ₱700,000 (earned from August 5 onward: ₱300,000 in Q3 and ₱400,000 in Q4). The annual reconciliation shows a balance of ₱32,000 after the Q3 payment of ₱4,000.
+
+**Tax year:** 2025
+**Filing period:** ANNUAL
+
+### Input (fields differing from Group 4 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `gross_receipts` | ₱700,000.00 | Gross from Aug 5 – Dec 31, 2025 |
+| `registration_quarter` | `3` | Registered August 5, 2025 (Q3 = Jul–Sep) |
+| `elected_regime` | `ELECT_EIGHT_PCT` | Elected 8% on Q3 1701Q (November 15, 2025) |
+| All itemized expense fields | ₱0.00 each | No documented expenses |
+| `cwt_2307_entries` | `[]` | No withholding clients in first year |
+| `prior_quarterly_payments` | `[{Q3: 4000.00}]` | See quarterly computation below; no Q1 or Q2 returns |
+| `actual_filing_date` | `2026-04-15` | Filed on time |
+
+**Income breakdown by quarter:**
+- Q1 (Jan–Mar, 2025): ₱0.00 — not yet registered; no Q1 return required
+- Q2 (Apr–Jun, 2025): ₱0.00 — not yet registered; no Q2 return required
+- Q3 (Aug 5 – Sep 30, 2025): ₱300,000.00 — first quarter of registration
+- Q4 (Oct – Dec, 2025): ₱400,000.00
+- **Total TY2025: ₱700,000.00**
+
+### Quarterly Computation (Supplementary)
+
+**Q3 1701Q (first return — 8% election made here; due November 15, 2025):**
+- Cumulative gross from registration (Q3 only): ₱300,000.00
+- 8% base: `max(300,000 − 250,000, 0) = ₱50,000.00`
+- Cumulative IT due: ₱50,000 × 0.08 = **₱4,000.00**
+- Prior quarterly IT paid: ₱0.00 (no Q1 or Q2 returns)
+- **Q3 balance payable: ₱4,000.00**
+- 8% election signified on this return; irrevocable for TY2025
+- Note: Q1 and Q2 1701Q returns are NOT required — taxpayer was not registered during those quarters; engine must NOT flag them as missing
+
+**No Q4 quarterly return:** Annual 1701A covers full year including Q4.
+
+**Total quarterly IT payments: ₱4,000.00** (Q3 only)
+
+### Expected Intermediate Values (Annual)
+
+**PL-02 Classification:**
+- `income_type = PURELY_SE`; `taxpayer_class = SERVICE_PROVIDER`; `taxpayer_tier = MICRO`
+- `is_first_year_registrant = true`; `registration_quarter = 3`
+- `path_c_eligible = true` (₱700,000 ≤ ₱3M; 8% elected)
+- Engine confirms: first return was Q3 1701Q (November 15, 2025); Q1 and Q2 are suppressed as "not applicable — pre-registration"
+
+**PL-04 (8% Eligibility):** eligible = true; gross ≤ ₱3M; not VAT-registered; purely SE; no prior-year gross > ₱3M
+
+**PL-10 Path C (8% — elected and optimal):**
+- `eight_pct_base = max(700,000 − 250,000, 0) = 450,000`
+- `income_tax_path_c = 450,000 × 0.08 = 36,000.00`
+- `pt_path_c = 0.00`
+- `total_tax_path_c = 36,000.00`
+
+**PL-09 Path B (OSD — comparison only):**
+- `osd_amount = 700,000 × 0.40 = 280,000`
+- `nti_path_b = 700,000 × 0.60 = 420,000`
+- `income_tax_path_b = graduated_tax_2023(420,000) = 22,500 + (420,000 − 400,000) × 0.20 = 22,500 + 4,000 = 26,500`
+- `pt_path_b = 700,000 × 0.03 = 21,000`
+- `total_tax_path_b = 26,500 + 21,000 = 47,500`
+
+**PL-08 Path A (no expenses — comparison only):**
+- `nti_path_a = 700,000`
+- `income_tax_path_a = graduated_tax_2023(700,000) = 22,500 + (700,000 − 400,000) × 0.20 = 22,500 + 60,000 = 82,500`
+- `pt_path_a = 700,000 × 0.03 = 21,000`
+- `total_tax_path_a = 82,500 + 21,000 = 103,500`
+
+**PL-13:** `recommended_path = PATH_C`; `selected_path = PATH_C` (elected and optimal); `savings_vs_next_best = 47,500 − 36,000 = 11,500` (vs Path B OSD); `savings_vs_worst = 103,500 − 36,000 = 67,500`
+
+**PL-14 Credits:**
+- `quarterly_it_paid = 4,000.00` (Q3 only)
+- `cwt_credits = 0.00`
+- `annual_it_due = 36,000.00`
+- `balance_payable = 36,000 − 4,000 = 32,000.00`
+
+**PL-15:** `form = FORM_1701A`; `form_section = PART_IV_B` (8% section)
+
+### Expected Final Output (TaxComputationResult)
+
+```
+TaxComputationResult {
+  tax_year: 2025,
+  filing_period: ANNUAL,
+  taxpayer_type: PURELY_SE,
+  taxpayer_tier: MICRO,
+  is_first_year_registrant: true,
+  registration_quarter: 3,
+  first_quarterly_return_was: "Q3 1701Q (due November 15, 2025)",
+  no_prior_quarters_required: true,
+  skipped_quarters: ["Q1 2025 (pre-registration)", "Q2 2025 (pre-registration)"],
+
+  regime_comparison: {
+    path_a: {
+      eligible: true,
+      nti: 700000.00,
+      income_tax: 82500.00,
+      percentage_tax: 21000.00,
+      total_tax: 103500.00
+    },
+    path_b: {
+      eligible: true,
+      nti: 420000.00,
+      osd_amount: 280000.00,
+      income_tax: 26500.00,
+      percentage_tax: 21000.00,
+      total_tax: 47500.00
+    },
+    path_c: {
+      eligible: true,
+      tax_base: 450000.00,
+      income_tax: 36000.00,
+      percentage_tax: 0.00,
+      total_tax: 36000.00,
+      ineligibility_reasons: []
+    },
+    recommended_path: PATH_C,
+    savings_vs_next_best: 11500.00,
+    savings_vs_worst: 67500.00
+  },
+
+  selected_path: PATH_C,
+  locked_regime: false,
+
+  income_tax_due: 36000.00,
+  percentage_tax_due: 0.00,
+  total_tax_due: 36000.00,
+
+  cwt_credits: 0.00,
+  quarterly_it_paid: 4000.00,
+  balance_payable: 32000.00,
+  overpayment: 0.00,
+  overpayment_disposition: null,
+
+  form: FORM_1701A,
+  form_section: PART_IV_B,
+
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [],
+  manual_review_flags: [],
+  ineligibility_notifications: []
+}
+```
+
+### Verification
+
+- **Q3 cumulative gross (first return):** ₱300,000
+- **Q3 8% base:** max(300,000 − 250,000, 0) = **₱50,000** ✓
+- **Q3 IT:** 50,000 × 0.08 = **₱4,000** ✓
+- **Q3 balance payable:** 4,000 − 0 = **₱4,000** ✓
+- **Annual IT (Path C):** (700,000 − 250,000) × 0.08 = 450,000 × 0.08 = **₱36,000** ✓
+- **Annual balance:** 36,000 − 4,000 = **₱32,000** ✓
+- **Path B IT:** graduated_tax_2023(420,000) = 22,500 + 20,000×0.20 = **₱26,500** ✓; PT = **₱21,000**; total = **₱47,500** ✓
+- **Savings vs OSD:** 47,500 − 36,000 = **₱11,500** ✓
+- **No Q1/Q2 returns required:** registration date August 5, 2025 is in Q3 (July–September) → Q1 and Q2 pre-registration period → engine suppresses missing-return alerts ✓
+- **Form 1701A:** purely SE, 8% elected, no compensation → correct form ✓
+
+**Legal basis:** First return for mid-year registrant is the quarter of registration: BIR RMC 12-2012 and RR 8-2018 Sec. 2(B)(2) — election on "first quarterly return or first quarterly percentage tax return"; NIRC Sec. 74 — quarterly returns required for each quarter of the taxable year the taxpayer is in business; no Q0 requirement for pre-registration quarters; 8% base: NIRC Sec. 24(A)(2)(b); PT waiver under 8%: same; Form 1701A: BIR RA 11976 EOPT simplified returns.
+
+---
+
+## GROUP 4 SUMMARY TABLE
+
+| Vector | Scenario | Registration | Gross | Expense% | Elected | Optimal | Total Tax | Missed Savings | Form |
+|--------|---------|-------------|-------|---------|---------|---------|-----------|---------------|------|
+| TV-EX-G4-001 | SC-FIRST-8 | Q1 (Feb 10) | ₱900,000 | 0% | 8% (Q1) | Path C | ₱52,000 | ₱0 (optimal) | 1701A |
+| TV-EX-G4-002 | SC-FIRST-O | Q1 (Jan 15) | ₱600,000 | 0% | OSD (Q1) | Path C | ₱34,500 | ₱6,500 | 1701A |
+| TV-EX-G4-003 | SC-FIRST-MID-Q3 | Q3 (Aug 5) | ₱700,000 | 0% | 8% (Q3) | Path C | ₱36,000 | ₱0 (optimal) | 1701A |
+| TV-EDGE-009 | SC-FIRST-MID-Q2 | Q2 (Apr 20) | ₱850,000 | 0% | 8% (Q2) | Path C | ₱48,000 | ₱0 (optimal) | 1701A |
+| TV-EDGE-016 | SC-FIRST-MID-Q4 | Q4 (Nov 3) | ₱220,000 | 0% | 8% (annual) | Path C | ₱0 | ₱0 (optimal) | 1701A |
+
+**Key insights validated:**
+1. Q1 registrants with full-year income file THREE quarterly 1701Q returns (Q1, Q2, Q3) plus annual 1701A. The ₱250K threshold means Q1 is often a NIL return when early-year income is modest (TV-EX-G4-001: Q1 NIL at ₱180K; TV-EX-G4-002: Q1 NIL at ₱120K).
+2. OSD election on the first 1701Q is irrevocable and often suboptimal (TV-EX-G4-002: ₱6,500 more tax vs 8%). The engine must prominently flag missed savings via WARN-004 to prevent this for future years.
+3. Mid-Q3 registrants file only ONE quarterly return (Q3) for the registration year (TV-EX-G4-003: ₱4,000 Q3 payment, ₱32,000 annual balance). No Q1 or Q2 returns are required or applicable — the engine must not flag them as missing.
+4. Mid-Q4 registrants file NO quarterly returns for the registration year — only the annual 1701A (TV-EDGE-016). The annual 1701A is both the first filing and the election return for this subset.
+5. All Group 4 vectors use Form 1701A (not Form 1701) because all are purely self-employed (no compensation income) and the recommended regime is 8% or OSD (both filed on 1701A).
+6. First-year taxpayers always use EWT rate 5% (prior-year gross = ₱0, which is below ₱3M threshold). This affects any 2307 entries in the same year (no Group 4 vectors have CWT — see Group 5 for CWT scenarios).
+7. The `no_prior_quarters_required` flag and `skipped_quarters` list in the output must be populated correctly by the engine to prevent UI confusion and to inform the compliance calendar displayed to the user after computation.
