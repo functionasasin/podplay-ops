@@ -1,6 +1,6 @@
 # Exhaustive Test Vectors — Philippine Freelance Tax Optimizer
 
-**Status:** PARTIAL — Groups 1–10 complete (50 vectors + 6 cross-references). Groups 11–14 pending.
+**Status:** PARTIAL — Groups 1–11 complete (59 vectors + 7 cross-references). Groups 12–14 pending.
 **Last updated:** 2026-03-02
 **Cross-references:**
 - Scenario codes: [domain/scenarios.md](../../domain/scenarios.md)
@@ -7544,4 +7544,1373 @@ TaxComputationResult {
 5. **Form 1701A applies even to VAT-registered PURELY_SE taxpayers.** For income tax filing purposes, VAT-registered PURELY_SE taxpayers using OSD file Form 1701A (Part IV-A). VAT is a separate filing (Form 2550Q/2550M). DT-04: no mixed income, no mid-year breach, Path B → FORM_1701A.
 
 6. **Scenarios.md correction acknowledged.** Two arithmetic errors were found in scenarios.md's SC-COMBO descriptions: (a) SC-COMBO-MH-O used ₱1M service + ₱500K goods at 50% goods COGS, which actually makes PATH_C win — the inputs were redesigned to make OSD win, consistent with the "O" suffix intent; (b) SC-COMBO-CROSS-3M cited IT ₱307,500 at NTI ₱1,680,000, but correct bracket-4 computation yields ₱322,500. Both corrections are applied in these test vectors.
+
+
+---
+
+## GROUP 11: Additional Mixed Income Sub-Scenarios (Extending Group 3)
+
+**10 scenario codes:** SC-M-L-O, SC-M-L-I, SC-M-MH-O, SC-M-MH-I, SC-M-H-8, SC-M-H-O, SC-M-H-I, SC-M-MINWAGE, SC-M-GOVT, SC-M-DUAL-EMP
+
+**Cross-reference note:**
+- **SC-M-MINWAGE** is fully specified in [edge-cases.md](edge-cases.md) as **TV-EDGE-007** (minimum wage employee + business; OSD beats 8% because ₱250K deduction barred, taxable_comp ₱0, business NTI small enough OSD wins).
+- This section provides the 9 remaining vectors.
+
+**Common characteristics for all Group 11 vectors (unless stated otherwise):**
+- `taxpayer_type`: MIXED_INCOME
+- `is_mixed_income`: true
+- `is_vat_registered`: false (all business gross < ₱3,000,000)
+- `is_bmbe_registered`: false
+- `subject_to_sec_117_128`: false
+- `is_gpp_partner`: false
+- `cost_of_goods_sold`: ₱0.00 (all are service/professional income)
+- `taxpayer_class` (derived): SERVICE_PROVIDER
+- `income_type` (derived): MIXED_INCOME
+- `form` (always): FORM_1701 (mixed income earners ALWAYS use Form 1701; Form 1701A prohibited per MIR-01)
+- `non_operating_income`: ₱0.00
+- `fwt_income`: ₱0.00
+- `sales_returns_allowances`: ₱0.00
+- `return_type`: ORIGINAL
+- `prior_year_excess_cwt`: ₱0.00
+- `actual_filing_date`: null (on-time assumed)
+- `filing_period`: ANNUAL
+- `tax_year`: 2025
+- `cwt_2307_entries`: [] (no business CWT unless otherwise specified)
+- `prior_quarterly_payments`: [] (no prior quarterly business payments unless specified)
+- `prior_payment_for_return`: ₱0.00
+- `elected_regime`: null (optimizer mode — engine recommends)
+- `path_c_eligible` (derived): true (all business gross ≤ ₱3M and not VAT-registered)
+- `taxpayer_tier` (derived): MICRO (all business gross < ₱3,000,000)
+
+**Critical mixed income rules applied in all Group 11 vectors:**
+
+| Rule | Description | Legal Basis |
+|------|-------------|-------------|
+| MIR-01 | Always use Form 1701; Form 1701A is prohibited | BIR Form 1701 Instructions; RMC 50-2018 |
+| MIR-03 | NO ₱250,000 deduction on 8% business income; tax base = full gross receipts | RMC 50-2018 Sec. 3; RMC 23-2018 |
+| MIR-04 | Paths A and B combine compensation NTI + business NTI before graduated table | NIRC Sec. 24(A)(2)(a) |
+| MIR-07 | Path C applies 8% to business income only; compensation always at graduated rates | NIRC Sec. 24(A)(2)(b); RMC 50-2018 |
+| MIR-08 | ₱3M threshold uses business gross only; compensation income excluded | NIRC Sec. 24(A)(2)(b) |
+
+---
+
+## TV-EX-G11-001: SC-M-L-O — Low-Compensation Employee + Small Freelance, OSD Optimal
+
+**Scenario code:** SC-M-L-O
+**Description:** Part-time customer service agent earning ₱200,000 annual taxable compensation (below ₱250K zero-bracket; employer withholds ₱0) who earns ₱160,000 in freelance graphic design. No documented business expenses. Path B (OSD) beats Path C (8%) because: the ₱250K deduction prohibition inflates Path C business IT to ₱12,800 (= ₱160,000 × 0.08), while OSD reduces combined NTI to ₱296,000 — only ₱46,000 above the ₱250K floor — yielding IT of ₱6,900 plus PT ₱4,800 = ₱11,700 total, saving ₱1,100 vs Path C. This narrow OSD-wins window exists only when compensation is below ₱250K and business gross is small enough that OSD NTI + compensation stays near the zero-bracket boundary.
+
+### Input (fields differing from Group 11 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `taxable_compensation` | ₱200,000.00 | Part-time job: ₱240K gross salary − ₱40K mandatory deductions (SSS ₱24K + PhilHealth ₱9K + Pag-IBIG ₱1.2K + 13th month exempt ₱20K) ≈ ₱200K taxable |
+| `compensation_cwt` (tax_withheld_by_employer) | ₱0.00 | Compensation below ₱250K zero bracket; employer correctly withheld ₱0 |
+| `gross_receipts` | ₱160,000.00 | Freelance graphic design projects (logo work, social media graphics) |
+| All itemized expense fields | ₱0.00 each | No receipts kept for business expenses |
+| `number_of_form_2316s` | 1 | Single employer |
+
+**Total itemized business expenses:** ₱0.00
+
+### Expected Intermediate Values
+
+**PL-02 (Classification):**
+- `net_gross_receipts` = ₱160,000.00 (business gross; compensation excluded from ₱3M threshold)
+- `taxpayer_tier` = MICRO (₱160,000 < ₱3,000,000)
+- `income_type` = MIXED_INCOME
+- `taxpayer_class` = SERVICE_PROVIDER
+
+**PL-04 (Eligibility):**
+- `path_c_eligible` = true (business gross ₱160K ≤ ₱3M AND not VAT-registered)
+- `ineligibility_reasons` = []
+
+**PL-05 (Itemized Deductions):**
+- `total_itemized_deductions` = ₱0.00
+- `ear_cap` = ₱160,000 × 0.01 = ₱1,600.00; no EAR expense claimed
+- `nolco_applied` = ₱0.00
+
+**PL-06 (OSD):**
+- `osd_amount` = ₱160,000 × 0.40 = ₱64,000.00
+- `business_nti_path_b` = ₱160,000 − ₱64,000 = ₱96,000.00
+
+**PL-07 (CWT):** `total_cwt_business` = ₱0.00
+
+**PL-08 (Path A — Mixed Income, Itemized = ₱0):**
+- `business_nti_path_a` = ₱160,000.00 (no deductions)
+- `combined_nti_path_a` = ₱200,000 (comp) + ₱160,000 (biz) = ₱360,000.00
+- `income_tax_path_a` = graduated_tax_2023(₱360,000)
+  = (₱360,000 − ₱250,000) × 0.15
+  = **₱16,500.00** (bracket 2)
+- `percentage_tax_path_a` = ₱160,000 × 0.03 = **₱4,800.00**
+- `total_tax_path_a` = **₱21,300.00**
+
+**PL-09 (Path B — Mixed Income, OSD):**
+- `business_nti_path_b` = ₱96,000.00
+- `combined_nti_path_b` = ₱200,000 (comp) + ₱96,000 (biz) = ₱296,000.00
+- `income_tax_path_b` = graduated_tax_2023(₱296,000)
+  = (₱296,000 − ₱250,000) × 0.15
+  = **₱6,900.00** (bracket 2)
+- `percentage_tax_path_b` = ₱160,000 × 0.03 = **₱4,800.00**
+- `total_tax_path_b` = **₱11,700.00**
+
+**PL-10 (Path C — Mixed Income, 8% separate; NO ₱250K deduction):**
+- `income_tax_compensation_path_c` = graduated_tax_2023(₱200,000) = **₱0.00** (below ₱250K zero bracket)
+- `income_tax_business_path_c` = ₱160,000 × 0.08 = **₱12,800.00** (NO ₱250K deduction per RMC 50-2018)
+- `percentage_tax_path_c` = **₱0.00** (PT waived under 8%)
+- `total_tax_path_c` = ₱0 + ₱12,800 = **₱12,800.00**
+
+**PL-13 (Compare):**
+- Path A: ₱21,300.00
+- Path B: ₱11,700.00 ← MINIMUM
+- Path C: ₱12,800.00
+- `recommended_path` = PATH_B (₱11,700 < ₱12,800; tie-break not triggered)
+- `savings_vs_next_best` = ₱12,800 − ₱11,700 = **₱1,100.00** (Path B vs Path C)
+- `savings_vs_worst` = ₱21,300 − ₱11,700 = **₱9,600.00** (Path B vs Path A)
+
+**PL-14 (Balance Payable):**
+- `income_tax_due` = ₱11,700.00
+- `percentage_tax_due` = ₱4,800.00
+- `compensation_tax_withheld` = ₱0.00
+- `total_cwt_business` = ₱0.00
+- `quarterly_it_paid` = ₱0.00
+- `balance_payable` = ₱11,700.00 (income tax, to be paid at annual filing)
+- Note: PT ₱4,800 is a separate liability paid via Form 2551Q quarterly; at annual Form 1701, only income tax balance is settled
+
+**PL-15 (Form Selection):**
+- `form` = FORM_1701
+- `form_section` = PART_IV_A (graduated + OSD schedule within Form 1701)
+
+**PL-16 (Penalties):** ₱0.00 (on-time)
+
+### Expected Final Output
+
+```
+TaxComputationResult {
+  tax_year: 2025,  filing_period: ANNUAL,
+  taxpayer_type: MIXED_INCOME,  taxpayer_tier: MICRO,
+  taxpayer_class: SERVICE_PROVIDER,
+
+  regime_comparison: {
+    path_a: {
+      eligible: true,
+      business_nti: 160000.00,
+      compensation_nti: 200000.00,
+      combined_nti: 360000.00,
+      income_tax: 16500.00,
+      percentage_tax: 4800.00,
+      total_tax: 21300.00
+    },
+    path_b: {
+      eligible: true,
+      osd_amount: 64000.00,
+      business_nti_osd: 96000.00,
+      compensation_nti: 200000.00,
+      combined_nti: 296000.00,
+      income_tax: 6900.00,
+      percentage_tax: 4800.00,
+      total_tax: 11700.00
+    },
+    path_c: {
+      eligible: true,
+      income_tax_business: 12800.00,
+      income_tax_compensation: 0.00,
+      total_income_tax: 12800.00,
+      percentage_tax: 0.00,
+      total_tax: 12800.00,
+      combined_nti: null,
+      note: "₱250,000 deduction does not apply: taxpayer has compensation income (RMC 50-2018)",
+      ineligibility_reasons: []
+    },
+    recommended_path: PATH_B,
+    savings_vs_next_best: 1100.00,
+    savings_vs_worst: 9600.00
+  },
+
+  selected_path: PATH_B,
+  income_tax_due: 11700.00,
+  percentage_tax_due: 4800.00,
+  total_tax_due: 16500.00,
+  compensation_tax_withheld: 0.00,
+  cwt_credits: 0.00,
+  quarterly_it_paid: 0.00,
+  balance_payable: 11700.00,
+  overpayment: 0.00,
+  overpayment_disposition: null,
+  form: FORM_1701,  form_section: PART_IV_A,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [WARN-003, WARN-004],
+  manual_review_flags: [],
+  ineligibility_notifications: []
+}
+```
+
+**WARN-003** fires: recommended path is PATH_B and no business CWT entries provided.
+**WARN-004** fires: total_itemized / gross_receipts = 0 / 160,000 = 0% < 5% threshold.
+
+### Verification
+
+- **Path B combined NTI:** 200,000 + 96,000 = 296,000; bracket 2: (296,000 − 250,000) × 0.15 = **₱6,900** ✓
+- **Path B PT:** 160,000 × 0.03 = **₱4,800** ✓; total B = 6,900 + 4,800 = **₱11,700** ✓
+- **Path C biz IT:** 160,000 × 0.08 = **₱12,800** ✓ (no ₱250K deduction — key)
+- **Path C comp IT:** graduated(200,000) = **₱0** (200K ≤ 250K zero bracket) ✓
+- **Path B beats Path C:** ₱11,700 < ₱12,800; margin = ₱1,100. ✓
+- **Why OSD wins:** The ₱250K prohibition on Path C raises the biz IT base from ₱0 effective (would be ₱0 if ₱250K deducted: 160K − 250K < 0) to ₱160K (full gross). Meanwhile OSD keeps combined NTI at ₱296K — only ₱46K above the ₱250K floor — so Path B's 15% marginal rate applies to just ₱46K = ₱6,900 IT. Even adding ₱4,800 PT, total B = ₱11,700 < Path C ₱12,800. ✓
+- **Balance payable** = ₱11,700 (income tax only; PT is separate obligation filed quarterly via 2551Q) ✓
+
+**Legal basis:** OSD (40%): NIRC Sec. 34(L). No ₱250K deduction for mixed income: RMC 50-2018 Sec. 3; RMC 23-2018. Compensation below ₱250K: ₱0 income tax per NIRC Sec. 24(A)(2)(a). PT (3%): NIRC Sec. 116. PT waived under 8%: NIRC Sec. 24(A)(2)(b) "in lieu of" percentage tax. Form 1701 mandatory: BIR Form 1701 Instructions; MIR-01.
+
+---
+
+## TV-EX-G11-002: SC-M-L-I — Moderate-Compensation Employee + Small Freelance, Itemized Wins
+
+**Scenario code:** SC-M-L-I
+**Description:** Employed marketing coordinator earning ₱360,000 annual taxable compensation (bracket 2, 15% marginal) who runs a small freelance web development business with ₱450,000 gross receipts and ₱360,000 in documented expenses (80% expense ratio — heavy subcontractor payments). Path A (Itemized) wins at ₱46,000 total tax, saving ₱6,500 vs Path C (₱52,500) and ₱36,000 vs Path B (₱82,000). Itemized wins here because the 80% expense ratio reduces business NTI to ₱90,000, keeping combined NTI at ₱450,000 (bracket 3; 20% marginal) — a lower total than Path C's prohibited ₱250K deduction forcing 8% on the full ₱450K gross. The breakeven expense ratio for this profile (₱360K comp + ₱450K biz) is approximately 73%: at 80% (> 73%), Itemized wins.
+
+### Input (fields differing from Group 11 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `taxable_compensation` | ₱360,000.00 | ₱30,000/month after SSS ₱1,440, PhilHealth ₱900, Pag-IBIG ₱100, 13th month ₱30K exempt |
+| `compensation_cwt` (tax_withheld_by_employer) | ₱16,500.00 | Employer withheld: (₱360,000 − ₱250,000) × 0.15 = ₱16,500 |
+| `gross_receipts` | ₱450,000.00 | Freelance web development project fees |
+| `itemized_expenses.salaries_wages` | ₱300,000.00 | Subcontracted developers and designers (project basis; BIR-registered, 2% EWT remitted) |
+| `itemized_expenses.supplies` | ₱20,000.00 | Software licenses, development tools, domain registrations |
+| `itemized_expenses.communication` | ₱15,000.00 | Internet (apportioned: 50% business × ₱2,500/month × 12) |
+| `itemized_expenses.other_allowable_deductions` | ₱25,000.00 | Cloud hosting, project management tools, professional development courses |
+| All other itemized expense fields | ₱0.00 each | |
+| `number_of_form_2316s` | 1 | Single employer |
+
+**Total itemized business expenses:** ₱300,000 + ₱20,000 + ₱15,000 + ₱25,000 = **₱360,000.00** (80.00% of gross receipts)
+
+### Expected Intermediate Values
+
+**PL-05 (Itemized Deductions):**
+- `total_itemized_deductions` = ₱360,000.00
+- `ear_cap` = ₱450,000 × 0.01 = ₱4,500.00; no EAR expense claimed
+- `nolco_applied` = ₱0.00
+
+**PL-06 (OSD):**
+- `osd_amount` = ₱450,000 × 0.40 = ₱180,000.00
+- `business_nti_path_b` = ₱270,000.00
+
+**PL-08 (Path A — Mixed Income, Itemized):**
+- `business_nti_path_a` = ₱450,000 − ₱360,000 = ₱90,000.00
+- `combined_nti_path_a` = ₱360,000 (comp) + ₱90,000 (biz) = ₱450,000.00
+- `income_tax_path_a` = graduated_tax_2023(₱450,000)
+  = ₱22,500 + (₱450,000 − ₱400,000) × 0.20
+  = ₱22,500 + ₱10,000.00
+  = **₱32,500.00** (bracket 3)
+- `percentage_tax_path_a` = ₱450,000 × 0.03 = **₱13,500.00**
+- `total_tax_path_a` = **₱46,000.00**
+
+**PL-09 (Path B — Mixed Income, OSD):**
+- `business_nti_path_b` = ₱270,000.00
+- `combined_nti_path_b` = ₱360,000 (comp) + ₱270,000 (biz) = ₱630,000.00
+- `income_tax_path_b` = graduated_tax_2023(₱630,000)
+  = ₱22,500 + (₱630,000 − ₱400,000) × 0.20
+  = ₱22,500 + ₱46,000.00
+  = **₱68,500.00** (bracket 3)
+- `percentage_tax_path_b` = **₱13,500.00**
+- `total_tax_path_b` = **₱82,000.00**
+
+**PL-10 (Path C — Mixed Income, 8% separate; NO ₱250K deduction):**
+- `income_tax_compensation_path_c` = graduated_tax_2023(₱360,000)
+  = (₱360,000 − ₱250,000) × 0.15
+  = **₱16,500.00** (bracket 2)
+- `income_tax_business_path_c` = ₱450,000 × 0.08 = **₱36,000.00** (NO ₱250K deduction)
+- `percentage_tax_path_c` = **₱0.00**
+- `total_tax_path_c` = ₱16,500 + ₱36,000 = **₱52,500.00**
+
+**PL-13 (Compare):**
+- Path A: ₱46,000.00 ← MINIMUM
+- Path B: ₱82,000.00
+- Path C: ₱52,500.00
+- `recommended_path` = PATH_A
+- `savings_vs_next_best` = ₱52,500 − ₱46,000 = **₱6,500.00** (Path A vs Path C)
+- `savings_vs_worst` = ₱82,000 − ₱46,000 = **₱36,000.00** (Path A vs Path B)
+
+**PL-14 (Balance Payable):**
+- `income_tax_due` = ₱46,000.00
+- `compensation_tax_withheld` = ₱16,500.00
+- `total_cwt_business` = ₱0.00
+- `quarterly_it_paid` = ₱0.00
+- `balance_payable` = ₱46,000 − ₱16,500 = **₱29,500.00**
+
+**PL-15 (Form Selection):**
+- `form` = FORM_1701
+- `form_section` = SCHEDULE_1_ITEMIZED (itemized deduction schedule within Form 1701)
+
+**PL-16 (Penalties):** ₱0.00 (on-time)
+
+### Expected Final Output
+
+```
+TaxComputationResult {
+  tax_year: 2025,  filing_period: ANNUAL,
+  taxpayer_type: MIXED_INCOME,  taxpayer_tier: MICRO,
+  taxpayer_class: SERVICE_PROVIDER,
+
+  regime_comparison: {
+    path_a: {
+      eligible: true,
+      business_nti: 90000.00,
+      compensation_nti: 360000.00,
+      combined_nti: 450000.00,
+      income_tax: 32500.00,
+      percentage_tax: 13500.00,
+      total_tax: 46000.00
+    },
+    path_b: {
+      eligible: true,
+      osd_amount: 180000.00,
+      business_nti_osd: 270000.00,
+      compensation_nti: 360000.00,
+      combined_nti: 630000.00,
+      income_tax: 68500.00,
+      percentage_tax: 13500.00,
+      total_tax: 82000.00
+    },
+    path_c: {
+      eligible: true,
+      income_tax_business: 36000.00,
+      income_tax_compensation: 16500.00,
+      total_income_tax: 52500.00,
+      percentage_tax: 0.00,
+      total_tax: 52500.00,
+      combined_nti: null,
+      note: "₱250,000 deduction does not apply: taxpayer has compensation income (RMC 50-2018)",
+      ineligibility_reasons: []
+    },
+    recommended_path: PATH_A,
+    savings_vs_next_best: 6500.00,
+    savings_vs_worst: 36000.00
+  },
+
+  selected_path: PATH_A,
+  income_tax_due: 46000.00,
+  percentage_tax_due: 13500.00,
+  total_tax_due: 59500.00,
+  compensation_tax_withheld: 16500.00,
+  cwt_credits: 0.00,
+  quarterly_it_paid: 0.00,
+  balance_payable: 29500.00,
+  overpayment: 0.00,
+  overpayment_disposition: null,
+  form: FORM_1701,  form_section: SCHEDULE_1_ITEMIZED,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [WARN-003],
+  manual_review_flags: [],
+  ineligibility_notifications: []
+}
+```
+
+**WARN-003** fires: recommended path is PATH_A and no business CWT entries provided. Subcontractor payments of ₱300,000 may have had 2% EWT withheld on payments made by clients; if the taxpayer received Form 2307s for professional income from corporate clients, those should be entered.
+
+### Verification
+
+- **Itemized total:** 300,000 + 20,000 + 15,000 + 25,000 = **₱360,000** ✓; expense ratio = 360/450 = **80.00%** ✓
+- **Path A biz NTI:** 450,000 − 360,000 = **₱90,000** ✓
+- **Path A combined NTI:** 360,000 + 90,000 = **₱450,000** ✓; bracket 3: 22,500 + (450,000 − 400,000) × 0.20 = 22,500 + 10,000 = **₱32,500** ✓
+- **Path A PT:** 450,000 × 0.03 = **₱13,500** ✓; total A = 32,500 + 13,500 = **₱46,000** ✓
+- **Path B combined NTI:** 360,000 + 270,000 = **₱630,000** ✓; bracket 3: 22,500 + (630,000 − 400,000) × 0.20 = **₱68,500** ✓; total B = **₱82,000** ✓
+- **Path C comp IT:** (360,000 − 250,000) × 0.15 = **₱16,500** ✓; biz IT = 450,000 × 0.08 = **₱36,000** ✓; total C = **₱52,500** ✓
+- **Breakeven derivation:** Path A = Path C when: graduated(360K + 450K − E) + 13,500 = 16,500 + 36,000; graduated(810K − E) = 39,000; solve bracket 3: 22,500 + (NTI − 400K) × 0.20 = 39,000 → NTI = 482,500; 810K − E = 482,500 → E = 327,500; breakeven ratio = 327,500 / 450,000 = **72.8%**. At 80% > 72.8% → Path A wins ✓
+- **Balance:** 46,000 − 16,500 = **₱29,500** ✓
+
+**Legal basis:** Itemized deductions: NIRC Sec. 34(A)–(K). Subcontractor payments as ordinary/necessary business expenses: Sec. 34(A)(1). No ₱250K deduction: RMC 50-2018 Sec. 3. PT (3%): NIRC Sec. 116. Form 1701 mandatory: MIR-01.
+
+---
+
+## TV-EX-G11-003: SC-M-MH-O — Moderate-Compensation Employee + Medium Business (₱1M–₱2M), OSD Path Exercised (Path C Wins)
+
+**Scenario code:** SC-M-MH-O
+**Description:** Operations manager earning ₱600,000 annual taxable compensation (bracket 3, 20% marginal) with a freelance IT consulting business earning ₱1,500,000. No documented business expenses. Path C (8% on business, graduated on comp) wins decisively at ₱182,500 total tax. Path B (OSD) yields ₱322,500 and Path A yields ₱477,500. This vector exercises the OSD computation path for the medium-business mixed income range and demonstrates that 8% is highly advantageous at this income level: the ₱250K deduction prohibition costs ₱120,000 vs a pure SE equivalent, but 8% on ₱1.5M biz still saves ₱140,000 over OSD. Employer withheld ₱62,500 on compensation; balance payable = ₱120,000 (business income IT only, since comp IT = employer withheld).
+
+### Input (fields differing from Group 11 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `taxable_compensation` | ₱600,000.00 | ₱50,000/month after mandatory deductions; 13th month (₱50K) exempt |
+| `compensation_cwt` (tax_withheld_by_employer) | ₱62,500.00 | Employer withheld: 22,500 + (₱600,000 − ₱400,000) × 0.20 = ₱62,500 |
+| `gross_receipts` | ₱1,500,000.00 | Freelance IT consulting and project management fees |
+| All itemized expense fields | ₱0.00 each | No business expense receipts maintained |
+| `number_of_form_2316s` | 1 | Single employer |
+
+**Total itemized business expenses:** ₱0.00
+
+### Expected Intermediate Values
+
+**PL-05:** total_itemized_deductions = ₱0.00; ear_cap = ₱1,500,000 × 0.01 = ₱15,000.00; nolco_applied = ₱0.00
+
+**PL-06 (OSD):**
+- `osd_amount` = ₱1,500,000 × 0.40 = ₱600,000.00
+- `business_nti_path_b` = ₱900,000.00
+
+**PL-08 (Path A — Mixed Income, Itemized = ₱0):**
+- `business_nti_path_a` = ₱1,500,000.00
+- `combined_nti_path_a` = ₱600,000 + ₱1,500,000 = ₱2,100,000.00
+- `income_tax_path_a` = graduated_tax_2023(₱2,100,000)
+  = ₱402,500 + (₱2,100,000 − ₱2,000,000) × 0.30
+  = ₱402,500 + ₱30,000
+  = **₱432,500.00** (bracket 5)
+- `percentage_tax_path_a` = ₱1,500,000 × 0.03 = **₱45,000.00**
+- `total_tax_path_a` = **₱477,500.00**
+
+**PL-09 (Path B — Mixed Income, OSD):**
+- `business_nti_path_b` = ₱900,000.00
+- `combined_nti_path_b` = ₱600,000 + ₱900,000 = ₱1,500,000.00
+- `income_tax_path_b` = graduated_tax_2023(₱1,500,000)
+  = ₱102,500 + (₱1,500,000 − ₱800,000) × 0.25
+  = ₱102,500 + ₱175,000
+  = **₱277,500.00** (bracket 4)
+- `percentage_tax_path_b` = **₱45,000.00**
+- `total_tax_path_b` = **₱322,500.00**
+
+**PL-10 (Path C — Mixed Income, 8% separate; NO ₱250K deduction):**
+- `income_tax_compensation_path_c` = graduated_tax_2023(₱600,000)
+  = ₱22,500 + (₱600,000 − ₱400,000) × 0.20
+  = **₱62,500.00** (bracket 3)
+- `income_tax_business_path_c` = ₱1,500,000 × 0.08 = **₱120,000.00** (NO ₱250K deduction)
+- `percentage_tax_path_c` = **₱0.00**
+- `total_tax_path_c` = ₱62,500 + ₱120,000 = **₱182,500.00**
+
+**PL-13 (Compare):**
+- Path A: ₱477,500.00
+- Path B: ₱322,500.00
+- Path C: ₱182,500.00 ← MINIMUM
+- `recommended_path` = PATH_C
+- `savings_vs_next_best` = ₱322,500 − ₱182,500 = **₱140,000.00** (Path C vs Path B)
+- `savings_vs_worst` = ₱477,500 − ₱182,500 = **₱295,000.00** (Path C vs Path A)
+
+**PL-14 (Balance Payable):**
+- `income_tax_due` = ₱182,500.00
+- `compensation_tax_withheld` = ₱62,500.00
+- `total_cwt_business` = ₱0.00
+- `quarterly_it_paid` = ₱0.00
+- `balance_payable` = ₱182,500 − ₱62,500 = **₱120,000.00**
+
+**PL-15:** form = FORM_1701; form_section = SCHEDULE_3B (8% income tax schedule for mixed income earners)
+
+**PL-16:** total_penalties = ₱0.00
+
+### Expected Final Output
+
+```
+TaxComputationResult {
+  tax_year: 2025,  filing_period: ANNUAL,
+  taxpayer_type: MIXED_INCOME,  taxpayer_tier: MICRO,
+  taxpayer_class: SERVICE_PROVIDER,
+
+  regime_comparison: {
+    path_a: {
+      eligible: true,
+      business_nti: 1500000.00,
+      compensation_nti: 600000.00,
+      combined_nti: 2100000.00,
+      income_tax: 432500.00,
+      percentage_tax: 45000.00,
+      total_tax: 477500.00
+    },
+    path_b: {
+      eligible: true,
+      osd_amount: 600000.00,
+      business_nti_osd: 900000.00,
+      compensation_nti: 600000.00,
+      combined_nti: 1500000.00,
+      income_tax: 277500.00,
+      percentage_tax: 45000.00,
+      total_tax: 322500.00
+    },
+    path_c: {
+      eligible: true,
+      income_tax_business: 120000.00,
+      income_tax_compensation: 62500.00,
+      total_income_tax: 182500.00,
+      percentage_tax: 0.00,
+      total_tax: 182500.00,
+      combined_nti: null,
+      note: "₱250,000 deduction does not apply: taxpayer has compensation income (RMC 50-2018)",
+      ineligibility_reasons: []
+    },
+    recommended_path: PATH_C,
+    savings_vs_next_best: 140000.00,
+    savings_vs_worst: 295000.00
+  },
+
+  selected_path: PATH_C,
+  income_tax_due: 182500.00,
+  percentage_tax_due: 0.00,
+  total_tax_due: 182500.00,
+  compensation_tax_withheld: 62500.00,
+  cwt_credits: 0.00,
+  quarterly_it_paid: 0.00,
+  balance_payable: 120000.00,
+  overpayment: 0.00,
+  overpayment_disposition: null,
+  form: FORM_1701,  form_section: SCHEDULE_3B,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [WARN-004],
+  manual_review_flags: [],
+  ineligibility_notifications: []
+}
+```
+
+**WARN-004** fires: total_itemized / gross_receipts = 0 / 1,500,000 = 0% < 5% threshold.
+
+### Verification
+
+- **Path B combined NTI:** 600,000 + 900,000 = **₱1,500,000** ✓; bracket 4: 102,500 + (1,500,000 − 800,000) × 0.25 = 102,500 + 175,000 = **₱277,500** ✓; total B = **₱322,500** ✓
+- **Path A combined NTI:** 600,000 + 1,500,000 = **₱2,100,000** ✓; bracket 5: 402,500 + (2,100,000 − 2,000,000) × 0.30 = **₱432,500** ✓; total A = **₱477,500** ✓
+- **Path C comp IT:** 22,500 + (600,000 − 400,000) × 0.20 = **₱62,500** ✓; biz IT = 1,500,000 × 0.08 = **₱120,000** ✓; total C = **₱182,500** ✓
+- **Savings:** 322,500 − 182,500 = **₱140,000** vs Path B ✓; 477,500 − 182,500 = **₱295,000** vs Path A ✓
+- **Balance:** 182,500 − 62,500 = **₱120,000** ✓ (comp IT fully covered by employer withholding; balance is pure business IT)
+
+**Legal basis:** 8% option: NIRC Sec. 24(A)(2)(b). No ₱250K deduction: RMC 50-2018 Sec. 3. OSD (40%): NIRC Sec. 34(L). Graduated rates: NIRC Sec. 24(A)(1), CR-002. PT (3%): NIRC Sec. 116. PT waived under 8%: NIRC Sec. 24(A)(2)(b). Form 1701 mandatory: MIR-01.
+
+---
+
+## TV-EX-G11-004: SC-M-MH-I — Mid-Compensation Employee + Medium Business (₱1M–₱2M), Itemized Wins (Very High Expenses)
+
+**Scenario code:** SC-M-MH-I
+**Description:** Employed engineer earning ₱400,000 annual taxable compensation (exactly at bracket boundary — 15% rate ends here) running a consulting firm with ₱1,500,000 gross receipts and ₱1,275,000 in documented expenses (85% expense ratio — primarily subcontractor and operating costs). Path A (Itemized) wins at ₱112,500, saving ₱30,000 vs Path C (₱142,500) and ₱160,000 vs Path B (₱272,500). At 85% expenses, business NTI = ₱225,000, keeping combined NTI at ₱625,000 (bracket 3, 20% marginal). Path C's 8% on ₱1.5M full gross (₱120,000) exceeds the marginal graduated IT on ₱225K business NTI (₱45,000 × 20%) when combined with PT (₱45,000). The breakeven expense ratio for this profile is approximately 82%: at 85% (> 82%), Itemized wins.
+
+### Input (fields differing from Group 11 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `taxable_compensation` | ₱400,000.00 | ₱33,333/month gross; after mandatory deductions taxable = ₱400K (bracket 2 top boundary) |
+| `compensation_cwt` (tax_withheld_by_employer) | ₱22,500.00 | Employer withheld: (₱400,000 − ₱250,000) × 0.15 = ₱22,500 |
+| `gross_receipts` | ₱1,500,000.00 | Engineering consulting and project oversight fees |
+| `itemized_expenses.salaries_wages` | ₱900,000.00 | Subcontracted engineers and drafters (project basis; properly invoiced) |
+| `itemized_expenses.rent` | ₱120,000.00 | Dedicated office space: ₱10,000/month × 12 |
+| `itemized_expenses.utilities` | ₱60,000.00 | Electricity, internet, water for office: ₱5,000/month × 12 |
+| `itemized_expenses.supplies` | ₱80,000.00 | CAD software, drafting equipment, safety gear, office supplies |
+| `itemized_expenses.communication` | ₱60,000.00 | Mobile, broadband, project communication tools |
+| `itemized_expenses.other_allowable_deductions` | ₱55,000.00 | Professional development, CPD units, engineering association dues |
+| All other itemized expense fields | ₱0.00 each | |
+| `number_of_form_2316s` | 1 | Single employer |
+
+**Total itemized business expenses:** ₱900,000 + ₱120,000 + ₱60,000 + ₱80,000 + ₱60,000 + ₱55,000 = **₱1,275,000.00** (85.00% of gross receipts)
+
+### Expected Intermediate Values
+
+**PL-05:**
+- `total_itemized_deductions` = ₱1,275,000.00
+- `ear_cap` = ₱1,500,000 × 0.01 = ₱15,000.00; no EAR expense claimed
+- `nolco_applied` = ₱0.00
+
+**PL-06 (OSD):**
+- `osd_amount` = ₱1,500,000 × 0.40 = ₱600,000.00
+- `business_nti_path_b` = ₱900,000.00
+
+**PL-08 (Path A — Mixed Income, Itemized):**
+- `business_nti_path_a` = ₱1,500,000 − ₱1,275,000 = ₱225,000.00
+- `combined_nti_path_a` = ₱400,000 + ₱225,000 = ₱625,000.00
+- `income_tax_path_a` = graduated_tax_2023(₱625,000)
+  = ₱22,500 + (₱625,000 − ₱400,000) × 0.20
+  = ₱22,500 + ₱45,000
+  = **₱67,500.00** (bracket 3)
+- `percentage_tax_path_a` = ₱1,500,000 × 0.03 = **₱45,000.00**
+- `total_tax_path_a` = **₱112,500.00**
+
+**PL-09 (Path B — Mixed Income, OSD):**
+- `business_nti_path_b` = ₱900,000.00
+- `combined_nti_path_b` = ₱400,000 + ₱900,000 = ₱1,300,000.00
+- `income_tax_path_b` = graduated_tax_2023(₱1,300,000)
+  = ₱102,500 + (₱1,300,000 − ₱800,000) × 0.25
+  = ₱102,500 + ₱125,000
+  = **₱227,500.00** (bracket 4)
+- `percentage_tax_path_b` = **₱45,000.00**
+- `total_tax_path_b` = **₱272,500.00**
+
+**PL-10 (Path C — Mixed Income, 8% separate; NO ₱250K deduction):**
+- `income_tax_compensation_path_c` = graduated_tax_2023(₱400,000)
+  = (₱400,000 − ₱250,000) × 0.15
+  = **₱22,500.00** (bracket 2 top)
+- `income_tax_business_path_c` = ₱1,500,000 × 0.08 = **₱120,000.00** (NO ₱250K deduction)
+- `percentage_tax_path_c` = **₱0.00**
+- `total_tax_path_c` = ₱22,500 + ₱120,000 = **₱142,500.00**
+
+**PL-13 (Compare):**
+- Path A: ₱112,500.00 ← MINIMUM
+- Path B: ₱272,500.00
+- Path C: ₱142,500.00
+- `recommended_path` = PATH_A
+- `savings_vs_next_best` = ₱142,500 − ₱112,500 = **₱30,000.00** (Path A vs Path C)
+- `savings_vs_worst` = ₱272,500 − ₱112,500 = **₱160,000.00** (Path A vs Path B)
+
+**PL-14 (Balance Payable):**
+- `income_tax_due` = ₱112,500.00
+- `compensation_tax_withheld` = ₱22,500.00
+- `total_cwt_business` = ₱0.00
+- `quarterly_it_paid` = ₱0.00
+- `balance_payable` = ₱112,500 − ₱22,500 = **₱90,000.00**
+
+**PL-15:** form = FORM_1701; form_section = SCHEDULE_1_ITEMIZED
+
+**PL-16:** total_penalties = ₱0.00
+
+### Expected Final Output
+
+```
+TaxComputationResult {
+  tax_year: 2025,  filing_period: ANNUAL,
+  taxpayer_type: MIXED_INCOME,  taxpayer_tier: MICRO,
+  taxpayer_class: SERVICE_PROVIDER,
+
+  regime_comparison: {
+    path_a: {
+      eligible: true,
+      business_nti: 225000.00,
+      compensation_nti: 400000.00,
+      combined_nti: 625000.00,
+      income_tax: 67500.00,
+      percentage_tax: 45000.00,
+      total_tax: 112500.00
+    },
+    path_b: {
+      eligible: true,
+      osd_amount: 600000.00,
+      business_nti_osd: 900000.00,
+      compensation_nti: 400000.00,
+      combined_nti: 1300000.00,
+      income_tax: 227500.00,
+      percentage_tax: 45000.00,
+      total_tax: 272500.00
+    },
+    path_c: {
+      eligible: true,
+      income_tax_business: 120000.00,
+      income_tax_compensation: 22500.00,
+      total_income_tax: 142500.00,
+      percentage_tax: 0.00,
+      total_tax: 142500.00,
+      combined_nti: null,
+      note: "₱250,000 deduction does not apply: taxpayer has compensation income (RMC 50-2018)",
+      ineligibility_reasons: []
+    },
+    recommended_path: PATH_A,
+    savings_vs_next_best: 30000.00,
+    savings_vs_worst: 160000.00
+  },
+
+  selected_path: PATH_A,
+  income_tax_due: 112500.00,
+  percentage_tax_due: 45000.00,
+  total_tax_due: 157500.00,
+  compensation_tax_withheld: 22500.00,
+  cwt_credits: 0.00,
+  quarterly_it_paid: 0.00,
+  balance_payable: 90000.00,
+  overpayment: 0.00,
+  overpayment_disposition: null,
+  form: FORM_1701,  form_section: SCHEDULE_1_ITEMIZED,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [WARN-003],
+  manual_review_flags: [],
+  ineligibility_notifications: []
+}
+```
+
+**WARN-003** fires: recommended path is PATH_A and no business CWT entries provided.
+
+### Verification
+
+- **Itemized total:** 900,000 + 120,000 + 60,000 + 80,000 + 60,000 + 55,000 = **₱1,275,000** ✓; ratio = 1,275/1,500 = **85.00%** ✓
+- **Path A biz NTI:** 1,500,000 − 1,275,000 = **₱225,000** ✓; combined = **₱625,000** ✓; bracket 3: 22,500 + 225,000 × 0.20 = **₱67,500** ✓; total A = 67,500 + 45,000 = **₱112,500** ✓
+- **Path B combined NTI:** 400,000 + 900,000 = **₱1,300,000** ✓; bracket 4: 102,500 + (1,300,000 − 800,000) × 0.25 = **₱227,500** ✓; total B = **₱272,500** ✓
+- **Path C comp IT:** (400,000 − 250,000) × 0.15 = **₱22,500** ✓; biz IT = 1,500,000 × 0.08 = **₱120,000** ✓; total C = **₱142,500** ✓
+- **Breakeven:** Path A = Path C when: graduated(400K + 1.5M − E) + 45K = 22,500 + 120,000 = 142,500; graduated(1.9M − E) = 97,500; bracket 4 (if ≥ 800K): 102,500 + (NTI − 800K) × 0.25 = 97,500 → NTI < 800K → try bracket 3: 22,500 + (NTI − 400K) × 0.20 = 97,500 → NTI = 775,000; 1.9M − E = 775,000 → E = 1,125,000; breakeven ratio = 1,125,000 / 1,500,000 = **75.0%**. Wait — let me re-derive at 85%: Path A combined NTI = 400K + 225K = 625K which is bracket 3. Path C = 142,500. At breakeven: 22,500 + (400K + NTI_biz − 400K) × 0.20 + 45K = 142,500 where NTI_biz = 1.5M − E → (1.5M − E) × 0.20 + 67,500 = 142,500 → (1.5M − E) = 375,000 → E = 1,125,000 → breakeven ratio = 75.0%. At E = ₱1,275,000 (85%) > 75.0% breakeven → Path A wins ✓
+- **Balance:** 112,500 − 22,500 = **₱90,000** ✓
+
+**Legal basis:** Itemized deductions: NIRC Sec. 34(A)–(K). No ₱250K deduction: RMC 50-2018. PT (3%): NIRC Sec. 116. Graduated rates: NIRC Sec. 24(A)(1). Form 1701 mandatory: MIR-01.
+
+---
+
+## TV-EX-G11-005: SC-M-H-8 — Mid-Compensation Employee + Large Business (₱2M–₱3M), 8% Optimal (No ₱250K Deduction)
+
+**Scenario code:** SC-M-H-8
+**Description:** Employed marketing director earning ₱500,000 annual taxable compensation (bracket 3, 20% marginal) running a high-revenue IT consulting practice with ₱2,500,000 gross receipts and no documented business expenses. Path C (8% on business, separated from comp) wins decisively at ₱242,500 total tax — saving ₱235,000 vs Path B (₱477,500) and ₱535,000 vs Path A (₱777,500). Despite the ₱250K prohibition (Path C biz IT = ₱200,000 vs a hypothetical pure-SE equivalent of ₱180,000), 8% still produces enormous savings because Paths A/B push the combined NTI into the 30% bracket (₱2,500,000+ combined NTI). Employer withheld ₱42,500; balance payable = ₱200,000 (pure business IT; comp IT = employer withheld).
+
+### Input (fields differing from Group 11 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `taxable_compensation` | ₱500,000.00 | ₱41,667/month after mandatory deductions; 13th month (₱41,667) exempt |
+| `compensation_cwt` (tax_withheld_by_employer) | ₱42,500.00 | Employer withheld: 22,500 + (₱500,000 − ₱400,000) × 0.20 = ₱42,500 |
+| `gross_receipts` | ₱2,500,000.00 | IT consulting project fees; below ₱3M threshold → 8% eligible |
+| All itemized expense fields | ₱0.00 each | No business expense receipts |
+| `number_of_form_2316s` | 1 | Single employer |
+
+**Total itemized business expenses:** ₱0.00
+
+### Expected Intermediate Values
+
+**PL-04 (Eligibility):** path_c_eligible = true (₱2,500,000 ≤ ₱3,000,000 AND not VAT-registered); taxpayer_tier = MICRO
+
+**PL-06 (OSD):**
+- `osd_amount` = ₱2,500,000 × 0.40 = ₱1,000,000.00
+- `business_nti_path_b` = ₱1,500,000.00
+
+**PL-08 (Path A — Mixed Income, Itemized = ₱0):**
+- `business_nti_path_a` = ₱2,500,000.00
+- `combined_nti_path_a` = ₱500,000 + ₱2,500,000 = ₱3,000,000.00
+- `income_tax_path_a` = graduated_tax_2023(₱3,000,000)
+  = ₱402,500 + (₱3,000,000 − ₱2,000,000) × 0.30
+  = ₱402,500 + ₱300,000
+  = **₱702,500.00** (bracket 5)
+- `percentage_tax_path_a` = ₱2,500,000 × 0.03 = **₱75,000.00**
+- `total_tax_path_a` = **₱777,500.00**
+
+**PL-09 (Path B — Mixed Income, OSD):**
+- `business_nti_path_b` = ₱1,500,000.00
+- `combined_nti_path_b` = ₱500,000 + ₱1,500,000 = ₱2,000,000.00
+- `income_tax_path_b` = graduated_tax_2023(₱2,000,000)
+  = ₱402,500 + (₱2,000,000 − ₱2,000,000) × 0.30
+  = **₱402,500.00** (exactly at bracket 5 lower boundary)
+- `percentage_tax_path_b` = **₱75,000.00**
+- `total_tax_path_b` = **₱477,500.00**
+
+**PL-10 (Path C — Mixed Income, 8% separate; NO ₱250K deduction):**
+- `income_tax_compensation_path_c` = graduated_tax_2023(₱500,000)
+  = ₱22,500 + (₱500,000 − ₱400,000) × 0.20
+  = **₱42,500.00** (bracket 3)
+- `income_tax_business_path_c` = ₱2,500,000 × 0.08 = **₱200,000.00** (NO ₱250K deduction)
+- `percentage_tax_path_c` = **₱0.00**
+- `total_tax_path_c` = ₱42,500 + ₱200,000 = **₱242,500.00**
+
+**PL-13 (Compare):**
+- Path A: ₱777,500.00
+- Path B: ₱477,500.00
+- Path C: ₱242,500.00 ← MINIMUM
+- `recommended_path` = PATH_C
+- `savings_vs_next_best` = ₱477,500 − ₱242,500 = **₱235,000.00** (Path C vs Path B)
+- `savings_vs_worst` = ₱777,500 − ₱242,500 = **₱535,000.00** (Path C vs Path A)
+
+**PL-14 (Balance Payable):**
+- `income_tax_due` = ₱242,500.00
+- `compensation_tax_withheld` = ₱42,500.00
+- `total_cwt_business` = ₱0.00
+- `quarterly_it_paid` = ₱0.00
+- `balance_payable` = ₱242,500 − ₱42,500 = **₱200,000.00**
+
+**PL-15:** form = FORM_1701; form_section = SCHEDULE_3B
+
+**PL-16:** total_penalties = ₱0.00
+
+### Expected Final Output
+
+```
+TaxComputationResult {
+  tax_year: 2025,  filing_period: ANNUAL,
+  taxpayer_type: MIXED_INCOME,  taxpayer_tier: MICRO,
+  taxpayer_class: SERVICE_PROVIDER,
+
+  regime_comparison: {
+    path_a: {
+      eligible: true,
+      business_nti: 2500000.00,
+      compensation_nti: 500000.00,
+      combined_nti: 3000000.00,
+      income_tax: 702500.00,
+      percentage_tax: 75000.00,
+      total_tax: 777500.00
+    },
+    path_b: {
+      eligible: true,
+      osd_amount: 1000000.00,
+      business_nti_osd: 1500000.00,
+      compensation_nti: 500000.00,
+      combined_nti: 2000000.00,
+      income_tax: 402500.00,
+      percentage_tax: 75000.00,
+      total_tax: 477500.00
+    },
+    path_c: {
+      eligible: true,
+      income_tax_business: 200000.00,
+      income_tax_compensation: 42500.00,
+      total_income_tax: 242500.00,
+      percentage_tax: 0.00,
+      total_tax: 242500.00,
+      combined_nti: null,
+      note: "₱250,000 deduction does not apply: taxpayer has compensation income (RMC 50-2018)",
+      ineligibility_reasons: []
+    },
+    recommended_path: PATH_C,
+    savings_vs_next_best: 235000.00,
+    savings_vs_worst: 535000.00
+  },
+
+  selected_path: PATH_C,
+  income_tax_due: 242500.00,
+  percentage_tax_due: 0.00,
+  total_tax_due: 242500.00,
+  compensation_tax_withheld: 42500.00,
+  cwt_credits: 0.00,
+  quarterly_it_paid: 0.00,
+  balance_payable: 200000.00,
+  overpayment: 0.00,
+  overpayment_disposition: null,
+  form: FORM_1701,  form_section: SCHEDULE_3B,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [WARN-004],
+  manual_review_flags: [],
+  ineligibility_notifications: []
+}
+```
+
+**WARN-004** fires: total_itemized / gross_receipts = 0 / 2,500,000 = 0% < 5% threshold.
+
+### Verification
+
+- **Path B combined NTI:** 500,000 + 1,500,000 = **₱2,000,000** ✓; bracket 5 lower boundary: 402,500 + 0 = **₱402,500** ✓; total B = 402,500 + 75,000 = **₱477,500** ✓
+- **Path A combined NTI:** 500,000 + 2,500,000 = **₱3,000,000** ✓; bracket 5: 402,500 + (3,000,000 − 2,000,000) × 0.30 = **₱702,500** ✓; total A = **₱777,500** ✓
+- **Path C comp IT:** 22,500 + (500,000 − 400,000) × 0.20 = **₱42,500** ✓; biz IT = 2,500,000 × 0.08 = **₱200,000** ✓; total C = **₱242,500** ✓
+- **Savings:** 477,500 − 242,500 = **₱235,000** ✓; 777,500 − 242,500 = **₱535,000** ✓
+- **Balance:** 242,500 − 42,500 = **₱200,000** ✓
+- **Bracket boundary note:** Path B combined NTI lands exactly at ₱2,000,000 — the bracket 5 boundary. graduated_tax_2023(2,000,000) = 402,500 + (2,000,000 − 2,000,000) × 0.30 = 402,500 + 0 = **₱402,500**. The OSD NTI of ₱1,500,000 plus ₱500K comp equals exactly ₱2M. This is coincidental but verifiable: 2,500,000 × 0.60 = 1,500,000; 1,500,000 + 500,000 = 2,000,000 ✓
+
+**Legal basis:** 8% option: NIRC Sec. 24(A)(2)(b). No ₱250K deduction: RMC 50-2018 Sec. 3. OSD (40%): NIRC Sec. 34(L). Graduated rates: NIRC Sec. 24(A)(1). PT waived under 8%: NIRC Sec. 24(A)(2)(b). Form 1701 mandatory: MIR-01.
+
+---
+
+## TV-EX-G11-006: SC-M-H-O — High-Compensation Employee + Large Business (₱2M–₱3M), OSD Path Exercised (Path C Wins)
+
+**Scenario code:** SC-M-H-O
+**Description:** Senior bank officer earning ₱800,000 annual taxable compensation (exactly at bracket 4 lower boundary, 25% marginal rate starts) with a freelance financial advisory practice earning ₱2,800,000. No documented business expenses. Path C wins at ₱326,500, saving ₱304,000 vs Path B (₱630,500) and ₱640,000 vs Path A (₱966,500). This vector exercises the OSD computation for the high-income mixed earner range: OSD NTI of ₱1,680,000 plus ₱800K comp = ₱2,480,000 combined NTI (bracket 5, 30%), yielding IT of ₱546,500 — nearly triple the Path C total. Employer withheld ₱102,500; balance payable = ₱224,000 (business IT only; comp IT = employer withheld).
+
+### Input (fields differing from Group 11 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `taxable_compensation` | ₱800,000.00 | Senior officer salary after mandatory deductions; 13th month (₱66,667) within ₱90K exempt |
+| `compensation_cwt` (tax_withheld_by_employer) | ₱102,500.00 | Employer withheld: 102,500 + (₱800,000 − ₱800,000) × 0.25 = ₱102,500 (at bracket 4 boundary: graduated_tax_2023(800,000) = 102,500) |
+| `gross_receipts` | ₱2,800,000.00 | Financial advisory, investment consulting, estate planning fees |
+| All itemized expense fields | ₱0.00 each | No documented business expenses |
+| `number_of_form_2316s` | 1 | Single employer |
+
+**Total itemized business expenses:** ₱0.00
+
+### Expected Intermediate Values
+
+**PL-04:** path_c_eligible = true (₱2,800,000 ≤ ₱3,000,000 AND not VAT-registered); taxpayer_tier = MICRO
+
+**PL-06 (OSD):**
+- `osd_amount` = ₱2,800,000 × 0.40 = ₱1,120,000.00
+- `business_nti_path_b` = ₱1,680,000.00
+
+**PL-08 (Path A — Itemized = ₱0):**
+- `business_nti_path_a` = ₱2,800,000.00
+- `combined_nti_path_a` = ₱800,000 + ₱2,800,000 = ₱3,600,000.00
+- `income_tax_path_a` = graduated_tax_2023(₱3,600,000)
+  = ₱402,500 + (₱3,600,000 − ₱2,000,000) × 0.30
+  = ₱402,500 + ₱480,000
+  = **₱882,500.00** (bracket 5)
+- `percentage_tax_path_a` = ₱2,800,000 × 0.03 = **₱84,000.00**
+- `total_tax_path_a` = **₱966,500.00**
+
+**PL-09 (Path B — OSD):**
+- `business_nti_path_b` = ₱1,680,000.00
+- `combined_nti_path_b` = ₱800,000 + ₱1,680,000 = ₱2,480,000.00
+- `income_tax_path_b` = graduated_tax_2023(₱2,480,000)
+  = ₱402,500 + (₱2,480,000 − ₱2,000,000) × 0.30
+  = ₱402,500 + ₱144,000
+  = **₱546,500.00** (bracket 5)
+- `percentage_tax_path_b` = **₱84,000.00**
+- `total_tax_path_b` = **₱630,500.00**
+
+**PL-10 (Path C — 8% separate; NO ₱250K deduction):**
+- `income_tax_compensation_path_c` = graduated_tax_2023(₱800,000)
+  = **₱102,500.00** (bracket 4 boundary: 102,500 + 0 × 0.25)
+- `income_tax_business_path_c` = ₱2,800,000 × 0.08 = **₱224,000.00**
+- `percentage_tax_path_c` = **₱0.00**
+- `total_tax_path_c` = ₱102,500 + ₱224,000 = **₱326,500.00**
+
+**PL-13 (Compare):**
+- Path A: ₱966,500.00
+- Path B: ₱630,500.00
+- Path C: ₱326,500.00 ← MINIMUM
+- `recommended_path` = PATH_C
+- `savings_vs_next_best` = ₱630,500 − ₱326,500 = **₱304,000.00**
+- `savings_vs_worst` = ₱966,500 − ₱326,500 = **₱640,000.00**
+
+**PL-14:** income_tax_due = ₱326,500; compensation_tax_withheld = ₱102,500; balance_payable = **₱224,000.00**
+
+**PL-15:** form = FORM_1701; form_section = SCHEDULE_3B
+
+### Expected Final Output
+
+```
+TaxComputationResult {
+  tax_year: 2025,  filing_period: ANNUAL,
+  taxpayer_type: MIXED_INCOME,  taxpayer_tier: MICRO,
+
+  regime_comparison: {
+    path_a: { eligible: true, business_nti: 2800000.00, compensation_nti: 800000.00,
+              combined_nti: 3600000.00, income_tax: 882500.00,
+              percentage_tax: 84000.00, total_tax: 966500.00 },
+    path_b: { eligible: true, osd_amount: 1120000.00, business_nti_osd: 1680000.00,
+              compensation_nti: 800000.00, combined_nti: 2480000.00,
+              income_tax: 546500.00, percentage_tax: 84000.00, total_tax: 630500.00 },
+    path_c: { eligible: true, income_tax_business: 224000.00,
+              income_tax_compensation: 102500.00, total_income_tax: 326500.00,
+              percentage_tax: 0.00, total_tax: 326500.00, combined_nti: null,
+              note: "₱250,000 deduction does not apply: taxpayer has compensation income (RMC 50-2018)",
+              ineligibility_reasons: [] },
+    recommended_path: PATH_C,
+    savings_vs_next_best: 304000.00,
+    savings_vs_worst: 640000.00
+  },
+
+  selected_path: PATH_C,
+  income_tax_due: 326500.00,
+  percentage_tax_due: 0.00,
+  total_tax_due: 326500.00,
+  compensation_tax_withheld: 102500.00,
+  cwt_credits: 0.00,
+  quarterly_it_paid: 0.00,
+  balance_payable: 224000.00,
+  overpayment: 0.00,
+  overpayment_disposition: null,
+  form: FORM_1701,  form_section: SCHEDULE_3B,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [WARN-004],
+  manual_review_flags: [],
+  ineligibility_notifications: []
+}
+```
+
+### Verification
+
+- **Path B combined NTI:** 800,000 + 1,680,000 = **₱2,480,000** ✓; bracket 5: 402,500 + (2,480,000 − 2,000,000) × 0.30 = 402,500 + 144,000 = **₱546,500** ✓; total B = **₱630,500** ✓
+- **Path A combined NTI:** 800,000 + 2,800,000 = **₱3,600,000** ✓; bracket 5: 402,500 + (3,600,000 − 2,000,000) × 0.30 = **₱882,500** ✓; total A = **₱966,500** ✓
+- **Path C comp IT:** graduated_tax_2023(800,000) = 102,500 + (800,000 − 800,000) × 0.25 = **₱102,500** ✓; biz IT = 2,800,000 × 0.08 = **₱224,000** ✓; total C = **₱326,500** ✓
+- **Balance:** 326,500 − 102,500 = **₱224,000** ✓
+
+**Legal basis:** 8% option: NIRC Sec. 24(A)(2)(b). No ₱250K deduction: RMC 50-2018. OSD (40%): NIRC Sec. 34(L). Graduated rates: NIRC Sec. 24(A)(1). Form 1701 mandatory: MIR-01.
+
+---
+
+## TV-EX-G11-007: SC-M-H-I — Mid-High-Compensation Employee + Large Business (₱2M–₱3M), Itemized Wins
+
+**Scenario code:** SC-M-H-I
+**Description:** Employed architect earning ₱600,000 annual taxable compensation (bracket 3, 20% marginal) running a large architecture practice with ₱2,400,000 gross receipts and ₱2,000,000 in documented expenses (83.33% expense ratio — staff salaries dominate). Path A (Itemized) wins at ₱224,500, saving ₱30,000 vs Path C (₱254,500) and ₱262,000 vs Path B (₱486,500). At 83.33% expenses, business NTI = ₱400,000, keeping combined NTI at ₱1,000,000 (bracket 4, 25% marginal). Path C's 8% on ₱2.4M full gross (₱192,000) exceeds itemized's combined IT of ₱152,500, even after adding PT ₱72,000 to Path A's total. The breakeven expense ratio for this profile (₱600K comp + ₱2.4M biz) is approximately 81%: at 83.33% (> 81%), Itemized wins.
+
+### Input (fields differing from Group 11 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `taxable_compensation` | ₱600,000.00 | ₱50,000/month after mandatory deductions; 13th month (₱50K) exempt |
+| `compensation_cwt` (tax_withheld_by_employer) | ₱62,500.00 | Employer withheld: 22,500 + (₱600,000 − ₱400,000) × 0.20 = ₱62,500 |
+| `gross_receipts` | ₱2,400,000.00 | Architecture design fees, project management, structural consultation |
+| `itemized_expenses.salaries_wages` | ₱1,400,000.00 | Junior architects, drafters, administrative staff (full-time employees; BIR-registered payroll) |
+| `itemized_expenses.rent` | ₱240,000.00 | Office lease: ₱20,000/month × 12 |
+| `itemized_expenses.utilities` | ₱96,000.00 | Electricity, internet, water: ₱8,000/month × 12 |
+| `itemized_expenses.supplies` | ₱120,000.00 | CAD software, drafting materials, architectural models |
+| `itemized_expenses.communication` | ₱60,000.00 | Mobile, broadband, project collaboration tools |
+| `itemized_expenses.depreciation` | ₱84,000.00 | Office furniture (₱240K cost, 5-yr SL = ₱48K/yr) + workstations (₱180K cost, 5-yr SL = ₱36K/yr) = ₱84K total |
+| All other itemized expense fields | ₱0.00 each | |
+| `number_of_form_2316s` | 1 | Single employer |
+
+**Total itemized business expenses:** ₱1,400,000 + ₱240,000 + ₱96,000 + ₱120,000 + ₱60,000 + ₱84,000 = **₱2,000,000.00** (83.33% of gross receipts)
+
+### Expected Intermediate Values
+
+**PL-05:**
+- `total_itemized_deductions` = ₱2,000,000.00
+- `ear_cap` = ₱2,400,000 × 0.01 = ₱24,000.00; no EAR expense claimed
+- `nolco_applied` = ₱0.00
+
+**PL-06 (OSD):**
+- `osd_amount` = ₱2,400,000 × 0.40 = ₱960,000.00
+- `business_nti_path_b` = ₱1,440,000.00
+
+**PL-08 (Path A — Itemized):**
+- `business_nti_path_a` = ₱2,400,000 − ₱2,000,000 = ₱400,000.00
+- `combined_nti_path_a` = ₱600,000 + ₱400,000 = ₱1,000,000.00
+- `income_tax_path_a` = graduated_tax_2023(₱1,000,000)
+  = ₱102,500 + (₱1,000,000 − ₱800,000) × 0.25
+  = ₱102,500 + ₱50,000
+  = **₱152,500.00** (bracket 4)
+- `percentage_tax_path_a` = ₱2,400,000 × 0.03 = **₱72,000.00**
+- `total_tax_path_a` = **₱224,500.00**
+
+**PL-09 (Path B — OSD):**
+- `business_nti_path_b` = ₱1,440,000.00
+- `combined_nti_path_b` = ₱600,000 + ₱1,440,000 = ₱2,040,000.00
+- `income_tax_path_b` = graduated_tax_2023(₱2,040,000)
+  = ₱402,500 + (₱2,040,000 − ₱2,000,000) × 0.30
+  = ₱402,500 + ₱12,000
+  = **₱414,500.00** (bracket 5)
+- `percentage_tax_path_b` = **₱72,000.00**
+- `total_tax_path_b` = **₱486,500.00**
+
+**PL-10 (Path C — 8% separate; NO ₱250K deduction):**
+- `income_tax_compensation_path_c` = graduated_tax_2023(₱600,000)
+  = ₱22,500 + (₱600,000 − ₱400,000) × 0.20
+  = **₱62,500.00** (bracket 3)
+- `income_tax_business_path_c` = ₱2,400,000 × 0.08 = **₱192,000.00**
+- `percentage_tax_path_c` = **₱0.00**
+- `total_tax_path_c` = ₱62,500 + ₱192,000 = **₱254,500.00**
+
+**PL-13 (Compare):**
+- Path A: ₱224,500.00 ← MINIMUM
+- Path B: ₱486,500.00
+- Path C: ₱254,500.00
+- `recommended_path` = PATH_A
+- `savings_vs_next_best` = ₱254,500 − ₱224,500 = **₱30,000.00** (Path A vs Path C)
+- `savings_vs_worst` = ₱486,500 − ₱224,500 = **₱262,000.00** (Path A vs Path B)
+
+**PL-14:** income_tax_due = ₱224,500; compensation_tax_withheld = ₱62,500; balance_payable = **₱162,000.00**
+
+**PL-15:** form = FORM_1701; form_section = SCHEDULE_1_ITEMIZED
+
+### Expected Final Output
+
+```
+TaxComputationResult {
+  tax_year: 2025,  filing_period: ANNUAL,
+  taxpayer_type: MIXED_INCOME,  taxpayer_tier: MICRO,
+
+  regime_comparison: {
+    path_a: { eligible: true, business_nti: 400000.00, compensation_nti: 600000.00,
+              combined_nti: 1000000.00, income_tax: 152500.00,
+              percentage_tax: 72000.00, total_tax: 224500.00 },
+    path_b: { eligible: true, osd_amount: 960000.00, business_nti_osd: 1440000.00,
+              compensation_nti: 600000.00, combined_nti: 2040000.00,
+              income_tax: 414500.00, percentage_tax: 72000.00, total_tax: 486500.00 },
+    path_c: { eligible: true, income_tax_business: 192000.00,
+              income_tax_compensation: 62500.00, total_income_tax: 254500.00,
+              percentage_tax: 0.00, total_tax: 254500.00, combined_nti: null,
+              note: "₱250,000 deduction does not apply: taxpayer has compensation income (RMC 50-2018)",
+              ineligibility_reasons: [] },
+    recommended_path: PATH_A,
+    savings_vs_next_best: 30000.00,
+    savings_vs_worst: 262000.00
+  },
+
+  selected_path: PATH_A,
+  income_tax_due: 224500.00,
+  percentage_tax_due: 72000.00,
+  total_tax_due: 296500.00,
+  compensation_tax_withheld: 62500.00,
+  cwt_credits: 0.00,
+  quarterly_it_paid: 0.00,
+  balance_payable: 162000.00,
+  overpayment: 0.00,
+  overpayment_disposition: null,
+  form: FORM_1701,  form_section: SCHEDULE_1_ITEMIZED,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [WARN-003],
+  manual_review_flags: [],
+  ineligibility_notifications: []
+}
+```
+
+**WARN-003** fires: recommended path is PATH_A and no business CWT entries provided.
+
+### Verification
+
+- **Itemized total:** 1,400,000 + 240,000 + 96,000 + 120,000 + 60,000 + 84,000 = **₱2,000,000** ✓; ratio = 2,000/2,400 = **83.33%** ✓
+- **Path A biz NTI:** 2,400,000 − 2,000,000 = **₱400,000** ✓; combined = **₱1,000,000** ✓; bracket 4: 102,500 + 200,000 × 0.25 = **₱152,500** ✓; total A = 152,500 + 72,000 = **₱224,500** ✓
+- **Path B combined NTI:** 600,000 + 1,440,000 = **₱2,040,000** ✓; bracket 5: 402,500 + 40,000 × 0.30 = **₱414,500** ✓; total B = **₱486,500** ✓
+- **Path C comp IT:** 22,500 + 200,000 × 0.20 = **₱62,500** ✓; biz IT = 2,400,000 × 0.08 = **₱192,000** ✓; total C = **₱254,500** ✓
+- **Balance:** 224,500 − 62,500 = **₱162,000** ✓
+
+**Legal basis:** Itemized deductions: NIRC Sec. 34(A)–(K). Staff salaries as business expenses: Sec. 34(A)(1). Depreciation: Sec. 34(F). No ₱250K deduction: RMC 50-2018. Graduated rates: NIRC Sec. 24(A)(1). Form 1701 mandatory: MIR-01.
+
+---
+
+## TV-EX-G11-008: SC-M-GOVT — Government Employee + Business (GSIS Contributor)
+
+**Scenario code:** SC-M-GOVT
+**Description:** Government school teacher (Teacher III, DepEd) earning ₱420,000 annual taxable compensation with a side tutoring and online course business earning ₱600,000 gross receipts. No documented business expenses. Path C wins at ₱74,500, saving ₱42,000 vs Path B (₱116,500) and ₱101,000 vs Path A (₱175,500). Key distinction from private employment: GSIS contributions instead of SSS (9% employee share of ₱24,996 base salary vs SSS ₱1,440/month cap), but the income tax treatment is identical — GSIS contributions are non-taxable exclusions per NIRC Sec. 32(B)(7)(f), treated the same as SSS for purposes of taxable compensation computation. Government employer (DepEd central office or school division) issues BIR Form 2316 and withholds income tax on compensation via BIR withholding agent designation.
+
+### Input (fields differing from Group 11 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `taxable_compensation` | ₱420,000.00 | Teacher III gross salary ₱504,000 (₱42K/month) − GSIS 9% (₱45,360) − PhilHealth (₱12,600) − Pag-IBIG (₱1,200) − 13th month ₱42K (exempt within ₱90K ceiling) − other non-taxable allowances ₱(remainder) ≈ ₱420K taxable |
+| `compensation_cwt` (tax_withheld_by_employer) | ₱26,500.00 | DepEd/government agency withheld: 22,500 + (₱420,000 − ₱400,000) × 0.20 = 22,500 + 4,000 = ₱26,500 |
+| `gross_receipts` | ₱600,000.00 | Private tutoring income + online course platform sales (non-employer educational income; separate BIR registration required) |
+| All itemized expense fields | ₱0.00 each | No separate business expense receipts |
+| `number_of_form_2316s` | 1 | Single government employer; Form 2316 issued by school/division |
+| `employer_type` (informational) | GOVERNMENT | GSIS contributor; non-taxable GSIS contributions already excluded from taxable_compensation input |
+
+**Total itemized business expenses:** ₱0.00
+
+### Expected Intermediate Values
+
+**PL-04:** path_c_eligible = true (₱600,000 ≤ ₱3,000,000 AND not VAT-registered); taxpayer_tier = MICRO
+
+**PL-06 (OSD):**
+- `osd_amount` = ₱600,000 × 0.40 = ₱240,000.00
+- `business_nti_path_b` = ₱360,000.00
+
+**PL-08 (Path A — Itemized = ₱0):**
+- `business_nti_path_a` = ₱600,000.00
+- `combined_nti_path_a` = ₱420,000 + ₱600,000 = ₱1,020,000.00
+- `income_tax_path_a` = graduated_tax_2023(₱1,020,000)
+  = ₱102,500 + (₱1,020,000 − ₱800,000) × 0.25
+  = ₱102,500 + ₱55,000
+  = **₱157,500.00** (bracket 4)
+- `percentage_tax_path_a` = ₱600,000 × 0.03 = **₱18,000.00**
+- `total_tax_path_a` = **₱175,500.00**
+
+**PL-09 (Path B — OSD):**
+- `business_nti_path_b` = ₱360,000.00
+- `combined_nti_path_b` = ₱420,000 + ₱360,000 = ₱780,000.00
+- `income_tax_path_b` = graduated_tax_2023(₱780,000)
+  = ₱22,500 + (₱780,000 − ₱400,000) × 0.20
+  = ₱22,500 + ₱76,000
+  = **₱98,500.00** (bracket 3)
+- `percentage_tax_path_b` = **₱18,000.00**
+- `total_tax_path_b` = **₱116,500.00**
+
+**PL-10 (Path C — 8% separate; NO ₱250K deduction):**
+- `income_tax_compensation_path_c` = graduated_tax_2023(₱420,000)
+  = ₱22,500 + (₱420,000 − ₱400,000) × 0.20
+  = ₱22,500 + ₱4,000
+  = **₱26,500.00** (bracket 3)
+- `income_tax_business_path_c` = ₱600,000 × 0.08 = **₱48,000.00** (NO ₱250K deduction)
+- `percentage_tax_path_c` = **₱0.00**
+- `total_tax_path_c` = ₱26,500 + ₱48,000 = **₱74,500.00**
+
+**PL-13 (Compare):**
+- Path A: ₱175,500.00
+- Path B: ₱116,500.00
+- Path C: ₱74,500.00 ← MINIMUM
+- `recommended_path` = PATH_C
+- `savings_vs_next_best` = ₱116,500 − ₱74,500 = **₱42,000.00**
+- `savings_vs_worst` = ₱175,500 − ₱74,500 = **₱101,000.00**
+
+**PL-14:** income_tax_due = ₱74,500; compensation_tax_withheld = ₱26,500; balance_payable = **₱48,000.00**
+
+**PL-15:** form = FORM_1701; form_section = SCHEDULE_3B
+
+### Expected Final Output
+
+```
+TaxComputationResult {
+  tax_year: 2025,  filing_period: ANNUAL,
+  taxpayer_type: MIXED_INCOME,  taxpayer_tier: MICRO,
+
+  regime_comparison: {
+    path_a: { eligible: true, business_nti: 600000.00, compensation_nti: 420000.00,
+              combined_nti: 1020000.00, income_tax: 157500.00,
+              percentage_tax: 18000.00, total_tax: 175500.00 },
+    path_b: { eligible: true, osd_amount: 240000.00, business_nti_osd: 360000.00,
+              compensation_nti: 420000.00, combined_nti: 780000.00,
+              income_tax: 98500.00, percentage_tax: 18000.00, total_tax: 116500.00 },
+    path_c: { eligible: true, income_tax_business: 48000.00,
+              income_tax_compensation: 26500.00, total_income_tax: 74500.00,
+              percentage_tax: 0.00, total_tax: 74500.00, combined_nti: null,
+              note: "₱250,000 deduction does not apply: taxpayer has compensation income (RMC 50-2018)",
+              ineligibility_reasons: [] },
+    recommended_path: PATH_C,
+    savings_vs_next_best: 42000.00,
+    savings_vs_worst: 101000.00
+  },
+
+  selected_path: PATH_C,
+  income_tax_due: 74500.00,
+  percentage_tax_due: 0.00,
+  total_tax_due: 74500.00,
+  compensation_tax_withheld: 26500.00,
+  cwt_credits: 0.00,
+  quarterly_it_paid: 0.00,
+  balance_payable: 48000.00,
+  overpayment: 0.00,
+  overpayment_disposition: null,
+  form: FORM_1701,  form_section: SCHEDULE_3B,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [WARN-004],
+  manual_review_flags: [],
+  ineligibility_notifications: []
+}
+```
+
+**WARN-004** fires: total_itemized / gross_receipts = 0% < 5%.
+
+### Verification
+
+- **Path B combined NTI:** 420,000 + 360,000 = **₱780,000** ✓; bracket 3: 22,500 + (780,000 − 400,000) × 0.20 = 22,500 + 76,000 = **₱98,500** ✓; total B = 98,500 + 18,000 = **₱116,500** ✓
+- **Path A combined NTI:** 420,000 + 600,000 = **₱1,020,000** ✓; bracket 4: 102,500 + 220,000 × 0.25 = **₱157,500** ✓; total A = **₱175,500** ✓
+- **Path C comp IT:** 22,500 + 20,000 × 0.20 = **₱26,500** ✓; biz IT = 600,000 × 0.08 = **₱48,000** ✓; total C = **₱74,500** ✓
+- **GSIS treatment:** GSIS contributions are non-taxable exclusions per NIRC Sec. 32(B)(7)(f), identical to SSS for income tax purposes. The engine does NOT distinguish between GSIS and SSS — both are handled by having the taxpayer enter the pre-computed `taxable_compensation` from Form 2316. ✓
+- **Government employer withholding:** Government agencies with BIR withholding agent designation (per RR 1-2014) withhold income tax on compensation exactly as private employers. The Form 2316 format and 25th-month deadline are the same. ✓
+- **Balance:** 74,500 − 26,500 = **₱48,000** ✓
+
+**Legal basis:** GSIS non-taxable: NIRC Sec. 32(B)(7)(f); RA 8291 (GSIS Act). Compensation IT: NIRC Sec. 24(A)(1). 8% option: NIRC Sec. 24(A)(2)(b). No ₱250K deduction: RMC 50-2018. Form 1701 mandatory: MIR-01.
+
+---
+
+## TV-EX-G11-009: SC-M-DUAL-EMP — Two Private Employers + Business (Underwithheld Compensation)
+
+**Scenario code:** SC-M-DUAL-EMP
+**Description:** Accountant holding two private employment positions simultaneously — main job (₱350,000 taxable compensation) and a part-time position (₱200,000 taxable compensation) — plus a freelance bookkeeping business (₱500,000 gross receipts). Critical mechanic: each employer withholds income tax based on THEIR OWN payroll only, without knowledge of the other employer's compensation. Main employer withheld ₱15,000; part-time employer withheld ₱0 (₱200K < ₱250K zero bracket). Combined taxable compensation = ₱550,000 (already in bracket 3 at 20% marginal), but total employer withholding = ₱15,000 — only 19.6% of the actual compensation IT due (₱52,500). The large underwithheld compensation tax (₱37,500) plus business income tax (₱40,000 under Path C) produces a balance payable of ₱77,500 — often a surprise for taxpayers with dual employment.
+
+### Input (fields differing from Group 11 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `taxable_compensation` | ₱550,000.00 | Aggregated from two Form 2316s: Main employer ₱350,000 + Part-time employer ₱200,000 |
+| `compensation_cwt` (tax_withheld_by_employer) | ₱15,000.00 | Main employer withheld (350,000 − 250,000) × 0.15 = ₱15,000; part-time employer withheld ₱0 (200,000 < 250,000 zero bracket on their payroll alone) |
+| `gross_receipts` | ₱500,000.00 | Freelance bookkeeping and accounting services |
+| All itemized expense fields | ₱0.00 each | No business expense receipts |
+| `number_of_form_2316s` | 2 | Two separate employers; aggregated inputs per CR-030 Section 8 |
+
+**Total itemized business expenses:** ₱0.00
+
+**Employer withholding breakdown (informational for UI):**
+
+| Employer | Taxable Comp | IT Withheld | Basis |
+|----------|-------------|-------------|-------|
+| Main employer (full-time) | ₱350,000 | ₱15,000 | (350K − 250K) × 15% = 15,000 |
+| Part-time employer | ₱200,000 | ₱0 | 200K < 250K zero bracket |
+| **Total** | **₱550,000** | **₱15,000** | Underwithheld by ₱37,500 vs actual comp IT |
+
+### Expected Intermediate Values
+
+**PL-04:** path_c_eligible = true (₱500,000 ≤ ₱3,000,000 AND not VAT-registered); taxpayer_tier = MICRO
+
+**PL-06 (OSD):**
+- `osd_amount` = ₱500,000 × 0.40 = ₱200,000.00
+- `business_nti_path_b` = ₱300,000.00
+
+**PL-08 (Path A — Itemized = ₱0):**
+- `business_nti_path_a` = ₱500,000.00
+- `combined_nti_path_a` = ₱550,000 + ₱500,000 = ₱1,050,000.00
+- `income_tax_path_a` = graduated_tax_2023(₱1,050,000)
+  = ₱102,500 + (₱1,050,000 − ₱800,000) × 0.25
+  = ₱102,500 + ₱62,500
+  = **₱165,000.00** (bracket 4)
+- `percentage_tax_path_a` = ₱500,000 × 0.03 = **₱15,000.00**
+- `total_tax_path_a` = **₱180,000.00**
+
+**PL-09 (Path B — OSD):**
+- `business_nti_path_b` = ₱300,000.00
+- `combined_nti_path_b` = ₱550,000 + ₱300,000 = ₱850,000.00
+- `income_tax_path_b` = graduated_tax_2023(₱850,000)
+  = ₱102,500 + (₱850,000 − ₱800,000) × 0.25
+  = ₱102,500 + ₱12,500
+  = **₱115,000.00** (bracket 4)
+- `percentage_tax_path_b` = **₱15,000.00**
+- `total_tax_path_b` = **₱130,000.00**
+
+**PL-10 (Path C — 8% separate; NO ₱250K deduction):**
+- `income_tax_compensation_path_c` = graduated_tax_2023(₱550,000)
+  = ₱22,500 + (₱550,000 − ₱400,000) × 0.20
+  = ₱22,500 + ₱30,000
+  = **₱52,500.00** (bracket 3)
+- `income_tax_business_path_c` = ₱500,000 × 0.08 = **₱40,000.00** (NO ₱250K deduction)
+- `percentage_tax_path_c` = **₱0.00**
+- `total_tax_path_c` = ₱52,500 + ₱40,000 = **₱92,500.00**
+
+**PL-13 (Compare):**
+- Path A: ₱180,000.00
+- Path B: ₱130,000.00
+- Path C: ₱92,500.00 ← MINIMUM
+- `recommended_path` = PATH_C
+- `savings_vs_next_best` = ₱130,000 − ₱92,500 = **₱37,500.00**
+- `savings_vs_worst` = ₱180,000 − ₱92,500 = **₱87,500.00**
+
+**PL-14 (Balance Payable):**
+- `income_tax_due` = ₱92,500.00
+- `compensation_tax_withheld` = ₱15,000.00 (both employers combined)
+- `total_cwt_business` = ₱0.00
+- `quarterly_it_paid` = ₱0.00
+- `balance_payable` = ₱92,500 − ₱15,000 = **₱77,500.00**
+
+**PL-15:** form = FORM_1701; form_section = SCHEDULE_3B
+
+### Expected Final Output
+
+```
+TaxComputationResult {
+  tax_year: 2025,  filing_period: ANNUAL,
+  taxpayer_type: MIXED_INCOME,  taxpayer_tier: MICRO,
+
+  regime_comparison: {
+    path_a: { eligible: true, business_nti: 500000.00, compensation_nti: 550000.00,
+              combined_nti: 1050000.00, income_tax: 165000.00,
+              percentage_tax: 15000.00, total_tax: 180000.00 },
+    path_b: { eligible: true, osd_amount: 200000.00, business_nti_osd: 300000.00,
+              compensation_nti: 550000.00, combined_nti: 850000.00,
+              income_tax: 115000.00, percentage_tax: 15000.00, total_tax: 130000.00 },
+    path_c: { eligible: true, income_tax_business: 40000.00,
+              income_tax_compensation: 52500.00, total_income_tax: 92500.00,
+              percentage_tax: 0.00, total_tax: 92500.00, combined_nti: null,
+              note: "₱250,000 deduction does not apply: taxpayer has compensation income (RMC 50-2018)",
+              ineligibility_reasons: [] },
+    recommended_path: PATH_C,
+    savings_vs_next_best: 37500.00,
+    savings_vs_worst: 87500.00
+  },
+
+  selected_path: PATH_C,
+  income_tax_due: 92500.00,
+  percentage_tax_due: 0.00,
+  total_tax_due: 92500.00,
+  compensation_tax_withheld: 15000.00,
+  cwt_credits: 0.00,
+  quarterly_it_paid: 0.00,
+  balance_payable: 77500.00,
+  overpayment: 0.00,
+  overpayment_disposition: null,
+  form: FORM_1701,  form_section: SCHEDULE_3B,
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [WARN-004],
+  manual_review_flags: [],
+  ineligibility_notifications: []
+}
+```
+
+**WARN-004** fires: total_itemized / gross_receipts = 0% < 5%.
+**Informational display (UI, not a formal warning code):** "You have entered 2 employer Form 2316s. Your second employer withheld ₱0 on their ₱200,000 payroll because they did not know about your first employer's ₱350,000 compensation. Your combined compensation of ₱550,000 results in ₱52,500 income tax on compensation, but only ₱15,000 was withheld — leaving ₱37,500 of compensation income tax to be paid on your annual return. This is a common result for taxpayers with multiple employers."
+
+### Verification
+
+- **Path C comp IT:** graduated_tax_2023(550,000) = 22,500 + (550,000 − 400,000) × 0.20 = 22,500 + 30,000 = **₱52,500** ✓
+- **Underwithheld computation:** Actual comp IT = ₱52,500; employer withholding = ₱15,000; gap = **₱37,500** ✓
+- **Path C biz IT:** 500,000 × 0.08 = **₱40,000** ✓ (no ₱250K deduction)
+- **Path B combined NTI:** 550,000 + 300,000 = **₱850,000** ✓; bracket 4: 102,500 + 50,000 × 0.25 = **₱115,000** ✓; total B = **₱130,000** ✓
+- **Path A combined NTI:** 550,000 + 500,000 = **₱1,050,000** ✓; bracket 4: 102,500 + 250,000 × 0.25 = **₱165,000** ✓; total A = **₱180,000** ✓
+- **Balance payable:** 92,500 − 15,000 = **₱77,500** ✓
+- **Why main employer withheld ₱15,000:** They computed on their own ₱350,000 payroll: (350,000 − 250,000) × 0.15 = ₱15,000. Correct from their perspective (they don't know about the ₱200,000 second job). ✓
+- **Why part-time employer withheld ₱0:** Their ₱200,000 payroll is below the ₱250,000 zero bracket. Correct from their perspective. ✓
+- **Dual employer aggregation per CR-030 Sec. 8:** Engine accepts total_taxable_compensation = ₱550,000 (sum) and total_compensation_tax_withheld = ₱15,000 (sum). The aggregation happens at data entry — user inputs totals from both Form 2316s. ✓
+
+**Legal basis:** Compensation IT: NIRC Sec. 24(A)(1). Employer withholding on compensation: NIRC Sec. 79. Multiple employers: NIRC Sec. 79(E) — employee with two employers must file annual ITR. No ₱250K deduction: RMC 50-2018. Form 1701 mandatory: MIR-01.
+
+---
+
+## GROUP 11 SUMMARY TABLE
+
+| Vector | Scenario | Comp | Biz GR | Biz Expenses | Expense% | Optimal Path | Total Tax | Savings vs Next | Key Insight |
+|--------|---------|------|--------|-------------|---------|-------------|-----------|-----------------|-------------|
+| TV-EX-G11-001 | SC-M-L-O | ₱200,000 | ₱160,000 | ₱0 | 0% | Path B (OSD) | ₱11,700 | ₱1,100 vs C | Low comp (< ₱250K) + small biz: OSD wins narrow window over 8% |
+| TV-EX-G11-002 | SC-M-L-I | ₱360,000 | ₱450,000 | ₱360,000 | 80% | Path A (Itemized) | ₱46,000 | ₱6,500 vs C | 80% expense ratio (> 73% breakeven): Itemized wins over 8% |
+| TV-EX-G11-003 | SC-M-MH-O | ₱600,000 | ₱1,500,000 | ₱0 | 0% | Path C (8%) | ₱182,500 | ₱140,000 vs B | OSD computed but Path C wins by ₱140K; 8% highly valuable at ₱1.5M biz |
+| TV-EX-G11-004 | SC-M-MH-I | ₱400,000 | ₱1,500,000 | ₱1,275,000 | 85% | Path A (Itemized) | ₱112,500 | ₱30,000 vs C | 85% expense ratio (> 75% breakeven): Itemized wins over 8% |
+| TV-EX-G11-005 | SC-M-H-8 | ₱500,000 | ₱2,500,000 | ₱0 | 0% | Path C (8%) | ₱242,500 | ₱235,000 vs B | Near-max biz income: 8% saves ₱235K vs OSD; Path B NTI lands exactly at ₱2M bracket boundary |
+| TV-EX-G11-006 | SC-M-H-O | ₱800,000 | ₱2,800,000 | ₱0 | 0% | Path C (8%) | ₱326,500 | ₱304,000 vs B | OSD computed but 8% dominates; high comp pushes Path B into 30% bracket |
+| TV-EX-G11-007 | SC-M-H-I | ₱600,000 | ₱2,400,000 | ₱2,000,000 | 83.33% | Path A (Itemized) | ₱224,500 | ₱30,000 vs C | 83.33% expense ratio (> 81% breakeven): Itemized wins even at ₱2.4M gross |
+| TV-EX-G11-008 | SC-M-GOVT | ₱420,000 | ₱600,000 | ₱0 | 0% | Path C (8%) | ₱74,500 | ₱42,000 vs B | Government employee (GSIS): identical mechanics to private; GSIS treated same as SSS |
+| TV-EX-G11-009 | SC-M-DUAL-EMP | ₱550,000 | ₱500,000 | ₱0 | 0% | Path C (8%) | ₱92,500 | ₱37,500 vs B | Dual employer: ₱37,500 comp IT underwithheld; balance payable ₱77,500 surprises taxpayer |
+| (edge-cases.md) | SC-M-MINWAGE | ₱0 taxable | ₱250,000 | ₱0 | 0% | Path B (OSD) | ₱7,500 | (see TV-EDGE-007) | Min wage earner: comp ₱0 taxable; 8% barred from ₱250K deduction; OSD NTI < ₱250K → IT ₱0 |
+
+**Key insights validated in Group 11:**
+
+1. **OSD beats 8% for mixed income earners only when compensation is below ₱250K and business gross is small.** The only scenarios where Path B outperforms Path C are TV-EX-G11-001 (SC-M-L-O) and TV-EDGE-007 (SC-M-MINWAGE) — both have compensation below ₱250K (₱200K and ₱0 respectively). At all other compensation levels, the 8% rate dominates.
+
+2. **Itemized deductions win at high expense ratios even for mixed income earners.** The breakeven expense ratio depends on the combined compensation + business income level: approximately 73% at ₱360K comp + ₱450K biz (TV-EX-G11-002), 75% at ₱400K comp + ₱1.5M biz (TV-EX-G11-004), and 81% at ₱600K comp + ₱2.4M biz (TV-EX-G11-007). Higher income levels require higher expense ratios for itemized to beat 8%.
+
+3. **The ₱250K prohibition cost scales with business gross.** For pure SE, the ₱250K deduction saves 8% × ₱250K = ₱20,000 in IT. For mixed income, this cost is borne in full: ₱20,000 at ₱500K biz gross, ₱120,000 lost at ₱1.5M biz, ₱200,000 lost at ₱2.5M biz. Despite this, Path C still wins in all cases except high-expense-ratio scenarios.
+
+4. **Government vs. private employment: identical income tax treatment.** The GSIS/SSS distinction is irrelevant at the income tax level — both are non-taxable exclusions under Sec. 32(B)(7). The engine treats SC-M-GOVT identically to an equivalent private-employer scenario (TV-EX-G11-008 results match TV-EX-G3-001's structure).
+
+5. **Dual employment creates systematic withholding gaps.** Second employers who compute withholding on their standalone payroll will almost always underwithhold when a first employer exists (TV-EX-G11-009). The ₱37,500 gap arises because ₱200,000 is below the ₱250K zero bracket in isolation but pushes combined compensation to ₱550,000 (bracket 3 at 20%). This is a common BIR audit trigger.
+
+6. **Path B at ₱2M combined NTI boundary (TV-EX-G11-005).** When business OSD NTI + compensation lands exactly at the ₱2,000,000 bracket 5 threshold, the bracket 5 marginal rate (30%) applies to ₱0 excess → IT = ₱402,500. This coincidental boundary contact is not an error — it is the correct bracket 4 maximum IT. The formula: 402,500 + (2,000,000 − 2,000,000) × 0.30 = 402,500 + 0 = ₱402,500.
 
