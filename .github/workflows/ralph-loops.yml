@@ -114,8 +114,8 @@ jobs:
 
             echo "--- $(date '+%H:%M:%S') | Remaining: ${REMAINING}s ---"
 
-            # Run one aspect (cap each at 10 min so we always get at least 2 per run)
-            if timeout 600 bash -c '
+            # Run one aspect (cap each at 15 min — balances large aspects vs multi-aspect runs)
+            if timeout 900 bash -c '
               unset CLAUDECODE
               cat PROMPT.md | claude --print --dangerously-skip-permissions
             '; then
