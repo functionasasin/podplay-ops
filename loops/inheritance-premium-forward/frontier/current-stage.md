@@ -6,8 +6,8 @@
 
 ## Test Results (updated by loop)
 ```
-(no tests run yet)
+7 passed (7 total) — src/lib/__tests__/supabase.test.ts
 ```
 
 ## Work Log
-(no iterations yet)
+- **iter-1** (2026-03-02): Supabase init, 001_initial_schema.sql (all 9 tables, 6 enums, RLS policies, triggers), @supabase/supabase-js@2 installed, src/lib/supabase.ts client, .env.local.example, 7 passing tests
