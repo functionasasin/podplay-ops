@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 81
-- Analyzed: 80
-- Pending: 1
-- Convergence: 99%
+- Analyzed: 81
+- Pending: 0
+- Convergence: 100% — CONVERGED
 
 ## Pending Aspects (ordered by dependency)
 
@@ -104,7 +104,7 @@ Cross-cutting concerns and gap filling. Only start after Waves 2-5 are complete.
 - [x] missing-spec-domains — Create deployment/domains.md: DNS records for taxoptimizer.ph (A/AAAA/CNAME), Cloudflare setup (proxy rules, WAF rules, page rules), SSL/TLS config, subdomain routing (api., www., staging., exports.)
 - [x] completeness-audit — Read every file in final-mega-spec/, check for gaps. Depends: missing-spec-* aspects completed.
 - [x] placeholder-validation — **HARD GATE.** Exhaustive line-by-line scan of ALL final-mega-spec/ files for banned placeholder patterns (TODO, TBD, FIXME, stubs, empty sections, deferral phrases, sample values, ellipsis-as-content). Must report PASS with zero findings before loop can converge. Fix all matches and re-scan in same iteration. Depends: completeness-audit.
-- [ ] convergence-check — Run final convergence checklist, either add new aspects or converge. Depends: placeholder-validation PASS.
+- [x] convergence-check — Run final convergence checklist, either add new aspects or converge. Depends: placeholder-validation PASS.
 
 ## Recently Analyzed
 - error-states (2026-03-01): Defined every invalid input state and the engine's error handling response. Key findings: (1) 28 hard validation errors (ERR_*) covering all VAL-001 to VAL-028 checks — including 8 additional codes beyond the 20 already in pipeline.md (ERR_NEGATIVE_RETURNS, ERR_DUPLICATE_QUARTERLY_PERIOD, ERR_QUARTERLY_PAYMENT_WRONG_PERIOD, ERR_MIXED_INCOME_NO_COMPENSATION, ERR_MIXED_INCOME_NO_BUSINESS, ERR_2307_PERIOD_INVALID, ERR_DEPRECIATION_INVALID, ERR_NOLCO_ENTRY_INVALID, ERR_COMPENSATION_ONLY_NO_OPTIMIZER); (2) 5 ineligibility errors (ERR_ELECTED_INELIGIBLE_PATH_C_*) for each reason a user-elected Path C is blocked; (3) 8 engine assertion errors (ERR_ASSERT_*) for internal invariant violations that should never occur in production — each maps to a specific INV-* invariant from invariants.md; (4) 17 soft warnings (WARN_001 to WARN_017) — extended from the 6 in pipeline.md to cover BMBE, GPP, overpayment, zero income, NOLCO warning, home office, charitable, bad debts, EAR cap, vehicle depreciation, and unknown ATC; (5) 5 ineligibility notification codes (IN-01 to IN-05) explaining why Path C is unavailable in a user-friendly way; (6) MRF flag conservative-assumption table showing exactly what the engine assumes for each of 14 MRF codes when computation continues; (7) Complete error/warning return type definitions (EngineError, ValidationWarning, IneligibilityNotification, ManualReviewFlag structs with all fields typed); (8) Error handling table by pipeline step — which step can produce which errors and what it does; (9) API HTTP error mapping — multi-error collect-all mode for PL-01 (all ERR_* found in one pass, not just first), 422 for user errors, 500 for assertions; (10) UI display rules — field-level red error rendering, cross-field errors, amber advisory cards with titles, informational blue cards, non-dismissible MRF flags, IN-* codes in results table Path C row with tooltip. Wrote final-mega-spec/engine/error-states.md (NEW, 12 sections, ~600 lines).

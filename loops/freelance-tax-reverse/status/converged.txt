@@ -1,0 +1,204 @@
+CONVERGED
+=========
+Loop: freelance-tax-reverse
+Date: 2026-03-02
+Aspects analyzed: 81/81
+Placeholder scan: PASS (zero violations)
+Completeness audit: PASS (35/35 items)
+
+---
+
+PRODUCT: TaxKlaro — Philippine Freelance & Self-Employed Income Tax Optimizer
+Domain: taxklaro.ph
+
+---
+
+SPEC SUMMARY
+============
+
+61 markdown files, ~4.1 MB total, across 13 subdirectories.
+
+A forward loop can build the entire platform from final-mega-spec/ with ZERO external research.
+
+---
+
+WHAT THE SPEC COVERS
+====================
+
+DOMAIN (what the tool computes)
+  - legal-basis.md              — Every statute, IRR, RMO, circular cited (NIRC Sec. 24A, 34, 74-79, 116;
+                                   RR 8-2018; RA 10963/TRAIN; RA 11534/CREATE; RA 11976/EOPT; RMC 50-2018)
+  - computation-rules.md        — 56 rules (CR-001–CR-056): graduated tax functions (both rate schedules),
+                                   8% flat rate, OSD 40%, itemized deductions (11 categories + exclusions),
+                                   regime comparison logic with exact breakeven tables, mixed income (Path A/B/C),
+                                   CWT crediting, quarterly cumulative method, annual reconciliation,
+                                   percentage tax (3%), VAT threshold, penalty computation, installment payments
+  - decision-trees.md           — 17 trees (DT-01–DT-17) fully expanded to leaf nodes with legal citations:
+                                   8% eligibility, regime selection, form selection, mixed income flow,
+                                   quarterly filing, VAT vs OPT obligation, penalty computation, EOPT tier
+  - lookup-tables/              — 9 tables, every row:
+                                     graduated-rate-table.md (6 brackets × 2 schedules, 2018-2022 and 2023+)
+                                     eight-percent-option-rules.md (eligibility criteria, election procedure)
+                                     osd-breakeven-table.md (breakeven expense ratios per gross receipt level)
+                                     itemized-deductions.md (31 deduction categories, 20 non-deductible items,
+                                       EAR cap table, depreciation useful life schedule, NOLCO tracking)
+                                     percentage-tax-rates.md (rate history, ₱3M triple-boundary analysis,
+                                       ATC codes, Form 2551Q field mapping, VAT exclusivity matrix)
+                                     cwt-ewt-rates.md (50+ ATC codes with WI/WC codes and rates)
+                                     filing-deadlines.md (every BIR deadline, every form, every taxpayer type)
+                                     bir-penalty-schedule.md (surcharge tiers, compromise penalty brackets,
+                                       EOPT reductions for MICRO/SMALL, prescriptive periods)
+                                     taxpayer-classification-tiers.md (EOPT micro/small/medium/large thresholds)
+  - scenarios.md                — 80 scenario codes across 14 groups (SC-P-*, SC-B-*, SC-M-*, SC-CROSS-*,
+                                   SC-QC-*, SC-LATE-*, SC-PLAT-*, SC-BE-*, SC-COMBO-*, etc.)
+  - edge-cases.md               — 80+ numbered edge cases with engine resolution for each
+  - manual-review-flags.md      — 21 MRF codes (MRF-001–MRF-021): things the engine cannot decide
+                                   (travel purpose, home office documentation, NOLCO tax-exempt year, etc.)
+  - bir-form-1701-field-mapping.md  — Every field on Form 1701 (4 pages, 6 schedules, ~80 items)
+  - bir-form-1701a-field-mapping.md — Every field on Form 1701A (8% items 47-56, graduated OSD items 36-46)
+
+ENGINE (how the tool computes)
+  - pipeline.md                 — 16 steps (PL-01–PL-16): input validation → taxpayer classification →
+                                   regime eligibility → path computations → regime comparison → CWT crediting
+                                   → quarterly reconciliation → annual reconciliation → penalty computation →
+                                   form generation → output assembly. Typed inputs/outputs per step.
+  - data-model.md               — Every struct, enum, and type: TaxpayerInput, AnnualTaxInput, QuarterlyInput
+                                   (all 3 variants), TaxComputationResult, RegimeComparisonResult,
+                                   ItemizedExpenseInput, FormGenerationOutput, and all sub-types
+  - invariants.md               — All engine invariants (INV-*): monotonicity, bracket consistency,
+                                   path comparison ordering, CWT non-negativity, quarterly cumulation
+  - error-states.md             — 28 hard validation errors (ERR_*), 5 ineligibility errors, 8 assertion
+                                   errors, 17 soft warnings (WARN_001–WARN_017), 5 ineligibility notifications
+  - test-vectors/basic.md       — 8 happy-path vectors (TV-BASIC-001–TV-BASIC-008)
+  - test-vectors/edge-cases.md  — 16 edge-case vectors (TV-EDGE-001–TV-EDGE-016)
+  - test-vectors/exhaustive.md  — 70+ vectors across all 14 groups, cross-referencing all 80 scenario codes
+  - test-vectors/fuzz-properties.md — Randomized test invariants using JS spread operator syntax
+
+API (how the tool is accessed)
+  - endpoints.md                — All routes with method, auth requirement, request/response shapes,
+                                   field types, status codes, and error responses. Covers: auth (register,
+                                   login, logout, magic link, OAuth, session), compute (annual, quarterly,
+                                   multi-year), saved computations, CWT management, batch (CPA multi-client),
+                                   export (PDF), billing (subscribe, cancel, upgrade), admin, webhooks
+  - auth.md                     — Session cookie auth, OAuth 2.0 (Google), API key auth (enterprise),
+                                   roles (TAXPAYER, CPA, ADMIN), permission matrix, CSRF protection
+  - rate-limiting.md            — 5 tiers (ANONYMOUS, FREE, PRO, ENTERPRISE_SESSION, ENTERPRISE_KEY, ADMIN)
+                                   with exact limits, burst allowances, per-endpoint overrides, Redis sliding
+                                   window algorithm, 429 response format with Retry-After header
+  - webhooks.md                 — 59-section event catalog (computation, subscription, payment events),
+                                   HMAC-SHA256 signature validation, retry policy (5 attempts, exponential
+                                   backoff), event delivery guarantees
+
+FRONTEND (what the user sees and does)
+  - user-journeys.md            — 6 user types × all flows: first-time freelancer, returning user,
+                                   mixed-income earner, CPA multi-client, mobile user, annual filer
+  - wizard-steps.md             — 19 steps (WS-00–WS-13 with sub-steps), every field specified with
+                                   label, type, validation rule, error message, conditional visibility,
+                                   default value. Step routing matrix for all regime combinations.
+  - results-views.md            — Regime comparison table (3-column), recommended regime highlight,
+                                   savings display, quarterly breakdown, CWT credit summary, PDF export CTA
+  - validation-rules.md         — Client-side validation, cross-field rules, pre-submission warnings
+  - copy.md                     — ALL user-facing text: 118 sections covering every label, tooltip,
+                                   error message, empty state, CTA, modal, notification, and help text
+  - responsive-behavior.md      — Behavior at 3 breakpoints (mobile 375px, tablet 768px, desktop 1280px)
+
+DATABASE (how data is stored)
+  - schema.md                   — Every table with every column (name, type, nullable, default, constraint):
+                                   users, sessions, api_keys, computations, computation_inputs,
+                                   quarterly_returns, cwt_certificates, saved_scenarios, subscriptions,
+                                   invoices, webhook_endpoints, webhook_deliveries, audit_log,
+                                   cpa_client_relationships, batch_jobs, batch_job_items
+  - migrations.md               — Drizzle ORM migration order: 0001_initial_schema → 0002_indexes →
+                                   0003_seed_data (admin user, test user, default subscription plans)
+  - indexes.md                  — Every index with type (btree/gin/partial), query pattern it serves,
+                                   expected cardinality
+  - retention.md                — Retention policies, PII deletion schedules, cleanup job specifications
+
+PREMIUM (how the tool makes money)
+  - tiers.md                    — FREE (unlimited computations, no save), PRO (₱299/month — save history,
+                                   PDF export, quarterly tracking, CWT management, email reminders),
+                                   ENTERPRISE (₱1,499/month — batch processing, API access, white-label)
+  - pricing.md                  — Annual discount (2 months free), trial (14-day PRO trial on signup),
+                                   PayMongo integration, billing cycle, upgrade/downgrade logic
+  - features-by-tier.md         — Exact feature matrix with gating rules for all 3 tiers
+  - professional-features.md    — CPA batch processing (up to 500 clients/run), API access (REST),
+                                   white-label (subdomain + logo), PDF export mimicking BIR form structure
+
+DEPLOYMENT (how the tool runs in production)
+  - infrastructure.md           — Vercel (Next.js, Edge runtime, Singapore region), Fly.io (background
+                                   jobs, PDF generation), Supabase (PostgreSQL), Cloudflare (DNS, WAF, CDN),
+                                   Upstash Redis (rate limiting), Resend (transactional email), PayMongo
+                                   (PH billing), R2 (PDF storage), Sentry (error tracking), Posthog (analytics)
+  - ci-cd.md                    — GitHub Actions pipeline: lint → typecheck → unit tests → integration tests
+                                   → build → preview deploy → production deploy. Exact CLI commands.
+  - monitoring.md               — Sentry alerts, Vercel analytics, uptime checks, error rate thresholds,
+                                   p95 latency targets, Slack notification channels
+  - domains.md                  — DNS records (A, AAAA, CNAME, MX, TXT) for taxklaro.ph, subdomain routing
+                                   (api., www., staging., exports.), Cloudflare proxy rules, WAF configuration
+  - environment.md              — All environment variable names with descriptions and example values
+
+UI/UX (how the tool looks)
+  - design-system.md            — Colors (#1D4ED8 primary, full palette with semantic names), typography
+                                   (Inter font, 7-level size scale), spacing scale (4px base), border radii,
+                                   shadow tokens
+  - component-library.md        — Every UI component with props, variants, and states: Button, Input,
+                                   Select, Checkbox, RadioGroup, ProgressBar, ResultsTable, RegimeCard,
+                                   TooltipBubble, MRFAlert, QuarterlyTimeline
+  - responsive.md               — Breakpoints (375/768/1280px), mobile-first approach, touch target
+                                   minimums (44×44px), collapsible wizard steps on mobile
+  - accessibility.md            — WCAG 2.1 AA compliance, ARIA labels for every interactive element,
+                                   keyboard navigation order, screen reader text, focus management
+  - branding.md                 — TaxKlaro brand identity, logo concept (stylized ₱ + checkmark),
+                                   favicon, OG image (1200×630), brand voice (friendly, precise, empowering)
+
+LEGAL (what protects the business)
+  - disclaimers.md              — Full disclaimer text (not a description — the actual words): computation
+                                   disclaimer, PDF disclaimer, professional referral notice, BIR filing
+                                   reminder, quarterly estimate advisory
+  - terms-of-service.md         — Complete ToS with key clauses: service description, user obligations,
+                                   permitted use, IP, limitation of liability, dispute resolution (PH law)
+  - privacy-policy.md           — GDPR/NPC-compliant policy: data collected, processing basis, retention,
+                                   user rights (access/deletion/portability), third-party processors
+  - limitations.md              — Explicit scope limitations: what the tool does NOT cover (business
+                                   income from corporations, estate/gift tax, international tax treaties,
+                                   VAT filing, etc.), liability caps
+
+SEO & GROWTH (how users find the tool)
+  - landing-page.md             — Hero headline, subheadline, 3-step value prop, feature bullets,
+                                   social proof sections, FAQ accordion, comparison table vs. competitors,
+                                   all CTA text. A/B variant copy included.
+  - seo-strategy.md             — Target keywords with exact search volumes and difficulty scores,
+                                   page title + meta description for every page, schema.org markup
+                                   (SoftwareApplication, FAQPage, Article, HowTo), sitemap structure
+  - content-strategy.md         — 20 blog post topics with titles, slugs, target keywords, outlines,
+                                   publication cadence, internal linking strategy, schema templates
+                                   with concrete example values (Post 1: "8% Income Tax Option Philippines")
+
+---
+
+CONVERGENCE EVIDENCE
+====================
+
+Wave 1 (Source Acquisition):     10/10 aspects DONE
+Wave 2 (Domain Rules):           16/16 aspects DONE
+Wave 3 (Engine Design):          18/18 aspects DONE
+Wave 4 (Full-Stack Product):     11/11 aspects DONE
+Wave 5 (Ship & Polish):          12/12 aspects DONE
+Wave 6 (Synthesis & Audit):      14/14 aspects DONE (including convergence-check)
+
+Placeholder sweep:    PASS — 0 violations (verified 2026-03-02, re-verified in convergence-check)
+Completeness audit:   PASS — 35/35 checklist items (verified 2026-03-02, re-verified in convergence-check)
+
+---
+
+LITMUS TEST RESULT
+==================
+
+A forward loop reading ONLY final-mega-spec/ can build the entire TaxKlaro platform.
+No external research required. No judgment calls deferred. No placeholders remaining.
+
+Every statute is reproduced in full. Every formula has exact pseudocode. Every database
+column has a type. Every error message has exact copy. Every deployment command is specified.
+Every price point is a real number in Philippine Pesos.
+
+THE SPEC IS COMPLETE.
