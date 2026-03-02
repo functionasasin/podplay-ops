@@ -1,7 +1,7 @@
-# Current Stage: 8 (Print Layout)
+# Current Stage: 9 (Donation Summary)
 
 ## Spec Sections
-- §4.7 — Print Layout
+- §4.15 — Donation Summary
 
 ## Test Results (updated by loop)
 ```
@@ -16,4 +16,5 @@ No tests yet
 - Stage 5 completed 2026-03-02 (10/10 tests passing)
 - Stage 6 completed 2026-03-02 (17/17 tests passing)
 - Stage 7 completed 2026-03-02 (36/36 tests passing)
-- Stage 8 starting 2026-03-02
+- Stage 8 completed 2026-03-02 (19/19 tests passing)
+- Stage 9 starting 2026-03-02
