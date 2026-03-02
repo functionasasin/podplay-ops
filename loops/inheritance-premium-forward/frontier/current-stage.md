@@ -1,7 +1,7 @@
-# Current Stage: 6 (Share Breakdown Panel)
+# Current Stage: 7 (Statute Citations UI)
 
 ## Spec Sections
-- §4.12 — Share Breakdown Panel
+- §4.5 — Statute Citations UI
 
 ## Test Results (updated by loop)
 ```
@@ -14,4 +14,5 @@ No tests yet
 - Stage 3 completed 2026-03-02 (69/69 tests passing)
 - Stage 4 completed 2026-03-02 (32/32 tests passing)
 - Stage 5 completed 2026-03-02 (10/10 tests passing)
-- Stage 6 starting 2026-03-02
+- Stage 6 completed 2026-03-02 (17/17 tests passing)
+- Stage 7 starting 2026-03-02
