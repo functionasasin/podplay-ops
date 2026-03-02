@@ -528,6 +528,79 @@ Please consult a CPA to determine the correct treatment. Enter only the sales re
 
 ---
 
+## MRF-029: BMBE-Registered Business — Income Tax Exemption Cannot Be Verified by Engine
+
+**Flag code:** MRF-029
+**Trigger:** `total_business_assets` ≤ ₱3,000,000 AND user selects "BMBE registered" in the taxpayer profile questionnaire (optional field in WS-01).
+
+**Why the engine cannot resolve this:**
+- RA 9178 (Barangay Micro Business Enterprise Act of 2002) exempts BMBE-registered businesses from income tax.
+- BMBE registration is issued by the Local Government Unit (LGU) where the business is located. The engine has no way to verify whether the user holds a valid, current Certificate of Authority from their LGU.
+- BMBE exemption applies only while the Certificate of Authority is valid (1-year renewable). The user may have an expired certificate or may not have renewed it.
+- Asset threshold is ₱3,000,000 total assets, excluding land. The engine receives gross receipts, not total assets. A business with ₱2.9M gross receipts could have total assets above or below ₱3M.
+- The engine cannot determine whether the user qualifies or has a valid BMBE registration.
+
+**Engine fallback behavior:**
+- Do NOT apply the BMBE income tax exemption.
+- Compute income tax under the standard NIRC Sec. 24(A) rules.
+- Display MRF-029 advisory prominently on the results screen.
+- Add note: "If you are BMBE-registered, your actual income tax due may be ₱0. Show your Certificate of Authority to your CPA or BIR."
+
+**User-facing text:**
+> "You indicated that your business may be registered as a Barangay Micro Business Enterprise (BMBE) under RA 9178. BMBE-registered businesses with total assets not exceeding ₱3,000,000 (excluding land) are exempt from income tax — meaning your income tax due could be ₱0 instead of the amount shown here. TaxKlaro cannot verify your BMBE registration status and has NOT applied this exemption. To confirm your exemption, present your valid BMBE Certificate of Authority (issued by your Local Government Unit) to a CPA or your Revenue District Office before filing. The figures shown above apply only if you are NOT BMBE-registered or your certificate has expired."
+
+**Legal basis:** RA 9178, Sec. 7 (Income Tax Exemption); DTI-DOLE-DOF Joint Memorandum Circular No. 1, series of 2009 (BMBE guidelines); NIRC Sec. 24(A) (general income tax rule that BMBE exemption overrides).
+
+---
+
+## MRF-030: Depletion Deduction for Mining/Oil Operations — Specialized Rules Apply
+
+**Flag code:** MRF-030
+**Trigger:** User selects income category "Mining" or "Oil and Gas Extraction" or enters the expense category "Depletion of natural resources" in the itemized deductions wizard step.
+
+**Why the engine cannot resolve this:**
+- NIRC Sec. 34(G) allows a deduction for depletion of oil and gas wells and mines. The allowable depletion is based on the cost-depletion method (or, for oil and gas, optionally the percentage-depletion method) applied to the adjusted cost basis of the natural resource.
+- Computing depletion requires: acquisition cost of the property, estimated recoverable reserves (barrels, metric tons), current-year production, and prior accumulated depletion. The engine does not collect these inputs.
+- Mining income may also be subject to the Government Share under the Mining Act (RA 7942) and special royalty arrangements that affect deductible expenses.
+- Individual mining operators are extremely rare among TaxKlaro's target users.
+
+**Engine fallback behavior:**
+- Exclude the depletion deduction from the itemized deduction computation.
+- Treat any "depletion" amount entered as a non-deductible item.
+- Display MRF-030 notice.
+- Compute income tax without the depletion deduction.
+
+**User-facing text:**
+> "TaxKlaro does not compute depletion deductions for mining or oil and gas operations under NIRC Section 34(G). The depletion deduction requires specialized inputs (property cost basis, estimated recoverable reserves, annual production data) that are outside the scope of this tool. Your income tax computation above does NOT include any depletion deduction. Consult a CPA specializing in mining or extractive industries to compute your correct depletion allowance and include it in your actual BIR filing."
+
+**Legal basis:** NIRC Sec. 34(G) (depletion of oil and gas wells and mines); RA 7942 (Philippine Mining Act of 1995); RA 8550 (Philippine Fisheries Code — similar issue for fishery resources).
+
+---
+
+## MRF-031: Agricultural or Fisheries Income — Special Deductions May Apply
+
+**Flag code:** MRF-031
+**Trigger:** User selects income category "Agriculture," "Farming," "Aquaculture," or "Fisheries" as their primary business activity in the wizard taxpayer profile step (WS-01).
+
+**Why the engine cannot resolve this:**
+- Agricultural income earners may qualify for special deductions not listed in NIRC Sec. 34(A)-(K), including deductions for farm development expenses, soil and water conservation expenses (up to 25% of gross income from farming), and livestock-related deductions.
+- Agri-related businesses may also qualify for NIRC Sec. 61 deduction for farm development expenditures (deductible in year paid or up to 10 years).
+- Small farmers and fisherfolk registered with the appropriate agency may have access to additional tax benefits or exemptions under agricultural promotion laws.
+- The engine's itemized deduction framework is designed for service and trading income and does not include agricultural-specific line items.
+
+**Engine fallback behavior:**
+- Continue computation using standard itemized deductions framework.
+- Agricultural expenses entered in standard categories (fertilizer as "supplies," farm equipment depreciation, etc.) will be included.
+- Do NOT claim farm development expenses (NIRC Sec. 61) unless explicitly entered by the user.
+- Display MRF-031 advisory.
+
+**User-facing text:**
+> "Your income category is agriculture/farming/fisheries. TaxKlaro uses the standard self-employment deduction framework for your computation. Agricultural businesses may qualify for additional deductions not covered here, including farm development expense deductions under NIRC Section 61 (deductible up to 10 years) and soil and water conservation deductions (up to 25% of gross farming income). These specialized deductions are NOT included in the figures above. We recommend consulting a CPA familiar with agricultural taxation to ensure you claim all allowable deductions before filing."
+
+**Legal basis:** NIRC Sec. 61 (farm development expenditures); NIRC Sec. 34(A) (ordinary and necessary business expenses, applicable to farming); RA 8435 (Agriculture and Fisheries Modernization Act — related tax incentives).
+
+---
+
 ## Cross-References
 
 - For edge cases where the engine CAN make a decision: See [edge-cases.md](edge-cases.md)

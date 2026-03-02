@@ -3,7 +3,7 @@
 This directory contains the complete product specification. A forward loop can build the entire platform by reading ONLY this directory.
 
 **Last updated:** 2026-03-02
-**Convergence status:** IN PROGRESS (66/76 aspects analyzed — Wave 4 complete; Wave 5 in progress)
+**Convergence status:** IN PROGRESS (67/76 aspects analyzed — Wave 4 complete; Wave 5 in progress)
 
 ---
 
@@ -107,10 +107,10 @@ This directory contains the complete product specification. A forward loop can b
 
 | File | Status | Description |
 |------|--------|-------------|
-| legal/disclaimers.md | PENDING | Exact disclaimer text |
-| legal/terms-of-service.md | PENDING | ToS key clauses |
-| legal/privacy-policy.md | PENDING | Data collection, storage, rights |
-| legal/limitations.md | PENDING | Explicit scope limits, liability |
+| [legal/disclaimers.md](legal/disclaimers.md) | COMPLETE | Verbatim disclaimer text for all 11 product locations: full /disclaimer page (10 subsections), inline results banner, onboarding card, regime change warning, penalty disclaimer, CWT disclaimer, PDF footer, email footer, footer compact, cookie notice, first-time user acknowledgment; disclaimer acceptance log spec; display rules by screen table; version history |
+| legal/terms-of-service.md | PENDING | ToS key clauses — to be written in terms-and-privacy aspect |
+| legal/privacy-policy.md | PENDING | Data collection, storage, rights — to be written in terms-and-privacy aspect |
+| [legal/limitations.md](legal/limitations.md) | COMPLETE | Exhaustive scope exclusions: 10 excluded tax types (VAT, CGT, donor's, estate, DST, excise, LBT, RPT, cedula, specialized PT); 6 excluded taxpayer types; 4 income type exclusions; 5 special incentive regimes; 6 filing procedures not supported; 9 specific exclusions (foreign tax credit, retirement exclusion, 13th month, SSS/PhilHealth, BMBE/mining/agriculture); full UI copy for /about#limitations |
 
 ### seo-and-growth/ — How users find the tool
 
