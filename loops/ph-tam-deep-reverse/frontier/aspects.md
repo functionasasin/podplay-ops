@@ -1,7 +1,7 @@
 # Aspects — ph-tam-deep-reverse
 
 ## Research Foundation
-- [ ] data-sources-registry — Compile all official PH government data sources with population counts relevant to 148 compliance tools; save to analysis/data-sources-registry.md
+- [x] data-sources-registry — Compile all official PH government data sources with population counts relevant to 148 compliance tools; save to analysis/data-sources-registry.md
 
 ## Per-Tool TAM Clusters
 - [ ] tam-tax-self-employed — A1 (Self-Employed IT Optimizer), A2 (Corporate IT), A5 (Compensation IT); BIR-registered taxpayer counts by type; CPA/tax agent population
