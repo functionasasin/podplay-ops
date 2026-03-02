@@ -27,21 +27,49 @@ export function FirmProfileProvider({
   userId: string | null;
   children: ReactNode;
 }) {
-  // stub — will be implemented
-  void useState;
-  void useEffect;
-  void loadFirmProfile;
-  void saveFirmProfile;
+  const [profile, setProfile] = useState<FirmProfile>(defaultFirmProfile());
+  const [loading, setLoading] = useState(!!userId);
+  const [error, setError] = useState<string | null>(null);
 
-  const value: FirmProfileContextValue = {
-    profile: defaultFirmProfile(),
-    loading: false,
-    error: null,
-    updateProfile: async () => {},
-    refreshProfile: async () => {},
+  const fetchProfile = async () => {
+    if (!userId) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const loaded = await loadFirmProfile(userId);
+      setProfile(loaded);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load profile');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  void userId;
+  useEffect(() => {
+    if (userId) {
+      fetchProfile();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
+
+  const updateProfile = async (updates: Partial<FirmProfile>) => {
+    if (!userId) return;
+    // Optimistic update
+    setProfile((prev) => ({ ...prev, ...updates }));
+    await saveFirmProfile(userId, updates);
+  };
+
+  const refreshProfile = async () => {
+    await fetchProfile();
+  };
+
+  const value: FirmProfileContextValue = {
+    profile,
+    loading,
+    error,
+    updateProfile,
+    refreshProfile,
+  };
 
   return (
     <FirmProfileContext.Provider value={value}>
