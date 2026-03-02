@@ -7,8 +7,8 @@ Dev order: 1 → 2 → 3 → 4-9 (parallel) → 10 → 11 → 12-16 (parallel) �
 | 1     | Supabase + Deps Setup       | —        | supabase                           | —                  | complete |
 | 2     | TanStack Router + Layout    | —        | router\|layout                     | 1                  | complete |
 | 3     | Auth & Persistence          | §4.2     | auth\|cases\|auto-save\|dashboard  | 1, 2               | complete |
-| 4     | Decedent Header             | §4.13    | decedent-header                    | —                  | active |
-| 5     | Representation Display      | §4.14    | representation                     | —                  | blocked |
+| 4     | Decedent Header             | §4.13    | decedent-header                    | —                  | complete |
+| 5     | Representation Display      | §4.14    | representation                     | —                  | active |
 | 6     | Share Breakdown Panel       | §4.12    | share-breakdown                    | —                  | blocked |
 | 7     | Statute Citations UI        | §4.5     | statute-citations\|ncc-article     | —                  | blocked |
 | 8     | Print Layout                | §4.7     | print                              | —                  | blocked |

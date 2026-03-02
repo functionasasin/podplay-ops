@@ -1,7 +1,7 @@
-# Current Stage: 4 (Decedent Header)
+# Current Stage: 5 (Representation Display)
 
 ## Spec Sections
-- §4.13 — Decedent Header
+- §4.14 — Representation Display
 
 ## Test Results (updated by loop)
 ```
@@ -12,4 +12,5 @@ No tests yet
 - Stage 1 completed 2026-03-02 (7/7 tests passing)
 - Stage 2 completed 2026-03-02 (14/14 tests passing)
 - Stage 3 completed 2026-03-02 (69/69 tests passing)
-- Stage 4 starting 2026-03-02
+- Stage 4 completed 2026-03-02 (32/32 tests passing)
+- Stage 5 starting 2026-03-02
