@@ -508,3 +508,71 @@ export function stringToFrac(s: string): { numer: number; denom: number } {
   const [n, d] = s.split("/").map(Number);
   return { numer: n, denom: d };
 }
+
+// ============================================================================
+// Premium Platform Types (§4.2)
+// ============================================================================
+
+export type CaseStatus = 'draft' | 'computed' | 'finalized' | 'archived';
+
+export interface CaseRow {
+  id: string;
+  org_id: string;
+  user_id: string;
+  client_id: string | null;
+  title: string;
+  status: CaseStatus;
+  input_json: EngineInput | null;
+  output_json: EngineOutput | null;
+  tax_input_json: object | null;
+  tax_output_json: object | null;
+  comparison_input_json: EngineInput | null;
+  comparison_output_json: EngineOutput | null;
+  comparison_ran_at: string | null;
+  decedent_name: string | null;
+  date_of_death: string | null;
+  gross_estate: number | null;
+  share_token: string;
+  share_enabled: boolean;
+  notes_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CaseListItem {
+  id: string;
+  title: string;
+  status: CaseStatus;
+  decedent_name: string | null;
+  date_of_death: string | null;
+  gross_estate: number | null;
+  updated_at: string;
+  notes_count: number;
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  full_name: string | null;
+  firm_name: string | null;
+  firm_address: string | null;
+  firm_phone: string | null;
+  firm_email: string | null;
+  counsel_name: string | null;
+  ibp_roll_no: string | null;
+  ptr_no: string | null;
+  mcle_compliance_no: string | null;
+  logo_url: string | null;
+  letterhead_color: string;
+  secondary_color: string;
+}
+
+export type AutoSaveStatus = 'idle' | 'saving' | 'saved' | 'error';
+
+/** Valid case status transitions */
+export const VALID_STATUS_TRANSITIONS: Record<CaseStatus, CaseStatus[]> = {
+  draft: ['computed'],
+  computed: ['finalized'],
+  finalized: ['archived'],
+  archived: ['finalized'], // admin only
+};
