@@ -1,6 +1,6 @@
 # Exhaustive Test Vectors — Philippine Freelance Tax Optimizer
 
-**Status:** PARTIAL — Groups 1–5 complete (25 vectors + 2 cross-references to edge-cases.md). Groups 6–14 pending.
+**Status:** PARTIAL — Groups 1–6 complete (26 vectors + 4 cross-references to edge-cases.md). Groups 7–14 pending.
 **Last updated:** 2026-03-02
 **Cross-references:**
 - Scenario codes: [domain/scenarios.md](../../domain/scenarios.md)
@@ -3639,4 +3639,337 @@ TaxComputationResult {
 5. **WI760 (Payoneer/RR 16-2023) 2307 mechanics.** The 2307 income_payment = 50% of net remittance (NOT 50% of contract value and NOT the full gross receipts). Tax withheld = 1% of that base. Effective rate = 0.5% of net remittance. Gross receipts for income tax purposes remains the full contract value. The ₱80,000 Upwork service fee is deductible under Path A but absorbed into Path C's 8% flat rate computation without separate recognition.
 
 6. **Both WI760 and WI010 are classified as INCOME_TAX_CWT.** Neither is PT_CWT. They aggregate into total_cwt_credits and offset income tax on the annual ITR. WARN-017 fires only if an unknown ATC code is entered (neither WI760 nor WI010 trigger it).
+
+---
+
+## GROUP 6: Threshold Crossing
+
+**3 scenario codes:** SC-CROSS-3M, SC-AT-3M, SC-NEAR-3M
+
+**What this group tests:** The ₱3,000,000 gross receipts boundary is the single most consequential threshold in the entire engine. It simultaneously governs (1) taxpayer tier classification (MICRO uses strict `< ₱3M`; SMALL uses `≥ ₱3M`), (2) 8% option eligibility (inclusive `≤ ₱3M`), and (3) mandatory VAT registration (strict `> ₱3M`). These three rules use different boundary expressions, so their interaction at exactly ₱3M and in the ₱2.7M–₱3M "warning zone" produces non-obvious results that the engine must compute correctly.
+
+**SC-AT-3M → See TV-EDGE-001 in [edge-cases.md](edge-cases.md)**
+Summary: GR = exactly ₱3,000,000. taxpayer_tier = SMALL (not MICRO; MICRO threshold is strict `< ₱3M`). 8% is still eligible (inclusive `≤ ₱3M`). VAT registration is NOT required (strict `> ₱3M` not met at exactly ₱3M). Annual IT = (₱3,000,000 − ₱250,000) × 0.08 = ₱220,000. Total tax = ₱220,000. Path C wins over OSD (₱442,500) by ₱222,500. No WARN-001 (fires only when `> ₱2,700,000 AND ≤ ₱3,000,000`; at exactly ₱3M the condition still meets ≤ ₱3M, so WARN-001 DOES fire at GR = ₱3,000,000). Form: FORM_1701A Part IV-B.
+
+**SC-CROSS-3M → See TV-EDGE-006 in [edge-cases.md](edge-cases.md)**
+Summary: Annual GR = ₱3,200,000. Taxpayer elected 8% at Q1 1701Q. Annual gross exceeds ₱3M → 8% retroactively cancelled at annual reconciliation. Path B (OSD, graduated) applies to full year. All Q1–Q3 quarterly IT payments (₱172,000, computed under 8%) are reclassified as advance payments toward the graduated-rate annual liability. Annual tax due (Path B) = ₱462,500. After crediting ₱172,000, balance payable = ₱290,500. WARN-002 fires (gross > ₱3M, not VAT-registered yet). Form: FORM_1701 (not 1701A; Path A/B required when 8% cancelled). IN-01 (INELIGIBLE_8PCT_THRESHOLD) fires in results table.
+
+---
+
+## TV-EX-G6-001: SC-NEAR-3M — Near-Threshold Service Provider, 8% in Warning Zone
+
+**Scenario code:** SC-NEAR-3M
+**Description:** A senior software developer earns ₱2,900,000 annual gross receipts, all from professional service contracts with no recorded business expenses. This vector demonstrates: (1) WARN-001 (WARN_NEAR_VAT_THRESHOLD) fires because GR = ₱2,900,000 is within the ₱300,000 warning band (₱2,700,001–₱3,000,000); (2) the engine still recommends Path C (8%) with savings of ₱212,500 over OSD; (3) the quarterly computation shows WARN-001 fires only at the ANNUAL level (not during Q1–Q3 returns, because those cumulative totals remain below ₱2,700,000); (4) the engine attaches a threshold proximity analysis showing the ₱100,000 buffer to crossing and the total additional tax cost if the buffer is breached; (5) taxpayer_tier = MICRO (₱2,900,000 is strictly less than ₱3,000,000 — this contrasts with TV-EDGE-001 where ₱3,000,000 exactly gives SMALL tier).
+
+**Tax year:** 2025
+**Filing period:** ANNUAL
+
+**Note on scenarios.md savings estimate:** The scenarios.md description for SC-NEAR-3M states "₱76,000–₱83,800 advantage for 8%". This figure is incorrect for the ₱2.8M–₱2.99M gross range. Those savings (₱76K–₱83.8K) correspond to gross receipts of approximately ₱1.5M–₱1.6M. The correct savings at GR = ₱2,900,000 are ₱212,500 (Path B total ₱424,500 minus Path C total ₱212,000). At GR = ₱2,800,000, savings are ₱202,500. This test vector uses the mathematically correct figures.
+
+### Input (fields differing from Group 1 defaults)
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `gross_receipts` | ₱2,900,000.00 | Annual professional service fees |
+| All itemized expense fields | ₱0.00 each | No receipts retained; no documented expenses |
+| `elected_regime` | `null` | Optimizer mode — engine recommends |
+| `cwt_2307_entries` | `[]` | Clients do not withhold (verified: prior-year gross ≤ ₱3M at start of year; corporate client pays gross to developer without withholding because client is not a top withholding agent) |
+| `prior_quarterly_payments` | `[{quarter:1, amount:28000.00}, {quarter:2, amount:60000.00}, {quarter:3, amount:68000.00}]` | Quarterly 8% IT payments per Q1–Q3 1701Q; see quarterly supplement |
+| `is_first_year_registrant` | `false` | Established taxpayer |
+| `actual_filing_date` | `2026-04-15` | Filed on time |
+
+**Total itemized expenses:** ₱0.00 (0.0% of GR)
+
+**Quarterly income breakdown:**
+- Q1 (Jan–Mar 2025): ₱600,000.00 — four monthly retainers
+- Q2 (Apr–Jun 2025): ₱750,000.00 — project milestone payments
+- Q3 (Jul–Sep 2025): ₱850,000.00 — year's largest quarter
+- Q4 (Oct–Dec 2025): ₱700,000.00 — year-end contract completions
+- **Total TY2025: ₱2,900,000.00**
+
+### Quarterly Computation Supplement (8% Cumulative Method)
+
+**Q1 1701Q (due May 15, 2025):**
+- Cumulative GR through Q1: ₱600,000.00
+- 8% base: `max(600,000 − 250,000, 0)` = ₱350,000.00
+- Cumulative IT due: ₱350,000 × 0.08 = **₱28,000.00**
+- Prior quarterly IT paid: ₱0.00
+- **Q1 balance payable: ₱28,000.00**
+- WARN-001 check at Q1: cumulative GR ₱600,000 ≤ ₱2,700,000 → does NOT fire
+- 8% election signified on Q1 return; irrevocable for TY2025
+
+**Q2 1701Q (due August 15, 2025):**
+- Cumulative GR through Q2: ₱600,000 + ₱750,000 = ₱1,350,000.00
+- 8% base: `max(1,350,000 − 250,000, 0)` = ₱1,100,000.00
+- Cumulative IT due: ₱1,100,000 × 0.08 = **₱88,000.00**
+- Prior quarterly IT paid: ₱28,000.00
+- **Q2 balance payable: ₱88,000 − ₱28,000 = ₱60,000.00**
+- WARN-001 check at Q2: cumulative GR ₱1,350,000 ≤ ₱2,700,000 → does NOT fire
+
+**Q3 1701Q (due November 15, 2025):**
+- Cumulative GR through Q3: ₱1,350,000 + ₱850,000 = ₱2,200,000.00
+- 8% base: `max(2,200,000 − 250,000, 0)` = ₱1,950,000.00
+- Cumulative IT due: ₱1,950,000 × 0.08 = **₱156,000.00**
+- Prior quarterly IT paid: ₱88,000.00
+- **Q3 balance payable: ₱156,000 − ₱88,000 = ₱68,000.00**
+- WARN-001 check at Q3: cumulative GR ₱2,200,000 ≤ ₱2,700,000 → does NOT fire
+- ₱3M threshold check at Q3: cumulative GR ₱2,200,000 ≤ ₱3,000,000 → 8% election remains valid
+
+**Total quarterly IT paid:** ₱28,000 + ₱60,000 + ₱68,000 = **₱156,000.00**
+
+**Q4 note:** Q4 GR = ₱700,000; cumulative through Q4 = ₱2,900,000 (< ₱3,000,000). 8% election is NOT cancelled. No Q4 quarterly return; annual 1701A reconciles full year.
+
+### Expected Intermediate Values (Annual)
+
+**PL-02 Classification:**
+- `income_type` = PURELY_SE
+- `taxpayer_class` = SERVICE_PROVIDER
+- `taxpayer_tier` = MICRO (₱2,900,000 < ₱3,000,000 strictly — MICRO threshold is `gross < ₱3M`)
+- `is_eight_pct_eligible` = true (₱2,900,000 ≤ ₱3,000,000 — 8% uses inclusive boundary)
+- `vat_registration_required` = false (₱2,900,000 does not exceed ₱3,000,000)
+- `pct_tax_applicable` = true (non-VAT; but waived under Path C)
+
+**PL-04 (8% Eligibility):**
+- `path_c_eligible` = true
+- `ineligibility_reasons` = []
+
+**PL-05 (Itemized Deductions):**
+- `total_itemized_deductions` = ₱0.00
+- `ear_cap` = ₱2,900,000 × 0.01 = ₱29,000.00 (not applied; no EAR expense)
+- `nolco_applied` = ₱0.00
+
+**PL-06 (OSD):**
+- `osd_amount` = ₱2,900,000 × 0.40 = ₱1,160,000.00
+- `nti_path_b` = ₱2,900,000 × 0.60 = ₱1,740,000.00
+
+**PL-07 (CWT):**
+- `total_cwt` = ₱0.00 (no 2307 entries)
+
+**PL-08 (Path A — Itemized, no expenses):**
+- `nti_path_a` = ₱2,900,000 − ₱0 = ₱2,900,000.00
+- `income_tax_path_a` = graduated_tax_2023(₱2,900,000)
+  Bracket 5 (₱2,000,001–₱8,000,000): ₱402,500 + (₱2,900,000 − ₱2,000,000) × 0.30
+  = ₱402,500 + ₱900,000 × 0.30
+  = ₱402,500 + ₱270,000 = **₱672,500.00**
+- `percentage_tax_path_a` = ₱2,900,000 × 0.03 = **₱87,000.00**
+- `total_tax_path_a` = **₱759,500.00**
+
+**PL-09 (Path B — OSD):**
+- `nti_path_b` = ₱1,740,000.00
+- `income_tax_path_b` = graduated_tax_2023(₱1,740,000)
+  Bracket 4 (₱800,001–₱2,000,000): ₱102,500 + (₱1,740,000 − ₱800,000) × 0.25
+  = ₱102,500 + ₱940,000 × 0.25
+  = ₱102,500 + ₱235,000 = **₱337,500.00**
+- `percentage_tax_path_b` = **₱87,000.00**
+- `total_tax_path_b` = **₱424,500.00**
+
+**PL-10 (Path C — 8% Flat Rate):**
+- `eight_pct_base` = ₱2,900,000 − ₱250,000 = ₱2,650,000.00
+- `income_tax_path_c` = ₱2,650,000 × 0.08 = **₱212,000.00**
+- `percentage_tax_path_c` = **₱0.00** (waived under 8%)
+- `total_tax_path_c` = **₱212,000.00**
+
+**PL-13 (Compare All Paths):**
+- Path A total: ₱759,500.00
+- Path B total: ₱424,500.00
+- Path C total: ₱212,000.00 ← MINIMUM
+- `recommended_path` = PATH_C
+- `savings_vs_next_best` = ₱424,500 − ₱212,000 = **₱212,500.00** (vs Path B)
+- `savings_vs_worst` = ₱759,500 − ₱212,000 = **₱547,500.00** (vs Path A)
+
+**PL-14 (Balance — Path C):**
+- `income_tax_due` = ₱212,000.00
+- `percentage_tax_due` = ₱0.00
+- `total_tax_due` = ₱212,000.00
+- `cwt_credits` = ₱0.00
+- `quarterly_it_paid` = ₱156,000.00 (Q1: ₱28K + Q2: ₱60K + Q3: ₱68K)
+- `balance_payable_raw` = 212,000 − 0 − 156,000 = **₱56,000.00**
+- `balance_payable` = ₱56,000.00
+- `overpayment` = ₱0.00
+
+**PL-15 (Form Selection):**
+- `form` = FORM_1701A (pure SE, 8% elected, no compensation income)
+- `form_section` = PART_IV_B (8% section on Form 1701A)
+
+**PL-16 (Penalty Check):**
+- Filed April 15, 2026 (on time) → no penalties
+
+**Warning generation:**
+- WARN_NEAR_VAT_THRESHOLD (WARN-001): GR = ₱2,900,000 > ₱2,700,000 AND ≤ ₱3,000,000 AND not VAT-registered → **fires**
+- WARN_NO_2307_ENTRIES (WARN-003): does NOT fire (Path C recommended; WARN-003 fires only when Path A is recommended without CWT)
+- WARN_VERY_LOW_EXPENSES (WARN-004): does NOT fire (no expenses entered; Path C recommended — WARN-004 fires only when expenses < 5% of GR AND Path A is recommended)
+
+**Threshold proximity analysis (engine-computed supplement):**
+- `current_gross` = ₱2,900,000.00
+- `vat_threshold` = ₱3,000,000.00
+- `buffer_remaining` = ₱100,000.00 (before 8% becomes unavailable)
+- `buffer_pct_of_threshold` = 3.33% (₱100,000 / ₱3,000,000)
+- `total_cost_if_cross` (counterfactual at GR = ₱3,000,001, Path B OSD): graduated_tax_2023(₱1,800,000) + ₱90,000 = ₱352,500 + ₱90,000 = ₱442,500 (vs ₱212,000 at current GR on Path C); crossing costs approximately ₱230,500 extra per year
+- `cross_scenario_ref` = "SC-CROSS-3M (TV-EDGE-006): mid-year crossing retroactively cancels 8%; see edge-cases.md"
+
+### Expected Final Output
+
+```
+TaxComputationResult {
+  tax_year: 2025,
+  filing_period: ANNUAL,
+  taxpayer_type: PURELY_SE,
+  taxpayer_tier: MICRO,
+
+  regime_comparison: {
+    path_a: {
+      eligible: true,
+      nti: 2900000.00,
+      itemized_deductions: 0.00,
+      income_tax: 672500.00,
+      percentage_tax: 87000.00,
+      total_tax: 759500.00
+    },
+    path_b: {
+      eligible: true,
+      nti: 1740000.00,
+      osd_amount: 1160000.00,
+      income_tax: 337500.00,
+      percentage_tax: 87000.00,
+      total_tax: 424500.00
+    },
+    path_c: {
+      eligible: true,
+      tax_base: 2650000.00,
+      income_tax: 212000.00,
+      percentage_tax: 0.00,
+      total_tax: 212000.00,
+      ineligibility_reasons: []
+    },
+    recommended_path: PATH_C,
+    savings_vs_next_best: 212500.00,
+    savings_vs_worst: 547500.00
+  },
+
+  selected_path: PATH_C,
+  income_tax_due: 212000.00,
+  percentage_tax_due: 0.00,
+  total_tax_due: 212000.00,
+  cwt_credits: 0.00,
+  quarterly_it_paid: 156000.00,
+  balance_payable: 56000.00,
+  overpayment: 0.00,
+  overpayment_disposition: null,
+
+  form: FORM_1701A,
+  form_section: PART_IV_B,
+
+  penalties: { surcharge: 0.00, interest: 0.00, compromise: 0.00, total: 0.00 },
+  warnings: [WARN_NEAR_VAT_THRESHOLD],
+  manual_review_flags: [],
+  ineligibility_notifications: [],
+
+  threshold_proximity_analysis: {
+    current_gross: 2900000.00,
+    vat_threshold: 3000000.00,
+    buffer_remaining: 100000.00,
+    buffer_pct_of_threshold: 3.33,
+    warn_threshold: 2700000.00,
+    warn_fired: true,
+    counterfactual_path_b_at_3000001: {
+      nti: 1800000.60,
+      income_tax: 352500.15,
+      percentage_tax: 90000.03,
+      total_tax: 442500.18,
+      additional_cost_vs_current_path_c: 230500.18
+    },
+    cross_scenario_ref: "SC-CROSS-3M (TV-EDGE-006 in edge-cases.md)"
+  },
+
+  quarterly_tracker: [
+    {
+      quarter: 1,
+      cumul_gross: 600000.00,
+      eight_pct_base: 350000.00,
+      cumul_it_due: 28000.00,
+      prior_paid: 0.00,
+      quarterly_payable: 28000.00,
+      warn_001_at_this_quarter: false,
+      threshold_crossed_at_this_quarter: false
+    },
+    {
+      quarter: 2,
+      cumul_gross: 1350000.00,
+      eight_pct_base: 1100000.00,
+      cumul_it_due: 88000.00,
+      prior_paid: 28000.00,
+      quarterly_payable: 60000.00,
+      warn_001_at_this_quarter: false,
+      threshold_crossed_at_this_quarter: false
+    },
+    {
+      quarter: 3,
+      cumul_gross: 2200000.00,
+      eight_pct_base: 1950000.00,
+      cumul_it_due: 156000.00,
+      prior_paid: 88000.00,
+      quarterly_payable: 68000.00,
+      warn_001_at_this_quarter: false,
+      threshold_crossed_at_this_quarter: false
+    },
+    {
+      quarter: "annual_reconciliation",
+      total_gross: 2900000.00,
+      eight_pct_base: 2650000.00,
+      annual_it: 212000.00,
+      total_prior_paid: 156000.00,
+      annual_balance: 56000.00,
+      warn_001_fires: true,
+      note: "WARN_NEAR_VAT_THRESHOLD fires at annual because final GR ₱2,900,000 > ₱2,700,000 warning threshold. Did not fire during quarterly returns because Q1 cumulative ₱600K and Q2 ₱1,350K and Q3 ₱2,200K were all below ₱2,700K."
+    }
+  ]
+}
+```
+
+**WARN_NEAR_VAT_THRESHOLD** fires with message: "Your gross receipts are within ₱300,000 of the ₱3,000,000 VAT registration threshold. If your total receipts for the year exceed ₱3,000,000, you will be required to register for VAT, and the 8% option will no longer be available to you. Monitor your receipts closely and register for VAT before the threshold is crossed."
+
+### Verification
+
+- **taxpayer_tier = MICRO:** ₱2,900,000 < ₱3,000,000 (strict) → MICRO ✓; contrast with TV-EDGE-001 where ₱3,000,000 = ₱3,000,000 → SMALL ✓
+- **8% eligible:** ₱2,900,000 ≤ ₱3,000,000 (inclusive) → eligible ✓
+- **VAT not required:** ₱2,900,000 does not exceed ₱3,000,000 (strict) → no VAT ✓
+- **Path A IT:** graduated_tax_2023(₱2,900,000) = 402,500 + (2,900,000 − 2,000,000) × 0.30 = 402,500 + 270,000 = **₱672,500** ✓
+- **Path A PT:** 2,900,000 × 0.03 = **₱87,000** ✓; total A = **₱759,500** ✓
+- **Path B NTI:** 2,900,000 × 0.60 = **₱1,740,000** ✓
+- **Path B IT:** graduated_tax_2023(₱1,740,000): bracket 4: 102,500 + (1,740,000 − 800,000) × 0.25 = 102,500 + 235,000 = **₱337,500** ✓; total B = 337,500 + 87,000 = **₱424,500** ✓
+- **Path C base:** 2,900,000 − 250,000 = **₱2,650,000** ✓
+- **Path C IT:** 2,650,000 × 0.08 = **₱212,000** ✓; total C = **₱212,000** ✓
+- **Savings vs B:** 424,500 − 212,000 = **₱212,500** ✓
+- **Q1 payable:** (600,000 − 250,000) × 0.08 = **₱28,000** ✓
+- **Q2 payable:** (1,350,000 − 250,000) × 0.08 = ₱88,000 cumul; 88,000 − 28,000 = **₱60,000** ✓
+- **Q3 payable:** (2,200,000 − 250,000) × 0.08 = ₱156,000 cumul; 156,000 − 88,000 = **₱68,000** ✓
+- **Annual balance:** 212,000 − 156,000 = **₱56,000** ✓
+- **WARN-001 condition:** 2,900,000 > 2,700,000 AND 2,900,000 ≤ 3,000,000 AND not VAT → fires ✓
+- **WARN-001 NOT at Q1-Q3:** Q1 cumul ₱600K ≤ ₱2,700K; Q2 ₱1,350K ≤ ₱2,700K; Q3 ₱2,200K ≤ ₱2,700K → does not fire during quarterly filings ✓
+- **EAR cap:** 1% × 2,900,000 = ₱29,000; no EAR expense claimed → no disallowance ✓
+- **PT waiver under 8%:** NIRC Sec. 24(A)(2)(b) "in lieu of graduated income tax rates AND percentage tax under Sec. 116" ✓
+
+**Legal basis:** TRAIN-amended NIRC Sec. 24(A)(2)(b) (8% option, ≤ ₱3M inclusive, PT waiver). NIRC Sec. 116 as amended by CREATE (3% PT, waived for 8% filers). CR-002 (graduated rates, 2023 schedule). CR-031 (₱3M triple boundary: MICRO strict, VAT strict, 8% inclusive). RR 8-2018 Sec. 2(A)(3) (8% option election irrevocable; signified on first quarterly return). NIRC Sec. 74-76 (quarterly cumulative method). CR-008 (quarterly computation). WARN-001 threshold: ₱2,700,000 guard (₱300,000 below ₱3M limit), per error-states.md.
+
+---
+
+## GROUP 6 SUMMARY TABLE
+
+| Vector | Scenario | GR | Tier | 8% Eligible | VAT Required | Optimal Path | Total Tax | Key Feature |
+|--------|---------|-----|------|-------------|-------------|-------------|-----------|-------------|
+| TV-EDGE-001 (edge-cases.md) | SC-AT-3M | ₱3,000,000 | SMALL | Yes (≤ ₱3M inclusive) | No (strict > ₱3M) | Path C | ₱220,000 | Exact boundary: SMALL tier but 8% still available; no VAT |
+| TV-EDGE-006 (edge-cases.md) | SC-CROSS-3M | ₱3,200,000 | SMALL | No (retroactively cancelled) | Yes | Path B (forced) | ₱462,500 | 8% cancelled at annual; all quarterly payments reclassified |
+| TV-EX-G6-001 | SC-NEAR-3M | ₱2,900,000 | MICRO | Yes | No | Path C | ₱212,000 | WARN-001 fires at annual only; ₱100K buffer; savings ₱212,500 vs OSD |
+
+**Key insights for Group 6:**
+
+1. **The ₱3M triple coincidence uses three different boundary expressions.** MICRO/SMALL tier split: `gross < ₱3M` (strict less-than). 8% eligibility: `gross ≤ ₱3M` (inclusive less-than-or-equal). VAT registration trigger: `gross > ₱3M` (strict greater-than). At exactly ₱3M: taxpayer is SMALL (not MICRO), still 8%-eligible, and still not VAT-required. See TV-EDGE-001.
+
+2. **WARN-001 fires during annual reconciliation, not necessarily during quarterly returns.** With quarterly income spread evenly or weighted toward later quarters, cumulative GR at Q1 and Q2 may remain below the ₱2,700,000 warning threshold even when the annual total triggers it. The engine applies the WARN-001 check at every computation step (quarterly and annual), but for many near-₱3M earners, the first warning fires only at the annual 1701A.
+
+3. **Crossing ₱3M retroactively cancels 8%.** The crossing does not affect only future quarters — it applies to the entire tax year. All quarterly IT paid under the 8% computation is reclassified as advance payments toward the graduated-rate annual tax. This can create a large surprise balance payable at annual reconciliation. See TV-EDGE-006.
+
+4. **At GR = ₱2,900,000 (no expenses), Path C saves ₱212,500 vs OSD.** The scenarios.md note stating "₱76,000–₱83,800 advantage for 8%" in the SC-NEAR-3M description is incorrect; those savings figures correspond to the ₱1.5M–₱1.6M gross range. Correct savings at ₱2.8M–₱2.999M are approximately ₱202,500–₱222,500 (the savings grow as GR approaches ₱3M because both the 8% base and the OSD NTI increase, but the graduated rate on NTI grows faster than 8% on the incremental base).
+
+5. **The buffer analysis is a user-value feature.** For near-₱3M earners, displaying the exact peso buffer (e.g., "You have ₱100,000 remaining before the 8% option is lost") is high-value information that existing tools do not provide. The `threshold_proximity_analysis` block enables the frontend to render a dedicated "Threshold Watch" card when WARN-001 fires.
 
