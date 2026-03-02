@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 54
-- Analyzed: 33
-- Pending: 21
-- Convergence: 61%
+- Analyzed: 34
+- Pending: 20
+- Convergence: 63%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -48,7 +48,7 @@ Design the computation engine from the extracted domain rules.
 - [x] error-states — Define every invalid input state and the engine's response
 - [x] test-vectors-basic — Write happy-path test vectors (one per common scenario)
 - [x] test-vectors-edge — Write edge-case test vectors
-- [ ] test-vectors-g1 — Exhaustive vectors: Group 1 (Pure Service/Professional, below ₱3M, 8% eligible — 12 codes)
+- [x] test-vectors-g1 — Exhaustive vectors: Group 1 (Pure Service/Professional, below ₱3M, 8% eligible — 12 codes)
 - [ ] test-vectors-g2 — Exhaustive vectors: Group 2 (Pure Service/Professional, above ₱3M VAT — 2 codes)
 - [ ] test-vectors-g3 — Exhaustive vectors: Group 3 (Mixed Income earners — 5 codes)
 - [ ] test-vectors-g4 — Exhaustive vectors: Group 4 (First-year/new registrants — 5 codes)
