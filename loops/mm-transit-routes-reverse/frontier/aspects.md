@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects: 106
-- Analyzed: 104
-- Pending: 2
-- Convergence: 98%
+- Analyzed: 105
+- Pending: 1
+- Convergence: 99%
 
 ---
 
@@ -145,5 +145,5 @@
 - [x] Generate frequencies.txt — headway estimates for peak/off-peak
 - [x] Generate calendar.txt — service patterns (weekday vs weekend vs holiday)
 - [x] GTFS validation — run against GTFS specification, fix errors
-- [ ] Coverage quality report — stats on routes mapped, confidence distribution, known gaps
+- [x] Coverage quality report — stats on routes mapped, confidence distribution, known gaps
 - [ ] Final convergence summary — what's complete, what needs field validation, recommended next steps
