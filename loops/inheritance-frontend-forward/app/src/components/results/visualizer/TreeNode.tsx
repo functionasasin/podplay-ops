@@ -11,7 +11,6 @@ export interface TreeNodeRendererProps {
 
 /**
  * Custom tree node component for react-d3-tree renderCustomNodeElement.
- * Stub — implementation in next iteration.
  */
 export function TreeNodeRenderer({ nodeDatum }: TreeNodeRendererProps) {
   const colors = NODE_ROLE_COLORS[nodeDatum.role];

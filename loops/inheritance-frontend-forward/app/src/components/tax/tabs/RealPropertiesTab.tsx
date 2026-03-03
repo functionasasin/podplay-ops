@@ -1,6 +1,5 @@
 /**
  * Tab 3 — Real Properties (§4.23)
- * Stub: will be fully implemented in a later iteration.
  */
 
 import type { RealPropertyItem } from '@/types/estate-tax';

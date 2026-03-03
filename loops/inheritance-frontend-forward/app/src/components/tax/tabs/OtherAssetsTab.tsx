@@ -1,6 +1,5 @@
 /**
  * Tab 5 — Other Assets (§4.23)
- * Stub: will be fully implemented in a later iteration.
  */
 
 import type { OtherAssets } from '@/types/estate-tax';

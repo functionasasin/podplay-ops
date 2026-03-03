@@ -1,6 +1,5 @@
 /**
  * Tab 7 — Special Deductions (§4.23)
- * Stub: will be fully implemented in a later iteration.
  */
 
 import type { SpecialDeductions } from '@/types/estate-tax';

@@ -1,6 +1,5 @@
 /**
  * DocumentChecklist — Per-case document checklist panel (§4.22)
- * Stub component — implementation in next iteration.
  */
 
 import { useState, useEffect } from 'react';

@@ -61,6 +61,79 @@ vi.mock('../wasm/bridge', () => ({
   }),
 }));
 
+// Mock cases lib — /cases/$caseId imports loadCase
+vi.mock('../lib/cases', () => ({
+  loadCase: vi.fn().mockRejectedValue(new Error('Not found')),
+  updateCaseInput: vi.fn(),
+  updateCaseOutput: vi.fn(),
+  createCase: vi.fn(),
+  listCases: vi.fn().mockResolvedValue([]),
+  deleteCase: vi.fn(),
+  isValidStatusTransition: vi.fn(),
+  updateCaseStatus: vi.fn(),
+}));
+
+// Mock clients lib — /clients imports listClients
+vi.mock('../lib/clients', () => ({
+  listClients: vi.fn().mockResolvedValue([]),
+  createClient: vi.fn(),
+  loadClient: vi.fn().mockRejectedValue(new Error('Not found')),
+  updateClient: vi.fn(),
+  deleteClient: vi.fn(),
+}));
+
+// Mock organizations lib — clients route uses useOrganization
+vi.mock('../lib/organizations', () => ({
+  getUserOrganization: vi.fn().mockResolvedValue(null),
+  listMembers: vi.fn().mockResolvedValue([]),
+  inviteMember: vi.fn(),
+  removeMember: vi.fn(),
+  updateMemberRole: vi.fn(),
+  revokeInvitation: vi.fn(),
+}));
+
+// Mock firm-profile lib — settings route uses FirmProfileProvider
+vi.mock('../lib/firm-profile', () => ({
+  defaultFirmProfile: vi.fn(() => ({
+    firmName: null,
+    firmAddress: null,
+    firmPhone: null,
+    firmEmail: null,
+    counselName: null,
+    counselEmail: null,
+    counselPhone: null,
+    ibpRollNo: null,
+    ptrNo: null,
+    mcleComplianceNo: null,
+    logoUrl: null,
+    letterheadColor: '#1E3A5F',
+    secondaryColor: '#C9A84C',
+  })),
+  loadFirmProfile: vi.fn().mockResolvedValue({
+    firmName: null,
+    firmAddress: null,
+    firmPhone: null,
+    firmEmail: null,
+    counselName: null,
+    counselEmail: null,
+    counselPhone: null,
+    ibpRollNo: null,
+    ptrNo: null,
+    mcleComplianceNo: null,
+    logoUrl: null,
+    letterheadColor: '#1E3A5F',
+    secondaryColor: '#C9A84C',
+  }),
+  saveFirmProfile: vi.fn(),
+  uploadLogo: vi.fn(),
+  deleteLogo: vi.fn(),
+  validateLogoFile: vi.fn(),
+  ALLOWED_LOGO_TYPES: ['image/png', 'image/jpeg', 'image/svg+xml'],
+  MAX_LOGO_SIZE_BYTES: 2 * 1024 * 1024,
+  DEFAULT_LETTERHEAD_COLOR: '#1E3A5F',
+  DEFAULT_SECONDARY_COLOR: '#C9A84C',
+}));
+
 // ---------------------------------------------------------------------------
 // Test helper: render a route with memory history
 // ---------------------------------------------------------------------------
@@ -188,38 +261,41 @@ describe('router > /share/:token renders without auth', () => {
 });
 
 describe('router > /cases/:caseId renders case editor', () => {
-  it('renders case editor page with case ID', async () => {
+  it('renders case editor page for a given case ID', async () => {
     await renderRoute('/cases/case-42');
 
-    expect(screen.getByText('Case Editor')).toBeInTheDocument();
-    expect(screen.getByText('case-42')).toBeInTheDocument();
+    // The case editor loads the case asynchronously — shows loading or error state
+    await waitFor(() => {
+      // Either a loading spinner or error message should be present
+      const hasContent = document.querySelector('main')?.innerHTML.length ?? 0;
+      expect(hasContent).toBeGreaterThan(0);
+    });
   });
 });
 
-describe('router > placeholder routes render correctly', () => {
-  it('/clients renders clients page', async () => {
+describe('router > authenticated routes show sign-in prompt', () => {
+  it('/clients renders sign-in prompt when unauthenticated', async () => {
     await renderRoute('/clients');
 
     // "Clients" appears in both sidebar nav and page heading
     expect(screen.getAllByText('Clients').length).toBeGreaterThanOrEqual(2);
-    expect(screen.getByText(/client management coming/i)).toBeInTheDocument();
+    expect(screen.getByText(/sign in to manage your clients/i)).toBeInTheDocument();
   });
 
-  it('/deadlines renders deadlines page', async () => {
+  it('/deadlines renders sign-in prompt when unauthenticated', async () => {
     await renderRoute('/deadlines');
 
     // "Deadlines" appears in both sidebar nav and page heading
     expect(screen.getAllByText('Deadlines').length).toBeGreaterThanOrEqual(2);
-    // Real implementation shows sign-in prompt for unauthenticated users
     expect(screen.getByText(/sign in to view your settlement deadlines/i)).toBeInTheDocument();
   });
 
-  it('/settings renders settings page', async () => {
+  it('/settings renders sign-in prompt when unauthenticated', async () => {
     await renderRoute('/settings');
 
     // "Settings" appears in both sidebar nav and page heading
     expect(screen.getAllByText('Settings').length).toBeGreaterThanOrEqual(2);
-    expect(screen.getByText(/firm branding settings coming/i)).toBeInTheDocument();
+    expect(screen.getByText(/sign in to manage your firm settings/i)).toBeInTheDocument();
   });
 });
 

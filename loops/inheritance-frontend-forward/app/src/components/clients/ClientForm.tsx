@@ -26,14 +26,31 @@ export interface ClientFormProps {
 export function ClientForm(props: ClientFormProps) {
   const { defaultValues, onSubmit, loading } = props;
 
-  // stub — will use react-hook-form + zod in implementation
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const data: ClientFormData = {
+      full_name: (formData.get('full_name') as string) ?? '',
+      nickname: (formData.get('nickname') as string) ?? '',
+      date_of_birth: (formData.get('date_of_birth') as string) ?? '',
+      place_of_birth: (formData.get('place_of_birth') as string) ?? '',
+      email: (formData.get('email') as string) ?? '',
+      phone: (formData.get('phone') as string) ?? '',
+      address: (formData.get('address') as string) ?? '',
+      tin: (formData.get('tin') as string) ?? '',
+      gov_id_type: (formData.get('gov_id_type') as GovIdType | '') ?? '',
+      gov_id_number: (formData.get('gov_id_number') as string) ?? '',
+      civil_status: (formData.get('civil_status') as CivilStatus | '') ?? '',
+      intake_date: (formData.get('intake_date') as string) ?? '',
+      referral_source: (formData.get('referral_source') as string) ?? '',
+    };
+    onSubmit(data);
+  };
+
   return (
     <form
       data-testid="client-form"
-      onSubmit={(e) => {
-        e.preventDefault();
-        // stub
-      }}
+      onSubmit={handleSubmit}
     >
       <div data-testid="client-form-identity">
         <input

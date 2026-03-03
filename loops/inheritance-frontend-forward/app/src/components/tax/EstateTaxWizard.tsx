@@ -1,6 +1,5 @@
 /**
  * Estate Tax Inputs Wizard — 8-tab container (§4.23)
- * Stub: will be implemented in a later iteration.
  */
 
 import { useState, useCallback } from 'react';

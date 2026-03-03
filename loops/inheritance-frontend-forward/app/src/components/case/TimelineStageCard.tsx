@@ -1,6 +1,5 @@
 /**
  * TimelineStageCard — Individual stage card in the Timeline Report (§4.21)
- * Stub — implementation coming in Stage 22 implement phase.
  */
 
 import type { TimelineStage } from '@/lib/timeline';

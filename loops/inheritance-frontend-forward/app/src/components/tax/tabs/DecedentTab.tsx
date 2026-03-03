@@ -1,6 +1,5 @@
 /**
  * Tab 1 — Decedent Details (§4.23)
- * Stub: will be fully implemented in a later iteration.
  */
 
 import type { DecedentDetails, MaritalStatus, PropertyRegime } from '@/types/estate-tax';

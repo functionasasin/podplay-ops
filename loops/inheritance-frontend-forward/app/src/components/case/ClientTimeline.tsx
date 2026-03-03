@@ -1,6 +1,5 @@
 /**
  * ClientTimeline — Client-facing shared timeline view (§4.21)
- * Stub — implementation coming in Stage 22 implement phase.
  */
 
 import { TimelineReport } from './TimelineReport';

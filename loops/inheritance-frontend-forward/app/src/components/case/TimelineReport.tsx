@@ -1,6 +1,5 @@
 /**
  * TimelineReport — Settlement timeline panel (§4.21)
- * Stub — implementation coming in Stage 22 implement phase.
  */
 
 import { buildTimelineData } from '@/lib/timeline';

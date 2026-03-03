@@ -1,6 +1,5 @@
 /**
  * Tab 6 — Ordinary Deductions (§4.23)
- * Stub: will be fully implemented in a later iteration.
  */
 
 import type { OrdinaryDeductions } from '@/types/estate-tax';

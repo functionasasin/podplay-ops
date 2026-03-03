@@ -1,6 +1,5 @@
 /**
  * Tab 4 — Personal Properties (§4.23)
- * Stub: will be fully implemented in a later iteration.
  */
 
 import type { PersonalPropertyItem } from '@/types/estate-tax';

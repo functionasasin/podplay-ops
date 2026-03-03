@@ -1,6 +1,5 @@
 /**
  * Tab 8 — Filing & Amnesty (§4.23)
- * Stub: will be fully implemented in a later iteration.
  */
 
 import type { FilingData, AmnestyDeductionMode } from '@/types/estate-tax';

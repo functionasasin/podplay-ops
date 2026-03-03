@@ -1,6 +1,5 @@
 /**
  * Tab 2 — Executor Details (§4.23)
- * Stub: will be fully implemented in a later iteration.
  */
 
 import type { ExecutorDetails } from '@/types/estate-tax';
