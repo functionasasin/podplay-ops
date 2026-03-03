@@ -5,7 +5,7 @@
  * runs the WASM engine, and computes per-heir deltas.
  */
 import type { EngineInput, EngineOutput } from '@/types';
-import { supabase } from './supabase';
+import { compute } from '@/wasm/bridge';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -26,8 +26,7 @@ export interface ComparisonDiffEntry {
  * Strip the will from a testate input to produce an intestate alternative.
  */
 export function buildAlternativeInput(input: EngineInput): EngineInput {
-  // stub — will be implemented in next iteration
-  return { ...input };
+  return { ...input, will: null };
 }
 
 /**
@@ -37,8 +36,36 @@ export function calculateDiffs(
   currentOutput: EngineOutput,
   alternativeOutput: EngineOutput,
 ): ComparisonDiffEntry[] {
-  // stub
-  return [];
+  // Build a lookup of alternative shares by heir_id
+  const altShareMap = new Map<string, bigint>();
+  for (const share of alternativeOutput.per_heir_shares) {
+    altShareMap.set(share.heir_id, BigInt(share.total.centavos));
+  }
+
+  return currentOutput.per_heir_shares.map((share) => {
+    const currentCentavos = BigInt(share.total.centavos);
+    const alternativeCentavos = altShareMap.get(share.heir_id) ?? BigInt(0);
+    const deltaCentavos = currentCentavos - alternativeCentavos;
+
+    // delta_pct: (current - alternative) / alternative * 100
+    // Special case: if alternative is 0 and current > 0, that's +100% (heir only exists under will)
+    // If both are 0, delta_pct is 0
+    let deltaPct: number;
+    if (alternativeCentavos === BigInt(0)) {
+      deltaPct = currentCentavos > BigInt(0) ? 100 : 0;
+    } else {
+      deltaPct = Number(deltaCentavos * BigInt(10000) / alternativeCentavos) / 100;
+    }
+
+    return {
+      heir_id: share.heir_id,
+      heir_name: share.heir_name,
+      current_centavos: currentCentavos,
+      alternative_centavos: alternativeCentavos,
+      delta_centavos: deltaCentavos,
+      delta_pct: deltaPct,
+    };
+  });
 }
 
 /**
@@ -46,12 +73,12 @@ export function calculateDiffs(
  */
 export async function computeComparison(
   input: EngineInput,
-  _output: EngineOutput,
+  currentOutput: EngineOutput,
 ): Promise<{ alternativeOutput: EngineOutput; diffs: ComparisonDiffEntry[] }> {
-  // stub
   const alternativeInput = buildAlternativeInput(input);
-  void alternativeInput;
-  return { alternativeOutput: _output, diffs: [] };
+  const alternativeOutput = await compute(alternativeInput);
+  const diffs = calculateDiffs(currentOutput, alternativeOutput);
+  return { alternativeOutput, diffs };
 }
 
 /**
@@ -62,6 +89,7 @@ export async function saveComparisonResults(
   alternativeInput: EngineInput,
   alternativeOutput: EngineOutput,
 ): Promise<void> {
+  const { supabase } = await import('./supabase');
   const { error } = await supabase
     .from('cases')
     .update({
