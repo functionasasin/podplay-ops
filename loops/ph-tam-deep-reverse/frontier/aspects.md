@@ -18,7 +18,7 @@
 - [x] tam-gsis — D-GSIS-1/2/3/4; GSIS active members + retirees; government HR officers
 - [x] tam-ofw-migration — E-OFW-1/2/3, OWWA; OFW annual deployments from DMW/POEA statistics; recruitment agencies + OFW legal advocates
 - [x] tam-maritime-seafarer — I-MAR-1/2/3/4; MARINA-registered seafarers + annual certifications; manning agencies + training centers
-- [ ] tam-prc-professional — H-PRC-1/2/3; PRC-registered professionals by board (43 boards); CPD providers + professional associations
+- [x] tam-prc-professional — H-PRC-1/2/3; PRC-registered professionals by board (43 boards); CPD providers + professional associations
 - [ ] tam-transport-lto — G-LTO-1/2, J-CAP-1; registered motor vehicles by type from LTO; processing agents / fixers (disintermediation)
 - [ ] tam-customs-boc — F-BOC-1/2/3; BOC import entry count + e-commerce importers; customs brokers
 - [ ] tam-business-licensing — R-DTI-1, N-BFP-1/2, R-CDA-1; LGU business permit holders + DTI-registered sole proprietors; compliance officers + registration agents
