@@ -1,7 +1,7 @@
-# Current Stage: 21 (Document Checklist)
+# Current Stage: 22 (Timeline Report)
 
 ## Spec Sections
-- §4.22 — Document Checklist
+- §4.21 — Timeline Report
 
 ## Test Results (updated by loop)
 ```
@@ -29,4 +29,5 @@ No tests yet
 - Stage 18 completed 2026-03-03 (30+ conflict tests passing)
 - Stage 19 completed 2026-03-03 (92 intake tests passing)
 - Stage 20 completed 2026-03-03 (49/49 deadline tests passing)
-- Stage 21 starting 2026-03-03
+- Stage 21 completed 2026-03-03 (57/57 document checklist tests passing)
+- Stage 22 starting 2026-03-03
