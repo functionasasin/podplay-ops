@@ -26,6 +26,20 @@ vi.mock('../lib/supabase', () => ({
   supabase: {
     from: vi.fn(),
     rpc: vi.fn(),
+    auth: {
+      onAuthStateChange: vi.fn((callback: (event: string, session: null) => void) => {
+        // Invoke callback immediately with no session (unauthenticated)
+        setTimeout(() => callback('INITIAL_SESSION', null), 0);
+        return {
+          data: { subscription: { unsubscribe: vi.fn() } },
+        };
+      }),
+      signInWithPassword: vi.fn(),
+      signUp: vi.fn(),
+      signOut: vi.fn(),
+      signInWithOAuth: vi.fn(),
+      signInWithOtp: vi.fn(),
+    },
   },
 }));
 
@@ -196,7 +210,8 @@ describe('router > placeholder routes render correctly', () => {
 
     // "Deadlines" appears in both sidebar nav and page heading
     expect(screen.getAllByText('Deadlines').length).toBeGreaterThanOrEqual(2);
-    expect(screen.getByText(/deadline tracker coming/i)).toBeInTheDocument();
+    // Real implementation shows sign-in prompt for unauthenticated users
+    expect(screen.getByText(/sign in to view your settlement deadlines/i)).toBeInTheDocument();
   });
 
   it('/settings renders settings page', async () => {
