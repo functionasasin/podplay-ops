@@ -584,3 +584,33 @@ export const VALID_STATUS_TRANSITIONS: Record<CaseStatus, CaseStatus[]> = {
   finalized: ['archived'],
   archived: ['finalized'], // admin only
 };
+
+// ============================================================================
+// Deadline Types (§4.20)
+// ============================================================================
+
+export type DeadlineStatus = 'done' | 'overdue' | 'urgent' | 'upcoming' | 'future';
+
+export interface CaseDeadline {
+  id: string;
+  case_id: string;
+  user_id: string;
+  milestone_key: string;
+  label: string;
+  description: string;
+  due_date: string;
+  completed_date: string | null;
+  legal_basis: string;
+  is_auto: boolean;
+  note: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export const DEADLINE_STATUS_COLORS: Record<DeadlineStatus, string> = {
+  done: 'green',
+  overdue: 'red',
+  urgent: 'amber',
+  upcoming: 'yellow',
+  future: 'slate',
+};
