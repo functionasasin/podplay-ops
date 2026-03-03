@@ -1,0 +1,155 @@
+
+00:00:00 Speaker 1
+But in the port itself, port itself, you will only have the iPad, the camera, the instant replay camera, the flick buttons, the TV, it should be bought there. Because, yeah, so.
+00:00:19 Carlos Sandoval
+Look, I mean, I think there's a lot of, I saw the hardware list. We don't have to bring like all of those things because there are a lot of things that we can already associate.
+00:00:28 Speaker 1
+Yeah, I mean, for us, I think the one that was very difficult to source. And remember, I remember the pink pod in Mandaluyo where we took you and we met. We had, I brought all of those. so because there's no way for us to configure it in manila.
+00:01:00 Speaker 1
+then so i had it i had the team configure it here, then i brought it to manila and then i just installed it.
+00:01:08 Carlos Sandoval
+but the configured stuff was like the mac mini the.
+00:01:14 Speaker 1
+servers yeah yeah so we but that one happened all the configuration happened here and then i was just it's like following an ikea we we just like okay here's this one and then i had the structural cables just lay out the cables right like the the cat6 and then i had them tag it and then tested it so that i know, which port goes in so that's the only thing but other than that it was pretty.
+00:01:45 Speaker 1
+straightforward the only difference here is like chad and nico. they make it like now as also part of like the business it's a different business line for us because now we're making money in slightly on on the installs if it's at least new york, connecticut and new jersey we have our own installer so we just and then we we make money in.
+00:02:16 Speaker 1
+in the equipments because we get it as a resale price and we pass it but then that's but that's nationwide now because it's like big so now that's why it's their own department so they have a list of like who's getting in first who's getting configured first then getting shipping drop shipping so it's like a process for them that's why now it's so hard before when we started it's about like.
+00:02:47 Speaker 1
+okay i got new client this is important let's put him in, so there's there was no system now it's more i think they have like three-man team so from, for example marco is entertaining we're entertaining marco for like hey do you want pod play then marco yeah i want pod late so he signed a contract he's like i have five five courts now he gets in the queue so when the when do when do we deliver to mark so there's like.
+00:03:18 Speaker 1
+really now a more secret we use hubspot for it yeah for sales and like pipelines yeah trying to from notion to hubspot okay so and that's specifically for this department yeah, the hubspot is off but the hotspot now is like more of like really centralized because everything now we use it for tracking sales of like.
+00:03:51 Speaker 1
+facilities not only for equipment but so it's all now centralized over there so every department can see where's Marcos facilities at so we're still in contract I've used them have you used some spot yeah it's pretty good so everybody is like in a knowledge of like where is this where are you in the in the sales pipeline. like even though like we're also just initial talks demos you know so that's basically this.
+00:04:23 Speaker 1
+is stuff we'll have to do uh once we have also you have to guys learn um while you're here also, i know this it might not make sense in the philippines because the labor is less in the philippines but we also have a tier called autonomous meaning that we use the magnetic so nico might not touch on that because we always believe that maybe philippines would not need it.
+00:04:56 Speaker 1
+no i think i think we need i think if we so right now the one that uncle kim is building in bridgetown, Remember Pinkpod in Madaluyong? We will be transferring that to Philippines. So that one is going to be a 24-hour, So in Bridgestone, there's gonna be a Pinkpod grab So meaning to say you we will have to have the key CD or the magnetic door So you should express this to Nico that oh, by the way, also.
+00:05:29 Speaker 1
+Cosmos is now the exclusive, master franchise of Pinkpod in Asia meaning to say that the concept is now, Going to back to where like 80 to 90% Bangkok is buying the whole Pinkpod. So we might install 10 maybe more to 20, Uncle thinks it's 30. So but because we're talking to like the equivalent of Ayala.
+00:06:00 Speaker 1
+He told me about the central group already so meaning to say that is gonna be autonomous So make sure that we touch on that. It has to be a hundred percent. Yeah, so you get the whole.
+00:06:14 Carlos Sandoval
+Training on that. Yeah, our plan is the moment we get back. So the moment we get back our plan is instead of a lab in, Yeah, and then we'll just rehearse we're gonna train a lot of people and make sure that we can do it as, seamlessly as possible and once we're.
+00:06:37 Speaker 1
+Confident especially with like sourcing so maybe by PC app also our KC apparatus, But then yeah, just ask like Nico and Chad about the key. Yeah.
+00:06:49 Carlos Sandoval
+Makes sense.
+00:06:53 Speaker 3
+So we're not doing QC, like the automatic version. 
+00:06:56 Carlos Sandoval
+No, we're not doing QC for the teleport.
+00:06:58 Speaker 3
+Just like, that's what he said, only like the one in Bridgetown. You guys don't plan on doing QC automatic course anywhere else. 
+00:07:07 Carlos Sandoval
+Because the one in Bridgetown is going to be transferred to the one he already has, which already has it. So we need to understand how it works because it's such a premium feature that people will pay for. So we need to be able to offer it. And we can charge a markup because it's such a big, they don't allow autonomous doors. And it's not a big lift if you've seen the hardware installation. It's just like a few extra steps.
+00:07:40 Speaker 3
+Yeah, I've seen the thing. It's really, it's not like, it's not complicated. It's really easy. It's like, it's big.
+00:07:53 Speaker 1
+have you guys tried this this is my favorite that's the one that they don't have.
+00:08:11 Speaker 4
+thank you thank you.
+00:08:22 Carlos Sandoval
+you know how many people workers there are so if we have 24 7 i thought it was a big, over there it's a really big opportunity no one can do that.
+00:08:53 Carlos Sandoval
+Not Teleport, the one in Bridgetown, Pinkpot. But there's so many PPO workers, I really think 24 hours has to be the goal. Yeah. And it's actually, it's like a, it's a cool thing, it's like a free play. No one's doing that.
+00:09:09 Speaker 1
+Yeah, I mean, that's why it's really, you know, we can make like a real big VR about it.
+00:09:16 Carlos Sandoval
+Yeah, and it's not, it's not that much more than existing, like the other stuff. Yeah, I think, I mean, because I know we're not only guides in the setups, so to me it makes sense, the only real question marks in my head right now are regarding the app, like how does it know that it's the PH site and throughout the magpie instead of Stripe, because I haven't been able to connect with those people yet.
+00:09:48 Carlos Sandoval
+I mean, I had a conversation with Dominic last week. and he told me about it.
+00:09:54 Speaker 1
+So each one, so for example Marco has a facility, Marco is going to have their own app.
+00:10:02 Carlos Sandoval
+Okay.
+00:10:02 Speaker 1
+So Telepart has their own app. Helios is going to have an own app. PinkPod is going to, every, each one has his own app.
+00:10:11 Carlos Sandoval
+This is like the, by app you mean like a dashboard? Yeah. And when a client downloads the app, Podlay app, it's the global version? No, each one. So we're going to release one on the app store. Each facility is going to release one on the app store.
+00:10:31 Speaker 1
+Your brand, his brand, my brand. Nobody knows. So think about it as the Intel. Intel is in HP, Intel is in Lenovo, Intel is in Dell. Okay. You don't see that. what you see on the surface it's like all the computers it's like twisting you can fold it you can put it high but inside they're almost the same so every facility will have it yes.
+00:11:07 Speaker 1
+unless in philippines we scale we scale class in ping pong so in ping pong could be one app, could be in cebu like to be in makati so each city we could put it that way. so good oh just buying it that's one thing that they don't have i never never knew i never knew that.
+00:11:43 Speaker 1
+yeah. and also it's like really good sriracha it's not like yeah it's it's just right right touch yeah now now since you have your own you you don't have to worry about the uh but eventually, hopefully that in a maybe on a version four there will be a cosmos global market wherein in cosmos.
+00:12:21 Speaker 1
+mass if you go to the website on cosmos you could see all the customers you could just click yeah. it's a marketplace for experiential. who do you think is gonna be the sales team because i need to also speak to the sales team they need to shadow me when i demo some sales who's gonna be able to say nobody's tired yet.
+00:12:57 Speaker 1
+yeah we're gonna have to find people yeah because right now telepart you know came i'm selling it and then there's this one coming you it's called reset alabang feeling best like at the center like really the posh thing so uh so i'm basically right now your sales guy person but i i imagine.
+00:13:33 Speaker 1
+once telepark goes live it's gonna it's gonna go crazy everybody's like okay but like yeah.
+00:13:39 Carlos Sandoval
+i'm not i'm not worried about like uh people wanting. But we still need to tell people to build the relationship. Yeah.
+00:13:49 Speaker 1
+You guys need to market it also. When do you think the French Town is going to open? Not the 8 story. Uncle Tim is going to open an interim.
+00:14:10 Carlos Sandoval
+The tournament place. 
+00:14:13 Speaker 1
+The boarding board.
+00:14:15 Carlos Sandoval
+Yeah, I mean, they want it as soon as possible. It's already, the plans are already...
+00:14:23 Speaker 1
+The problem, the thing is that the town is actually smart. Because everybody is building. You want to touch the wave before people get used to it. Because 2027... gonna be so long it might it might still open 2028 building another i built like, one close to 30 pink pods and a few pick up off we always say okay we're gonna open june we end.
+00:14:58 Speaker 1
+up opening the next june permits delays in construction workers you know one delay in electrician gets a delay of the whole thing because you know it's a it's a sequence freaking.
+00:15:12 Carlos Sandoval
+another level so yeah so they already have like plans for to fill the gaps right um it's really smart i'm not sure if you've met rich dickie richard so when you got you went again to pinkpod.
+00:15:31 Speaker 1
+right yeah with dickie, yeah so i i saw the invite he he used to be the chairman of psc right he used to be a pbi player also yeah i think he's from mandalu yeah he's from san juan yeah i know his brother more uh he his brother is the uh the ns the the president of squash.
+00:15:57 Carlos Sandoval
+yeah nsa first yeah so he's he's uh us he's our our guy now thankfully maybe so we're we're building a team finally yeah many people are joking are you gonna send vicky here.
+00:16:19 Speaker 1
+like nah he's like he's not gonna be able to follow those guys his pass is prime.
+00:16:31 Carlos Sandoval
+our job is just to understand the configuration installation process really well so we can.
+00:16:37 Speaker 1
+the goal is like no more need to fly back here to you don't think i that's why i kind of push out of here to like just send the team you know it's just one time pain and we can scale it afterwards you know yeah it's much i think this is a better so it's just you know it's just scary.
+00:17:09 Speaker 1
+me flying now i was thinking i was thinking of flying also this march i was like not gonna fly.
+00:17:15 Carlos Sandoval
+wait a few months so the one when you when you do pink pot in bridgetown is gonna be 24 hours.
+00:17:28 Speaker 1
+i think that's gonna really yeah i mean right now alone itself i'm gonna, this is unfiltered right um mandaluyo right now there's people playing up to 11 p.m if we were open like 24 hours people will go and we're like in a shitty.
+00:17:59 Speaker 1
+place yeah very bad i get like i get cursed like, you guys don't have parking your bathroom sucks and then this customer's like the next day he's gonna come back he just have to like they just have to like send us like bad shit and then he's gonna come back because it's the only place that you know you could like really, like your own just imagine it outside bridge town, it's gonna be much better right so it's we're gonna create, the people are even paying to be in that shitty place i'm not even advertising because i wanna.
+00:18:35 Speaker 1
+because i cannot advertise that place that's not a pink pot it's mainly it's it's just a showroom for us when i first met your uncle you know that was the intention like just a showroom, and then people was like we want to use it we want to use it we know you know we know you're in there you don't have bathroom it's a place you know so but okay but people was like i believe me like my messengers like our messengers like you guys don't have a parking you.
+00:19:06 Speaker 1
+guys are like it's like okay don't come back it's like then he comes back like he buys membership it's like you know you just you just said so so many mean things and then you come back like yeah you know because in malls they close at night yeah and and. and they cannot open as early as they can and people are coming after work so yeah i mean their.
+00:19:36 Speaker 1
+their work is starts at 9 00 pm right yeah while you're in new york message me you'll find time i'll give you a tour of other places of other pod place so you'll see because uncle kim it was an eye-opener for him and eventually you guys next next generation you guys are gonna take over when i was telling him over google me it's like kim this is what we do it's like it's like yeah.
+00:20:10 Speaker 1
+it's like cool but to feel it when he felt it, it's it's just different level yeah yeah it's just different level like he saw the pickleball, in in long island in in here in new york it's like wow and it's autonomous they only close when they're cleaning this place four courts the rent is let's say the rent is including.
+00:20:41 Speaker 1
+including operational expenses the rent is 30 000 a month including utilities and electricity, this guy make 1 million more maybe 1.3 because of the nature that pod play has it's unbelievable i'll give you a tour on that i'll give you a tour on on sharks you heard about the sharks, the sharks is art we also own it's a billiard concept okay so it's like more of a lounge so.
+00:21:22 Speaker 1
+this is the i think that would also be crazy it's gonna be cool so here you could see, so it's also like all autonomous almost it's like private also instant replays but more loungy you can throw a party yeah you can throw a party it's like marco it's like if you.
+00:21:58 Speaker 1
+bring your friends here it's gonna be like your own uh mtv thing so yeah so we have. Five, six right now we have New York, Philly, Puerto Rico, we're trying to scale this and I think it will also kill in Philippines. Just imagine the call centers like the Marcos. I think billiards in the Philippines is pretty popular. What? Billiards in the Philippines is pretty popular.
+00:22:28 Speaker 1
+I mean we're one of the best in billiards but there are a lot of people, it's just the concept itself. The brand sharks you know it's like really what sharks you know then you see really cool. So we have that we're trying to Uncle Kim is like me and so Uncle Kim and I were talking yesterday about like strategies like we could be like the autonomous provider for anything. So I'll show you.
+00:23:05 Speaker 1
+i'll show you the dog grooming business it's like a dog salon or a pet salon, in new york city some buildings they don't allow you to wash your dogs in in the bathtub or so you have to go but there's no 24 7 so we have 24 7. so there's like a thing like you just go and wash your dog then 24 7. you can also book a groomer yeah like you want to have your dog wash.
+00:23:41 Speaker 1
+you can watch the video of your dog it's going to be so cool have you you've never been to the when you visited where you visit did you visit uh pink patch you should have come. maybe you were not there yet yeah so uh we have that then the golf simulator we wanted to get into it it's also really it's shooting up in popularity now in manila so these guys have a rent in lower east side of like 10 000. these guys they're two operators they have their own like.
+00:24:23 Speaker 1
+full-time job they open a golf simulator use spot play these freaking guys just hired like a cleaner and make 30 000 every month so they like split like so like insane like and so it's like this guys doesn't even like operate so well and they make so much money it's like so what i'm thinking i'm gonna approach these guys like hey, i want to buy you guys out you know let me run this one and let me scale it more so you want to.
+00:24:59 Speaker 1
+get into like any other any autonomous thing like i think it's gonna be so cool if we land central group that's the first we can put sharks because they have balls like so big have you been to bangkok you have been to bangkok there many times but central central world is theirs right yeah so so the guy that i was talking to said i'm gonna send you next month and.
+00:25:31 Speaker 1
+we're gonna make this happen because the big boss of the of their group the equivalent of uh, henry c or ayala uh sabel de ayala loves to bring the ping pong, let's bring this guy what did they find out about they just saw it like in instagram it's like social media because we have like uh it's getting crazy about the map i don't know if you guys have watched the marty supreme yet yeah so it's getting a a big boss about like table tennis so yeah marty.
+00:26:10 Speaker 1
+supreme like uh timothy chalamet started his training in ping pong his coach everything in ping pong his advisors everything being fun yeah that's why we're getting like good, you know tailwind of like the popularity of that movie, So just imagine, it went to the movie, it won best actors, now it's gonna stream online. Amazon, Netflix, Hulu. So then now every household's gonna see table tennis.
+00:26:40 Speaker 1
+Now every household's like, where do we play table tennis, right? So that's why I said, Kim, this is a good time for us. Because the central group, the Thailand people, said like, it's hard for us to fly back and forth to New York to experience it. They know that we have in Philippines. I said like, yeah, but it's, you know, I don't want them to come to Philippines. Like, no one's gonna be so bad.
+00:27:11 Speaker 1
+So I want Kim like, Kim, I cannot let them visit the Philippines. That's a school, you know, that's not like the whole Pink Pod set up. It has to be a more presentable set up. Yeah, makes sense. Because if they come, they wanna feel it. they want to see it so but also now once they feel it now they are going to say like yeah it works we want pod play also for our they they're starting pickable they're starting padel, everything yeah there yeah i met the guy one of the family members like uh uncle kim said.
+00:27:47 Speaker 1
+and he's really hot now he's like yeah and then but interesting enough in in thailand he's not the only guy that wanted to bring our technology or ping pong the mariotte group, the whole marios group in thailand came to me and like we wanna we wanna bring you here also so now it's a competing thing that we we're so lucky that we have that so yeah i think it's a it's a good start for us so we want to make that really really well so if they ever visit to manila.
+00:28:25 Speaker 1
+it's gonna be they should have a good experience, so the goal is like uncle kim said like yeah july august is the we should be able to finish the, alfred is the architect so it's gonna be tight i don't think if they're gonna make it that's of july and august the interim the internet the interim court it's gonna be really tight. i'm gonna just google the address do we have the address yeah yeah i have it 78 john miller way.
+00:29:04 Speaker 1
+you gotta when you go back to let's find time maybe on the the last day of work, Day of Marco. We go to New York we have dinner maybe or maybe we meet in New York you guys I don't know how it works just depending on your time I don't.
+00:29:40 Speaker 1
+your flight yeah I mean what where you also fly it yeah Newark also Newark Newark right I should have like suggested to Kim that you fly LaGuardia from LaGuardia because that's gonna be New York at least you have time so March 6 is the the last day okay we should walk
