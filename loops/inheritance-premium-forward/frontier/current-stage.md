@@ -1,7 +1,7 @@
-# Current Stage: 24 (BIR Form 1801 Integration)
+# Current Stage: 25 (Multi-Seat Firm Accounts)
 
 ## Spec Sections
-- §4.9 — BIR Form 1801 Integration
+- §4.11 — Multi-Seat Firm Accounts
 
 ## Test Results (updated by loop)
 ```
@@ -32,4 +32,5 @@ No tests yet
 - Stage 21 completed 2026-03-03 (57/57 document checklist tests passing)
 - Stage 22 completed 2026-03-03 (58/58 timeline tests passing)
 - Stage 23 completed 2026-03-03 (125/125 estate tax tests passing)
-- Stage 24 starting 2026-03-03
+- Stage 24 completed 2026-03-03 (42/42 tax-bridge tests passing)
+- Stage 25 starting 2026-03-03
