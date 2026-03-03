@@ -28,7 +28,7 @@ Dev order: 1 → 2 → 3 → 4-9 (parallel) → 10 → 11 → 12-16 (parallel) �
 | 22    | Timeline Report             | §4.21    | timeline                           | 20                 | complete |
 | 23    | Estate Tax Inputs Wizard    | §4.23    | estate-tax\|tax-wizard             | 3                  | complete |
 | 24    | BIR Form 1801 Integration   | §4.9     | bir\|form-1801\|tax-bridge         | 23, 11             | complete |
-| 25    | Multi-Seat Firm Accounts    | §4.11    | multi-seat\|organization\|team     | all                | active |
-| 26    | Integration Sweep           | —        | integration-sweep                  | all                | blocked |
+| 25    | Multi-Seat Firm Accounts    | §4.11    | multi-seat\|organization\|team     | all                | complete |
+| 26    | Integration Sweep           | —        | integration-sweep                  | all                | active |
 
 Status values: blocked | pending | active | complete
