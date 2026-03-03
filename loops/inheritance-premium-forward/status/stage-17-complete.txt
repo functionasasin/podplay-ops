@@ -1,0 +1,17 @@
+Stage 17 (Client Profiles) completed 2026-03-03
+
+All 42 client/CRM tests passing:
+- src/utils/__tests__/tin-format.test.ts (8 tests)
+- src/lib/__tests__/clients.test.ts (9 tests)
+- src/components/clients/__tests__/client-components.test.tsx (25 tests)
+
+Files produced:
+- src/routes/clients/index.tsx — Client list page
+- src/routes/clients/new.tsx — New client form
+- src/routes/clients/$clientId.tsx — Client detail page
+- src/components/clients/ClientList.tsx — Sortable, searchable table
+- src/components/clients/ClientForm.tsx — Form with PH-specific fields
+- src/lib/clients.ts — CRUD functions
+- src/utils/tin-format.ts — TIN formatting helper
+- src/types/client.ts — Client TypeScript types
+- src/schemas/client.ts — Zod validation schemas
