@@ -21,6 +21,20 @@ import { deadlinesRoute } from '../routes/deadlines';
 import { settingsRoute } from '../routes/settings/index';
 import { shareTokenRoute } from '../routes/share/$token';
 
+// Mock supabase — share/$token imports share lib which imports supabase
+vi.mock('../lib/supabase', () => ({
+  supabase: {
+    from: vi.fn(),
+    rpc: vi.fn(),
+  },
+}));
+
+// Mock share lib — share/$token uses getSharedCase
+vi.mock('../lib/share', () => ({
+  getSharedCase: vi.fn().mockResolvedValue(null),
+  toggleShare: vi.fn(),
+}));
+
 // Mock the WASM bridge — /cases/new imports compute()
 vi.mock('../wasm/bridge', () => ({
   compute: vi.fn().mockResolvedValue({
@@ -133,11 +147,15 @@ describe('router > /auth renders login page', () => {
 });
 
 describe('router > /share/:token renders without auth', () => {
-  it('renders the shared case page with token', async () => {
+  it('renders the shared case page at /share/:token', async () => {
     await renderRoute('/share/abc-123-test');
 
-    expect(screen.getByText('Shared Case')).toBeInTheDocument();
-    expect(screen.getByText('abc-123-test')).toBeInTheDocument();
+    // Route renders — shows loading or not-found state (mock returns null)
+    await waitFor(() => {
+      const loading = screen.queryByTestId('shared-case-loading');
+      const notFound = screen.queryByTestId('shared-case-not-found');
+      expect(loading ?? notFound).toBeTruthy();
+    });
   });
 
   it('does not require authentication for shared view', async () => {
@@ -146,7 +164,12 @@ describe('router > /share/:token renders without auth', () => {
 
     // Should show the shared case content, not the auth page
     expect(screen.queryByText('Sign In')).not.toBeInTheDocument();
-    expect(screen.getByText('Shared Case')).toBeInTheDocument();
+    // Route renders without auth gate — shows loading or not-found
+    await waitFor(() => {
+      const loading = screen.queryByTestId('shared-case-loading');
+      const notFound = screen.queryByTestId('shared-case-not-found');
+      expect(loading ?? notFound).toBeTruthy();
+    });
   });
 });
 
