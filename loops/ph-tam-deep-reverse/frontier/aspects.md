@@ -25,5 +25,5 @@
 - [x] tam-regulatory-specialty — P-IPO-1/2, Q-ERC-1, S-BSP-1, M-FDA-1/2, L-TES-1, R-BOI-1/2, R-PCAB-1, N-NPC-1, R-NTC-1; one specific registry count per tool from the relevant agency
 
 ## Synthesis
-- [ ] synthesis-master-tam-table — Compile all per-tool TAM files into single ranked master table sorted by Total TAM; include Data Confidence Score per tool
-- [ ] synthesis-revenue-model — Revenue model stacking tools in priority order; 3 penetration scenarios (0.5%/2%/5%); 3-year horizon; ₱199/₱999/₱2,999/₱9,999 tier breakdown; identify standalone vs bundle plays
+- [x] synthesis-master-tam-table — Compile all per-tool TAM files into single ranked master table sorted by Total TAM; include Data Confidence Score per tool
+- [x] synthesis-revenue-model — Revenue model stacking tools in priority order; 3 penetration scenarios (0.5%/2%/5%); 3-year horizon; ₱199/₱999/₱2,999/₱9,999 tier breakdown; identify standalone vs bundle plays
