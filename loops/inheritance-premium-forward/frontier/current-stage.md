@@ -1,7 +1,7 @@
-# Current Stage: 15 (Scenario Comparison)
+# Current Stage: 16 (Family Tree Visualizer)
 
 ## Spec Sections
-- §4.8 — Scenario Comparison
+- §4.19 — Family Tree Visualizer
 
 ## Test Results (updated by loop)
 ```
@@ -23,4 +23,5 @@ No tests yet
 - Stage 12 completed 2026-03-02 (27/27 tests passing)
 - Stage 13 completed 2026-03-03 (36/36 tests passing)
 - Stage 14 completed 2026-03-03 (22/22 tests passing)
-- Stage 15 starting 2026-03-03
+- Stage 15 completed 2026-03-03 (26/26 tests passing)
+- Stage 16 starting 2026-03-03
