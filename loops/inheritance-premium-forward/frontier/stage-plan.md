@@ -19,8 +19,8 @@ Dev order: 1 → 2 → 3 → 4-9 (parallel) → 10 → 11 → 12-16 (parallel) �
 | 13    | Shareable Links             | §4.10    | share\|shareable                   | 3                  | complete |
 | 14    | Case Export ZIP             | §4.16    | zip\|export-archive                | 11, 3              | complete |
 | 15    | Scenario Comparison         | §4.8     | comparison\|scenario-compare       | 3                  | complete |
-| 16    | Family Tree Visualizer      | §4.19    | family-tree-viz\|tree-tab          | —                  | active |
-| 17    | Client Profiles             | §4.3     | client\|crm                        | 3                  | blocked |
+| 16    | Family Tree Visualizer      | §4.19    | family-tree-viz\|tree-tab          | —                  | complete |
+| 17    | Client Profiles             | §4.3     | client\|crm                        | 3                  | active |
 | 18    | Conflict Check              | §4.17    | conflict                           | 17                 | blocked |
 | 19    | Guided Intake Form          | §4.18    | intake                             | 17, 18             | blocked |
 | 20    | Deadline Tracker            | §4.20    | deadline                           | 3                  | blocked |

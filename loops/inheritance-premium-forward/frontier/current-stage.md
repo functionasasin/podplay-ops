@@ -1,7 +1,7 @@
-# Current Stage: 16 (Family Tree Visualizer)
+# Current Stage: 17 (Client Profiles)
 
 ## Spec Sections
-- §4.19 — Family Tree Visualizer
+- §4.3 — Client Profiles
 
 ## Test Results (updated by loop)
 ```
@@ -24,4 +24,5 @@ No tests yet
 - Stage 13 completed 2026-03-03 (36/36 tests passing)
 - Stage 14 completed 2026-03-03 (22/22 tests passing)
 - Stage 15 completed 2026-03-03 (26/26 tests passing)
-- Stage 16 starting 2026-03-03
+- Stage 16 completed 2026-03-03 (75/75 tests passing)
+- Stage 17 starting 2026-03-03
