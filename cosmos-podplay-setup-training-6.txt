@@ -1,0 +1,187 @@
+
+00:00:28 Speaker 1
+Thank you.
+00:01:02 Speaker 2
+I'm trying to think, because if you guys are, like Chad said we're going to have this, but you're honestly right. If you transfer ADM, the device is going to be reset. You guys are going to know how to just reset it anyway, but...
+00:01:17 Carlos Sandoval
+Yeah, I mean, so it's like, might as well not even set it up.
+00:02:06 Carlos Sandoval
+But if we did get the ABM and the Moselle and everything, would you still need to track Telepark or would we be the ones to do that. 
+00:02:13 Speaker 2
+No, that's what I'm saying. Honestly, I was thinking about that too. I didn't know how, Chad, or what the deal was. If you guys were just going to be like under us. Originally, what I was going to do was I was just going to have you guys as sub people under Podplay. But I guess you guys, I didn't realize you guys are a whole separate entity. So it makes sense for you guys just to have your own thing because you guys are just going to be doing it.
+00:02:35 Carlos Sandoval
+Eventually, we will, obviously. It's just a question of this one.
+00:02:38 Speaker 2
+This one setup. When are they opening. 
+00:02:41 Carlos Sandoval
+They want us to install by, we're targeting to install by the end of the month.
+00:02:47 Speaker 2
+Yeah. If we wanted for them to be up and running, like we could have them start under us and then like you guys could do like a migration, I guess.
+00:02:56 Carlos Sandoval
+How would that look like. 
+00:02:57 Speaker 2
+How would it look like? So let's see.
+00:02:59 Carlos Sandoval
+Have you ever done that before. 
+00:03:01 Speaker 2
+No, but I honestly know how it would work is, I would release the devices, those devices get factory reset. You go on site, do exactly what we're doing here, and then just add the configuration, and then they're in your guys setup, make sense. 
+00:03:17 Carlos Sandoval
+Yeah, when you're releasing it, that's factory reset. 
+00:03:21 Speaker 2
+Once you release it, I've released before, you'll have access, so those settings are locked, the factory reset and all that. Once those two are, once they're released from ABM and Mozilla, you'll have access to factory reset. Once you boot that back up, the iPads, as if they're...
+00:03:39 Carlos Sandoval
+And all you would need to reconfigure are the Apple devices. That's it, yep.
+00:03:45 Speaker 2
+The Mac Mini, I'm trying to think how that would work. Technically we could, the Mac Mini would still be in our Mozilla 2. You could technically just, I mean, resetting up the Mac Mini is not too hard, I'll show you guys now. Technically, you would have to do that as well.
+00:04:06 Carlos Sandoval
+That's the Mac Mini, right. 
+00:04:07 Speaker 2
+Mm-hmm. So, like, I might as well finish this setup before I go to bed. This one came straight from Apple. Before, I would have to do something. Now, I don't know.
+00:05:08 Speaker 1
+Uh-huh.
+00:06:03 Speaker 2
+I told you in two weeks, I guess. we'll set up another call and i'll show you how to install v2 because honestly i'm not they're still figuring out how we're gonna how the whole v2 service is gonna run and all that, it makes it much easier to install and update which is great eventually what's gonna happen is you're gonna be able to like link you're gonna be able to link from the admin dashboard your mac and then from there like the replay service downloads and nice and clean this part first.
+00:06:46 Speaker 2
+first thing i always do download the cameras first thing you want to configure the cameras now, the cameras won't need obviously they're not avm.
+00:08:14 Speaker 1
+Marco, what do you want for lunch? Let's order some food.
+00:08:23 Speaker 2
+Do you guys do Grubhub, or do you guys tap Grubhub and Seamless and that, the ordering stuff. 
+00:08:29 Carlos Sandoval
+You mean in the Philippines. 
+00:08:30 Speaker 2
+Yeah.
+00:08:31 Carlos Sandoval
+Yeah, we have an app called Grab. It's basically the same thing. Would you recommend anything. 
+00:08:40 Speaker 2
+Also, you got any food places in the area? I don't live in Jersey, honestly. I bring my own food every day. What place is Ron here? He's going to do delivery, so I'm assuming he's probably going to come from Jersey City. Oh, yeah. Jersey? What do you like. 
+00:08:56 Speaker 4
+Anything, honestly.
+00:09:08 Speaker 2
+It's further downtown, though, so I don't know if they'll deliver here. About to find out. What do you got on there? What does it say? Places. 
+00:09:15 Carlos Sandoval
+It doesn't even show. It just shows me, like...
+00:09:18 Speaker 2
+What app are you on. 
+00:09:19 Carlos Sandoval
+Uber. Uber Eats. Oh.
+00:09:20 Speaker 2
+Oh, yeah. It should have everything. Uber Eats should be good.
+00:09:23 Carlos Sandoval
+Just go to all. But it doesn't show me the rest of the food. It only shows me like the types of food. Just cookie, sushi, Chinese. What's that. 
+00:09:34 Speaker 2
+Go to all? Yeah, wait. Mine looks different than yours.
+00:09:41 Speaker 4
+Ours just shows up with the rest. We probably have the Asia option.
+00:09:46 Speaker 2
+That's what mine looks like. I mean, there's so many options. You guys could literally take a pick. There you go. That's it.
+00:10:08 Speaker 1
+Do you guys have wifi here. 
+00:10:21 Speaker 2
+what's it called pp test and then p where's they have the one through seven capital p.
+00:10:34 Speaker 1
+quarter yeah yeah hey marco what do you what do you want.
+00:11:42 Speaker 2
+I honestly have never ordered food here once, but I see people doing it all the time.
+00:11:50 Speaker 4
+One that won't make the place smell.
+00:11:54 Speaker 2
+Oh, you guys can stink it up in here, I don't mind.
+00:12:01 Carlos Sandoval
+I have no idea, shut up.
+00:12:02 Speaker 2
+I've never had any of this, and I can't.
+00:12:06 Carlos Sandoval
+What kind of cuisine is...
+00:12:09 Speaker 2
+In New York, you can get anything, I'm not kidding. Yeah, that's true. Literally, we have everything. You can get everything.
+00:12:14 Speaker 4
+And it's all pretty good.
+00:12:15 Speaker 2
+Yeah, it's pretty hot.
+00:12:17 Speaker 4
+I'm limited to halal food only. But even with that, I have a lot of options. So if you don't have any food restrictions or boundaries or anything...
+00:12:46 Carlos Sandoval
+What the hell is this thing. 
+00:12:48 Speaker 2
+I don't know.
+00:12:49 Carlos Sandoval
+I've never seen this before. What are you thinking. 
+00:13:02 Speaker 4
+Let's get like a... Sandwich? Sandwich over like... Taco maybe?
+00:13:47 Speaker 4
+what do you want oh my god we could have just one two uh which is it actually this one's good actually you pick first because i think i might be getting something please but then we could have.
+00:14:14 Speaker 2
+just one dude you guys have chipotle in the philippines no no have you guys had it uh i've had it i've had it i've had it fine mexican fast food yeah all right when i was in college oh my god oh yeah did you study here and i studied upstate new york you've heard of syracuse.
+00:14:36 Carlos Sandoval
+university i have a real person to ask what no no i haven't.
+00:14:42 Speaker 2
+actually they have like uh the only reason i asked because i know they have a good foreign exchange.
+00:14:45 Speaker 4
+program and a lot of people from overseas let's see if we can get your boat like i should they i would think of a cat oh there is nice what do you want get me the burrito give me the steak.
+00:15:21 Speaker 4
+half portion what the can i say what did you study what did i study i originally did topside.
+00:15:55 Speaker 2
+How's the coding changed with AI? I don't code anymore. Really? Is there really a clause? No clause.
+00:16:04 Carlos Sandoval
+I mean, my process evolved to just use AI for everything. I use it a lot.
+00:16:13 Speaker 2
+I've coded up a few things, like nothing crazy, but I feel like even with my job. To be honest, this is my first IT job. I started about a year ago before I was managing a family store. Within the year with AI, I honestly am just doing things I didn't even know how to do at all. Like, before I had an IT manager, and then he just, like, wasn't working. I just let him go, and now it's just, like, a three-man team.
+00:16:49 Speaker 2
+But with AI now, I feel like me was, like, pretty low-level starting with IT. Like, I could solve things that, like, I had no idea how to do. Then you learn it, and it's like, oh, okay, I can change the whole thing. Your team, like, shrunk? Like, do you guys even need as many developers now? It's just you, right?
+00:17:20 Speaker 2
+Wow. It's crazy. How big was your team, like, originally. 
+00:17:37 Carlos Sandoval
+So, how it works is I have, actually I have another side thing, it's an AI site based in Seattle, but there isn't much work for me to do there nowadays, so I found a new job, because I automated a lot of my company and now they're just trying to sell it, so I had a lot of free time on my hands, and I just coincidentally talked to this guy, he offered me a job, and my job with that company is just to come up with cool AI integration workflows.
+00:18:15 Speaker 2
+Yeah, I mean, we honestly need some, you'll see, you're going to see, a lot of this stuff is just over and over.
+00:18:43 Carlos Sandoval
+There's a lot of them aren't, they code, but they're not, like, they don't really, it's not like a real train, like, data center.
+00:18:55 Speaker 2
+Really crafting that bowl over there.
+00:18:58 Speaker 4
+I was having trouble.
+00:19:00 Speaker 2
+Did you guys eat this morning? You guys went to breakfast? Yeah. Nice. Where'd you guys go? Just in the hotel, or. 
+00:19:07 Carlos Sandoval
+Yeah, just the hotel, and then we just had, Ernesto just got us Starbucks on the way.
+00:19:12 Speaker 2
+There's Starbucks in the Philippines, right. 
+00:19:14 Carlos Sandoval
+Starbucks is big in the Philippines.
+00:19:16 Speaker 2
+Starbucks is big here, too. Starbucks is big everywhere.
+00:20:30 Speaker 1
+I don't really drink water, good. 
+00:20:32 Carlos Sandoval
+I forgot to bring my, uh,
+00:21:38 Carlos Sandoval
+Okay, how are you feeling with the Moza stuff? Because if we don't... It's pretty straightforward. Okay, do you think you can get an account? Don't we have to pay for it? Yeah, it's okay, I can give you the card details.
+00:21:55 Speaker 4
+Oh yeah, it's just getting an account.
+00:21:58 Carlos Sandoval
+No, I mean like, you know how he's enrolling devices. 
+00:22:02 Speaker 4
+Yeah. I mean, we don't have devices.
+00:22:08 Carlos Sandoval
+No, no, these devices. The ones that we're going to bring home.
+00:22:11 Speaker 4
+Like this one, yeah. What do you mean by...
+00:22:17 Carlos Sandoval
+So, do you think by tomorrow we can enroll them in Moza? In our Moza.
+00:22:24 Speaker 4
+Oh yeah, maybe. If he lets us log in.
+00:22:28 Carlos Sandoval
+Yeah, that's what he wants, so that he doesn't need to... Yeah. Yeah, so we can, we'll have time to figure it out later, later tonight.
+00:24:25 Carlos Sandoval
+Should be here in 30 minutes.
+00:25:10 Speaker 2
+Later Hamza, I'll see you Thursday. Thank you Hamza. Yeah, yeah, it's always nice.
+00:25:26 Carlos Sandoval
+Where'd you get your water. 
+00:25:28 Speaker 2
+You have a bottle, go to the kitchen and to the right there's a water dispenser too.
+00:28:29 Speaker 1
+This is Nico Park.
+00:31:58 Speaker 2
+I want to say there should be an SFP cable from port exactly yes okay but how is the UDM connected to the switch?
