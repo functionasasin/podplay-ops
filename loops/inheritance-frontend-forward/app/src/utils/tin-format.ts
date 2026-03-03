@@ -8,6 +8,12 @@
  * Strips non-digit characters first, then inserts hyphens at positions 3, 6, and 9.
  */
 export function formatTIN(raw: string): string {
-  // stub — implementation in next iteration
-  return raw;
+  const digits = raw.replace(/\D/g, '').slice(0, 12);
+  if (digits.length === 0) return '';
+
+  const parts: string[] = [];
+  for (let i = 0; i < digits.length; i += 3) {
+    parts.push(digits.slice(i, i + 3));
+  }
+  return parts.join('-');
 }

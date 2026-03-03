@@ -10,24 +10,37 @@ import type {
 export async function createClient(
   data: CreateClientData,
 ): Promise<{ id: string }> {
-  // stub — implementation in next iteration
-  void data;
-  return { id: '' };
+  const { data: result, error } = await supabase
+    .from('clients')
+    .insert(data)
+    .select('id')
+    .single();
+
+  if (error) throw error;
+  return { id: result.id };
 }
 
 export async function loadClient(clientId: string): Promise<ClientRow> {
-  // stub — implementation in next iteration
-  void clientId;
-  return {} as ClientRow;
+  const { data, error } = await supabase
+    .from('clients')
+    .select('*')
+    .eq('id', clientId)
+    .single();
+
+  if (error) throw error;
+  return data as ClientRow;
 }
 
 export async function updateClient(
   clientId: string,
   data: UpdateClientData,
 ): Promise<void> {
-  // stub — implementation in next iteration
-  void clientId;
-  void data;
+  const { error } = await supabase
+    .from('clients')
+    .update(data)
+    .eq('id', clientId);
+
+  if (error) throw error;
 }
 
 export async function listClients(
@@ -35,17 +48,30 @@ export async function listClients(
   statusFilter?: ClientStatus,
   searchQuery?: string,
 ): Promise<ClientListItem[]> {
-  // stub — implementation in next iteration
-  void orgId;
-  void statusFilter;
-  void searchQuery;
-  return [];
+  let query = supabase
+    .from('clients')
+    .select('id, full_name, tin, status, intake_date, conflict_cleared, case_count')
+    .eq('org_id', orgId);
+
+  if (statusFilter) {
+    query = query.eq('status', statusFilter);
+  }
+
+  if (searchQuery) {
+    query = query.ilike('full_name', `%${searchQuery}%`);
+  }
+
+  const { data, error } = await query.order('intake_date', { ascending: false });
+
+  if (error) throw error;
+  return data as ClientListItem[];
 }
 
 export async function deleteClient(clientId: string): Promise<void> {
-  // stub — implementation in next iteration
-  void clientId;
-}
+  const { error } = await supabase
+    .from('clients')
+    .delete()
+    .eq('id', clientId);
 
-// Re-export supabase for testing purposes
-export { supabase as _supabase };
+  if (error) throw error;
+}
