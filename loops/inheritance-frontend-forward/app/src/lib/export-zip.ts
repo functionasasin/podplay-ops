@@ -51,11 +51,62 @@ export function formatNotesAsText(notes: CaseNote[]): string {
  * Generates report.pdf via §4.1, bundles input/output JSON, notes, and metadata.
  */
 export async function exportCaseZip(
-  _caseId: string,
-  _input: EngineInput,
-  _output: EngineOutput,
-  _notes: CaseNote[],
+  caseId: string,
+  input: EngineInput,
+  output: EngineOutput,
+  notes: CaseNote[],
 ): Promise<void> {
-  // Stub — implementation in next iteration
-  throw new Error('Not implemented');
+  if (!caseId) {
+    throw new Error('Cannot export: case must be saved first (no caseId)');
+  }
+
+  const [JSZipModule, { generatePDF }, { supabase }] = await Promise.all([
+    import('jszip'),
+    import('./pdf-export'),
+    import('./supabase'),
+  ]);
+
+  const JSZip = JSZipModule.default;
+  const zip = JSZip();
+
+  // Generate the PDF report
+  const pdfBlob = await generatePDF(input, output, null);
+  zip.file('report.pdf', pdfBlob);
+
+  // Add input and output as pretty-printed JSON
+  zip.file('input.json', JSON.stringify(input, null, 2));
+  zip.file('output.json', JSON.stringify(output, null, 2));
+
+  // Add notes.txt only when notes exist
+  if (notes.length > 0) {
+    zip.file('notes.txt', formatNotesAsText(notes));
+  }
+
+  // Get current user for metadata
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // Build metadata
+  const metadata: ZipMetadata = {
+    export_format_version: '1.0',
+    case_id: caseId,
+    decedent_name: input.decedent?.name ?? null,
+    date_of_death: input.decedent?.date_of_death ?? null,
+    exported_at: new Date().toISOString(),
+    exported_by_user_id: user?.id ?? 'anonymous',
+  };
+  zip.file('metadata.json', JSON.stringify(metadata, null, 2));
+
+  // Generate ZIP blob
+  const zipBlob = await zip.generateAsync({ type: 'blob' });
+
+  // Trigger browser download
+  const url = URL.createObjectURL(zipBlob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = buildZipFilename(
+    input.decedent?.name ?? '',
+    input.decedent?.date_of_death,
+  );
+  anchor.click();
+  URL.revokeObjectURL(url);
 }
