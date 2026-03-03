@@ -1,7 +1,7 @@
-# Current Stage: 23 (Estate Tax Inputs Wizard)
+# Current Stage: 24 (BIR Form 1801 Integration)
 
 ## Spec Sections
-- §4.23 — Estate Tax Inputs Wizard
+- §4.9 — BIR Form 1801 Integration
 
 ## Test Results (updated by loop)
 ```
@@ -31,4 +31,5 @@ No tests yet
 - Stage 20 completed 2026-03-03 (49/49 deadline tests passing)
 - Stage 21 completed 2026-03-03 (57/57 document checklist tests passing)
 - Stage 22 completed 2026-03-03 (58/58 timeline tests passing)
-- Stage 23 starting 2026-03-03
+- Stage 23 completed 2026-03-03 (125/125 estate tax tests passing)
+- Stage 24 starting 2026-03-03
