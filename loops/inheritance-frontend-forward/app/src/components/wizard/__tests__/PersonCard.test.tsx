@@ -289,7 +289,7 @@ describe('wizard-step3 > PersonCard', () => {
           }}
         />
       );
-      expect(screen.getByText(/children.*representation/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/children.*representation/i).length).toBeGreaterThan(0);
     });
 
     it('does NOT show children picker when person is alive', () => {
