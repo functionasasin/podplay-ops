@@ -19,7 +19,7 @@
 - [x] tam-ofw-migration — E-OFW-1/2/3, OWWA; OFW annual deployments from DMW/POEA statistics; recruitment agencies + OFW legal advocates
 - [x] tam-maritime-seafarer — I-MAR-1/2/3/4; MARINA-registered seafarers + annual certifications; manning agencies + training centers
 - [x] tam-prc-professional — H-PRC-1/2/3; PRC-registered professionals by board (43 boards); CPD providers + professional associations
-- [ ] tam-transport-lto — G-LTO-1/2, J-CAP-1; registered motor vehicles by type from LTO; processing agents / fixers (disintermediation)
+- [x] tam-transport-lto — G-LTO-1/2, J-CAP-1; registered motor vehicles by type from LTO; processing agents / fixers (disintermediation)
 - [ ] tam-customs-boc — F-BOC-1/2/3; BOC import entry count + e-commerce importers; customs brokers
 - [ ] tam-business-licensing — R-DTI-1, N-BFP-1/2, R-CDA-1; LGU business permit holders + DTI-registered sole proprietors; compliance officers + registration agents
 - [ ] tam-regulatory-specialty — P-IPO-1/2, Q-ERC-1, S-BSP-1, M-FDA-1/2, L-TES-1, R-BOI-1/2, R-PCAB-1, N-NPC-1, R-NTC-1; one specific registry count per tool from the relevant agency
