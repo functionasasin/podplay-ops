@@ -1,7 +1,7 @@
-# Current Stage: 22 (Timeline Report)
+# Current Stage: 23 (Estate Tax Inputs Wizard)
 
 ## Spec Sections
-- §4.21 — Timeline Report
+- §4.23 — Estate Tax Inputs Wizard
 
 ## Test Results (updated by loop)
 ```
@@ -30,4 +30,5 @@ No tests yet
 - Stage 19 completed 2026-03-03 (92 intake tests passing)
 - Stage 20 completed 2026-03-03 (49/49 deadline tests passing)
 - Stage 21 completed 2026-03-03 (57/57 document checklist tests passing)
-- Stage 22 starting 2026-03-03
+- Stage 22 completed 2026-03-03 (58/58 timeline tests passing)
+- Stage 23 starting 2026-03-03
