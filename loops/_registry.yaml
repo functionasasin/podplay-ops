@@ -241,5 +241,6 @@ loops:
     schedule: "*/30 * * * *"
     max_iterations: 60
     timeout_minutes: 30
-    status: active
+    status: converged
     created: 2026-03-02
+    converged_at: "2026-03-03"
