@@ -1,0 +1,215 @@
+
+00:00:05 Speaker 1
+wow look the tcp stream is fine oh really yeah you're done i think i just hold on let me make sure i did this right i did this settings show all i used rtp on rtsp and now look at the stream i can't see it for some reason let me reset patrick you see it it looks fine that's crazy.
+00:00:43 Speaker 2
+if you look at the blue area where you see it kind of looks like you get kind of the pattern that is disappearing every three seconds which blue area blue paint on the floor over here.
+00:01:01 Speaker 1
+let me see but now it's okay this looks i mean this i think is fine this looks normal to me it looks better than before before it was before it was really wow okay all right so we just got to deploy v2 there it looks like yes all right so i need to talk to victoria about this all right.
+00:01:22 Speaker 3
+well that's good news i'm glad it was that easy so let's see real quick is there like a like an sfp p plus to thunderbolt are you saying to do what patrick's suggesting anyway well like we i'm just thinking it might be expensive today it looks like they're like i have a few of these really, i think i have a u green or something put it but sfp because i think in like in order to get the.
+00:01:50 Speaker 2
+more than a gig on the unified side we need sfp anyway do you get i think 10 or something on this.
+00:02:01 Speaker 3
+yes but what i'm saying is that these are definitely one gig unless we use the sfp. so i think they do make like sfp the thunderbolt but it looks like they're pretty expensive that. will give us 10 gig i'm looking at one now but it's like 300 so what bandwidth do we use no.
+00:02:35 Speaker 2
+it's it's one gig i mean you can't did you measure how much traffic you get all the kids.
+00:02:44 Speaker 3
+no but i just never like you know use up the whole gig a bit per second on the cameras.
+00:02:58 Speaker 1
+I think we can check that on the UDM. Are you talking about how many packets are going to them. 
+00:03:07 Speaker 3
+The bandwidth, like a throughput, I guess. Um, yeah, let's switch this.
+00:03:18 Speaker 2
+I think one should be enough.
+00:03:20 Speaker 3
+Yeah, I would think so.
+00:03:25 Speaker 1
+KP, I don't even know what.
+00:03:35 Speaker 4
+Let's do a Unify.
+00:03:36 Speaker 2
+I mean, you can send uncompressed at 3 gigabits with no compression at all.
+00:03:47 Speaker 1
+Oh yeah, I think a gig should be enough.
+00:03:56 Speaker 2
+Yes. okay so you could have like 20 cameras pickable yes 15 how much do you have now up there how much.
+00:04:15 Speaker 1
+what six oh that's 10 times margin yeah but the thing is it's only six cameras with the packets.
+00:04:23 Speaker 2
+i don't even know what kp sts is yes i don't think we need more than one gig no no i'm looking right.
+00:04:34 Speaker 3
+now at the um at the switch yeah they're they're all one gig except for the sfp plus ports there are switches they make that do that have two and a half gig you know um internet ports but i just don't think that's going to make a big difference it's unnecessary the only thing if we have a.
+00:04:55 Speaker 2
+separate, physical connection then we don't have the same then we don't have competing traffic right right.
+00:05:01 Speaker 3
+right yeah same um but i think there's also ways to isolate and prioritize traffic on the same.
+00:05:08 Speaker 1
+switch to with configuration oh yeah you can isolate these networks i've seen it before we don't do it like over here somewhere isolate network right here but i but but isolate network.
+00:05:21 Speaker 3
+i don't know if that simple check is actually isolating the traffic it isolates like the communication but i don't know if the actual traffic like you need to prioritize packets, to the specific devices over others um but it won't be completely isolated but it would prioritize it i think but you know i guess patrick's right ideally we have a separate switch but i don't let's see if we run into issues because yeah every club is expensive.
+00:05:51 Speaker 1
+Yeah, and if the other clubs aren't really experiencing the issue, we might as well not fix it for now.
+00:05:56 Speaker 2
+And also, we wouldn't have the uploads affect the cameras. If we now upload a 30-minute video, it's going to use a lot of bandwidth, and that would steal bandwidth from the cameras.
+00:06:18 Speaker 3
+Okay, so we have a plan for this, I think.
+00:06:21 Speaker 1
+Yeah, that's promising.
+00:06:24 Speaker 3
+We'll just update that one, and we'll go from there. Patrick, we'll let you know if that works. Hopefully it does. Okay.
+00:06:32 Speaker 1
+Thank you, Patrick. Thanks, guys.
+00:06:34 Speaker 3
+All right, Nico, do you want to stay on for a minute and chat about it. 
+00:06:37 Speaker 1
+Oh, yeah, let's do that. They're here right now, so you can meet them still. All right, Patrick, you can drop. So yeah, well, you guys just basically, yeah, you guys just saw like one of the stuff you guys will probably end up learning into, that was our developer who experts in this stuff and he's really, he's really good, yeah, he built the server for, he built the replay service, so any questions with that, I always go directly to him and his first, his first.
+00:07:12 Speaker 1
+instinct was right, his new replay service is going over TCP, so once I do that, it'll, be good.
+00:07:21 Speaker 3
+all right as far as like we'll have to you know figure out processes and hey guys i'm chad by the way sorry my camera's off right now i'm doing some like renovation in this office so i don't have the camera on right now um i want to try to make it in to meet you guys tomorrow um or or thursday, tomorrow will probably be the better day for me though and um you know so so kim brought you guys here to get trained on how to configure all the equipment right yes so we we still need to figure.
+00:07:53 Speaker 3
+out um like what the process will look like for support you know if if there there is going to be some issues that you might not be able to solve from a support perspective and eventually it would need to be escalated to someone like patrick on our team who's the developer of the service but, you know a lot of the, things you guys would attempt to do first before escalating it to someone on our team because, theoretically like the deal is kind of like you know kid is taking all all of responsibility for.
+00:08:28 Speaker 3
+setup installation configuration and and support of all the southeast asian clubs yeah so, uh so you know you met nico he's our configuration specialist he's super smart and um you know this this stuff is not rocket science but we'll just want to make sure that it's. uh we lost you for a second that's awesome sorry my mic muted um yeah so you know nico already has a lot of documentation that you can follow but going through it in person um.
+00:09:03 Speaker 3
+you know is is obviously the best way to learn and you know we we use our own um, cool that I've built in Google Sheets. Niko can show you. It's like our, I call it our, Jesus. MRP? What do I, yes, Manufacturing Resource Planning, which is not exactly what it is, but whatever, it's a name. And we use it to track the configurations. Now, I could probably duplicate this if you guys want to use it,
+00:09:36 Speaker 3
+or you can come up with your own solution, but I don't think that we're going to be sharing one.
+00:09:42 Carlos Sandoval
+Yeah, definitely not.
+00:09:44 Speaker 3
+Sheet, yeah. It's going to be, like, you guys will be responsible, for managing these configurations however you want to. If you want to do it, like, the way that I've been doing it, you're welcome to, but, you know, it's going to be something that you guys will figure out.
+00:09:58 Speaker 1
+Yeah. So, Chad, the thing with Mozilla, things get automatically enrolled and we get the Podplay app. I'm trying to figure out now for them, how do you want, like, how are we going to set this up? with, like, ABM, because our stuff comes automatically enrolled, probably, you know. 
+00:10:18 Speaker 3
+depending on where they're going to source, like, the devices from, because they were thinking down the line they may even move to Android devices, we would have to help.
+00:10:26 Speaker 1
+develop the software, well, Android, Mozilla doesn't even do Android, so, I know, I know. 
+00:10:31 Speaker 3
+I know, that's my, my point is that maybe they, they just have their own independent, MDM that's, that's separate from ours.
+00:10:39 Speaker 1
+Okay, that's fine, but now, so, say we're configuring this club right now, those get enrolled into our Mozilla, as of right now.
+00:10:47 Speaker 3
+Okay, so, this one will be ours, because this is the first one, and, you know, we're, we're essentially, they're getting trained, we're, we're owning this configuration.
+00:10:56 Speaker 1
+Okay, that makes sense.
+00:10:57 Speaker 3
+But, moving forward, you know, I think that they will have their own spreadsheet where they're tracking configs, and shipments, and all of that. they will also have their own MDM because this is really like a subsidiary they own all this stuff we're doing a rev share but like you know they're responsible for like the whole thing essentially.
+00:11:17 Speaker 1
+yeah makes sense okay uh what was my other question with that so we need to enter them now anyway right yeah because I was going to show them exactly from point a to point z, exactly how I just moved first thing I do we go once he entered is in we have this thing called the bomb bill of materials I print this out you want to actually show them um it's the.
+00:11:44 Speaker 3
+the poor what is it the cost analysis tab I see is this uh are you muted again chad, Yep, sorry. So when I touch my mic, it's like a sensitive button on top of the music. So this is basically the, like there's more to it, but this automatically creates the bill of materials for any specific club depending on what devices that they require based on the tier, the number of courts they have.
+00:12:21 Speaker 3
+Right. So, you know, we have four really, we'll call it four tiers. There's really like three now, and one of them is an add-on, but that's semantics. So like basic and basic plus are just software. And we have our pro tier, which includes replay system. So that's like the replay cameras, the scoreboards, which are televisions, the kiosk, which is an iPad, and the Apple TV is what powers the scoreboard. So pro close. Clubs get all of this hardware. That's when we have to start, you know, building out these networks. So we're shipping them.
+00:12:57 Speaker 3
+find networking equipment they're getting a udm pro which is a firewall or gateway um they're getting a switch the size of the switch depends on how large the club is if it's two you know versus four versus eight versus twelve and i have a little algorithm that will automatically select a 24 port a 48 port or a combination of the two or two 48 ports or whatever is needed depending on the size of the club and how many courts there are um and then everything else is also dependent.
+00:13:27 Speaker 3
+on size right so like how many patch panels are included um if they need an nvr so the nvr, network video recorder is when the clubs get the surveillance system that's our autonomous, plus tier we um we have a team in the philippines that monitors these clubs as a service, so then you know those type of clubs get additional um, additional hardware and then there's another add-on called the Autonomous Access Control,
+00:14:01 Speaker 3
+which is basically an access control system. They automatically can unlock the door via our app. We use a platform called Kisi, but we're probably going to migrate to Unifi, for access control as well. Again, if you scroll down, you can see Kisi Controller. So, if the club is tagged as autonomous, then it will select that they need this controller and the reader. And the reader is depending on how many, the quantities depend on how many doors they have.
+00:14:34 Speaker 3
+The replay system, right, so once they're tagged as pro, Then they each get a Mac Mini, they get a Mac Mini shelf, the external SSD, and the size of that SSD is dependent on, again, the number of quarts. So there's a one, two, or a four terabyte SSD. They get the cameras based on the number of quarts, the replay buttons, which are Bluetooth-enabled, there's signage. So each club, their configuration gets built automatically using this tool.
+00:15:06 Speaker 3
+Cool. So, Nico, if you want to select a different club at the top. Like just show them how it changes. Yeah. Yeah. So this is for how many courts is this. 
+00:15:17 Speaker 1
+So usually this is a for this is a for quarters. So usually every club for courts for cameras.
+00:15:23 Speaker 3
+Can always tell us in the middle of the inputs from the form So it's saying number of courts this club has for a number of security cameras for a number of doors.
+00:15:32 Speaker 1
+All the stuff that comes the packs all that stuff. So now let's go to I go to a big club. Let's go to, Pick a lot. Let's go to Roseville. Roseville has 11 courts.
+00:15:53 Speaker 3
+Then you can see how it changes, you know in the line items it says, you know, security system and the key seat controller is not needed but it also is now using a larger switch, because before it was using a 24 board and now you know because there are more devices on the network scroll up nico we have um so we have the 48 port switch now selected instead of the 24 port, so let me go ahead and add the club that you guys are doing now give me one second.
+00:16:28 Speaker 1
+so chad another thing actually they're going to be doing their own clubs i follow so how are we going to deal with them knowing when the assets are ready like in linear because i actually just followed up about their assets and vincent's finishing the designs now so like, That's another thing I'm going to talk to you guys about.
+00:16:50 Carlos Sandoval
+You guys use linear. 
+00:16:52 Speaker 1
+Yeah, but so how would they communicate with, our team's obviously doing all that stuff still, right. 
+00:16:59 Speaker 3
+We can, so we can, yeah, we can give them.
+00:17:06 Speaker 1
+Maybe a channel or something. 
+00:17:08 Speaker 3
+Give them access to HubSpot potentially, and then they can look at the onboarding status there.
+00:17:17 Speaker 1
+And this is the plug you were on. 
+00:17:19 Speaker 3
+Not in linear, though, because HubSpot, we also have that.
+00:17:22 Speaker 1
+That's where we're moving, yeah. Well, I'm just saying, so right now, Telepark, because I actually asked about this on the call yesterday because I wanted to see where you guys were at. So you guys, originally it wasn't a pro tier, now it is, so let's click.
+00:17:38 Speaker 3
+My internet's being weird. I can still see you guys, but I can't resolve my Google Drive.
+00:17:43 Speaker 1
+I'm still connected to Pickleball Nation. It's definitely why it's so slow. Backlog, why are we back so close. 
+00:17:50 Carlos Sandoval
+You guys are moving from Linear to HubSpot. 
+00:17:52 Speaker 1
+Yeah, this was a pretty recent change, probably a couple months ago now, where it's still migrating.
+00:17:59 Speaker 3
+So Linear will still be used for our developers' tickets, but HubSpot is our CRM where we're tracking the onboardings of all of these clubs. I don't know why my Google Drive is not working, so I'm not on a VPN.
+00:18:14 Carlos Sandoval
+But this is for the, eventually we will do this, right. 
+00:18:21 Speaker 1
+See, this is, you will never be able to do the, I don't think Chad will ever be able to create the assets and stuff, like isn't that, what are you talking about? so you see like these guys right now these are developers they are creating remember I was showing you guys how each like pickleball kingdom they all have their own little page here it's like white labeled right mm-hmm but also on the iPads they all have their own apps yeah so right now looks like they like.
+00:18:52 Carlos Sandoval
+they handle releasing to the house or everything they released to the App.
+00:18:57 Speaker 3
+Store and everything these aren't I don't think you want to just add is it.
+00:19:10 Speaker 1
+easy to add them to the hardware sheet or no it is but I don't know why my.
+00:19:13 Speaker 3
+Google Drive won't resolve I got the page but Andy knows how to do it I think.
+00:19:20 Speaker 1
+shed. Alright, so from the top, you guys actually saw a pretty new issue we just ran into, which is another reason we built the new replay service. The old replay service was going over UDP, this new one's going over TCP. We don't know why this club, for some reason, their replays were all pixelated. I don't know why that's the first time it's happened, but it came up here and it's a good timing for it to work, so now we can just redeploy the new replay service.
+00:19:53 Speaker 1
+Anyways, back to this. These developers, Create Your Apps, they're actually not, these apps don't hit the App Store. We install them via...
+00:20:05 Carlos Sandoval
+These are for the facilities.
+00:20:07 Speaker 1
+These are for the iPads, and so like a person off, like I can't download their app, you have to download it via VPP. You need a VPP license.
+00:20:17 Carlos Sandoval
+It's like an APK that you get sent to them or something.
+00:20:20 Speaker 1
+VPP, I forget what VPP stands for.
+00:20:27 Carlos Sandoval
+but it's not it's not released on the on the store it's no we installed the mozo.
+00:20:33 Speaker 1
+uh let's see so i said install this is time sensitive. and this has like all their brackets this has all your guys branding so if we click over here let's go back to your guys little home over here so augustine's our ios developer he just x you just did this so i assume by end of today tomorrow your stuff will be ready and that's when you could you can always start the installs before the apps are ready okay which i'll show you.
+00:21:09 Speaker 1
+that's uh i like to test everything obviously before it goes but like, for you guys you guys are obviously taking this stuff back it'll be done by the time you guys go but the mozul stuff's super easy like you just install the apps on it and.
+00:21:28 Carlos Sandoval
+Tell apart and so what would be on HubSpot like what is the stuff we so we.
+00:21:38 Speaker 1
+have all these steps over here so just exactly exactly so like before before I you guys are a special case you guys obviously it looks like upgrade in they sent you guys here usually like you guys weren't even here so I didn't even look like oh are there stuff ready that's why yesterday like I'm like we had a call with our everyone's like hey there's stuff even like I didn't see them in the spreadsheet normally the next club I would start is right here at pickle nation and I go to our status they're not even ready so I would be like okay.
+00:22:10 Speaker 1
+not doing them pickle spot Columbus not ready not doing them then I go here Hillard okay ready and I would do that, Andy is our project manager he handles this kind of stuff like when stuff's ready But like if he's not around I could always go to linear and check myself But that's the pros it sounds like Chad's actually gonna duplicate this for you guys, so that's gonna be extremely helpful Yeah, I think that's honestly it's uh it's not perfect. He built this himself, so like there's some kinks and stuff.
+00:22:43 Carlos Sandoval
+Well, I think one of the things is it seems like you guys are your own business right like you track costs and everything, Yeah, because like we don't we don't have to do that.
+00:22:52 Speaker 1
+Yeah, so I mean that there's a bunch of stuff in here like he's got finance that's the cost analysis We don't know they are someone might ask you for an itemized receipt like all that kind of stuff.
+00:23:03 Carlos Sandoval
+I think I think our number one priority is just to get it up and yeah, yeah, okay. 
+00:23:08 Speaker 1
+So I guess for now he didn't put you guys.
+00:23:23 Carlos Sandoval
+Yeah, I think as much as possible the goal for us is just to go from start to finish you guys.
+00:23:28 Speaker 1
+I have no doubt you guys will pick it up.
+00:23:31 Carlos Sandoval
+When we do try and do it in the Philippines, we never have to like message you ever again.
+00:23:38 Speaker 1
+I see the thing is I don't think we'll ever get to that point because, Like even our developer like that made this stuff like he's not a full-time worker We still I do you see we have a once a week call and that was the call And what we do is like we'll just go over. Hey, we have these outstanding replays Like that was a major issue. Usually this replay service knock on wood runs smooth Like there's usually nothing that really comes up, Still have some edge cases every so often you have all these different networks going around so we run into what is like the integration point.
+00:24:09 Carlos Sandoval
+between the replay service and like the the, infrastructure of pod play it's just the, meaning Like this this what this developer made, that's this is like all the on-site on-site uh what's on the mac mini the server so it like.
+00:24:30 Speaker 1
+uploads it to the cloud and he's this guy's an expert with like um just uh video footage and like coding and that kind of like video all that kind of stuff so i see he knows most likely there probably will be issues down the line there well there will yeah like i i know for you'll run into this stuff for sure okay why don't we you guys aren't even in here yet but i'll just grab a random club and i could just show you as if it was you guys we'll start there um who's you guys.
+00:25:05 Speaker 1
+have eight courts or eight seven eight yeah let's say i'm not mistaken it's eight.
+00:25:22 Carlos Sandoval
+all right we'll grab the pickle park for now marco uh later today can you message someone i don't know who who would someone see what if let's say for eight quarts the bill of materials or like the the all the hardware let's see what we can already source by the time we get back so yeah i'll show.
+00:25:45 Speaker 1
+you so the way chad's thing works as he was showing us on that other sheet uh when he enters in how many courts and stuff this all gets populated automatically yeah oh pickle park you type over here pickle beautiful for the park first thing i always do print this out okay.
+00:26:25 Speaker 4
+Do you know how much we've been getting? The rest of everything is... I'll cut it up after.
+00:27:21 Speaker 4
+Or it's on the, like, thing you have to, you know, as well.
