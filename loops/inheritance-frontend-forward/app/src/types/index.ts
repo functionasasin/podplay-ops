@@ -440,7 +440,7 @@ export interface ManualFlag {
 }
 
 // ============================================================================
-// Display Constants (stubs)
+// Display Constants
 // ============================================================================
 
 export const EFFECTIVE_CATEGORY_LABELS: Record<EffectiveCategory, string> = {
@@ -468,7 +468,7 @@ export const WARNING_SEVERITY: Record<string, "error" | "warning" | "info"> = {
 };
 
 // ============================================================================
-// Utility Functions (stubs — implementation in next iteration)
+// Utility Functions
 // ============================================================================
 
 export function pesosToCentavos(pesos: number): number {
