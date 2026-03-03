@@ -614,3 +614,47 @@ export const DEADLINE_STATUS_COLORS: Record<DeadlineStatus, string> = {
   upcoming: 'yellow',
   future: 'slate',
 };
+
+// ============================================================================
+// Document Checklist Types (§4.22)
+// ============================================================================
+
+export interface CaseDocument {
+  id: string;
+  case_id: string;
+  user_id: string;
+  document_key: string;
+  label: string;
+  category: string;
+  description: string;
+  required_when: string;
+  is_obtained: boolean;
+  is_not_applicable: boolean;
+  obtained_date: string | null;
+  note: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DocumentTemplate {
+  document_key: string;
+  label: string;
+  category: string;
+  description: string;
+  required_when: string;
+}
+
+export interface DocumentSeedingContext {
+  is_married: boolean;
+  has_real_property: boolean;
+  has_bank_account: boolean;
+  has_business_interest: boolean;
+  has_overseas_heir: boolean;
+  settlement_track: 'ejs' | 'judicial';
+}
+
+export interface DocumentProgress {
+  obtained: number;
+  total: number;
+  percentage: number;
+}
