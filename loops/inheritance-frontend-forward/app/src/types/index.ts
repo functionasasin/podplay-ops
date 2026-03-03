@@ -658,3 +658,102 @@ export interface DocumentProgress {
   total: number;
   percentage: number;
 }
+
+// ============================================================================
+// Organization / Multi-Seat Types (§4.11)
+// ============================================================================
+
+export type OrgPlan = 'solo' | 'team' | 'firm';
+export type OrgRole = 'admin' | 'attorney' | 'paralegal' | 'readonly';
+export type InvitationStatus = 'pending' | 'accepted' | 'expired' | 'revoked';
+
+export interface Organization {
+  id: string;
+  name: string;
+  slug: string;
+  plan: OrgPlan;
+  seat_limit: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OrganizationMember {
+  id: string;
+  org_id: string;
+  user_id: string;
+  role: OrgRole;
+  joined_at: string;
+}
+
+export interface OrganizationInvitation {
+  id: string;
+  org_id: string;
+  email: string;
+  role: OrgRole;
+  token: string;
+  status: InvitationStatus;
+  invited_by: string;
+  expires_at: string;
+  accepted_at: string | null;
+  created_at: string;
+}
+
+/** Permission matrix per role (§4.11) */
+export const ROLE_PERMISSIONS: Record<OrgRole, {
+  canCreateCase: boolean;
+  canEditCase: boolean;
+  canFinalizeCase: boolean;
+  canDeleteCase: boolean;
+  canManageClients: boolean;
+  canInviteMembers: boolean;
+  canRemoveMembers: boolean;
+  canManageBilling: boolean;
+}> = {
+  admin: {
+    canCreateCase: true,
+    canEditCase: true,
+    canFinalizeCase: true,
+    canDeleteCase: true,
+    canManageClients: true,
+    canInviteMembers: true,
+    canRemoveMembers: true,
+    canManageBilling: true,
+  },
+  attorney: {
+    canCreateCase: true,
+    canEditCase: true,
+    canFinalizeCase: true,
+    canDeleteCase: false,
+    canManageClients: true,
+    canInviteMembers: false,
+    canRemoveMembers: false,
+    canManageBilling: false,
+  },
+  paralegal: {
+    canCreateCase: true,
+    canEditCase: true,
+    canFinalizeCase: false,
+    canDeleteCase: false,
+    canManageClients: true,
+    canInviteMembers: false,
+    canRemoveMembers: false,
+    canManageBilling: false,
+  },
+  readonly: {
+    canCreateCase: false,
+    canEditCase: false,
+    canFinalizeCase: false,
+    canDeleteCase: false,
+    canManageClients: false,
+    canInviteMembers: false,
+    canRemoveMembers: false,
+    canManageBilling: false,
+  },
+};
+
+/** Seat limits per plan */
+export const PLAN_SEAT_LIMITS: Record<OrgPlan, number> = {
+  solo: 1,
+  team: 5,
+  firm: Infinity,
+};
