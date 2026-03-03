@@ -1,7 +1,7 @@
-# Current Stage: 13 (Shareable Links)
+# Current Stage: 14 (Case Export ZIP)
 
 ## Spec Sections
-- §4.10 — Shareable Links
+- §4.16 — Case Export ZIP
 
 ## Test Results (updated by loop)
 ```
@@ -21,4 +21,5 @@ No tests yet
 - Stage 10 completed 2026-03-02 (71/71 tests passing)
 - Stage 11 completed 2026-03-02 (70/70 tests passing)
 - Stage 12 completed 2026-03-02 (27/27 tests passing)
-- Stage 13 starting 2026-03-02
+- Stage 13 completed 2026-03-03 (36/36 tests passing)
+- Stage 14 starting 2026-03-03

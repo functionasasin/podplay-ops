@@ -6,6 +6,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import { QRCodeSVG } from 'qrcode.react';
 
 export interface ShareDialogProps {
   open: boolean;
@@ -91,7 +92,7 @@ export function ShareDialog({
 
             {/* QR Code */}
             <div data-testid="qr-code-container" className="flex justify-center py-2">
-              {/* stub — QR code will be rendered here */}
+              <QRCodeSVG value={shareUrl} size={160} />
             </div>
           </>
         )}
