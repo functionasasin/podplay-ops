@@ -1,7 +1,7 @@
-# Current Stage: 19 (Guided Intake Form)
+# Current Stage: 20 (Deadline Tracker)
 
 ## Spec Sections
-- §4.18 — Guided Intake Form
+- §4.20 — Deadline Tracker
 
 ## Test Results (updated by loop)
 ```
@@ -27,4 +27,5 @@ No tests yet
 - Stage 16 completed 2026-03-03 (75/75 tests passing)
 - Stage 17 completed 2026-03-03 (42/42 tests passing)
 - Stage 18 completed 2026-03-03 (30+ conflict tests passing)
-- Stage 19 starting 2026-03-03
+- Stage 19 completed 2026-03-03 (92 intake tests passing)
+- Stage 20 starting 2026-03-03
