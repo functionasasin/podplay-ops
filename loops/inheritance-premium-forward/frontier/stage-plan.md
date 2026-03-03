@@ -23,8 +23,8 @@ Dev order: 1 → 2 → 3 → 4-9 (parallel) → 10 → 11 → 12-16 (parallel) �
 | 17    | Client Profiles             | §4.3     | client\|crm                        | 3                  | complete |
 | 18    | Conflict Check              | §4.17    | conflict                           | 17                 | complete |
 | 19    | Guided Intake Form          | §4.18    | intake                             | 17, 18             | complete |
-| 20    | Deadline Tracker            | §4.20    | deadline                           | 3                  | active |
-| 21    | Document Checklist          | §4.22    | document-checklist\|doc-check      | 3                  | blocked |
+| 20    | Deadline Tracker            | §4.20    | deadline                           | 3                  | complete |
+| 21    | Document Checklist          | §4.22    | document-checklist\|doc-check      | 3                  | active |
 | 22    | Timeline Report             | §4.21    | timeline                           | 20                 | blocked |
 | 23    | Estate Tax Inputs Wizard    | §4.23    | estate-tax\|tax-wizard             | 3                  | blocked |
 | 24    | BIR Form 1801 Integration   | §4.9     | bir\|form-1801\|tax-bridge         | 23, 11             | blocked |

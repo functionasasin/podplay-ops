@@ -1,7 +1,7 @@
-# Current Stage: 20 (Deadline Tracker)
+# Current Stage: 21 (Document Checklist)
 
 ## Spec Sections
-- §4.20 — Deadline Tracker
+- §4.22 — Document Checklist
 
 ## Test Results (updated by loop)
 ```
@@ -28,4 +28,5 @@ No tests yet
 - Stage 17 completed 2026-03-03 (42/42 tests passing)
 - Stage 18 completed 2026-03-03 (30+ conflict tests passing)
 - Stage 19 completed 2026-03-03 (92 intake tests passing)
-- Stage 20 starting 2026-03-03
+- Stage 20 completed 2026-03-03 (49/49 deadline tests passing)
+- Stage 21 starting 2026-03-03

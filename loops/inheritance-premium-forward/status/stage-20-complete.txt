@@ -1,0 +1,21 @@
+Stage 20 — Deadline Tracker: COMPLETE
+Completed: 2026-03-03T08:26:54Z
+
+Tests passing: 49/49 deadline-related tests
+- DeadlineTimeline component tests
+- DeadlineCard component tests
+- computeDeadlineStatus utility tests
+- generateDeadlines milestone generation tests
+- All-cases deadlines page tests
+
+Artifacts produced:
+- Migration: 005_case_deadlines.sql
+- Migration: get_case_deadline_summaries RPC
+- src/routes/deadlines.tsx — All-cases deadline summary page
+- src/components/case/DeadlineTimeline.tsx — Per-case vertical timeline panel
+- src/components/case/DeadlineCard.tsx — Single milestone card
+- src/lib/deadlines.ts — generateAndSaveDeadlines, markDeadlineComplete, computeDeadlineStatus
+- src/lib/__tests__/deadlines.test.ts — Deadline utility tests
+- src/components/case/__tests__/DeadlineTimeline.test.tsx — Timeline component tests
+- src/components/case/__tests__/DeadlineCard.test.tsx — Card component tests
+- src/routes/__tests__/deadlines.test.tsx — Deadlines page tests
