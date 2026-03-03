@@ -22,7 +22,7 @@
 - [x] tam-transport-lto — G-LTO-1/2, J-CAP-1; registered motor vehicles by type from LTO; processing agents / fixers (disintermediation)
 - [x] tam-customs-boc — F-BOC-1/2/3; BOC import entry count + e-commerce importers; customs brokers
 - [x] tam-business-licensing — R-DTI-1, N-BFP-1/2, R-CDA-1; LGU business permit holders + DTI-registered sole proprietors; compliance officers + registration agents
-- [ ] tam-regulatory-specialty — P-IPO-1/2, Q-ERC-1, S-BSP-1, M-FDA-1/2, L-TES-1, R-BOI-1/2, R-PCAB-1, N-NPC-1, R-NTC-1; one specific registry count per tool from the relevant agency
+- [x] tam-regulatory-specialty — P-IPO-1/2, Q-ERC-1, S-BSP-1, M-FDA-1/2, L-TES-1, R-BOI-1/2, R-PCAB-1, N-NPC-1, R-NTC-1; one specific registry count per tool from the relevant agency
 
 ## Synthesis
 - [ ] synthesis-master-tam-table — Compile all per-tool TAM files into single ranked master table sorted by Total TAM; include Data Confidence Score per tool
