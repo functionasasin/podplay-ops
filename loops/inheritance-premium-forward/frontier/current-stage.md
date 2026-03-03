@@ -1,7 +1,7 @@
-# Current Stage: 14 (Case Export ZIP)
+# Current Stage: 15 (Scenario Comparison)
 
 ## Spec Sections
-- §4.16 — Case Export ZIP
+- §4.8 — Scenario Comparison
 
 ## Test Results (updated by loop)
 ```
@@ -22,4 +22,5 @@ No tests yet
 - Stage 11 completed 2026-03-02 (70/70 tests passing)
 - Stage 12 completed 2026-03-02 (27/27 tests passing)
 - Stage 13 completed 2026-03-03 (36/36 tests passing)
-- Stage 14 starting 2026-03-03
+- Stage 14 completed 2026-03-03 (22/22 tests passing)
+- Stage 15 starting 2026-03-03
