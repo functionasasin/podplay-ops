@@ -1,26 +1,19 @@
-# Current Stage: 7
+# Current Stage: 8
 
-## Stage 7 — Email Signatures & AI (9 tools)
+## Stage 8 — Creators & Discovery (6 tools)
 
-Create backend service routes and CE tools for email signatures, bulk draft editing, AI email improvement, and thread summaries.
+Create backend service routes and CE tools for creator enrichment, discovery search, and profile lookup.
 
-| # | Tool | Backend Route | Notes |
-|---|------|--------------|-------|
-| 50 | `cheerful_list_email_signatures` | `GET /api/service/signatures` | |
-| 51 | `cheerful_get_email_signatures_for_reply` | `GET /api/service/signatures/for-reply` | |
-| 52 | `cheerful_create_email_signature` | `POST /api/service/signatures` | |
-| 53 | `cheerful_get_email_signature` | `GET /api/service/signatures/{id}` | |
-| 54 | `cheerful_update_email_signature` | `PATCH /api/service/signatures/{id}` | |
-| 55 | `cheerful_delete_email_signature` | `DELETE /api/service/signatures/{id}` | |
-| 56 | `cheerful_bulk_edit_drafts` | `POST /api/service/campaigns/{id}/bulk-edit-drafts` | Temporal workflow |
-| 57 | `cheerful_improve_email_content` | — | CE-native (calls Claude, no backend route) |
-| 58 | `cheerful_get_thread_summary` | — | CE-native (ThreadSummarizer, no backend route) |
+| # | Tool | Backend Route |
+|---|------|--------------|
+| 59 | `cheerful_start_creator_enrichment` | `POST /api/service/campaigns/{id}/enrichment` |
+| 60 | `cheerful_get_enrichment_workflow_status` | `GET /api/service/campaigns/{id}/enrichment/{workflow_id}` |
+| 61 | `cheerful_search_similar_creators` | `GET /api/service/creators/search/similar` |
+| 62 | `cheerful_search_creators_by_keyword` | `GET /api/service/creators/search/keyword` |
+| 63 | `cheerful_enrich_creator` | `POST /api/service/creators/enrich` |
+| 64 | `cheerful_get_creator_profile` | `GET /api/service/creators/profile/{handle}` |
 
-**Priority**: ADVANCE — All 9 Stage 7 tools implemented and tested. Run full suite to verify, then advance to Stage 8.
+**Priority**: SCAFFOLD — Create test fixture file for creators domain with mock API responses.
 
 ## Work Log
-- 2026-03-04: Stage 6 complete (261 total tests passing, 42 cheerful tools registered). Advancing to Stage 7.
-- 2026-03-04: Scaffold complete — created email_signatures_fixtures.py with mock API responses for all 9 Stage 7 tools.
-- 2026-03-04: Backend routes complete — 7 service routes added: email signature CRUD (#50-55: list, for-reply, create, get, update, delete) + bulk draft edit (#56). Tools #57-58 are CE-native (no backend routes needed).
-- 2026-03-04: Tests + implementation for 7 tools (#50-56) complete — 35 new tests, 296 total passing. Created tools_email_signatures.py with tool definitions, formatters, input models + api.py client functions.
-- 2026-03-04: CE-native tools #57-58 implemented + 15 new tests + all 9 Stage 7 tools registered in catalog. 311 total tests passing, 51 cheerful tools registered.
+- 2026-03-04: Stage 7 complete (311 total tests passing, 51 cheerful tools registered). Advancing to Stage 8.
