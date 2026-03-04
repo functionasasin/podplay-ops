@@ -2692,105 +2692,403 @@ scenario_code is consistent with the heir set in distributions:
 
 ## §20 Cross-Layer Consistency Checklist
 
-A developer MUST verify ALL items before declaring the implementation complete.
+This section documents all verified cross-layer agreements and all resolved discrepancies
+between the Rust type definitions, JSON wire format, TypeScript interfaces, and Zod schemas.
+See `analysis/cross-layer-consistency.md` for full reasoning on each resolution.
 
-### §20.1 Field Name Consistency
+A developer MUST verify ALL items in §20.8 (Implementation Checklist) before shipping.
 
-| Field | Rust (`snake_case`) | JSON key | TypeScript interface | Zod schema key |
-|---|---|---|---|---|
-| Estate centavos | `net_estate.centavos` | `"net_estate"` → `"centavos"` | `net_estate.centavos` | `net_estate.centavos` |
-| Heir type | `heir_type` | `"heir_type"` | `heir_type` | `heir_type` |
-| Date of death | `date_of_death` | `"date_of_death"` | `date_of_death` | `date_of_death` |
-| Disinheritance ground | `ground` | `"ground"` | `ground` | `ground` |
-| Articulo mortis | `articulo_mortis` | `"articulo_mortis"` | `articulo_mortis` | `articulo_mortis` |
-| Is illegitimate | `is_illegitimate` | `"is_illegitimate"` | `is_illegitimate` | `is_illegitimate` |
-| Cohabitation years | `cohabitation_years` | `"cohabitation_years"` | `cohabitation_years` | `cohabitation_years` |
-| Collation credit | `collation_credit_centavos` | `"collation_credit_centavos"` | `collation_credit_centavos` | `collation_credit_centavos` |
+### §20.1 Confirmed Cross-Layer Matches
 
-### §20.2 Enum Variant Consistency
+The following items are **consistent** across all four layers with no changes needed:
 
-| Enum | Rust variant | JSON wire value | TypeScript literal | Zod enum entry |
-|---|---|---|---|---|
-| HeirType | `LegitimateChild` | `"LegitimateChild"` | `"LegitimateChild"` | `"LegitimateChild"` |
-| HeirType | `IllegitimateChild` | `"IllegitimateChild"` | `"IllegitimateChild"` | `"IllegitimateChild"` |
-| DisinheritanceGround | `Art919_1` | `"Art919_1"` | `"Art919_1"` | `"Art919_1"` |
-| ScenarioCode | `T5` | `"T5"` | `"T5"` | `"T5"` |
-| ExclusionReason | `IronCurtain` | `"IronCurtain"` | `"IronCurtain"` | `"IronCurtain"` |
-| RepresentationTrigger | `Art902IllegitimateLine` | `"Art902IllegitimateLine"` | `"Art902IllegitimateLine"` | `"Art902IllegitimateLine"` |
-| EffectiveGroup | N/A (string) | `"G1"`.."G4"` | `string \| null` | `z.string().nullable()` |
+| Item | Status |
+|------|--------|
+| `HeirType` (9 variants: LegitimateChild…OtherCollateral) | ✅ Consistent |
+| `LegalSeparationStatus` (NotApplicable, InnocentSpouse, GuiltySpouse) | ✅ Consistent |
+| `SubstitutionType` (Simple, Fideicommissary, Reciprocal) | ✅ Consistent |
+| `DisinheritanceGround` (22 variants: Art919_1…Art921_6) | ✅ Consistent |
+| `ScenarioCode` (30 variants: T1–T15, I1–I15) | ✅ Consistent |
+| `SuccessionType` (Testate, Intestate, Mixed) | ✅ Consistent |
+| `ShareSource` (Legitime, FreePortion, Intestate, Devise, Legacy) | ✅ Consistent |
+| Money: number \| string on input; number on output | ✅ Consistent |
+| Booleans: `true`/`false` only (never string/number) | ✅ Consistent |
+| `Option<T>` → always `null`, never absent | ✅ Consistent |
+| Struct fields: `snake_case` | ✅ Consistent |
+| Enum variants: `PascalCase` | ✅ Consistent |
+| `deny_unknown_fields` on all input types | ✅ Consistent |
+| No `deny_unknown_fields` on output types | ✅ Consistent |
+| Fractions: `"numer/denom"` string format | ✅ Consistent |
+| Dates: `"YYYY-MM-DD"` ISO-8601 | ✅ Consistent |
+| `DisinheritanceRecord` fields | ✅ Consistent |
+| `WillInput` / `InstitutionInput` / `DeviseInput` / `LegacyInput` / `SubstitutionInput` / `DonationInput` fields | ✅ Consistent |
+| `RoundingAdjustment` fields | ✅ Consistent |
+| `ComputationOutput` top-level structure | ✅ Consistent |
+| `ComputationError` (5 variants, `error_type` tag) | ✅ Consistent |
+| `ValidationWarning` (10 variants, `code`+`data` tag) | ✅ Consistent |
+| `ManualReviewFlag` (7 variants, `flag` tag) | ✅ Consistent |
+| `HeirInput.children` recursive `HeirInput[]` | ✅ Consistent |
 
-**CRITICAL**: EffectiveGroup is NOT a Rust enum — it is stored as `Option<String>` in Rust.
-The wire values `"G1"`..`"G4"` are string constants, not enum variant names.
-TypeScript models this as `string | null`. Frontend maps to human labels:
-- `"G1"` → "Primary Heir"
-- `"G2"` → "Ascendant"
-- `"G3"` → "Spouse" (or collateral in intestate)
-- `"G4"` → "Illegitimate Child"
+---
 
-### §20.3 Nullability Consistency
+### §20.2 Resolved Discrepancies
 
-| Field | Rust | JSON | TypeScript | Zod |
-|---|---|---|---|---|
-| `decedent.date_of_death` | `Option<String>` | `null` or string | `DateString \| null` | `DateStringSchema.nullable()` |
-| `will` | `Option<WillInput>` | `null` or object | `WillInput \| null` | `WillInputSchema.nullable()` |
-| `heir.degree` | `Option<u32>` | `null` or number | `number \| null` | `z.number().int().nullable()` |
-| `distributions[*].per_stirpes_fraction` | `Option<String>` | `null` or string | `FractionString \| null` | `FractionStringSchema.nullable()` |
-| `distributions[*].representation` | `Option<RepresentationChain>` | `null` or object | `RepresentationChain \| null` | `RepresentationChainSchema.nullable()` |
+Nine discrepancies were found between the four layers and resolved below. Each resolution
+picks the canonical definition that ALL layers must implement.
 
-**Rule**: NEVER use `z.optional()` for serde `Option<T>` fields. ALWAYS use `.nullable()`.
+#### DISC-01: `EffectiveGroup` — shorthand G1–G4 vs full PascalCase names
 
-### §20.4 Tagged Enum Tag Field Consistency
+**Prior conflict**: `serde-wire-format` used `"G1"`–`"G4"` shorthand (4 variants).
+`rust-types` and `zod-schemas` used full PascalCase names (5 variants).
 
-| Enum | Rust tag attr | JSON key | TypeScript discriminant |
-|---|---|---|---|
-| PreteritionEffect | `#[serde(tag = "type")]` | `"type"` | `.type` |
-| ValidationWarning | `#[serde(tag = "code", content = "data")]` | `"code"` + `"data"` | `.code` |
-| ManualReviewFlag | `#[serde(tag = "flag")]` | `"flag"` | `.flag` |
-| ComputationError | `#[serde(tag = "error_type")]` | `"error_type"` | `.error_type` |
+**Resolution** ✅ Full PascalCase, 5 variants:
 
-### §20.5 Money Serialization Consistency
+```
+LegitimateChildGroup     → "LegitimateChildGroup"   (G1)
+LegitimateAscendantGroup → "LegitimateAscendantGroup" (G2, only when G1 absent)
+SurvivingSpouseGroup     → "SurvivingSpouseGroup"   (G3)
+IllegitimateChildGroup   → "IllegitimateChildGroup"  (G4)
+CollateralGroup          → "CollateralGroup"         (G5, intestate I11–I15)
+```
+
+Note: 5 variants (not 4) — `CollateralGroup` needed for intestate collateral scenarios.
+
+#### DISC-02: `ExclusionReason` — completely different variant sets
+
+**Prior conflict**: `serde-wire-format` had 8 simplified variants. `rust-types` and
+`zod-schemas` had a different 8-variant set with more precise names.
+
+**Resolution** ✅ Rust-types variants + `IronCurtain` added = 9 variants:
+
+```
+PredeceaseNoRepresentation  — predeceased, no eligible representatives
+Unworthiness                — Art. 1032 unworthiness, not condoned
+FiliationNotProved          — FC Arts. 172/175 filiation not established
+GuiltySpouseLegalSeparation — Art. 1002 spouse gave cause for legal separation
+AdoptionRescinded           — RA 8552 §20 adoption rescinded before death
+ValidDisinheritance         — Arts. 915–923 valid disinheritance
+Renounced                   — Art. 1041 valid renunciation
+ExcludedByGroup             — Art. 887(2) legitimate ascendant excluded by LC presence
+IronCurtain                 — Art. 992 Iron Curtain Rule (IC ↔ legitimate relatives barrier)
+```
+
+Removed: `Predeceased` (renamed), `Incapacity` (renamed), `Renunciation` (renamed),
+`IronCurtain` (kept from prior), `NotCalled` (not an exclusion reason), `InvalidDisinheritance`
+(invalid disinheritance does NOT exclude — it emits a warning only).
+
+#### DISC-03: `RepresentationTrigger` — two variant conflicts
+
+**Prior conflict**: `serde-wire-format` used `Incapacity` and `Art902IllegitimateLine`.
+`rust-types` and `zod-schemas` used `Unworthiness` and `IllegitimateTransmission`.
+
+**Resolution** ✅ Rust-types variants (4 variants):
+
+```
+Predecease               — heir predeceased (Arts. 970–971)
+Disinheritance           — valid disinheritance (Art. 923)
+Unworthiness             — unworthy/incapacitated (Art. 1035)
+IllegitimateTransmission — Art. 902 illegitimate child's descendants in intestate
+```
+
+#### DISC-04: `VacancyCause` — different variant sets
+
+**Prior conflict**: `serde-wire-format` had 6 variants including `DisinheritanceInvalid`
+and `LegitimacyVacancy`. `rust-types` and `zod-schemas` had different 6 variants.
+
+**Resolution** ✅ Rust-types variants + `ConditionFailed` added = 7 variants:
+
+```
+Predecease              — heir (or substitute) predeceased
+Renunciation            — heir renounced (Art. 1041)
+Unworthiness            — heir unworthy/incapacitated (Art. 1032)
+Disinheritance          — valid disinheritance (invalid ≠ vacancy)
+SubstitutePredeceased   — named substitute predeceased primary heir
+SubstituteIncapacitated — named substitute is incapacitated/unworthy
+ConditionFailed         — will condition not fulfilled (Art. 872)
+```
+
+Removed: `DisinheritanceInvalid` (invalid disinheritance is a warning, not a vacancy),
+`LegitimacyVacancy` (Art. 1021 ¶2 is a restart trigger, not a VacancyCause).
+
+#### DISC-05: `ResolutionMethod` — 5 vs 8 variants
+
+**Prior conflict**: `serde-wire-format` had 5 variants with a single `Accretion`.
+`rust-types` and `zod-schemas` had 8 variants distinguishing accretion types.
+
+**Resolution** ✅ Rust-types 8-variant set:
+
+```
+Substitution          — Art. 859/1022(1): named substitute inherits
+Representation        — Arts. 970–977: representatives step in per stirpes
+AccretionFreePortion  — Arts. 1016–1019, 1021 ¶1: pro indiviso FP accretion
+AccretionIntestate    — Art. 1018: intestate share proportional accretion
+OwnRightLegitime      — Art. 1021 ¶2: vacant legitime → pipeline restart required
+IntestateFallback     — Art. 1022(2): falls to legal/intestate heirs
+NextDegreeInOwnRight  — Art. 969: all same-degree heirs renounce → next degree
+Escheat               — Art. 1011: no heirs → entire estate to State
+```
+
+`AccretionFreePortion` ≠ `AccretionIntestate` — legally distinct effects requiring different
+pipeline handling. `OwnRightLegitime` triggers a full scenario recompute (not accretion).
+
+#### DISC-06: `PreteritionEffect` — `AnnulsAll`/`AnnulsInstitutions` vs `None`/`InstitutionAnnulled`
+
+**Prior conflict**: `serde-wire-format` had `AnnulsAll` and `AnnulsInstitutions`.
+`rust-types` and `zod-schemas` had `None` and `InstitutionAnnulled`.
+
+**Resolution** ✅ Rust-types variants:
+
+```json
+{ "type": "None" }
+{ "type": "InstitutionAnnulled", "preterited_heir_ids": ["heir_001"] }
+```
+
+Art. 854 annuls ONLY heir institutions (not devises/legacies) — `AnnulsAll` was legally wrong.
+`None` variant is required so the field always serializes.
+
+#### DISC-07: `DecedentInput` — missing fields in earlier draft
+
+**Prior conflict**: Two different incomplete definitions existed — `rust-types` had
+Art. 903/900 fields; `serde-wire-format` had logical input fields.
+
+**Resolution** ✅ Merged 11-field canonical definition:
+
+```
+name                    : string
+date_of_death           : string | null          (YYYY-MM-DD or null)
+has_will                : boolean
+has_legitimate_children : boolean
+has_illegitimate_children: boolean
+is_illegitimate         : boolean                (Art. 903 T14/T15 trigger)
+articulo_mortis         : boolean                (Art. 900 ¶2 trigger)
+cohabitation_years      : u32                    (Art. 900 ¶2 exception)
+legal_separation_status : LegalSeparationStatus  (for spouse exclusion)
+domicile                : string | null
+nationality             : string | null
+```
+
+#### DISC-08: `EstateInput` — `net_value_centavos: i64` vs Money wrapper
+
+**Prior conflict**: `rust-types` used `net_value_centavos: i64`. `serde-wire-format`
+and `zod-schemas` used `net_estate: Money` wrapper with additional fields.
+
+**Resolution** ✅ Money-wrapper form (4 fields):
+
+```
+net_estate    : Money              (required — base for all computations)
+gross_estate  : Money | null       (optional — collation base if provided)
+obligations   : Money | null       (optional — audit trail)
+description   : string | null      (optional — display label)
+```
+
+#### DISC-09: `HeirInput` — four sub-conflicts
+
+**a) `is_alive` vs `is_deceased`** — Resolution ✅ `is_alive: boolean`
+
+**b) `degree` vs `collateral_degree` + `is_collateral`** — Resolution ✅ `degree: number | null` (unified)
+
+**c) `is_disinherited` on HeirInput** — Resolution ✅ **Remove** (engine-computed, not input)
+
+**d) `children: Vec<HeirId>` vs `children: HeirInput[]`** — Resolution ✅ Recursive `HeirInput[]`
+
+The canonical HeirInput has 24 fields. Removed from HeirInput: `is_deceased`,
+`is_disinherited`, `is_collateral`, `collateral_degree`, `cause_proven`, `reconciled`
+(last two belong on `DisinheritanceRecord` only).
+
+---
+
+### §20.3 Canonical Enum Summary
+
+| Enum | Variants (wire strings) |
+|------|-------------------------|
+| `HeirType` | `LegitimateChild`, `LegitimatedChild`, `AdoptedChild`, `IllegitimateChild`, `LegitimateAscendant`, `Spouse`, `Sibling`, `NieceNephew`, `OtherCollateral` |
+| `LegalSeparationStatus` | `NotApplicable`, `InnocentSpouse`, `GuiltySpouse` |
+| `SubstitutionType` | `Simple`, `Fideicommissary`, `Reciprocal` |
+| `DisinheritanceGround` | `Art919_1`–`Art919_8`, `Art920_1`–`Art920_8`, `Art921_1`–`Art921_6` |
+| `ScenarioCode` | `T1`–`T15`, `I1`–`I15` |
+| `SuccessionType` | `Testate`, `Intestate`, `Mixed` |
+| `EffectiveGroup` | `LegitimateChildGroup`, `LegitimateAscendantGroup`, `SurvivingSpouseGroup`, `IllegitimateChildGroup`, `CollateralGroup` |
+| `ExclusionReason` | `PredeceaseNoRepresentation`, `Unworthiness`, `FiliationNotProved`, `GuiltySpouseLegalSeparation`, `AdoptionRescinded`, `ValidDisinheritance`, `Renounced`, `ExcludedByGroup`, `IronCurtain` |
+| `RepresentationTrigger` | `Predecease`, `Disinheritance`, `Unworthiness`, `IllegitimateTransmission` |
+| `VacancyCause` | `Predecease`, `Renunciation`, `Unworthiness`, `Disinheritance`, `SubstitutePredeceased`, `SubstituteIncapacitated`, `ConditionFailed` |
+| `ShareSource` | `Legitime`, `FreePortion`, `Intestate`, `Devise`, `Legacy` |
+| `ResolutionMethod` | `Substitution`, `Representation`, `AccretionFreePortion`, `AccretionIntestate`, `OwnRightLegitime`, `IntestateFallback`, `NextDegreeInOwnRight`, `Escheat` |
+| `PreteritionEffect` (tag="type") | `None`, `InstitutionAnnulled` |
+| `ValidationWarning` (tag="code") | `PreteritionDetected`, `InvalidDisinheritance`, `ConditionStripped`, `Underprovision`, `InoficiousnessReduced`, `ReconciliationVoided`, `PosthumousHeirPossible`, `AnnuityChoiceRequired`, `IndivisibleRealty`, `MultipleDisinheritances` |
+| `ManualReviewFlag` (tag="flag") | `AllDescendantsDisinherited`, `DisinheritedWithSubstituteAndReps`, `PosthumousChildPossible`, `UsufructElectionRequired`, `IndivisibleRealtyPartition`, `ReconciliationPreWill`, `LegitimationContested` |
+| `ComputationError` (tag="error_type") | `InputValidation`, `DomainValidation`, `MaxRestartsExceeded`, `ArithmeticError`, `PanicRecovered` |
+
+---
+
+### §20.4 Nullability Matrix
+
+Every `Option<T>` in Rust must be `T | null` in TypeScript and `z.nullable(TSchema)` in Zod.
+**Rule**: NEVER use `z.optional()` for serde `Option<T>` fields. ALWAYS use `z.nullable()`.
+
+| Struct | Field | Rust | TS | Zod |
+|--------|-------|------|----|-----|
+| `DecedentInput` | `date_of_death` | `Option<String>` | `string \| null` | `z.nullable(DateStringSchema)` |
+| `DecedentInput` | `domicile` | `Option<String>` | `string \| null` | `z.nullable(z.string())` |
+| `DecedentInput` | `nationality` | `Option<String>` | `string \| null` | `z.nullable(z.string())` |
+| `EstateInput` | `gross_estate` | `Option<Money>` | `InputMoney \| null` | `z.nullable(InputMoneySchema)` |
+| `EstateInput` | `obligations` | `Option<Money>` | `InputMoney \| null` | `z.nullable(InputMoneySchema)` |
+| `EstateInput` | `description` | `Option<String>` | `string \| null` | `z.nullable(z.string())` |
+| `HeirInput` | `date_of_death` | `Option<String>` | `string \| null` | `z.nullable(DateStringSchema)` |
+| `HeirInput` | `date_of_birth` | `Option<String>` | `string \| null` | `z.nullable(DateStringSchema)` |
+| `HeirInput` | `adoption_date` | `Option<String>` | `string \| null` | `z.nullable(DateStringSchema)` |
+| `HeirInput` | `adoption_rescission_date` | `Option<String>` | `string \| null` | `z.nullable(DateStringSchema)` |
+| `HeirInput` | `degree` | `Option<u32>` | `number \| null` | `z.nullable(z.number().int().min(1))` |
+| `ComputationInput` | `will` | `Option<WillInput>` | `WillInput \| null` | `z.nullable(WillInputSchema)` |
+| `ComputationInput` | `donations` | `Option<Vec<DonationInput>>` | `DonationInput[] \| null` | `z.nullable(z.array(DonationInputSchema))` |
+| `WillInput` | `date_executed` | `Option<String>` | `string \| null` | `z.nullable(DateStringSchema)` |
+| `DonationInput` | `donor_id` | `Option<String>` | `string \| null` | `z.nullable(z.string())` |
+| `DonationInput` | `recipient_heir_id` | `Option<String>` | `string \| null` | `z.nullable(z.string())` |
+| `DonationInput` | `date` | `Option<String>` | `string \| null` | `z.nullable(DateStringSchema)` |
+| `DonationInput` | `description` | `Option<String>` | `string \| null` | `z.nullable(z.string())` |
+| `DonationInput` | `professional_expense_imputed_savings_centavos` | `Option<i64>` | `number \| null` | `z.nullable(z.number().int())` |
+| `DisinheritanceRecord` | `note` | `Option<String>` | `string \| null` | `z.nullable(z.string())` |
+| `InstitutionInput` | `fraction` | `Option<String>` | `string \| null` | `z.nullable(FractionStringSchema)` |
+| `InstitutionInput` | `amount_centavos` | `Option<i64>` | `number \| null` | `z.nullable(z.number().int())` |
+| `InstitutionInput` | `description` | `Option<String>` | `string \| null` | `z.nullable(z.string())` |
+| `DeviseInput` | `beneficiary_heir_id` | `Option<HeirId>` | `string \| null` | `z.nullable(z.string())` |
+| `HeirDistribution` | `effective_group` | `Option<EffectiveGroup>` | `EffectiveGroup \| null` | `z.nullable(EffectiveGroupSchema)` |
+| `HeirDistribution` | `exclusion_reason` | `Option<ExclusionReason>` | `ExclusionReason \| null` | `z.nullable(ExclusionReasonSchema)` |
+| `HeirDistribution` | `per_stirpes_fraction` | `Option<String>` | `string \| null` | `z.nullable(FractionStringSchema)` |
+| `HeirDistribution` | `representation` | `Option<RepresentationChain>` | `RepresentationChain \| null` | `z.nullable(RepresentationChainSchema)` |
+| `HeirDistribution` | `per_heir_fraction` | `Option<String>` | `string \| null` | `z.nullable(FractionStringSchema)` |
+| `HeirDistribution` | `partition_notes` | `Option<String>` | `string \| null` | `z.nullable(z.string())` |
+| `ComputationOutput` | `testate_validation` | `Option<TestateValidationResult>` | `TestateValidationResult \| null` | `z.nullable(TestateValidationResultSchema)` |
+| `ComputationOutput` | `collation` | `Option<CollationResult>` | `CollationResult \| null` | `z.nullable(CollationResultSchema)` |
+
+---
+
+### §20.5 Tagged Enum Tag Field Consistency
+
+| Enum | Rust tag attr | JSON discriminant key | TypeScript discriminant |
+|------|---------------|-----------------------|------------------------|
+| `PreteritionEffect` | `#[serde(tag = "type")]` | `"type"` | `.type` |
+| `ValidationWarning` | `#[serde(tag = "code", content = "data")]` | `"code"` + `"data"` | `.code` |
+| `ManualReviewFlag` | `#[serde(tag = "flag")]` | `"flag"` | `.flag` |
+| `ComputationError` | `#[serde(tag = "error_type")]` | `"error_type"` | `.error_type` |
+
+---
+
+### §20.6 Money Serialization Consistency
 
 | Layer | Centavos accepted |
-|---|---|
-| Rust deserialize | `i64` number OR string `"12345"` |
+|-------|-------------------|
+| Rust deserialize (input) | `i64` number OR `"12345"` string |
 | JSON wire (input) | number OR string |
-| JSON wire (output) | number only |
-| TypeScript InputMoney | `number \| string` |
-| TypeScript OutputMoney | `number` |
-| Zod InputMoneySchema | `z.union([z.number().int(), z.string().regex(/^-?\d+$/)])` |
-| Zod OutputMoneySchema | `z.number().int()` |
-| MoneyInput component | Collects as pesos (decimal), converts to centavos: `Math.round(pesos * 100)` |
-| MoneyDisplay component | Receives centavos, displays as pesos: `centavos / 100` |
+| JSON wire (output) | number only (always i64) |
+| TypeScript `InputMoney` | `number \| string` |
+| TypeScript `OutputMoney` | `number` |
+| Zod `InputMoneySchema` | `z.union([z.number().int(), z.string().regex(/^-?\d+$/)])` |
+| Zod `OutputMoneySchema` | `z.number().int()` |
+| `MoneyInput` component | Collects as pesos (decimal) → converts: `Math.round(pesos * 100)` |
+| `MoneyDisplay` component | Receives centavos → displays: `(centavos / 100).toLocaleString("en-PH", { style: "currency", currency: "PHP" })` |
 
-### §20.6 Integration Test Scenarios
+---
 
-End-to-end test flow: Form input → JSON → WASM → Result → Display
+### §20.7 Integration Test Scenarios
+
+End-to-end test flow: Form → JSON → WASM → Result → Display
 
 **Scenario A: Simple Intestate (I1)**
 ```
-Input: 1 LC, E=₱10M, no will
-JSON: { "decedent": { "has_will": false, ... }, "heirs": [{ "heir_type": "LegitimateChild", "is_alive": true, ... }], ... }
-WASM: compute_json(inputJson) → success
-Result: distributions[0].total_centavos == 1_000_000_000
-Display: LC = ₱10,000,000.00
+Input:  1 LC, E=₱10,000,000, no will
+JSON:   { "decedent": {"has_will": false, ...}, "heirs": [{"heir_type": "LegitimateChild",
+          "is_alive": true, ...}], "will": null, "donations": null }
+WASM:   compute_json(inputJson) → Ok(outputJson)
+Result: scenario_code = "I1", distributions[0].total_centavos = 1_000_000_000
+        distributions[0].effective_group = "LegitimateChildGroup"   ← DISC-01 critical
+Display: "Maria dela Cruz (LC) — ₱10,000,000.00"
 ```
 
 **Scenario B: Cap Rule (T4)**
 ```
-Input: 1 LC + 5 IC, E=₱10M, with will giving all FP to LC
-JSON: heir_type values ["LegitimateChild","IllegitimateChild" × 5]
-WASM: → success, scenario_code = "T4"
-Result: distributions[0].total_centavos == 5_000_000_00 (LC)
-        distributions[1..5].total_centavos == 1_000_000_00 each (IC, capped)
+Input:  1 LC + 5 IC, E=₱10,000,000, will giving all FP to LC
+JSON:   heir_type values ["LegitimateChild", "IllegitimateChild" × 5]
+WASM:   → success, scenario_code = "T4"
+Result: distributions[0].total_centavos = 500_000_000 (LC — ½ estate)
+        distributions[1..5].total_centavos = 100_000_000 each (IC — ½ of LC each)
+        distributions[1..5].effective_group = "IllegitimateChildGroup"   ← DISC-01
 ```
 
-**Scenario C: Error Handling**
+**Scenario C: Disinheritance with Representation**
 ```
-Input: invalid JSON { "heir_type": "legitimateChild" } (lowercase)
-WASM: → Err(JsValue)
-Parse: error_type = "InputValidation", field_path = "heir_type"
-Display: field-level error on heir_type dropdown
+Input:  1 LC (disinherited, valid), 2 grandchildren
+JSON:   disinheritances[0].ground = "Art919_1", cause_proven = true
+WASM:   → success, scenario_code = "T1" (grandchildren represent LC)
+Result: distributions[0].is_excluded = true
+        distributions[0].exclusion_reason = "ValidDisinheritance"   ← DISC-02 critical
+        distributions[1..2].representation.trigger = "Disinheritance"   ← DISC-03
 ```
+
+**Scenario D: Vacant Share with Renunciation**
+```
+Input:  2 LC, LC2 renounces
+WASM:   → success
+Result: vacancy_resolutions[0].vacancy_cause = "Renunciation"   ← DISC-04
+        vacancy_resolutions[0].resolution_method = "AccretionIntestate"   ← DISC-05
+        LC1 gets 100% estate
+```
+
+**Scenario E: Enum Round-Trip Validation**
+```typescript
+// TypeScript: verify all DISC-resolved enum values parse without error
+const output: ComputationOutput = ComputationOutputSchema.parse(wasmOutput);
+// Must accept without throwing:
+expect(output.distributions[0].effective_group).toBe("LegitimateChildGroup");  // DISC-01
+expect(output.distributions[1].exclusion_reason).toBe("PredeceaseNoRepresentation");  // DISC-02
+expect(output.distributions[1].representation?.trigger).toBe("IllegitimateTransmission");  // DISC-03
+expect(output.vacancy_resolutions[0].vacancy_cause).toBe("SubstitutePredeceased");  // DISC-04
+expect(output.vacancy_resolutions[0].resolution_method).toBe("AccretionFreePortion");  // DISC-05
+expect(output.testate_validation?.preterition_effect.type).toBe("InstitutionAnnulled");  // DISC-06
+```
+
+**Scenario F: Error Handling**
+```
+Input:  invalid JSON { "heir_type": "legitimateChild" } (wrong case)
+WASM:   → Err(json_string)
+Parse:  error_type = "InputValidation", field_path = "heirs[0].heir_type"
+Display: field-level error on HeirType dropdown
+```
+
+---
+
+### §20.8 Implementation Checklist
+
+A developer implementing the v2 engine must verify every item:
+
+**Rust Engine:**
+- [ ] `EffectiveGroup` has 5 PascalCase variants (not G1–G4 shorthands)
+- [ ] `ExclusionReason` has 9 variants including `IronCurtain`
+- [ ] `RepresentationTrigger` uses `Unworthiness` and `IllegitimateTransmission`
+- [ ] `VacancyCause` has 7 variants including `ConditionFailed`
+- [ ] `ResolutionMethod` has 8 variants (`AccretionFreePortion` ≠ `AccretionIntestate`)
+- [ ] `PreteritionEffect` has `None` and `InstitutionAnnulled` variants
+- [ ] `DecedentInput` has all 11 fields including `is_illegitimate`, `articulo_mortis`, `cohabitation_years`
+- [ ] `EstateInput` uses `net_estate: Money` (not `net_value_centavos: i64`)
+- [ ] `HeirInput` uses `is_alive: bool` (not `is_deceased`)
+- [ ] `HeirInput` uses `degree: Option<u32>` (not `collateral_degree: u32`)
+- [ ] `HeirInput` does NOT have `is_disinherited`, `is_collateral`, `cause_proven`, `reconciled`
+- [ ] `HeirInput.children` is `Vec<Box<HeirInput>>` (recursive, not `Vec<HeirId>`)
+- [ ] No `#[serde(skip_serializing_if = "Option::is_none")]` on any field
+- [ ] Input structs have `#[serde(deny_unknown_fields)]`; output structs do NOT
+
+**TypeScript / Zod:**
+- [ ] `EffectiveGroupSchema` lists 5 full PascalCase names
+- [ ] `ExclusionReasonSchema` lists 9 variants including `IronCurtain`
+- [ ] `RepresentationTriggerSchema` uses `Unworthiness` and `IllegitimateTransmission`
+- [ ] `VacancyCauseSchema` lists 7 variants including `ConditionFailed`
+- [ ] `ResolutionMethodSchema` lists 8 variants
+- [ ] `PreteritionEffectSchema` discriminates on `type` with `None` and `InstitutionAnnulled`
+- [ ] `DecedentInputSchema` has all 11 fields including `is_illegitimate`, `articulo_mortis`, `cohabitation_years`
+- [ ] `EstateInputSchema` uses `net_estate: InputMoneySchema` (not `net_value_centavos`)
+- [ ] `HeirInputSchema` uses `is_alive` (not `is_deceased`)
+- [ ] All input schemas use `.strict()` — output schemas do NOT
+- [ ] All `Option<T>` fields use `z.nullable()` — never `z.optional()`
+- [ ] TypeScript `EffectiveGroup` type lists 5 full names (not `"G1"` etc.)
 
 ---
 
