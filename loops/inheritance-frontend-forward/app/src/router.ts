@@ -5,6 +5,8 @@ import { authRoute } from './routes/auth';
 import { casesNewRoute } from './routes/cases/new';
 import { caseIdRoute } from './routes/cases/$caseId';
 import { clientsRoute } from './routes/clients/index';
+import { newClientRoute } from './routes/clients/new';
+import { clientDetailRoute } from './routes/clients/$clientId';
 import { deadlinesRoute } from './routes/deadlines';
 import { settingsRoute } from './routes/settings/index';
 import { shareTokenRoute } from './routes/share/$token';
@@ -15,6 +17,8 @@ const routeTree = rootRoute.addChildren([
   casesNewRoute,
   caseIdRoute,
   clientsRoute,
+  newClientRoute,
+  clientDetailRoute,
   deadlinesRoute,
   settingsRoute,
   shareTokenRoute,
