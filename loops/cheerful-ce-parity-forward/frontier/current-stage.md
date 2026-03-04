@@ -19,3 +19,4 @@ Create backend service routes and CE tools for campaign CRUD operations and laun
 - 2026-03-04: Stage 1 complete (49 tests passing). Advancing to Stage 2.
 - 2026-03-04: Stage 2 scaffold complete — campaign_fixtures.py + test_campaigns.py stubs created.
 - 2026-03-04: Backend routes batch 1 — get_campaign, delete_campaign, duplicate_campaign. Also refactored _verify_campaign_access to use team access checks and added _build_campaign_response helper.
+- 2026-03-04: Backend routes batch 2 — create_campaign, update_campaign. Full CRUD now complete. Launch route still needed.
