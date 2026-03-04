@@ -17,7 +17,9 @@ Create backend service routes and CE tools for Google Sheets, Shopify, Instantly
 | 99 | `cheerful_find_youtube_lookalikes` | `POST /api/service/integrations/youtube/lookalikes` |
 | 100 | `cheerful_lookup_brand` | `GET /api/service/integrations/brand` |
 
-**Priority**: SCAFFOLD — Need to create test fixtures for Stage 12 external integrations.
+**Priority**: WRITE TESTS — Backend routes complete for all 10 Stage 12 tools. Next: write tests + stubs.
 
 ## Work Log
 - 2026-03-04: Stage 11 complete (485 total tests passing, 78 cheerful tools registered). Advancing to Stage 12.
+- 2026-03-04: Scaffold complete — created external_integrations_fixtures.py with mock responses for all 10 Stage 12 tools.
+- 2026-03-04: Backend routes complete — all 10 service routes created (#91-100): Google Sheets tabs, Shopify products + orders, Instantly status/connect/disconnect/test, Slack digest, YouTube lookalikes, Brand lookup.
