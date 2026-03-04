@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 30
-- Analyzed: 24
-- Pending: 6
-- Convergence: 80%
+- Analyzed: 25
+- Pending: 5
+- Convergence: 83%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -46,7 +46,7 @@ Depends on Wave 3 data model and Wave 4 bridge contract.
 - [x] zod-schemas — Strict Zod schemas: z.strict(), z.boolean() not coerce, z.nullable() not optional, matching serde wire format
 - [x] wizard-steps — 6-step wizard structure: fields per step, conditional visibility rules, validation per step
 - [x] results-view — Results display architecture: header, distribution table/chart, narrative panel, warnings, computation log, actions
-- [ ] shared-components — Reusable form widgets: MoneyInput, DateInput, FractionInput, PersonPicker, EnumSelect
+- [x] shared-components — Reusable form widgets: MoneyInput, DateInput, FractionInput, PersonPicker, EnumSelect
 - [ ] design-system — Fresh palette (not Navy+Gold), typography pairing, shadcn/ui component library, spacing, visual direction
 
 ### Wave 6: Synthesis
