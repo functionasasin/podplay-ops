@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 30
-- Analyzed: 14
-- Pending: 16
-- Convergence: 47%
+- Analyzed: 15
+- Pending: 15
+- Convergence: 50%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -30,7 +30,7 @@ Depends on Wave 2 rule extraction.
 - [x] rust-types — Define all Rust structs and enums with exact field names, types, serde attributes
 - [x] pipeline-design — 10-step pipeline with input/output types per step, restart conditions, max-restart guard
 - [x] algorithms — Pseudocode for all non-trivial computations (cap rule, Art. 911 reduction, collateral distribution, Hare-Niemeyer rounding)
-- [ ] test-vectors — 20+ test vectors covering all 30 scenarios with expected peso amounts
+- [x] test-vectors — 20+ test vectors covering all 30 scenarios with expected peso amounts
 - [ ] invariants — 10 formal invariants that must hold for any valid input/output pair
 
 ### Wave 4: Bridge Contract
@@ -56,6 +56,7 @@ Depends on all previous waves.
 - [ ] spec-review — Self-review: can a developer build the entire product from this spec alone, without any type mismatches at integration time?
 
 ## Recently Analyzed
+- test-vectors (Wave 3) — 47 total test vectors (23 existing + 5 BUG-001 + 19 new); 100% scenario coverage of all 30 ScenarioCode variants; exact centavo values with Hare-Niemeyer rounding for irrational shares; 10 formal invariants (INV-1 sum guarantee, INV-2 E_adj total entitlement, INV-3 legitime floor, INV-4 Art.895 ratio, INV-5 cap invariant, INV-6 per stirpes, INV-7 adoption equivalence, INV-8 preterition totality, INV-9 disinheritance exclusion, INV-10 scenario consistency); I8/I9/I10 must use explicit fraction formulas not unit-ratio; Regime B (T8/T9) uses flat ¼ for IC with no cap rule; TV-N05 illustrates rounding bonus can go to half-blood heir when higher fractional remainder; TV-N19 specifies collation debt clamping + CollationDebt warning + MANUAL_REVIEW flag; JSON input/output shape documented
 - pipeline-design (Wave 3) — 10-step deterministic restartable pipeline; PipelineState struct with classified_heirs_base (immutable) + classified_heirs (working); StepResult::Continue|Restart|Error; RestartTrigger enum (ValidDisinheritance|PreteritionAnnulment|LegitimeVacancy); MAX_RESTARTS=10; clear_from_step(3) strips representation additions but keeps disinheritance exclusions; clear_from_step(4) keeps full post-rep heir set; step7 restarts to step3 (disinheritance/preterition), step10 restarts to step4 (Art.1021¶2 legitimate vacancy only); step1-2 never re-run on restart; rounding (Hare-Niemeyer) as final sub-step of step10; collation phase1 in step5 (E_adj), phase2 imputation in step9; 10-module src layout; ComputationLogEntry per step for audit trail
 - rust-types (Wave 3) — 49 distinct types across 14 modules; ComputationInput/DecedentInput/EstateInput/HeirInput/WillInput/DonationInput full structs with serde attributes; HeirType (9 variants), DisinheritanceGround (22 variants), ScenarioCode (30 variants) enums; Money type with custom centavos deserializer (number-or-string for BigInt); HeirInput.children for cascading representation; ClassifiedHeir intermediate type; LegitimeResult/LegitimeEntry; TestateValidationResult and all sub-types; CollationResult/ImputationResult/DonationReduction/PartitionAllocation; VacantShare/VacancyResolution/VacancyRedistribution; ValidationWarning (10 variants) + ManualReviewFlag (7 variants); ComputationOutput/HeirDistribution/RoundingAdjustment; ComputationError (5 variants); 10-module src layout; 8 key design decisions (BigRational internal, i64 I/O, PascalCase enums, flat ScenarioCode, children-over-representatives, engine-computed is_valid, "numer/denom" fractions, null-not-absent Options)
 - multiple-disinheritance-fix (Wave 2) — BUG-001 correct algorithm: 4-phase batch processing (validate→batch-exclude→batch-add-reps→single ScenarioCode recompute); Art. 777 simultaneous-at-death principle; cascading disinheritance handled by find_representatives_recursive(); spousal disinheritance has no Art. 923 representation cascade; conservative rule: all-G1-disinherited-with-no-reps does NOT activate G2 (MANUAL_REVIEW flag); mixed valid/invalid partitioned before any mutation; idempotency guard for pipeline restarts; ExclusionReason/DisinheritanceResult/RepresentationChain Rust types; 8 INV-MD invariants; 5 test vectors (TV-MD-01 to TV-MD-05); 4 narrative templates; pipeline integration showing single restart path
