@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 30
-- Analyzed: 25
-- Pending: 5
-- Convergence: 83%
+- Analyzed: 26
+- Pending: 4
+- Convergence: 87%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -47,7 +47,7 @@ Depends on Wave 3 data model and Wave 4 bridge contract.
 - [x] wizard-steps — 6-step wizard structure: fields per step, conditional visibility rules, validation per step
 - [x] results-view — Results display architecture: header, distribution table/chart, narrative panel, warnings, computation log, actions
 - [x] shared-components — Reusable form widgets: MoneyInput, DateInput, FractionInput, PersonPicker, EnumSelect
-- [ ] design-system — Fresh palette (not Navy+Gold), typography pairing, shadcn/ui component library, spacing, visual direction
+- [x] design-system — Fresh palette (not Navy+Gold), typography pairing, shadcn/ui component library, spacing, visual direction
 
 ### Wave 6: Synthesis
 Depends on all previous waves.
