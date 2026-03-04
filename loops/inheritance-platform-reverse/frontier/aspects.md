@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 25
-- Analyzed: 11
-- Pending: 14
-- Convergence: 44%
+- Analyzed: 12
+- Pending: 13
+- Convergence: 48%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -29,7 +29,7 @@ Depends on Wave 1 catalogs being complete.
 
 - [x] journey-new-visitor — Walk: user visits `/` for the first time with no account. What do they see? Can they understand the product? Can they find sign-up?
 - [x] journey-signup-signin — Walk: user clicks sign up → fills form → gets confirmation email → confirms → signs in → lands where? Document every step and gap.
-- [ ] journey-first-case — Walk: authenticated user creates first case → fills wizard → computes → sees results. Is the flow discoverable? Are there dead ends?
+- [x] journey-first-case — Walk: authenticated user creates first case → fills wizard → computes → sees results. Is the flow discoverable? Are there dead ends?
 - [ ] journey-share-case — Walk: user shares a case via link → recipient opens link. Does the share flow work? What does the recipient see?
 - [ ] journey-return-visit — Walk: user returns days later → dashboard → case list → opens existing case → edits → recomputes. Is the dashboard useful?
 - [ ] journey-settings-team — Walk: user goes to settings → updates firm profile → invites team member → member accepts. Does the full org flow work?
@@ -56,6 +56,7 @@ Depends on all previous waves. **Strict internal dependency order.**
 
 | Aspect | Wave | Date | Key Findings |
 |--------|------|------|--------------|
+| journey-first-case | 2 | 2026-03-04 | BROKEN overall; 19 gaps found; CRITICAL: WizardContainer never saves to DB (JFC-002), GuidedIntakeForm orphaned — no route uses it (JFC-010), no Save/Share/PDF in ActionsBar (JFC-009/JFC-011/JFC-013), no /cases list route (JFC-017), Dashboard shows no case list (JFC-018); ResultsView missing caseId prop chain; dual Submit buttons on Review step; fix: swap /cases/new to use GuidedIntakeForm + redirect to /cases/$caseId on complete |
 | journey-signup-signin | 2 | 2026-03-04 | BROKEN overall; 14 gaps found; CRITICAL: no /auth/callback route (JSS-008) — PKCE email confirmation code discarded, session never established; useAuth.signUp() discards return value (JSS-004); auto-confirm shows wrong message (JSS-005); no org creation (JSS-014); HIGH: no resend button in confirmation card (JSS-006), always redirects to / after sign-in (JSS-012); fix specs provided for all critical/high gaps |
 | journey-new-visitor | 2 | 2026-03-04 | BROKEN overall; 19 gaps found; CRITICAL: white-screen if env vars missing (JNV-001), AppLayout wraps /auth page (JNV-006), no org creation after sign-up (JNV-011/018), sign-up shows "Check email" but user is auto-confirmed (JNV-012); HIGH: "Create Account" opens signin mode (JNV-005), no Sign Out in nav (JNV-003), no Forgot Password (JNV-007); fix specs provided for all critical/high gaps |
 | reference-modern-saas | 1 | 2026-03-04 | 20 adoptable patterns cataloged from Linear/Vercel/Cal.com; critical: add sonner toast (no library currently), skeleton shimmer CSS, auth-aware sidebar, gold active accent bar, collapsible nav, empty states, shadow+animation tokens missing from index.css; mobile: drawer nav + stacked card tables below lg breakpoint |
