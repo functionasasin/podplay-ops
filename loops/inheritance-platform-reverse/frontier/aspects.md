@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 25
-- Analyzed: 8
-- Pending: 17
-- Convergence: 32%
+- Analyzed: 9
+- Pending: 16
+- Convergence: 36%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -22,7 +22,7 @@ Gather and catalog all source material.
 
 ### Wave 1: Additional Verification (discovered during read-premium-spec)
 
-- [ ] verify-migration-columns — Confirm migrations 003, 004, 008, 009 status; verify cases table has comparison_*, tax_*, intake_data columns; confirm get_shared_case() RPC and firm-logos storage bucket exist
+- [x] verify-migration-columns — Confirm migrations 003, 004, 008, 009 status; verify cases table has comparison_*, tax_*, intake_data columns; confirm get_shared_case() RPC and firm-logos storage bucket exist
 
 ### Wave 2: User Journey Audit
 Depends on Wave 1 catalogs being complete.
