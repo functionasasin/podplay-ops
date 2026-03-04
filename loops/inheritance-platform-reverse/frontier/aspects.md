@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 25
-- Analyzed: 19
-- Pending: 6
-- Convergence: 76%
+- Analyzed: 20
+- Pending: 5
+- Convergence: 80%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -41,7 +41,7 @@ Depends on Wave 1 catalogs and Wave 2 journey findings.
 - [x] design-wizard-components — Audit all wizard step components: card patterns, form styling, step indicators, validation display. Propose modernization.
 - [x] design-results-components — Audit results view, computation log, warnings panel, narrative panel, actions bar. Propose modernization.
 - [x] design-shared-components — Audit shared form components (MoneyInput, DateInput, PersonPicker, etc.): consistency, focus states, error display. Propose modernization.
-- [ ] design-mobile-responsive — Audit every page at mobile breakpoints: does the layout work? Touch targets adequate? Scroll behavior correct? Tables overflow? Propose fixes.
+- [x] design-mobile-responsive — Audit every page at mobile breakpoints: does the layout work? Touch targets adequate? Scroll behavior correct? Tables overflow? Propose fixes.
 - [ ] design-loading-empty-states — Catalog every loading state and empty state in the app. Which are missing? Propose skeleton/spinner patterns and empty state illustrations+CTAs.
 
 ### Wave 4: Synthesis
