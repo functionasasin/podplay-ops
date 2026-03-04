@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 30
-- Analyzed: 26
-- Pending: 4
-- Convergence: 87%
+- Analyzed: 27
+- Pending: 3
+- Convergence: 90%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -51,7 +51,7 @@ Depends on Wave 3 data model and Wave 4 bridge contract.
 
 ### Wave 6: Synthesis
 Depends on all previous waves.
-- [ ] spec-draft — Assemble all findings into docs/plans/inheritance-v2-spec.md (21 sections + 2 appendices)
+- [x] spec-draft — Assemble all findings into docs/plans/inheritance-v2-spec.md (21 sections + 2 appendices)
 - [ ] cross-layer-consistency — Verify field names, types, enums, nullability match across Rust ↔ JSON ↔ TypeScript ↔ Zod
 - [ ] spec-review — Self-review: can a developer build the entire product from this spec alone, without any type mismatches at integration time?
 
