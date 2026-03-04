@@ -17,7 +17,8 @@ Create backend service routes and CE tools for campaign signatures, merge tags, 
 | 36 | `cheerful_get_campaign_enrichment_status` | `GET /api/service/campaigns/{id}/enrichment-status` |
 | 37 | `cheerful_override_creator_email` | `POST /api/service/campaigns/{id}/creators/{creator_id}/override-email` |
 
-**Priority**: SCAFFOLD — need to create test fixture file for campaign extras domain.
+**Priority**: BACKEND ROUTES — batch 2 (products, enrichment status, override email).
 
 ## Work Log
 - 2026-03-04: Stage 3 complete (140 total tests passing, 7 tools implemented). Advancing to Stage 4.
+- 2026-03-04: Backend routes batch 1 — signature, list signatures, merge tags, required columns, generate summary.
