@@ -6,8 +6,8 @@ Dev order: 0 → 1 → 2 → 3-4 (parallel-ok) → 5 → 6-7 (parallel-ok) → 8
 |-------|-----------------------------------|-------|--------------------------|-------------------------------------------------------|------------|---------|
 | 0     | Shared Infrastructure             | —     | —                        | conftest                                              | —          | complete |
 | 1     | Security + Bug Fixes              | 7 fix | all specs                | existing\|security                                    | 0          | complete |
-| 2     | Campaign CRUD + Launch            | 6     | campaigns.md             | campaign-crud\|launch                                 | 1          | active |
-| 3     | Campaign Recipients + Outbox      | 7     | campaigns.md             | recipients\|outbox\|sender                            | 2          | pending |
+| 2     | Campaign CRUD + Launch            | 6     | campaigns.md             | campaign-crud\|launch                                 | 1          | complete |
+| 3     | Campaign Recipients + Outbox      | 7     | campaigns.md             | recipients\|outbox\|sender                            | 2          | active |
 | 4     | Campaign Extras                   | 10    | campaigns.md             | signature\|merge-tag\|product\|enrichment\|summary    | 2          | pending |
 | 5     | Email Threads & Ops               | 4     | email.md                 | list-threads\|hide\|unhide\|attachment                | 1          | pending |
 | 6     | Email Drafts & Sending            | 8     | email.md                 | draft\|send-email\|schedule                           | 5          | pending |
