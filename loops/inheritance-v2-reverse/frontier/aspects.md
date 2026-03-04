@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 30
-- Analyzed: 21
-- Pending: 9
-- Convergence: 70%
+- Analyzed: 22
+- Pending: 8
+- Convergence: 73%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -43,7 +43,7 @@ Depends on Wave 3 data model.
 ### Wave 5: Frontend Data Model + UI Design
 Depends on Wave 3 data model and Wave 4 bridge contract.
 - [x] typescript-types — Map every Rust struct/enum to TypeScript interface/union (exact field names matching serde)
-- [ ] zod-schemas — Strict Zod schemas: z.strict(), z.boolean() not coerce, z.nullable() not optional, matching serde wire format
+- [x] zod-schemas — Strict Zod schemas: z.strict(), z.boolean() not coerce, z.nullable() not optional, matching serde wire format
 - [ ] wizard-steps — 6-step wizard structure: fields per step, conditional visibility rules, validation per step
 - [ ] results-view — Results display architecture: header, distribution table/chart, narrative panel, warnings, computation log, actions
 - [ ] shared-components — Reusable form widgets: MoneyInput, DateInput, FractionInput, PersonPicker, EnumSelect
@@ -56,6 +56,7 @@ Depends on all previous waves.
 - [ ] spec-review — Self-review: can a developer build the entire product from this spec alone, without any type mismatches at integration time?
 
 ## Recently Analyzed
+- zod-schemas (Wave 5b) — strict Zod v3 schemas: .strict() on all input (mirrors deny_unknown_fields), no .strict() on output (forward-compatible); z.boolean()/z.number() not coerce; z.nullable() not optional for all Option<T>; InputMoneySchema: z.union([z.number().int(), z.string()]); FractionStringSchema regex; DateStringSchema regex; 4 enum schemas + 30-variant ScenarioCode + 22-variant DisinheritanceGround; z.lazy() for recursive HeirInput.children; 4 z.discriminatedUnion schemas (PreteritionEffect, ValidationWarning, ManualReviewFlag, ComputationError); all input struct schemas with .strict(); all output struct schemas; ComputeResultSchema; z.infer<> type aliases; usage patterns + default factories; 12-row UX error message table; 5 cross-layer discrepancy notes (EffectiveGroup shorthand vs PascalCase full names; ExclusionReason/RepresentationTrigger/VacancyCause/ResolutionMethod variant name mismatches vs serde-wire-format); 7-file schemas/ layout
 - typescript-types (Wave 5a) — full TypeScript type system: HeirType (9 variants), DisinheritanceGround (22 Art919_1..Art921_6 codes), all 30 ScenarioCode variants (T5 not T5a/T5b), EffectiveGroup (PascalCase full names, not "G1"-"G4"), ExclusionReason (rust-types granular variants), RepresentationTrigger/VacancyCause/ResolutionMethod/ShareSource enums; InputMoney vs OutputMoney types; ComputeResult discriminated union; tagged union types for PreteritionEffect/ValidationWarning/ManualReviewFlag/ComputationError; all input interfaces (ComputationInput, DecedentInput merged from both analysis files, EstateInput with Money wrapper, HeirInput with full field set, DisinheritanceRecord, WillInput, InstitutionInput, DeviseInput, LegacyInput, SubstitutionInput, DonationInput); all output interfaces (ComputationOutput, HeirDistribution, RepresentationChain, LegitimeResult, LegitimeEntry, TestateValidationResult, CollationResult, VacancyResolution, RoundingAdjustment, ComputationLogEntry); type guards and utility functions; 9-item cross-file discrepancy log flagging rust-types vs serde-wire-format conflicts for cross-layer-consistency resolution
 - wasm-initialization (Wave 4) — dual-path init: `initSync({ module: wasmBytes })` for Node.js/vitest (fs.readFileSync + fileURLToPath-relative path), `await initAsync()` for browser; environment detection via `typeof process !== "undefined" && process.versions?.node`; promise-based singleton guard (upgrade from boolean guard) prevents race conditions with concurrent callers; vite.config.ts requires `vite-plugin-wasm` + `vite-plugin-top-level-await`; vitest.config.ts intentionally omits wasm plugin (Node.js file path handles WASM loading); dynamic imports for `node:fs`/`node:path`/`node:url` prevent Vite bundling Node built-ins; `.wasm` path resolved relative to `import.meta.url` not `process.cwd()`; `initSync` new-style API `{ module: BufferSource }` not deprecated single-arg form; exported `ensureWasmInitialized` for optional app pre-warming; `useWasmCompute` hook pattern; `fatal_error` state distinct from `engine_error` for init failures
 - invariants (Wave 3) — 10 global formal invariants (INV-1 sum conservation, INV-2 E_adj entitlement, INV-3 legitime floor, INV-4 Art.895 per-IC ratio, INV-5 aggregate IC cap, INV-6 per stirpes slot conservation, INV-7 adoption equivalence, INV-8 preterition totality, INV-9 disinheritance exclusion, INV-10 scenario consistency); 5 pipeline invariants (PINV-1 termination, PINV-2 monotonic exclusion, PINV-3 step ordering, PINV-4 idempotent base classification, PINV-5 log append-only); Rust assertion patterns for each invariant; invariant applicability matrix (which apply to intestate/testate/mixed/BUG-001); violation response protocol (panic for INV-1/3/6, MaxRestartsExceeded for PINV-1); 5 edge cases (all-excluded→escheat, zero estate, single heir, collation>estate, restart chain); cross-references to sub-domain invariants in multiple-disinheritance-fix, vacancy-resolution, intestate-distribution analysis files
