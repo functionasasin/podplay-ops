@@ -7,6 +7,7 @@ import type { InheritanceShare, SuccessionType, ScenarioCode, Person } from '../
 import { formatPeso } from '../../types';
 import { getResultsLayout, CATEGORY_BADGE_STYLE } from './utils';
 import type { ResultsLayout } from './utils';
+import { getRepresentedName } from './representation';
 import { Badge } from '../ui/badge';
 import { Alert, AlertTitle, AlertDescription } from '../ui/alert';
 import {
@@ -101,9 +102,17 @@ function HeirTable({ shares, showDonations, showRepresentation, persons, layout 
             const person = persons?.find((p) => p.id === share.heir_id);
             const bloodType = person?.blood_type ?? null;
             const units = bloodType === 'Full' ? 2 : bloodType === 'Half' ? 1 : null;
+            const representedName = getRepresentedName(share, persons ?? []);
             return (
               <TableRow key={share.heir_id}>
-                <TableCell className="font-medium">{share.heir_name}</TableCell>
+                <TableCell className="font-medium">
+                  {share.heir_name}
+                  {representedName && (
+                    <span className="block text-sm text-muted-foreground">
+                      ↳ {representedName}
+                    </span>
+                  )}
+                </TableCell>
                 <TableCell><CategoryBadge category={share.heir_category} /></TableCell>
                 {isCollateral && <TableCell>{bloodType ?? '—'}</TableCell>}
                 {isCollateral && <TableCell>{units ?? '—'}</TableCell>}

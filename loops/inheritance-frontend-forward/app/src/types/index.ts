@@ -440,7 +440,7 @@ export interface ManualFlag {
 }
 
 // ============================================================================
-// Display Constants (stubs)
+// Display Constants
 // ============================================================================
 
 export const EFFECTIVE_CATEGORY_LABELS: Record<EffectiveCategory, string> = {
@@ -468,7 +468,7 @@ export const WARNING_SEVERITY: Record<string, "error" | "warning" | "info"> = {
 };
 
 // ============================================================================
-// Utility Functions (stubs — implementation in next iteration)
+// Utility Functions
 // ============================================================================
 
 export function pesosToCentavos(pesos: number): number {
@@ -508,3 +508,252 @@ export function stringToFrac(s: string): { numer: number; denom: number } {
   const [n, d] = s.split("/").map(Number);
   return { numer: n, denom: d };
 }
+
+// ============================================================================
+// Premium Platform Types (§4.2)
+// ============================================================================
+
+export type CaseStatus = 'draft' | 'computed' | 'finalized' | 'archived';
+
+export interface CaseRow {
+  id: string;
+  org_id: string;
+  user_id: string;
+  client_id: string | null;
+  title: string;
+  status: CaseStatus;
+  input_json: EngineInput | null;
+  output_json: EngineOutput | null;
+  tax_input_json: object | null;
+  tax_output_json: object | null;
+  comparison_input_json: EngineInput | null;
+  comparison_output_json: EngineOutput | null;
+  comparison_ran_at: string | null;
+  decedent_name: string | null;
+  date_of_death: string | null;
+  gross_estate: number | null;
+  share_token: string;
+  share_enabled: boolean;
+  notes_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CaseListItem {
+  id: string;
+  title: string;
+  status: CaseStatus;
+  decedent_name: string | null;
+  date_of_death: string | null;
+  gross_estate: number | null;
+  updated_at: string;
+  notes_count: number;
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  full_name: string | null;
+  firm_name: string | null;
+  firm_address: string | null;
+  firm_phone: string | null;
+  firm_email: string | null;
+  counsel_name: string | null;
+  ibp_roll_no: string | null;
+  ptr_no: string | null;
+  mcle_compliance_no: string | null;
+  logo_url: string | null;
+  letterhead_color: string;
+  secondary_color: string;
+}
+
+export type AutoSaveStatus = 'idle' | 'saving' | 'saved' | 'error';
+
+export interface CaseNote {
+  id: string;
+  case_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+}
+
+/** Valid case status transitions */
+export const VALID_STATUS_TRANSITIONS: Record<CaseStatus, CaseStatus[]> = {
+  draft: ['computed'],
+  computed: ['finalized'],
+  finalized: ['archived'],
+  archived: ['finalized'], // admin only
+};
+
+// ============================================================================
+// Deadline Types (§4.20)
+// ============================================================================
+
+export type DeadlineStatus = 'done' | 'overdue' | 'urgent' | 'upcoming' | 'future';
+
+export interface CaseDeadline {
+  id: string;
+  case_id: string;
+  user_id: string;
+  milestone_key: string;
+  label: string;
+  description: string;
+  due_date: string;
+  completed_date: string | null;
+  legal_basis: string;
+  is_auto: boolean;
+  note: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export const DEADLINE_STATUS_COLORS: Record<DeadlineStatus, string> = {
+  done: 'green',
+  overdue: 'red',
+  urgent: 'amber',
+  upcoming: 'yellow',
+  future: 'slate',
+};
+
+// ============================================================================
+// Document Checklist Types (§4.22)
+// ============================================================================
+
+export interface CaseDocument {
+  id: string;
+  case_id: string;
+  user_id: string;
+  document_key: string;
+  label: string;
+  category: string;
+  description: string;
+  required_when: string;
+  is_obtained: boolean;
+  is_not_applicable: boolean;
+  obtained_date: string | null;
+  note: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DocumentTemplate {
+  document_key: string;
+  label: string;
+  category: string;
+  description: string;
+  required_when: string;
+}
+
+export interface DocumentSeedingContext {
+  is_married: boolean;
+  has_real_property: boolean;
+  has_bank_account: boolean;
+  has_business_interest: boolean;
+  has_overseas_heir: boolean;
+  settlement_track: 'ejs' | 'judicial';
+}
+
+export interface DocumentProgress {
+  obtained: number;
+  total: number;
+  percentage: number;
+}
+
+// ============================================================================
+// Organization / Multi-Seat Types (§4.11)
+// ============================================================================
+
+export type OrgPlan = 'solo' | 'team' | 'firm';
+export type OrgRole = 'admin' | 'attorney' | 'paralegal' | 'readonly';
+export type InvitationStatus = 'pending' | 'accepted' | 'expired' | 'revoked';
+
+export interface Organization {
+  id: string;
+  name: string;
+  slug: string;
+  plan: OrgPlan;
+  seat_limit: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OrganizationMember {
+  id: string;
+  org_id: string;
+  user_id: string;
+  role: OrgRole;
+  joined_at: string;
+}
+
+export interface OrganizationInvitation {
+  id: string;
+  org_id: string;
+  email: string;
+  role: OrgRole;
+  token: string;
+  status: InvitationStatus;
+  invited_by: string;
+  expires_at: string;
+  accepted_at: string | null;
+  created_at: string;
+}
+
+/** Permission matrix per role (§4.11) */
+export const ROLE_PERMISSIONS: Record<OrgRole, {
+  canCreateCase: boolean;
+  canEditCase: boolean;
+  canFinalizeCase: boolean;
+  canDeleteCase: boolean;
+  canManageClients: boolean;
+  canInviteMembers: boolean;
+  canRemoveMembers: boolean;
+  canManageBilling: boolean;
+}> = {
+  admin: {
+    canCreateCase: true,
+    canEditCase: true,
+    canFinalizeCase: true,
+    canDeleteCase: true,
+    canManageClients: true,
+    canInviteMembers: true,
+    canRemoveMembers: true,
+    canManageBilling: true,
+  },
+  attorney: {
+    canCreateCase: true,
+    canEditCase: true,
+    canFinalizeCase: true,
+    canDeleteCase: false,
+    canManageClients: true,
+    canInviteMembers: false,
+    canRemoveMembers: false,
+    canManageBilling: false,
+  },
+  paralegal: {
+    canCreateCase: true,
+    canEditCase: true,
+    canFinalizeCase: false,
+    canDeleteCase: false,
+    canManageClients: true,
+    canInviteMembers: false,
+    canRemoveMembers: false,
+    canManageBilling: false,
+  },
+  readonly: {
+    canCreateCase: false,
+    canEditCase: false,
+    canFinalizeCase: false,
+    canDeleteCase: false,
+    canManageClients: false,
+    canInviteMembers: false,
+    canRemoveMembers: false,
+    canManageBilling: false,
+  },
+};
+
+/** Seat limits per plan */
+export const PLAN_SEAT_LIMITS: Record<OrgPlan, number> = {
+  solo: 1,
+  team: 5,
+  firm: Infinity,
+};

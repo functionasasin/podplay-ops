@@ -1,0 +1,3 @@
+Stage 23 (Estate Tax Inputs Wizard) completed 2026-03-03T09:06:12Z
+Tests: 125/125 passing
+Files: types, schemas, wizard component, 8 tabs (Decedent, Executor, RealProperties, PersonalProperties, OtherAssets, OrdinaryDeductions, SpecialDeductions, FilingAmnesty)

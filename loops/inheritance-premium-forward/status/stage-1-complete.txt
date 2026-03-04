@@ -1,0 +1,10 @@
+Stage 1 — Supabase + Deps Setup: COMPLETE
+Completed: 2026-03-02T20:33:00+08:00
+
+Summary:
+- npx supabase init (config.toml, .gitignore)
+- 001_initial_schema.sql: 9 tables, 6 enum types, RLS policies, triggers, indexes
+- @supabase/supabase-js@2 installed
+- src/lib/supabase.ts: client with env var validation
+- .env.local.example: placeholder values
+- 7/7 tests passing (supabase.test.ts)

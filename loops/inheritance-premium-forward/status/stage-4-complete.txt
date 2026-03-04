@@ -1,0 +1,7 @@
+Stage 4 (Decedent Header) completed at 2026-03-02T13:19:43Z
+
+Tests: 32/32 passing (26 pre-existing + 6 decedent header)
+- ResultsHeader renders "Estate of {name}" as h1
+- ResultsHeader renders "Date of Death: {formatted}" sub-line
+- formatDateOfDeath uses string splitting (no new Date()) for timezone safety
+- Falls back gracefully when decedent name is empty

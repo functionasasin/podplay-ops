@@ -1,0 +1,3 @@
+-- Stage 21: Document Checklist (§4.22)
+-- case_documents table already created in 001_initial_schema.sql
+-- This migration is now a no-op (kept for migration history consistency).

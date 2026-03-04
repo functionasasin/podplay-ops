@@ -1,0 +1,20 @@
+Stage 11 (PDF Export) completed 2026-03-02T23:32:00+08:00
+70/70 tests passing (53 component tests + 17 utility tests)
+
+Components:
+- EstatePDF (main Document): A4 portrait, proper margins, 8 sections
+- FirmHeaderSection: logo, firm name, address, counsel credentials
+- CaseSummarySection: decedent name, DOD, succession type, net estate
+- DistributionTableSection: heir rows with names, relationships, shares
+- PerHeirBreakdownSection: per-heir detail with statute citations
+- NarrativesSection: legal narratives
+- ComputationLogSection: step-by-step computation log
+- WarningsSection: engine warnings display
+- DisclaimerSection: legal disclaimer
+
+Utilities:
+- generatePDF: lazy-loads @react-pdf/renderer, returns Blob
+- downloadPDF: generates + triggers browser download
+- slugifyName: name-to-filename slug
+- buildPDFFilename: estate-{slug}-{date}.pdf pattern
+- DEFAULT_PDF_OPTIONS: all sections enabled by default

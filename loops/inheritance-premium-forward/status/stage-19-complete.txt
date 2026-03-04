@@ -1,0 +1,28 @@
+Stage 19 — Guided Intake Form: COMPLETE
+Completed: 2026-03-03T08:09:30Z
+
+Tests: 92 intake tests passing
+- GuidedIntakeForm container, step navigation, progress indicator
+- All 7 step components render correctly
+- INTAKE_STEPS constants (7 steps, correct order)
+- CLIENT_RELATIONSHIPS (6 options), PROPERTY_REGIMES (3 options)
+- ConflictCheckStep gates progress
+- createInitialIntakeState returns correct defaults
+- mapDecedentInfoToDecedent: name, DOD, civil status, ID generation
+- mapHeirEntryToPerson: name, relationship, alive status, defaults
+- mapFamilyToFamilyTree: builds correct tree structure
+- mapIntakeToEngineInput: full intake → EngineInput mapping
+- Settlement track generates correct milestones (9 EJS, 4 Probate)
+- mapIntakeToClientRow, mapIntakeToDeadlineRows
+
+Files implemented:
+- src/components/intake/GuidedIntakeForm.tsx
+- src/components/intake/ConflictCheckStep.tsx
+- src/components/intake/ClientDetailsStep.tsx
+- src/components/intake/DecedentInfoStep.tsx
+- src/components/intake/FamilyCompositionStep.tsx
+- src/components/intake/AssetSummaryStep.tsx
+- src/components/intake/SettlementTrackStep.tsx
+- src/components/intake/IntakeReviewStep.tsx
+- src/lib/intake.ts (mapping functions)
+- supabase/migrations/009_cases_intake_data.sql

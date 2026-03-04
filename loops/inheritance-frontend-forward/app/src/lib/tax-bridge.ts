@@ -2,94 +2,105 @@
  * Tax Bridge — BIR Form 1801 Integration (spec §4.9)
  *
  * Bridge formula: net_distributable_estate = max(0, item40_gross_estate - item44_total_deductions)
- * Re-runs the inheritance engine with the bridged value.
+ * Re-runs inheritance engine with bridged value when tax output changes.
  */
 import type { EngineInput, EngineOutput } from '@/types';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
-export interface EstateTaxOutput {
-  item40_gross_estate: number;
-  item44_total_deductions: number;
-  tax_due: number;
-  surcharges: number;
-  schedules: Record<string, number>;
+/** Minimal estate tax engine output used by the bridge formula. */
+export interface EstateTaxEngineOutput {
+  item40_gross_estate: number; // centavos
+  item44_total_deductions: number; // centavos
+  tax_due: number; // centavos
+  surcharges: number; // centavos
+  interest: number; // centavos
+  compromise_penalty: number; // centavos
+  total_amount_due: number; // centavos
+  schedules: EstateTaxScheduleSummary;
 }
+
+export interface EstateTaxScheduleSummary {
+  schedule1_real_properties: number; // centavos
+  schedule2_personal_properties: number; // centavos
+  schedule3_taxable_transfers: number; // centavos
+  schedule4_claims_deductions: number; // centavos
+  schedule5_other_deductions: number; // centavos
+  schedule6_net_share_spouse: number; // centavos
+}
+
+export type TaxBridgeState = 'idle' | 'computing' | 'ready' | 'error';
 
 export interface TaxBridgeResult {
-  net_distributable_estate: number;
-  bridged_input: EngineInput;
-  bridged_output: EngineOutput | null;
+  netDistributableEstate: number; // centavos
+  bridgedInput: EngineInput;
+  bridgedOutput: EngineOutput;
 }
 
-// ── Bridge Formula ──────────────────────────────────────────────────────────
+// ── Core functions ──────────────────────────────────────────────────────────
 
 /**
- * Compute net distributable estate from estate tax output.
- * Formula: max(0, item40_gross_estate - item44_total_deductions)
+ * Bridge formula: max(0, gross_estate - total_deductions).
+ * Returns net distributable estate in centavos.
  */
 export function computeNetDistributableEstate(
-  item40_gross_estate: number,
-  item44_total_deductions: number,
+  item40GrossEstate: number,
+  item44TotalDeductions: number,
 ): number {
-  return Math.max(0, item40_gross_estate - item44_total_deductions);
+  return Math.max(0, item40GrossEstate - item44TotalDeductions);
 }
 
 /**
- * Build bridged EngineInput by replacing net_distributable_estate
- * with the value derived from estate tax computation.
+ * Build a bridged EngineInput with updated net_distributable_estate from tax output.
  */
 export function buildBridgedInput(
   inheritanceInput: EngineInput,
-  taxOutput: EstateTaxOutput,
+  netDistributableEstateCentavos: number,
 ): EngineInput {
-  const net = computeNetDistributableEstate(
-    taxOutput.item40_gross_estate,
-    taxOutput.item44_total_deductions,
-  );
   return {
     ...inheritanceInput,
-    net_distributable_estate: { centavos: net },
+    net_distributable_estate: { centavos: netDistributableEstateCentavos },
   };
 }
 
 /**
- * Run the full tax bridge: compute bridged input and re-run inheritance engine.
+ * Full bridge: extract net estate from tax output, build bridged input, run engine.
  */
 export async function runTaxBridge(
   inheritanceInput: EngineInput,
-  taxOutput: EstateTaxOutput,
-): Promise<TaxBridgeResult> {
+  taxOutput: EstateTaxEngineOutput,
+): Promise<{ bridgedInput: EngineInput; bridgedOutput: EngineOutput }> {
   const { compute } = await import('@/wasm/bridge');
-  const bridgedInput = buildBridgedInput(inheritanceInput, taxOutput);
-  const net = computeNetDistributableEstate(
+  const netEstate = computeNetDistributableEstate(
     taxOutput.item40_gross_estate,
     taxOutput.item44_total_deductions,
   );
+  const bridgedInput = buildBridgedInput(inheritanceInput, netEstate);
   const bridgedOutput = await compute(bridgedInput);
-  return {
-    net_distributable_estate: net,
-    bridged_input: bridgedInput,
-    bridged_output: bridgedOutput,
-  };
+  return { bridgedInput, bridgedOutput };
 }
 
 /**
- * Persist tax bridge results to the case row.
+ * Persist tax output to the case row.
  */
-export async function saveTaxBridgeResults(
+export async function saveTaxOutput(
   caseId: string,
-  taxOutput: EstateTaxOutput,
-  bridgedOutput: EngineOutput,
+  taxOutput: EstateTaxEngineOutput,
 ): Promise<void> {
   const { supabase } = await import('./supabase');
   const { error } = await supabase
     .from('cases')
-    .update({
-      tax_output_json: taxOutput,
-      output_json: bridgedOutput,
-    })
+    .update({ tax_output_json: taxOutput })
     .eq('id', caseId);
 
   if (error) throw error;
+}
+
+/**
+ * Build the bridge note text for PDF.
+ */
+export function buildBridgeNoteText(netDistributableEstateCentavos: number): string {
+  const pesos = netDistributableEstateCentavos / 100;
+  const formatted = pesos.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return `Estate tax net distributable estate of ₱${formatted} has been applied to the inheritance computation.`;
 }
