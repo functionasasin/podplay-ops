@@ -19,7 +19,8 @@ Create backend service routes and CE tools for user settings, teams, team member
 | 111 | `cheerful_unassign_campaign` | `DELETE /api/service/teams/{id}/assignments/{assignment_id}` |
 | 113 | `cheerful_get_onboarding_status` | `GET /api/service/user/onboarding` |
 
-**Priority**: SCAFFOLD — Create test fixture file for users & team domain.
+**Priority**: BACKEND ROUTES — Create service routes for users & team tools.
 
 ## Work Log
 - 2026-03-04: Stage 12 complete (66 tests passing, all 10 external integration tools implemented). Advancing to Stage 13.
+- 2026-03-04: Scaffold complete — created `users_team_fixtures.py` with mock responses for all 12 tools.
