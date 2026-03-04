@@ -2,6 +2,7 @@
 
 | # | Aspect | Wave | Status | Date | Notes |
 |---|--------|------|--------|------|-------|
+| 13 | pipeline-design | 3 | Complete | 2026-03-04 | 10-step pipeline; PipelineState with classified_heirs_base + classified_heirs; MAX_RESTARTS=10; step7→restart3 (disinheritance/preterition), step10→restart4 (Art.1021¶2); clear_from_step(3/4) rules; Hare-Niemeyer rounding in step10; collation phase1 in step5, phase2 in step9; 10-module src layout; ComputationLogEntry audit trail |
 | 1 | consolidate-legal-sources | 1 | Complete | 2026-03-04 | 4 source docs: civil-code-succession.md, family-code-filiation.md, ra-8552-adoption.md, key-rules-summary.md; BUG-001 fix spec included |
 | 2 | consolidate-worked-examples | 1 | Complete | 2026-03-04 | 23 test vectors (TV-01 to TV-23), 17 scenarios, 10 invariants, master coverage matrix; source: inheritance-reverse/analysis/test-vectors.md + spec-fix-test-vectors.md |
 | 3 | heir-classification | 2 | Complete | 2026-03-04 | 4 groups, 7 eligibility gates, HeirType enum + EffectiveGroup mapping, HeirInput struct fields, ascendant division (Art. 890), Art. 977 renunciation blocks representation, BUG-001 disinheritance gate |
