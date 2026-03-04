@@ -14,7 +14,8 @@ Create backend service routes and CE tools for SMTP account and connected accoun
 | 88 | `cheerful_update_smtp_account` | `PATCH /api/service/accounts/smtp/{id}` |
 | 89 | `cheerful_delete_smtp_account` | `DELETE /api/service/accounts/smtp/{id}` |
 
-**Priority**: SCAFFOLD — Create test fixtures for integrations domain.
+**Priority**: BACKEND ROUTES — Create service routes for Stage 11 tools.
 
 ## Work Log
 - 2026-03-04: Stage 10 complete (444 total tests passing, 71 cheerful tools registered). Advancing to Stage 11.
+- 2026-03-04: Scaffold complete — created integrations_fixtures.py with mock responses for all 7 Stage 11 tools.
