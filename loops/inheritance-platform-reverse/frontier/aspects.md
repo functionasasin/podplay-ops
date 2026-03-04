@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 25
-- Analyzed: 7
-- Pending: 18
-- Convergence: 28%
+- Analyzed: 8
+- Pending: 17
+- Convergence: 32%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -18,7 +18,7 @@ Gather and catalog all source material.
 - [x] catalog-migrations — Read every file in `app/supabase/migrations/`, catalog: what each creates, any duplicates or conflicts
 - [x] read-premium-spec — Read `docs/plans/inheritance-premium-spec.md`, extract every platform-related feature that was specified
 - [x] read-failure-logs — Read failure docs from `loops/inheritance-frontend-forward/frontier/analysis-log.md` and `loops/inheritance-frontend-reverse/frontier/aspects.md`, extract actionable items
-- [ ] reference-modern-saas — Research modern SaaS dashboard patterns (Linear, Vercel, Cal.com): nav design, card patterns, transitions, loading states, empty states, onboarding flows. Document patterns that work with Navy+Gold.
+- [x] reference-modern-saas — Research modern SaaS dashboard patterns (Linear, Vercel, Cal.com): nav design, card patterns, transitions, loading states, empty states, onboarding flows. Document patterns that work with Navy+Gold.
 
 ### Wave 1: Additional Verification (discovered during read-premium-spec)
 
@@ -56,6 +56,7 @@ Depends on all previous waves. **Strict internal dependency order.**
 
 | Aspect | Wave | Date | Key Findings |
 |--------|------|------|--------------|
+| reference-modern-saas | 1 | 2026-03-04 | 20 adoptable patterns cataloged from Linear/Vercel/Cal.com; critical: add sonner toast (no library currently), skeleton shimmer CSS, auth-aware sidebar, gold active accent bar, collapsible nav, empty states, shadow+animation tokens missing from index.css; mobile: drawer nav + stacked card tables below lg breakpoint |
 | catalog-routes | 1 | 2026-03-04 | 10 registered routes, 1 unregistered (settings/team — CRITICAL), 3 stub placeholders (share results, client cases, logo reload hack), no route-level auth guards, missing /cases list route |
 | catalog-components | 1 | 2026-03-04 | ~80 non-test files across 13 subdirs; 5 critical stubs: DocumentChecklist (unimplemented backend fns), DeadlineTimeline (raw HTML + missing handler), ClientForm (raw HTML, no validation), ClientList (raw HTML table), InviteMemberDialog (unstyled buttons); MISSING: Toast/notification system, Skeleton component, auth-conditional nav |
 | catalog-lib-hooks | 1 | 2026-03-04 | 18 lib files + 5 hooks; CRITICAL: supabase.ts throws on missing env vars (white-screen), comparison.ts static wasm import (blocks thread), no createOrganization anywhere; HIGH: no resetPassword, intake.ts non-null assertion crash, @/wasm/bridge and @/data/document-templates unverified; MEDIUM: useAuth no error state, useAutoSave no isDirty/flush-on-unmount; 7 missing hooks for lib modules |
