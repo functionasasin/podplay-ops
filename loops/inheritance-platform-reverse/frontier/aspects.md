@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 25
-- Analyzed: 10
-- Pending: 15
-- Convergence: 40%
+- Analyzed: 11
+- Pending: 14
+- Convergence: 44%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -28,7 +28,7 @@ Gather and catalog all source material.
 Depends on Wave 1 catalogs being complete.
 
 - [x] journey-new-visitor — Walk: user visits `/` for the first time with no account. What do they see? Can they understand the product? Can they find sign-up?
-- [ ] journey-signup-signin — Walk: user clicks sign up → fills form → gets confirmation email → confirms → signs in → lands where? Document every step and gap.
+- [x] journey-signup-signin — Walk: user clicks sign up → fills form → gets confirmation email → confirms → signs in → lands where? Document every step and gap.
 - [ ] journey-first-case — Walk: authenticated user creates first case → fills wizard → computes → sees results. Is the flow discoverable? Are there dead ends?
 - [ ] journey-share-case — Walk: user shares a case via link → recipient opens link. Does the share flow work? What does the recipient see?
 - [ ] journey-return-visit — Walk: user returns days later → dashboard → case list → opens existing case → edits → recomputes. Is the dashboard useful?
@@ -56,6 +56,7 @@ Depends on all previous waves. **Strict internal dependency order.**
 
 | Aspect | Wave | Date | Key Findings |
 |--------|------|------|--------------|
+| journey-signup-signin | 2 | 2026-03-04 | BROKEN overall; 14 gaps found; CRITICAL: no /auth/callback route (JSS-008) — PKCE email confirmation code discarded, session never established; useAuth.signUp() discards return value (JSS-004); auto-confirm shows wrong message (JSS-005); no org creation (JSS-014); HIGH: no resend button in confirmation card (JSS-006), always redirects to / after sign-in (JSS-012); fix specs provided for all critical/high gaps |
 | journey-new-visitor | 2 | 2026-03-04 | BROKEN overall; 19 gaps found; CRITICAL: white-screen if env vars missing (JNV-001), AppLayout wraps /auth page (JNV-006), no org creation after sign-up (JNV-011/018), sign-up shows "Check email" but user is auto-confirmed (JNV-012); HIGH: "Create Account" opens signin mode (JNV-005), no Sign Out in nav (JNV-003), no Forgot Password (JNV-007); fix specs provided for all critical/high gaps |
 | reference-modern-saas | 1 | 2026-03-04 | 20 adoptable patterns cataloged from Linear/Vercel/Cal.com; critical: add sonner toast (no library currently), skeleton shimmer CSS, auth-aware sidebar, gold active accent bar, collapsible nav, empty states, shadow+animation tokens missing from index.css; mobile: drawer nav + stacked card tables below lg breakpoint |
 | catalog-routes | 1 | 2026-03-04 | 10 registered routes, 1 unregistered (settings/team — CRITICAL), 3 stub placeholders (share results, client cases, logo reload hack), no route-level auth guards, missing /cases list route |
