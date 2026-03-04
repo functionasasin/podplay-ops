@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 30
-- Analyzed: 6
-- Pending: 24
-- Convergence: 20%
+- Analyzed: 7
+- Pending: 23
+- Convergence: 23%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -19,7 +19,7 @@ Depends on Wave 1 sources being consolidated.
 - [x] heir-concurrence — Arts. 888-903: who inherits together, who excludes whom, 30 scenario codes (T1-T15, I1-I15)
 - [x] representation — Arts. 970-977: per stirpes, 4 triggers, collateral limit, recursive multi-level, renunciation non-trigger
 - [x] legitime-fractions — Arts. 888-903: complete fraction table for all 30 scenarios, FP_gross vs FP_disposable, Art. 895 cap rule
-- [ ] intestate-distribution — Arts. 960-1014: all 15 intestate formulas, Iron Curtain Rule, collateral sub-algorithm
+- [x] intestate-distribution — Arts. 960-1014: all 15 intestate formulas, Iron Curtain Rule, collateral sub-algorithm
 - [ ] testate-validation — Arts. 840-872, 908-923: preterition, disinheritance (22 grounds), inofficiousness, underprovision, condition stripping
 - [ ] collation — Arts. 1061-1077: 14-category collatability matrix, imputation, estate base, Art. 1064 representation collation
 - [ ] vacancy-resolution — Arts. 1015-1023: substitution → representation → accretion → intestate fallback, Art. 1021 legitime vs FP distinction
@@ -56,6 +56,7 @@ Depends on all previous waves.
 - [ ] spec-review — Self-review: can a developer build the entire product from this spec alone, without any type mismatches at integration time?
 
 ## Recently Analyzed
+- intestate-distribution (Wave 2) — All 15 intestate scenarios (I1–I15) with complete Rust pseudocode; 6-class priority hierarchy; 2:1 ratio (no cap) for IC in intestate; collateral sub-algorithm (Art. 1006 full/half blood; Art. 975 per capita for nephews alone); Iron Curtain Rule (Art. 992) filtering; Art. 1018 proportional accretion; Art. 1001 spouse+siblings exception; IntestateTrigger enum; CollateralHeir/BloodType types identified; 10 invariants
 - consolidate-legal-sources (Wave 1) — 4 source docs created in `input/sources/`; 30 scenarios confirmed; BUG-001 fix spec captured
 - consolidate-worked-examples (Wave 1) — 23 test vectors (TV-01 through TV-23) extracted into `input/sources/worked-examples.md`; 17 scenarios covered; 10 invariants documented
 - heir-classification (Wave 2) — 4 compulsory heir groups; 7 eligibility gates; HeirType enum + EffectiveGroup mapping; HeirInput struct with all fields; ascendant division per Art. 890; Art. 977 renunciation blocks representation; BUG-001 disinheritance gate noted
