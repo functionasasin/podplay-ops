@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 30
-- Analyzed: 8
-- Pending: 22
-- Convergence: 27%
+- Analyzed: 9
+- Pending: 21
+- Convergence: 30%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -21,7 +21,7 @@ Depends on Wave 1 sources being consolidated.
 - [x] legitime-fractions — Arts. 888-903: complete fraction table for all 30 scenarios, FP_gross vs FP_disposable, Art. 895 cap rule
 - [x] intestate-distribution — Arts. 960-1014: all 15 intestate formulas, Iron Curtain Rule, collateral sub-algorithm
 - [x] testate-validation — Arts. 840-872, 908-923: preterition, disinheritance (22 grounds), inofficiousness, underprovision, condition stripping
-- [ ] collation — Arts. 1061-1077: 14-category collatability matrix, imputation, estate base, Art. 1064 representation collation
+- [x] collation — Arts. 1061-1077: 14-category collatability matrix, imputation, estate base, Art. 1064 representation collation
 - [ ] vacancy-resolution — Arts. 1015-1023: substitution → representation → accretion → intestate fallback, Art. 1021 legitime vs FP distinction
 - [ ] multiple-disinheritance-fix — BUG-001 from v1: specify correct algorithm for 2+ simultaneous disinheritances (batch process, single scenario recompute)
 
@@ -56,6 +56,7 @@ Depends on all previous waves.
 - [ ] spec-review — Self-review: can a developer build the entire product from this spec alone, without any type mismatches at integration time?
 
 ## Recently Analyzed
+- collation (Wave 2) — 14-category collatability matrix; Art. 1061 4-condition obligation; Art. 1062 two exemptions (donor-express, repudiation) with inofficiousness override; Art. 1064 representation collation (grandchildren collate parent's donations even if property gone); Art. 1065 ascending line exception; Art. 1066 spouse donations; Art. 1067 exempt categories; Art. 1068 professional expense conditional; Art. 1069 debt/election/fine collatable; Art. 1070 wedding gift 1/10 FP threshold; Art. 1071 donation-time valuation; Art. 1072 joint donation split; E_adj = net_estate + collatable_sum used for ALL legitime computations; two-phase pipeline integration (before legitime computation + after distribution); imputation: charged to legitime then FP; Art. 911(3) reduction in reverse-chrono; Donation + CollationResult + ImputationResult + DonationReduction + PartitionAllocation Rust structs; 17 test vectors; 12 edge cases; 5 narrative templates
 - testate-validation (Wave 2) — 5 validation problems; preterition detection (G1/G2 direct-line only; complete omission only); 22 disinheritance grounds as DisinheritanceGround enum (8 Art.919 + 8 Art.920 + 6 Art.921); BUG-001 batch-disinheritance fix in Rust pseudocode; Art. 911 reduction order (devises pro rata → donations reverse-chronological); Art. 872 condition stripping; requires_restart flag; TestateValidationResult struct; 10-warning catalog; 6 edge cases; Will/Institution/Devise/Legacy/DisinheritanceRecord/Substitution input types
 - intestate-distribution (Wave 2) — All 15 intestate scenarios (I1–I15) with complete Rust pseudocode; 6-class priority hierarchy; 2:1 ratio (no cap) for IC in intestate; collateral sub-algorithm (Art. 1006 full/half blood; Art. 975 per capita for nephews alone); Iron Curtain Rule (Art. 992) filtering; Art. 1018 proportional accretion; Art. 1001 spouse+siblings exception; IntestateTrigger enum; CollateralHeir/BloodType types identified; 10 invariants
 - consolidate-legal-sources (Wave 1) — 4 source docs created in `input/sources/`; 30 scenarios confirmed; BUG-001 fix spec captured
