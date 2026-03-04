@@ -13,9 +13,10 @@ Create backend service routes and CE tools for creator enrichment, discovery sea
 | 63 | `cheerful_enrich_creator` | `POST /api/service/creators/enrich` |
 | 64 | `cheerful_get_creator_profile` | `GET /api/service/creators/profile/{handle}` |
 
-**Priority**: WRITE TESTS — Backend routes complete, write tests for Stage 8 tools.
+**Priority**: WRITE TESTS — Continue writing tests for remaining Stage 8 tools (#62, #63, #64).
 
 ## Work Log
 - 2026-03-04: Stage 7 complete (311 total tests passing, 51 cheerful tools registered). Advancing to Stage 8.
 - 2026-03-04: Scaffold complete — creators_fixtures.py with mock responses for all 6 Stage 8 tools.
 - 2026-03-04: Backend routes complete — 6 service routes added: enrich-creators (POST + GET status), creator-search/similar, creator-search/keyword, creator-search/enrich, creator-search/profile.
+- 2026-03-04: Tests for #59, #60, #61 written (23 tests). Also created tools_creators.py with full implementations + api.py functions for all 6 tools. 334 total tests passing, 57 cheerful tools registered.
