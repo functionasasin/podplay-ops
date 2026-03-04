@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 30
-- Analyzed: 22
-- Pending: 8
-- Convergence: 73%
+- Analyzed: 23
+- Pending: 7
+- Convergence: 77%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -44,7 +44,7 @@ Depends on Wave 3 data model.
 Depends on Wave 3 data model and Wave 4 bridge contract.
 - [x] typescript-types — Map every Rust struct/enum to TypeScript interface/union (exact field names matching serde)
 - [x] zod-schemas — Strict Zod schemas: z.strict(), z.boolean() not coerce, z.nullable() not optional, matching serde wire format
-- [ ] wizard-steps — 6-step wizard structure: fields per step, conditional visibility rules, validation per step
+- [x] wizard-steps — 6-step wizard structure: fields per step, conditional visibility rules, validation per step
 - [ ] results-view — Results display architecture: header, distribution table/chart, narrative panel, warnings, computation log, actions
 - [ ] shared-components — Reusable form widgets: MoneyInput, DateInput, FractionInput, PersonPicker, EnumSelect
 - [ ] design-system — Fresh palette (not Navy+Gold), typography pairing, shadcn/ui component library, spacing, visual direction
