@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 30
-- Analyzed: 13
-- Pending: 17
-- Convergence: 43%
+- Analyzed: 14
+- Pending: 16
+- Convergence: 47%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -29,7 +29,7 @@ Depends on Wave 1 sources being consolidated.
 Depends on Wave 2 rule extraction.
 - [x] rust-types — Define all Rust structs and enums with exact field names, types, serde attributes
 - [x] pipeline-design — 10-step pipeline with input/output types per step, restart conditions, max-restart guard
-- [ ] algorithms — Pseudocode for all non-trivial computations (cap rule, Art. 911 reduction, collateral distribution, Hare-Niemeyer rounding)
+- [x] algorithms — Pseudocode for all non-trivial computations (cap rule, Art. 911 reduction, collateral distribution, Hare-Niemeyer rounding)
 - [ ] test-vectors — 20+ test vectors covering all 30 scenarios with expected peso amounts
 - [ ] invariants — 10 formal invariants that must hold for any valid input/output pair
 
