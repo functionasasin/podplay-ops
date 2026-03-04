@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 30
-- Analyzed: 5
-- Pending: 25
-- Convergence: 17%
+- Analyzed: 6
+- Pending: 24
+- Convergence: 20%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -18,7 +18,7 @@ Depends on Wave 1 sources being consolidated.
 - [x] heir-classification — Compulsory heir categories, eligibility gate (Art. 887), filiation proof (FC 172/175), adopted/legitimated equivalence
 - [x] heir-concurrence — Arts. 888-903: who inherits together, who excludes whom, 30 scenario codes (T1-T15, I1-I15)
 - [x] representation — Arts. 970-977: per stirpes, 4 triggers, collateral limit, recursive multi-level, renunciation non-trigger
-- [ ] legitime-fractions — Arts. 888-903: complete fraction table for all 30 scenarios, FP_gross vs FP_disposable, Art. 895 cap rule
+- [x] legitime-fractions — Arts. 888-903: complete fraction table for all 30 scenarios, FP_gross vs FP_disposable, Art. 895 cap rule
 - [ ] intestate-distribution — Arts. 960-1014: all 15 intestate formulas, Iron Curtain Rule, collateral sub-algorithm
 - [ ] testate-validation — Arts. 840-872, 908-923: preterition, disinheritance (22 grounds), inofficiousness, underprovision, condition stripping
 - [ ] collation — Arts. 1061-1077: 14-category collatability matrix, imputation, estate base, Art. 1064 representation collation
@@ -61,3 +61,4 @@ Depends on all previous waves.
 - heir-classification (Wave 2) — 4 compulsory heir groups; 7 eligibility gates; HeirType enum + EffectiveGroup mapping; HeirInput struct with all fields; ascendant division per Art. 890; Art. 977 renunciation blocks representation; BUG-001 disinheritance gate noted
 - heir-concurrence (Wave 2) — 30 ScenarioCode enum variants (T1–T15, I1–I15); full testate + intestate determination algorithms in Rust pseudocode; cap rule formula + 2 examples; sibling full/half-blood (Art. 1006); Art. 903 T14/T15 illegitimate decedent branch; 6 new fields identified for DecedentInput; testate vs intestate comparison table
 - representation (Wave 2) — 4 triggers (predecease, disinheritance, incapacity/unworthiness, Art. 902 illegitimate); renunciation NON-trigger; per stirpes + per capita switch (Art. 975); collateral limit (Art. 972, nephews/nieces only); recursive multi-level algorithm; Art. 976/977 asymmetry; 12 test vectors; RepresentationTrigger + InheritanceMode + LineInfo types; pipeline placement before concurrence step
+- legitime-fractions (Wave 2) — full fraction tables for all 30 scenarios; 3 regimes (A/B/C + Art. 903 special); FP_gross vs FP_disposable; Art. 895 cap rule with threshold formulas; ascendant distribution (Art. 890); LegitimeResult struct; intestate 2:1 ratio (no cap); 6 edge cases + invariant
