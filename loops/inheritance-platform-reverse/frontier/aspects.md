@@ -1,10 +1,10 @@
 # Frontier — Inheritance Platform Layer
 
 ## Statistics
-- Total aspects discovered: 22
-- Analyzed: 5
-- Pending: 17
-- Convergence: 23%
+- Total aspects discovered: 25
+- Analyzed: 6
+- Pending: 19
+- Convergence: 24%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -16,9 +16,13 @@ Gather and catalog all source material.
 - [x] catalog-lib-hooks — Read every file in `app/src/lib/` and `app/src/hooks/`, catalog: exports, dependencies, completeness
 - [x] catalog-config — Read `app/src/index.css`, `app/vite.config.ts`, `app/tsconfig.json`, `app/package.json`, `app/supabase/config.toml`, catalog current design tokens and config
 - [x] catalog-migrations — Read every file in `app/supabase/migrations/`, catalog: what each creates, any duplicates or conflicts
-- [ ] read-premium-spec — Read `docs/plans/inheritance-premium-spec.md`, extract every platform-related feature that was specified
+- [x] read-premium-spec — Read `docs/plans/inheritance-premium-spec.md`, extract every platform-related feature that was specified
 - [ ] read-failure-logs — Read failure docs from `loops/inheritance-frontend-forward/frontier/analysis-log.md` and `loops/inheritance-frontend-reverse/frontier/aspects.md`, extract actionable items
 - [ ] reference-modern-saas — Research modern SaaS dashboard patterns (Linear, Vercel, Cal.com): nav design, card patterns, transitions, loading states, empty states, onboarding flows. Document patterns that work with Navy+Gold.
+
+### Wave 1: Additional Verification (discovered during read-premium-spec)
+
+- [ ] verify-migration-columns — Confirm migrations 003, 004, 008, 009 status; verify cases table has comparison_*, tax_*, intake_data columns; confirm get_shared_case() RPC and firm-logos storage bucket exist
 
 ### Wave 2: User Journey Audit
 Depends on Wave 1 catalogs being complete.
@@ -56,3 +60,4 @@ Depends on all previous waves. **Strict internal dependency order.**
 | catalog-components | 1 | 2026-03-04 | ~80 non-test files across 13 subdirs; 5 critical stubs: DocumentChecklist (unimplemented backend fns), DeadlineTimeline (raw HTML + missing handler), ClientForm (raw HTML, no validation), ClientList (raw HTML table), InviteMemberDialog (unstyled buttons); MISSING: Toast/notification system, Skeleton component, auth-conditional nav |
 | catalog-lib-hooks | 1 | 2026-03-04 | 18 lib files + 5 hooks; CRITICAL: supabase.ts throws on missing env vars (white-screen), comparison.ts static wasm import (blocks thread), no createOrganization anywhere; HIGH: no resetPassword, intake.ts non-null assertion crash, @/wasm/bridge and @/data/document-templates unverified; MEDIUM: useAuth no error state, useAutoSave no isDirty/flush-on-unmount; 7 missing hooks for lib modules |
 | catalog-config | 1 | 2026-03-04 | Navy+Gold palette fully defined; CRITICAL: email confirmations off in config (users access without verified email); HIGH: no toast library installed (UX dead end), no date library (deadline bug risk); MEDIUM: no VITE_APP_URL (QR/share links broken), no production auth guidance; LOW: no shadow tokens, no animation tokens, dark mode declared but not implemented |
+| read-premium-spec | 1 | 2026-03-04 | 23 premium features cataloged; 7 packages not installed (@react-pdf/renderer, jszip, react-markdown×3, qrcode.react, react-d3-tree); 4 migrations unconfirmed (003,004,008,009); FirmProfileProvider missing; createOrganization missing; /cases/:id/tax route absent; /settings/team unregistered; toast+date libraries needed; 1 new verification aspect added (verify-migration-columns) |
