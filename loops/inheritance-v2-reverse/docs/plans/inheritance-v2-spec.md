@@ -1,6 +1,6 @@
 # Philippine Inheritance Distribution Engine v2 — Full-Stack Specification
 
-**Status**: Synthesized from 26 analysis files (Waves 1–5)
+**Status**: Synthesized from 28 analysis files (Waves 1–6, including cross-layer-consistency + spec-review)
 **Date**: 2026-03-04
 **Supersedes**: `docs/plans/inheritance-engine-spec.md` (v1, ~1,200 lines)
 
@@ -348,23 +348,67 @@ pub struct HeirInput {
     pub id:                      HeirId,
     pub name:                    String,
     pub heir_type:               HeirType,
+
+    // ── Eligibility Gate Flags ─────────────────────────────────────────────
+    /// True if heir is alive at decedent's death. False = predeceased.
     pub is_alive:                bool,
+    pub date_of_death:           Option<String>,  // "YYYY-MM-DD"; null if alive
+    pub date_of_birth:           Option<String>,  // "YYYY-MM-DD"; for posthumous check
+    /// Art. 1032 unworthiness, not condoned (Art. 1033).
+    pub is_unworthy:             bool,
+    /// Art. 1033: testator expressly condoned unworthiness → heir remains eligible.
+    pub unworthiness_condoned:   bool,
+    /// FC Arts. 172/175: filiation legally proved. Must be true for LC/Legitimated/Adopted.
+    /// For IllegitimateChild, false = ineligible (ExclusionReason::FiliationNotProved).
+    pub filiation_proved:        bool,
+    /// Art. 1041: heir executed a valid renunciation. Renunciation ≠ representation trigger.
+    pub has_renounced:           bool,
+
+    // ── Adoption Fields ────────────────────────────────────────────────────
     pub is_adopted:              bool,
+    /// RA 8552 §20: adoption rescinded before decedent's death → reverts to biological type.
     pub adoption_rescinded:      bool,
-    pub adoption_date:           Option<String>,
-    pub adoption_rescission_date:Option<String>,
-    pub cause_proven:            bool,    // for disinheritance cause_proven
-    pub reconciled:              bool,    // Art. 922
-    pub date_of_birth:           Option<String>,
-    pub date_of_death:           Option<String>,
-    pub degree:                  Option<u32>, // collateral degree; null for direct-line
+    pub adoption_date:           Option<String>,  // "YYYY-MM-DD"
+    pub adoption_rescission_date:Option<String>,  // "YYYY-MM-DD"; null if not rescinded
+    /// RA 8552 §16: adopter is married to biological parent → RA 8552 applies differently.
+    pub biological_parent_is_adopter_spouse: bool,
+
+    // ── Classification Metadata ────────────────────────────────────────────
+    /// FC Arts. 177–179: heir was legitimated by subsequent valid marriage of parents.
+    pub is_legitimated:          bool,
+    /// For LegitimateAscendant: true = paternal line, false = maternal line (Art. 890).
+    pub paternal_line:           bool,
+    /// Degree of kinship. For ascendants: 1=parent, 2=grandparent.
+    /// For collaterals: 2=sibling, 3=nephew/niece, 4=grand-nephew/niece, 5=4th-degree.
+    /// Null for direct-line heirs (LegitimateChild, Spouse, IllegitimateChild).
+    pub degree:                  Option<u32>,
+    /// For Sibling/NieceNephew/OtherCollateral: true = full blood, false = half blood (Art. 1006).
+    pub is_full_blood:           bool,
+
+    // ── Legal Separation ───────────────────────────────────────────────────
+    /// For Spouse only. Defaults to NotApplicable for all other heir types.
     pub legal_separation_status: LegalSeparationStatus,
+
+    // ── Will Dispositions ──────────────────────────────────────────────────
+    /// DisinheritanceRecord entries targeting this heir (from will). cause_proven/reconciled
+    /// are on DisinheritanceRecord, not here — the engine evaluates validity from those.
     pub disinheritances:         Vec<DisinheritanceRecord>,
+    /// SubstitutionInput entries where this heir is the primary (substituted) heir.
     pub substitutions:           Vec<SubstitutionInput>,
-    pub children:                Vec<HeirInput>,  // grandchildren for representation
-    pub donations_received:      Vec<DonationId>, // references to top-level donations
+
+    // ── Family Tree ────────────────────────────────────────────────────────
+    /// Direct children of this heir (recursive). Used to build representation chains.
+    pub children:                Vec<Box<HeirInput>>,
+
+    // ── Collation Linkage ──────────────────────────────────────────────────
+    /// DonationId values referencing ComputationInput.donations entries received by this heir.
+    pub donations_received:      Vec<DonationId>,
 }
 ```
+
+> **DISC-09 note**: `cause_proven` and `reconciled` are NOT on `HeirInput`. They belong
+> exclusively on `DisinheritanceRecord`. The engine evaluates disinheritance validity from
+> `DisinheritanceRecord.cause_proven` and `DisinheritanceRecord.reconciled` only.
 
 #### DisinheritanceRecord
 ```rust
@@ -457,92 +501,206 @@ pub struct DonationInput {
 pub enum SuccessionType { Testate, Intestate, Mixed }
 ```
 
-#### ExclusionReason
+#### ExclusionReason  *(9 variants — DISC-02)*
 ```rust
 #[serde(rename_all = "PascalCase")]
 pub enum ExclusionReason {
-    Predeceased, Incapacity, Unworthiness, Renunciation,
-    IronCurtain, NotCalled, ValidDisinheritance, InvalidDisinheritance,
+    /// Predeceased the decedent with no eligible representatives available.
+    PredeceaseNoRepresentation,
+    /// Art. 1032: unworthy/incapacitated, not condoned by testator (Art. 1033).
+    Unworthiness,
+    /// FC Arts. 172/175: illegitimate filiation not legally proved.
+    FiliationNotProved,
+    /// Art. 1002: spouse gave cause for legal separation; decedent is innocent spouse.
+    GuiltySpouseLegalSeparation,
+    /// RA 8552 §20: adoption was rescinded before decedent's death.
+    AdoptionRescinded,
+    /// Arts. 915–923: valid disinheritance (enumerated ground, cause proved, not reconciled).
+    ValidDisinheritance,
+    /// Art. 1041: heir executed a valid renunciation.
+    Renounced,
+    /// Art. 887(2): legitimate ascendant excluded because legitimate children/descendants exist.
+    ExcludedByGroup,
+    /// Art. 992 (Iron Curtain Rule): IC cannot inherit from legitimate relatives of decedent
+    /// and vice versa.
+    IronCurtain,
 }
 ```
 
-#### RepresentationTrigger
+> Wire values: `"PredeceaseNoRepresentation"`, `"Unworthiness"`, `"FiliationNotProved"`,
+> `"GuiltySpouseLegalSeparation"`, `"AdoptionRescinded"`, `"ValidDisinheritance"`,
+> `"Renounced"`, `"ExcludedByGroup"`, `"IronCurtain"`.
+> Note: `InvalidDisinheritance` is NOT an ExclusionReason — invalid disinheritance emits
+> a `ValidationWarning::InvalidDisinheritance` but does NOT exclude the heir.
+
+#### RepresentationTrigger  *(4 variants — DISC-03)*
 ```rust
 #[serde(rename_all = "PascalCase")]
 pub enum RepresentationTrigger {
-    Predecease, Disinheritance, Incapacity, Art902IllegitimateLine,
+    /// Heir predeceased the decedent (Arts. 970–971).
+    Predecease,
+    /// Heir was validly disinherited (Art. 923).
+    Disinheritance,
+    /// Heir is unworthy/incapacitated and unworthiness was not condoned (Art. 1035).
+    Unworthiness,
+    /// Art. 902: illegitimate child's own descendants may represent in intestate.
+    IllegitimateTransmission,
 }
 ```
 
-#### VacancyCause
+> Wire values: `"Predecease"`, `"Disinheritance"`, `"Unworthiness"`, `"IllegitimateTransmission"`.
+
+#### VacancyCause  *(7 variants — DISC-04)*
 ```rust
 #[serde(rename_all = "PascalCase")]
 pub enum VacancyCause {
-    Predecease, Incapacity, Renunciation, DisinheritanceInvalid,
-    ConditionFailed, LegitimacyVacancy,
+    /// Heir (or substitute) predeceased the decedent.
+    Predecease,
+    /// Heir validly renounced the inheritance (Art. 1041).
+    Renunciation,
+    /// Heir is unworthy/incapacitated (Art. 1032).
+    Unworthiness,
+    /// Heir was validly disinherited (Arts. 915–923). Invalid disinheritance ≠ vacancy.
+    Disinheritance,
+    /// Named substitute predeceased the primary heir.
+    SubstitutePredeceased,
+    /// Named substitute is incapacitated or unworthy.
+    SubstituteIncapacitated,
+    /// Will condition attached to a devise/legacy failed or was not fulfilled (Art. 872).
+    ConditionFailed,
 }
 ```
 
-#### ResolutionMethod
+> Wire values: `"Predecease"`, `"Renunciation"`, `"Unworthiness"`, `"Disinheritance"`,
+> `"SubstitutePredeceased"`, `"SubstituteIncapacitated"`, `"ConditionFailed"`.
+> Note: `LegitimacyVacancy` is NOT a VacancyCause — Art. 1021 ¶2 legitimate vacancy triggers
+> a pipeline restart (RestartTrigger::LegitimeVacancy), not a VacancyResolution entry.
+
+#### ResolutionMethod  *(8 variants — DISC-05)*
 ```rust
 #[serde(rename_all = "PascalCase")]
 pub enum ResolutionMethod {
-    Substitution, Representation, Accretion, IntestateFallback, Escheat,
+    /// Art. 859/1022(1): named substitute steps in.
+    Substitution,
+    /// Arts. 970–977: representatives step in per stirpes.
+    Representation,
+    /// Arts. 1016–1019, 1021 ¶1: free-portion vacancy accretes pro indiviso to co-heirs.
+    AccretionFreePortion,
+    /// Art. 1018: intestate share vacancy accretes proportionally to remaining co-heirs.
+    AccretionIntestate,
+    /// Art. 1021 ¶2: vacant legitime — co-heirs "succeed in own right" (triggers restart).
+    OwnRightLegitime,
+    /// Art. 1022(2): share falls to legal/intestate heirs.
+    IntestateFallback,
+    /// Art. 969: all heirs of a degree renounce → next degree inherits in own right.
+    NextDegreeInOwnRight,
+    /// Art. 1011: no heirs at any degree → estate escheats to State.
+    Escheat,
 }
 ```
 
-#### ShareSource
+> Wire values: `"Substitution"`, `"Representation"`, `"AccretionFreePortion"`,
+> `"AccretionIntestate"`, `"OwnRightLegitime"`, `"IntestateFallback"`,
+> `"NextDegreeInOwnRight"`, `"Escheat"`.
+
+#### ShareSource  *(5 variants — §20.1)*
 ```rust
 #[serde(rename_all = "PascalCase")]
-pub enum ShareSource { Legitime, FreePortion, Intestate, Collateral }
+pub enum ShareSource {
+    Legitime,    // heir received share from legitime pool
+    FreePortion, // heir received share from free portion (testamentary institution)
+    Intestate,   // heir received share via intestate formula (no will, or FP released)
+    Devise,      // heir received a specific realty devise
+    Legacy,      // heir received a specific personal property legacy
+}
 ```
 
-#### EffectiveGroup (output string — NOT an enum in Rust, stored as Option<String>)
+> Wire values: `"Legitime"`, `"FreePortion"`, `"Intestate"`, `"Devise"`, `"Legacy"`.
+> Note: collaterals inherit via `"Intestate"` — there is no `"Collateral"` ShareSource.
 
-Output values: `"G1"`, `"G2"`, `"G3"`, `"G4"`, or `null` for excluded heirs.
-Frontend displays human labels: G1 = "Compulsory Heir (Primary)", G2 = "Ascendants",
-G3 = "Collaterals", G4 = "Illegitimate Children".
+#### EffectiveGroup  *(5 variants — DISC-01)*
+```rust
+#[serde(rename_all = "PascalCase")]
+pub enum EffectiveGroup {
+    LegitimateChildGroup,      // "LegitimateChildGroup"   — G1 (LC, legitimated, adopted)
+    LegitimateAscendantGroup,  // "LegitimateAscendantGroup" — G2 (only when G1 absent)
+    SurvivingSpouseGroup,      // "SurvivingSpouseGroup"   — G3
+    IllegitimateChildGroup,    // "IllegitimateChildGroup"  — G4
+    CollateralGroup,           // "CollateralGroup"         — G5 (intestate I11–I15 only)
+}
+```
+
+> `EffectiveGroup` is a proper enum, NOT a free-text string. Wire values are the full PascalCase
+> names above. Excluded heirs have `effective_group: null` on `HeirDistribution`.
 
 ### §3.6 Tagged Output Enums
 
-#### PreteritionEffect — internally tagged `"type"`
+#### PreteritionEffect — internally tagged `"type"`  *(DISC-06)*
 ```rust
 #[serde(tag = "type", rename_all = "PascalCase")]
 pub enum PreteritionEffect {
-    AnnulsAll,
-    AnnulsInstitutions { affected_institution_ids: Vec<DispositionId> },
+    /// No preterition detected. Field always serializes (never omitted).
+    None,
+    /// Art. 854: All heir institutions annulled. Devises and legacies survive intact.
+    /// Preterited heirs receive intestate shares from the released free portion.
+    InstitutionAnnulled { preterited_heir_ids: Vec<HeirId> },
 }
 ```
-Wire: `{"type":"AnnulsAll"}` or `{"type":"AnnulsInstitutions","affected_institution_ids":["i1"]}`
+Wire:
+```json
+{ "type": "None" }
+{ "type": "InstitutionAnnulled", "preterited_heir_ids": ["heir_001", "heir_002"] }
+```
 
-#### ValidationWarning — adjacently tagged `"code"` + `"data"`
+> Art. 854 does NOT annul devises/legacies — only heir institutions. `AnnulsAll` was legally
+> incorrect. `None` variant required so `preterition.effect` always serializes.
+
+#### ValidationWarning — adjacently tagged `"code"` + `"data"`  *(§20.1 canonical)*
 ```rust
 #[serde(tag = "code", content = "data", rename_all = "PascalCase")]
 pub enum ValidationWarning {
-    CollationDebt { heir_id: HeirId, excess_centavos: i64 },
+    /// Art. 854 preterition detected — heir institution(s) annulled, restarts pipeline.
+    PreteritionDetected { preterited_heir_ids: Vec<HeirId> },
+    /// Arts. 915–923: invalid disinheritance (ground not in enumerated list, or cause not proven).
+    /// Heir is NOT excluded; engine continues as if no disinheritance.
     InvalidDisinheritance { heir_id: HeirId, reason: String },
-    ManualReviewRequired { flag: String },
-    LegitimeUnderprovision { heir_id: HeirId, deficit_centavos: i64 },
-    InofficiousDonation { donation_id: DonationId, reduction_centavos: i64 },
-    ArticuloMortisSpouse { spouse_legitime_reduced: bool },
-    IronCurtainApplied { blocked_heir_id: HeirId },
-    ReconciliationNullified { disinheritance_id: DispositionId },
-    SubstitutionActivated { primary_heir_id: HeirId, substitute_heir_id: HeirId },
-    EscheatLikely,
+    /// Art. 872: will condition stripped (impossible, contrary to law/good customs).
+    ConditionStripped { condition_id: ConditionId, reason: String },
+    /// Art. 906: heir received less than their legal legitime from the will.
+    Underprovision { heir_id: HeirId, deficit_centavos: i64 },
+    /// Art. 911: inofficious donation(s) reduced to protect compulsory heir legitimes.
+    InoficiousnessReduced { donation_id: DonationId, reduction_centavos: i64 },
+    /// Art. 922: prior reconciliation voided a disinheritance.
+    ReconciliationVoided { disinheritance_id: DispositionId },
+    /// Art. 777: deceased heir found after computation; posthumous heir possible.
+    PosthumousHeirPossible { heir_id: HeirId },
+    /// Art. 900 ¶1: surviving spouse given annuity choice instead of usufruct.
+    AnnuityChoiceRequired { spouse_heir_id: HeirId },
+    /// Indivisible realty included; physical partition may require court approval.
+    IndivisibleRealty { description: String },
+    /// BUG-001 case: multiple simultaneous disinheritances detected; scenario recomputed once.
+    MultipleDisinheritances { disinherited_heir_ids: Vec<HeirId> },
 }
 ```
 
-#### ManualReviewFlag — internally tagged `"flag"`
+#### ManualReviewFlag — internally tagged `"flag"`  *(§20.1 canonical)*
 ```rust
 #[serde(tag = "flag", rename_all = "PascalCase")]
 pub enum ManualReviewFlag {
-    AllGrandparentsExcluded,
-    CollateralDegreeAmbiguous { degree: u32 },
-    FiliationDisputed { heir_id: HeirId },
-    AdoptionDocumentsMissing { heir_id: HeirId },
-    WillFormInvalid,
-    Art903AmbiguousParentage,
-    AllG1DisinheritedNoReps,
+    /// All G1 descendants disinherited with no representatives — unusual; may violate Art. 854.
+    AllDescendantsDisinherited,
+    /// Heir both disinherited and has named substitute + representation eligible — complex.
+    DisinheritedWithSubstituteAndReps { heir_id: HeirId },
+    /// Conception/birth dates suggest posthumous child is possible.
+    PosthumousChildPossible,
+    /// Usufruct-or-legitime election required (Art. 900 ¶1).
+    UsufructElectionRequired { spouse_heir_id: HeirId },
+    /// Indivisible realty in estate; partition requires court order or agreement.
+    IndivisibleRealtyPartition,
+    /// Reconciliation occurred before will was executed — may not void disinheritance.
+    ReconciliationPreWill { disinheritance_id: DispositionId },
+    /// Legitimation documents contested; heir's status uncertain.
+    LegitimationContested { heir_id: HeirId },
 }
 ```
 
@@ -588,7 +746,7 @@ pub struct HeirDistribution {
     pub heir_id:               HeirId,
     pub heir_name:             String,
     pub heir_type:             HeirType,
-    pub effective_group:       Option<String>,   // "G1".."G4" or null
+    pub effective_group:       Option<EffectiveGroup>, // null for excluded heirs
     pub is_excluded:           bool,
     pub exclusion_reason:      Option<ExclusionReason>,
     pub legitime_centavos:     i64,
@@ -656,31 +814,41 @@ pub struct ComputationLogEntry {
 Collaterals (siblings, nieces/nephews, other collaterals) are NOT compulsory heirs — they
 only inherit intestate when no closer heirs exist.
 
-### §4.2 EffectiveGroup Mapping
+### §4.2 EffectiveGroup Mapping  *(DISC-01 canonical names)*
 
-| HeirType | EffectiveGroup |
-|---|---|
-| LegitimateChild | G1 |
-| LegitimatedChild | G1 |
-| AdoptedChild | G1 (adoption not rescinded) |
-| LegitimateAscendant | G2 (only when G1 absent) |
-| Spouse | G3 |
-| IllegitimateChild | G4 |
-| Sibling / NieceNephew / OtherCollateral | null (intestate only) |
+| HeirType | `EffectiveGroup` wire value | Condition |
+|---|---|---|
+| LegitimateChild | `"LegitimateChildGroup"` | always (if eligible) |
+| LegitimatedChild | `"LegitimateChildGroup"` | always (if eligible) |
+| AdoptedChild | `"LegitimateChildGroup"` | if `adoption_rescinded = false` |
+| LegitimateAscendant | `"LegitimateAscendantGroup"` | only when no G1 heirs exist |
+| Spouse | `"SurvivingSpouseGroup"` | always (if eligible) |
+| IllegitimateChild | `"IllegitimateChildGroup"` | always (if eligible) |
+| Sibling / NieceNephew / OtherCollateral | `"CollateralGroup"` | intestate I11–I15 only |
+| (any excluded heir) | `null` | is_excluded = true |
 
-G2 is **excluded by G1** (Art. 887 ¶2: ascendants excluded by descendants).
+`"LegitimateAscendantGroup"` is **excluded by `"LegitimateChildGroup"`** (Art. 887 ¶2:
+ascendants excluded by descendants). Both groups may appear in output; `"LegitimateAscendantGroup"`
+heirs have `is_excluded = true` when G1 heirs are present.
 
 ### §4.3 Eligibility Gates (7 conditions)
 
-An heir is **ineligible** (`is_eligible = false`) if ANY of:
+An heir is **ineligible** (`is_excluded = true`) if ANY of:
 
 1. **Predeceased**: `is_alive = false` AND no representatives found (step 3)
-2. **Incapacity/unworthiness**: convicted of crime against decedent (Art. 1032)
-3. **Filiation unproven**: IC with `cause_proven = false` (FC Art. 175)
-4. **Guilty spouse**: `LegalSeparationStatus::GuiltySpouse` (Art. 1002 / Art. 63 FC)
-5. **Adoption rescinded**: `adoption_rescinded = true` → reverts to biological heir_type
-6. **Valid disinheritance**: `disinheritances` has valid ground + `cause_proven = true` + not reconciled
-7. **Renunciation**: heir formally renounced; `is_alive = true` but treated as ineligible for representation (Art. 977 — renunciation does NOT trigger representation)
+   → `ExclusionReason::PredeceaseNoRepresentation`
+2. **Unworthiness**: `is_unworthy = true` AND `unworthiness_condoned = false` (Art. 1032)
+   → `ExclusionReason::Unworthiness`
+3. **Filiation unproven**: `heir_type = IllegitimateChild` AND `filiation_proved = false`
+   (FC Art. 175) → `ExclusionReason::FiliationNotProved`
+4. **Guilty spouse**: `legal_separation_status = GuiltySpouse` (Art. 1002 / FC Art. 63)
+   → `ExclusionReason::GuiltySpouseLegalSeparation`
+5. **Adoption rescinded**: `adoption_rescinded = true` (RA 8552 §20)
+   → `ExclusionReason::AdoptionRescinded`; heir reverts to biological `heir_type`
+6. **Valid disinheritance**: `disinheritances` contains a record with valid ground,
+   `cause_proven = true`, and `reconciled = false` → `ExclusionReason::ValidDisinheritance`
+7. **Renunciation**: `has_renounced = true`; heir is ineligible but this does NOT trigger
+   representation (Art. 977) → `ExclusionReason::Renounced`
 
 ### §4.4 Filiation Proof (FC Arts. 172, 175)
 
@@ -690,7 +858,9 @@ An heir is **ineligible** (`is_eligible = false`) if ANY of:
 | Illegitimate | Same docs OR private handwritten instrument + signed by both parties (FC Art. 175) |
 | Adopted | Adoption decree (RA 8552 §16 or RA 11642 §47) |
 
-Engine uses `cause_proven: bool` as a proxy for filiation proof. If `false` for IC, mark as ineligible with `ExclusionReason::Incapacity` and emit `ManualReviewFlag::FiliationDisputed`.
+Engine uses `filiation_proved: bool` on `HeirInput` as the proxy for filiation proof.
+If `filiation_proved = false` for an `IllegitimateChild` heir, mark as ineligible with
+`ExclusionReason::FiliationNotProved` and emit `ManualReviewFlag::LegitimationContested`.
 
 ### §4.5 Ascendant Division (Art. 890)
 
@@ -741,8 +911,8 @@ disinherited, or incapacitated heir and take their share by right of descent (pe
 |---|---|---|
 | Predecease | `is_alive = false` AND heir has children | `Predecease` |
 | Valid disinheritance | Heir validly disinherited AND has children | `Disinheritance` |
-| Incapacity/unworthiness | Art. 1032 incapacity AND has children | `Incapacity` |
-| Art. 902 illegitimate line | IC's descendants inherit by representation | `Art902IllegitimateLine` |
+| Incapacity/unworthiness | Art. 1032 unworthiness AND has children | `Unworthiness` |
+| Art. 902 illegitimate line | IC's descendants inherit by representation | `IllegitimateTransmission` |
 
 **Non-trigger**: Renunciation (Art. 977). A renouncing heir's share does NOT pass to their
 children; it goes to co-heirs by accretion or intestate fallback.
@@ -1118,7 +1288,7 @@ claim is via underprovision, not preterition).
 fn is_preterited(heir: &ClassifiedHeir, will: &WillInput) -> bool {
     // Must be eligible compulsory heir in G1 or G2
     if !heir.is_eligible { return false; }
-    if !matches!(heir.effective_group, Some("G1") | Some("G2")) { return false; }
+    if !matches!(heir.effective_group, Some(EffectiveGroup::LegitimateChildGroup) | Some(EffectiveGroup::LegitimateAscendantGroup)) { return false; }
     // Not mentioned at all in will (no institution, no express disinheritance)
     let in_institutions = will.institutions.iter().any(|i| i.heir_id == heir.input_ref);
     let in_disinheritances = will_disinheritances.iter().any(|d| d.heir_id == heir.input_ref);
@@ -1181,7 +1351,7 @@ if will_dispositions_total + collatable_donations_total > FP_gross:
 
 When a will institution gives a compulsory heir less than their legitime, the engine
 automatically tops up the heir to their full legitime amount. The deficiency comes from
-the free portion. Emit `ValidationWarning::LegitimeUnderprovision`.
+the free portion. Emit `ValidationWarning::Underprovision`.
 
 ### §9.6 Condition Stripping (Art. 872)
 
@@ -1232,14 +1402,18 @@ degree proportionally. If no co-heirs in same degree, passes to next degree.
 
 ### §10.5 Vacancy Causes and Resolution Matrix
 
-| VacancyCause | Representation? | Accretion? | Art. 1021 ¶2? |
+| VacancyCause | Representation? | Accretion? | Art. 1021 ¶2 restart? |
 |---|---|---|---|
 | Predecease | Yes (if has children) | If no reps | If legitime |
-| Incapacity | Yes | If no reps | If legitime |
+| Unworthiness | Yes (Art. 1035) | If no reps | If legitime |
 | Renunciation | NO (Art. 977) | Yes | If legitime |
-| DisinheritanceInvalid | No (heir keeps share) | N/A | N/A |
+| Disinheritance | Yes (Art. 923 — valid only) | If no reps | If legitime |
+| SubstitutePredeceased | No (substitute vacant) | Yes (FP) | If legitime |
+| SubstituteIncapacitated | No (substitute vacant) | Yes (FP) | If legitime |
 | ConditionFailed | No | Yes (FP portion) | If legitime |
-| LegitimacyVacancy | No | No — RESTART | Always |
+> Note: `DisinheritanceInvalid` is NOT a VacancyCause (invalid disinheritance → heir keeps share
+> + ValidationWarning::InvalidDisinheritance). `LegitimacyVacancy` is NOT a VacancyCause (Art.
+> 1021 ¶2 triggers RestartTrigger::LegitimeVacancy — a full pipeline restart).
 
 ---
 
@@ -1275,10 +1449,11 @@ Legal basis: {article_citations}.
 |---|---|---|
 | ValidDisinheritance | "validly disinherited" | Art. 916 |
 | Predeceased | "predeceased the decedent" | Art. 970 |
-| Renunciation | "renounced their inheritance" | Art. 1006 |
+| Renounced | "renounced their inheritance" | Art. 1041 |
 | IronCurtain | "barred by the Iron Curtain Rule" | Art. 992 |
-| Incapacity | "found incapable of inheriting" | Art. 1032 |
-| NotCalled | "not called to this succession" | — |
+| Unworthiness | "found unworthy/incapable of inheriting" | Art. 1032 |
+| ExcludedByGroup | "excluded by presence of closer compulsory heirs" | Art. 887(2) |
+| FiliationNotProved | "filiation not legally established" | FC Art. 175 |
 
 ---
 
@@ -1588,21 +1763,47 @@ export type ScenarioCode =
   | "I6"  | "I7"  | "I8"  | "I9"  | "I10"
   | "I11" | "I12" | "I13" | "I14" | "I15";
 
+// DISC-02: 9 variants (PredeceaseNoRepresentation replaces Predeceased;
+//   FiliationNotProved replaces Incapacity for IC; Renounced replaces Renunciation;
+//   IronCurtain kept; NotCalled/InvalidDisinheritance removed)
 export type ExclusionReason =
-  | "Predeceased" | "Incapacity" | "Unworthiness" | "Renunciation"
-  | "IronCurtain" | "NotCalled" | "ValidDisinheritance" | "InvalidDisinheritance";
+  | "PredeceaseNoRepresentation"
+  | "Unworthiness"
+  | "FiliationNotProved"
+  | "GuiltySpouseLegalSeparation"
+  | "AdoptionRescinded"
+  | "ValidDisinheritance"
+  | "Renounced"
+  | "ExcludedByGroup"
+  | "IronCurtain";
 
+// DISC-03: 4 variants (Unworthiness replaces Incapacity; IllegitimateTransmission replaces Art902...)
 export type RepresentationTrigger =
-  | "Predecease" | "Disinheritance" | "Incapacity" | "Art902IllegitimateLine";
+  | "Predecease" | "Disinheritance" | "Unworthiness" | "IllegitimateTransmission";
 
+// DISC-04: 7 variants (Unworthiness replaces Incapacity; SubstitutePredeceased/Incapacitated added;
+//   DisinheritanceInvalid/LegitimacyVacancy removed)
 export type VacancyCause =
-  | "Predecease" | "Incapacity" | "Renunciation" | "DisinheritanceInvalid"
-  | "ConditionFailed" | "LegitimacyVacancy";
+  | "Predecease" | "Renunciation" | "Unworthiness" | "Disinheritance"
+  | "SubstitutePredeceased" | "SubstituteIncapacitated" | "ConditionFailed";
 
+// DISC-05: 8 variants (AccretionFreePortion/AccretionIntestate replaces Accretion;
+//   OwnRightLegitime/NextDegreeInOwnRight added)
 export type ResolutionMethod =
-  | "Substitution" | "Representation" | "Accretion" | "IntestateFallback" | "Escheat";
+  | "Substitution" | "Representation"
+  | "AccretionFreePortion" | "AccretionIntestate"
+  | "OwnRightLegitime" | "IntestateFallback" | "NextDegreeInOwnRight" | "Escheat";
 
-export type ShareSource = "Legitime" | "FreePortion" | "Intestate" | "Collateral";
+// §20.1: 5 variants (Devise/Legacy added; Collateral removed — collaterals use "Intestate")
+export type ShareSource = "Legitime" | "FreePortion" | "Intestate" | "Devise" | "Legacy";
+
+// DISC-01: 5 full-name variants (not G1–G4 strings)
+export type EffectiveGroup =
+  | "LegitimateChildGroup"
+  | "LegitimateAscendantGroup"
+  | "SurvivingSpouseGroup"
+  | "IllegitimateChildGroup"
+  | "CollateralGroup";
 ```
 
 ### §14.4 Money Types
@@ -1648,24 +1849,47 @@ export interface EstateInput {
 }
 
 export interface HeirInput {
-  id:                       HeirId;
-  name:                     string;
-  heir_type:                HeirType;
-  is_alive:                 boolean;
-  is_adopted:               boolean;
-  adoption_rescinded:       boolean;
-  adoption_date:            DateString | null;
-  adoption_rescission_date: DateString | null;
-  cause_proven:             boolean;
-  reconciled:               boolean;
-  date_of_birth:            DateString | null;
-  date_of_death:            DateString | null;
-  degree:                   number | null;
-  legal_separation_status:  LegalSeparationStatus;
-  disinheritances:          DisinheritanceRecord[];
-  substitutions:            SubstitutionInput[];
-  children:                 HeirInput[];        // recursive
-  donations_received:       DonationId[];
+  id:                               HeirId;
+  name:                             string;
+  heir_type:                        HeirType;
+
+  // Eligibility Gate Flags
+  is_alive:                         boolean;
+  date_of_death:                    DateString | null;
+  date_of_birth:                    DateString | null;
+  is_unworthy:                      boolean;
+  unworthiness_condoned:            boolean;
+  /** FC Arts. 172/175: must be true for LC/Legitimated/Adopted; set for IC. */
+  filiation_proved:                 boolean;
+  has_renounced:                    boolean;
+
+  // Adoption Fields
+  is_adopted:                       boolean;
+  adoption_rescinded:               boolean;
+  adoption_date:                    DateString | null;
+  adoption_rescission_date:         DateString | null;
+  biological_parent_is_adopter_spouse: boolean;
+
+  // Classification Metadata
+  is_legitimated:                   boolean;
+  /** For LegitimateAscendant: true = paternal line, false = maternal (Art. 890). */
+  paternal_line:                    boolean;
+  /** For ascendants: 1=parent, 2=grandparent; for collaterals: 2=sibling, 3=niece/nephew. */
+  degree:                           number | null;
+  /** For Sibling/NieceNephew/OtherCollateral: true = full blood (Art. 1006). */
+  is_full_blood:                    boolean;
+
+  // Legal Separation
+  legal_separation_status:          LegalSeparationStatus;
+
+  // Will Dispositions
+  /** cause_proven and reconciled are on DisinheritanceRecord, NOT on HeirInput. */
+  disinheritances:                  DisinheritanceRecord[];
+  substitutions:                    SubstitutionInput[];
+
+  // Family Tree
+  children:                         HeirInput[];   // recursive
+  donations_received:               DonationId[];
 }
 
 export interface DisinheritanceRecord {
@@ -1762,7 +1986,7 @@ export interface HeirDistribution {
   heir_id:               HeirId;
   heir_name:             string;
   heir_type:             HeirType;
-  effective_group:       string | null;   // "G1".."G4" or null
+  effective_group:       EffectiveGroup | null;  // null for excluded heirs
   is_excluded:           boolean;
   exclusion_reason:      ExclusionReason | null;
   legitime_centavos:     number;
@@ -1804,33 +2028,33 @@ export interface ComputationLogEntry {
 ### §14.7 Tagged Union Output Types
 
 ```typescript
-// PreteritionEffect — tag field: "type"
+// PreteritionEffect — tag field: "type"  (DISC-06)
 export type PreteritionEffect =
-  | { type: "AnnulsAll" }
-  | { type: "AnnulsInstitutions"; affected_institution_ids: DispositionId[] };
+  | { type: "None" }   // no preterition; field always present
+  | { type: "InstitutionAnnulled"; preterited_heir_ids: HeirId[] };
 
-// ValidationWarning — tag field: "code", data field: "data"
+// ValidationWarning — tag field: "code", data field: "data"  (§20.1 canonical)
 export type ValidationWarning =
-  | { code: "CollationDebt";          data: { heir_id: HeirId; excess_centavos: number } }
-  | { code: "InvalidDisinheritance";  data: { heir_id: HeirId; reason: string } }
-  | { code: "ManualReviewRequired";   data: { flag: string } }
-  | { code: "LegitimeUnderprovision"; data: { heir_id: HeirId; deficit_centavos: number } }
-  | { code: "InofficiousDonation";    data: { donation_id: DonationId; reduction_centavos: number } }
-  | { code: "ArticuloMortisSpouse";   data: { spouse_legitime_reduced: boolean } }
-  | { code: "IronCurtainApplied";     data: { blocked_heir_id: HeirId } }
-  | { code: "ReconciliationNullified";data: { disinheritance_id: DispositionId } }
-  | { code: "SubstitutionActivated";  data: { primary_heir_id: HeirId; substitute_heir_id: HeirId } }
-  | { code: "EscheatLikely";          data: null };
+  | { code: "PreteritionDetected";      data: { preterited_heir_ids: HeirId[] } }
+  | { code: "InvalidDisinheritance";    data: { heir_id: HeirId; reason: string } }
+  | { code: "ConditionStripped";        data: { condition_id: ConditionId; reason: string } }
+  | { code: "Underprovision";           data: { heir_id: HeirId; deficit_centavos: number } }
+  | { code: "InoficiousnessReduced";    data: { donation_id: DonationId; reduction_centavos: number } }
+  | { code: "ReconciliationVoided";     data: { disinheritance_id: DispositionId } }
+  | { code: "PosthumousHeirPossible";   data: { heir_id: HeirId } }
+  | { code: "AnnuityChoiceRequired";    data: { spouse_heir_id: HeirId } }
+  | { code: "IndivisibleRealty";        data: { description: string } }
+  | { code: "MultipleDisinheritances";  data: { disinherited_heir_ids: HeirId[] } };
 
-// ManualReviewFlag — tag field: "flag"
+// ManualReviewFlag — tag field: "flag"  (§20.1 canonical)
 export type ManualReviewFlag =
-  | { flag: "AllGrandparentsExcluded" }
-  | { flag: "CollateralDegreeAmbiguous";    degree: number }
-  | { flag: "FiliationDisputed";            heir_id: HeirId }
-  | { flag: "AdoptionDocumentsMissing";     heir_id: HeirId }
-  | { flag: "WillFormInvalid" }
-  | { flag: "Art903AmbiguousParentage" }
-  | { flag: "AllG1DisinheritedNoReps" };
+  | { flag: "AllDescendantsDisinherited" }
+  | { flag: "DisinheritedWithSubstituteAndReps"; heir_id: HeirId }
+  | { flag: "PosthumousChildPossible" }
+  | { flag: "UsufructElectionRequired"; spouse_heir_id: HeirId }
+  | { flag: "IndivisibleRealtyPartition" }
+  | { flag: "ReconciliationPreWill";    disinheritance_id: DispositionId }
+  | { flag: "LegitimationContested";    heir_id: HeirId };
 
 // ComputationError — tag field: "error_type"
 export type ComputationError =
@@ -1914,17 +2138,40 @@ export const ScenarioCodeSchema = z.enum([
   "I1","I2","I3","I4","I5","I6","I7","I8","I9","I10","I11","I12","I13","I14","I15",
 ]);
 
+// DISC-02: 9 canonical variants
 export const ExclusionReasonSchema = z.enum([
-  "Predeceased","Incapacity","Unworthiness","Renunciation",
-  "IronCurtain","NotCalled","ValidDisinheritance","InvalidDisinheritance",
+  "PredeceaseNoRepresentation","Unworthiness","FiliationNotProved",
+  "GuiltySpouseLegalSeparation","AdoptionRescinded","ValidDisinheritance",
+  "Renounced","ExcludedByGroup","IronCurtain",
 ]);
 
+// DISC-03: 4 canonical variants
 export const RepresentationTriggerSchema = z.enum([
-  "Predecease","Disinheritance","Incapacity","Art902IllegitimateLine",
+  "Predecease","Disinheritance","Unworthiness","IllegitimateTransmission",
 ]);
 
+// DISC-04: 7 canonical variants
+export const VacancyCauseSchema = z.enum([
+  "Predecease","Renunciation","Unworthiness","Disinheritance",
+  "SubstitutePredeceased","SubstituteIncapacitated","ConditionFailed",
+]);
+
+// DISC-05: 8 canonical variants
+export const ResolutionMethodSchema = z.enum([
+  "Substitution","Representation",
+  "AccretionFreePortion","AccretionIntestate",
+  "OwnRightLegitime","IntestateFallback","NextDegreeInOwnRight","Escheat",
+]);
+
+// §20.1: 5 canonical variants
 export const ShareSourceSchema = z.enum([
-  "Legitime","FreePortion","Intestate","Collateral",
+  "Legitime","FreePortion","Intestate","Devise","Legacy",
+]);
+
+// DISC-01: 5 full-name variants
+export const EffectiveGroupSchema = z.enum([
+  "LegitimateChildGroup","LegitimateAscendantGroup","SurvivingSpouseGroup",
+  "IllegitimateChildGroup","CollateralGroup",
 ]);
 ```
 
@@ -1932,25 +2179,45 @@ export const ShareSourceSchema = z.enum([
 
 ```typescript
 // Recursive HeirInput requires z.lazy()
+// DISC-09: removed cause_proven/reconciled (belong on DisinheritanceRecord only);
+//          added 8 missing eligibility/classification fields
 type HeirInputType = z.infer<typeof HeirInputSchemaBase> & { children: HeirInputType[] };
 const HeirInputSchemaBase = z.object({
-  id:                       IdSchema,
-  name:                     z.string().min(1),
-  heir_type:                HeirTypeSchema,
-  is_alive:                 z.boolean(),
-  is_adopted:               z.boolean(),
-  adoption_rescinded:       z.boolean(),
-  adoption_date:            DateStringSchema.nullable(),
-  adoption_rescission_date: DateStringSchema.nullable(),
-  cause_proven:             z.boolean(),
-  reconciled:               z.boolean(),
-  date_of_birth:            DateStringSchema.nullable(),
-  date_of_death:            DateStringSchema.nullable(),
-  degree:                   z.number().int().min(2).max(5).nullable(),
-  legal_separation_status:  LegalSeparationStatusSchema,
-  disinheritances:          z.array(DisinheritanceRecordSchema),
-  substitutions:            z.array(SubstitutionInputSchema),
-  donations_received:       z.array(IdSchema),
+  id:                                    IdSchema,
+  name:                                  z.string().min(1),
+  heir_type:                             HeirTypeSchema,
+
+  // Eligibility Gate Flags
+  is_alive:                              z.boolean(),
+  date_of_death:                         DateStringSchema.nullable(),
+  date_of_birth:                         DateStringSchema.nullable(),
+  is_unworthy:                           z.boolean(),
+  unworthiness_condoned:                 z.boolean(),
+  filiation_proved:                      z.boolean(),
+  has_renounced:                         z.boolean(),
+
+  // Adoption Fields
+  is_adopted:                            z.boolean(),
+  adoption_rescinded:                    z.boolean(),
+  adoption_date:                         DateStringSchema.nullable(),
+  adoption_rescission_date:              DateStringSchema.nullable(),
+  biological_parent_is_adopter_spouse:   z.boolean(),
+
+  // Classification Metadata
+  is_legitimated:                        z.boolean(),
+  paternal_line:                         z.boolean(),
+  degree:                                z.number().int().min(1).nullable(),
+  is_full_blood:                         z.boolean(),
+
+  // Legal Separation
+  legal_separation_status:               LegalSeparationStatusSchema,
+
+  // Will Dispositions
+  disinheritances:                       z.array(DisinheritanceRecordSchema),
+  substitutions:                         z.array(SubstitutionInputSchema),
+
+  // Collation Linkage
+  donations_received:                    z.array(IdSchema),
 }).strict();
 
 export const HeirInputSchema: z.ZodType<HeirInputType> = HeirInputSchemaBase.extend({
@@ -1969,15 +2236,50 @@ export const ComputationInputSchema = z.object({
 ### §15.5 Tagged Union Schemas
 
 ```typescript
+// §20.1 canonical 10 variants — complete definition
 export const ValidationWarningSchema = z.discriminatedUnion("code", [
-  z.object({ code: z.literal("CollationDebt"),
-    data: z.object({ heir_id: IdSchema, excess_centavos: z.number().int() }) }),
+  z.object({ code: z.literal("PreteritionDetected"),
+    data: z.object({ preterited_heir_ids: z.array(IdSchema) }) }),
   z.object({ code: z.literal("InvalidDisinheritance"),
     data: z.object({ heir_id: IdSchema, reason: z.string() }) }),
-  z.object({ code: z.literal("LegitimeUnderprovision"),
+  z.object({ code: z.literal("ConditionStripped"),
+    data: z.object({ condition_id: IdSchema, reason: z.string() }) }),
+  z.object({ code: z.literal("Underprovision"),
     data: z.object({ heir_id: IdSchema, deficit_centavos: z.number().int() }) }),
-  z.object({ code: z.literal("EscheatLikely"), data: z.null() }),
-  // ... (all 10 variants)
+  z.object({ code: z.literal("InoficiousnessReduced"),
+    data: z.object({ donation_id: IdSchema, reduction_centavos: z.number().int() }) }),
+  z.object({ code: z.literal("ReconciliationVoided"),
+    data: z.object({ disinheritance_id: IdSchema }) }),
+  z.object({ code: z.literal("PosthumousHeirPossible"),
+    data: z.object({ heir_id: IdSchema }) }),
+  z.object({ code: z.literal("AnnuityChoiceRequired"),
+    data: z.object({ spouse_heir_id: IdSchema }) }),
+  z.object({ code: z.literal("IndivisibleRealty"),
+    data: z.object({ description: z.string() }) }),
+  z.object({ code: z.literal("MultipleDisinheritances"),
+    data: z.object({ disinherited_heir_ids: z.array(IdSchema) }) }),
+]);
+
+// §20.1 canonical 7 variants
+export const ManualReviewFlagSchema = z.discriminatedUnion("flag", [
+  z.object({ flag: z.literal("AllDescendantsDisinherited") }),
+  z.object({ flag: z.literal("DisinheritedWithSubstituteAndReps"),
+    heir_id: IdSchema }),
+  z.object({ flag: z.literal("PosthumousChildPossible") }),
+  z.object({ flag: z.literal("UsufructElectionRequired"),
+    spouse_heir_id: IdSchema }),
+  z.object({ flag: z.literal("IndivisibleRealtyPartition") }),
+  z.object({ flag: z.literal("ReconciliationPreWill"),
+    disinheritance_id: IdSchema }),
+  z.object({ flag: z.literal("LegitimationContested"),
+    heir_id: IdSchema }),
+]);
+
+// DISC-06: None/InstitutionAnnulled
+export const PreteritionEffectSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("None") }),
+  z.object({ type: z.literal("InstitutionAnnulled"),
+    preterited_heir_ids: z.array(IdSchema) }),
 ]);
 
 export const ComputationErrorSchema = z.discriminatedUnion("error_type", [
@@ -2579,7 +2881,7 @@ The engine must pass all 47 test vectors. 100% scenario coverage (all 30 Scenari
 - E = ₱1,000,000; 1 LC; donation received = ₱3,000,000
 - E_adj = ₱4,000,000; LC legitime = ₱2,000,000
 - LC estate portion = ₱2,000,000 − ₱2,000,000 = ₱0 (donation fully covers)
-- Remaining donation (₱1,000,000) exceeds estate → CollationDebt warning; MANUAL_REVIEW flag
+- Remaining donation (₱1,000,000) exceeds estate → `Underprovision` warning; `MANUAL_REVIEW` flag
 
 ### §18.3 Full Vector Coverage
 
@@ -2653,11 +2955,12 @@ For each AdoptedChild heir a (not rescinded):
 ```
 Adopted child receives same share as a legitimate child in the same position.
 
-#### INV-8: Preterition Totality (when AnnulsAll)
+#### INV-8: Preterition Totality (when InstitutionAnnulled)
 ```
-When testate_validation.preterition.effect.type == "AnnulsAll":
-  succession_type == "Intestate"
-  AND all institution amounts are zero
+When testate_validation.preterition.effect.type == "InstitutionAnnulled":
+  succession_type == "Mixed"   (devises/legacies survive; institutions annulled)
+  AND all institution heir amounts are zero
+  AND preterited heirs receive intestate shares from released free portion
 ```
 Full preterition converts to intestate distribution.
 
@@ -3096,15 +3399,15 @@ A developer implementing the v2 engine must verify every item:
 
 ### §21.1 Edge Cases That Require MANUAL_REVIEW Flags
 
-| Edge Case | Flag Emitted | Description |
+| Edge Case | Flag Emitted (§20.1 canonical) | Description |
 |---|---|---|
-| All G1 heirs disinherited, no representatives | `AllG1DisinheritedNoReps` | Conservative: does NOT promote G2 automatically. Manual attorney review required. |
-| Collateral degree ambiguous (≥5) | `CollateralDegreeAmbiguous{degree}` | Art. 1010 limits to 5th degree. Degree 5 = just included; >5 = state inherits. |
-| IC filiation unproven | `FiliationDisputed{heir_id}` | Engine marks as ineligible; attorney must verify filiation documents. |
-| Adoption documents missing | `AdoptionDocumentsMissing{heir_id}` | RA 8552 §16 requires adoption decree. Without it, no G1 status. |
-| Will formality suspect | `WillFormInvalid` | Engine cannot verify notarial/holographic formalities. |
-| Illegitimate decedent, parentage disputed | `Art903AmbiguousParentage` | T14/T15 requires proof of filiation by parents. |
-| All grandparents excluded (no G2) | `AllGrandparentsExcluded` | Unusual; may indicate input error. |
+| All G1 heirs disinherited, no representatives | `AllDescendantsDisinherited` | Conservative: does NOT promote G2 automatically. Manual attorney review required. |
+| Heir both disinherited AND has named substitute AND representatives eligible | `DisinheritedWithSubstituteAndReps{heir_id}` | Complex priority conflict — attorney must resolve. |
+| Conception/birth dates suggest posthumous child is possible | `PosthumousChildPossible` | Art. 777 timing issue; may require waiting period. |
+| Surviving spouse usufruct-or-legitime election required | `UsufructElectionRequired{spouse_heir_id}` | Art. 900 ¶1 — spouse must choose; holding distributable estate. |
+| Indivisible realty in estate | `IndivisibleRealtyPartition` | Court order or notarial agreement needed to partition. |
+| Reconciliation occurred before will was executed | `ReconciliationPreWill{disinheritance_id}` | Pre-will reconciliation may or may not void the later disinheritance; Art. 922 is ambiguous. |
+| IC legitimation or filiation documents contested | `LegitimationContested{heir_id}` | FC Art. 175 requires proof; engine marks ineligible pending attorney verification. |
 
 ### §21.2 Additional Edge Cases (No Flag, Handled Automatically)
 
@@ -3112,13 +3415,13 @@ A developer implementing the v2 engine must verify every item:
 |---|---|
 | Zero estate (E=0) | All distributions = ₱0; warnings emitted for each heir with ₱0 |
 | Single heir | Full estate to that heir; no rounding issue |
-| All heirs predeceased, no representatives | Escheat (I15); `EscheatLikely` warning |
+| All heirs predeceased, no representatives | Escheat (I15); `ResolutionMethod::Escheat` |
 | Art. 900 ¶2: cohabitation_years ≥ 5 despite articulo_mortis=true | Normal T12 (½ spouse); NOT reduced |
-| Donation amount > entire estate | CollationDebt warning; imputation capped at 0 (heir gets nothing from estate) |
+| Donation amount > entire estate | `Underprovision` warning; imputation capped at 0 (heir gets nothing from estate) |
 | Multiple co-heirs with equal fractional remainder (Hare-Niemeyer tie) | Stable sort by position in input array; first heir gets +1 centavo |
 | Recursive representation depth > 10 | MANUAL_REVIEW flag; engine halts recursion at depth 10 |
 | Will institution fractions sum > 1 | DomainValidation error; reject input |
-| No will + `has_will=true` | Treated as intestate; `WillFormInvalid` warning |
+| No will + `has_will=true` | Treated as intestate; `ValidationWarning::ConditionStripped` on each stripped will condition |
 | Adopted child later legitimated (before adoption) | Use latest legal status; if adoption decree valid, AdoptedChild status takes precedence |
 
 ### §21.3 Invariant Violation Responses

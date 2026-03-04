@@ -1,0 +1,37 @@
+CONVERGED — Philippine Inheritance Distribution Engine v2 Reverse Loop
+
+Date: 2026-03-04
+Total aspects: 30
+Analyzed: 30
+Pending: 0
+Convergence: 100%
+
+Wave summary:
+- Wave 1 (Legal Sources):        2/2 complete — Civil Code, Family Code, RA 8552, RA 11642, 23 test vectors
+- Wave 2 (Domain Rules):         9/9 complete — heir classification, concurrence, representation, legitimes,
+                                  intestate distribution, testate validation, collation, vacancy, BUG-001 fix
+- Wave 3 (Engine Design):        5/5 complete — Rust types (49), pipeline (10 steps), algorithms, 47 test
+                                  vectors, 15 invariants
+- Wave 4 (Bridge Contract):      4/4 complete — WASM export, serde wire format, error contract, initialization
+- Wave 5 (Frontend):             6/6 complete — TypeScript types, Zod schemas, wizard steps, results view,
+                                  shared components, design system
+- Wave 6 (Synthesis):            4/4 complete — spec draft, cross-layer consistency (9 DISCs), spec review
+
+Output artifact:
+  docs/plans/inheritance-v2-spec.md — 3,300+ lines, 21 sections + 2 appendices
+  Self-contained, implementation-ready specification for:
+    - Rust engine (WASM-compiled, BigRational arithmetic, 10-step pipeline)
+    - WASM bridge (compute_json, serde wire format, dual-path initialization)
+    - React frontend (6-step wizard, results view, design system)
+
+  A developer can build the entire product from this document without discovering
+  any type mismatches, missing fields, or serialization surprises at integration time.
+
+Key decisions:
+  - BUG-001 fixed: multiple simultaneous disinheritances batch-processed, single recompute
+  - EffectiveGroup: proper 5-variant enum (LegitimateChildGroup…CollateralGroup)
+  - HeirInput: 24 canonical fields, no cause_proven/reconciled (moved to DisinheritanceRecord)
+  - ExclusionReason: 9 variants (PredeceaseNoRepresentation, FiliationNotProved, etc.)
+  - ResolutionMethod: 8 variants (AccretionFreePortion ≠ AccretionIntestate ≠ OwnRightLegitime)
+  - PreteritionEffect: None/InstitutionAnnulled (AnnulsAll was legally incorrect)
+  - Design system: Archival Slate + Sage + Parchment palette (not Navy+Gold from v1)
