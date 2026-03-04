@@ -1,20 +1,21 @@
-# Current Stage: 5
+# Current Stage: 6
 
-## Stage 5 — Email Threads & Ops (4 tools)
+## Stage 6 — Email Drafts & Sending (8 tools)
 
-Create backend service routes and CE tools for email thread listing, hiding/unhiding threads, and message attachments.
+Create backend service routes and CE tools for email drafts, sending, and scheduling.
 
 | # | Tool | Backend Route |
 |---|------|--------------|
-| 38 | `cheerful_list_threads` | `GET /api/service/threads` |
-| 39 | `cheerful_hide_thread` | `POST /api/service/threads/{id}/hide` |
-| 40 | `cheerful_unhide_thread` | `POST /api/service/threads/{id}/unhide` |
-| 41 | `cheerful_list_message_attachments` | `GET /api/service/threads/{thread_id}/messages/{message_id}/attachments` |
+| 42 | `cheerful_get_thread_draft` | `GET /api/service/threads/{id}/draft` |
+| 43 | `cheerful_create_thread_draft` | `POST /api/service/threads/{id}/draft` |
+| 44 | `cheerful_update_thread_draft` | `PATCH /api/service/threads/{id}/draft` |
+| 45 | `cheerful_send_email` | `POST /api/service/email/send` |
+| 46 | `cheerful_schedule_email` | `POST /api/service/email/schedule` |
+| 47 | `cheerful_list_scheduled_emails` | `GET /api/service/email/scheduled` |
+| 48 | `cheerful_cancel_scheduled_email` | `DELETE /api/service/email/scheduled/{id}` |
+| 49 | `cheerful_reschedule_email` | `PATCH /api/service/email/scheduled/{id}` |
 
-**Priority**: IMPLEMENT — Tests exist (29 passing), implement remaining tool registrations and catalog entries.
+**Priority**: SCAFFOLD — Create test fixture file for email drafts & sending domain.
 
 ## Work Log
-- 2026-03-04: Stage 4 complete (194 total tests passing, 10 tools implemented). Advancing to Stage 5.
-- 2026-03-04: SCAFFOLD complete — email_fixtures.py with mock responses for all 4 Stage 5 tools.
-- 2026-03-04: BACKEND ROUTES complete — 4 service routes: GET /threads, PATCH /threads/{id}/hide, PATCH /threads/{id}/unhide, GET /messages/{id}/attachments.
-- 2026-03-04: WRITE TESTS complete — 29 tests for 4 tools (list_threads, hide_thread, unhide_thread, list_message_attachments). Also created tools_email.py with full implementations + api.py email functions.
+- 2026-03-04: Stage 5 complete (223 total tests passing, 34 cheerful tools registered). Advancing to Stage 6.
