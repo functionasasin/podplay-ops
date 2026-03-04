@@ -22,3 +22,4 @@ Create backend service routes and CE tools for campaign CRUD operations and laun
 - 2026-03-04: Backend routes batch 2 — create_campaign, update_campaign. Full CRUD now complete. Launch route still needed.
 - 2026-03-04: Backend routes batch 3 — launch_campaign service route. Full orchestration endpoint with csv_content/image_url support. All 6 Stage 2 backend routes complete.
 - 2026-03-04: Tests batch 1 — 17 tests for get_campaign, delete_campaign, duplicate_campaign (happy path, API verification, 404/403 errors, no-user errors). Created tools_campaigns.py with implementations + api.py client functions. Fixed conftest async mock bug.
+- 2026-03-04: Tests batch 2 — 16 tests for create_campaign (5), update_campaign (5), launch_campaign (6). Covers happy path, API call verification, optional field omission, error responses (422/403/404), no-user errors. All 33 Stage 2 tests passing.
