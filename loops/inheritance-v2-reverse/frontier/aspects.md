@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 30
-- Analyzed: 11
-- Pending: 19
-- Convergence: 37%
+- Analyzed: 12
+- Pending: 18
+- Convergence: 40%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -27,7 +27,7 @@ Depends on Wave 1 sources being consolidated.
 
 ### Wave 3: Engine Design
 Depends on Wave 2 rule extraction.
-- [ ] rust-types — Define all Rust structs and enums with exact field names, types, serde attributes
+- [x] rust-types — Define all Rust structs and enums with exact field names, types, serde attributes
 - [ ] pipeline-design — 10-step pipeline with input/output types per step, restart conditions, max-restart guard
 - [ ] algorithms — Pseudocode for all non-trivial computations (cap rule, Art. 911 reduction, collateral distribution, Hare-Niemeyer rounding)
 - [ ] test-vectors — 20+ test vectors covering all 30 scenarios with expected peso amounts
@@ -56,6 +56,7 @@ Depends on all previous waves.
 - [ ] spec-review — Self-review: can a developer build the entire product from this spec alone, without any type mismatches at integration time?
 
 ## Recently Analyzed
+- rust-types (Wave 3) — 49 distinct types across 14 modules; ComputationInput/DecedentInput/EstateInput/HeirInput/WillInput/DonationInput full structs with serde attributes; HeirType (9 variants), DisinheritanceGround (22 variants), ScenarioCode (30 variants) enums; Money type with custom centavos deserializer (number-or-string for BigInt); HeirInput.children for cascading representation; ClassifiedHeir intermediate type; LegitimeResult/LegitimeEntry; TestateValidationResult and all sub-types; CollationResult/ImputationResult/DonationReduction/PartitionAllocation; VacantShare/VacancyResolution/VacancyRedistribution; ValidationWarning (10 variants) + ManualReviewFlag (7 variants); ComputationOutput/HeirDistribution/RoundingAdjustment; ComputationError (5 variants); 10-module src layout; 8 key design decisions (BigRational internal, i64 I/O, PascalCase enums, flat ScenarioCode, children-over-representatives, engine-computed is_valid, "numer/denom" fractions, null-not-absent Options)
 - multiple-disinheritance-fix (Wave 2) — BUG-001 correct algorithm: 4-phase batch processing (validate→batch-exclude→batch-add-reps→single ScenarioCode recompute); Art. 777 simultaneous-at-death principle; cascading disinheritance handled by find_representatives_recursive(); spousal disinheritance has no Art. 923 representation cascade; conservative rule: all-G1-disinherited-with-no-reps does NOT activate G2 (MANUAL_REVIEW flag); mixed valid/invalid partitioned before any mutation; idempotency guard for pipeline restarts; ExclusionReason/DisinheritanceResult/RepresentationChain Rust types; 8 INV-MD invariants; 5 test vectors (TV-MD-01 to TV-MD-05); 4 narrative templates; pipeline integration showing single restart path
 - vacancy-resolution (Wave 2) — 4-step priority chain (substitution→representation→accretion→intestate fallback); Art. 1021 ¶2 legitime vacancy triggers scenario recompute (NOT proportional add); Art. 1021 ¶1 FP vacancy = true accretion requires pro indiviso; Art. 1017 "equal shares" does not block accretion; Art. 969 total repudiation → next degree in own right; Art. 977 renunciation blocks representation; Art. 1019 proportionality; Art. 1020 charges transfer; Art. 1023 devisees/legatees/usufructuaries; VacantShare/VacancyCause/ShareSource/ResolutionMethod/VacancyResolution/Redistribution Rust types; convergence guard (initial_heir_count max restarts); 12 test vectors; 10 invariants; 5 narrative templates; 11 edge cases
 - collation (Wave 2) — 14-category collatability matrix; Art. 1061 4-condition obligation; Art. 1062 two exemptions (donor-express, repudiation) with inofficiousness override; Art. 1064 representation collation (grandchildren collate parent's donations even if property gone); Art. 1065 ascending line exception; Art. 1066 spouse donations; Art. 1067 exempt categories; Art. 1068 professional expense conditional; Art. 1069 debt/election/fine collatable; Art. 1070 wedding gift 1/10 FP threshold; Art. 1071 donation-time valuation; Art. 1072 joint donation split; E_adj = net_estate + collatable_sum used for ALL legitime computations; two-phase pipeline integration (before legitime computation + after distribution); imputation: charged to legitime then FP; Art. 911(3) reduction in reverse-chrono; Donation + CollationResult + ImputationResult + DonationReduction + PartitionAllocation Rust structs; 17 test vectors; 12 edge cases; 5 narrative templates
