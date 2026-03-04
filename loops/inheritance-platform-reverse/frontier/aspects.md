@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 22
-- Analyzed: 2
-- Pending: 20
-- Convergence: 9%
+- Analyzed: 3
+- Pending: 19
+- Convergence: 14%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -13,7 +13,7 @@ Gather and catalog all source material.
 
 - [x] catalog-routes — Read every file in `app/src/routes/`, catalog: path, exported route name, component, what it renders, auth requirement
 - [x] catalog-components — Read every file in `app/src/components/`, catalog: file path, what it renders, props, any stubs/placeholders
-- [ ] catalog-lib-hooks — Read every file in `app/src/lib/` and `app/src/hooks/`, catalog: exports, dependencies, completeness
+- [x] catalog-lib-hooks — Read every file in `app/src/lib/` and `app/src/hooks/`, catalog: exports, dependencies, completeness
 - [ ] catalog-config — Read `app/src/index.css`, `app/vite.config.ts`, `app/tsconfig.json`, `app/package.json`, `app/supabase/config.toml`, catalog current design tokens and config
 - [ ] catalog-migrations — Read every file in `app/supabase/migrations/`, catalog: what each creates, any duplicates or conflicts
 - [ ] read-premium-spec — Read `docs/plans/inheritance-premium-spec.md`, extract every platform-related feature that was specified
@@ -54,3 +54,4 @@ Depends on all previous waves. **Strict internal dependency order.**
 |--------|------|------|--------------|
 | catalog-routes | 1 | 2026-03-04 | 10 registered routes, 1 unregistered (settings/team — CRITICAL), 3 stub placeholders (share results, client cases, logo reload hack), no route-level auth guards, missing /cases list route |
 | catalog-components | 1 | 2026-03-04 | ~80 non-test files across 13 subdirs; 5 critical stubs: DocumentChecklist (unimplemented backend fns), DeadlineTimeline (raw HTML + missing handler), ClientForm (raw HTML, no validation), ClientList (raw HTML table), InviteMemberDialog (unstyled buttons); MISSING: Toast/notification system, Skeleton component, auth-conditional nav |
+| catalog-lib-hooks | 1 | 2026-03-04 | 18 lib files + 5 hooks; CRITICAL: supabase.ts throws on missing env vars (white-screen), comparison.ts static wasm import (blocks thread), no createOrganization anywhere; HIGH: no resetPassword, intake.ts non-null assertion crash, @/wasm/bridge and @/data/document-templates unverified; MEDIUM: useAuth no error state, useAutoSave no isDirty/flush-on-unmount; 7 missing hooks for lib modules |
