@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 25
-- Analyzed: 14
-- Pending: 11
-- Convergence: 56%
+- Analyzed: 15
+- Pending: 10
+- Convergence: 60%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -32,7 +32,7 @@ Depends on Wave 1 catalogs being complete.
 - [x] journey-first-case — Walk: authenticated user creates first case → fills wizard → computes → sees results. Is the flow discoverable? Are there dead ends?
 - [x] journey-share-case — Walk: user shares a case via link → recipient opens link. Does the share flow work? What does the recipient see?
 - [x] journey-return-visit — Walk: user returns days later → dashboard → case list → opens existing case → edits → recomputes. Is the dashboard useful?
-- [ ] journey-settings-team — Walk: user goes to settings → updates firm profile → invites team member → member accepts. Does the full org flow work?
+- [x] journey-settings-team — Walk: user goes to settings → updates firm profile → invites team member → member accepts. Does the full org flow work?
 
 ### Wave 3: Design Modernization Audit
 Depends on Wave 1 catalogs and Wave 2 journey findings.
