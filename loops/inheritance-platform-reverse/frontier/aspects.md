@@ -2,16 +2,16 @@
 
 ## Statistics
 - Total aspects discovered: 22
-- Analyzed: 0
-- Pending: 22
-- Convergence: 0%
+- Analyzed: 1
+- Pending: 21
+- Convergence: 5%
 
 ## Pending Aspects (ordered by dependency)
 
 ### Wave 1: Source Acquisition
 Gather and catalog all source material.
 
-- [ ] catalog-routes — Read every file in `app/src/routes/`, catalog: path, exported route name, component, what it renders, auth requirement
+- [x] catalog-routes — Read every file in `app/src/routes/`, catalog: path, exported route name, component, what it renders, auth requirement
 - [ ] catalog-components — Read every file in `app/src/components/`, catalog: file path, what it renders, props, any stubs/placeholders
 - [ ] catalog-lib-hooks — Read every file in `app/src/lib/` and `app/src/hooks/`, catalog: exports, dependencies, completeness
 - [ ] catalog-config — Read `app/src/index.css`, `app/vite.config.ts`, `app/tsconfig.json`, `app/package.json`, `app/supabase/config.toml`, catalog current design tokens and config
@@ -49,4 +49,7 @@ Depends on all previous waves. **Strict internal dependency order.**
 - [ ] spec-review — Final review: could a developer fix every platform issue and modernize every component from this spec alone?
 
 ## Recently Analyzed
-(Empty — loop hasn't started yet)
+
+| Aspect | Wave | Date | Key Findings |
+|--------|------|------|--------------|
+| catalog-routes | 1 | 2026-03-04 | 10 registered routes, 1 unregistered (settings/team — CRITICAL), 3 stub placeholders (share results, client cases, logo reload hack), no route-level auth guards, missing /cases list route |
