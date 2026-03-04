@@ -15,9 +15,10 @@ Create backend service routes and CE tools for email drafts, sending, and schedu
 | 48 | `cheerful_cancel_scheduled_email` | `DELETE /api/service/email/scheduled/{id}` |
 | 49 | `cheerful_reschedule_email` | `PATCH /api/service/email/scheduled/{id}` |
 
-**Priority**: BACKEND ROUTES — Create remaining service routes for email sending & scheduling.
+**Priority**: WRITE TESTS — Backend routes complete, write tests for email draft & sending tools.
 
 ## Work Log
 - 2026-03-04: Stage 5 complete (223 total tests passing, 34 cheerful tools registered). Advancing to Stage 6.
 - 2026-03-04: Scaffold complete — created email_drafts_fixtures.py with mock responses for all 8 tools.
 - 2026-03-04: Backend routes batch 1 — 5 routes: GET/POST/PUT threads/{id}/draft, GET/DELETE email/scheduled.
+- 2026-03-04: Backend routes batch 2 — 3 routes: POST email/send, POST email/schedule, PATCH email/scheduled/{id}/reschedule. All 8 backend routes complete.
