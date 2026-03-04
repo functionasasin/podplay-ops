@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 25
-- Analyzed: 21
-- Pending: 4
-- Convergence: 84%
+- Analyzed: 22
+- Pending: 3
+- Convergence: 88%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -47,7 +47,7 @@ Depends on Wave 1 catalogs and Wave 2 journey findings.
 ### Wave 4: Synthesis
 Depends on all previous waves. **Strict internal dependency order.**
 
-- [ ] spec-draft — Assemble all findings into `docs/plans/inheritance-platform-spec.md`. Every section fully written with exact file paths and exact changes.
+- [x] spec-draft — Assemble all findings into `docs/plans/inheritance-platform-spec.md`. Every section fully written with exact file paths and exact changes.
 - [ ] placeholder-validation — **HARD GATE.** Scan entire spec for banned patterns. MUST return PASS before proceeding.
 - [ ] completeness-audit — Verify every gap from Wave 2 journeys has an exact fix in the spec. Per-gap PASS/FAIL.
 - [ ] spec-review — Final review: could a developer fix every platform issue and modernize every component from this spec alone?
