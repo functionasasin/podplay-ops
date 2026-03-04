@@ -13,8 +13,8 @@ Dev order: 0 → 1 → 2 → 3-4 (parallel-ok) → 5 → 6-7 (parallel-ok) → 8
 | 6     | Email Drafts & Sending            | 8     | email.md                 | draft\|send-email\|schedule                           | 5          | complete |
 | 7     | Email Signatures & AI             | 9     | email.md                 | email-sig\|bulk-edit\|improve\|thread-summary         | 5          | complete |
 | 8     | Creators & Discovery              | 6     | creators.md              | enrichment\|ic-search\|creator-profile                | 1          | complete |
-| 9     | Creator Lists & Items             | 10    | creators.md              | creator-list                                          | 8          | active |
-| 10    | Creator Posts                     | 4     | creators.md              | creator-post                                          | 8          | pending |
+| 9     | Creator Lists & Items             | 10    | creators.md              | creator-list                                          | 8          | complete |
+| 10    | Creator Posts                     | 4     | creators.md              | creator-post                                          | 8          | active |
 | 11    | Integrations: SMTP & Accounts     | 7     | integrations.md          | gmail\|smtp\|connected-account                        | 1          | pending |
 | 12    | Integrations: External Services   | 10    | integrations.md          | sheets\|shopify\|instantly\|slack-digest\|youtube\|brand | 1       | pending |
 | 13    | Users & Team                      | 12    | users-and-team.md        | user-settings\|team\|assignment\|onboarding           | 1          | pending |

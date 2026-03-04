@@ -1,27 +1,17 @@
-# Current Stage: 9
+# Current Stage: 10
 
-## Stage 9 — Creator Lists & Items (10 tools)
+## Stage 10 — Creator Posts (4 tools)
 
-Create backend service routes and CE tools for creator list management and list item operations.
+Create backend service routes and CE tools for creator post management.
 
 | # | Tool | Backend Route |
 |---|------|--------------|
-| 65 | `cheerful_list_creator_lists` | `GET /api/service/creator-lists` |
-| 66 | `cheerful_create_creator_list` | `POST /api/service/creator-lists` |
-| 67 | `cheerful_get_creator_list` | `GET /api/service/creator-lists/{id}` |
-| 68 | `cheerful_update_creator_list` | `PATCH /api/service/creator-lists/{id}` |
-| 69 | `cheerful_delete_creator_list` | `DELETE /api/service/creator-lists/{id}` |
-| 70 | `cheerful_list_creator_list_items` | `GET /api/service/creator-lists/{id}/items` |
-| 71 | `cheerful_add_creators_to_list` | `POST /api/service/creator-lists/{id}/items` |
-| 72 | `cheerful_add_search_creators_to_list` | `POST /api/service/creator-lists/{id}/items/from-search` |
-| 74 | `cheerful_remove_creator_from_list` | `DELETE /api/service/creator-lists/{id}/items/{item_id}` |
-| 75 | `cheerful_add_list_creators_to_campaign` | `POST /api/service/creator-lists/{id}/add-to-campaign` |
+| 76 | `cheerful_list_posts` | `GET /api/service/posts` |
+| 77 | `cheerful_list_creator_posts` | `GET /api/service/campaigns/{id}/creators/{creator_id}/posts` |
+| 78 | `cheerful_refresh_creator_posts` | `POST /api/service/campaigns/{id}/creators/{creator_id}/posts/refresh` |
+| 79 | `cheerful_delete_post` | `DELETE /api/service/posts/{id}` |
 
-**Priority**: ADVANCE — All 10 tools implemented with tests (48 tests passing). Register in catalog and advance to stage 10.
+**Priority**: SCAFFOLD — Create test fixture file for creator posts domain with mock API responses.
 
 ## Work Log
-- 2026-03-04: Stage 8 complete (364 total tests passing, 57 cheerful tools registered). Advancing to Stage 9.
-- 2026-03-04: Scaffold complete — created creator_lists_fixtures.py with mock responses for all 10 tools.
-- 2026-03-04: Backend routes batch 1 — 5 CRUD routes (#65-69): list, create, get, update, delete creator lists.
-- 2026-03-04: Backend routes batch 2 — 5 item/operation routes (#70-72, #74-75): list items, add creators, add from search, remove creator, add to campaign.
-- 2026-03-04: Tests + implementation complete — all 10 tools implemented in tools_creator_lists.py, 10 API client functions in api.py, 48 tests passing. Registered all 10 tools + 6 stage 8 tools in catalog.py (67 cheerful tools total).
+- 2026-03-04: Stage 9 complete (412 total tests passing, 67 cheerful tools registered). Advancing to Stage 10.
