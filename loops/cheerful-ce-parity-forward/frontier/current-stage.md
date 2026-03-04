@@ -14,10 +14,11 @@ Create backend service routes and CE tools for SMTP account and connected accoun
 | 88 | `cheerful_update_smtp_account` | `PATCH /api/service/accounts/smtp/{id}` |
 | 89 | `cheerful_delete_smtp_account` | `DELETE /api/service/accounts/smtp/{id}` |
 
-**Priority**: IMPLEMENT — Tests written (41 tests, all 7 tools), stub tools exist. Implement tool handlers.
+**Priority**: ADVANCE — All 41 tests passing, all 7 tools implemented and registered (485 total tests, 78 cheerful tools).
 
 ## Work Log
 - 2026-03-04: Stage 10 complete (444 total tests passing, 71 cheerful tools registered). Advancing to Stage 11.
 - 2026-03-04: Scaffold complete — created integrations_fixtures.py with mock responses for all 7 Stage 11 tools.
 - 2026-03-04: Backend routes complete — 7 service routes added to service.py (#83-89): list_gmail_accounts, list_connected_accounts, list/get/create/update/delete smtp_accounts.
 - 2026-03-04: Tests written — 41 tests across 7 tool classes in test_integrations.py. Created tools_integrations.py stub with input models and tool signatures.
+- 2026-03-04: Implementation complete — all 7 tool handlers, formatters, and API client functions implemented. 41/41 tests passing. Tools registered in catalog.py (78 total cheerful tools, 485 total tests).
