@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 30
-- Analyzed: 10
-- Pending: 20
-- Convergence: 33%
+- Analyzed: 11
+- Pending: 19
+- Convergence: 37%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -23,7 +23,7 @@ Depends on Wave 1 sources being consolidated.
 - [x] testate-validation — Arts. 840-872, 908-923: preterition, disinheritance (22 grounds), inofficiousness, underprovision, condition stripping
 - [x] collation — Arts. 1061-1077: 14-category collatability matrix, imputation, estate base, Art. 1064 representation collation
 - [x] vacancy-resolution — Arts. 1015-1023: substitution → representation → accretion → intestate fallback, Art. 1021 legitime vs FP distinction
-- [ ] multiple-disinheritance-fix — BUG-001 from v1: specify correct algorithm for 2+ simultaneous disinheritances (batch process, single scenario recompute)
+- [x] multiple-disinheritance-fix — BUG-001 from v1: specify correct algorithm for 2+ simultaneous disinheritances (batch process, single scenario recompute)
 
 ### Wave 3: Engine Design
 Depends on Wave 2 rule extraction.
@@ -56,6 +56,7 @@ Depends on all previous waves.
 - [ ] spec-review — Self-review: can a developer build the entire product from this spec alone, without any type mismatches at integration time?
 
 ## Recently Analyzed
+- multiple-disinheritance-fix (Wave 2) — BUG-001 correct algorithm: 4-phase batch processing (validate→batch-exclude→batch-add-reps→single ScenarioCode recompute); Art. 777 simultaneous-at-death principle; cascading disinheritance handled by find_representatives_recursive(); spousal disinheritance has no Art. 923 representation cascade; conservative rule: all-G1-disinherited-with-no-reps does NOT activate G2 (MANUAL_REVIEW flag); mixed valid/invalid partitioned before any mutation; idempotency guard for pipeline restarts; ExclusionReason/DisinheritanceResult/RepresentationChain Rust types; 8 INV-MD invariants; 5 test vectors (TV-MD-01 to TV-MD-05); 4 narrative templates; pipeline integration showing single restart path
 - vacancy-resolution (Wave 2) — 4-step priority chain (substitution→representation→accretion→intestate fallback); Art. 1021 ¶2 legitime vacancy triggers scenario recompute (NOT proportional add); Art. 1021 ¶1 FP vacancy = true accretion requires pro indiviso; Art. 1017 "equal shares" does not block accretion; Art. 969 total repudiation → next degree in own right; Art. 977 renunciation blocks representation; Art. 1019 proportionality; Art. 1020 charges transfer; Art. 1023 devisees/legatees/usufructuaries; VacantShare/VacancyCause/ShareSource/ResolutionMethod/VacancyResolution/Redistribution Rust types; convergence guard (initial_heir_count max restarts); 12 test vectors; 10 invariants; 5 narrative templates; 11 edge cases
 - collation (Wave 2) — 14-category collatability matrix; Art. 1061 4-condition obligation; Art. 1062 two exemptions (donor-express, repudiation) with inofficiousness override; Art. 1064 representation collation (grandchildren collate parent's donations even if property gone); Art. 1065 ascending line exception; Art. 1066 spouse donations; Art. 1067 exempt categories; Art. 1068 professional expense conditional; Art. 1069 debt/election/fine collatable; Art. 1070 wedding gift 1/10 FP threshold; Art. 1071 donation-time valuation; Art. 1072 joint donation split; E_adj = net_estate + collatable_sum used for ALL legitime computations; two-phase pipeline integration (before legitime computation + after distribution); imputation: charged to legitime then FP; Art. 911(3) reduction in reverse-chrono; Donation + CollationResult + ImputationResult + DonationReduction + PartitionAllocation Rust structs; 17 test vectors; 12 edge cases; 5 narrative templates
 - testate-validation (Wave 2) — 5 validation problems; preterition detection (G1/G2 direct-line only; complete omission only); 22 disinheritance grounds as DisinheritanceGround enum (8 Art.919 + 8 Art.920 + 6 Art.921); BUG-001 batch-disinheritance fix in Rust pseudocode; Art. 911 reduction order (devises pro rata → donations reverse-chronological); Art. 872 condition stripping; requires_restart flag; TestateValidationResult struct; 10-warning catalog; 6 edge cases; Will/Institution/Devise/Legacy/DisinheritanceRecord/Substitution input types
