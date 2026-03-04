@@ -1,20 +1,20 @@
-# Current Stage: 10
+# Current Stage: 11
 
-## Stage 10 — Creator Posts (4 tools)
+## Stage 11 — Integrations: SMTP & Accounts (7 tools)
 
-Create backend service routes and CE tools for creator post management.
+Create backend service routes and CE tools for SMTP account and connected account management.
 
 | # | Tool | Backend Route |
 |---|------|--------------|
-| 76 | `cheerful_list_posts` | `GET /api/service/posts` |
-| 77 | `cheerful_list_creator_posts` | `GET /api/service/campaigns/{id}/creators/{creator_id}/posts` |
-| 78 | `cheerful_refresh_creator_posts` | `POST /api/service/campaigns/{id}/creators/{creator_id}/posts/refresh` |
-| 79 | `cheerful_delete_post` | `DELETE /api/service/posts/{id}` |
+| 83 | `cheerful_list_gmail_accounts` | `GET /api/service/accounts/gmail` |
+| 84 | `cheerful_list_connected_accounts` | `GET /api/service/accounts` |
+| 85 | `cheerful_list_smtp_accounts` | `GET /api/service/accounts/smtp` |
+| 86 | `cheerful_get_smtp_account` | `GET /api/service/accounts/smtp/{id}` |
+| 87 | `cheerful_create_smtp_account` | `POST /api/service/accounts/smtp` |
+| 88 | `cheerful_update_smtp_account` | `PATCH /api/service/accounts/smtp/{id}` |
+| 89 | `cheerful_delete_smtp_account` | `DELETE /api/service/accounts/smtp/{id}` |
 
-**Priority**: ADVANCE — All 32 tests passing for stage 10 (444 total). Tools implemented, registered in catalog. Ready to advance.
+**Priority**: SCAFFOLD — Create test fixtures for integrations domain.
 
 ## Work Log
-- 2026-03-04: Stage 9 complete (412 total tests passing, 67 cheerful tools registered). Advancing to Stage 10.
-- 2026-03-04: Scaffold complete — created `creator_posts_fixtures.py` with mock responses for all 4 tools.
-- 2026-03-04: Backend routes complete — 4 service routes for list_posts, list_creator_posts, refresh_creator_posts, delete_post.
-- 2026-03-04: Tests + implementation complete — 32 tests for 4 tools, all passing. Tools registered in catalog (71 total). API client functions added. 444 total tests passing.
+- 2026-03-04: Stage 10 complete (444 total tests passing, 71 cheerful tools registered). Advancing to Stage 11.
