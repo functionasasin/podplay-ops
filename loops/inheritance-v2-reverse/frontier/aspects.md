@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 30
-- Analyzed: 2
-- Pending: 28
-- Convergence: 7%
+- Analyzed: 3
+- Pending: 27
+- Convergence: 10%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -15,7 +15,7 @@ Consolidate domain knowledge from original analysis files.
 
 ### Wave 2: Domain Rule Extraction
 Depends on Wave 1 sources being consolidated.
-- [ ] heir-classification — Compulsory heir categories, eligibility gate (Art. 887), filiation proof (FC 172/175), adopted/legitimated equivalence
+- [x] heir-classification — Compulsory heir categories, eligibility gate (Art. 887), filiation proof (FC 172/175), adopted/legitimated equivalence
 - [ ] heir-concurrence — Arts. 888-903: who inherits together, who excludes whom, 30 scenario codes (T1-T15, I1-I15)
 - [ ] representation — Arts. 970-977: per stirpes, 4 triggers, collateral limit, recursive multi-level, renunciation non-trigger
 - [ ] legitime-fractions — Arts. 888-903: complete fraction table for all 30 scenarios, FP_gross vs FP_disposable, Art. 895 cap rule
@@ -58,3 +58,4 @@ Depends on all previous waves.
 ## Recently Analyzed
 - consolidate-legal-sources (Wave 1) — 4 source docs created in `input/sources/`; 30 scenarios confirmed; BUG-001 fix spec captured
 - consolidate-worked-examples (Wave 1) — 23 test vectors (TV-01 through TV-23) extracted into `input/sources/worked-examples.md`; 17 scenarios covered; 10 invariants documented
+- heir-classification (Wave 2) — 4 compulsory heir groups; 7 eligibility gates; HeirType enum + EffectiveGroup mapping; HeirInput struct with all fields; ascendant division per Art. 890; Art. 977 renunciation blocks representation; BUG-001 disinheritance gate noted
