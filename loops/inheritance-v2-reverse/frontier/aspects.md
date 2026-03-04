@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 30
-- Analyzed: 19
-- Pending: 11
-- Convergence: 63%
+- Analyzed: 20
+- Pending: 10
+- Convergence: 67%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -38,7 +38,7 @@ Depends on Wave 3 data model.
 - [x] wasm-export — Define compute_json signature, parameter types, return type, wasm-bindgen attributes
 - [x] serde-wire-format — Exact JSON serialization rules: deny_unknown_fields, rename_all, boolean/number/null/enum/date/fraction conventions
 - [x] error-contract — Validation error vs computation error shapes, panic recovery
-- [ ] wasm-initialization — initSync (Node.js/vitest) vs init (browser), dual-path initialization pattern
+- [x] wasm-initialization — initSync (Node.js/vitest) vs init (browser), dual-path initialization pattern
 
 ### Wave 5: Frontend Data Model + UI Design
 Depends on Wave 3 data model and Wave 4 bridge contract.
@@ -56,6 +56,7 @@ Depends on all previous waves.
 - [ ] spec-review — Self-review: can a developer build the entire product from this spec alone, without any type mismatches at integration time?
 
 ## Recently Analyzed
+- wasm-initialization (Wave 4) — dual-path init: `initSync({ module: wasmBytes })` for Node.js/vitest (fs.readFileSync + fileURLToPath-relative path), `await initAsync()` for browser; environment detection via `typeof process !== "undefined" && process.versions?.node`; promise-based singleton guard (upgrade from boolean guard) prevents race conditions with concurrent callers; vite.config.ts requires `vite-plugin-wasm` + `vite-plugin-top-level-await`; vitest.config.ts intentionally omits wasm plugin (Node.js file path handles WASM loading); dynamic imports for `node:fs`/`node:path`/`node:url` prevent Vite bundling Node built-ins; `.wasm` path resolved relative to `import.meta.url` not `process.cwd()`; `initSync` new-style API `{ module: BufferSource }` not deprecated single-arg form; exported `ensureWasmInitialized` for optional app pre-warming; `useWasmCompute` hook pattern; `fatal_error` state distinct from `engine_error` for init failures
 - invariants (Wave 3) — 10 global formal invariants (INV-1 sum conservation, INV-2 E_adj entitlement, INV-3 legitime floor, INV-4 Art.895 per-IC ratio, INV-5 aggregate IC cap, INV-6 per stirpes slot conservation, INV-7 adoption equivalence, INV-8 preterition totality, INV-9 disinheritance exclusion, INV-10 scenario consistency); 5 pipeline invariants (PINV-1 termination, PINV-2 monotonic exclusion, PINV-3 step ordering, PINV-4 idempotent base classification, PINV-5 log append-only); Rust assertion patterns for each invariant; invariant applicability matrix (which apply to intestate/testate/mixed/BUG-001); violation response protocol (panic for INV-1/3/6, MaxRestartsExceeded for PINV-1); 5 edge cases (all-excluded→escheat, zero estate, single heir, collation>estate, restart chain); cross-references to sub-domain invariants in multiple-disinheritance-fix, vacancy-resolution, intestate-distribution analysis files
 - test-vectors (Wave 3) — 47 total test vectors (23 existing + 5 BUG-001 + 19 new); 100% scenario coverage of all 30 ScenarioCode variants; exact centavo values with Hare-Niemeyer rounding for irrational shares; 10 formal invariants (INV-1 sum guarantee, INV-2 E_adj total entitlement, INV-3 legitime floor, INV-4 Art.895 ratio, INV-5 cap invariant, INV-6 per stirpes, INV-7 adoption equivalence, INV-8 preterition totality, INV-9 disinheritance exclusion, INV-10 scenario consistency); I8/I9/I10 must use explicit fraction formulas not unit-ratio; Regime B (T8/T9) uses flat ¼ for IC with no cap rule; TV-N05 illustrates rounding bonus can go to half-blood heir when higher fractional remainder; TV-N19 specifies collation debt clamping + CollationDebt warning + MANUAL_REVIEW flag; JSON input/output shape documented
 - pipeline-design (Wave 3) — 10-step deterministic restartable pipeline; PipelineState struct with classified_heirs_base (immutable) + classified_heirs (working); StepResult::Continue|Restart|Error; RestartTrigger enum (ValidDisinheritance|PreteritionAnnulment|LegitimeVacancy); MAX_RESTARTS=10; clear_from_step(3) strips representation additions but keeps disinheritance exclusions; clear_from_step(4) keeps full post-rep heir set; step7 restarts to step3 (disinheritance/preterition), step10 restarts to step4 (Art.1021¶2 legitimate vacancy only); step1-2 never re-run on restart; rounding (Hare-Niemeyer) as final sub-step of step10; collation phase1 in step5 (E_adj), phase2 imputation in step9; 10-module src layout; ComputationLogEntry per step for audit trail
