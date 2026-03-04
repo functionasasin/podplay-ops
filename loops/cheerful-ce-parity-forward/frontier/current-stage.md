@@ -1,24 +1,23 @@
-# Current Stage: 3
+# Current Stage: 4
 
-## Stage 3 — Campaign Recipients + Outbox (7 tools)
+## Stage 4 — Campaign Extras (10 tools)
 
-Create backend service routes and CE tools for campaign recipient management, sender configuration, and outbox operations.
+Create backend service routes and CE tools for campaign signatures, merge tags, products, enrichment status, and summaries.
 
 | # | Tool | Backend Route |
 |---|------|--------------|
-| 18 | `cheerful_add_campaign_recipients` | `POST /api/service/campaigns/{id}/recipients` |
-| 19 | `cheerful_add_campaign_recipients_from_search` | `POST /api/service/campaigns/{id}/recipients/from-search` |
-| 21 | `cheerful_list_campaign_recipients` | `GET /api/service/campaigns/{id}/recipients` |
-| 22 | `cheerful_update_campaign_sender` | `PUT /api/service/campaigns/{id}/sender` |
-| 23 | `cheerful_remove_campaign_sender` | `DELETE /api/service/campaigns/{id}/sender` |
-| 24 | `cheerful_populate_campaign_outbox` | `POST /api/service/campaigns/{id}/outbox/populate` |
-| 25 | `cheerful_get_campaign_outbox` | `GET /api/service/campaigns/{id}/outbox` |
+| 26 | `cheerful_get_campaign_signature` | `GET /api/service/campaigns/{id}/signature` |
+| 28 | `cheerful_list_campaign_signatures` | `GET /api/service/campaigns/{id}/signatures` |
+| 29 | `cheerful_get_campaign_merge_tags` | `GET /api/service/campaigns/{id}/merge-tags` |
+| 30 | `cheerful_get_campaign_required_columns` | `GET /api/service/campaigns/{id}/required-columns` |
+| 32 | `cheerful_generate_campaign_summary` | `POST /api/service/campaigns/{id}/summary` |
+| 33 | `cheerful_create_product` | `POST /api/service/products` |
+| 34 | `cheerful_list_products` | `GET /api/service/products` |
+| 35 | `cheerful_get_product` | `GET /api/service/products/{id}` |
+| 36 | `cheerful_get_campaign_enrichment_status` | `GET /api/service/campaigns/{id}/enrichment-status` |
+| 37 | `cheerful_override_creator_email` | `POST /api/service/campaigns/{id}/creators/{creator_id}/override-email` |
 
-**Priority**: ALL TESTS COMPLETE — 58 tests for all 7 Stage 3 tools passing. All implementations complete. Ready to advance to Stage 4.
+**Priority**: SCAFFOLD — need to create test fixture file for campaign extras domain.
 
 ## Work Log
-- 2026-03-04: Stage 2 complete (33 tests passing, 6 tools implemented). Advancing to Stage 3.
-- 2026-03-04: Scaffold complete — created `recipients_fixtures.py` with mock responses for all 7 Stage 3 tools.
-- 2026-03-04: Backend routes complete — all 7 service routes created: add_campaign_recipients (#18), add_campaign_recipients_from_search (#19), list_campaign_recipients (#21), update_campaign_sender (#22), remove_campaign_sender (#23), populate_campaign_outbox (#24), get_campaign_outbox (#25).
-- 2026-03-04: Tests batch 1 (31 tests) + tool implementations + API functions — created `tools_recipients.py` with all 7 tool implementations, added 7 API client functions to `api.py`, wrote 31 tests for tools #18 (7 tests), #19 (7 tests), #21 (9 tests), #22 (8 tests). All 113 tests passing.
-- 2026-03-04: Tests batch 2 (27 tests) — wrote tests for #23 remove_campaign_sender (8 tests), #24 populate_campaign_outbox (9 tests), #25 get_campaign_outbox (10 tests). All 140 tests passing. Stage 3 tests complete.
+- 2026-03-04: Stage 3 complete (140 total tests passing, 7 tools implemented). Advancing to Stage 4.
