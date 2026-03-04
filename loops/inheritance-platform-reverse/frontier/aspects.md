@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 25
-- Analyzed: 16
-- Pending: 9
-- Convergence: 64%
+- Analyzed: 17
+- Pending: 8
+- Convergence: 68%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -38,7 +38,7 @@ Depends on Wave 1 catalogs being complete.
 Depends on Wave 1 catalogs and Wave 2 journey findings.
 
 - [x] design-layout-nav — Audit AppLayout, sidebar, mobile header: spacing, transitions, active states, collapse behavior. Propose modernization.
-- [ ] design-wizard-components — Audit all wizard step components: card patterns, form styling, step indicators, validation display. Propose modernization.
+- [x] design-wizard-components — Audit all wizard step components: card patterns, form styling, step indicators, validation display. Propose modernization.
 - [ ] design-results-components — Audit results view, computation log, warnings panel, narrative panel, actions bar. Propose modernization.
 - [ ] design-shared-components — Audit shared form components (MoneyInput, DateInput, PersonPicker, etc.): consistency, focus states, error display. Propose modernization.
 - [ ] design-mobile-responsive — Audit every page at mobile breakpoints: does the layout work? Touch targets adequate? Scroll behavior correct? Tables overflow? Propose fixes.
@@ -56,6 +56,7 @@ Depends on all previous waves. **Strict internal dependency order.**
 
 | Aspect | Wave | Date | Key Findings |
 |--------|------|------|--------------|
+| design-wizard-components | 3 | 2026-03-04 | 24 gaps found; CRITICAL: dual Submit buttons on Review step (GAP-DWC-004), no field-level validation — form submits with empty required fields (GAP-DWC-024); HIGH: native checkboxes/radios throughout (GAP-DWC-008), relationship badge uses off-palette colors (GAP-DWC-012), native select elements (GAP-DWC-013), custom hand-rolled tabs in WillStep (GAP-DWC-014), GuidedIntakeForm submission error not surfaced (GAP-DWC-023); MEDIUM: step indicator lacks progress bar on mobile (GAP-DWC-001), no step transition animation (GAP-DWC-003), plain text empty states in FamilyTree+Donations steps (GAP-DWC-010/015), ReviewStep sparse summary cards (GAP-DWC-017); hardcoded [hsl(var(--accent))] classes throughout (GAP-DWC-019); 13 modernization specs (MOD-DWC-001 through MOD-DWC-013) |
 | design-layout-nav | 3 | 2026-03-04 | 11 gaps found; CRITICAL: sidebar uses bg-card (white) not bg-sidebar (navy) — token defined but unused (GAP-DLN-001), no auth-conditional nav (GAP-DLN-004), no sign-out anywhere (GAP-DLN-011); HIGH: wrong active state (GAP-DLN-002), no hover transitions (GAP-DLN-003), missing /cases nav link (GAP-DLN-005), mobile tab bar must become hamburger+drawer (GAP-DLN-008); exact modernization specs: MOD-DLN-001 through MOD-DLN-007 covering AppLayout.tsx rewrite and index.css token additions |
 | journey-return-visit | 2 | 2026-03-04 | BROKEN overall; 16 gaps found; CRITICAL: No cases list route (JRV-002), Dashboard shows no case list (JRV-001), /settings/team not registered (JRV-012); HIGH: no Cases nav item (JRV-003), useAutoSave imported but never called (JRV-007), TeamMemberList shows UUID not name (JRV-014), InviteMemberDialog raw HTML not modal (JRV-015); MEDIUM: logo upload does window.location.reload() (JRV-010), no Back-to-Results shortcut (JRV-006); Deadlines page has org_id vs user_id bug (JRV-004) |
 | journey-first-case | 2 | 2026-03-04 | BROKEN overall; 19 gaps found; CRITICAL: WizardContainer never saves to DB (JFC-002), GuidedIntakeForm orphaned — no route uses it (JFC-010), no Save/Share/PDF in ActionsBar (JFC-009/JFC-011/JFC-013), no /cases list route (JFC-017), Dashboard shows no case list (JFC-018); ResultsView missing caseId prop chain; dual Submit buttons on Review step; fix: swap /cases/new to use GuidedIntakeForm + redirect to /cases/$caseId on complete |
