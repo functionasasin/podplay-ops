@@ -1,27 +1,17 @@
-# Current Stage: 4
+# Current Stage: 5
 
-## Stage 4 — Campaign Extras (10 tools)
+## Stage 5 — Email Threads & Ops (4 tools)
 
-Create backend service routes and CE tools for campaign signatures, merge tags, products, enrichment status, and summaries.
+Create backend service routes and CE tools for email thread listing, hiding/unhiding threads, and message attachments.
 
 | # | Tool | Backend Route |
 |---|------|--------------|
-| 26 | `cheerful_get_campaign_signature` | `GET /api/service/campaigns/{id}/signature` |
-| 28 | `cheerful_list_campaign_signatures` | `GET /api/service/campaigns/{id}/signatures` |
-| 29 | `cheerful_get_campaign_merge_tags` | `GET /api/service/campaigns/{id}/merge-tags` |
-| 30 | `cheerful_get_campaign_required_columns` | `GET /api/service/campaigns/{id}/required-columns` |
-| 32 | `cheerful_generate_campaign_summary` | `POST /api/service/campaigns/{id}/summary` |
-| 33 | `cheerful_create_product` | `POST /api/service/products` |
-| 34 | `cheerful_list_products` | `GET /api/service/products` |
-| 35 | `cheerful_get_product` | `GET /api/service/products/{id}` |
-| 36 | `cheerful_get_campaign_enrichment_status` | `GET /api/service/campaigns/{id}/enrichment-status` |
-| 37 | `cheerful_override_creator_email` | `POST /api/service/campaigns/{id}/creators/{creator_id}/override-email` |
+| 38 | `cheerful_list_threads` | `GET /api/service/threads` |
+| 39 | `cheerful_hide_thread` | `POST /api/service/threads/{id}/hide` |
+| 40 | `cheerful_unhide_thread` | `POST /api/service/threads/{id}/unhide` |
+| 41 | `cheerful_list_message_attachments` | `GET /api/service/threads/{thread_id}/messages/{message_id}/attachments` |
 
-**Priority**: ADVANCE — All 10 tools tested and implemented, 194 tests passing. Run full verification then advance to Stage 5.
+**Priority**: SCAFFOLD — Create test fixture file for email domain with mock API responses.
 
 ## Work Log
-- 2026-03-04: Stage 3 complete (140 total tests passing, 7 tools implemented). Advancing to Stage 4.
-- 2026-03-04: Backend routes batch 1 — signature, list signatures, merge tags, required columns, generate summary.
-- 2026-03-04: Backend routes batch 2 — create/list/get product, enrichment status, override creator email. All 10 stage 4 backend routes complete.
-- 2026-03-04: Tests + implementations for 4 tools: get_campaign_signature, list_campaign_signatures, get_campaign_merge_tags, get_campaign_required_columns. Also created all 10 api.py functions and full tools_campaign_extras.py with all 10 tool implementations. 23 new tests, 163 total passing.
-- 2026-03-04: Tests for remaining 6 tools: generate_campaign_summary, create_product, list_products, get_product, get_campaign_enrichment_status, override_creator_email. Fixed `_fmt_campaign_summary` bug (tag name kwarg conflict). 31 new tests, 194 total passing.
+- 2026-03-04: Stage 4 complete (194 total tests passing, 10 tools implemented). Advancing to Stage 5.

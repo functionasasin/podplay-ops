@@ -8,8 +8,8 @@ Dev order: 0 → 1 → 2 → 3-4 (parallel-ok) → 5 → 6-7 (parallel-ok) → 8
 | 1     | Security + Bug Fixes              | 7 fix | all specs                | existing\|security                                    | 0          | complete |
 | 2     | Campaign CRUD + Launch            | 6     | campaigns.md             | campaign-crud\|launch                                 | 1          | complete |
 | 3     | Campaign Recipients + Outbox      | 7     | campaigns.md             | recipients\|outbox\|sender                            | 2          | complete |
-| 4     | Campaign Extras                   | 10    | campaigns.md             | signature\|merge-tag\|product\|enrichment\|summary    | 2          | active |
-| 5     | Email Threads & Ops               | 4     | email.md                 | list-threads\|hide\|unhide\|attachment                | 1          | pending |
+| 4     | Campaign Extras                   | 10    | campaigns.md             | signature\|merge-tag\|product\|enrichment\|summary    | 2          | complete |
+| 5     | Email Threads & Ops               | 4     | email.md                 | list-threads\|hide\|unhide\|attachment                | 1          | active |
 | 6     | Email Drafts & Sending            | 8     | email.md                 | draft\|send-email\|schedule                           | 5          | pending |
 | 7     | Email Signatures & AI             | 9     | email.md                 | email-sig\|bulk-edit\|improve\|thread-summary         | 5          | pending |
 | 8     | Creators & Discovery              | 6     | creators.md              | enrichment\|ic-search\|creator-profile                | 1          | pending |
