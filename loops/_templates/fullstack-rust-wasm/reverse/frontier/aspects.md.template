@@ -51,6 +51,7 @@ Depends on Wave 3 data model and Wave 4 bridge contract.
 - [ ] env-configuration — List all required env vars, .env.local.example contents, graceful error handling when vars are missing (no unhandled throws)
 - [ ] database-migrations — Specify migration sequence, idempotency rules (IF NOT EXISTS, CREATE OR REPLACE), no duplicate table creation across migrations
 - [ ] navigation — Auth-aware sidebar/header: what unauthenticated users see vs authenticated users, mobile nav, active state
+- [ ] component-wiring-map — For every component, specify: which route/page/tab/dialog renders it, how user navigates there from home screen, what triggers it (for modals), and where props come from. No orphans allowed.
 
 ### Wave 6: Synthesis
 Depends on all previous waves. **Strict internal dependency order — do NOT skip ahead.**

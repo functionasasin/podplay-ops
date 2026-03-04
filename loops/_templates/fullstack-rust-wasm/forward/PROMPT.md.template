@@ -102,6 +102,8 @@ Build all UI components. Tests run via `vitest` with real WASM.
 <!-- | P4-N | Results View | [Result components] | §Results View | -->
 <!-- | P4-N+1 | Validation + Integration | End-to-end form → compute → results | §Cross-Layer | -->
 
+**Wiring rule**: Every component built in Phase 4 MUST be imported and rendered by a route or parent component. The spec's Component Wiring Map (§(N+3).4) specifies exactly where each component lives. A component that exists but is never rendered is an orphan — equivalent to a stub. Do not move to the next stage until the current stage's components are wired into their specified parents.
+
 ### Phase 5: Platform Layer
 Wire authentication, routing, environment config, and navigation per the spec's Platform Layer section. The app must be fully bootable and navigable before polish.
 
@@ -137,6 +139,10 @@ Apply design system and responsive styling. Tests must continue passing + CSS bu
 Search ALL files in `engine/src/` and `frontend/src/` for these banned patterns:
 - **Rust**: `todo!()`, `unimplemented!()`, `panic!("not implemented")`, `// TODO`, `// FIXME`, `// STUB`, `// HACK`, `// PLACEHOLDER`, `0 // placeholder`, `Default::default() // placeholder`
 - **TypeScript/React**: `// TODO`, `// FIXME`, `// STUB`, `// PLACEHOLDER`, `// HACK`, `throw new Error("not implemented")`, `console.log("TODO")`, empty component bodies (`return null`/`return <></>`/`return <div/>`), functions returning hardcoded dummy values, `as any` type assertions hiding incomplete types
+- **Orphaned components** (exported but never imported by a route):
+  - For every `export function` or `export const` in `frontend/src/components/`, verify it is imported by at least one file in `frontend/src/routes/` or by a parent component that IS imported by a route (transitive).
+  - A component that passes all its tests but is never rendered on any page is functionally equivalent to a stub — users can never reach it.
+  - Exclusions: test helpers, type-only exports, UI primitives (Button, Card, etc. from ui/ directory)
 - **Both**: Empty function bodies, functions that ignore their parameters and return constants, commented-out logic blocks with TODO annotations
 
 **Exclusions** (NOT counted as stubs):
@@ -154,6 +160,7 @@ For EVERY feature described in the spec:
 3. **Does it handle edge cases?** (empty input, boundary values, nulls)
 4. **Does it display results correctly?** (formatting, labels, conditional visibility)
 5. **Does it handle errors?** (validation messages, WASM errors, network issues)
+6. **Is it reachable?** (can a user navigate to it from the home screen without typing a URL?)
 
 Write results to `status/completeness-audit.txt` with per-feature PASS/FAIL. If ANY feature fails: create stages to fix, do NOT mark P7-2 complete.
 
@@ -230,6 +237,7 @@ z.optional()         // produces undefined → serde crash
 - Never modify a passing test to keep it passing after a code change.
 - If a test contradicts the spec, fix the test AND note it in your commit message.
 - **No mocks.** From Phase 3 Stage P3-3 onward, all frontend tests hit the real WASM engine.
+- **No orphans.** Every exported component must be rendered by a route or by a parent that is rendered by a route. A component with passing tests but no render path is functionally identical to deleted code — users can never see it. The spec's Component Wiring Map is the source of truth for where each component lives.
 - **CSS bundle size check** in Phase 5: `npm run build` must produce CSS > 20KB (proves Tailwind is processing). If CSS is tiny, `@tailwindcss/vite` plugin is missing from `vite.config.ts`.
 
 ## HARD CONSTRAINT: Zero Stubs in Production Code

@@ -179,6 +179,60 @@ SCAN_EOF
     fi
 }
 
+# Scan for orphaned components — exported but never imported by any route or parent component.
+# Returns 0 if clean, 1 if orphans found. Writes results to status/orphan-scan.txt.
+orphan_scan() {
+  local frontend_src="$FRONTEND_DIR/src"
+  local orphans=0
+  local results_file="$WORK_DIR/status/orphan-scan.txt"
+
+  mkdir -p "$WORK_DIR/status"
+
+  if [ ! -d "$frontend_src/components" ]; then
+    echo "ORPHAN_SCAN: $frontend_src/components does not exist yet, skipping"
+    echo "PASS — components directory does not exist yet" > "$results_file"
+    return 0
+  fi
+
+  local orphan_details=""
+
+  # Find all exported components in components/ (not ui/ primitives, not test files)
+  for comp_file in $(find "$frontend_src/components" -name "*.tsx" -not -name "*.test.*" -not -path "*/ui/*" -not -path "*/__tests__/*"); do
+    # Extract exported function/const names
+    local exports
+    exports=$(grep -oP 'export\s+(function|const)\s+\K\w+' "$comp_file" 2>/dev/null || true)
+    for exp in $exports; do
+      # Check if imported anywhere in routes/ or other components/
+      local importers
+      importers=$(grep -rl "$exp" "$frontend_src/routes/" "$frontend_src/components/" 2>/dev/null | grep -v "$comp_file" | grep -v ".test." | head -1)
+      if [ -z "$importers" ]; then
+        orphan_details+="ORPHAN: $exp in $comp_file — not imported by any route or parent component"$'\n'
+        orphans=$((orphans + 1))
+      fi
+    done
+  done
+
+  if [ "$orphans" -gt 0 ]; then
+    cat > "$results_file" << ORPHAN_EOF
+FAIL — $orphans orphaned component(s) found
+Timestamp: $(date -Iseconds)
+
+${orphan_details}
+These components must be imported by a route or parent component before the stage can converge.
+ORPHAN_EOF
+    echo "ORPHAN_SCAN: FAIL ($orphans orphaned components)"
+    echo "$orphan_details"
+    return 1
+  else
+    cat > "$results_file" << ORPHAN_EOF
+PASS — zero orphaned components
+Timestamp: $(date -Iseconds)
+ORPHAN_EOF
+    echo "ORPHAN_SCAN: PASS"
+    return 0
+  fi
+}
+
 check_dependencies() {
     local stage=$1
     local deps="${STAGE_DEPS[$stage]:-}"
@@ -341,6 +395,12 @@ update_frontier() {
         stub_scan_status=$(cat "$WORK_DIR/status/stub-scan.txt")
     fi
 
+    # Include orphan scan results if they exist
+    local orphan_scan_status=""
+    if [ -f "$WORK_DIR/status/orphan-scan.txt" ]; then
+        orphan_scan_status=$(cat "$WORK_DIR/status/orphan-scan.txt")
+    fi
+
     cat > "$CURRENT_STAGE_FILE" << FRONTIER_EOF
 # Current Stage: $stage (${STAGE_NAMES[$stage]})
 
@@ -357,7 +417,14 @@ $test_output
 ${stub_scan_status:-Not yet run}
 \`\`\`
 
+## Orphan Scan Results
+\`\`\`
+${orphan_scan_status:-Not yet run}
+\`\`\`
+
 **IMPORTANT**: If the stub scan shows FAIL, your priority is to REPLACE the listed stubs with full implementations from the spec. Do not just remove TODO comments — implement the actual feature logic.
+
+**IMPORTANT**: If the orphan scan shows FAIL, your priority is to WIRE the listed orphaned components into their parent route or component as specified in the spec's Component Wiring Map. A component that exists but is never rendered is equivalent to a stub.
 
 ## Work Log
 $existing_log
@@ -431,14 +498,26 @@ run_stage() {
             consecutive_passes=$((consecutive_passes + 1))
             echo "Tests pass ($consecutive_passes/$required_passes consecutive passes)"
             if [ "$consecutive_passes" -ge "$required_passes" ]; then
-                # HARD GATE: Stub scan must pass before declaring stage complete
-                if stub_scan "$stage"; then
+                # HARD GATE: Stub scan AND orphan scan must pass before declaring stage complete
+                local scan_pass=true
+                if ! stub_scan "$stage"; then
+                    echo "Tests pass but stubs remain — not converged."
+                    scan_pass=false
+                fi
+                # Run orphan scan for frontend stages
+                if [[ "${STAGE_WORKSPACE[$stage]:-engine}" == "frontend" ]]; then
+                    if ! orphan_scan; then
+                        echo "Tests pass but orphaned components found — not converged."
+                        scan_pass=false
+                    fi
+                fi
+                if [ "$scan_pass" = true ]; then
                     write_completion "$stage" "$test_output" "$iteration"
                     return 0
                 else
-                    echo "Tests pass but stubs remain — not converged. Running Claude to replace stubs."
+                    echo "Running Claude to fix scan failures."
                     consecutive_passes=0
-                    # Fall through to invoke Claude to fix the stubs
+                    # Fall through to invoke Claude to fix the issues
                 fi
             fi
             # For multi-pass stages, re-test without invoking Claude

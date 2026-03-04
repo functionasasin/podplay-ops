@@ -135,6 +135,19 @@ This wave exists because the inheritance project needed 5 manual fixes on first 
 - **Navigation**: Specify the sidebar/header nav items. Auth-aware: unauthenticated users see sign-in link, authenticated users see the full nav.
 - **Session management**: How auth state is persisted, how the app rehydrates on refresh, what happens when a token expires.
 
+#### 5e: Component Wiring Map
+**Goal**: Ensure every component has a home — no orphans.
+
+The inheritance project had 17 components that existed but were never rendered on any page. The spec described WHAT to build but not WHERE each component lives in the UI or HOW users reach it.
+
+For EVERY component specified in §5b (Component Hierarchy):
+- **Parent**: Which route/page/tab/dialog renders this component?
+- **Navigation path**: How does a user get there from the home screen? (e.g., "Sidebar → Cases → click case → Results tab → Share Breakdown section")
+- **Trigger** (for dialogs/modals): What button/action opens it?
+- **Props source**: Where does the data come from? (e.g., "output.per_heir_shares from ResultsView parent")
+
+Output: A complete wiring table in the spec mapping every component to its render location. If a component has no parent, it should be cut from the spec or assigned one.
+
 ### Wave 6: Synthesis
 **Goal**: Assemble all wave findings into the final spec document. Every section must be implementation-ready with zero placeholders.
 
@@ -165,6 +178,12 @@ This wave exists because the inheritance project needed 5 manual fixes on first 
 - For EACH component/feature mentioned in the spec, verify it has: types, behavior, edge cases, error handling
 - For EACH wizard step, verify: fields listed, validation rules specified, conditional visibility defined
 - For EACH results display element, verify: data source mapped, formatting specified, empty/error states defined
+- **ORPHAN CHECK**: For EVERY component in the spec's Component Wiring Map, verify:
+  - It has a specified parent route/page/tab/dialog
+  - The navigation path from the home screen is documented (no dead ends)
+  - If it requires a route, that route is listed in the Route Table
+  - If it's inside a tab/dialog, the tab/dialog is specified in its parent component
+  - If ANY component lacks a navigation path, the audit FAILS
 - Write results to `analysis/completeness-audit.md` with per-feature PASS/FAIL
 
 **For `cross-layer-consistency`**:
@@ -199,6 +218,7 @@ The final spec at `docs/plans/{{SPEC_FILENAME}}.md` must contain these sections:
     §(N+3).1  Wizard/Form Steps (fields per step, conditional visibility)
     §(N+3).2  Results View (components, data mapping)
     §(N+3).3  Shared Components (reusable form widgets)
+    §(N+3).4  Component Wiring Map (every component → parent route/tab/dialog, navigation path from home, trigger, props source)
 §N+4  Design System
     §(N+4).1  Palette (CSS custom properties)
     §(N+4).2  Typography
