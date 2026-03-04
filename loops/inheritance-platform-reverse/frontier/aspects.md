@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 25
-- Analyzed: 12
-- Pending: 13
-- Convergence: 48%
+- Analyzed: 13
+- Pending: 12
+- Convergence: 52%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -30,7 +30,7 @@ Depends on Wave 1 catalogs being complete.
 - [x] journey-new-visitor — Walk: user visits `/` for the first time with no account. What do they see? Can they understand the product? Can they find sign-up?
 - [x] journey-signup-signin — Walk: user clicks sign up → fills form → gets confirmation email → confirms → signs in → lands where? Document every step and gap.
 - [x] journey-first-case — Walk: authenticated user creates first case → fills wizard → computes → sees results. Is the flow discoverable? Are there dead ends?
-- [ ] journey-share-case — Walk: user shares a case via link → recipient opens link. Does the share flow work? What does the recipient see?
+- [x] journey-share-case — Walk: user shares a case via link → recipient opens link. Does the share flow work? What does the recipient see?
 - [ ] journey-return-visit — Walk: user returns days later → dashboard → case list → opens existing case → edits → recomputes. Is the dashboard useful?
 - [ ] journey-settings-team — Walk: user goes to settings → updates firm profile → invites team member → member accepts. Does the full org flow work?
 
