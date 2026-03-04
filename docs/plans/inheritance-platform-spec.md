@@ -972,6 +972,7 @@ function AuthenticatedDashboard({ user }: { user: User }) {
 | JNV-011/JNV-018 | CRITICAL | `src/lib/organizations.ts`: add `createOrganization()`; `src/routes/auth.tsx` + `src/routes/auth/callback.tsx`: call after sign-up (full spec §5.3) |
 | JNV-012 | CRITICAL | `src/hooks/useAuth.ts:32-34`: return signUp result; `src/routes/auth.tsx:37-39`: check `result?.session` for auto-confirm (full spec §3.1) |
 | JNV-016 | HIGH | `src/routes/index.tsx`: authenticated dashboard shows case list and onboarding prompt (full spec §7.2) |
+| JNV-010 | LOW | `src/routes/auth.tsx` sign-up form: add ToS/privacy acknowledgment. After the Confirm Password field, add: `<p className="text-xs text-muted-foreground">By creating an account you agree to our <a href="/terms" className="text-primary hover:underline">Terms of Service</a> and <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>.</p>`. No checkbox required — passive acknowledgment is sufficient for a legal-tool internal SaaS. |
 
 ### Journey: Sign-Up / Sign-In (Overall: BROKEN → target: WORKING)
 
@@ -995,9 +996,13 @@ function AuthenticatedDashboard({ user }: { user: User }) {
 | JFC-011/JFC-012 | CRITICAL | `src/components/results/ResultsView.tsx`: add `caseId?: string; shareToken?: string; shareEnabled?: boolean; onToggleShare?: (e: boolean) => Promise<void>` to `ResultsViewProps`; pass through to `ActionsBar` |
 | JFC-017/JFC-018 | CRITICAL | Create `src/routes/cases/index.tsx` `CasesListPage`; add to router; update Dashboard to show cases (full spec §7.2) |
 | JFC-019 | CRITICAL | After `compute()` at `/cases/new`, call `createCase(orgId, userId, data, output)` → redirect to `/cases/${caseId}`. Alternatively, use `GuidedIntakeForm` which already does this. |
+| JFC-001 | HIGH | **File**: `src/routes/cases/new.tsx`. Add `beforeLoad` auth guard to `casesNewRoute` using the router context pattern from §2: `beforeLoad: ({ context }) => { if (!context.auth?.user) { throw redirect({ to: '/auth', search: { redirect: '/cases/new' } }); } }`. Without this, unauthenticated users can open the wizard; GuidedIntakeForm would crash on `userId={user.id}` with `user` null. |
 | JFC-013 | HIGH | `src/components/results/ActionsBar.tsx`: add PDF export button using `<PDFDownloadLink document={<EstatePDF input={input} output={output} profile={firmProfile} />} fileName={buildPDFFilename(input)}>` |
+| JFC-008 | MEDIUM | **File**: `src/routes/cases/new.tsx` and `src/routes/cases/$caseId.tsx`. Wrap `compute(data)` calls with a 30-second timeout: `const output = await Promise.race([compute(data), new Promise((_, rej) => setTimeout(() => rej(new Error('Computation timed out after 30 seconds')), 30000))]);`. In the catch block, show the error message and a "Try Again" button that calls `setState({ phase: 'wizard', input: data })`. |
 | JFC-006 | LOW | `src/components/wizard/WizardContainer.tsx`: when `currentStep === 'review'`, hide the nav-level Submit button (`hidden`); let ReviewStep's "Compute Distribution" be the sole CTA |
 | JFC-007 | LOW | `src/routes/cases/new.tsx:50-54`: replace raw CSS spinner with `<Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />` |
+| JFC-015 | LOW | **File**: `src/components/results/ActionsBar.tsx` Export JSON handler (lines 16–25). After the blob download is triggered, call `toast.success('JSON exported')`. Add `import { toast } from 'sonner'` at the top. Result: user gets confirmation that the download was triggered. |
+| JFC-016 | LOW | **File**: `src/routes/cases/new.tsx` `handleSubmit`. After `setState({ phase: 'results', ... })`, add `toast.success('Computation complete')`. This gives first-time users confirmation that results are ready. |
 
 ### Journey: Share Case (Overall: BROKEN → target: WORKING)
 
@@ -1009,6 +1014,7 @@ function AuthenticatedDashboard({ user }: { user: User }) {
 | JSC-006 | MEDIUM | `src/components/case/ShareDialog.tsx:39-41`: add `copied` state; `setCopied(true); setTimeout(() => setCopied(false), 2000)` |
 | JSC-007 | MEDIUM | `src/routes/share/$token.tsx`: replace loading text with `<Loader2>` spinner |
 | JSC-008 | LOW | Verify `qrcode.react` in `package.json`; if absent: `npm install qrcode.react` in `app/` directory |
+| JSC-009 | LOW | **File**: `src/routes/share/$token.tsx`. After the closing `</Card>` tag (before the outer `</div>`), add: `<p className="mt-6 text-center text-xs text-muted-foreground">Generated with{' '}<a href="/" className="text-primary hover:underline font-medium">Philippine Inheritance Calculator</a>{' '}—{' '}<a href="/auth" className="text-primary hover:underline">Create your own analysis</a></p>`. This gives anonymous recipients product context and a sign-up CTA. |
 
 ### Journey: Return Visit (Overall: BROKEN → target: WORKING)
 
@@ -1022,6 +1028,8 @@ function AuthenticatedDashboard({ user }: { user: User }) {
 | JRV-010 | MEDIUM | `src/routes/settings/index.tsx:73`: replace `window.location.reload()` with `await updateProfile({ logoUrl: newUrl })` — `uploadLogo` returns the public URL |
 | JRV-014 | HIGH | `src/routes/settings/team.tsx:100-109`: fetch profiles for all member user_ids; build `memberProfiles` map; pass to `<TeamMemberList>` |
 | JRV-015 | HIGH | `src/components/settings/InviteMemberDialog.tsx:71`: replace root `<div role="dialog">` with shadcn `<Dialog open={open} onOpenChange={onOpenChange}><DialogContent>` |
+| JRV-006 | MEDIUM | **File**: `src/routes/cases/$caseId.tsx`. In the wizard phase render, when `caseRow?.output_json !== null`, show a "Back to Results" button in the wizard nav bar: `{caseRow?.output_json && <Button variant="ghost" size="sm" onClick={() => setState({ phase: 'results', input: caseRow.input_json!, output: caseRow.output_json! })} className="gap-2"><ArrowLeft className="h-4 w-4" />Back to Results</Button>}`. Import `ArrowLeft` from lucide-react. Place this button to the left of the Back/Next buttons in the wizard nav. |
+| JRV-009 | LOW | **File**: `src/routes/cases/$caseId.tsx` `handleSubmit`. After `setState({ phase: 'results', input: data, output })` (line 72), add `toast.success('Computation complete')`. Requires sonner installed (§9.3). |
 
 ### Journey: Settings → Team (Overall: BROKEN → target: WORKING)
 
@@ -1035,6 +1043,9 @@ function AuthenticatedDashboard({ user }: { user: User }) {
 | JST-007 | HIGH | `src/routes/settings/team.tsx:101-109`: pass `memberProfiles` — `supabase.from('profiles').select('id,full_name,email').in('id', members.map(m => m.user_id))` |
 | JST-008 | HIGH | `src/components/settings/TeamMemberList.tsx:64-78`: add "Change role" to dropdown; inline role `<Select>` on click; call `onUpdateRole(member.id, newRole)` |
 | JST-011 | MEDIUM | `src/routes/settings/index.tsx:123-125`: wrap `updateProfile` color calls in `useDebouncedCallback(..., 600)` — add `use-debounce` to `package.json` |
+| JST-009 | MEDIUM | **File**: `src/components/settings/TeamMemberList.tsx:48-50`. Replace bare `<span>{member.role}</span>` with a shadcn `<Badge>` variant: `import { Badge } from '@/components/ui/badge'`. Variant map: `const ROLE_VARIANT: Record<string, 'default' \| 'secondary' \| 'outline'> = { admin: 'default', attorney: 'secondary', paralegal: 'secondary', readonly: 'outline' }`. Render: `<Badge variant={ROLE_VARIANT[member.role] ?? 'outline'} className="capitalize text-xs">{member.role}</Badge>`. The `default` variant uses the primary (gold) color for admins, `secondary` for attorneys/paralegals, and `outline` for readonly. |
+| JST-010 | MEDIUM | **File**: `src/routes/settings/index.tsx` `handleSave` (line 58–65). After `updateProfile(form)` resolves without error, call `toast.success('Firm profile saved')`. If it throws, call `toast.error('Failed to save profile')`. Requires sonner installed (§9.3). |
+| JST-015 | LOW | **File**: `src/components/settings/FirmProfileForm.tsx`. Add `isDirty` detection by comparing `form` state with the `profile` prop: `const isDirty = JSON.stringify(form) !== JSON.stringify(profile ?? {})`. Render a warning banner above the Save button when dirty: `{isDirty && <p className="text-xs text-amber-600 flex items-center gap-1"><AlertTriangle className="h-3 w-3" />You have unsaved changes</p>}`. Import `AlertTriangle` from lucide-react. This is an inline visual cue — no `beforeunload` event needed for a SaaS tool. |
 
 ---
 
