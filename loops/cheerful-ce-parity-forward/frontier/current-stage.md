@@ -17,9 +17,10 @@ Create backend service routes and CE tools for creator list management and list 
 | 74 | `cheerful_remove_creator_from_list` | `DELETE /api/service/creator-lists/{id}/items/{item_id}` |
 | 75 | `cheerful_add_list_creators_to_campaign` | `POST /api/service/creator-lists/{id}/add-to-campaign` |
 
-**Priority**: BACKEND ROUTES — Create service routes for creator list items and operations (5 CRUD routes done, 5 remaining).
+**Priority**: WRITE TESTS — All 10 backend routes complete. Write tests for creator list item tools (#70-75).
 
 ## Work Log
 - 2026-03-04: Stage 8 complete (364 total tests passing, 57 cheerful tools registered). Advancing to Stage 9.
 - 2026-03-04: Scaffold complete — created creator_lists_fixtures.py with mock responses for all 10 tools.
 - 2026-03-04: Backend routes batch 1 — 5 CRUD routes (#65-69): list, create, get, update, delete creator lists.
+- 2026-03-04: Backend routes batch 2 — 5 item/operation routes (#70-72, #74-75): list items, add creators, add from search, remove creator, add to campaign.
