@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 25
-- Analyzed: 15
-- Pending: 10
-- Convergence: 60%
+- Analyzed: 16
+- Pending: 9
+- Convergence: 64%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -37,7 +37,7 @@ Depends on Wave 1 catalogs being complete.
 ### Wave 3: Design Modernization Audit
 Depends on Wave 1 catalogs and Wave 2 journey findings.
 
-- [ ] design-layout-nav — Audit AppLayout, sidebar, mobile header: spacing, transitions, active states, collapse behavior. Propose modernization.
+- [x] design-layout-nav — Audit AppLayout, sidebar, mobile header: spacing, transitions, active states, collapse behavior. Propose modernization.
 - [ ] design-wizard-components — Audit all wizard step components: card patterns, form styling, step indicators, validation display. Propose modernization.
 - [ ] design-results-components — Audit results view, computation log, warnings panel, narrative panel, actions bar. Propose modernization.
 - [ ] design-shared-components — Audit shared form components (MoneyInput, DateInput, PersonPicker, etc.): consistency, focus states, error display. Propose modernization.
@@ -56,6 +56,7 @@ Depends on all previous waves. **Strict internal dependency order.**
 
 | Aspect | Wave | Date | Key Findings |
 |--------|------|------|--------------|
+| design-layout-nav | 3 | 2026-03-04 | 11 gaps found; CRITICAL: sidebar uses bg-card (white) not bg-sidebar (navy) — token defined but unused (GAP-DLN-001), no auth-conditional nav (GAP-DLN-004), no sign-out anywhere (GAP-DLN-011); HIGH: wrong active state (GAP-DLN-002), no hover transitions (GAP-DLN-003), missing /cases nav link (GAP-DLN-005), mobile tab bar must become hamburger+drawer (GAP-DLN-008); exact modernization specs: MOD-DLN-001 through MOD-DLN-007 covering AppLayout.tsx rewrite and index.css token additions |
 | journey-return-visit | 2 | 2026-03-04 | BROKEN overall; 16 gaps found; CRITICAL: No cases list route (JRV-002), Dashboard shows no case list (JRV-001), /settings/team not registered (JRV-012); HIGH: no Cases nav item (JRV-003), useAutoSave imported but never called (JRV-007), TeamMemberList shows UUID not name (JRV-014), InviteMemberDialog raw HTML not modal (JRV-015); MEDIUM: logo upload does window.location.reload() (JRV-010), no Back-to-Results shortcut (JRV-006); Deadlines page has org_id vs user_id bug (JRV-004) |
 | journey-first-case | 2 | 2026-03-04 | BROKEN overall; 19 gaps found; CRITICAL: WizardContainer never saves to DB (JFC-002), GuidedIntakeForm orphaned — no route uses it (JFC-010), no Save/Share/PDF in ActionsBar (JFC-009/JFC-011/JFC-013), no /cases list route (JFC-017), Dashboard shows no case list (JFC-018); ResultsView missing caseId prop chain; dual Submit buttons on Review step; fix: swap /cases/new to use GuidedIntakeForm + redirect to /cases/$caseId on complete |
 | journey-signup-signin | 2 | 2026-03-04 | BROKEN overall; 14 gaps found; CRITICAL: no /auth/callback route (JSS-008) — PKCE email confirmation code discarded, session never established; useAuth.signUp() discards return value (JSS-004); auto-confirm shows wrong message (JSS-005); no org creation (JSS-014); HIGH: no resend button in confirmation card (JSS-006), always redirects to / after sign-in (JSS-012); fix specs provided for all critical/high gaps |
