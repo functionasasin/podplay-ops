@@ -2,16 +2,16 @@
 
 ## Statistics
 - Total aspects discovered: 30
-- Analyzed: 1
-- Pending: 29
-- Convergence: 3%
+- Analyzed: 2
+- Pending: 28
+- Convergence: 7%
 
 ## Pending Aspects (ordered by dependency)
 
 ### Wave 1: Legal Source Acquisition
 Consolidate domain knowledge from original analysis files.
 - [x] consolidate-legal-sources — Read original analysis files at `loops/inheritance-reverse/analysis/`, consolidate Civil Code, Family Code, RA 8552, RA 11642 rules into `input/sources/`
-- [ ] consolidate-worked-examples — Extract all 23 test vectors and 8 worked examples from original analysis files into `input/sources/worked-examples.md`
+- [x] consolidate-worked-examples — Extract all 23 test vectors and 8 worked examples from original analysis files into `input/sources/worked-examples.md`
 
 ### Wave 2: Domain Rule Extraction
 Depends on Wave 1 sources being consolidated.
@@ -57,3 +57,4 @@ Depends on all previous waves.
 
 ## Recently Analyzed
 - consolidate-legal-sources (Wave 1) — 4 source docs created in `input/sources/`; 30 scenarios confirmed; BUG-001 fix spec captured
+- consolidate-worked-examples (Wave 1) — 23 test vectors (TV-01 through TV-23) extracted into `input/sources/worked-examples.md`; 17 scenarios covered; 10 invariants documented
