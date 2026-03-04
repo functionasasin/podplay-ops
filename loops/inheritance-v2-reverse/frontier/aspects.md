@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 30
-- Analyzed: 17
-- Pending: 13
-- Convergence: 57%
+- Analyzed: 18
+- Pending: 12
+- Convergence: 60%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -36,7 +36,7 @@ Depends on Wave 2 rule extraction.
 ### Wave 4: Bridge Contract
 Depends on Wave 3 data model.
 - [x] wasm-export — Define compute_json signature, parameter types, return type, wasm-bindgen attributes
-- [ ] serde-wire-format — Exact JSON serialization rules: deny_unknown_fields, rename_all, boolean/number/null/enum/date/fraction conventions
+- [x] serde-wire-format — Exact JSON serialization rules: deny_unknown_fields, rename_all, boolean/number/null/enum/date/fraction conventions
 - [ ] error-contract — Validation error vs computation error shapes, panic recovery
 - [ ] wasm-initialization — initSync (Node.js/vitest) vs init (browser), dual-path initialization pattern
 
