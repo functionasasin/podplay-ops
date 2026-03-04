@@ -1,25 +1,22 @@
-# Current Stage: 6
+# Current Stage: 7
 
-## Stage 6 — Email Drafts & Sending (8 tools)
+## Stage 7 — Email Signatures & AI (9 tools)
 
-Create backend service routes and CE tools for email drafts, sending, and scheduling.
+Create backend service routes and CE tools for email signatures, bulk draft editing, AI email improvement, and thread summaries.
 
-| # | Tool | Backend Route |
-|---|------|--------------|
-| 42 | `cheerful_get_thread_draft` | `GET /api/service/threads/{id}/draft` |
-| 43 | `cheerful_create_thread_draft` | `POST /api/service/threads/{id}/draft` |
-| 44 | `cheerful_update_thread_draft` | `PATCH /api/service/threads/{id}/draft` |
-| 45 | `cheerful_send_email` | `POST /api/service/email/send` |
-| 46 | `cheerful_schedule_email` | `POST /api/service/email/schedule` |
-| 47 | `cheerful_list_scheduled_emails` | `GET /api/service/email/scheduled` |
-| 48 | `cheerful_cancel_scheduled_email` | `DELETE /api/service/email/scheduled/{id}` |
-| 49 | `cheerful_reschedule_email` | `PATCH /api/service/email/scheduled/{id}` |
+| # | Tool | Backend Route | Notes |
+|---|------|--------------|-------|
+| 50 | `cheerful_list_email_signatures` | `GET /api/service/signatures` | |
+| 51 | `cheerful_get_email_signatures_for_reply` | `GET /api/service/signatures/for-reply` | |
+| 52 | `cheerful_create_email_signature` | `POST /api/service/signatures` | |
+| 53 | `cheerful_get_email_signature` | `GET /api/service/signatures/{id}` | |
+| 54 | `cheerful_update_email_signature` | `PATCH /api/service/signatures/{id}` | |
+| 55 | `cheerful_delete_email_signature` | `DELETE /api/service/signatures/{id}` | |
+| 56 | `cheerful_bulk_edit_drafts` | `POST /api/service/campaigns/{id}/bulk-edit-drafts` | Temporal workflow |
+| 57 | `cheerful_improve_email_content` | — | CE-native (calls Claude, no backend route) |
+| 58 | `cheerful_get_thread_summary` | — | CE-native (ThreadSummarizer, no backend route) |
 
-**Priority**: IMPLEMENT — Tests written (38 tests for all 8 tools), stub implementations in place. Now implement the tools fully.
+**Priority**: SCAFFOLD — Create test fixture file for email signatures domain with mock API responses.
 
 ## Work Log
-- 2026-03-04: Stage 5 complete (223 total tests passing, 34 cheerful tools registered). Advancing to Stage 6.
-- 2026-03-04: Scaffold complete — created email_drafts_fixtures.py with mock responses for all 8 tools.
-- 2026-03-04: Backend routes batch 1 — 5 routes: GET/POST/PUT threads/{id}/draft, GET/DELETE email/scheduled.
-- 2026-03-04: Backend routes batch 2 — 3 routes: POST email/send, POST email/schedule, PATCH email/scheduled/{id}/reschedule. All 8 backend routes complete.
-- 2026-03-04: Tests written — 38 tests for all 8 tools (#42-49): draft get/create/update, send, schedule, list/cancel/reschedule scheduled. All 261 cheerful tests passing. Stub tools + API client functions implemented.
+- 2026-03-04: Stage 6 complete (261 total tests passing, 42 cheerful tools registered). Advancing to Stage 7.
