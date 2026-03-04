@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 22
-- Analyzed: 1
-- Pending: 21
-- Convergence: 5%
+- Analyzed: 2
+- Pending: 20
+- Convergence: 9%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -12,7 +12,7 @@
 Gather and catalog all source material.
 
 - [x] catalog-routes — Read every file in `app/src/routes/`, catalog: path, exported route name, component, what it renders, auth requirement
-- [ ] catalog-components — Read every file in `app/src/components/`, catalog: file path, what it renders, props, any stubs/placeholders
+- [x] catalog-components — Read every file in `app/src/components/`, catalog: file path, what it renders, props, any stubs/placeholders
 - [ ] catalog-lib-hooks — Read every file in `app/src/lib/` and `app/src/hooks/`, catalog: exports, dependencies, completeness
 - [ ] catalog-config — Read `app/src/index.css`, `app/vite.config.ts`, `app/tsconfig.json`, `app/package.json`, `app/supabase/config.toml`, catalog current design tokens and config
 - [ ] catalog-migrations — Read every file in `app/supabase/migrations/`, catalog: what each creates, any duplicates or conflicts
@@ -53,3 +53,4 @@ Depends on all previous waves. **Strict internal dependency order.**
 | Aspect | Wave | Date | Key Findings |
 |--------|------|------|--------------|
 | catalog-routes | 1 | 2026-03-04 | 10 registered routes, 1 unregistered (settings/team — CRITICAL), 3 stub placeholders (share results, client cases, logo reload hack), no route-level auth guards, missing /cases list route |
+| catalog-components | 1 | 2026-03-04 | ~80 non-test files across 13 subdirs; 5 critical stubs: DocumentChecklist (unimplemented backend fns), DeadlineTimeline (raw HTML + missing handler), ClientForm (raw HTML, no validation), ClientList (raw HTML table), InviteMemberDialog (unstyled buttons); MISSING: Toast/notification system, Skeleton component, auth-conditional nav |
