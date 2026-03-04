@@ -14,8 +14,9 @@ Create backend service routes and CE tools for campaign recipient management, se
 | 24 | `cheerful_populate_campaign_outbox` | `POST /api/service/campaigns/{id}/outbox/populate` |
 | 25 | `cheerful_get_campaign_outbox` | `GET /api/service/campaigns/{id}/outbox` |
 
-**Priority**: BACKEND ROUTES — create service routes for recipients/sender/outbox endpoints.
+**Priority**: WRITE TESTS — backend routes exist, write tests for 2-4 tools next.
 
 ## Work Log
 - 2026-03-04: Stage 2 complete (33 tests passing, 6 tools implemented). Advancing to Stage 3.
 - 2026-03-04: Scaffold complete — created `recipients_fixtures.py` with mock responses for all 7 Stage 3 tools.
+- 2026-03-04: Backend routes complete — all 7 service routes created: add_campaign_recipients (#18), add_campaign_recipients_from_search (#19), list_campaign_recipients (#21), update_campaign_sender (#22), remove_campaign_sender (#23), populate_campaign_outbox (#24), get_campaign_outbox (#25).
