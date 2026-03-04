@@ -13,7 +13,8 @@ Create backend service routes and CE tools for campaign CRUD operations and laun
 | 12 | `cheerful_duplicate_campaign` | `POST /api/service/campaigns/{campaign_id}/duplicate` |
 | 17 | `cheerful_launch_campaign` | `POST /api/service/campaigns/{campaign_id}/launch` |
 
-**Priority**: SCAFFOLD — create test fixtures for campaign domain, then BACKEND ROUTES.
+**Priority**: BACKEND ROUTES — create service routes for campaign CRUD + launch.
 
 ## Work Log
 - 2026-03-04: Stage 1 complete (49 tests passing). Advancing to Stage 2.
+- 2026-03-04: Stage 2 scaffold complete — campaign_fixtures.py + test_campaigns.py stubs created.
