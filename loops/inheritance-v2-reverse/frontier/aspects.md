@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 30
-- Analyzed: 3
-- Pending: 27
-- Convergence: 10%
+- Analyzed: 4
+- Pending: 26
+- Convergence: 13%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -16,7 +16,7 @@ Consolidate domain knowledge from original analysis files.
 ### Wave 2: Domain Rule Extraction
 Depends on Wave 1 sources being consolidated.
 - [x] heir-classification — Compulsory heir categories, eligibility gate (Art. 887), filiation proof (FC 172/175), adopted/legitimated equivalence
-- [ ] heir-concurrence — Arts. 888-903: who inherits together, who excludes whom, 30 scenario codes (T1-T15, I1-I15)
+- [x] heir-concurrence — Arts. 888-903: who inherits together, who excludes whom, 30 scenario codes (T1-T15, I1-I15)
 - [ ] representation — Arts. 970-977: per stirpes, 4 triggers, collateral limit, recursive multi-level, renunciation non-trigger
 - [ ] legitime-fractions — Arts. 888-903: complete fraction table for all 30 scenarios, FP_gross vs FP_disposable, Art. 895 cap rule
 - [ ] intestate-distribution — Arts. 960-1014: all 15 intestate formulas, Iron Curtain Rule, collateral sub-algorithm
@@ -59,3 +59,4 @@ Depends on all previous waves.
 - consolidate-legal-sources (Wave 1) — 4 source docs created in `input/sources/`; 30 scenarios confirmed; BUG-001 fix spec captured
 - consolidate-worked-examples (Wave 1) — 23 test vectors (TV-01 through TV-23) extracted into `input/sources/worked-examples.md`; 17 scenarios covered; 10 invariants documented
 - heir-classification (Wave 2) — 4 compulsory heir groups; 7 eligibility gates; HeirType enum + EffectiveGroup mapping; HeirInput struct with all fields; ascendant division per Art. 890; Art. 977 renunciation blocks representation; BUG-001 disinheritance gate noted
+- heir-concurrence (Wave 2) — 30 ScenarioCode enum variants (T1–T15, I1–I15); full testate + intestate determination algorithms in Rust pseudocode; cap rule formula + 2 examples; sibling full/half-blood (Art. 1006); Art. 903 T14/T15 illegitimate decedent branch; 6 new fields identified for DecedentInput; testate vs intestate comparison table
