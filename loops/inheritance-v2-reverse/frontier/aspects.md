@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 30
-- Analyzed: 18
-- Pending: 12
-- Convergence: 60%
+- Analyzed: 19
+- Pending: 11
+- Convergence: 63%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -37,7 +37,7 @@ Depends on Wave 2 rule extraction.
 Depends on Wave 3 data model.
 - [x] wasm-export — Define compute_json signature, parameter types, return type, wasm-bindgen attributes
 - [x] serde-wire-format — Exact JSON serialization rules: deny_unknown_fields, rename_all, boolean/number/null/enum/date/fraction conventions
-- [ ] error-contract — Validation error vs computation error shapes, panic recovery
+- [x] error-contract — Validation error vs computation error shapes, panic recovery
 - [ ] wasm-initialization — initSync (Node.js/vitest) vs init (browser), dual-path initialization pattern
 
 ### Wave 5: Frontend Data Model + UI Design
