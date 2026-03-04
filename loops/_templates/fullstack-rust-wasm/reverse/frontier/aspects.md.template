@@ -45,6 +45,12 @@ Depends on Wave 3 data model and Wave 4 bridge contract.
 - [ ] results-view — Define results display components and data mapping
 - [ ] shared-components — Identify reusable form widgets (money input, date input, enum select, etc.)
 - [ ] design-system — Choose palette, typography, component library, spacing, visual direction
+- [ ] auth-flow — Specify authentication methods, sign-in/sign-up page layout, confirmation flow, error states, post-auth redirect
+- [ ] landing-page — Specify unauthenticated user experience at `/`: sign-in/sign-up CTA, product description, auth-aware conditional rendering
+- [ ] route-table — Complete route registry: every path, component, and auth requirement (public vs authenticated). Every route file MUST be registered.
+- [ ] env-configuration — List all required env vars, .env.local.example contents, graceful error handling when vars are missing (no unhandled throws)
+- [ ] database-migrations — Specify migration sequence, idempotency rules (IF NOT EXISTS, CREATE OR REPLACE), no duplicate table creation across migrations
+- [ ] navigation — Auth-aware sidebar/header: what unauthenticated users see vs authenticated users, mobile nav, active state
 
 ### Wave 6: Synthesis
 Depends on all previous waves. **Strict internal dependency order — do NOT skip ahead.**

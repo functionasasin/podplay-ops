@@ -8,8 +8,9 @@
 | 2 | WASM Bridge | engine/ → frontend/ (wasm-pack) | P2-1, P2-2 | pending |
 | 3 | Frontend Foundation | frontend/ (vitest + real WASM) | P3-1, P3-2, P3-3 | pending |
 | 4 | Frontend Components | frontend/ (vitest + real WASM) | P4-1 — P4-N | pending |
-| 5 | UI Polish | frontend/ (vitest + CSS check) | P5-1, P5-2, P5-3 | pending |
-| 6 | Completeness Verification | all (HARD GATE) | P6-1, P6-2, P6-3 | pending |
+| 5 | Platform Layer | frontend/ (auth, routes, env, nav) | P5-1 — P5-5 | pending |
+| 6 | UI Polish | frontend/ (vitest + CSS check) | P6-1, P6-2, P6-3 | pending |
+| 7 | Completeness Verification | all (HARD GATE) | P7-1, P7-2, P7-3 | pending |
 
 ## Current Stage
 
@@ -31,7 +32,8 @@ Not started. Run `./forward-ralph.sh auto` to begin.
 
 - Phase 1 tests: `cargo test {filter}` in engine/
 - Phase 2 tests: `cargo check --target wasm32` + `wasm-pack build` + artifact verification
-- Phase 3-5 tests: `npx vitest run {filter}` in frontend/ — all hit real WASM engine
+- Phase 3-4 tests: `npx vitest run {filter}` in frontend/ — all hit real WASM engine
 - No mocks anywhere. Phase 3 Stage P3-3 wires real WASM before any components are built.
-- CSS bundle size check in Phase 5: `npm run build` must produce CSS > 20KB
-- **Phase 6 is a HARD GATE**: Product does not ship until P6-1 (stub scan), P6-2 (completeness audit), and P6-3 (build verification) all pass. The runner's stub_scan() function mechanically blocks convergence if stubs are detected in source files at any stage.
+- Phase 5 (Platform Layer): Auth, routing, env config, navigation, boot verification. The app must render and be navigable before polish.
+- CSS bundle size check in Phase 6: `npm run build` must produce CSS > 20KB
+- **Phase 7 is a HARD GATE**: Product does not ship until P7-1 (stub scan), P7-2 (completeness audit), and P7-3 (build verification) all pass. The runner's stub_scan() function mechanically blocks convergence if stubs are detected in source files at any stage.

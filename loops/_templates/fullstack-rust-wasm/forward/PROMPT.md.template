@@ -102,27 +102,38 @@ Build all UI components. Tests run via `vitest` with real WASM.
 <!-- | P4-N | Results View | [Result components] | §Results View | -->
 <!-- | P4-N+1 | Validation + Integration | End-to-end form → compute → results | §Cross-Layer | -->
 
-### Phase 5: UI Polish
+### Phase 5: Platform Layer
+Wire authentication, routing, environment config, and navigation per the spec's Platform Layer section. The app must be fully bootable and navigable before polish.
+
+| Stage | Name | Work | Spec Sections |
+|-------|------|------|---------------|
+| P5-1 | Environment + Supabase Setup | Create `.env.local.example` with all required vars, configure Supabase client with graceful missing-var handling (no crash), write migrations (idempotent) | §Platform Layer: Env Config, §Migrations |
+| P5-2 | Auth Page | Build sign-in/sign-up page with all specified methods, confirmation flow, error states, post-auth redirect | §Platform Layer: Auth |
+| P5-3 | Route Registration + Navigation | Register ALL route files in router, build auth-aware sidebar/header nav, mobile nav | §Platform Layer: Routes, §Navigation |
+| P5-4 | Landing Page | Auth-aware landing page: unauthenticated users see product description + sign-in/sign-up CTA, authenticated users see dashboard with primary actions | §Platform Layer: Landing Page |
+| P5-5 | Boot Verification | **HARD GATE.** Start the dev server, verify: (1) app renders without errors when env vars are set, (2) app shows a meaningful error page (not blank/crash) when env vars are missing, (3) every registered route renders a component (no NOT FOUND for implemented routes), (4) sign-in/sign-up flow works end-to-end. Write results to `status/boot-verification.txt`. | All §Platform Layer |
+
+### Phase 6: UI Polish
 Apply design system and responsive styling. Tests must continue passing + CSS bundle size check.
 
 | Stage | Name | Work | Spec Sections |
 |-------|------|------|---------------|
-| P5-1 | Design System Setup | Install component library, configure palette, add fonts, verify tests + CSS > 20KB | §Design System |
-| P5-2 | Component Restyle | Apply design system to all components (shared → wizard → results) | §Design System, §Component Patterns |
-| P5-3 | Responsive + Polish | Mobile breakpoints, spacing audit, typography audit, focus states, empty states | §Design System |
+| P6-1 | Design System Setup | Install component library, configure palette, add fonts, verify tests + CSS > 20KB | §Design System |
+| P6-2 | Component Restyle | Apply design system to all components (shared → wizard → results) | §Design System, §Component Patterns |
+| P6-3 | Responsive + Polish | Mobile breakpoints, spacing audit, typography audit, focus states, empty states | §Design System |
 
-### Phase 6: Completeness Verification (HARD GATE)
-**No product ships without passing Phase 6.** This phase exists because stubs that compile and pass tests still produce a broken, unusable product.
+### Phase 7: Completeness Verification (HARD GATE)
+**No product ships without passing Phase 7.** This phase exists because stubs that compile and pass tests still produce a broken, unusable product.
 
 | Stage | Name | Work | Gate |
 |-------|------|------|------|
-| P6-1 | Stub Scan | Scan ALL source files (engine + frontend) for banned stub patterns. MUST find ZERO matches in production code. | HARD GATE — blocks P6-2 |
-| P6-2 | Functional Completeness Audit | For EVERY feature in the spec: verify it is fully implemented, wired to real data, handles edge cases, and renders correctly. Walk through every user flow end-to-end. | HARD GATE — blocks convergence |
-| P6-3 | Build Verification | `cargo test` (all pass) + `npm run build` (clean build, no warnings, CSS > 20KB) + manual feature walkthrough | Final gate |
+| P7-1 | Stub Scan | Scan ALL source files (engine + frontend) for banned stub patterns. MUST find ZERO matches in production code. | HARD GATE — blocks P7-2 |
+| P7-2 | Functional Completeness Audit | For EVERY feature in the spec: verify it is fully implemented, wired to real data, handles edge cases, and renders correctly. Walk through every user flow end-to-end. Includes platform layer: auth works, routes resolve, nav is auth-aware, landing page has CTA. | HARD GATE — blocks convergence |
+| P7-3 | Build Verification | `cargo test` (all pass) + `npm run build` (clean build, no warnings, CSS > 20KB) + manual feature walkthrough | Final gate |
 
-**Phase 6 Analysis Methods:**
+**Phase 7 Analysis Methods:**
 
-#### P6-1: Stub Scan
+#### P7-1: Stub Scan
 Search ALL files in `engine/src/` and `frontend/src/` for these banned patterns:
 - **Rust**: `todo!()`, `unimplemented!()`, `panic!("not implemented")`, `// TODO`, `// FIXME`, `// STUB`, `// HACK`, `// PLACEHOLDER`, `0 // placeholder`, `Default::default() // placeholder`
 - **TypeScript/React**: `// TODO`, `// FIXME`, `// STUB`, `// PLACEHOLDER`, `// HACK`, `throw new Error("not implemented")`, `console.log("TODO")`, empty component bodies (`return null`/`return <></>`/`return <div/>`), functions returning hardcoded dummy values, `as any` type assertions hiding incomplete types
@@ -134,9 +145,9 @@ Search ALL files in `engine/src/` and `frontend/src/` for these banned patterns:
 - Intentional `unreachable!()` for exhaustive match arms
 - HTML placeholder attributes (`placeholder="Enter amount"`) — these are UI strings, not code stubs
 
-Write results to `status/stub-scan.txt`. If ANY banned pattern is found: create a new stage to fix each stub, do NOT mark P6-1 complete.
+Write results to `status/stub-scan.txt`. If ANY banned pattern is found: create a new stage to fix each stub, do NOT mark P7-1 complete.
 
-#### P6-2: Functional Completeness Audit
+#### P7-2: Functional Completeness Audit
 For EVERY feature described in the spec:
 1. **Is the feature implemented?** (not just typed — actually wired and functional)
 2. **Does it handle the happy path?** (correct output for standard input)
@@ -144,9 +155,9 @@ For EVERY feature described in the spec:
 4. **Does it display results correctly?** (formatting, labels, conditional visibility)
 5. **Does it handle errors?** (validation messages, WASM errors, network issues)
 
-Write results to `status/completeness-audit.txt` with per-feature PASS/FAIL. If ANY feature fails: create stages to fix, do NOT mark P6-2 complete.
+Write results to `status/completeness-audit.txt` with per-feature PASS/FAIL. If ANY feature fails: create stages to fix, do NOT mark P7-2 complete.
 
-#### P6-3: Build Verification
+#### P7-3: Build Verification
 1. Run `cargo test` in engine/ — ALL tests must pass
 2. Run `wasm-pack build` — must produce valid .wasm artifact
 3. Run `npm run build` in frontend/ — must succeed with zero warnings, CSS bundle > 20KB
@@ -161,6 +172,8 @@ When the runner detects a phase boundary (all stages in a phase complete), it pe
 - **Phase 2 → Phase 3**: `wasm-pack build` + copy `pkg/` to frontend directory
 - **Phase 3 → Phase 4**: No transition needed (same frontend project)
 - **Phase 4 → Phase 5**: No transition needed (same frontend project)
+- **Phase 5 → Phase 6**: Boot verification must pass (app renders, auth works, routes resolve)
+- **Phase 6 → Phase 7**: No transition needed (same frontend project)
 
 ## Key Spec References
 
@@ -229,7 +242,7 @@ z.optional()         // produces undefined → serde crash
 2. **Priority 3 (IMPLEMENT)** MUST replace every stub with a full implementation. If you finish an implementation pass and stubs remain, you are not done — keep implementing.
 3. **Priority 4 (FIX FAILURES)** fixes failing tests. If the failure is caused by a stub that was never replaced, the fix is to IMPLEMENT the feature, not to modify the test.
 4. **Priority 5 (DONE)** runs a stub scan. If stubs exist, you are NOT done.
-5. **Phase 6 (COMPLETENESS)** is the final gate. The product does not ship with stubs.
+5. **Phase 7 (COMPLETENESS)** is the final gate. The product does not ship with stubs.
 
 ### What Counts as a Stub
 

@@ -122,6 +122,19 @@ Two sub-concerns that MUST be consistent:
 - Define visual direction for the domain (professional? playful? clinical?)
 - Specify key component patterns (cards, badges, alerts, tables)
 
+#### 5d: Platform Layer
+**Goal**: Specify everything needed for the app to boot and be usable before any domain feature is reached.
+
+This wave exists because the inheritance project needed 5 manual fixes on first run — blank page (missing env vars), placeholder auth page (no form), dead-end landing page (no sign-in CTA), unregistered routes, and broken migrations. Every one of these was a spec gap.
+
+- **Authentication flow**: Which auth methods (email/password, magic link, OAuth)? Specify the sign-in page layout, sign-up form fields, confirmation flow, error states, and where the user lands after auth.
+- **Unauthenticated user experience**: What does a new user see at `/`? There MUST be a clear call-to-action to sign in or create an account. Dead-end pages with text like "Sign in to continue" and no button are UX failures.
+- **Environment configuration**: List every required env var (e.g., `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`). Specify what happens when they're missing — the app MUST NOT crash with an unhandled throw. Specify a `.env.local.example` with documented values.
+- **Route registration**: Every route file MUST be registered in the router. Specify the complete route table with path, component, and auth requirement (public vs authenticated).
+- **Database setup**: If using Supabase/Postgres, specify the complete migration sequence. Each migration MUST be idempotent (`IF NOT EXISTS`, `CREATE OR REPLACE`). Never create the same table in two different migrations.
+- **Navigation**: Specify the sidebar/header nav items. Auth-aware: unauthenticated users see sign-in link, authenticated users see the full nav.
+- **Session management**: How auth state is persisted, how the app rehydrates on refresh, what happens when a token expires.
+
 ### Wave 6: Synthesis
 **Goal**: Assemble all wave findings into the final spec document. Every section must be implementation-ready with zero placeholders.
 
@@ -190,9 +203,16 @@ The final spec at `docs/plans/{{SPEC_FILENAME}}.md` must contain these sections:
     §(N+4).1  Palette (CSS custom properties)
     §(N+4).2  Typography
     §(N+4).3  Component Patterns
-§N+5  Test Vectors (input → expected output, at least 15)
-§N+6  Invariants (formal rules that must hold for any I/O pair)
-§N+7  Cross-Layer Consistency Checklist
+§N+5  Platform Layer
+    §(N+5).1  Authentication (methods, sign-in/sign-up UI, confirmation flow, error states)
+    §(N+5).2  Route Table (complete list: path, component, auth requirement)
+    §(N+5).3  Environment Configuration (required env vars, .env.local.example, graceful missing-var handling)
+    §(N+5).4  Database Migrations (idempotent, no duplicates, setup instructions)
+    §(N+5).5  Navigation (auth-aware sidebar/header, unauthenticated landing page with CTA)
+    §(N+5).6  Session Management (auth state persistence, token refresh, expiry handling)
+§N+6  Test Vectors (input → expected output, at least 15)
+§N+7  Invariants (formal rules that must hold for any I/O pair)
+§N+8  Cross-Layer Consistency Checklist
 Appendix A: Glossary
 Appendix B: Edge Cases + Known Limitations
 ```
