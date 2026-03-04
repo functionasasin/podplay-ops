@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 22
-- Analyzed: 3
-- Pending: 19
-- Convergence: 14%
+- Analyzed: 4
+- Pending: 18
+- Convergence: 18%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -14,7 +14,7 @@ Gather and catalog all source material.
 - [x] catalog-routes — Read every file in `app/src/routes/`, catalog: path, exported route name, component, what it renders, auth requirement
 - [x] catalog-components — Read every file in `app/src/components/`, catalog: file path, what it renders, props, any stubs/placeholders
 - [x] catalog-lib-hooks — Read every file in `app/src/lib/` and `app/src/hooks/`, catalog: exports, dependencies, completeness
-- [ ] catalog-config — Read `app/src/index.css`, `app/vite.config.ts`, `app/tsconfig.json`, `app/package.json`, `app/supabase/config.toml`, catalog current design tokens and config
+- [x] catalog-config — Read `app/src/index.css`, `app/vite.config.ts`, `app/tsconfig.json`, `app/package.json`, `app/supabase/config.toml`, catalog current design tokens and config
 - [ ] catalog-migrations — Read every file in `app/supabase/migrations/`, catalog: what each creates, any duplicates or conflicts
 - [ ] read-premium-spec — Read `docs/plans/inheritance-premium-spec.md`, extract every platform-related feature that was specified
 - [ ] read-failure-logs — Read failure docs from `loops/inheritance-frontend-forward/frontier/analysis-log.md` and `loops/inheritance-frontend-reverse/frontier/aspects.md`, extract actionable items
@@ -55,3 +55,4 @@ Depends on all previous waves. **Strict internal dependency order.**
 | catalog-routes | 1 | 2026-03-04 | 10 registered routes, 1 unregistered (settings/team — CRITICAL), 3 stub placeholders (share results, client cases, logo reload hack), no route-level auth guards, missing /cases list route |
 | catalog-components | 1 | 2026-03-04 | ~80 non-test files across 13 subdirs; 5 critical stubs: DocumentChecklist (unimplemented backend fns), DeadlineTimeline (raw HTML + missing handler), ClientForm (raw HTML, no validation), ClientList (raw HTML table), InviteMemberDialog (unstyled buttons); MISSING: Toast/notification system, Skeleton component, auth-conditional nav |
 | catalog-lib-hooks | 1 | 2026-03-04 | 18 lib files + 5 hooks; CRITICAL: supabase.ts throws on missing env vars (white-screen), comparison.ts static wasm import (blocks thread), no createOrganization anywhere; HIGH: no resetPassword, intake.ts non-null assertion crash, @/wasm/bridge and @/data/document-templates unverified; MEDIUM: useAuth no error state, useAutoSave no isDirty/flush-on-unmount; 7 missing hooks for lib modules |
+| catalog-config | 1 | 2026-03-04 | Navy+Gold palette fully defined; CRITICAL: email confirmations off in config (users access without verified email); HIGH: no toast library installed (UX dead end), no date library (deadline bug risk); MEDIUM: no VITE_APP_URL (QR/share links broken), no production auth guidance; LOW: no shadow tokens, no animation tokens, dark mode declared but not implemented |
