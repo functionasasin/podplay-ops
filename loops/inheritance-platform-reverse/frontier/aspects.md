@@ -1,0 +1,52 @@
+# Frontier — Inheritance Platform Layer
+
+## Statistics
+- Total aspects discovered: 22
+- Analyzed: 0
+- Pending: 22
+- Convergence: 0%
+
+## Pending Aspects (ordered by dependency)
+
+### Wave 1: Source Acquisition
+Gather and catalog all source material.
+
+- [ ] catalog-routes — Read every file in `app/src/routes/`, catalog: path, exported route name, component, what it renders, auth requirement
+- [ ] catalog-components — Read every file in `app/src/components/`, catalog: file path, what it renders, props, any stubs/placeholders
+- [ ] catalog-lib-hooks — Read every file in `app/src/lib/` and `app/src/hooks/`, catalog: exports, dependencies, completeness
+- [ ] catalog-config — Read `app/src/index.css`, `app/vite.config.ts`, `app/tsconfig.json`, `app/package.json`, `app/supabase/config.toml`, catalog current design tokens and config
+- [ ] catalog-migrations — Read every file in `app/supabase/migrations/`, catalog: what each creates, any duplicates or conflicts
+- [ ] read-premium-spec — Read `docs/plans/inheritance-premium-spec.md`, extract every platform-related feature that was specified
+- [ ] read-failure-logs — Read failure docs from `loops/inheritance-frontend-forward/frontier/analysis-log.md` and `loops/inheritance-frontend-reverse/frontier/aspects.md`, extract actionable items
+- [ ] reference-modern-saas — Research modern SaaS dashboard patterns (Linear, Vercel, Cal.com): nav design, card patterns, transitions, loading states, empty states, onboarding flows. Document patterns that work with Navy+Gold.
+
+### Wave 2: User Journey Audit
+Depends on Wave 1 catalogs being complete.
+
+- [ ] journey-new-visitor — Walk: user visits `/` for the first time with no account. What do they see? Can they understand the product? Can they find sign-up?
+- [ ] journey-signup-signin — Walk: user clicks sign up → fills form → gets confirmation email → confirms → signs in → lands where? Document every step and gap.
+- [ ] journey-first-case — Walk: authenticated user creates first case → fills wizard → computes → sees results. Is the flow discoverable? Are there dead ends?
+- [ ] journey-share-case — Walk: user shares a case via link → recipient opens link. Does the share flow work? What does the recipient see?
+- [ ] journey-return-visit — Walk: user returns days later → dashboard → case list → opens existing case → edits → recomputes. Is the dashboard useful?
+- [ ] journey-settings-team — Walk: user goes to settings → updates firm profile → invites team member → member accepts. Does the full org flow work?
+
+### Wave 3: Design Modernization Audit
+Depends on Wave 1 catalogs and Wave 2 journey findings.
+
+- [ ] design-layout-nav — Audit AppLayout, sidebar, mobile header: spacing, transitions, active states, collapse behavior. Propose modernization.
+- [ ] design-wizard-components — Audit all wizard step components: card patterns, form styling, step indicators, validation display. Propose modernization.
+- [ ] design-results-components — Audit results view, computation log, warnings panel, narrative panel, actions bar. Propose modernization.
+- [ ] design-shared-components — Audit shared form components (MoneyInput, DateInput, PersonPicker, etc.): consistency, focus states, error display. Propose modernization.
+- [ ] design-mobile-responsive — Audit every page at mobile breakpoints: does the layout work? Touch targets adequate? Scroll behavior correct? Tables overflow? Propose fixes.
+- [ ] design-loading-empty-states — Catalog every loading state and empty state in the app. Which are missing? Propose skeleton/spinner patterns and empty state illustrations+CTAs.
+
+### Wave 4: Synthesis
+Depends on all previous waves. **Strict internal dependency order.**
+
+- [ ] spec-draft — Assemble all findings into `docs/plans/inheritance-platform-spec.md`. Every section fully written with exact file paths and exact changes.
+- [ ] placeholder-validation — **HARD GATE.** Scan entire spec for banned patterns. MUST return PASS before proceeding.
+- [ ] completeness-audit — Verify every gap from Wave 2 journeys has an exact fix in the spec. Per-gap PASS/FAIL.
+- [ ] spec-review — Final review: could a developer fix every platform issue and modernize every component from this spec alone?
+
+## Recently Analyzed
+(Empty — loop hasn't started yet)

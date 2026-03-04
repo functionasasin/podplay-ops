@@ -260,3 +260,11 @@ loops:
     timeout_minutes: 30
     status: active
     created: 2026-03-03
+  inheritance-platform-reverse:
+    description: "Audit inheritance app platform layer (auth, routes, nav, env, design) → modernization spec with Navy+Gold aesthetic"
+    type: reverse
+    schedule: "*/30 * * * *"
+    max_iterations: 40
+    timeout_minutes: 30
+    status: active
+    created: 2026-03-03
