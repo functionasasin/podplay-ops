@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 30
-- Analyzed: 15
-- Pending: 15
-- Convergence: 50%
+- Analyzed: 16
+- Pending: 14
+- Convergence: 53%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -31,7 +31,7 @@ Depends on Wave 2 rule extraction.
 - [x] pipeline-design — 10-step pipeline with input/output types per step, restart conditions, max-restart guard
 - [x] algorithms — Pseudocode for all non-trivial computations (cap rule, Art. 911 reduction, collateral distribution, Hare-Niemeyer rounding)
 - [x] test-vectors — 20+ test vectors covering all 30 scenarios with expected peso amounts
-- [ ] invariants — 10 formal invariants that must hold for any valid input/output pair
+- [x] invariants — 10 formal invariants that must hold for any valid input/output pair
 
 ### Wave 4: Bridge Contract
 Depends on Wave 3 data model.
@@ -56,6 +56,7 @@ Depends on all previous waves.
 - [ ] spec-review — Self-review: can a developer build the entire product from this spec alone, without any type mismatches at integration time?
 
 ## Recently Analyzed
+- invariants (Wave 3) — 10 global formal invariants (INV-1 sum conservation, INV-2 E_adj entitlement, INV-3 legitime floor, INV-4 Art.895 per-IC ratio, INV-5 aggregate IC cap, INV-6 per stirpes slot conservation, INV-7 adoption equivalence, INV-8 preterition totality, INV-9 disinheritance exclusion, INV-10 scenario consistency); 5 pipeline invariants (PINV-1 termination, PINV-2 monotonic exclusion, PINV-3 step ordering, PINV-4 idempotent base classification, PINV-5 log append-only); Rust assertion patterns for each invariant; invariant applicability matrix (which apply to intestate/testate/mixed/BUG-001); violation response protocol (panic for INV-1/3/6, MaxRestartsExceeded for PINV-1); 5 edge cases (all-excluded→escheat, zero estate, single heir, collation>estate, restart chain); cross-references to sub-domain invariants in multiple-disinheritance-fix, vacancy-resolution, intestate-distribution analysis files
 - test-vectors (Wave 3) — 47 total test vectors (23 existing + 5 BUG-001 + 19 new); 100% scenario coverage of all 30 ScenarioCode variants; exact centavo values with Hare-Niemeyer rounding for irrational shares; 10 formal invariants (INV-1 sum guarantee, INV-2 E_adj total entitlement, INV-3 legitime floor, INV-4 Art.895 ratio, INV-5 cap invariant, INV-6 per stirpes, INV-7 adoption equivalence, INV-8 preterition totality, INV-9 disinheritance exclusion, INV-10 scenario consistency); I8/I9/I10 must use explicit fraction formulas not unit-ratio; Regime B (T8/T9) uses flat ¼ for IC with no cap rule; TV-N05 illustrates rounding bonus can go to half-blood heir when higher fractional remainder; TV-N19 specifies collation debt clamping + CollationDebt warning + MANUAL_REVIEW flag; JSON input/output shape documented
 - pipeline-design (Wave 3) — 10-step deterministic restartable pipeline; PipelineState struct with classified_heirs_base (immutable) + classified_heirs (working); StepResult::Continue|Restart|Error; RestartTrigger enum (ValidDisinheritance|PreteritionAnnulment|LegitimeVacancy); MAX_RESTARTS=10; clear_from_step(3) strips representation additions but keeps disinheritance exclusions; clear_from_step(4) keeps full post-rep heir set; step7 restarts to step3 (disinheritance/preterition), step10 restarts to step4 (Art.1021¶2 legitimate vacancy only); step1-2 never re-run on restart; rounding (Hare-Niemeyer) as final sub-step of step10; collation phase1 in step5 (E_adj), phase2 imputation in step9; 10-module src layout; ComputationLogEntry per step for audit trail
 - rust-types (Wave 3) — 49 distinct types across 14 modules; ComputationInput/DecedentInput/EstateInput/HeirInput/WillInput/DonationInput full structs with serde attributes; HeirType (9 variants), DisinheritanceGround (22 variants), ScenarioCode (30 variants) enums; Money type with custom centavos deserializer (number-or-string for BigInt); HeirInput.children for cascading representation; ClassifiedHeir intermediate type; LegitimeResult/LegitimeEntry; TestateValidationResult and all sub-types; CollationResult/ImputationResult/DonationReduction/PartitionAllocation; VacantShare/VacancyResolution/VacancyRedistribution; ValidationWarning (10 variants) + ManualReviewFlag (7 variants); ComputationOutput/HeirDistribution/RoundingAdjustment; ComputationError (5 variants); 10-module src layout; 8 key design decisions (BigRational internal, i64 I/O, PascalCase enums, flat ScenarioCode, children-over-representatives, engine-computed is_valid, "numer/denom" fractions, null-not-absent Options)
