@@ -252,3 +252,11 @@ loops:
     timeout_minutes: 30
     status: active
     created: 2026-03-02
+  cheerful-ce-parity-forward:
+    description: "Implement 113 CE tools + backend service routes for full Cheerful frontend parity"
+    type: forward
+    schedule: "*/30 * * * *"
+    max_iterations: 80
+    timeout_minutes: 30
+    status: active
+    created: 2026-03-03
