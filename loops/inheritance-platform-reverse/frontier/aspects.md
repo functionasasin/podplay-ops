@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 25
-- Analyzed: 6
-- Pending: 19
-- Convergence: 24%
+- Analyzed: 7
+- Pending: 18
+- Convergence: 28%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -17,7 +17,7 @@ Gather and catalog all source material.
 - [x] catalog-config — Read `app/src/index.css`, `app/vite.config.ts`, `app/tsconfig.json`, `app/package.json`, `app/supabase/config.toml`, catalog current design tokens and config
 - [x] catalog-migrations — Read every file in `app/supabase/migrations/`, catalog: what each creates, any duplicates or conflicts
 - [x] read-premium-spec — Read `docs/plans/inheritance-premium-spec.md`, extract every platform-related feature that was specified
-- [ ] read-failure-logs — Read failure docs from `loops/inheritance-frontend-forward/frontier/analysis-log.md` and `loops/inheritance-frontend-reverse/frontier/aspects.md`, extract actionable items
+- [x] read-failure-logs — Read failure docs from `loops/inheritance-frontend-forward/frontier/analysis-log.md` and `loops/inheritance-frontend-reverse/frontier/aspects.md`, extract actionable items
 - [ ] reference-modern-saas — Research modern SaaS dashboard patterns (Linear, Vercel, Cal.com): nav design, card patterns, transitions, loading states, empty states, onboarding flows. Document patterns that work with Navy+Gold.
 
 ### Wave 1: Additional Verification (discovered during read-premium-spec)
