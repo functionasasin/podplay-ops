@@ -1,26 +1,25 @@
-# Current Stage: 12
+# Current Stage: 13
 
-## Stage 12 — Integrations: External Services (10 tools)
+## Stage 13 — Users & Team (12 tools)
 
-Create backend service routes and CE tools for Google Sheets, Shopify, Instantly, Slack digest, YouTube lookalikes, and brand lookup.
+Create backend service routes and CE tools for user settings, teams, team members, campaign assignments, and onboarding status.
 
 | # | Tool | Backend Route |
 |---|------|--------------|
-| 91 | `cheerful_get_google_sheet_tabs` | `GET /api/service/integrations/sheets/tabs` |
-| 92 | `cheerful_list_shopify_products` | `GET /api/service/integrations/shopify/products` |
-| 93 | `cheerful_create_shopify_order` | `POST /api/service/integrations/shopify/orders` |
-| 94 | `cheerful_get_instantly_status` | `GET /api/service/integrations/instantly/status` |
-| 95 | `cheerful_connect_instantly` | `POST /api/service/integrations/instantly/connect` |
-| 96 | `cheerful_disconnect_instantly` | `DELETE /api/service/integrations/instantly` |
-| 97 | `cheerful_test_instantly` | `POST /api/service/integrations/instantly/test` |
-| 98 | `cheerful_trigger_slack_digest` | `POST /api/service/integrations/slack/digest` |
-| 99 | `cheerful_find_youtube_lookalikes` | `POST /api/service/integrations/youtube/lookalikes` |
-| 100 | `cheerful_lookup_brand` | `GET /api/service/integrations/brand` |
+| 101 | `cheerful_get_user_settings` | `GET /api/service/user/settings` |
+| 102 | `cheerful_list_teams` | `GET /api/service/teams` |
+| 103 | `cheerful_create_team` | `POST /api/service/teams` |
+| 104 | `cheerful_get_team` | `GET /api/service/teams/{id}` |
+| 105 | `cheerful_delete_team` | `DELETE /api/service/teams/{id}` |
+| 106 | `cheerful_add_team_member` | `POST /api/service/teams/{id}/members` |
+| 107 | `cheerful_remove_team_member` | `DELETE /api/service/teams/{id}/members/{member_id}` |
+| 108 | `cheerful_list_my_campaign_assignments` | `GET /api/service/assignments/mine` |
+| 109 | `cheerful_list_campaign_assignments` | `GET /api/service/teams/{id}/assignments` |
+| 110 | `cheerful_assign_campaign` | `POST /api/service/teams/{id}/assignments` |
+| 111 | `cheerful_unassign_campaign` | `DELETE /api/service/teams/{id}/assignments/{assignment_id}` |
+| 113 | `cheerful_get_onboarding_status` | `GET /api/service/user/onboarding` |
 
-**Priority**: IMPLEMENT — Tests + stubs complete for all 10 Stage 12 tools (66 tests, all passing). Next: implement tools.
+**Priority**: SCAFFOLD — Create test fixture file for users & team domain.
 
 ## Work Log
-- 2026-03-04: Stage 11 complete (485 total tests passing, 78 cheerful tools registered). Advancing to Stage 12.
-- 2026-03-04: Scaffold complete — created external_integrations_fixtures.py with mock responses for all 10 Stage 12 tools.
-- 2026-03-04: Backend routes complete — all 10 service routes created (#91-100): Google Sheets tabs, Shopify products + orders, Instantly status/connect/disconnect/test, Slack digest, YouTube lookalikes, Brand lookup.
-- 2026-03-04: Tests + stubs complete — 66 tests all passing, tools_external_integrations.py with full implementations, API client functions, catalog registration. 551 total tests passing.
+- 2026-03-04: Stage 12 complete (66 tests passing, all 10 external integration tools implemented). Advancing to Stage 13.
