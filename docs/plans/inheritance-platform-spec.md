@@ -81,6 +81,65 @@ export const caseIdRoute = createRoute({
 });
 ```
 
+### §2.1 Router Context Setup (`src/main.tsx`)
+
+The `context.auth` field used by `beforeLoad` guards must be populated at runtime. Replace the current root render in `src/main.tsx` with a `RouterWithAuth` wrapper that subscribes to Supabase auth state and passes it as router context:
+
+```tsx
+// src/main.tsx
+import React, { useState, useEffect } from 'react';
+import ReactDOM from 'react-dom/client';
+import { RouterProvider } from '@tanstack/react-router';
+import { Toaster } from 'sonner';
+import { supabase, supabaseConfigured } from '@/lib/supabase';
+import { router } from './router';
+import { SetupPage } from '@/components/SetupPage';
+import type { User } from '@supabase/supabase-js';
+
+function RouterWithAuth() {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setUser(data.session?.user ?? null);
+      setLoading(false);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => setUser(session?.user ?? null)
+    );
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <RouterProvider router={router} context={{ auth: { user } }} />
+      <Toaster position="bottom-right" />
+    </>
+  );
+}
+
+if (!supabaseConfigured) {
+  ReactDOM.createRoot(document.getElementById('root')!).render(<SetupPage />);
+} else {
+  ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode><RouterWithAuth /></React.StrictMode>
+  );
+}
+```
+
+**Note**: This is the single source of auth state for the router context. The `useAuth` hook (`src/hooks/useAuth.ts`) maintains a parallel subscription for component-level auth access (user data, signIn/signOut actions). Both subscribe to `onAuthStateChange` independently — this is intentional and is the standard pattern for TanStack Router + Supabase.
+
+**Remove** the `<Toaster />` from any other location if it was added there during earlier implementation.
+
 ---
 
 ## §3 Authentication Flow
@@ -417,6 +476,64 @@ function RootLayout() {
 ```
 
 **Result**: `/auth`, `/auth/callback`, `/auth/reset`, `/auth/reset-confirm`, `/share/$token`, and `/invite/$token` render without the sidebar nav.
+
+### `publicRootRoute` Definition
+
+This route is the parent for all public (unauthenticated) pages. Add to `src/routes/__root.tsx`:
+
+```tsx
+// src/routes/__root.tsx — add after rootRoute definition
+
+function MinimalLayout() {
+  return (
+    <main className="min-h-screen bg-background">
+      <Outlet />
+    </main>
+  );
+}
+
+export const publicRootRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: '_public',
+  component: MinimalLayout,
+});
+```
+
+**Register in `src/router.ts`**: Add `publicRootRoute` to the route tree and add all public routes as its children:
+
+```ts
+// src/router.ts
+import { publicRootRoute } from './routes/__root';
+import { authRoute } from './routes/auth';
+import { authCallbackRoute } from './routes/auth/callback';
+import { authResetRoute } from './routes/auth/reset';
+import { authResetConfirmRoute } from './routes/auth/reset-confirm';
+import { onboardingRoute } from './routes/onboarding';
+import { shareTokenRoute } from './routes/share/$token';
+import { inviteTokenRoute } from './routes/invite/$token';
+
+const routeTree = rootRoute.addChildren([
+  publicRootRoute.addChildren([
+    authRoute,
+    authCallbackRoute,
+    authResetRoute,
+    authResetConfirmRoute,
+    onboardingRoute,
+    shareTokenRoute,
+    inviteTokenRoute,
+  ]),
+  indexRoute,
+  casesIndexRoute,
+  casesNewRoute,
+  caseIdRoute,
+  clientsIndexRoute,
+  clientsNewRoute,
+  clientIdRoute,
+  deadlinesRoute,
+  settingsIndexRoute,
+  settingsTeamRoute,
+]);
+```
 
 ---
 
@@ -779,6 +896,18 @@ import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 ```
 
+**`useMatchRoute` hook call** — add at the top of the `AppLayout` component body, before any JSX or nested function definitions:
+
+```tsx
+export function AppLayout({ children }: { children: React.ReactNode }) {
+  const { user, signOut } = useAuth();
+  const matchRoute = useMatchRoute();           // ← required: must be called at component level
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  // ...
+```
+
+`renderNavItem` references `matchRoute` as a closure variable. Without calling `useMatchRoute()` first, the function would throw "matchRoute is not defined".
+
 ### §6.2 Mobile Header + Navigation
 
 **Replace current mobile tab bar** (lines 61–90) with hamburger header + drawer:
@@ -805,15 +934,93 @@ import { cn } from '@/lib/utils';
   <div className="md:hidden fixed inset-0 z-50 flex">
     <div className="absolute inset-0 bg-black/40" onClick={() => setDrawerOpen(false)} />
     <div className="relative w-72 bg-sidebar text-sidebar-foreground flex flex-col shadow-xl animate-in slide-in-from-left duration-200">
-      {/* Drawer header with close button */}
-      {/* Nav items — h-11 = 44px touch target */}
-      {/* Footer with email + Sign Out */}
+      {/* Header */}
+      <div className="h-14 px-4 flex items-center justify-between border-b border-sidebar-border flex-shrink-0">
+        <div className="flex items-center gap-2">
+          <Scale className="h-5 w-5 text-sidebar-primary" />
+          <span className="text-sm font-bold tracking-tight font-serif">Inheritance</span>
+        </div>
+        <button
+          onClick={() => setDrawerOpen(false)}
+          aria-label="Close navigation"
+          className="p-2 rounded-md text-sidebar-foreground/75 hover:bg-white/[0.08] transition-colors duration-100"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      </div>
+      {/* Nav — h-11 = 44px touch target per WCAG 2.5.5 */}
+      {user ? (
+        <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
+          {mainNavItems.map(({ to, label, icon: Icon }) => {
+            const isActive = !!matchRoute({ to, fuzzy: false });
+            return (
+              <Link
+                key={to} to={to}
+                onClick={() => setDrawerOpen(false)}
+                className={cn(
+                  'flex items-center gap-3 h-11 px-3 rounded-md text-sm transition-colors duration-100 ease-out border-l-[3px]',
+                  isActive
+                    ? 'bg-sidebar-accent border-sidebar-primary text-sidebar-foreground font-medium'
+                    : 'border-transparent text-sidebar-foreground/75 hover:bg-white/[0.08] hover:text-sidebar-foreground'
+                )}
+              >
+                <Icon className="h-4 w-4 flex-shrink-0" />
+                <span>{label}</span>
+              </Link>
+            );
+          })}
+          <div className="h-px bg-sidebar-border my-2" />
+          {settingsNavItems.map(({ to, label, icon: Icon }) => {
+            const isActive = !!matchRoute({ to, fuzzy: false });
+            return (
+              <Link
+                key={to} to={to}
+                onClick={() => setDrawerOpen(false)}
+                className={cn(
+                  'flex items-center gap-3 h-11 px-3 rounded-md text-sm transition-colors duration-100 ease-out border-l-[3px]',
+                  isActive
+                    ? 'bg-sidebar-accent border-sidebar-primary text-sidebar-foreground font-medium'
+                    : 'border-transparent text-sidebar-foreground/75 hover:bg-white/[0.08] hover:text-sidebar-foreground'
+                )}
+              >
+                <Icon className="h-4 w-4 flex-shrink-0" />
+                <span>{label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      ) : (
+        <nav className="flex-1 px-3 py-3">
+          <Link
+            to="/auth"
+            onClick={() => setDrawerOpen(false)}
+            className="flex items-center gap-3 h-11 px-3 rounded-md text-sm border-l-[3px] border-transparent text-sidebar-foreground/75 hover:bg-white/[0.08] hover:text-sidebar-foreground transition-colors duration-100"
+          >
+            <LogIn className="h-4 w-4 flex-shrink-0" />
+            <span>Sign In</span>
+          </Link>
+        </nav>
+      )}
+      {/* Footer */}
+      {user && (
+        <div className="border-t border-sidebar-border px-3 py-3 space-y-1 flex-shrink-0">
+          <div className="px-3 py-1">
+            <p className="text-xs text-sidebar-foreground/60 truncate">{user.email}</p>
+          </div>
+          <button
+            onClick={() => { signOut(); setDrawerOpen(false); }}
+            className="flex items-center gap-3 h-11 px-3 w-full rounded-md text-sm border-l-[3px] border-transparent text-sidebar-foreground/75 hover:bg-white/[0.08] hover:text-sidebar-foreground transition-colors duration-100 ease-out"
+          >
+            <LogOut className="h-4 w-4 flex-shrink-0" />Sign Out
+          </button>
+        </div>
+      )}
     </div>
   </div>
 )}
 ```
 
-Nav items in drawer use `h-11` (44px) instead of `h-9` for WCAG 2.5.5 compliance. Tap on any nav item calls `setDrawerOpen(false)` to close the drawer.
+Nav items use `h-11` (44px) instead of `h-9` for WCAG 2.5.5 compliance. Each nav item calls `setDrawerOpen(false)` on click so the drawer closes when the user navigates.
 
 ### §6.3 Auth-Aware Rendering
 
@@ -1008,8 +1215,151 @@ function AuthenticatedDashboard({ user }: { user: User }) {
 
 | Gap ID | Severity | Fix Summary |
 |--------|----------|-------------|
-| JSC-001/JSC-004/JSC-005 | CRITICAL | Wire share state through component tree. In `src/routes/cases/$caseId.tsx`: add `shareToken`, `shareEnabled` state; initialize from `caseRow`; add `handleToggleShare`; pass all three + `caseId` to `ResultsView`. In `ResultsView.tsx`: add to props, pass to `ActionsBar`. In `ActionsBar.tsx`: add Share button + `<ShareDialog>` (full fix spec in `analysis/journey-share-case.md` §FIX JSC-001`) |
-| JSC-002 | CRITICAL | `src/routes/share/$token.tsx:97-101`: replace TODO comment with full ResultsHeader + DistributionSection + NarrativePanel + WarningsPanel + ComputationLog rendering (full spec in `analysis/journey-share-case.md` §FIX JSC-002) |
+| JSC-001/JSC-004/JSC-005 | CRITICAL | Wire share state through component tree — full code below |
+| JSC-002 | CRITICAL | Render results in SharedCasePage — full code below |
+
+**FIX JSC-001/004/005 — Wire share state through component tree**
+
+**File: `src/routes/cases/$caseId.tsx`** — add after existing state declarations (after `setCaseRow` useState):
+```tsx
+const [shareToken, setShareToken] = useState<string>('');
+const [shareEnabled, setShareEnabled] = useState<boolean>(false);
+```
+
+In `fetchCase()`, after `setCaseRow(row)`, initialize share state:
+```tsx
+setShareToken(row.share_token ?? '');
+setShareEnabled(row.share_enabled ?? false);
+```
+
+Add handler after `handleEditInput`:
+```tsx
+const handleToggleShare = async (enabled: boolean) => {
+  const result = await toggleShare(caseId, enabled);
+  setShareEnabled(result.shareEnabled);
+  setShareToken(result.shareToken);
+};
+```
+Add import: `import { toggleShare } from '@/lib/share';`
+
+Update ResultsView call:
+```tsx
+<ResultsView
+  input={state.input}
+  output={state.output}
+  onEditInput={handleEditInput}
+  caseId={caseId}
+  shareToken={shareToken}
+  shareEnabled={shareEnabled}
+  onToggleShare={handleToggleShare}
+/>
+```
+
+**File: `src/components/results/ResultsView.tsx`** — add to `ResultsViewProps` interface:
+```ts
+caseId?: string;
+shareToken?: string;
+shareEnabled?: boolean;
+onToggleShare?: (enabled: boolean) => Promise<void>;
+```
+Pass through to ActionsBar:
+```tsx
+<ActionsBar
+  input={input}
+  output={output}
+  onEditInput={onEditInput}
+  caseId={caseId}
+  shareToken={shareToken}
+  shareEnabled={shareEnabled}
+  onToggleShare={onToggleShare}
+/>
+```
+
+**File: `src/components/results/ActionsBar.tsx`** — add to `ActionsBarProps`:
+```ts
+caseId?: string;
+shareToken?: string;
+shareEnabled?: boolean;
+onToggleShare?: (enabled: boolean) => Promise<void>;
+```
+Add share dialog state: `const [shareOpen, setShareOpen] = useState(false);`
+
+Add Share button (after Copy Narratives button):
+```tsx
+{caseId && shareToken !== undefined && (
+  <Button type="button" variant="outline" onClick={() => setShareOpen(true)}>
+    <Share2 className="size-4 mr-2" />Share
+  </Button>
+)}
+```
+
+Add ShareDialog before closing `</div>`:
+```tsx
+{caseId && shareToken !== undefined && onToggleShare && (
+  <ShareDialog
+    open={shareOpen}
+    onOpenChange={setShareOpen}
+    shareToken={shareToken ?? ''}
+    shareEnabled={shareEnabled ?? false}
+    onToggleShare={onToggleShare}
+  />
+)}
+```
+
+Add imports: `import { Share2 } from 'lucide-react';` and `import { ShareDialog } from '@/components/case/ShareDialog';`
+
+---
+
+**FIX JSC-002 — Render results in SharedCasePage**
+
+**File: `src/routes/share/$token.tsx`** — add imports at top:
+```tsx
+import { ResultsHeader } from '@/components/results/ResultsHeader';
+import { DistributionSection } from '@/components/results/DistributionSection';
+import { NarrativePanel } from '@/components/results/NarrativePanel';
+import { WarningsPanel } from '@/components/results/WarningsPanel';
+import { ComputationLog } from '@/components/results/ComputationLog';
+```
+
+Replace the TODO comment block (lines 97–104) with:
+```tsx
+{caseData.output_json && caseData.input_json ? (
+  <div className="mt-4 space-y-6">
+    <ResultsHeader
+      scenarioCode={caseData.output_json.scenario_code}
+      successionType={caseData.output_json.succession_type}
+      netDistributableEstate={caseData.input_json.net_distributable_estate}
+      decedentName={caseData.input_json.decedent.name}
+      dateOfDeath={caseData.input_json.decedent.date_of_death}
+    />
+    <DistributionSection
+      shares={caseData.output_json.per_heir_shares}
+      totalCentavos={
+        typeof caseData.input_json.net_distributable_estate.centavos === 'string'
+          ? parseInt(caseData.input_json.net_distributable_estate.centavos, 10)
+          : caseData.input_json.net_distributable_estate.centavos
+      }
+      successionType={caseData.output_json.succession_type}
+      scenarioCode={caseData.output_json.scenario_code}
+      persons={caseData.input_json.family_tree}
+    />
+    <NarrativePanel
+      narratives={caseData.output_json.narratives}
+      decedentName={caseData.input_json.decedent.name}
+      dateOfDeath={caseData.input_json.decedent.date_of_death}
+    />
+    <WarningsPanel
+      warnings={caseData.output_json.warnings}
+      shares={caseData.output_json.per_heir_shares}
+    />
+    <ComputationLog log={caseData.output_json.computation_log} />
+  </div>
+) : (
+  <p className="mt-4 text-sm text-muted-foreground">
+    Results have not been computed for this case yet.
+  </p>
+)}
+```
 | JSC-003 | HIGH | Layout isolation: share route → `publicRootRoute` (full spec §3.7) |
 | JSC-006 | MEDIUM | `src/components/case/ShareDialog.tsx:39-41`: add `copied` state; `setCopied(true); setTimeout(() => setCopied(false), 2000)` |
 | JSC-007 | MEDIUM | `src/routes/share/$token.tsx`: replace loading text with `<Loader2>` spinner |
@@ -1021,7 +1371,81 @@ function AuthenticatedDashboard({ user }: { user: User }) {
 | Gap ID | Severity | Fix Summary |
 |--------|----------|-------------|
 | JRV-001 | CRITICAL | `src/routes/index.tsx`: call `listCases(org.id, { limit: 5 })` on mount; render `<CaseCard>` grid with "View all" link (full spec §7.2) |
-| JRV-002 | CRITICAL | Create `src/routes/cases/index.tsx` with `CasesListPage`; register in `src/router.ts` |
+| JRV-002 | CRITICAL | Create `src/routes/cases/index.tsx` with `CasesListPage`; register in `src/router.ts` — full code below |
+
+**FIX JRV-002 — CasesListPage**
+
+**New file: `src/routes/cases/index.tsx`**
+```tsx
+import { createRoute, redirect, Link, useNavigate } from '@tanstack/react-router';
+import { useState, useEffect } from 'react';
+import { FolderOpen, FilePlus } from 'lucide-react';
+import { rootRoute } from '@/routes/__root';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
+import { CaseCard } from '@/components/dashboard/CaseCard';
+import { listCases } from '@/lib/cases';
+import { useOrganization } from '@/hooks/useOrganization';
+import type { CaseListItem } from '@/lib/cases';
+
+export const casesIndexRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/cases',
+  beforeLoad: ({ context }) => {
+    if (!context.auth?.user) throw redirect({ to: '/auth', search: { redirect: '/cases' } });
+  },
+  component: CasesListPage,
+});
+
+function CasesListPage() {
+  const [cases, setCases] = useState<CaseListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { organization } = useOrganization();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!organization) return;
+    listCases(organization.id).then(setCases).finally(() => setLoading(false));
+  }, [organization?.id]);
+
+  return (
+    <div className="max-w-4xl mx-auto py-6 px-4 sm:px-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <FolderOpen className="h-5 w-5 text-primary" />
+          <h1 className="text-xl font-bold tracking-tight font-serif">Cases</h1>
+        </div>
+        <Link to="/cases/new">
+          <Button className="gap-2"><FilePlus className="h-4 w-4" />New Case</Button>
+        </Link>
+      </div>
+      {loading ? (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}
+        </div>
+      ) : cases.length === 0 ? (
+        <EmptyState
+          icon={FolderOpen}
+          title="No cases yet"
+          description="Create your first estate case to start computing inheritance distributions."
+          action={{ label: 'Create First Case', onClick: () => navigate({ to: '/cases/new' }) }}
+        />
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {cases.map(c => (
+            <Link key={c.id} to="/cases/$caseId" params={{ caseId: c.id }}>
+              <CaseCard caseItem={c} />
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+Register in `src/router.ts`: import `casesIndexRoute` and add to the route tree (see §3.7 publicRootRoute section for full route tree).
 | JRV-012 | CRITICAL | `src/routes/settings/team.tsx`: add `export const settingsTeamRoute = createRoute({ getParentRoute: () => rootRoute, path: '/settings/team', component: TeamSettingsPage })`; import and register in router.ts |
 | JRV-003 | HIGH | `src/components/layout/AppLayout.tsx`: add `{ to: '/cases', label: 'Cases', icon: FolderOpen }` to navItems (full spec §6.1) |
 | JRV-007 | HIGH | `src/routes/cases/$caseId.tsx:12`: call `const { status: saveStatus } = useAutoSave(caseId, currentInput)` during wizard phase; pass `saveStatus` to display near wizard nav |
@@ -1036,7 +1460,58 @@ function AuthenticatedDashboard({ user }: { user: User }) {
 | Gap ID | Severity | Fix Summary |
 |--------|----------|-------------|
 | JST-001 | CRITICAL | `src/routes/settings/team.tsx`: add `createRoute` wrapper; register in `router.ts` |
-| JST-002 | CRITICAL | Create `src/routes/invite/$token.tsx`: call `acceptInvitation(token)` on mount → redirect to `/settings/team` on success |
+| JST-002 | CRITICAL | Create `src/routes/invite/$token.tsx` — full code below |
+
+**FIX JST-002 — Invite Acceptance Route**
+
+**New file: `src/routes/invite/$token.tsx`**
+```tsx
+import { createRoute, useNavigate } from '@tanstack/react-router';
+import { useState, useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
+import { Link } from '@tanstack/react-router';
+import { publicRootRoute } from '@/routes/__root';
+import { acceptInvitation } from '@/lib/organizations';
+
+export const inviteTokenRoute = createRoute({
+  getParentRoute: () => publicRootRoute,
+  path: '/invite/$token',
+  component: InviteCallbackPage,
+});
+
+function InviteCallbackPage() {
+  const { token } = inviteTokenRoute.useParams();
+  const navigate = useNavigate();
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!token) { setError('Invalid invitation link.'); return; }
+    acceptInvitation(token)
+      .then(() => navigate({ to: '/settings/team' }))
+      .catch((err) => setError(err.message ?? 'This invitation link is invalid or has expired.'));
+  }, [token]);
+
+  if (error) {
+    return (
+      <div className="max-w-md mx-auto py-20 text-center space-y-4">
+        <p className="text-destructive font-medium">{error}</p>
+        <Link to="/auth" className="text-primary text-sm underline">Return to sign in</Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center gap-3 text-muted-foreground">
+        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+        Accepting invitation…
+      </div>
+    </div>
+  );
+}
+```
+
+Register in `src/router.ts` as child of `publicRootRoute` (see §3.7).
 | JST-003 | CRITICAL | `src/lib/organizations.ts:41-53 inviteMember()`: create Supabase Edge Function `send-invitation-email` (triggered by insert on `organization_invitations`) OR add explicit Supabase `inviteUserByEmail` call to generate the magic invite link |
 | JST-004 | CRITICAL | `src/routes/settings/index.tsx`: add settings tab navigation: `<Tabs defaultValue="profile"><TabsList><TabsTrigger value="profile">Firm Profile</TabsTrigger><TabsTrigger value="team" onClick={() => navigate({ to: '/settings/team' })}>Team</TabsTrigger></TabsList>` |
 | JST-005 | HIGH | `src/components/settings/InviteMemberDialog.tsx`: replace all raw HTML with shadcn components — `Dialog`, `Input`, `Select`, `Button` |
@@ -1415,15 +1890,197 @@ On Submit: call `updateProfile({ counselName, ibpRollNo, ptrNo })`.
 
 **Layout**: Full-screen centered, no sidebar, with a step progress indicator (3 dots or numbered pills) and the firm logo placeholder.
 
+**New file: `src/routes/onboarding.tsx`** — complete implementation:
+
 ```tsx
+import { createRoute, useNavigate, Link } from '@tanstack/react-router';
+import { useState, useEffect } from 'react';
+import { Scale, Loader2, FilePlus, CheckCircle2 } from 'lucide-react';
+import { publicRootRoute } from '@/routes/__root';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useAuth } from '@/hooks/useAuth';
+import { useOrganization } from '@/hooks/useOrganization';
+import { createOrganization } from '@/lib/organizations';
+import { updateProfile } from '@/lib/firm-profile';
+import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+
 export const onboardingRoute = createRoute({
   getParentRoute: () => publicRootRoute,
   path: '/onboarding',
   component: OnboardingPage,
 });
+
+type OnboardingStep = 'firm' | 'profile' | 'done';
+
+function OnboardingPage() {
+  const { user, loading } = useAuth();
+  const { organization } = useOrganization();
+  const navigate = useNavigate();
+  const [step, setStep] = useState<OnboardingStep>('firm');
+  const [submitting, setSubmitting] = useState(false);
+
+  const [firmName, setFirmName] = useState('');
+  const [firmPhone, setFirmPhone] = useState('');
+  const [firmAddress, setFirmAddress] = useState('');
+  const [counselName, setCounselName] = useState('');
+  const [ibpRollNo, setIbpRollNo] = useState('');
+  const [ptrNo, setPtrNo] = useState('');
+
+  useEffect(() => {
+    if (!loading && !user) navigate({ to: '/auth' });
+    if (!loading && organization) navigate({ to: '/' }); // already onboarded
+  }, [user, loading, organization]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  const STEPS: OnboardingStep[] = ['firm', 'profile', 'done'];
+  const stepIndex = STEPS.indexOf(step);
+
+  const handleFirmSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!firmName.trim()) return;
+    setSubmitting(true);
+    try {
+      await createOrganization(firmName.trim());
+      setStep('profile');
+    } catch (err: any) {
+      toast.error(err.message ?? 'Failed to create organization');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleProfileSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await updateProfile({ counselName, ibpRollNo, ptrNo });
+    } catch {
+      // Non-fatal — profile can be updated later in Settings
+    } finally {
+      setSubmitting(false);
+      setStep('done');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Logo */}
+        <div className="flex items-center justify-center gap-2 mb-8">
+          <Scale className="h-6 w-6 text-primary" />
+          <span className="text-lg font-bold font-serif text-foreground">Inheritance Calculator</span>
+        </div>
+        {/* Step progress dots */}
+        <div className="flex items-center justify-center gap-2 mb-8">
+          {STEPS.map((s, i) => (
+            <div key={s} className={cn(
+              'h-2 w-2 rounded-full transition-colors duration-200',
+              i <= stepIndex ? 'bg-primary' : 'bg-muted'
+            )} />
+          ))}
+        </div>
+
+        {step === 'firm' && (
+          <div className="bg-card border rounded-xl p-6 shadow-sm space-y-4">
+            <div>
+              <h1 className="text-xl font-bold font-serif">Set up your firm</h1>
+              <p className="text-sm text-muted-foreground mt-1">This takes 30 seconds and unlocks all features.</p>
+            </div>
+            <form onSubmit={handleFirmSubmit} className="space-y-4">
+              <div className="space-y-1">
+                <Label htmlFor="firm-name">Firm Name <span className="text-destructive">*</span></Label>
+                <Input
+                  id="firm-name"
+                  required
+                  placeholder="Reyes & Associates Law Offices"
+                  value={firmName}
+                  onChange={(e) => setFirmName(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="firm-phone">Phone <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                <Input id="firm-phone" type="tel" placeholder="+63 2 1234 5678" value={firmPhone} onChange={(e) => setFirmPhone(e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="firm-address">Address <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                <Input id="firm-address" placeholder="123 Main St, Makati City" value={firmAddress} onChange={(e) => setFirmAddress(e.target.value)} />
+              </div>
+              <Button type="submit" className="w-full gap-2" disabled={submitting || !firmName.trim()}>
+                {submitting ? <><Loader2 className="h-4 w-4 animate-spin" />Creating…</> : 'Continue →'}
+              </Button>
+            </form>
+          </div>
+        )}
+
+        {step === 'profile' && (
+          <div className="bg-card border rounded-xl p-6 shadow-sm space-y-4">
+            <div>
+              <h1 className="text-xl font-bold font-serif">Attorney profile</h1>
+              <p className="text-sm text-muted-foreground mt-1">Used in PDF reports. You can update this later in Settings.</p>
+            </div>
+            <form onSubmit={handleProfileSubmit} className="space-y-4">
+              <div className="space-y-1">
+                <Label htmlFor="counsel-name">Counsel Full Name</Label>
+                <Input id="counsel-name" placeholder="Atty. Maria Santos" value={counselName} onChange={(e) => setCounselName(e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="ibp-roll">IBP Roll No.</Label>
+                <Input id="ibp-roll" placeholder="123456" value={ibpRollNo} onChange={(e) => setIbpRollNo(e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="ptr-no">PTR No.</Label>
+                <Input id="ptr-no" placeholder="7654321" value={ptrNo} onChange={(e) => setPtrNo(e.target.value)} />
+              </div>
+              <div className="flex gap-3">
+                <Button type="submit" className="flex-1 gap-2" disabled={submitting}>
+                  {submitting ? <><Loader2 className="h-4 w-4 animate-spin" />Saving…</> : 'Continue →'}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setStep('done')} disabled={submitting}>
+                  Skip
+                </Button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {step === 'done' && (
+          <div className="bg-card border rounded-xl p-8 shadow-sm text-center space-y-4">
+            <div className="inline-flex items-center justify-center rounded-full bg-success/10 p-4 mb-2">
+              <CheckCircle2 className="h-8 w-8 text-success" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold font-serif">You're all set!</h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Your firm profile is configured. Start computing inheritance distributions.
+              </p>
+            </div>
+            <div className="flex flex-col gap-3">
+              <Link to="/cases/new">
+                <Button className="w-full gap-2"><FilePlus className="h-4 w-4" />Create Your First Case</Button>
+              </Link>
+              <Link to="/">
+                <Button variant="ghost" className="w-full">Go to Dashboard</Button>
+              </Link>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 ```
 
-Register in `src/router.ts` as child of `publicRootRoute`.
+Register in `src/router.ts` as child of `publicRootRoute` (see §3.7 for full route tree).
 
 ---
 
