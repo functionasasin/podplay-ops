@@ -1,0 +1,13 @@
+Stage 3 complete — routes + navigation verified
+
+All Stage 3 items implemented:
+- cases/index.tsx: CasesListPage with auth guard, skeleton loading, EmptyState
+- onboarding.tsx: 3-step firm setup flow (firm → profile → done)
+- invite/$token.tsx: invitation acceptance route via acceptInvitation()
+- settings/team.tsx: createRoute wrapper + settingsTeamRoute export
+- AppLayout.tsx: navy sidebar, gold active bar, auth-aware nav, mobile hamburger + drawer
+- router.ts: casesIndexRoute, onboardingRoute, inviteTokenRoute, settingsTeamRoute all registered
+- Skeleton and EmptyState UI components added
+
+Build errors are pre-existing (test files, wasm stubs, unused imports) — not introduced by Stage 3.
+These will be addressed in Stage 8 (Verification).

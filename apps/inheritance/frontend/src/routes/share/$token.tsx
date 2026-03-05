@@ -1,11 +1,16 @@
 import { useState, useEffect } from 'react';
 import { createRoute } from '@tanstack/react-router';
 import { publicRootRoute } from '../__root';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getSharedCase } from '@/lib/share';
 import type { SharedCaseData } from '@/lib/share';
+import { ResultsHeader } from '@/components/results/ResultsHeader';
+import { DistributionSection } from '@/components/results/DistributionSection';
+import { NarrativePanel } from '@/components/results/NarrativePanel';
+import { WarningsPanel } from '@/components/results/WarningsPanel';
+import { ComputationLog } from '@/components/results/ComputationLog';
 
 export const shareTokenRoute = createRoute({
   getParentRoute: () => publicRootRoute,
@@ -54,8 +59,8 @@ export function SharedCasePage({ token }: SharedCasePageProps) {
     return (
       <div data-testid="shared-case-loading" className="max-w-3xl mx-auto py-6 sm:py-8 px-4 sm:px-6">
         <Card>
-          <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">Loading shared case...</p>
+          <CardContent className="py-12 flex items-center justify-center">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </CardContent>
         </Card>
       </div>
@@ -97,8 +102,42 @@ export function SharedCasePage({ token }: SharedCasePageProps) {
           <p className="text-muted-foreground">
             Estate of {caseData.decedent_name}
           </p>
-          {/* Results will be rendered here in implementation phase */}
-          {/* No ActionsBar, no CaseNotesPanel, no share button in shared view */}
+          {caseData.output_json && caseData.input_json ? (
+            <div className="mt-4 space-y-6">
+              <ResultsHeader
+                scenarioCode={caseData.output_json.scenario_code}
+                successionType={caseData.output_json.succession_type}
+                netDistributableEstate={caseData.input_json.net_distributable_estate}
+                decedentName={caseData.input_json.decedent.name}
+                dateOfDeath={caseData.input_json.decedent.date_of_death}
+              />
+              <DistributionSection
+                shares={caseData.output_json.per_heir_shares}
+                totalCentavos={
+                  typeof caseData.input_json.net_distributable_estate.centavos === 'string'
+                    ? parseInt(caseData.input_json.net_distributable_estate.centavos, 10)
+                    : caseData.input_json.net_distributable_estate.centavos
+                }
+                successionType={caseData.output_json.succession_type}
+                scenarioCode={caseData.output_json.scenario_code}
+                persons={caseData.input_json.family_tree}
+              />
+              <NarrativePanel
+                narratives={caseData.output_json.narratives}
+                decedentName={caseData.input_json.decedent.name}
+                dateOfDeath={caseData.input_json.decedent.date_of_death}
+              />
+              <WarningsPanel
+                warnings={caseData.output_json.warnings}
+                shares={caseData.output_json.per_heir_shares}
+              />
+              <ComputationLog log={caseData.output_json.computation_log} />
+            </div>
+          ) : (
+            <p className="mt-4 text-sm text-muted-foreground">
+              Results have not been computed for this case yet.
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>
