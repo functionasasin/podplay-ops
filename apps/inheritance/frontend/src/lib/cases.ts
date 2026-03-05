@@ -58,6 +58,18 @@ export async function updateCaseInput(
   if (error) throw error;
 }
 
+export async function updateCaseTaxInput(
+  caseId: string,
+  taxInput: object,
+): Promise<void> {
+  const { error } = await supabase
+    .from('cases')
+    .update({ tax_input_json: taxInput })
+    .eq('id', caseId);
+
+  if (error) throw error;
+}
+
 export async function updateCaseOutput(
   caseId: string,
   output: EngineOutput,

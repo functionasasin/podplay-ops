@@ -9,6 +9,7 @@ import { authResetConfirmRoute } from './routes/auth/reset-confirm';
 import { casesIndexRoute } from './routes/cases/index';
 import { casesNewRoute } from './routes/cases/new';
 import { caseIdRoute } from './routes/cases/$caseId';
+import { caseTaxRoute } from './routes/cases/$caseId.tax';
 import { clientsRoute } from './routes/clients/index';
 import { newClientRoute } from './routes/clients/new';
 import { clientDetailRoute } from './routes/clients/$clientId';
@@ -33,6 +34,7 @@ const routeTree = rootRoute.addChildren([
   casesIndexRoute,
   casesNewRoute,
   caseIdRoute,
+  caseTaxRoute,
   clientsRoute,
   newClientRoute,
   clientDetailRoute,
