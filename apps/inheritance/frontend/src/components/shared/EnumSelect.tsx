@@ -1,6 +1,14 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Control, FieldValues, Path, useController } from 'react-hook-form';
-import { cn } from '@/lib/utils';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export interface EnumOption<T extends string = string> {
   value: T;
@@ -19,15 +27,9 @@ export interface EnumSelectProps<T extends FieldValues, V extends string = strin
   filter?: (option: EnumOption<V>) => boolean;
 }
 
-const selectClassName = cn(
-  "border-input flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none md:text-sm",
-  "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
-  "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
-);
-
 /**
  * EnumSelect — Generic select for any PascalCase enum.
- * Supports grouped options via optgroup when options have `group` property.
+ * Supports grouped options via SelectGroup when options have `group` property.
  */
 export function EnumSelect<T extends FieldValues, V extends string = string>({
   name,
@@ -47,23 +49,22 @@ export function EnumSelect<T extends FieldValues, V extends string = string>({
     return options;
   }, [options, filter]);
 
-  // Group options by their `group` property
   const hasGroups = filteredOptions.some((opt) => opt.group);
 
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    field.onChange(e.target.value as unknown as T[typeof name]);
+  const handleValueChange = (val: string) => {
+    field.onChange(val as unknown as T[typeof name]);
   };
 
-  const renderOptions = () => {
+  const renderItems = () => {
     if (!hasGroups) {
       return filteredOptions.map((opt) => (
-        <option key={opt.value} value={opt.value}>
+        <SelectItem key={opt.value} value={opt.value}>
           {opt.label}
-        </option>
+        </SelectItem>
       ));
     }
 
-    // Group by `group` field, preserving order
+    // Group options by their `group` property, preserving order
     const groups: { name: string; options: EnumOption<V>[] }[] = [];
     const groupMap = new Map<string, EnumOption<V>[]>();
 
@@ -78,13 +79,14 @@ export function EnumSelect<T extends FieldValues, V extends string = string>({
     }
 
     return groups.map((group) => (
-      <optgroup key={group.name} label={group.name}>
+      <SelectGroup key={group.name}>
+        <SelectLabel>{group.name}</SelectLabel>
         {group.options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
+          <SelectItem key={opt.value} value={opt.value}>
             {opt.label}
-          </option>
+          </SelectItem>
         ))}
-      </optgroup>
+      </SelectGroup>
     ));
   };
 
@@ -92,16 +94,14 @@ export function EnumSelect<T extends FieldValues, V extends string = string>({
     <div data-testid="enum-select" className="space-y-2">
       <label className="block space-y-2">
         <span className="text-sm font-medium leading-none">{label}</span>
-        <select
-          value={field.value ?? ''}
-          onChange={handleChange}
-          onBlur={field.onBlur}
-          role="combobox"
-          className={selectClassName}
-        >
-          {placeholder && <option value="">{placeholder}</option>}
-          {renderOptions()}
-        </select>
+        <Select value={field.value || undefined} onValueChange={handleValueChange}>
+          <SelectTrigger className="w-full" onBlur={field.onBlur}>
+            <SelectValue placeholder={placeholder ?? '-- Select --'} />
+          </SelectTrigger>
+          <SelectContent>
+            {renderItems()}
+          </SelectContent>
+        </Select>
       </label>
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>

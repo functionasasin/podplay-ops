@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import type { Control, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 import type { EngineInput, Person } from '../../types';
 import { DateInput } from '../shared/DateInput';
@@ -6,7 +5,7 @@ import { InstitutionsTab } from './InstitutionsTab';
 import { LegaciesTab } from './LegaciesTab';
 import { DevisesTab } from './DevisesTab';
 import { DisinheritancesTab } from './DisinheritancesTab';
-import { cn } from '@/lib/utils';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 export interface WillStepProps {
   control: Control<EngineInput>;
@@ -16,9 +15,6 @@ export interface WillStepProps {
   persons: Person[];
 }
 
-const SUB_TABS = ['Institutions', 'Legacies', 'Devises', 'Disinheritances'] as const;
-type SubTab = (typeof SUB_TABS)[number];
-
 export function WillStep({
   control,
   setValue,
@@ -26,7 +22,6 @@ export function WillStep({
   errors,
   persons,
 }: WillStepProps) {
-  const [activeTab, setActiveTab] = useState<SubTab>('Institutions');
   const will = watch('will' as any);
 
   if (!will) {
@@ -42,27 +37,14 @@ export function WillStep({
         control={control}
       />
 
-      <div className="flex gap-1 border-b border-border">
-        {SUB_TABS.map((tab) => (
-          <button
-            key={tab}
-            type="button"
-            onClick={() => setActiveTab(tab)}
-            className={cn(
-              "px-4 py-2.5 text-sm font-medium transition-colors relative",
-              "hover:text-foreground",
-              activeTab === tab
-                ? "text-foreground after:absolute after:bottom-0 after:inset-x-0 after:h-0.5 after:bg-[hsl(var(--accent))]"
-                : "text-muted-foreground"
-            )}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
-
-      <div className="pt-2">
-        {activeTab === 'Institutions' && (
+      <Tabs defaultValue="Institutions">
+        <TabsList variant="line">
+          <TabsTrigger value="Institutions">Institutions</TabsTrigger>
+          <TabsTrigger value="Legacies">Legacies</TabsTrigger>
+          <TabsTrigger value="Devises">Devises</TabsTrigger>
+          <TabsTrigger value="Disinheritances">Disinheritances</TabsTrigger>
+        </TabsList>
+        <TabsContent value="Institutions" className="pt-2">
           <InstitutionsTab
             control={control}
             setValue={setValue}
@@ -70,8 +52,8 @@ export function WillStep({
             errors={errors}
             persons={persons}
           />
-        )}
-        {activeTab === 'Legacies' && (
+        </TabsContent>
+        <TabsContent value="Legacies" className="pt-2">
           <LegaciesTab
             control={control}
             setValue={setValue}
@@ -79,8 +61,8 @@ export function WillStep({
             errors={errors}
             persons={persons}
           />
-        )}
-        {activeTab === 'Devises' && (
+        </TabsContent>
+        <TabsContent value="Devises" className="pt-2">
           <DevisesTab
             control={control}
             setValue={setValue}
@@ -88,8 +70,8 @@ export function WillStep({
             errors={errors}
             persons={persons}
           />
-        )}
-        {activeTab === 'Disinheritances' && (
+        </TabsContent>
+        <TabsContent value="Disinheritances" className="pt-2">
           <DisinheritancesTab
             control={control}
             setValue={setValue}
@@ -97,8 +79,8 @@ export function WillStep({
             errors={errors}
             persons={persons}
           />
-        )}
-      </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -1,6 +1,12 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Control, FieldValues, Path, useController } from 'react-hook-form';
-import { cn } from '@/lib/utils';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export interface PersonOption {
   id: string;
@@ -20,12 +26,6 @@ export interface PersonPickerProps<T extends FieldValues> {
 }
 
 const STRANGER_VALUE = '__stranger__';
-
-const selectClassName = cn(
-  "border-input flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none md:text-sm",
-  "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
-  "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
-);
 
 /**
  * PersonPicker — Select dropdown listing persons from the family tree.
@@ -54,47 +54,42 @@ export function PersonPicker<T extends FieldValues>({
     return result;
   }, [persons, filter, excludeIds]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const val = e.target.value;
+  // Map null/undefined field value to STRANGER_VALUE if allowStranger, else undefined (shows placeholder)
+  const selectValue =
+    field.value === null && allowStranger
+      ? STRANGER_VALUE
+      : field.value || undefined;
+
+  const handleValueChange = (val: string) => {
     if (val === STRANGER_VALUE) {
-      field.onChange(null as unknown as T[typeof name]);
-    } else if (val === '') {
       field.onChange(null as unknown as T[typeof name]);
     } else {
       field.onChange(val as unknown as T[typeof name]);
     }
   };
 
-  // Determine select value: map null -> STRANGER_VALUE if allowStranger, else ''
-  const selectValue =
-    field.value === null && allowStranger
-      ? STRANGER_VALUE
-      : field.value ?? '';
-
   return (
     <div data-testid="person-picker" className="space-y-2">
       <label className="block space-y-2">
         <span className="text-sm font-medium leading-none">{label}</span>
-        <select
-          value={selectValue}
-          onChange={handleChange}
-          onBlur={field.onBlur}
-          role="combobox"
-          className={selectClassName}
-        >
-          <option value="">-- Select --</option>
-          {filteredPersons.map((person) => (
-            <option key={person.id} value={person.id}>
-              {person.name}
-              {person.relationship ? ` (${person.relationship})` : ''}
-            </option>
-          ))}
-          {allowStranger && (
-            <option value={STRANGER_VALUE}>
-              Other (not in family tree)
-            </option>
-          )}
-        </select>
+        <Select value={selectValue} onValueChange={handleValueChange}>
+          <SelectTrigger className="w-full" onBlur={field.onBlur}>
+            <SelectValue placeholder="-- Select --" />
+          </SelectTrigger>
+          <SelectContent>
+            {filteredPersons.map((person) => (
+              <SelectItem key={person.id} value={person.id}>
+                {person.name}
+                {person.relationship ? ` (${person.relationship})` : ''}
+              </SelectItem>
+            ))}
+            {allowStranger && (
+              <SelectItem value={STRANGER_VALUE}>
+                Other (not in family tree)
+              </SelectItem>
+            )}
+          </SelectContent>
+        </Select>
       </label>
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>

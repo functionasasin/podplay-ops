@@ -180,8 +180,22 @@ export function WizardContainer({ onSubmit, defaultValues }: WizardContainerProp
   return (
     <FormProvider {...methods}>
       <div data-testid="wizard-container" className="max-w-2xl mx-auto">
+        {/* Mobile progress bar */}
+        <div className="sm:hidden mb-6">
+          <div className="flex justify-between text-xs text-muted-foreground mb-1">
+            <span>Step {currentStepIndex + 1} of {visibleSteps.length}</span>
+            <span>{currentStep?.label}</span>
+          </div>
+          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+            <div
+              className="h-full bg-accent rounded-full transition-all duration-300"
+              style={{ width: `${((currentStepIndex + 1) / visibleSteps.length) * 100}%` }}
+            />
+          </div>
+        </div>
+
         {/* Step indicators */}
-        <nav className="flex items-center gap-1 mb-8 overflow-x-auto pb-2">
+        <nav className="hidden sm:flex items-center gap-1 mb-8 overflow-x-auto pb-2">
           {visibleSteps.map((step, idx) => {
             const isCompleted = idx < currentStepIndex;
             const isCurrent = idx === currentStepIndex;
@@ -223,8 +237,8 @@ export function WizardContainer({ onSubmit, defaultValues }: WizardContainerProp
         </nav>
 
         {/* Current step content */}
-        <Card>
-          <CardContent className="pt-6">
+        <Card key={currentStep?.key}>
+          <CardContent className="pt-6 animate-in fade-in slide-in-from-right-2 duration-200">
             {renderStep()}
           </CardContent>
         </Card>
@@ -241,20 +255,12 @@ export function WizardContainer({ onSubmit, defaultValues }: WizardContainerProp
             </Button>
           )}
           <div className="ml-auto">
-            {currentStepIndex < visibleSteps.length - 1 ? (
+            {currentStepIndex < visibleSteps.length - 1 && (
               <Button
                 type="button"
                 onClick={handleNext}
               >
                 Next
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                onClick={methods.handleSubmit((data) => onSubmit?.(data))}
-                className="bg-accent text-accent-foreground hover:bg-accent/90"
-              >
-                Submit
               </Button>
             )}
           </div>
