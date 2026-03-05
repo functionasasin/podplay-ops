@@ -10,7 +10,6 @@ import {
   getSimilarityColor,
   type ConflictCheckResult,
   type ConflictMatch,
-  type ConflictOutcome,
 } from '@/lib/conflict-check';
 
 export interface ConflictCheckScreenProps {

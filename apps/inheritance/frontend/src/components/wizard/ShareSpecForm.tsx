@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { Control, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 import type { EngineInput, ShareSpec } from '../../types';
 import { stringToFrac } from '../../types';

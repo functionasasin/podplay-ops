@@ -4,7 +4,6 @@
 
 import { useState } from 'react';
 import { DeadlineCard } from './DeadlineCard';
-import { computeDeadlineStatus } from '@/lib/deadlines';
 import type { CaseDeadline } from '@/types';
 
 export interface DeadlineTimelineProps {

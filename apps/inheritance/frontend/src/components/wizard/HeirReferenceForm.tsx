@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import type { Control, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 import type { EngineInput, Person } from '../../types';
 import { PersonPicker } from '../shared/PersonPicker';

@@ -249,7 +249,7 @@ export async function computeMock(input: EngineInput): Promise<EngineOutput> {
     const remainder = estateCentavos - baseShare * n;
 
     for (let i = 0; i < n; i++) {
-      const person = heirs[i];
+      const person = heirs[i]!;
       const shareCentavos = baseShare + (i < remainder ? 1 : 0);
       const category = relationshipToCategory(
         person.relationship_to_decedent

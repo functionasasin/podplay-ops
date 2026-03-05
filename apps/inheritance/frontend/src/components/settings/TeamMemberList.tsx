@@ -18,7 +18,6 @@ export function TeamMemberList({
   currentUserId,
   currentUserRole,
   onRemoveMember,
-  onUpdateRole,
   onRevokeInvitation,
   memberProfiles = {},
 }: TeamMemberListProps) {

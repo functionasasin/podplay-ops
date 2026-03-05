@@ -135,7 +135,7 @@ function CaseEditorPage() {
               </Button>
             </div>
           )}
-          <WizardContainer onSubmit={handleSubmit} defaultInput={state.input ?? undefined} />
+          <WizardContainer onSubmit={handleSubmit} defaultValues={state.input ?? undefined} />
         </>
       )}
 

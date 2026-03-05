@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import type { Control, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 import { useController } from 'react-hook-form';
 import { AlertTriangle, AlertCircle, Info, X } from 'lucide-react';
@@ -206,11 +206,8 @@ const SEVERITY_ICONS = {
 
 export function ReviewStep({
   control,
-  setValue,
   watch,
-  errors,
   hasWill,
-  persons,
   onSubmit,
 }: ReviewStepProps) {
   const [dismissedWarnings, setDismissedWarnings] = useState<Set<string>>(new Set());

@@ -14,7 +14,7 @@ export const DateSchema = z
   .regex(/^\d{4}-\d{2}-\d{2}$/, { message: "Date must be in YYYY-MM-DD format" })
   .refine(
     (d) => {
-      const [y, m, day] = d.split("-").map(Number);
+      const [y, m, day] = d.split("-").map(Number) as [number, number, number];
       const date = new Date(y, m - 1, day);
       return (
         date.getFullYear() === y &&
@@ -30,14 +30,14 @@ export const FracSchema = z
   .regex(/^\d+\/\d+$/, { message: 'Fraction must be in "n/d" format, e.g. "1/2"' })
   .refine(
     (s) => {
-      const parts = s.split("/");
+      const parts = s.split("/") as [string, string];
       return parts[1] !== "0";
     },
     { message: "Denominator cannot be zero" }
   )
   .refine(
     (s) => {
-      const [n, d] = s.split("/").map(Number);
+      const [n, d] = s.split("/").map(Number) as [number, number];
       return n >= 0 && d > 0;
     },
     { message: "Fraction must be non-negative (numerator >= 0, denominator > 0)" }
@@ -45,7 +45,7 @@ export const FracSchema = z
 
 export const FractionalInterestFracSchema = FracSchema.refine(
   (s) => {
-    const [n, d] = s.split("/").map(Number);
+    const [n, d] = s.split("/").map(Number) as [number, number];
     return n <= d;
   },
   { message: "Fractional interest cannot exceed 100% of the property" }

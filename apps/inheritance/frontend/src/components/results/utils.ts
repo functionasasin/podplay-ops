@@ -75,10 +75,10 @@ export const SUCCESSION_TYPE_BADGE_COLOR: Record<SuccessionType, string> = {
  * to avoid timezone issues. §4.13
  */
 export function formatDateOfDeath(dod: string): string {
-  const [year, month, day] = dod.split('-');
+  const [year, month, day] = dod.split('-') as [string, string, string];
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  return `${parseInt(day)} ${months[parseInt(month) - 1]} ${year}`;
+  return `${parseInt(day)} ${months[parseInt(month) - 1]!} ${year}`;
 }
 
 /**

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Control, UseFormSetValue, UseFormWatch, useFieldArray } from 'react-hook-form';
 import { UserPlus } from 'lucide-react';
 import type { EngineInput, Person, Relationship } from '../../types';

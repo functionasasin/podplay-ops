@@ -4,8 +4,7 @@ import { CalendarClock, ExternalLink, Loader2, AlertCircle } from 'lucide-react'
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
-import { computeDeadlineStatus } from '@/lib/deadlines';
-import type { CaseDeadline, DeadlineStatus } from '@/types';
+import type { CaseDeadline } from '@/types';
 
 export const deadlinesRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -95,8 +94,10 @@ function DeadlinesPage() {
         return;
       }
 
-      const caseIds = cases.map((c) => c.id);
-      const caseMap = new Map(cases.map((c) => [c.id, c]));
+      type CaseRow = { id: string; title: string; decedent_name: string | null };
+      const typedCases = cases as CaseRow[];
+      const caseIds = typedCases.map((c) => c.id);
+      const caseMap = new Map(typedCases.map((c) => [c.id, c]));
 
       // Fetch all pending deadlines for those cases
       const { data: dls, error: dlsErr } = await supabase
@@ -115,7 +116,7 @@ function DeadlinesPage() {
       }
 
       if (!cancelled) {
-        const withCase: DeadlineWithCase[] = (dls ?? []).map((dl) => {
+        const withCase: DeadlineWithCase[] = (dls ?? []).map((dl: CaseDeadline & { case_id: string }) => {
           const caseInfo = caseMap.get(dl.case_id);
           return {
             ...dl,

@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import { useRef } from 'react';
 import { useFieldArray } from 'react-hook-form';
 import type { Control, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 import { Plus, Trash2 } from 'lucide-react';

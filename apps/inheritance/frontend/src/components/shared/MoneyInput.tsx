@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback, type ChangeEvent } from 'react';
 import { Control, FieldValues, Path, useController } from 'react-hook-form';
 import { pesosToCentavos, centavosToPesos } from '../../types';
 import { Input } from '@/components/ui/input';
@@ -38,10 +38,8 @@ export function MoneyInput<T extends FieldValues>({
     const pesos = centavosToPesos(Number(field.value));
     return formatDisplay(pesos);
   });
-  const [isFocused, setIsFocused] = useState(false);
 
   const handleFocus = useCallback(() => {
-    setIsFocused(true);
     // Show raw number for editing (no commas)
     if (field.value != null && field.value !== '') {
       const pesos = centavosToPesos(Number(field.value));
@@ -50,7 +48,6 @@ export function MoneyInput<T extends FieldValues>({
   }, [field.value]);
 
   const handleBlur = useCallback(() => {
-    setIsFocused(false);
     field.onBlur();
 
     const raw = displayValue.replace(/,/g, '').trim();
@@ -73,7 +70,7 @@ export function MoneyInput<T extends FieldValues>({
   }, [displayValue, field]);
 
   const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    (e: ChangeEvent<HTMLInputElement>) => {
       const val = e.target.value;
       setDisplayValue(val);
 
@@ -128,6 +125,6 @@ export function MoneyInput<T extends FieldValues>({
 function formatDisplay(pesos: number): string {
   // Format with 2 decimal places and comma thousands
   const parts = pesos.toFixed(2).split('.');
-  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  return parts.join('.');
+  const intPart = parts[0] ?? '';
+  return intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + (parts[1] ?? '00');
 }

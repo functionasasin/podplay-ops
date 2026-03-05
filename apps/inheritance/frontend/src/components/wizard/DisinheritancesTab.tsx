@@ -1,4 +1,4 @@
-import React from 'react';
+import { useEffect } from 'react';
 import { useFieldArray } from 'react-hook-form';
 import type { Control, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 import { Plus, Trash2, CheckCircle2, XCircle } from 'lucide-react';
@@ -15,7 +15,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 
 export interface DisinheritancesTabProps {
   control: Control<EngineInput>;
@@ -151,7 +150,7 @@ function DisinheritanceCard({
     : [];
 
   // Auto-populate heir_reference.name when person is selected
-  React.useEffect(() => {
+  useEffect(() => {
     if (personId) {
       const person = persons.find((p) => p.id === personId);
       if (person) {

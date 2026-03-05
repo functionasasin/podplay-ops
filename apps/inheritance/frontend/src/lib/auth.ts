@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import type { UserProfile } from '@/types';
 
 export async function signIn(email: string, password: string) {
@@ -35,7 +36,7 @@ export async function signInWithMagicLink(email: string) {
 }
 
 export function onAuthStateChange(callback: (user: unknown) => void) {
-  return supabase.auth.onAuthStateChange((_event, session) => {
+  return supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
     callback(session?.user ?? null);
   });
 }

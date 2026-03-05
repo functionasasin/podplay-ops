@@ -505,7 +505,7 @@ export function fracToString(numer: number, denom: number): string {
 }
 
 export function stringToFrac(s: string): { numer: number; denom: number } {
-  const [n, d] = s.split("/").map(Number);
+  const [n, d] = s.split("/").map(Number) as [number, number];
   return { numer: n, denom: d };
 }
 

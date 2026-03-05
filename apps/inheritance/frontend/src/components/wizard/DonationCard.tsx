@@ -1,4 +1,3 @@
-import React from 'react';
 import type { Control, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 import { Info, Trash2 } from 'lucide-react';
 import type { EngineInput, Person, Donation } from '../../types';
@@ -57,7 +56,6 @@ export function DonationCard({
   watch,
   onRemove,
   persons,
-  errors,
 }: DonationCardProps) {
   // Single watch call for the entire donation to minimize subscriptions
   const donations = watch('donations') || [];
@@ -80,7 +78,7 @@ export function DonationCard({
     if (newVal) {
       updates.recipient_heir_id = null;
       for (const flag of EXEMPTION_FLAGS) {
-        (updates as Record<string, unknown>)[flag] = false;
+        (updates as unknown as Record<string, unknown>)[flag] = false;
       }
       updates.professional_expense_parent_required = false;
       updates.professional_expense_imputed_savings = null;
@@ -90,15 +88,15 @@ export function DonationCard({
   };
 
   const handleExemptionClick = (clickedFlag: (typeof EXEMPTION_FLAGS)[number]) => {
-    const wasActive = donation ? (donation as Record<string, unknown>)[clickedFlag] : false;
+    const wasActive = donation ? (donation as unknown as Record<string, unknown>)[clickedFlag] : false;
     const updates: Partial<Donation> = {};
 
     for (const flag of EXEMPTION_FLAGS) {
-      (updates as Record<string, unknown>)[flag] = false;
+      (updates as unknown as Record<string, unknown>)[flag] = false;
     }
 
     if (!wasActive) {
-      (updates as Record<string, unknown>)[clickedFlag] = true;
+      (updates as unknown as Record<string, unknown>)[clickedFlag] = true;
     }
 
     updateDonation(updates);
@@ -195,7 +193,7 @@ export function DonationCard({
             <div className="space-y-2.5">
               <span className="text-sm font-medium text-muted-foreground">Exemption Flags</span>
               {EXEMPTION_FLAGS.map((flag) => {
-                const flagVal = donation ? (donation as Record<string, unknown>)[flag] : false;
+                const flagVal = donation ? (donation as unknown as Record<string, unknown>)[flag] : false;
                 return (
                   <label
                     key={flag}

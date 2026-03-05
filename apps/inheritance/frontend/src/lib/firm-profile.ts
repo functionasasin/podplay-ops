@@ -143,7 +143,7 @@ export async function uploadLogo(userId: string, file: File): Promise<string> {
   // Delete previous logo files
   const { data: existing } = await bucket.list(folder);
   if (existing && existing.length > 0) {
-    const paths = existing.map((f) => `${folder}/${f.name}`);
+    const paths = existing.map((f: { name: string }) => `${folder}/${f.name}`);
     await bucket.remove(paths);
   }
 

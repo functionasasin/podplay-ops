@@ -9,7 +9,7 @@ export interface OtherAssetsTabProps {
   onChange: (data: OtherAssets) => void;
 }
 
-export function OtherAssetsTab({ data, onChange }: OtherAssetsTabProps) {
+export function OtherAssetsTab({ data }: OtherAssetsTabProps) {
   return (
     <div data-testid="other-assets-tab">
       <h2>Other Assets</h2>

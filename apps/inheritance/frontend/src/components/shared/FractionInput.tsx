@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { Control, FieldValues, Path, useController } from 'react-hook-form';
 import { stringToFrac } from '../../types';
 import { Input } from '@/components/ui/input';

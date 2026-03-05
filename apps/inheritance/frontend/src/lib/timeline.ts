@@ -166,14 +166,14 @@ export function buildTimelineData(
         ? stageDeadlines.reduce((latest, d) => {
             const cd = d.completed_date!;
             return cd > latest ? cd : latest;
-          }, stageDeadlines[0].completed_date!)
+          }, stageDeadlines[0]!.completed_date!)
         : null;
 
     const estimatedDate =
       stageDeadlines.length > 0
         ? stageDeadlines.reduce((latest, d) => {
             return d.due_date > latest ? d.due_date : latest;
-          }, stageDeadlines[0].due_date)
+          }, stageDeadlines[0]!.due_date)
         : null;
 
     return {

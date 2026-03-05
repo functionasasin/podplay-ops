@@ -71,21 +71,21 @@ function HeirBreakdown({ share }: { share: InheritanceShare }) {
           />
         )}
 
-        {share.from_legitime.centavos > 0 && (
+        {Number(share.from_legitime.centavos) > 0 && (
           <BreakdownLine
             label="From Legitime"
             value={formatPeso(share.from_legitime.centavos)}
           />
         )}
 
-        {share.from_free_portion.centavos > 0 && (
+        {Number(share.from_free_portion.centavos) > 0 && (
           <BreakdownLine
             label="From Free Portion"
             value={formatPeso(share.from_free_portion.centavos)}
           />
         )}
 
-        {share.from_intestate.centavos > 0 && (
+        {Number(share.from_intestate.centavos) > 0 && (
           <BreakdownLine
             label="From Intestate"
             value={formatPeso(share.from_intestate.centavos)}
@@ -99,7 +99,7 @@ function HeirBreakdown({ share }: { share: InheritanceShare }) {
           value={formatPeso(share.gross_entitlement.centavos)}
         />
 
-        {share.donations_imputed.centavos > 0 && (
+        {Number(share.donations_imputed.centavos) > 0 && (
           <div
             data-testid="donations-imputed-line"
             className="flex justify-between text-amber-700"
