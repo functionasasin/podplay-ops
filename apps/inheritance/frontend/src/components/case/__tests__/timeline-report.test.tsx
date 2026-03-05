@@ -349,7 +349,7 @@ describe('timeline > TimelineStageCard', () => {
   it('renders stage number and name', () => {
     const stage = createStage();
     render(<TimelineStageCard stage={stage} isCurrent={false} />);
-    expect(screen.getByTestId('stage-number-1')).toHaveTextContent('1');
+    expect(screen.getByTestId('stage-number-1')).toHaveTextContent('Stage 1');
     expect(screen.getByTestId('stage-name-1')).toHaveTextContent(
       'Registration & Notification',
     );
@@ -358,14 +358,14 @@ describe('timeline > TimelineStageCard', () => {
   it('renders stage status', () => {
     const stage = createStage({ status: 'complete' });
     render(<TimelineStageCard stage={stage} isCurrent={false} />);
-    expect(screen.getByTestId('stage-status-1')).toHaveTextContent('complete');
+    expect(screen.getByTestId('stage-status-1')).toHaveTextContent('Complete');
   });
 
-  it('shows "Currently Here" indicator when isCurrent is true', () => {
+  it('shows "Current" indicator when isCurrent is true', () => {
     const stage = createStage({ status: 'in-progress' });
     render(<TimelineStageCard stage={stage} isCurrent={true} />);
     expect(screen.getByTestId('current-stage-indicator')).toHaveTextContent(
-      'Currently Here',
+      'Current',
     );
   });
 
@@ -443,7 +443,7 @@ describe('timeline > TimelineReport', () => {
     const deadlines = createEjsDeadlines();
     render(<TimelineReport deadlines={deadlines} track="ejs" />);
     expect(screen.getByTestId('timeline-track')).toHaveTextContent(
-      'Extrajudicial Settlement',
+      'Extrajudicial',
     );
   });
 
@@ -451,7 +451,7 @@ describe('timeline > TimelineReport', () => {
     const deadlines = createJudicialDeadlines();
     render(<TimelineReport deadlines={deadlines} track="judicial" />);
     expect(screen.getByTestId('timeline-track')).toHaveTextContent(
-      'Judicial Settlement',
+      'Judicial',
     );
   });
 
@@ -498,8 +498,8 @@ describe('timeline > TimelineReport', () => {
   it('completed stages show complete status', () => {
     const deadlines = createEjsDeadlines({ completedThrough: 1 });
     render(<TimelineReport deadlines={deadlines} track="ejs" />);
-    expect(screen.getByTestId('stage-status-1')).toHaveTextContent('complete');
-    expect(screen.getByTestId('stage-status-2')).toHaveTextContent('complete');
+    expect(screen.getByTestId('stage-status-1')).toHaveTextContent('Complete');
+    expect(screen.getByTestId('stage-status-2')).toHaveTextContent('Complete');
   });
 
   it('progress bar fill width matches percentage', () => {
@@ -563,7 +563,7 @@ describe('timeline > TimelineReport', () => {
       />,
     );
     expect(screen.getByTestId('client-current-indicator')).toHaveTextContent(
-      '← Currently Here',
+      'Currently Here',
     );
   });
 });

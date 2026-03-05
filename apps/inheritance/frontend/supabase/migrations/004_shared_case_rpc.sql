@@ -5,7 +5,10 @@
 -- shared cases via /share/:token without authentication.
 -- Only returns data when share_enabled = TRUE.
 
-CREATE OR REPLACE FUNCTION get_shared_case(p_token TEXT)
+-- Drop old TEXT-parameter version if it exists
+DROP FUNCTION IF EXISTS get_shared_case(TEXT);
+
+CREATE OR REPLACE FUNCTION get_shared_case(p_token UUID)
 RETURNS TABLE (
   title TEXT,
   status TEXT,
@@ -19,5 +22,8 @@ BEGIN
   SELECT c.title, c.status::TEXT, c.input_json, c.output_json,
          c.decedent_name, c.date_of_death
   FROM cases c
-  WHERE c.share_token = p_token::UUID AND c.share_enabled = TRUE;
+  WHERE c.share_token = p_token AND c.share_enabled = TRUE;
 END; $$;
+
+-- Allow anonymous users to call this RPC (share links work without auth)
+GRANT EXECUTE ON FUNCTION get_shared_case(UUID) TO anon;

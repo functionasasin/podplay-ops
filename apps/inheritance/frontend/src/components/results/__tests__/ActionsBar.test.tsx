@@ -128,9 +128,14 @@ describe('results > ActionsBar', () => {
       expect(screen.getByRole('button', { name: /Edit Input/i })).toBeInTheDocument();
     });
 
-    it('renders "Export JSON" button or dropdown', () => {
+    it('renders "Export PDF" button', () => {
       renderActions();
-      expect(screen.getByRole('button', { name: /Export/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Export PDF/i })).toBeInTheDocument();
+    });
+
+    it('renders "Export JSON" button', () => {
+      renderActions();
+      expect(screen.getByRole('button', { name: /Export JSON/i })).toBeInTheDocument();
     });
 
     it('renders "Copy Narratives" button', () => {
@@ -165,14 +170,7 @@ describe('results > ActionsBar', () => {
       const input = createInput();
       renderActions({ input });
 
-      // Click export button (may show dropdown with options)
-      await user.click(screen.getByRole('button', { name: /Export/i }));
-
-      // Look for "Export Input JSON" option or similar
-      const exportInputBtn = screen.queryByText(/Export Input/i) ?? screen.getByRole('button', { name: /Export/i });
-      if (exportInputBtn !== screen.getByRole('button', { name: /Export/i })) {
-        await user.click(exportInputBtn);
-      }
+      await user.click(screen.getByRole('button', { name: /Export JSON/i }));
 
       // Should have attempted to create a blob download
       // The createObjectURL mock verifies the export flow was triggered
@@ -184,12 +182,7 @@ describe('results > ActionsBar', () => {
       const output = createOutput();
       renderActions({ output });
 
-      await user.click(screen.getByRole('button', { name: /Export/i }));
-
-      // Verify export was triggered
-      if (screen.queryByText(/Export Output/i)) {
-        await user.click(screen.getByText(/Export Output/i));
-      }
+      await user.click(screen.getByRole('button', { name: /Export JSON/i }));
       expect(createObjectURL).toHaveBeenCalled();
     });
   });

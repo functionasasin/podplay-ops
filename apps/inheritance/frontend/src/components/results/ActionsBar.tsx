@@ -2,7 +2,7 @@
  * ActionsBar — Edit Input, Export JSON, Copy Narratives, Share.
  */
 import { useState } from 'react';
-import { Pencil, Download, Copy, Share2 } from 'lucide-react';
+import { Pencil, Download, Copy, Share2, FileText, Loader2 } from 'lucide-react';
 import type { EngineInput, EngineOutput } from '../../types';
 import { stripMarkdownBold } from './utils';
 import { Button } from '../ui/button';
@@ -32,6 +32,7 @@ function downloadJson(data: unknown, filename: string) {
 
 export function ActionsBar({ input, output, onEditInput, caseId, shareToken, shareEnabled, onToggleShare }: ActionsBarProps) {
   const [shareOpen, setShareOpen] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   const handleExport = () => {
     const dateOfDeath = input.decedent.date_of_death;
@@ -39,6 +40,16 @@ export function ActionsBar({ input, output, onEditInput, caseId, shareToken, sha
       { input, output },
       `inheritance-${dateOfDeath}-both.json`,
     );
+  };
+
+  const handleExportPDF = async () => {
+    setPdfLoading(true);
+    try {
+      const { downloadPDF } = await import('../../lib/pdf-export');
+      await downloadPDF(input, output, null);
+    } finally {
+      setPdfLoading(false);
+    }
   };
 
   const handleCopyNarratives = () => {
@@ -60,6 +71,15 @@ export function ActionsBar({ input, output, onEditInput, caseId, shareToken, sha
         >
           <Pencil className="size-4" />
           Edit Input
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleExportPDF}
+          disabled={pdfLoading}
+        >
+          {pdfLoading ? <Loader2 className="size-4 animate-spin" /> : <FileText className="size-4" />}
+          Export PDF
         </Button>
         <Button
           type="button"
