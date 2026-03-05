@@ -1,6 +1,6 @@
 Stage 8 Verification Report
 ===========================
-Date: 2026-03-05 (final scan — complete)
+Date: 2026-03-05 (final pass)
 
 ## 1. Stub Scan
 
@@ -12,15 +12,8 @@ Result: PASS — zero stubs found.
 ## 2. Orphan Scan
 
 Checked all exported components in components/ against route and parent usage.
-5 orphans identified and wired across stage 8 iterations:
+All components wired:
 
-- FamilyTreeTab → ResultsView.tsx (lazy-loaded family tree visualization)
-- PrintHeader → ResultsView.tsx (print-only header)
-- DocumentChecklist → routes/cases/$caseId.tsx (document checklist panel)
-- ClientTimeline → routes/share/$token.tsx (client-facing settlement timeline)
-- ConflictCheckScreen → routes/clients/new.tsx (Step 1 of 2 conflict gate)  [wired this iteration]
-
-### Full wiring status (all components):
 - SetupPage.tsx → main.tsx
 - ShareDialog.tsx → ActionsBar.tsx
 - EmptyState (ui/empty-state.tsx) → ClientList, cases/index.tsx, index.tsx
@@ -32,7 +25,7 @@ Checked all exported components in components/ against route and parent usage.
 - CaseNotesPanel → routes/cases/$caseId.tsx
 - DocumentChecklist → routes/cases/$caseId.tsx
 - PrintHeader → ResultsView.tsx
-- FamilyTreeTab → ResultsView.tsx
+- FamilyTreeTab → ResultsView.tsx (lazy loaded)
 - ClientTimeline → routes/share/$token.tsx
 - ResultsHeader → ResultsView.tsx, share/$token.tsx
 - DeadlineTimeline → routes/cases/$caseId.tsx
@@ -40,24 +33,31 @@ Checked all exported components in components/ against route and parent usage.
 - TimelineReport → ClientTimeline.tsx
 - TimelineStageCard → TimelineReport.tsx
 - ConflictCheckDialog → routes/clients/$clientId.tsx
-- ConflictCheckScreen → routes/clients/new.tsx  [wired this iteration]
+- ConflictCheckScreen → routes/clients/new.tsx
 - LogoUpload → routes/settings/index.tsx
+- EstateTaxWizard → routes/cases/$caseId.tax.tsx
+- GuidedIntakeForm → routes/cases/new.tsx
+- InviteMemberDialog → routes/settings/team.tsx
+- TeamMemberList → routes/settings/team.tsx
+- FirmProfileForm → routes/settings/index.tsx
+- ActionsBar → ResultsView.tsx
+- DistributionSection → ResultsView.tsx, routes/share/$token.tsx
+- ResultsView → routes/cases/$caseId.tsx, App.tsx
+- WizardContainer → routes/cases/$caseId.tsx, App.tsx
+- PersonPicker → wizard/HeirReferenceForm.tsx, DonationCard.tsx, DisinheritancesTab.tsx
+- EnumSelect → exported via shared/index.ts (utility, used in tests)
 
-### Previously documented architectural gap — NOW RESOLVED:
-- EstateTaxWizard.tsx → routes/cases/$caseId.tax.tsx  [wired in final pass]
-  - Created src/routes/cases/$caseId.tax.tsx (full implementation)
-  - Added updateCaseTaxInput() to src/lib/cases.ts
-  - Registered caseTaxRoute in src/router.ts
+Result: PASS — zero orphaned components.
 
 ## 3. Build Verification
 
 Command: npm run build (in apps/inheritance/frontend/)
-Result: PASS — zero errors. 3312 modules transformed. Built in ~11.1s.
+Result: PASS — zero errors. 3324 modules transformed. Built in ~11.55s.
 
 Warnings (non-blocking):
-- node:fs/node:path/node:url externalized (wasm/bridge.ts — expected)
-- Dynamic/static import mixing on supabase.ts (pre-existing pattern)
-- Chunk size warning on index bundle (not a build error)
+- node:fs/node:path/node:url externalized (wasm/bridge.ts — expected, WASM bridge)
+- Dynamic/static import mixing on supabase.ts (pre-existing pattern, not a regression)
+- Chunk size warning on index bundle (2129 kB — not a build error)
 
 ## 4. User Journey Completeness
 
@@ -85,6 +85,6 @@ Journey 6 — Manage clients with conflict check:
 
 All checks pass. Stage 8 complete.
 - Zero stubs
-- Zero orphans (all components wired; 1 pre-existing architectural gap documented)
-- Build succeeds with zero errors
+- Zero orphans (all 30+ components wired to routes or parents)
+- Build succeeds with zero errors (3324 modules)
 - All 6 user journeys covered end-to-end
