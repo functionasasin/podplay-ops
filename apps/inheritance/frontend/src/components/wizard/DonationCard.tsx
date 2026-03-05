@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export const EXEMPTION_FLAGS = [
   'is_expressly_exempt',
@@ -128,15 +129,14 @@ export function DonationCard({
 
       <CardContent className="space-y-4">
         {/* Stranger toggle */}
-        <label className="flex items-center gap-2 cursor-pointer text-sm">
-          <input
-            type="checkbox"
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id={`donation-stranger-${index}`}
             checked={isStranger}
-            onChange={handleStrangerToggle}
-            className="h-4 w-4 rounded border-slate-300 text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
+            onCheckedChange={() => handleStrangerToggle()}
           />
-          <span className="font-medium">Recipient is Not in Family Tree</span>
-        </label>
+          <label htmlFor={`donation-stranger-${index}`} className="text-sm font-medium cursor-pointer">Recipient is Not in Family Tree</label>
+        </div>
 
         {/* Stranger info banner */}
         {isStranger && (
@@ -195,23 +195,22 @@ export function DonationCard({
               {EXEMPTION_FLAGS.map((flag) => {
                 const flagVal = donation ? (donation as unknown as Record<string, unknown>)[flag] : false;
                 return (
-                  <label
+                  <div
                     key={flag}
                     className={cn(
                       "flex items-center gap-2 cursor-pointer text-sm rounded-md px-2 py-1.5 transition-colors",
                       flagVal
-                        ? "bg-[hsl(var(--accent))]/10 text-foreground font-medium"
+                        ? "bg-accent/10 text-foreground font-medium"
                         : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                     )}
                   >
-                    <input
-                      type="checkbox"
+                    <Checkbox
+                      id={`donation-flag-${index}-${flag}`}
                       checked={!!flagVal}
-                      onChange={() => handleExemptionClick(flag)}
-                      className="h-4 w-4 rounded border-slate-300 text-[hsl(var(--accent))] focus:ring-[hsl(var(--accent))]"
+                      onCheckedChange={() => handleExemptionClick(flag)}
                     />
-                    <span>{EXEMPTION_LABELS[flag]}</span>
-                  </label>
+                    <label htmlFor={`donation-flag-${index}-${flag}`} className="cursor-pointer">{EXEMPTION_LABELS[flag]}</label>
+                  </div>
                 );
               })}
             </div>
@@ -221,17 +220,16 @@ export function DonationCard({
         {/* Professional expense cascade: parent_required */}
         {!isStranger && isProfessionalExpense && (
           <div className="ml-6 border-l-2 border-[hsl(var(--accent))]/30 pl-4 space-y-3">
-            <label className="flex items-center gap-2 cursor-pointer text-sm">
-              <input
-                type="checkbox"
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id={`donation-parent-required-${index}`}
                 checked={parentRequired}
-                onChange={() =>
+                onCheckedChange={() =>
                   updateDonation({ professional_expense_parent_required: !parentRequired })
                 }
-                className="h-4 w-4 rounded border-slate-300 text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
               />
-              <span className="font-medium">Parent Co-Signature Required</span>
-            </label>
+              <label htmlFor={`donation-parent-required-${index}`} className="text-sm font-medium cursor-pointer">Parent Co-Signature Required</label>
+            </div>
 
             {/* Imputed savings (only when parent_required) */}
             {parentRequired && (

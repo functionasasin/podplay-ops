@@ -1,8 +1,9 @@
-import React from 'react';
 import { Control, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 import type { EngineInput } from '../../types';
 import { MoneyInput } from '../shared/MoneyInput';
 import { Separator } from '@/components/ui/separator';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 
 export interface EstateStepProps {
   control: Control<EngineInput>;
@@ -24,8 +25,8 @@ export function EstateStep({
   const centavos = watch('net_distributable_estate.centavos');
   const showZeroWarning = centavos != null && Number(centavos) === 0;
 
-  const handleSuccessionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const isTestate = e.target.value === 'testate';
+  const handleSuccessionChange = (value: string) => {
+    const isTestate = value === 'testate';
     onHasWillChange(isTestate);
     if (isTestate) {
       setValue('will', {
@@ -63,30 +64,20 @@ export function EstateStep({
 
       <fieldset className="space-y-3">
         <legend className="text-sm font-medium leading-none">Succession Type</legend>
-        <div className="flex gap-6 pt-1">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="succession-type"
-              value="intestate"
-              checked={!hasWill}
-              onChange={handleSuccessionChange}
-              className="h-4 w-4 accent-primary"
-            />
-            <span className="text-sm">Intestate</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="succession-type"
-              value="testate"
-              checked={hasWill}
-              onChange={handleSuccessionChange}
-              className="h-4 w-4 accent-primary"
-            />
-            <span className="text-sm">Testate</span>
-          </label>
-        </div>
+        <RadioGroup
+          value={hasWill ? 'testate' : 'intestate'}
+          onValueChange={handleSuccessionChange}
+          className="flex gap-6 pt-1"
+        >
+          <div className="flex items-center gap-2">
+            <RadioGroupItem value="intestate" id="succession-intestate" />
+            <Label htmlFor="succession-intestate" className="cursor-pointer font-normal">Intestate</Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <RadioGroupItem value="testate" id="succession-testate" />
+            <Label htmlFor="succession-testate" className="cursor-pointer font-normal">Testate</Label>
+          </div>
+        </RadioGroup>
         {hasWill && (
           <p className="text-xs text-accent font-medium">
             Will & dispositions will be configured in a later step.

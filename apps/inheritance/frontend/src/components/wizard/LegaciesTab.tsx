@@ -8,6 +8,7 @@ import { MoneyInput } from '../shared/MoneyInput';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -242,17 +243,16 @@ function LegacyCard({
           </div>
         )}
 
-        <label className="flex items-center gap-2 text-sm cursor-pointer">
-          <input
-            type="checkbox"
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id={`legacy-preferred-${basePath}`}
             checked={!!isPreferred}
-            onChange={(e) =>
-              setValue(`${basePath}.is_preferred` as any, e.target.checked)
+            onCheckedChange={(checked) =>
+              setValue(`${basePath}.is_preferred` as any, checked === true)
             }
-            className="h-4 w-4 rounded border-input accent-[hsl(var(--primary))]"
           />
-          Preferred Legacy (Art. 911)
-        </label>
+          <label htmlFor={`legacy-preferred-${basePath}`} className="text-sm cursor-pointer">Preferred Legacy (Art. 911)</label>
+        </div>
 
         <Separator />
 

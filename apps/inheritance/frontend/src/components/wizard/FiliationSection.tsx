@@ -1,10 +1,10 @@
-import React from 'react';
 import { Control, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 import { AlertTriangle } from 'lucide-react';
 import type { EngineInput } from '../../types';
 import { FILIATION_PROOF_OPTIONS } from './FamilyTreeStep';
 import { cn } from '@/lib/utils';
 import { Alert, AlertTitle } from '@/components/ui/alert';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const selectClassName = cn(
   "border-input flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none md:text-sm",
@@ -28,8 +28,7 @@ export function FiliationSection({
   const filiationProved = watch(`family_tree.${personIndex}.filiation_proved` as any);
   const filiationProofType = watch(`family_tree.${personIndex}.filiation_proof_type` as any);
 
-  const handleFiliationProvedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const checked = e.target.checked;
+  const handleFiliationProvedChange = (checked: boolean) => {
     setValue(`family_tree.${personIndex}.filiation_proved` as any, checked);
     if (!checked) {
       setValue(`family_tree.${personIndex}.filiation_proof_type` as any, null);
@@ -38,15 +37,14 @@ export function FiliationSection({
 
   return (
     <div data-testid="filiation-section" className="space-y-4 ml-4 border-l-2 border-purple-300 pl-4">
-      <label className="flex items-center gap-2 cursor-pointer">
-        <input
-          type="checkbox"
+      <div className="flex items-center gap-2">
+        <Checkbox
+          id={`filiation-proved-${personIndex}`}
           checked={filiationProved ?? true}
-          onChange={handleFiliationProvedChange}
-          className="h-4 w-4 rounded accent-primary"
+          onCheckedChange={handleFiliationProvedChange}
         />
-        <span className="text-sm">Filiation Proved</span>
-      </label>
+        <label htmlFor={`filiation-proved-${personIndex}`} className="text-sm cursor-pointer">Filiation Proved</label>
+      </div>
 
       {filiationProved && (
         <label className="block space-y-2">

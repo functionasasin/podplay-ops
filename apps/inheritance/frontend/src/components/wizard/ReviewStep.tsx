@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export interface ReviewStepProps {
   control: Control<EngineInput>;
@@ -383,15 +384,14 @@ export function ReviewStep({
                 />
               </div>
 
-              <label className="flex items-center gap-2 cursor-pointer text-sm">
-                <input
-                  type="checkbox"
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="review-retroactive-ra"
                   checked={!!retroactiveRa.field.value}
-                  onChange={(e) => retroactiveRa.field.onChange(e.target.checked)}
-                  className="h-4 w-4 rounded border-input accent-primary"
+                  onCheckedChange={(checked) => retroactiveRa.field.onChange(checked === true)}
                 />
-                <span className="font-medium">Retroactive RA 11642</span>
-              </label>
+                <label htmlFor="review-retroactive-ra" className="text-sm font-medium cursor-pointer">Retroactive RA 11642</label>
+              </div>
             </div>
           </AccordionContent>
         </AccordionItem>

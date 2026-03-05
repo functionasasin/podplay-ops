@@ -4,6 +4,7 @@ import type { EngineInput, Person } from '../../types';
 import { PersonPicker } from '../shared/PersonPicker';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export interface HeirReferenceFormProps {
   control: Control<EngineInput>;
@@ -75,23 +76,19 @@ export function HeirReferenceForm({
         />
       </label>
 
-      <label className="flex items-center gap-2 text-sm cursor-pointer">
-        <input
-          type="checkbox"
+      <div className="flex items-center gap-2">
+        <Checkbox
+          id={`heir-collective-${fieldPath}`}
           checked={!!isCollective}
-          onChange={(e) => {
-            setValue(
-              `${fieldPath}.is_collective` as any,
-              e.target.checked
-            );
-            if (!e.target.checked) {
+          onCheckedChange={(checked) => {
+            setValue(`${fieldPath}.is_collective` as any, checked === true);
+            if (!checked) {
               setValue(`${fieldPath}.class_designation` as any, null);
             }
           }}
-          className="h-4 w-4 rounded border-input accent-[hsl(var(--primary))]"
         />
-        Collective Gift
-      </label>
+        <label htmlFor={`heir-collective-${fieldPath}`} className="text-sm cursor-pointer">Collective Gift</label>
+      </div>
 
       {isCollective && (
         <label className="block space-y-2">

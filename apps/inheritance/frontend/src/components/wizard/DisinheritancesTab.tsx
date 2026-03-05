@@ -13,6 +13,7 @@ import { PersonPicker } from '../shared/PersonPicker';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
@@ -201,47 +202,38 @@ function DisinheritanceCard({
         </label>
 
         <div className="space-y-2">
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <input
-              type="checkbox"
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id={`disinheritance-cause-stated-${basePath}`}
               checked={causeSpecified ?? true}
-              onChange={(e) =>
-                setValue(
-                  `${basePath}.cause_specified_in_will` as any,
-                  e.target.checked
-                )
+              onCheckedChange={(checked) =>
+                setValue(`${basePath}.cause_specified_in_will` as any, checked === true)
               }
-              className="h-4 w-4 rounded border-input accent-[hsl(var(--primary))]"
             />
-            Cause Stated in Will
-          </label>
+            <label htmlFor={`disinheritance-cause-stated-${basePath}`} className="text-sm cursor-pointer">Cause Stated in Will</label>
+          </div>
 
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <input
-              type="checkbox"
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id={`disinheritance-cause-proven-${basePath}`}
               checked={causeProven ?? true}
-              onChange={(e) =>
-                setValue(`${basePath}.cause_proven` as any, e.target.checked)
+              onCheckedChange={(checked) =>
+                setValue(`${basePath}.cause_proven` as any, checked === true)
               }
-              className="h-4 w-4 rounded border-input accent-[hsl(var(--primary))]"
             />
-            Cause Proven
-          </label>
+            <label htmlFor={`disinheritance-cause-proven-${basePath}`} className="text-sm cursor-pointer">Cause Proven</label>
+          </div>
 
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <input
-              type="checkbox"
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id={`disinheritance-reconciliation-${basePath}`}
               checked={reconciliation ?? false}
-              onChange={(e) =>
-                setValue(
-                  `${basePath}.reconciliation_occurred` as any,
-                  e.target.checked
-                )
+              onCheckedChange={(checked) =>
+                setValue(`${basePath}.reconciliation_occurred` as any, checked === true)
               }
-              className="h-4 w-4 rounded border-input accent-[hsl(var(--primary))]"
             />
-            Reconciliation Occurred
-          </label>
+            <label htmlFor={`disinheritance-reconciliation-${basePath}`} className="text-sm cursor-pointer">Reconciliation Occurred</label>
+          </div>
         </div>
 
         {/* Validity Indicator */}

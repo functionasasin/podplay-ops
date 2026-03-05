@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -239,17 +240,16 @@ function DeviseCard({
           </div>
         )}
 
-        <label className="flex items-center gap-2 text-sm cursor-pointer">
-          <input
-            type="checkbox"
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id={`devise-preferred-${basePath}`}
             checked={!!isPreferred}
-            onChange={(e) =>
-              setValue(`${basePath}.is_preferred` as any, e.target.checked)
+            onCheckedChange={(checked) =>
+              setValue(`${basePath}.is_preferred` as any, checked === true)
             }
-            className="h-4 w-4 rounded border-input accent-[hsl(var(--primary))]"
           />
-          Preferred Devise
-        </label>
+          <label htmlFor={`devise-preferred-${basePath}`} className="text-sm cursor-pointer">Preferred Devise</label>
+        </div>
 
         <Separator />
 

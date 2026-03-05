@@ -8,6 +8,7 @@ import { ShareSpecForm } from './ShareSpecForm';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export interface InstitutionsTabProps {
   control: Control<EngineInput>;
@@ -123,17 +124,16 @@ function InstitutionCard({
           errors={errors}
         />
 
-        <label className="flex items-center gap-2 text-sm cursor-pointer">
-          <input
-            type="checkbox"
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id={`institution-residuary-${basePath}`}
             checked={!!isResiduary}
-            onChange={(e) =>
-              setValue(`${basePath}.is_residuary` as any, e.target.checked)
+            onCheckedChange={(checked) =>
+              setValue(`${basePath}.is_residuary` as any, checked === true)
             }
-            className="h-4 w-4 rounded border-input accent-[hsl(var(--primary))]"
           />
-          Residuary Heir
-        </label>
+          <label htmlFor={`institution-residuary-${basePath}`} className="text-sm cursor-pointer">Residuary Heir</label>
+        </div>
 
         {!isResiduary && (
           <ShareSpecForm

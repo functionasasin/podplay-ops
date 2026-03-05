@@ -1,10 +1,10 @@
-import React from 'react';
 import { Control, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 import { AlertTriangle } from 'lucide-react';
 import type { EngineInput, Person } from '../../types';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertTitle } from '@/components/ui/alert';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const selectClassName = cn(
   "border-input flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none md:text-sm",
@@ -37,16 +37,14 @@ export function AdoptionSubForm({
   const rescissionDate = watch(`family_tree.${personIndex}.adoption.rescission_date` as any);
   const biologicalParent = watch(`family_tree.${personIndex}.adoption.biological_parent_spouse` as any);
 
-  const handleStepparentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const checked = e.target.checked;
+  const handleStepparentChange = (checked: boolean) => {
     setValue(`family_tree.${personIndex}.adoption.is_stepparent_adoption` as any, checked);
     if (!checked) {
       setValue(`family_tree.${personIndex}.adoption.biological_parent_spouse` as any, null);
     }
   };
 
-  const handleRescindedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const checked = e.target.checked;
+  const handleRescindedChange = (checked: boolean) => {
     setValue(`family_tree.${personIndex}.adoption.is_rescinded` as any, checked);
     if (!checked) {
       setValue(`family_tree.${personIndex}.adoption.rescission_date` as any, null);
@@ -84,15 +82,14 @@ export function AdoptionSubForm({
       </label>
 
       {/* Stepparent Adoption Toggle */}
-      <label className="flex items-center gap-2 cursor-pointer">
-        <input
-          type="checkbox"
+      <div className="flex items-center gap-2">
+        <Checkbox
+          id={`adoption-stepparent-${personIndex}`}
           checked={isStepparent ?? false}
-          onChange={handleStepparentChange}
-          className="h-4 w-4 rounded accent-primary"
+          onCheckedChange={handleStepparentChange}
         />
-        <span className="text-sm">Stepparent Adoption</span>
-      </label>
+        <label htmlFor={`adoption-stepparent-${personIndex}`} className="text-sm cursor-pointer">Stepparent Adoption</label>
+      </div>
 
       {/* Biological Parent Spouse (conditional on stepparent) */}
       {isStepparent && (
@@ -123,15 +120,14 @@ export function AdoptionSubForm({
       )}
 
       {/* Adoption Rescinded Toggle */}
-      <label className="flex items-center gap-2 cursor-pointer">
-        <input
-          type="checkbox"
+      <div className="flex items-center gap-2">
+        <Checkbox
+          id={`adoption-rescinded-${personIndex}`}
           checked={isRescinded ?? false}
-          onChange={handleRescindedChange}
-          className="h-4 w-4 rounded accent-primary"
+          onCheckedChange={handleRescindedChange}
         />
-        <span className="text-sm">Adoption Rescinded</span>
-      </label>
+        <label htmlFor={`adoption-rescinded-${personIndex}`} className="text-sm cursor-pointer">Adoption Rescinded</label>
+      </div>
 
       {/* Rescission Date (conditional on rescinded) */}
       {isRescinded && (

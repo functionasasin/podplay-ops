@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { Control, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 import { AlertTriangle } from 'lucide-react';
 import type { EngineInput } from '../../types';
@@ -6,6 +6,7 @@ import { DateInput } from '../shared/DateInput';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Checkbox } from '@/components/ui/checkbox';
 import { MARRIAGE_DEFAULTS, ARTICULO_MORTIS_DEFAULTS, ILLNESS_DEFAULTS } from './WizardContainer';
 
 export interface DecedentStepProps {
@@ -33,8 +34,7 @@ export function DecedentStep({
   }, [setValue]);
 
   // Reset marriage fields when is_married toggled off
-  const handleMarriedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const checked = e.target.checked;
+  const handleMarriedChange = (checked: boolean) => {
     setValue('decedent.is_married', checked);
     if (!checked) {
       setValue('decedent.date_of_marriage', MARRIAGE_DEFAULTS.date_of_marriage);
@@ -47,8 +47,7 @@ export function DecedentStep({
   };
 
   // Reset articulo mortis child fields when toggled off
-  const handleArticuloMortisChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const checked = e.target.checked;
+  const handleArticuloMortisChange = (checked: boolean) => {
     setValue('decedent.marriage_solemnized_in_articulo_mortis', checked);
     if (!checked) {
       setValue('decedent.was_ill_at_marriage', ARTICULO_MORTIS_DEFAULTS.was_ill_at_marriage);
@@ -57,8 +56,7 @@ export function DecedentStep({
   };
 
   // Reset illness_caused_death when was_ill toggled off
-  const handleWasIllChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const checked = e.target.checked;
+  const handleWasIllChange = (checked: boolean) => {
     setValue('decedent.was_ill_at_marriage', checked);
     if (!checked) {
       setValue('decedent.illness_caused_death', ILLNESS_DEFAULTS.illness_caused_death);
@@ -101,15 +99,14 @@ export function DecedentStep({
       {/* Section 2: Legitimacy Status */}
       <div className="space-y-3">
         <h3 className="text-sm font-semibold text-primary uppercase tracking-wide">Legitimacy</h3>
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="decedent-illegitimate"
             checked={watch('decedent.is_illegitimate') ?? false}
-            onChange={(e) => setValue('decedent.is_illegitimate', e.target.checked)}
-            className="h-4 w-4 rounded accent-primary"
+            onCheckedChange={(checked) => setValue('decedent.is_illegitimate', checked === true)}
           />
-          <span className="text-sm">Decedent is Illegitimate</span>
-        </label>
+          <label htmlFor="decedent-illegitimate" className="text-sm cursor-pointer">Decedent is Illegitimate</label>
+        </div>
         <p className="text-xs text-muted-foreground ml-7">
           Only affects scenario when no descendants and will exists — Arts. T14/T15 via Art. 903
         </p>
@@ -120,15 +117,14 @@ export function DecedentStep({
       {/* Section 3: Marital Status */}
       <div className="space-y-3">
         <h3 className="text-sm font-semibold text-primary uppercase tracking-wide">Marital Status</h3>
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="decedent-married"
             checked={isMarried ?? false}
-            onChange={handleMarriedChange}
-            className="h-4 w-4 rounded accent-primary"
+            onCheckedChange={handleMarriedChange}
           />
-          <span className="text-sm">Was Married at Time of Death</span>
-        </label>
+          <label htmlFor="decedent-married" className="text-sm cursor-pointer">Was Married at Time of Death</label>
+        </div>
       </div>
 
       {/* Marriage-conditional fields */}
@@ -152,53 +148,49 @@ export function DecedentStep({
             />
           </label>
 
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="decedent-legal-separation"
               checked={watch('decedent.has_legal_separation') ?? false}
-              onChange={(e) => setValue('decedent.has_legal_separation', e.target.checked)}
-              className="h-4 w-4 rounded accent-primary"
+              onCheckedChange={(checked) => setValue('decedent.has_legal_separation', checked === true)}
             />
-            <span className="text-sm">Legal Separation</span>
-          </label>
+            <label htmlFor="decedent-legal-separation" className="text-sm cursor-pointer">Legal Separation</label>
+          </div>
 
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="decedent-articulo-mortis"
               checked={articuloMortis ?? false}
-              onChange={handleArticuloMortisChange}
-              className="h-4 w-4 rounded accent-primary"
+              onCheckedChange={handleArticuloMortisChange}
             />
-            <span className="text-sm">Articulo Mortis</span>
-          </label>
+            <label htmlFor="decedent-articulo-mortis" className="text-sm cursor-pointer">Articulo Mortis</label>
+          </div>
 
           {/* Articulo Mortis cascade — level 2 */}
           {articuloMortis && (
             <div className="ml-4 space-y-4 border-l-2 border-warning/30 pl-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="decedent-was-ill"
                   checked={wasIll ?? false}
-                  onChange={handleWasIllChange}
-                  className="h-4 w-4 rounded accent-primary"
+                  onCheckedChange={handleWasIllChange}
                 />
-                <span className="text-sm">Was Ill at Time of Marriage</span>
-              </label>
+                <label htmlFor="decedent-was-ill" className="text-sm cursor-pointer">Was Ill at Time of Marriage</label>
+              </div>
 
               {/* Level 3: illness_caused_death */}
               {wasIll && (
                 <div className="ml-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="decedent-illness-caused-death"
                       checked={illnessCausedDeath ?? false}
-                      onChange={(e) =>
-                        setValue('decedent.illness_caused_death', e.target.checked)
+                      onCheckedChange={(checked) =>
+                        setValue('decedent.illness_caused_death', checked === true)
                       }
-                      className="h-4 w-4 rounded accent-primary"
                     />
-                    <span className="text-sm">Illness Caused Death</span>
-                  </label>
+                    <label htmlFor="decedent-illness-caused-death" className="text-sm cursor-pointer">Illness Caused Death</label>
+                  </div>
                 </div>
               )}
             </div>

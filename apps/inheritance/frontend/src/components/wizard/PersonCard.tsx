@@ -1,4 +1,3 @@
-import React from 'react';
 import { Control, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 import { AlertTriangle, Trash2 } from 'lucide-react';
 import type { EngineInput, Person, Relationship } from '../../types';
@@ -18,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertTitle } from '@/components/ui/alert';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const selectClassName = cn(
   "border-input flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none md:text-sm",
@@ -211,59 +211,55 @@ export function PersonCard({
 
         {/* Status Toggles */}
         <div className="space-y-3">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id={`person-alive-${index}`}
               checked={isAlive ?? true}
-              onChange={(e) =>
-                setValue(`family_tree.${index}.is_alive_at_succession` as any, e.target.checked)
+              onCheckedChange={(checked) =>
+                setValue(`family_tree.${index}.is_alive_at_succession` as any, checked === true)
               }
-              className="h-4 w-4 rounded accent-primary"
             />
-            <span className="text-sm">Alive at Time of Succession</span>
-          </label>
+            <label htmlFor={`person-alive-${index}`} className="text-sm cursor-pointer">Alive at Time of Succession</label>
+          </div>
 
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id={`person-renounced-${index}`}
               checked={hasRenounced ?? false}
-              onChange={(e) =>
-                setValue(`family_tree.${index}.has_renounced` as any, e.target.checked)
+              onCheckedChange={(checked) =>
+                setValue(`family_tree.${index}.has_renounced` as any, checked === true)
               }
-              className="h-4 w-4 rounded accent-primary"
             />
-            <span className="text-sm">Has Renounced Inheritance</span>
-          </label>
+            <label htmlFor={`person-renounced-${index}`} className="text-sm cursor-pointer">Has Renounced Inheritance</label>
+          </div>
 
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id={`person-unworthy-${index}`}
               checked={isUnworthy ?? false}
-              onChange={(e) => {
-                setValue(`family_tree.${index}.is_unworthy` as any, e.target.checked);
-                if (!e.target.checked) {
+              onCheckedChange={(checked) => {
+                setValue(`family_tree.${index}.is_unworthy` as any, checked === true);
+                if (!checked) {
                   setValue(`family_tree.${index}.unworthiness_condoned` as any, false);
                 }
               }}
-              className="h-4 w-4 rounded accent-primary"
             />
-            <span className="text-sm">Declared Unworthy</span>
-          </label>
+            <label htmlFor={`person-unworthy-${index}`} className="text-sm cursor-pointer">Declared Unworthy</label>
+          </div>
 
           {/* Conditional: Unworthiness Condoned */}
           {showUnworthinessCondoned && (
             <div className="ml-7">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id={`person-condoned-${index}`}
                   checked={unworthinessCondoned ?? false}
-                  onChange={(e) =>
-                    setValue(`family_tree.${index}.unworthiness_condoned` as any, e.target.checked)
+                  onCheckedChange={(checked) =>
+                    setValue(`family_tree.${index}.unworthiness_condoned` as any, checked === true)
                   }
-                  className="h-4 w-4 rounded accent-primary"
                 />
-                <span className="text-sm">Unworthiness Condoned</span>
-              </label>
+                <label htmlFor={`person-condoned-${index}`} className="text-sm cursor-pointer">Unworthiness Condoned</label>
+              </div>
             </div>
           )}
         </div>
@@ -313,20 +309,19 @@ export function PersonCard({
         {/* Conditional: Guilty Party (SurvivingSpouse + legal separation) */}
         {showGuiltyParty && (
           <div className="ml-4 border-l-2 border-border pl-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id={`person-guilty-${index}`}
                 checked={isGuiltyParty ?? false}
-                onChange={(e) =>
+                onCheckedChange={(checked) =>
                   setValue(
                     `family_tree.${index}.is_guilty_party_in_legal_separation` as any,
-                    e.target.checked
+                    checked === true
                   )
                 }
-                className="h-4 w-4 rounded accent-primary"
               />
-              <span className="text-sm">Guilty Party in Legal Separation</span>
-            </label>
+              <label htmlFor={`person-guilty-${index}`} className="text-sm cursor-pointer">Guilty Party in Legal Separation</label>
+            </div>
           </div>
         )}
 
@@ -418,20 +413,19 @@ function ChildrenForRepresentation({
               (o) => o.value === person.relationship_to_decedent
             )?.label;
             return (
-              <label key={person.id} className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
+              <div key={person.id} className="flex items-center gap-2">
+                <Checkbox
+                  id={`child-${personIndex}-${person.id}`}
                   checked={selectedChildren.includes(person.id)}
-                  onChange={(e) => handleToggle(person.id, e.target.checked)}
-                  className="h-4 w-4 rounded accent-primary"
+                  onCheckedChange={(checked) => handleToggle(person.id, checked === true)}
                 />
-                <span className="text-sm">
+                <label htmlFor={`child-${personIndex}-${person.id}`} className="text-sm cursor-pointer">
                   {person.name || person.id}
                   {relLabel && (
                     <span className="text-muted-foreground"> ({relLabel})</span>
                   )}
-                </span>
-              </label>
+                </label>
+              </div>
             );
           })}
         </div>
