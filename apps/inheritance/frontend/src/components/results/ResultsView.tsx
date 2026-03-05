@@ -2,6 +2,7 @@
  * ResultsView — main container for the results display.
  * Renders all sections + actions bar after engine returns EngineOutput.
  */
+import { lazy, Suspense } from 'react';
 import type { EngineInput, EngineOutput } from '../../types';
 import { ResultsHeader } from './ResultsHeader';
 import { DistributionSection } from './DistributionSection';
@@ -12,6 +13,12 @@ import { NarrativePanel } from './NarrativePanel';
 import { WarningsPanel } from './WarningsPanel';
 import { ComputationLog } from './ComputationLog';
 import { ActionsBar } from './ActionsBar';
+import { PrintHeader } from '../shared/PrintHeader';
+import { Skeleton } from '../ui/skeleton';
+
+const FamilyTreeTab = lazy(() =>
+  import('./visualizer/FamilyTreeTab').then(m => ({ default: m.FamilyTreeTab }))
+);
 
 export interface ResultsViewProps {
   input: EngineInput;
@@ -33,6 +40,11 @@ export function ResultsView({ input, output, onEditInput, caseId, shareToken, sh
 
   return (
     <div data-testid="results-view" className="space-y-8">
+      <PrintHeader
+        firmName=""
+        caseTitle={`Estate of ${input.decedent.name}`}
+      />
+
       <ResultsHeader
         scenarioCode={output.scenario_code}
         successionType={output.succession_type}
@@ -74,6 +86,10 @@ export function ResultsView({ input, output, onEditInput, caseId, shareToken, sh
       />
 
       <ComputationLog log={output.computation_log} />
+
+      <Suspense fallback={<Skeleton className="h-[500px] w-full rounded-lg" />}>
+        <FamilyTreeTab input={input} output={output} />
+      </Suspense>
 
       <ActionsBar
         input={input}

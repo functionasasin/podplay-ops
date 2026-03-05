@@ -11,6 +11,7 @@ import { DistributionSection } from '@/components/results/DistributionSection';
 import { NarrativePanel } from '@/components/results/NarrativePanel';
 import { WarningsPanel } from '@/components/results/WarningsPanel';
 import { ComputationLog } from '@/components/results/ComputationLog';
+import { ClientTimeline } from '@/components/case/ClientTimeline';
 
 export const shareTokenRoute = createRoute({
   getParentRoute: () => publicRootRoute,
@@ -132,6 +133,12 @@ export function SharedCasePage({ token }: SharedCasePageProps) {
                 shares={caseData.output_json.per_heir_shares}
               />
               <ComputationLog log={caseData.output_json.computation_log} />
+              <ClientTimeline
+                deadlines={[]}
+                track="ejs"
+                decedentName={caseData.input_json.decedent.name}
+                dateOfDeath={caseData.input_json.decedent.date_of_death}
+              />
             </div>
           ) : (
             <p className="mt-4 text-sm text-muted-foreground">

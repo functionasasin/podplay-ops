@@ -10,6 +10,7 @@ import { listDeadlines, markDeadlineComplete, addCustomDeadline } from '@/lib/de
 import { ResultsView } from '@/components/results/ResultsView';
 import { CaseNotesPanel } from '@/components/case/CaseNotesPanel';
 import { DeadlineTimeline } from '@/components/case/DeadlineTimeline';
+import { DocumentChecklist } from '@/components/case/DocumentChecklist';
 import { WizardContainer } from '@/components/wizard';
 import { compute } from '@/wasm/bridge';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
@@ -195,6 +196,11 @@ function CaseEditorPage() {
                 onMarkDone={handleMarkDone}
                 onAddCustom={handleAddCustom}
               />
+            </div>
+          )}
+          {user && (
+            <div className="mt-8 border-t pt-6">
+              <DocumentChecklist caseId={caseId} userId={user.id} />
             </div>
           )}
           {user && (
