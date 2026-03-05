@@ -72,7 +72,7 @@ export function NarrativePanel({ narratives, decedentName, dateOfDeath }: Narrat
           <AccordionItem key={narrative.heir_id} value={narrative.heir_id} className="px-1">
             <AccordionTrigger className="px-3 hover:no-underline">
               <div className="flex items-center gap-3">
-                <span className="font-medium text-foreground">{narrative.heir_name}</span>
+                <span className="font-medium text-foreground break-words">{narrative.heir_name}</span>
                 <Badge variant="secondary" className="text-xs font-normal">
                   {narrative.heir_category_label}
                 </Badge>

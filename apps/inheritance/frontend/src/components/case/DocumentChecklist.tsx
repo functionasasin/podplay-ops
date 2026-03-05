@@ -5,6 +5,7 @@
 import { useState, useEffect } from 'react';
 import type { CaseDocument, DocumentProgress } from '@/types';
 import { listDocuments, computeProgress, checkOffDocument, markNotApplicable } from '@/lib/documents';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface DocumentChecklistProps {
   caseId: string;
@@ -42,7 +43,13 @@ export function DocumentChecklist({ caseId }: DocumentChecklistProps) {
   }
 
   if (loading) {
-    return <div data-testid="document-checklist-loading">Loading documents...</div>;
+    return (
+      <div data-testid="document-checklist-loading" className="space-y-2">
+        {[1, 2, 3, 4, 5, 6].map(i => (
+          <Skeleton key={i} className="h-12 w-full rounded-lg" />
+        ))}
+      </div>
+    );
   }
 
   return (

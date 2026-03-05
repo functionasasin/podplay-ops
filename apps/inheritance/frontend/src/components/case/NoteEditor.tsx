@@ -2,6 +2,7 @@ import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeSanitize from 'rehype-sanitize';
+import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -70,7 +71,7 @@ export function NoteEditor({ onSave, onCancel, saving }: NoteEditorProps) {
           disabled={isEmpty || saving}
           data-testid="note-save"
         >
-          {saving ? 'Saving...' : 'Save Note'}
+          {saving ? <><Loader2 className="h-4 w-4 animate-spin" />Saving...</> : 'Save Note'}
         </Button>
       </div>
     </div>

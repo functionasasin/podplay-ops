@@ -1,5 +1,6 @@
 import { createRoute } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { rootRoute } from '@/routes/__root';
 import { useAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/hooks/useOrganization';
@@ -59,7 +60,20 @@ function TeamSettingsPage() {
   }, [members]);
 
   if (loading) {
-    return <div className="p-6"><p>Loading...</p></div>;
+    return (
+      <div className="p-6 max-w-4xl mx-auto space-y-3">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="flex items-center gap-3">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <div className="flex-1 space-y-1.5">
+              <Skeleton className="h-4 w-48" />
+              <Skeleton className="h-3 w-32" />
+            </div>
+            <Skeleton className="h-6 w-16 rounded-full" />
+          </div>
+        ))}
+      </div>
+    );
   }
 
   if (error) {

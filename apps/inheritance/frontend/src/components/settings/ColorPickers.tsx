@@ -18,7 +18,7 @@ export function ColorPickers({
     <div data-testid="color-pickers" className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="letterheadColor">Letterhead Color</Label>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <input
             type="color"
             value={letterheadColor}
@@ -38,7 +38,7 @@ export function ColorPickers({
 
       <div className="space-y-2">
         <Label htmlFor="secondaryColor">Secondary Color</Label>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <input
             type="color"
             value={secondaryColor}

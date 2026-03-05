@@ -1,4 +1,18 @@
 import type { ClientListItem, ClientStatus } from '@/types/client';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Users } from 'lucide-react';
 
 export interface ClientListProps {
   clients: ClientListItem[];
@@ -11,6 +25,18 @@ export interface ClientListProps {
   onSortChange: (sort: 'name' | 'intake_date' | 'status') => void;
   onClientClick: (clientId: string) => void;
 }
+
+const STATUS_LABELS: Record<ClientStatus | 'all', string> = {
+  all: 'All',
+  active: 'Active',
+  former: 'Former',
+};
+
+const SORT_LABELS: Record<'name' | 'intake_date' | 'status', string> = {
+  name: 'Name A-Z',
+  intake_date: 'Intake Date',
+  status: 'Status',
+};
 
 export function ClientList(props: ClientListProps) {
   const {
@@ -26,64 +52,108 @@ export function ClientList(props: ClientListProps) {
   } = props;
 
   return (
-    <div data-testid="client-list">
-      <div data-testid="client-list-controls">
-        <input
+    <div data-testid="client-list" className="space-y-4">
+      <div data-testid="client-list-controls" className="flex flex-wrap gap-3">
+        <Input
           data-testid="client-search"
           type="text"
           placeholder="Search clients by name..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
+          className="flex-1 min-w-[200px]"
         />
 
-        <select
-          data-testid="client-status-filter"
+        <Select
           value={statusFilter}
-          onChange={(e) => onStatusFilterChange(e.target.value as ClientStatus | 'all')}
+          onValueChange={(v) => onStatusFilterChange(v as ClientStatus | 'all')}
         >
-          <option value="all">All</option>
-          <option value="active">Active</option>
-          <option value="former">Former</option>
-        </select>
+          <SelectTrigger data-testid="client-status-filter" className="w-36">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            {(['all', 'active', 'former'] as const).map((s) => (
+              <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-        <select
-          data-testid="client-sort"
+        <Select
           value={sortBy}
-          onChange={(e) => onSortChange(e.target.value as 'name' | 'intake_date' | 'status')}
+          onValueChange={(v) => onSortChange(v as 'name' | 'intake_date' | 'status')}
         >
-          <option value="name">Name A-Z</option>
-          <option value="intake_date">Intake Date</option>
-          <option value="status">Status</option>
-        </select>
+          <SelectTrigger data-testid="client-sort" className="w-40">
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent>
+            {(['name', 'intake_date', 'status'] as const).map((s) => (
+              <SelectItem key={s} value={s}>{SORT_LABELS[s]}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
-      {loading && <div data-testid="client-list-loading">Loading...</div>}
-
-      <table data-testid="client-list-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>TIN</th>
-            <th>Cases</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {clients.map((client) => (
-            <tr
-              key={client.id}
-              data-testid={`client-row-${client.id}`}
-              onClick={() => onClientClick(client.id)}
-              style={{ cursor: 'pointer' }}
-            >
-              <td data-testid="client-name">{client.full_name}</td>
-              <td data-testid="client-tin">{client.tin ? maskTIN(client.tin) : '-'}</td>
-              <td data-testid="client-case-count">{client.case_count}</td>
-              <td data-testid="client-status">{client.status}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {loading ? (
+        <div data-testid="client-list-loading" className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>TIN</TableHead>
+                <TableHead>Cases</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {[1, 2, 3, 4, 5].map(i => (
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-4 w-40" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-28" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-8" /></TableCell>
+                  <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      ) : clients.length === 0 ? (
+        <EmptyState
+          icon={Users}
+          title="No clients yet"
+          description="Add your first client to start tracking estate cases"
+        />
+      ) : (
+        <div className="overflow-x-auto">
+          <Table data-testid="client-list-table">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>TIN</TableHead>
+                <TableHead>Cases</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {clients.map((client) => (
+                <TableRow
+                  key={client.id}
+                  data-testid={`client-row-${client.id}`}
+                  onClick={() => onClientClick(client.id)}
+                  className="cursor-pointer"
+                >
+                  <TableCell data-testid="client-name" className="font-medium">{client.full_name}</TableCell>
+                  <TableCell data-testid="client-tin">{client.tin ? maskTIN(client.tin) : '-'}</TableCell>
+                  <TableCell data-testid="client-case-count">{client.case_count}</TableCell>
+                  <TableCell data-testid="client-status">
+                    <Badge variant={client.status === 'active' ? 'default' : 'secondary'} className="capitalize">
+                      {client.status}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </div>
   );
 }
