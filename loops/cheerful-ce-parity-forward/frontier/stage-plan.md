@@ -19,8 +19,8 @@ Dev order: 0 → 1 → 2 → 3-4 (parallel-ok) → 5 → 6-7 (parallel-ok) → 8
 | 12    | Integrations: External Services   | 10    | integrations.md          | sheets\|shopify\|instantly\|slack-digest\|youtube\|brand | 1       | complete |
 | 13    | Users & Team                      | 12    | users-and-team.md        | user-settings\|team\|assignment\|onboarding           | 1          | complete |
 | 14    | Analytics + Search                | 5     | analytics.md + search-and-discovery.md | analytics\|lookalike                        | 1          | complete |
-| 15    | Workflows                         | 8     | workflows.md             | workflow                                              | 1          | active |
-| 16    | Integration Sweep                 | —     | all specs                | —                                                     | all        | pending |
+| 15    | Workflows                         | 8     | workflows.md             | workflow                                              | 1          | complete |
+| 16    | Integration Sweep                 | —     | all specs                | —                                                     | all        | active |
 
 Status values: blocked | pending | active | complete
 
