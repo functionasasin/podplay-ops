@@ -1,9 +1,9 @@
-# Current Stage: 1 (Foundation)
+# Current Stage: 2 (Router + Auth)
 
 ## Test Results
 ```
-Not yet run — first iteration
+Stage 1 complete — all foundation items verified against spec
 ```
 
 ## Work Log
-(No iterations yet)
+- Stage 1: All items pre-implemented. Verified supabase.ts, SetupPage.tsx, .env.local.example, migrations 011+012, _MIGRATION_NOTES.md, organizations.ts, auth.ts.
