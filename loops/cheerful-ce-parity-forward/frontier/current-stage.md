@@ -15,8 +15,9 @@ Create backend service routes and CE tools for campaign workflow automation.
 | 125 | `cheerful_get_thread_workflow_execution` | `GET /api/service/threads/{thread_id}/workflow-execution/{workflow_id}` |
 | 126 | `cheerful_list_workflow_tools` | `GET /api/service/workflows/tools` |
 
-**Priority**: BACKEND ROUTES — Create service routes for workflow endpoints.
+**Priority**: BACKEND ROUTES — Create remaining service routes (executions + tools).
 
 ## Work Log
 - 2026-03-05: Stage 14 complete (5 analytics + search tools implemented, catalog registered). Advancing to Stage 15.
 - 2026-03-05: Scaffold complete — workflow_fixtures.py with mock responses for all 8 tools.
+- 2026-03-05: Backend routes for 5 workflow CRUD endpoints (#119-123) added to service.py with ownership/assignment checks.
