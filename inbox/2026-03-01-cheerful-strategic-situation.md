@@ -3,6 +3,17 @@ type: journal
 date: 2026-03-01
 tags: [cheerful, strategy, career, nuts-and-bolts]
 related: [[Nuts and Bolts]], [[Cheerful]], [[Mama Sitas]]
+ingested: 2026-03-03
+entities_extracted:
+  - "[[Cheerful]]"
+  - "[[Nuts and Bolts]]"
+  - "[[Mama Sitas]]"
+  - "[[Paolo]]"
+  - "[[Chris]]"
+  - "[[Paul]]"
+  - "[[Derick]]"
+  - "[[Josh]]"
+  - "[[cheerful-brand-first-strategy]]"
 ---
 
 # Cheerful Strategic Situation — 2026-03-01
