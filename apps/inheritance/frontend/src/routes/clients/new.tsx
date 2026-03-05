@@ -1,6 +1,7 @@
 import { createRoute, useNavigate } from '@tanstack/react-router';
 import { rootRoute } from '../__root';
 import { ClientForm, type ClientFormData } from '@/components/clients/ClientForm';
+import { ConflictCheckScreen } from '@/components/clients/ConflictCheckScreen';
 import { createClient } from '@/lib/clients';
 import { useAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/hooks/useOrganization';
@@ -18,6 +19,15 @@ function NewClientPage() {
   const { organization } = useOrganization(user?.id ?? null);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState<'conflict' | 'details'>('conflict');
+  const [prefillName, setPrefillName] = useState('');
+  const [prefillTin, setPrefillTin] = useState('');
+
+  const handleConflictCleared = (name: string, tin?: string) => {
+    setPrefillName(name);
+    setPrefillTin(tin ?? '');
+    setStep('details');
+  };
 
   const handleSubmit = async (data: ClientFormData) => {
     if (!user || !organization) return;
@@ -46,12 +56,26 @@ function NewClientPage() {
     }
   };
 
+  if (step === 'conflict') {
+    return (
+      <ConflictCheckScreen
+        onClear={handleConflictCleared}
+        onClearedAfterReview={(name, _notes, tin) => handleConflictCleared(name, tin)}
+        onSkip={handleConflictCleared}
+      />
+    );
+  }
+
   return (
     <div className="max-w-2xl mx-auto py-6 sm:py-8 px-4 sm:px-6">
       <h1 className="text-xl font-bold tracking-tight font-serif mb-6">
-        New Client
+        New Client — Step 2 of 2: Client Details
       </h1>
-      <ClientForm onSubmit={handleSubmit} loading={loading} />
+      <ClientForm
+        onSubmit={handleSubmit}
+        loading={loading}
+        defaultValues={{ full_name: prefillName, tin: prefillTin }}
+      />
     </div>
   );
 }
