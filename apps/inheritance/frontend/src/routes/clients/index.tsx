@@ -1,6 +1,6 @@
 import { createRoute, useNavigate } from '@tanstack/react-router';
 import { rootRoute } from '../__root';
-import { Users, Loader2, Plus } from 'lucide-react';
+import { Users, Loader2, Plus, AlertCircle } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/hooks/useOrganization';
@@ -21,6 +21,7 @@ function ClientsPage() {
   const navigate = useNavigate();
   const [clients, setClients] = useState<ClientListItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<ClientStatus | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'intake_date' | 'status'>('name');
@@ -28,11 +29,13 @@ function ClientsPage() {
   const fetchClients = useCallback(async () => {
     if (!organization) return;
     setLoading(true);
+    setFetchError(null);
     try {
       const filter = statusFilter === 'all' ? undefined : statusFilter;
       const result = await listClients(organization.id, filter, searchQuery || undefined);
       setClients(result);
-    } catch {
+    } catch (err) {
+      setFetchError(err instanceof Error ? err.message : 'Failed to load clients');
       setClients([]);
     } finally {
       setLoading(false);
@@ -73,6 +76,23 @@ function ClientsPage() {
     );
   }
 
+  if (!organization && !authLoading) {
+    return (
+      <div className="max-w-4xl mx-auto py-6 sm:py-8 px-4 sm:px-6">
+        <div className="flex items-center gap-2 mb-6">
+          <Users className="h-5 w-5 text-primary" />
+          <h1 className="text-xl font-bold tracking-tight font-serif">Clients</h1>
+        </div>
+        <p className="text-muted-foreground text-sm">
+          Create your organization to unlock clients, deadlines, and team features.
+        </p>
+        <Button className="mt-4" onClick={() => navigate({ to: '/onboarding' })}>
+          Set up your organization
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto py-6 sm:py-8 px-4 sm:px-6">
       <div className="flex items-center gap-2 mb-6">
@@ -89,6 +109,13 @@ function ClientsPage() {
           New Client
         </Button>
       </div>
+
+      {fetchError && (
+        <div className="flex items-center gap-2 text-red-600 mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <span className="text-sm">{fetchError}</span>
+        </div>
+      )}
 
       <ClientList
         clients={clients}

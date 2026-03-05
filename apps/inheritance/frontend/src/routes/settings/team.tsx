@@ -6,6 +6,7 @@ import { useOrganization } from '@/hooks/useOrganization';
 import { TeamMemberList } from '@/components/settings/TeamMemberList';
 import { InviteMemberDialog } from '@/components/settings/InviteMemberDialog';
 import { listPendingInvitations } from '@/lib/organizations';
+import { supabase } from '@/lib/supabase';
 import type { OrganizationInvitation } from '@/types';
 
 export const settingsTeamRoute = createRoute({
@@ -31,12 +32,31 @@ function TeamSettingsPage() {
 
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [pendingInvitations, setPendingInvitations] = useState<OrganizationInvitation[]>([]);
+  const [memberProfiles, setMemberProfiles] = useState<Record<string, { full_name: string | null; email: string }>>({});
 
   useEffect(() => {
     if (organization) {
       listPendingInvitations(organization.id).then(setPendingInvitations).catch(() => {});
     }
   }, [organization]);
+
+  useEffect(() => {
+    if (members.length === 0) return;
+    const userIds = members.map((m) => m.user_id);
+    supabase
+      .from('profiles')
+      .select('id, full_name, email')
+      .in('id', userIds)
+      .then(({ data }: { data: Array<{ id: string; full_name: string | null; email: string }> | null }) => {
+        if (!data) return;
+        const map: Record<string, { full_name: string | null; email: string }> = {};
+        for (const p of data) {
+          map[p.id] = { full_name: p.full_name, email: p.email };
+        }
+        setMemberProfiles(map);
+      })
+      .catch(() => {});
+  }, [members]);
 
   if (loading) {
     return <div className="p-6"><p>Loading...</p></div>;
@@ -114,6 +134,7 @@ function TeamSettingsPage() {
         onRemoveMember={removeMember}
         onUpdateRole={updateMemberRole}
         onRevokeInvitation={handleRevokeInvitation}
+        memberProfiles={memberProfiles}
       />
 
       <InviteMemberDialog

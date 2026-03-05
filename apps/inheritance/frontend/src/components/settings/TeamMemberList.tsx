@@ -1,5 +1,13 @@
 import { useState } from 'react';
 import type { OrganizationMember, OrganizationInvitation, OrgRole } from '@/types';
+import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export interface TeamMemberListProps {
   members: OrganizationMember[];
@@ -12,16 +20,27 @@ export interface TeamMemberListProps {
   memberProfiles?: Record<string, { full_name: string | null; email: string }>;
 }
 
+const ROLE_VARIANT: Record<string, 'default' | 'secondary' | 'outline'> = {
+  admin: 'default',
+  attorney: 'secondary',
+  paralegal: 'secondary',
+  readonly: 'outline',
+};
+
+const ROLES: OrgRole[] = ['admin', 'attorney', 'paralegal', 'readonly'];
+
 export function TeamMemberList({
   members,
   pendingInvitations,
   currentUserId,
   currentUserRole,
   onRemoveMember,
+  onUpdateRole,
   onRevokeInvitation,
   memberProfiles = {},
 }: TeamMemberListProps) {
   const [openActionId, setOpenActionId] = useState<string | null>(null);
+  const [changingRoleId, setChangingRoleId] = useState<string | null>(null);
   const isAdmin = currentUserRole === 'admin';
 
   return (
@@ -44,9 +63,30 @@ export function TeamMemberList({
               )}
             </div>
 
-            <span className="text-sm px-2 py-0.5 rounded bg-muted">
-              {member.role}
-            </span>
+            {changingRoleId === member.id ? (
+              <Select
+                value={member.role}
+                onValueChange={(newRole) => {
+                  onUpdateRole(member.id, newRole as OrgRole);
+                  setChangingRoleId(null);
+                }}
+              >
+                <SelectTrigger className="w-32 h-7 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ROLES.map((r) => (
+                    <SelectItem key={r} value={r} className="text-xs capitalize">
+                      {r}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Badge variant={ROLE_VARIANT[member.role] ?? 'outline'} className="capitalize text-xs">
+                {member.role}
+              </Badge>
+            )}
 
             {isAdmin && !isSelf && (
               <div className="relative ml-2">
@@ -61,7 +101,16 @@ export function TeamMemberList({
                   ···
                 </button>
                 {openActionId === member.id && (
-                  <div className="absolute right-0 mt-1 bg-white border rounded shadow-lg z-10 min-w-[120px]">
+                  <div className="absolute right-0 mt-1 bg-white border rounded shadow-lg z-10 min-w-[140px]">
+                    <button
+                      onClick={() => {
+                        setChangingRoleId(member.id);
+                        setOpenActionId(null);
+                      }}
+                      className="block w-full text-left px-3 py-1.5 text-sm hover:bg-muted"
+                    >
+                      Change role
+                    </button>
                     <button
                       onClick={() => {
                         onRemoveMember(member.id);

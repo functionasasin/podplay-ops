@@ -1,5 +1,23 @@
 import { useState, type FormEvent } from 'react';
 import type { OrgRole } from '@/types';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Loader2 } from 'lucide-react';
 
 export interface InviteMemberDialogProps {
   open: boolean;
@@ -25,9 +43,7 @@ export function InviteMemberDialog({
   const [role, setRole] = useState<OrgRole>('attorney');
   const [emailError, setEmailError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-
-  if (!open) return null;
+  const [inviting, setInviting] = useState(false);
 
   const isValidEmail = (value: string): boolean => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -48,7 +64,7 @@ export function InviteMemberDialog({
       return;
     }
 
-    setSubmitting(true);
+    setInviting(true);
     try {
       await onInvite(email, role);
       setEmail('');
@@ -59,70 +75,72 @@ export function InviteMemberDialog({
         `Invitation failed: ${err instanceof Error ? err.message : 'Unknown error'}`,
       );
     } finally {
-      setSubmitting(false);
+      setInviting(false);
     }
   };
 
-  const handleCancel = () => {
-    onOpenChange(false);
-  };
-
   return (
-    <div role="dialog" aria-modal="true">
-      <h2>Invite Member</h2>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Invite Member</DialogTitle>
+        </DialogHeader>
 
-      <p>
-        Seats: {seatUsage.used} / {seatUsage.limit}
-      </p>
-
-      {seatUsage.isFull && (
-        <p className="text-destructive">
-          Seat limit reached. Upgrade your plan to add more members.
+        <p className="text-sm text-muted-foreground">
+          Seats: {seatUsage.used} / {seatUsage.limit}
         </p>
-      )}
 
-      <form onSubmit={handleSubmit} noValidate>
-        <div>
-          <label htmlFor="invite-email">Email</label>
-          <input
-            id="invite-email"
-            type="text"
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              setEmailError(null);
-            }}
-            placeholder="colleague@firm.ph"
-          />
-          {emailError && <p className="text-destructive text-sm">{emailError}</p>}
-        </div>
+        {seatUsage.isFull && (
+          <p className="text-sm text-destructive">
+            Seat limit reached. Upgrade your plan to add more members.
+          </p>
+        )}
 
-        <div>
-          <label htmlFor="invite-role">Role</label>
-          <select
-            id="invite-role"
-            value={role}
-            onChange={(e) => setRole(e.target.value as OrgRole)}
-          >
-            {ROLES.map((r) => (
-              <option key={r.value} value={r.value}>
-                {r.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <form onSubmit={handleSubmit} noValidate className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="invite-email">Email</Label>
+            <Input
+              id="invite-email"
+              type="text"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setEmailError(null);
+              }}
+              placeholder="colleague@firm.ph"
+            />
+            {emailError && <p className="text-destructive text-sm">{emailError}</p>}
+          </div>
 
-        {submitError && <p className="text-destructive text-sm">{submitError}</p>}
+          <div className="space-y-2">
+            <Label htmlFor="invite-role">Role</Label>
+            <Select value={role} onValueChange={(v) => setRole(v as OrgRole)}>
+              <SelectTrigger id="invite-role">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ROLES.map((r) => (
+                  <SelectItem key={r.value} value={r.value}>
+                    {r.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div className="flex gap-2 justify-end mt-4">
-          <button type="button" onClick={handleCancel}>
-            Cancel
-          </button>
-          <button type="submit" disabled={seatUsage.isFull || submitting}>
-            Invite
-          </button>
-        </div>
-      </form>
-    </div>
+          {submitError && <p className="text-destructive text-sm">{submitError}</p>}
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={seatUsage.isFull || inviting}>
+              {inviting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Invite
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

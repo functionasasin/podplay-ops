@@ -3,6 +3,7 @@ import type { FirmProfile } from '@/lib/firm-profile';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { AlertTriangle, Loader2 } from 'lucide-react';
 
 export interface FirmProfileFormProps {
   profile: FirmProfile;
@@ -12,6 +13,7 @@ export interface FirmProfileFormProps {
 
 export function FirmProfileForm({ profile, onSave, saving }: FirmProfileFormProps) {
   const [form, setForm] = useState<FirmProfile>({ ...profile });
+  const isDirty = JSON.stringify(form) !== JSON.stringify(profile ?? {});
 
   const handleChange = (field: keyof FirmProfile, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -118,7 +120,14 @@ export function FirmProfileForm({ profile, onSave, saving }: FirmProfileFormProp
         </div>
       </div>
 
+      {isDirty && (
+        <p className="text-xs text-amber-600 flex items-center gap-1">
+          <AlertTriangle className="h-3 w-3" />
+          You have unsaved changes
+        </p>
+      )}
       <Button type="submit" disabled={saving}>
+        {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
         {saving ? 'Saving...' : 'Save'}
       </Button>
     </form>

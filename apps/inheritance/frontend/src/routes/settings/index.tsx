@@ -1,4 +1,4 @@
-import { createRoute } from '@tanstack/react-router';
+import { createRoute, useNavigate } from '@tanstack/react-router';
 import { rootRoute } from '../__root';
 import { Settings, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -8,6 +8,9 @@ import { LogoUpload } from '@/components/settings/LogoUpload';
 import { ColorPickers } from '@/components/settings/ColorPickers';
 import { uploadLogo, deleteLogo } from '@/lib/firm-profile';
 import { useState } from 'react';
+import { toast } from 'sonner';
+import { useDebouncedCallback } from 'use-debounce';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 export const settingsRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -54,11 +57,15 @@ function SettingsPage() {
 function SettingsContent() {
   const { profile, loading, updateProfile } = useFirmProfile();
   const [saving, setSaving] = useState(false);
+  const navigate = useNavigate();
 
   const handleSave = async (updates: Parameters<typeof updateProfile>[0]) => {
     setSaving(true);
     try {
       await updateProfile(updates);
+      toast.success('Firm profile saved');
+    } catch {
+      toast.error('Failed to save profile');
     } finally {
       setSaving(false);
     }
@@ -67,10 +74,8 @@ function SettingsContent() {
   const handleLogoUpload = async (file: File) => {
     const { user } = await import('@/lib/supabase').then(m => m.supabase.auth.getUser()).then(r => r.data);
     if (!user) return;
-    await uploadLogo(user.id, file);
-    const { useFirmProfile: _ } = await import('@/contexts/FirmProfileContext');
-    // Refresh profile to get new logo URL
-    window.location.reload();
+    const newUrl = await uploadLogo(user.id, file);
+    await updateProfile({ logoUrl: newUrl });
   };
 
   const handleLogoRemove = async () => {
@@ -79,6 +84,16 @@ function SettingsContent() {
     await deleteLogo(user.id, profile.logoUrl);
     await updateProfile({ logoUrl: null });
   };
+
+  const handleLetterheadChange = useDebouncedCallback(
+    (color: string) => updateProfile({ letterheadColor: color }),
+    600,
+  );
+
+  const handleSecondaryChange = useDebouncedCallback(
+    (color: string) => updateProfile({ secondaryColor: color }),
+    600,
+  );
 
   if (loading) {
     return (
@@ -99,31 +114,40 @@ function SettingsContent() {
         </h1>
       </div>
 
-      <div className="space-y-8">
-        <section>
-          <h2 className="text-lg font-semibold mb-4">Firm Profile</h2>
-          <FirmProfileForm profile={profile} onSave={handleSave} saving={saving} />
-        </section>
+      <Tabs defaultValue="profile">
+        <TabsList className="mb-6">
+          <TabsTrigger value="profile">Firm Profile</TabsTrigger>
+          <TabsTrigger value="team" onClick={() => navigate({ to: '/settings/team' })}>Team</TabsTrigger>
+        </TabsList>
 
-        <section>
-          <h2 className="text-lg font-semibold mb-4">Firm Logo</h2>
-          <LogoUpload
-            currentLogoUrl={profile.logoUrl}
-            onUpload={handleLogoUpload}
-            onRemove={handleLogoRemove}
-          />
-        </section>
+        <TabsContent value="profile">
+          <div className="space-y-8">
+            <section>
+              <h2 className="text-lg font-semibold mb-4">Firm Profile</h2>
+              <FirmProfileForm profile={profile} onSave={handleSave} saving={saving} />
+            </section>
 
-        <section>
-          <h2 className="text-lg font-semibold mb-4">Brand Colors</h2>
-          <ColorPickers
-            letterheadColor={profile.letterheadColor}
-            secondaryColor={profile.secondaryColor}
-            onLetterheadChange={(color) => updateProfile({ letterheadColor: color })}
-            onSecondaryChange={(color) => updateProfile({ secondaryColor: color })}
-          />
-        </section>
-      </div>
+            <section>
+              <h2 className="text-lg font-semibold mb-4">Firm Logo</h2>
+              <LogoUpload
+                currentLogoUrl={profile.logoUrl}
+                onUpload={handleLogoUpload}
+                onRemove={handleLogoRemove}
+              />
+            </section>
+
+            <section>
+              <h2 className="text-lg font-semibold mb-4">Brand Colors</h2>
+              <ColorPickers
+                letterheadColor={profile.letterheadColor}
+                secondaryColor={profile.secondaryColor}
+                onLetterheadChange={handleLetterheadChange}
+                onSecondaryChange={handleSecondaryChange}
+              />
+            </section>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

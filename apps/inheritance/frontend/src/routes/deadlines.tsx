@@ -3,6 +3,7 @@ import { rootRoute } from './__root';
 import { CalendarClock, ExternalLink, Loader2, AlertCircle } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useOrganization } from '@/hooks/useOrganization';
 import { supabase } from '@/lib/supabase';
 import type { CaseDeadline } from '@/types';
 
@@ -55,6 +56,7 @@ function formatDaysLabel(dueDate: string): string {
 
 function DeadlinesPage() {
   const { user, loading: authLoading } = useAuth();
+  const { organization } = useOrganization(user?.id ?? null);
   const [deadlines, setDeadlines] = useState<DeadlineWithCase[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -71,12 +73,15 @@ function DeadlinesPage() {
       setLoading(true);
       setError(null);
 
-      // Fetch active cases for the user
-      const { data: cases, error: casesErr } = await supabase
+      // Fetch active cases for the organization (or fall back to user_id for personal plans)
+      const casesQuery = supabase
         .from('cases')
         .select('id, title, decedent_name')
-        .eq('user_id', user!.id)
         .in('status', ['draft', 'computed', 'finalized']);
+
+      const { data: cases, error: casesErr } = organization
+        ? await casesQuery.eq('org_id', organization.id)
+        : await casesQuery.eq('user_id', user!.id);
 
       if (casesErr) {
         if (!cancelled) {
@@ -131,7 +136,7 @@ function DeadlinesPage() {
 
     fetchAllDeadlines();
     return () => { cancelled = true; };
-  }, [user, authLoading]);
+  }, [user, authLoading, organization]);
 
   const groupedDeadlines = useMemo(() => {
     const groups: Record<UrgencyGroup, DeadlineWithCase[]> = {
