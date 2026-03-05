@@ -1,0 +1,1 @@
+Stage 6 complete — design system fully implemented: sonner, index.css tokens, skeleton.tsx, empty-state.tsx, PersonPicker/EnumSelect shadcn selects, WizardContainer mobile progress + animation, WillStep shadcn Tabs, native checkbox/radio replacements. Build passes.
