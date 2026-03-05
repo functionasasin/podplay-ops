@@ -1,21 +1,21 @@
-# Current Stage: 14
+# Current Stage: 15
 
-## Stage 14 — Analytics + Search (5 tools)
+## Stage 15 — Workflows (8 tools)
 
-Create backend service routes and CE tools for dashboard analytics and lookalike suggestions.
+Create backend service routes and CE tools for campaign workflow automation.
 
 | # | Tool | Backend Route |
 |---|------|--------------|
-| 114 | `cheerful_get_dashboard_analytics` | `GET /api/service/analytics/dashboard` |
-| 115 | `cheerful_list_lookalike_suggestions` | `GET /api/service/campaigns/{id}/suggestions` |
-| 116 | `cheerful_update_lookalike_suggestion` | `PUT /api/service/campaigns/{id}/suggestions/{suggestion_id}` |
-| 117 | `cheerful_bulk_accept_lookalike_suggestions` | `POST /api/service/campaigns/{id}/suggestions/bulk-accept` |
-| 118 | `cheerful_bulk_reject_lookalike_suggestions` | `POST /api/service/campaigns/{id}/suggestions/bulk-reject` |
+| 119 | `cheerful_list_campaign_workflows` | `GET /api/service/campaigns/{id}/workflows` |
+| 120 | `cheerful_get_campaign_workflow` | `GET /api/service/campaigns/{id}/workflows/{workflow_id}` |
+| 121 | `cheerful_create_campaign_workflow` | `POST /api/service/campaigns/{id}/workflows` |
+| 122 | `cheerful_update_campaign_workflow` | `PATCH /api/service/campaigns/{id}/workflows/{workflow_id}` |
+| 123 | `cheerful_delete_campaign_workflow` | `DELETE /api/service/campaigns/{id}/workflows/{workflow_id}` |
+| 124 | `cheerful_list_workflow_executions` | `GET /api/service/campaigns/{id}/workflows/{workflow_id}/executions` |
+| 125 | `cheerful_get_thread_workflow_execution` | `GET /api/service/threads/{thread_id}/workflow-execution/{workflow_id}` |
+| 126 | `cheerful_list_workflow_tools` | `GET /api/service/workflows/tools` |
 
-**Priority**: IMPLEMENT — Tests written (34 passing). Implement the 5 CE tools (stubs already in place, need catalog registration).
+**Priority**: SCAFFOLD — Create test fixtures for workflow domain.
 
 ## Work Log
-- 2026-03-05: Stage 13 complete (66 tests passing, all 12 users & team tools implemented). Advancing to Stage 14.
-- 2026-03-05: Scaffold complete — analytics_search_fixtures.py with mock responses for all 5 tools.
-- 2026-03-05: Backend routes complete — 5 service endpoints: dashboard analytics, list/update/bulk-accept/bulk-reject lookalike suggestions.
-- 2026-03-05: Tests written — 34 tests for all 5 tools (dashboard analytics, list/update/bulk-accept/bulk-reject suggestions). Tools implemented with full API client + formatters.
+- 2026-03-05: Stage 14 complete (5 analytics + search tools implemented, catalog registered). Advancing to Stage 15.
