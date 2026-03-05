@@ -38,41 +38,6 @@ loops:
     status: converged
     created: 2026-02-23
     converged_at: "2026-02-23"
-  estate-tax-reverse:
-    description: "Extract PH estate tax rules (TRAIN + pre-TRAIN + amnesty) → deterministic computation engine spec with explainer"
-    type: reverse
-    schedule: "*/30 * * * *"
-    max_iterations: 40
-    timeout_minutes: 15
-    status: converged
-    created: 2026-02-23
-    converged_at: "2026-02-25"
-  inheritance-reverse:
-    description: "Extract PH succession/inheritance rules → per-heir distribution engine spec with numbers + narrative explanations"
-    type: reverse
-    schedule: "*/30 * * * *"
-    max_iterations: 40
-    timeout_minutes: 15
-    status: converged
-    created: 2026-02-23
-    converged_at: "2026-02-23"
-  inheritance-rust-forward:
-    description: "Build PH inheritance distribution engine in Rust from spec, 12-stage TDD pipeline"
-    type: forward
-    schedule: "*/30 * * * *"
-    max_iterations: 50
-    timeout_minutes: 30
-    status: active
-    created: 2026-02-24
-  inheritance-frontend-reverse:
-    description: "Analyze Rust inheritance engine → implementation-ready React + TypeScript frontend spec"
-    type: reverse
-    schedule: "*/30 * * * *"
-    max_iterations: 40
-    timeout_minutes: 30
-    status: converged
-    created: 2026-02-24
-    converged_at: "2026-02-25"
   ph-compliance-moats-reverse:
     description: "Survey PH legal codes + regulatory agencies → ranked shortlist of compliance domains ripe for automation"
     type: reverse
@@ -82,14 +47,6 @@ loops:
     status: converged
     created: 2026-02-24
     converged_at: "2026-02-25"
-  inheritance-frontend-forward:
-    description: "Build PH inheritance wizard frontend (React + TypeScript) from spec, 12-stage TDD pipeline"
-    type: forward
-    schedule: "*/30 * * * *"
-    max_iterations: 50
-    timeout_minutes: 30
-    status: active
-    created: 2026-02-25
   cheerful-reverse:
     description: "Distill Cheerful codebase + production usage data → ultra-comprehensive modular rebuild spec with full user stories"
     type: reverse
@@ -156,40 +113,6 @@ loops:
     status: converged
     created: 2026-02-28
     converged_at: "2026-02-28"
-  inheritance-ui-forward:
-    description: "Redesign inheritance calculator frontend with shadcn/ui, Navy + Gold professional legal aesthetic"
-    type: forward
-    schedule: "*/30 * * * *"
-    max_iterations: 50
-    timeout_minutes: 30
-    status: active
-    created: 2026-02-28
-  inheritance-wasm-forward:
-    description: "Wire real Rust WASM engine into frontend, replacing mock bridge + fixing type conformance"
-    type: forward
-    schedule: "*/30 * * * *"
-    max_iterations: 30
-    timeout_minutes: 30
-    status: active
-    created: 2026-02-28
-  inheritance-v2-reverse:
-    description: "Single mega-spec loop: full-stack inheritance platform rebuild — Civil Code law + Rust engine + WASM bridge + TypeScript + React + design system"
-    type: reverse
-    schedule: "*/30 * * * *"
-    max_iterations: 60
-    timeout_minutes: 30
-    status: converged
-    created: 2026-03-04
-    converged_at: "2026-03-04"
-  inheritance-premium-reverse:
-    description: "Research and specify all premium features for PH inheritance professional platform → mega-spec"
-    type: reverse
-    schedule: "*/30 * * * *"
-    max_iterations: 40
-    timeout_minutes: 30
-    status: converged
-    created: 2026-02-28
-    converged_at: "2026-03-01"
   freelance-tax-reverse:
     description: "Extract PH freelance/self-employed income tax rules into exhaustive product spec"
     type: reverse
@@ -253,14 +176,6 @@ loops:
     status: converged
     created: 2026-03-02
     converged_at: "2026-03-03"
-  inheritance-premium-forward:
-    description: "Build 23 premium features (auth, PDF, CRM, tax integration, multi-seat) from inheritance-premium-reverse spec"
-    type: forward
-    schedule: "*/30 * * * *"
-    max_iterations: 50
-    timeout_minutes: 30
-    status: active
-    created: 2026-03-02
   cheerful-ce-parity-forward:
     description: "Implement 113 CE tools + backend service routes for full Cheerful frontend parity"
     type: forward
@@ -269,20 +184,3 @@ loops:
     timeout_minutes: 30
     status: active
     created: 2026-03-03
-  inheritance-platform-reverse:
-    description: "Audit inheritance app platform layer (auth, routes, nav, env, design) → modernization spec with Navy+Gold aesthetic"
-    type: reverse
-    schedule: "*/30 * * * *"
-    max_iterations: 40
-    timeout_minutes: 30
-    status: converged
-    created: 2026-03-03
-    converged_at: "2026-03-04"
-  inheritance-platform-forward:
-    description: "Fix 104 platform-layer gaps (auth, routes, nav, design) in inheritance calculator from inheritance-platform-spec.md"
-    type: forward
-    schedule: "*/30 * * * *"
-    max_iterations: 50
-    timeout_minutes: 30
-    status: active
-    created: 2026-03-04
