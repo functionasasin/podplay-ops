@@ -9,11 +9,11 @@ You are a development agent in a forward ralph loop. Each time you run, you do O
 
 ## Your Working Directories
 
-- **Loop dir**: `loops/inheritance-premium-forward/` (frontier, status, loop script)
-- **App dir**: `loops/inheritance-frontend-forward/app/` (the existing Vite + React project — YOUR BUILD TARGET)
-- **Premium spec**: `docs/plans/inheritance-premium-spec.md` (your primary source of truth — 23 features)
-- **Frontend spec dir**: `loops/inheritance-frontend-reverse/analysis/synthesis/` (original types/schemas spec)
-- **Rust engine**: `loops/inheritance-rust-forward/` (WASM engine source)
+- **Loop dir**: `apps/inheritance/loops/forward/premium/` (frontier, status, loop script)
+- **App dir**: `apps/inheritance/frontend/` (the existing Vite + React project — YOUR BUILD TARGET)
+- **Premium spec**: `apps/inheritance/specs/inheritance-premium-spec.md` (your primary source of truth — 23 features)
+- **Frontend spec dir**: `apps/inheritance/loops/reverse/frontend/analysis/synthesis/` (original types/schemas spec)
+- **Rust engine**: `apps/inheritance/engine/` (WASM engine source)
 
 ## Tech Stack
 
@@ -46,7 +46,7 @@ You are a development agent in a forward ralph loop. Each time you run, you do O
 
 ## What To Do This Iteration
 
-1. **Read the frontier**: Open `loops/inheritance-premium-forward/frontier/current-stage.md`
+1. **Read the frontier**: Open `apps/inheritance/loops/forward/premium/frontier/current-stage.md`
 2. **Identify your work priority** (pick the FIRST that applies):
 
    **Priority 1 — SETUP** (if Supabase not initialized OR required packages missing):
@@ -83,16 +83,16 @@ You are a development agent in a forward ralph loop. Each time you run, you do O
    - Exit
 
    **Priority 5 — FIX FAILURES** (if tests exist and some are failing):
-   - Run `cd loops/inheritance-frontend-forward/app && npx vitest run --reporter=verbose 2>&1 | tail -80`
+   - Run `cd apps/inheritance/frontend && npx vitest run --reporter=verbose 2>&1 | tail -80`
    - Identify the root cause of 1-3 related failures
    - Fix the implementation code (NOT the tests, unless a test contradicts the spec)
    - Commit: `premium: stage {N} - fix {description}`
    - Exit
 
    **Priority 6 — ADVANCE** (if ALL tests pass for the current stage):
-   - Write `loops/inheritance-premium-forward/status/stage-{N}-complete.txt` with timestamp
-   - Update `loops/inheritance-premium-forward/frontier/current-stage.md` to the NEXT stage
-   - Update `loops/inheritance-premium-forward/frontier/stage-plan.md` status column
+   - Write `apps/inheritance/loops/forward/premium/status/stage-{N}-complete.txt` with timestamp
+   - Update `apps/inheritance/loops/forward/premium/frontier/current-stage.md` to the NEXT stage
+   - Update `apps/inheritance/loops/forward/premium/frontier/stage-plan.md` status column
    - Commit: `premium: stage {N} complete, advancing to stage {N+1}`
    - Exit
 
@@ -136,7 +136,7 @@ You are a development agent in a forward ralph loop. Each time you run, you do O
 Initialize Supabase for the project and install foundational dependencies.
 
 **Tasks:**
-1. Run `npx supabase init` in `loops/inheritance-frontend-forward/app/`
+1. Run `npx supabase init` in `apps/inheritance/frontend/`
 2. Create `supabase/migrations/001_initial_schema.sql` with:
    - Extensions: `pgcrypto`, `pg_trgm`
    - Enum types: `case_status`, `client_status`, `org_role`, `invitation_status`, `conflict_outcome`, `gov_id_type`
@@ -942,14 +942,14 @@ VITE_SUPABASE_URL=http://localhost:54321
 VITE_SUPABASE_ANON_KEY=<local-anon-key-from-supabase-start>
 ```
 
-**Migration File Location:** `loops/inheritance-frontend-forward/app/supabase/migrations/`
+**Migration File Location:** `apps/inheritance/frontend/supabase/migrations/`
 
 **Migration Naming Convention:** `{NNN}_{description}.sql` (e.g., `001_initial_schema.sql`)
 
 ## Rules
 
 - Do ONE unit of work, then exit. Do not do multiple priorities in one iteration.
-- Always read the spec before writing code. `docs/plans/inheritance-premium-spec.md` is the primary source of truth.
+- Always read the spec before writing code. `apps/inheritance/specs/inheritance-premium-spec.md` is the primary source of truth.
 - Every type name, field name, and behavior comes from the spec — never invent.
 - Use TanStack Router for all navigation — no manual window.location changes.
 - Use Supabase client for all database operations — no direct SQL from frontend.

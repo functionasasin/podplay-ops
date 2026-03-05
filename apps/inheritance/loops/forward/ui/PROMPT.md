@@ -9,8 +9,8 @@ You are a development agent in a forward ralph loop. Each time you run, you do O
 
 ## Your Working Directories
 
-- **Loop dir**: `loops/inheritance-ui-forward/` (frontier, status, loop script)
-- **App dir**: `loops/inheritance-frontend-forward/app/` (the Vite + React project — your canvas)
+- **Loop dir**: `apps/inheritance/loops/forward/ui/` (frontier, status, loop script)
+- **App dir**: `apps/inheritance/frontend/` (the Vite + React project — your canvas)
 - **Existing components**: All components in `app/src/components/` are fully functional with tests passing
 
 ## Design Direction
@@ -308,7 +308,7 @@ Unit tests use jsdom which does NOT process CSS — they will pass even if Tailw
 **Run this after every stage commit:**
 
 ```bash
-cd loops/inheritance-frontend-forward/app
+cd apps/inheritance/frontend
 npm run build 2>&1 | tail -5
 CSS_SIZE=$(stat -c%s dist/assets/*.css 2>/dev/null || echo "0")
 echo "CSS bundle size: ${CSS_SIZE} bytes"

@@ -11,17 +11,17 @@ You are running in `--print` mode. You MUST output text describing what you are 
 
 This is NOT a full-stack build. The inheritance calculator app already exists at `app/`. The Rust engine, WASM bridge, and React frontend are built and working. But the **platform layer is broken end-to-end** — auth, routes, navigation, case persistence, share, team management, and design all have critical gaps.
 
-The reverse loop (`inheritance-platform-reverse`) audited the codebase and produced a comprehensive spec at `docs/plans/inheritance-platform-spec.md` documenting 104 gaps (24 critical, 31 high, 29 medium, 20 low).
+The reverse loop (`inheritance-platform-reverse`) audited the codebase and produced a comprehensive spec at `apps/inheritance/specs/inheritance-platform-spec.md` documenting 104 gaps (24 critical, 31 high, 29 medium, 20 low).
 
 This forward loop implements every fix in that spec, stage by stage.
 
 ## Your Working Directories
 
-- **Loop dir**: `loops/inheritance-platform-forward/` (frontier, status tracking)
-- **App dir**: `loops/inheritance-frontend-forward/app/` (the existing React app — this is what you modify)
-- **Spec**: `docs/plans/inheritance-platform-spec.md` (your source of truth for ALL fixes)
+- **Loop dir**: `apps/inheritance/loops/forward/platform/` (frontier, status tracking)
+- **App dir**: `apps/inheritance/frontend/` (the existing React app — this is what you modify)
+- **Spec**: `apps/inheritance/specs/inheritance-platform-spec.md` (your source of truth for ALL fixes)
 
-**IMPORTANT**: The app source lives in `loops/inheritance-frontend-forward/app/src/`, NOT in this loop's directory. You are patching an existing codebase, not building a new one.
+**IMPORTANT**: The app source lives in `apps/inheritance/frontend/src/`, NOT in this loop's directory. You are patching an existing codebase, not building a new one.
 
 ## What To Do This Iteration
 
@@ -160,7 +160,7 @@ Write results to `status/verification.txt`. If ANY check fails, create a fix lis
 
 ## Key Spec References
 
-The spec at `docs/plans/inheritance-platform-spec.md` contains exact code snippets for every fix. **Use the spec's code, not your own invention.** The spec was designed to be copy-paste implementable.
+The spec at `apps/inheritance/specs/inheritance-platform-spec.md` contains exact code snippets for every fix. **Use the spec's code, not your own invention.** The spec was designed to be copy-paste implementable.
 
 Quick reference:
 - §2: Route Table + auth guard pattern
@@ -182,7 +182,7 @@ Quick reference:
 - **No new stubs.** Every change must be a complete implementation, not a placeholder.
 - **No orphans.** Every new component must be imported and rendered by a route or parent.
 - Install packages in `app/` directory (the app's `package.json` lives there).
-- All file paths in the spec are relative to `app/src/` — translate to the actual path `loops/inheritance-frontend-forward/app/src/`.
+- All file paths in the spec are relative to `app/src/` — translate to the actual path `apps/inheritance/frontend/src/`.
 
 ## Commit Convention
 

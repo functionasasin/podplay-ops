@@ -4,18 +4,18 @@ You are a development agent in a forward ralph loop. Your job is to wire the rea
 
 ## Your Working Directories
 
-- **Loop dir**: `loops/inheritance-wasm-forward/`
-- **Rust engine dir**: `loops/inheritance-rust-forward/` (the Rust source)
-- **Frontend dir**: `loops/inheritance-frontend-forward/` (the React app)
-- **Frontend app dir**: `loops/inheritance-frontend-forward/app/`
+- **Loop dir**: `apps/inheritance/loops/forward/wasm/`
+- **Rust engine dir**: `apps/inheritance/engine/` (the Rust source)
+- **Frontend dir**: `apps/inheritance/loops/forward/frontend/` (the React app)
+- **Frontend app dir**: `apps/inheritance/frontend/`
 
 ## Context
 
-The frontend currently has a mock WASM bridge (`app/src/wasm/bridge.ts`) that generates synthetic output. The real Rust engine at `loops/inheritance-rust-forward/` is complete and passing all tests, but has NO wasm-bindgen support yet. This loop adds WASM export to the Rust engine, builds it, and wires it into the frontend.
+The frontend currently has a mock WASM bridge (`app/src/wasm/bridge.ts`) that generates synthetic output. The real Rust engine at `apps/inheritance/engine/` is complete and passing all tests, but has NO wasm-bindgen support yet. This loop adds WASM export to the Rust engine, builds it, and wires it into the frontend.
 
 ## What To Do This Iteration
 
-Read `loops/inheritance-wasm-forward/frontier/current-stage.md` to see which stage you are on and what tests are failing.
+Read `apps/inheritance/loops/forward/wasm/frontier/current-stage.md` to see which stage you are on and what tests are failing.
 
 Then pick the FIRST priority that applies:
 
@@ -47,10 +47,10 @@ Then pick the FIRST priority that applies:
 
 **Steps**:
 1. Ensure `wasm32-unknown-unknown` target is installed: `rustup target add wasm32-unknown-unknown`
-2. Edit `loops/inheritance-rust-forward/Cargo.toml`:
+2. Edit `apps/inheritance/engine/Cargo.toml`:
    - Add `wasm-bindgen = "0.2"` to `[dependencies]`
    - Add a `[lib]` section: `crate-type = ["cdylib", "rlib"]`
-3. Create `loops/inheritance-rust-forward/src/wasm.rs`:
+3. Create `apps/inheritance/engine/src/wasm.rs`:
    ```rust
    use wasm_bindgen::prelude::*;
    use crate::pipeline::run_pipeline;
@@ -65,9 +65,9 @@ Then pick the FIRST priority that applies:
            .map_err(|e| JsValue::from_str(&format!("Output serialize error: {e}")))
    }
    ```
-4. Add `pub mod wasm;` to `loops/inheritance-rust-forward/src/lib.rs`
+4. Add `pub mod wasm;` to `apps/inheritance/engine/src/lib.rs`
 
-**Test**: `cd loops/inheritance-rust-forward && cargo check --target wasm32-unknown-unknown --lib`
+**Test**: `cd apps/inheritance/engine && cargo check --target wasm32-unknown-unknown --lib`
 
 **IMPORTANT**: The existing `main.rs` CLI must continue working. The `[lib]` section's crate-type with `"rlib"` ensures this. Do NOT break the existing `cargo test` or `cargo run` workflows. Run `cargo test` after your changes to verify.
 
@@ -77,17 +77,17 @@ Then pick the FIRST priority that applies:
 
 **Steps**:
 1. Ensure `wasm-pack` is installed: `cargo install wasm-pack` (if not already)
-2. Run: `cd loops/inheritance-rust-forward && wasm-pack build --target web --out-dir pkg`
+2. Run: `cd apps/inheritance/engine && wasm-pack build --target web --out-dir pkg`
 3. Verify the following files exist:
-   - `loops/inheritance-rust-forward/pkg/inheritance_engine_bg.wasm`
-   - `loops/inheritance-rust-forward/pkg/inheritance_engine.js`
-   - `loops/inheritance-rust-forward/pkg/inheritance_engine.d.ts`
+   - `apps/inheritance/engine/pkg/inheritance_engine_bg.wasm`
+   - `apps/inheritance/engine/pkg/inheritance_engine.js`
+   - `apps/inheritance/engine/pkg/inheritance_engine.d.ts`
 4. Copy or symlink the pkg/ directory into the frontend:
-   - `cp -r loops/inheritance-rust-forward/pkg loops/inheritance-frontend-forward/app/src/wasm/pkg`
+   - `cp -r apps/inheritance/engine/pkg apps/inheritance/frontend/src/wasm/pkg`
 5. Add `app/src/wasm/pkg/` to the frontend's `.gitignore` (the WASM binary shouldn't be committed — it's a build artifact)
-6. Create a build script at `loops/inheritance-wasm-forward/build-wasm.sh` that automates steps 2-4
+6. Create a build script at `apps/inheritance/loops/forward/wasm/build-wasm.sh` that automates steps 2-4
 
-**Test**: The build script runs successfully AND `loops/inheritance-frontend-forward/app/src/wasm/pkg/inheritance_engine_bg.wasm` exists.
+**Test**: The build script runs successfully AND `apps/inheritance/frontend/src/wasm/pkg/inheritance_engine_bg.wasm` exists.
 
 ### Stage 3 — Frontend WASM Integration
 
@@ -96,10 +96,10 @@ Then pick the FIRST priority that applies:
 **Steps**:
 1. Install Vite WASM plugins in the frontend app:
    ```bash
-   cd loops/inheritance-frontend-forward/app
+   cd apps/inheritance/loops/forward/frontend/app
    npm install --save-dev vite-plugin-wasm vite-plugin-top-level-await
    ```
-2. Update `loops/inheritance-frontend-forward/app/vite.config.ts`:
+2. Update `apps/inheritance/frontend/vite.config.ts`:
    ```typescript
    import wasm from 'vite-plugin-wasm'
    import topLevelAwait from 'vite-plugin-top-level-await'
@@ -109,7 +109,7 @@ Then pick the FIRST priority that applies:
      // ... rest unchanged
    })
    ```
-3. Rewrite `loops/inheritance-frontend-forward/app/src/wasm/bridge.ts`:
+3. Rewrite `apps/inheritance/frontend/src/wasm/bridge.ts`:
    - Import `init, { compute_json }` from `./pkg/inheritance_engine`
    - Replace `computeWasm()` body with real WASM call
    - Keep `computeMock()` available as a named export (tests may still use it)
@@ -129,7 +129,7 @@ Then pick the FIRST priority that applies:
      return JSON.parse(resultJson) as EngineOutput;
    }
    ```
-4. Create test file `loops/inheritance-frontend-forward/app/src/wasm/__tests__/wasm-live.test.ts`:
+4. Create test file `apps/inheritance/frontend/src/wasm/__tests__/wasm-live.test.ts`:
    - Test that `computeWasm()` with the simple-intestate example returns valid output
    - Test that output has correct scenario_code (I1) and succession_type (Intestate)
    - Test that shares sum to estate total
@@ -137,7 +137,7 @@ Then pick the FIRST priority that applies:
    - Test that invalid input (negative centavos) throws
 5. Update vitest config if needed to handle .wasm file imports
 
-**Test**: `cd loops/inheritance-frontend-forward/app && npx vitest run wasm-live`
+**Test**: `cd apps/inheritance/loops/forward/frontend/app && npx vitest run wasm-live`
 
 **IMPORTANT**: The existing `wasm-real` tests may break because they tested mock behavior. That's OK — the `wasm-live` tests are the new source of truth. If `wasm-real` tests are incompatible with real engine output, update them.
 
@@ -150,7 +150,7 @@ Then pick the FIRST priority that applies:
 The user reported "invalid string boolean etc" errors when computing. This means the form produces data with type mismatches that the Rust `serde_json::from_str` rejects. The mock was lenient (Zod coerces types), but the real engine is strict.
 
 **Steps**:
-1. Create test file `loops/inheritance-frontend-forward/app/src/wasm/__tests__/conformance.test.ts`
+1. Create test file `apps/inheritance/frontend/src/wasm/__tests__/conformance.test.ts`
 2. Import the `DEFAULT_ENGINE_INPUT` from `WizardContainer` or reconstruct the form defaults
 3. For each test:
    - Construct an `EngineInput` the way the form would (using form defaults)
@@ -172,15 +172,15 @@ The user reported "invalid string boolean etc" errors when computing. This means
    - Ensure null fields are `null`, not `undefined` or `""`
    - Ensure enum values match exact PascalCase strings
 
-**Test**: `cd loops/inheritance-frontend-forward/app && npx vitest run conformance`
+**Test**: `cd apps/inheritance/loops/forward/frontend/app && npx vitest run conformance`
 
 ### Stage 5 — Scenario Coverage
 
 **Goal**: Validate that the real engine produces correct results for representative scenarios from each major category.
 
 **Steps**:
-1. Create test file `loops/inheritance-frontend-forward/app/src/wasm/__tests__/scenario-coverage.test.ts`
-2. Copy the example JSON files from `loops/inheritance-rust-forward/examples/` as test fixtures
+1. Create test file `apps/inheritance/frontend/src/wasm/__tests__/scenario-coverage.test.ts`
+2. Copy the example JSON files from `apps/inheritance/engine/examples/` as test fixtures
 3. Test cases (at minimum):
    - **I1**: Single LC intestate (from `examples/simple-intestate.json`)
    - **I2**: LC + spouse intestate
@@ -203,7 +203,7 @@ The user reported "invalid string boolean etc" errors when computing. This means
 5. If any scenario fails with a deserialization error, fix the input construction (Stage 4 issue)
 6. If any scenario fails with wrong distribution, that's a Rust engine bug — log it but don't try to fix the engine
 
-**Test**: `cd loops/inheritance-frontend-forward/app && npx vitest run scenario-coverage`
+**Test**: `cd apps/inheritance/loops/forward/frontend/app && npx vitest run scenario-coverage`
 
 ## Serialization Rules (CRITICAL)
 
