@@ -442,7 +442,7 @@ Replace the Stage 4 mock bridge with the actual Rust inheritance engine compiled
 - Build: `wasm-pack build --target web --out-dir ../../apps/inheritance/frontend/src/wasm/pkg`
 - This produces: `inheritance_engine_bg.wasm`, `inheritance_engine.js`, `inheritance_engine.d.ts`
 - Add `app/src/wasm/pkg/` to `.gitignore` (generated artifact)
-- Add a build script to `app/package.json`: `"build:wasm": "wasm-pack build --target web --release --out-dir ../app/src/wasm/pkg ../../loops/inheritance-rust-forward"`
+- Add a build script to `app/package.json`: `"build:wasm": "wasm-pack build --target web --release --out-dir ../app/src/wasm/pkg ../../apps/inheritance/engine"`
 
 **Step 3 — Replace mock bridge with real WASM**:
 - Update `src/wasm/bridge.ts`:
