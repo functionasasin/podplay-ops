@@ -26,17 +26,17 @@ const selectClassName = cn(
 );
 
 const RELATIONSHIP_BADGE_STYLES: Record<Relationship, string> = {
-  LegitimateChild: 'bg-blue-600 text-white',
-  LegitimatedChild: 'bg-blue-600 text-white',
-  AdoptedChild: 'bg-blue-600 text-white',
-  IllegitimateChild: 'bg-purple-600 text-white',
-  SurvivingSpouse: 'bg-emerald-600 text-white',
-  LegitimateParent: 'bg-amber-600 text-white',
-  LegitimateAscendant: 'bg-amber-600 text-white',
-  Sibling: 'bg-slate-500 text-white',
-  NephewNiece: 'bg-slate-500 text-white',
-  OtherCollateral: 'bg-slate-500 text-white',
-  Stranger: 'bg-neutral-400 text-white',
+  LegitimateChild: 'bg-primary/10 text-primary border border-primary/20',
+  LegitimatedChild: 'bg-primary/10 text-primary border border-primary/20',
+  AdoptedChild: 'bg-primary/10 text-primary border border-primary/20',
+  IllegitimateChild: 'bg-muted text-muted-foreground border border-border',
+  SurvivingSpouse: 'bg-accent/10 text-[#c5a44e] border border-accent/20',
+  LegitimateParent: 'bg-foreground/5 text-foreground border border-border',
+  LegitimateAscendant: 'bg-foreground/5 text-foreground border border-border',
+  Sibling: 'bg-muted text-muted-foreground border border-border',
+  NephewNiece: 'bg-muted text-muted-foreground border border-border',
+  OtherCollateral: 'bg-muted text-muted-foreground border border-border',
+  Stranger: 'bg-muted text-muted-foreground border border-border',
 };
 
 export interface PersonCardProps {

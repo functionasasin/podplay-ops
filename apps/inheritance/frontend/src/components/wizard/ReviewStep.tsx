@@ -5,7 +5,6 @@ import { AlertTriangle, AlertCircle, Info, X } from 'lucide-react';
 import type { EngineInput, Person, Relationship, ScenarioCode } from '../../types';
 import { formatPeso } from '../../types';
 import { cn } from '@/lib/utils';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -196,7 +195,7 @@ function computeWarnings(
 const SEVERITY_STYLES = {
   error: 'bg-destructive/5 border-destructive/20 text-destructive',
   warning: 'bg-amber-50 border-amber-200 text-amber-700',
-  info: 'bg-[hsl(var(--primary))]/5 border-[hsl(var(--primary))]/20 text-[hsl(var(--primary))]',
+  info: 'bg-primary/5 border-primary/20 text-primary',
 } as const;
 
 const SEVERITY_ICONS = {
@@ -244,67 +243,49 @@ export function ReviewStep({
 
   return (
     <div data-testid="review-step" className="space-y-6">
-      <h2 className="text-lg sm:text-xl font-bold text-[hsl(var(--primary))] font-serif">Review & Run</h2>
+      <h2 className="text-lg sm:text-xl font-bold text-primary font-serif">Review & Run</h2>
 
-      {/* Summary sections */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {/* Estate summary — all content in one text node to avoid /Estate/i matching both child and parent */}
-        <Card className="py-4">
-          <CardContent className="text-sm">
-            {'Estate: '}
+      {/* KPI summary cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+        <div className="border rounded-xl p-4 bg-card">
+          <p className="text-xs text-muted-foreground mb-1">Gross Estate</p>
+          <p className="text-lg font-bold text-foreground">
             {estate?.centavos != null ? formatPeso(estate.centavos) : '—'}
-            {' | '}
+          </p>
+        </div>
+        <div className="border rounded-xl p-4 bg-card">
+          <p className="text-xs text-muted-foreground mb-1">Succession Type</p>
+          <p className="text-lg font-bold text-foreground">
             {hasWill ? 'Testate' : 'Intestate'}
-          </CardContent>
-        </Card>
-
-        {/* Decedent summary */}
-        <Card className="py-4">
-          <CardContent className="text-sm">
-            <span className="font-medium">Decedent: </span>
-            <span>{decedent?.name || '—'}</span>
-            <span className="mx-2 text-muted-foreground">|</span>
-            <span>Died {decedent?.date_of_death || '—'}</span>
-            <span className="mx-2 text-muted-foreground">|</span>
-            <span>{decedent?.is_married ? 'Married' : 'Single'}</span>
-          </CardContent>
-        </Card>
-
-        {/* Family tree summary */}
-        <Card className="py-4">
-          <CardContent className="text-sm">
-            <span className="font-medium">Family Tree: </span>
-            <span>{familyTree.length} persons</span>
-          </CardContent>
-        </Card>
-
-        {/* Will summary (only when hasWill) */}
+          </p>
+        </div>
+        <div className="border rounded-xl p-4 bg-card">
+          <p className="text-xs text-muted-foreground mb-1">Heirs</p>
+          <p className="text-lg font-bold text-foreground">{familyTree.length}</p>
+        </div>
+        <div className="border rounded-xl p-4 bg-card col-span-2 sm:col-span-1">
+          <p className="text-xs text-muted-foreground mb-1">Decedent</p>
+          <p className="text-sm font-semibold text-foreground truncate">{decedent?.name || '—'}</p>
+          <p className="text-xs text-muted-foreground">{decedent?.date_of_death || '—'}</p>
+        </div>
+        <div className="border rounded-xl p-4 bg-card">
+          <p className="text-xs text-muted-foreground mb-1">Donations</p>
+          <p className="text-lg font-bold text-foreground">{donations.length}</p>
+        </div>
         {hasWill && will && (
-          <Card className="py-4">
-            <CardContent className="text-sm">
-              <span className="font-medium">Will: </span>
-              <span>
-                {will.institutions?.length || 0} institution{(will.institutions?.length || 0) !== 1 ? 's' : ''}
-                , {will.legacies?.length || 0} legac{(will.legacies?.length || 0) !== 1 ? 'ies' : 'y'}
-                , {will.devises?.length || 0} devise{(will.devises?.length || 0) !== 1 ? 's' : ''}
-              </span>
-            </CardContent>
-          </Card>
+          <div className="border rounded-xl p-4 bg-card">
+            <p className="text-xs text-muted-foreground mb-1">Will Dispositions</p>
+            <p className="text-lg font-bold text-foreground">
+              {(will.institutions?.length || 0) + (will.legacies?.length || 0) + (will.devises?.length || 0)}
+            </p>
+          </div>
         )}
-
-        {/* Donations summary */}
-        <Card className="py-4">
-          <CardContent className="text-sm">
-            <span className="font-medium">Donations: </span>
-            <span>{donations.length} donation{donations.length !== 1 ? 's' : ''}</span>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Predicted scenario badge */}
-      <div className="flex items-center justify-center py-4 px-6 bg-[hsl(var(--primary))]/5 border border-[hsl(var(--primary))]/20 rounded-lg">
+      <div className="flex items-center justify-center py-4 px-6 bg-primary/5 border border-primary/20 rounded-lg">
         <span className="font-medium text-sm mr-3">Predicted: </span>
-        <Badge className="bg-[hsl(var(--accent))] text-white text-base px-4 py-1 font-mono">
+        <Badge className="bg-accent text-white text-base px-4 py-1 font-mono">
           {scenario}
         </Badge>
       </div>
@@ -402,7 +383,7 @@ export function ReviewStep({
         type="button"
         onClick={onSubmit}
         size="lg"
-        className="w-full py-6 text-base font-semibold bg-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))]/90 text-white"
+        className="w-full py-6 text-base font-semibold bg-accent hover:bg-accent/90 text-white"
       >
         Compute Distribution
       </Button>

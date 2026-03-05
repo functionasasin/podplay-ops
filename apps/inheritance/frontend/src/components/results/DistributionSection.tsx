@@ -1,7 +1,7 @@
 /**
  * DistributionSection — pie chart + heir table with 7 layout variants.
  */
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Info, Scale } from 'lucide-react';
 import type { InheritanceShare, SuccessionType, ScenarioCode, Person } from '../../types';
 import { formatPeso } from '../../types';
@@ -179,6 +179,14 @@ function DistributionChart({ chartData }: { chartData: { name: string; value: nu
             ))}
           </Pie>
           <Tooltip />
+          <Legend
+            layout="horizontal"
+            verticalAlign="bottom"
+            align="center"
+            iconType="circle"
+            iconSize={10}
+            formatter={(value) => <span className="text-xs text-foreground/70">{value}</span>}
+          />
         </PieChart>
       </ResponsiveContainer>
     </div>
