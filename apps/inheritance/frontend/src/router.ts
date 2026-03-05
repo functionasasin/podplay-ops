@@ -6,6 +6,7 @@ import { authRoute } from './routes/auth';
 import { authCallbackRoute } from './routes/auth/callback';
 import { authResetRoute } from './routes/auth/reset';
 import { authResetConfirmRoute } from './routes/auth/reset-confirm';
+import { casesIndexRoute } from './routes/cases/index';
 import { casesNewRoute } from './routes/cases/new';
 import { caseIdRoute } from './routes/cases/$caseId';
 import { clientsRoute } from './routes/clients/index';
@@ -13,7 +14,10 @@ import { newClientRoute } from './routes/clients/new';
 import { clientDetailRoute } from './routes/clients/$clientId';
 import { deadlinesRoute } from './routes/deadlines';
 import { settingsRoute } from './routes/settings/index';
+import { settingsTeamRoute } from './routes/settings/team';
 import { shareTokenRoute } from './routes/share/$token';
+import { onboardingRoute } from './routes/onboarding';
+import { inviteTokenRoute } from './routes/invite/$token';
 
 const routeTree = rootRoute.addChildren([
   publicRootRoute.addChildren([
@@ -22,8 +26,11 @@ const routeTree = rootRoute.addChildren([
     authResetRoute,
     authResetConfirmRoute,
     shareTokenRoute,
+    onboardingRoute,
+    inviteTokenRoute,
   ]),
   indexRoute,
+  casesIndexRoute,
   casesNewRoute,
   caseIdRoute,
   clientsRoute,
@@ -31,6 +38,7 @@ const routeTree = rootRoute.addChildren([
   clientDetailRoute,
   deadlinesRoute,
   settingsRoute,
+  settingsTeamRoute,
 ]);
 
 export const router = createRouter({

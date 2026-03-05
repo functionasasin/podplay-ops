@@ -1,4 +1,6 @@
+import { createRoute } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
+import { rootRoute } from '@/routes/__root';
 import { useAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/hooks/useOrganization';
 import { TeamMemberList } from '@/components/settings/TeamMemberList';
@@ -6,7 +8,13 @@ import { InviteMemberDialog } from '@/components/settings/InviteMemberDialog';
 import { listPendingInvitations } from '@/lib/organizations';
 import type { OrganizationInvitation } from '@/types';
 
-export function TeamSettingsPage() {
+export const settingsTeamRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/settings/team',
+  component: TeamSettingsPage,
+});
+
+function TeamSettingsPage() {
   const { user } = useAuth();
   const {
     organization,

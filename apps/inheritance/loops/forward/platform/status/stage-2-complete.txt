@@ -1,0 +1,11 @@
+Stage 2 complete — router + auth flow end-to-end verified against spec
+
+Items verified:
+1. __root.tsx - publicRootRoute + MinimalLayout + pathname-based layout isolation
+2. router.ts - Full route tree with publicRootRoute children and auth context
+3. main.tsx - RouterWithAuth wrapper with auth state subscription + Toaster
+4. auth.tsx - validateSearch, firmName, confirmPassword, SUPABASE_ERROR_MAP, post-sign-up branching
+5. auth/callback.tsx - PKCE email confirmation handler
+6. auth/reset.tsx - Password reset request page
+7. auth/reset-confirm.tsx - Password reset confirmation page
+8. hooks/useAuth.ts - Returns signUp result for auto-confirm detection
