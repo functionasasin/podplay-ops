@@ -135,4 +135,6 @@ export interface UpdateClientData {
   civil_status?: CivilStatus | null;
   status?: ClientStatus;
   referral_source?: string | null;
+  conflict_cleared?: boolean | null;
+  conflict_notes?: string | null;
 }

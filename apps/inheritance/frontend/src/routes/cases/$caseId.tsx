@@ -2,12 +2,14 @@ import { createRoute, redirect } from '@tanstack/react-router';
 import { rootRoute } from '../__root';
 import { useState, useEffect } from 'react';
 import { Loader2, AlertCircle } from 'lucide-react';
-import type { EngineInput, EngineOutput, CaseRow, CaseNote } from '@/types';
+import type { EngineInput, EngineOutput, CaseRow, CaseNote, CaseDeadline } from '@/types';
 import { loadCase, updateCaseInput, updateCaseOutput } from '@/lib/cases';
 import { toggleShare } from '@/lib/share';
 import { listNotes } from '@/lib/case-notes';
+import { listDeadlines, markDeadlineComplete, addCustomDeadline } from '@/lib/deadlines';
 import { ResultsView } from '@/components/results/ResultsView';
 import { CaseNotesPanel } from '@/components/case/CaseNotesPanel';
+import { DeadlineTimeline } from '@/components/case/DeadlineTimeline';
 import { WizardContainer } from '@/components/wizard';
 import { compute } from '@/wasm/bridge';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
@@ -41,6 +43,7 @@ function CaseEditorPage() {
   const [shareEnabled, setShareEnabled] = useState<boolean>(false);
   const [autoSaveInput, setAutoSaveInput] = useState<EngineInput | null>(null);
   const [notes, setNotes] = useState<CaseNote[]>([]);
+  const [deadlines, setDeadlines] = useState<CaseDeadline[]>([]);
 
   useAutoSave(autoSaveInput ? caseId : null, autoSaveInput as EngineInput);
 
@@ -87,6 +90,23 @@ function CaseEditorPage() {
   useEffect(() => {
     listNotes(caseId).then(setNotes).catch(() => {});
   }, [caseId]);
+
+  useEffect(() => {
+    if (state.phase === 'results') {
+      listDeadlines(caseId).then(setDeadlines).catch(() => {});
+    }
+  }, [caseId, state.phase]);
+
+  const handleMarkDone = async (deadlineId: string, completedDate: string) => {
+    await markDeadlineComplete(deadlineId, completedDate);
+    listDeadlines(caseId).then(setDeadlines).catch(() => {});
+  };
+
+  const handleAddCustom = async (data: { label: string; due_date: string; description: string; legal_basis?: string }) => {
+    if (!user) return;
+    await addCustomDeadline(caseId, user.id, data);
+    listDeadlines(caseId).then(setDeadlines).catch(() => {});
+  };
 
   const handleSubmit = async (data: EngineInput) => {
     setState({ phase: 'computing', input: data });
@@ -168,6 +188,15 @@ function CaseEditorPage() {
             shareEnabled={shareEnabled}
             onToggleShare={handleToggleShare}
           />
+          {deadlines.length > 0 && (
+            <div className="mt-8 border-t pt-6">
+              <DeadlineTimeline
+                deadlines={deadlines}
+                onMarkDone={handleMarkDone}
+                onAddCustom={handleAddCustom}
+              />
+            </div>
+          )}
           {user && (
             <div className="mt-8 border-t pt-6">
               <CaseNotesPanel

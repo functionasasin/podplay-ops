@@ -2,9 +2,11 @@ import { createRoute } from '@tanstack/react-router';
 import { rootRoute } from '../__root';
 import { useState, useEffect } from 'react';
 import { Loader2, AlertCircle } from 'lucide-react';
-import { loadClient } from '@/lib/clients';
+import { loadClient, updateClient } from '@/lib/clients';
 import type { ClientRow } from '@/types/client';
 import { GOV_ID_TYPE_LABELS, CIVIL_STATUS_LABELS } from '@/types/client';
+import { ConflictCheckDialog } from '@/components/clients/ConflictCheckDialog';
+import { Button } from '@/components/ui/button';
 
 export const clientDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -17,6 +19,7 @@ function ClientDetailPage() {
   const [client, setClient] = useState<ClientRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [conflictDialogOpen, setConflictDialogOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -139,7 +142,7 @@ function ClientDetailPage() {
 
         <section data-testid="client-conflict-log-section">
           <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-2">Conflict Check Log</h2>
-          <dl className="grid grid-cols-2 gap-2 text-sm">
+          <dl className="grid grid-cols-2 gap-2 text-sm mb-3">
             <dt className="text-muted-foreground">Conflict Cleared</dt>
             <dd>{client.conflict_cleared === true ? 'Yes' : client.conflict_cleared === false ? 'No' : 'N/A'}</dd>
             {client.conflict_notes && <>
@@ -147,8 +150,26 @@ function ClientDetailPage() {
               <dd>{client.conflict_notes}</dd>
             </>}
           </dl>
+          <Button variant="outline" size="sm" onClick={() => setConflictDialogOpen(true)}>
+            Re-run Conflict Check
+          </Button>
         </section>
       </div>
+
+      <ConflictCheckDialog
+        open={conflictDialogOpen}
+        onOpenChange={setConflictDialogOpen}
+        clientName={client.full_name}
+        clientTin={client.tin}
+        onClear={async () => {
+          await updateClient(clientId, { conflict_cleared: true, conflict_notes: null });
+          setClient({ ...client, conflict_cleared: true, conflict_notes: null });
+        }}
+        onClearedAfterReview={async (notes) => {
+          await updateClient(clientId, { conflict_cleared: true, conflict_notes: notes });
+          setClient({ ...client, conflict_cleared: true, conflict_notes: notes });
+        }}
+      />
     </div>
   );
 }
