@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createRoute } from '@tanstack/react-router';
-import { rootRoute } from '../__root';
+import { publicRootRoute } from '../__root';
 import { ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,7 +8,7 @@ import { getSharedCase } from '@/lib/share';
 import type { SharedCaseData } from '@/lib/share';
 
 export const shareTokenRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => publicRootRoute,
   path: '/share/$token',
   component: SharedCaseRouteComponent,
 });

@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import type { User } from '@supabase/supabase-js';
+import type { User, Session } from '@supabase/supabase-js';
 import * as authLib from '@/lib/auth';
 
 export interface UseAuthReturn {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, fullName?: string) => Promise<void>;
+  signUp: (email: string, password: string, fullName?: string) => Promise<{ user: User | null; session: Session | null } | null>;
   signOut: () => Promise<void>;
 }
 
@@ -30,7 +30,7 @@ export function useAuth(): UseAuthReturn {
   };
 
   const signUp = async (email: string, password: string, fullName?: string) => {
-    await authLib.signUp(email, password, fullName);
+    return await authLib.signUp(email, password, fullName);
   };
 
   const signOut = async () => {

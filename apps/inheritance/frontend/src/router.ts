@@ -1,7 +1,11 @@
 import { createRouter } from '@tanstack/react-router';
-import { rootRoute } from './routes/__root';
+import type { User } from '@supabase/supabase-js';
+import { rootRoute, publicRootRoute } from './routes/__root';
 import { indexRoute } from './routes/index';
 import { authRoute } from './routes/auth';
+import { authCallbackRoute } from './routes/auth/callback';
+import { authResetRoute } from './routes/auth/reset';
+import { authResetConfirmRoute } from './routes/auth/reset-confirm';
 import { casesNewRoute } from './routes/cases/new';
 import { caseIdRoute } from './routes/cases/$caseId';
 import { clientsRoute } from './routes/clients/index';
@@ -12,8 +16,14 @@ import { settingsRoute } from './routes/settings/index';
 import { shareTokenRoute } from './routes/share/$token';
 
 const routeTree = rootRoute.addChildren([
+  publicRootRoute.addChildren([
+    authRoute,
+    authCallbackRoute,
+    authResetRoute,
+    authResetConfirmRoute,
+    shareTokenRoute,
+  ]),
   indexRoute,
-  authRoute,
   casesNewRoute,
   caseIdRoute,
   clientsRoute,
@@ -21,10 +31,14 @@ const routeTree = rootRoute.addChildren([
   clientDetailRoute,
   deadlinesRoute,
   settingsRoute,
-  shareTokenRoute,
 ]);
 
-export const router = createRouter({ routeTree });
+export const router = createRouter({
+  routeTree,
+  context: {
+    auth: undefined as { user: User | null } | undefined,
+  },
+});
 
 // Type-safe route registration
 declare module '@tanstack/react-router' {
