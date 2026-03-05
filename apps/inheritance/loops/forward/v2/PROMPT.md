@@ -6,10 +6,10 @@ This is an **integrated** forward loop. You build the Rust engine, WASM bridge, 
 
 ## Your Working Directories
 
-- **Loop dir**: `loops/inheritance-v2-forward/` (frontier, status tracking)
-- **Engine dir**: `loops/inheritance-v2-forward/engine/` (Rust crate — Cargo.toml, src/, tests/)
-- **Frontend dir**: `loops/inheritance-v2-forward/frontend/` (Vite + React — package.json, src/, etc.)
-- **Spec**: `docs/plans/inheritance-v2-spec.md` (your source of truth for ALL types, algorithms, wire format, UI, and design)
+- **Loop dir**: `apps/inheritance/loops/forward/v2/` (frontier, status tracking)
+- **Engine dir**: `apps/inheritance/engine/` (Rust crate — Cargo.toml, src/, tests/)
+- **Frontend dir**: `apps/inheritance/frontend/` (Vite + React — package.json, src/, etc.)
+- **Spec**: `apps/inheritance/specs/inheritance-v2-spec.md` (your source of truth for ALL types, algorithms, wire format, UI, and design)
 
 ## What To Do This Iteration
 
