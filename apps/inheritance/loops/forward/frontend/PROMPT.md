@@ -4,10 +4,10 @@ You are a development agent in a forward ralph loop. Each time you run, you do O
 
 ## Your Working Directories
 
-- **Loop dir**: `loops/inheritance-frontend-forward/` (frontier, status, loop script)
-- **App dir**: `loops/inheritance-frontend-forward/app/` (the Vite + React project)
-- **Spec dir**: `loops/inheritance-frontend-reverse/analysis/synthesis/` (your source of truth)
-- **Cross-cutting specs**: `loops/inheritance-frontend-reverse/analysis/` (conditional-visibility.md, invalid-combinations.md, shared-components.md, scenario-field-mapping.md)
+- **Loop dir**: `apps/inheritance/loops/forward/frontend/` (frontier, status, loop script)
+- **App dir**: `apps/inheritance/frontend/` (the Vite + React project)
+- **Spec dir**: `apps/inheritance/loops/reverse/frontend/analysis/synthesis/` (your source of truth)
+- **Cross-cutting specs**: `apps/inheritance/loops/reverse/frontend/analysis/` (conditional-visibility.md, invalid-combinations.md, shared-components.md, scenario-field-mapping.md)
 
 ## Tech Stack
 
@@ -109,7 +109,7 @@ You are a development agent in a forward ralph loop. Each time you run, you do O
 | 10 | Results View | `results` | `synthesis/results-view.md` | 4 |
 | 11 | Validation Layer 3 | `validation\|warning` | `invalid-combinations.md`, `conditional-visibility.md` | 6, 7, 8, 9 |
 | 12 | Integration & Polish | `integration\|e2e` | `synthesis/spec-summary.md` | all 1-11 |
-| 13 | Real WASM Engine | `wasm-real\|wasm-engine` | Rust source at `loops/inheritance-rust-forward/` | 4, 12 |
+| 13 | Real WASM Engine | `wasm-real\|wasm-engine` | Rust source at `apps/inheritance/engine/` | 4, 12 |
 
 ## Stage Details
 
@@ -119,7 +119,7 @@ Create the Vite project. Bare minimum to get `npx vitest run` passing with one s
 
 ### Stage 2 — Types & Enums
 
-**Read**: `../inheritance-frontend-reverse/analysis/synthesis/types.ts`
+**Read**: `../../reverse/frontend/analysis/synthesis/types.ts`
 
 Produce `src/types/index.ts` containing:
 - All 17 TypeScript interfaces (EngineInput, EngineOutput, Decedent, Person, Will, etc.)
@@ -138,7 +138,7 @@ Produce `src/types/index.ts` containing:
 
 ### Stage 3 — Zod Schemas
 
-**Read**: `../inheritance-frontend-reverse/analysis/synthesis/schemas.ts`
+**Read**: `../../reverse/frontend/analysis/synthesis/schemas.ts`
 
 Produce `src/schemas/index.ts` containing:
 - All Zod schemas from the spec synthesis
@@ -165,7 +165,7 @@ Produce `src/schemas/index.ts` containing:
 
 ### Stage 4 — WASM Bridge Mock
 
-**Read**: `../inheritance-frontend-reverse/analysis/engine-output.md`, `../inheritance-frontend-reverse/analysis/scenario-field-mapping.md`
+**Read**: `../../reverse/frontend/analysis/engine-output.md`, `../../reverse/frontend/analysis/scenario-field-mapping.md`
 
 Produce `src/wasm/bridge.ts`:
 - `async function compute(input: EngineInput): Promise<EngineOutput>` — the public API
@@ -191,7 +191,7 @@ Produce `src/wasm/bridge.ts`:
 
 ### Stage 5 — Shared Components
 
-**Read**: `../inheritance-frontend-reverse/analysis/shared-components.md`
+**Read**: `../../reverse/frontend/analysis/shared-components.md`
 
 Produce 5 Tier-1 shared components in `src/components/shared/`:
 
@@ -211,7 +211,7 @@ Produce 5 Tier-1 shared components in `src/components/shared/`:
 
 ### Stage 6 — Wizard Steps 1-2 (Estate + Decedent)
 
-**Read**: `../inheritance-frontend-reverse/analysis/synthesis/wizard-steps.md` — Step 1 and Step 2 sections
+**Read**: `../../reverse/frontend/analysis/synthesis/wizard-steps.md` — Step 1 and Step 2 sections
 
 Produce:
 - `src/components/wizard/WizardContainer.tsx` — step navigation, form state management with `useForm<EngineInput>()`
@@ -233,7 +233,7 @@ Produce:
 
 ### Stage 7 — Wizard Step 3 (Family Tree)
 
-**Read**: `../inheritance-frontend-reverse/analysis/synthesis/wizard-steps.md` — Step 3 section
+**Read**: `../../reverse/frontend/analysis/synthesis/wizard-steps.md` — Step 3 section
 
 This is the most complex step. Produce:
 - `src/components/wizard/FamilyTreeStep.tsx` — repeater for persons
@@ -266,7 +266,7 @@ This is the most complex step. Produce:
 
 ### Stage 8 — Wizard Step 4 (Will & Dispositions)
 
-**Read**: `../inheritance-frontend-reverse/analysis/synthesis/wizard-steps.md` — Step 4 section
+**Read**: `../../reverse/frontend/analysis/synthesis/wizard-steps.md` — Step 4 section
 
 Produce:
 - `src/components/wizard/WillStep.tsx` — 4 sub-tabs container, only visible when hasWill=true
@@ -298,7 +298,7 @@ Produce:
 
 ### Stage 9 — Wizard Steps 5-6 (Donations + Review)
 
-**Read**: `../inheritance-frontend-reverse/analysis/synthesis/wizard-steps.md` — Steps 5 and 6
+**Read**: `../../reverse/frontend/analysis/synthesis/wizard-steps.md` — Steps 5 and 6
 
 Produce:
 - `src/components/wizard/DonationsStep.tsx` — repeater for donations
@@ -324,7 +324,7 @@ Produce:
 
 ### Stage 10 — Results View
 
-**Read**: `../inheritance-frontend-reverse/analysis/synthesis/results-view.md`
+**Read**: `../../reverse/frontend/analysis/synthesis/results-view.md`
 
 Produce:
 - `src/components/results/ResultsView.tsx` — container with 5 sections
@@ -359,7 +359,7 @@ Produce:
 
 ### Stage 11 — Validation Layer 3
 
-**Read**: `../inheritance-frontend-reverse/analysis/invalid-combinations.md`, `../inheritance-frontend-reverse/analysis/conditional-visibility.md`
+**Read**: `../../reverse/frontend/analysis/invalid-combinations.md`, `../../reverse/frontend/analysis/conditional-visibility.md`
 
 Produce:
 - `src/hooks/useValidationWarnings.ts` — hook that computes Layer 3 warnings from form state
@@ -390,7 +390,7 @@ Produce:
 
 ### Stage 12 — Integration & Polish
 
-**Read**: `../inheritance-frontend-reverse/analysis/synthesis/spec-summary.md`
+**Read**: `../../reverse/frontend/analysis/synthesis/spec-summary.md`
 
 Produce:
 - Full wizard → compute() → results view flow working end-to-end
@@ -410,14 +410,14 @@ Produce:
 
 Replace the Stage 4 mock bridge with the actual Rust inheritance engine compiled to WASM.
 
-**Rust engine location**: `../../loops/inheritance-rust-forward/` (relative to loop dir)
+**Rust engine location**: `../../apps/inheritance/engine/` (relative to loop dir)
 - Public API: `pub fn run_pipeline(input: &EngineInput) -> EngineOutput` in `src/pipeline.rs`
 - All types have `Serialize`/`Deserialize` — JSON in, JSON out
 - 411 Rust tests passing, fully working engine
-- Example input: `loops/inheritance-rust-forward/examples/simple-intestate.json`
+- Example input: `apps/inheritance/engine/examples/simple-intestate.json`
 
 **Step 1 — Add wasm-bindgen to the Rust project**:
-- Edit `loops/inheritance-rust-forward/Cargo.toml`:
+- Edit `apps/inheritance/engine/Cargo.toml`:
   - Add `[lib]` section: `crate-type = ["cdylib", "rlib"]`
   - Add dependency: `wasm-bindgen = "0.2"`
   - Add dependency: `getrandom = { version = "0.2", features = ["js"] }` (if needed for WASM target)
@@ -439,7 +439,7 @@ Replace the Stage 4 mock bridge with the actual Rust inheritance engine compiled
 
 **Step 2 — Build WASM package**:
 - Install wasm-pack if needed: `cargo install wasm-pack`
-- Build: `wasm-pack build --target web --out-dir ../../loops/inheritance-frontend-forward/app/src/wasm/pkg`
+- Build: `wasm-pack build --target web --out-dir ../../apps/inheritance/frontend/src/wasm/pkg`
 - This produces: `inheritance_engine_bg.wasm`, `inheritance_engine.js`, `inheritance_engine.d.ts`
 - Add `app/src/wasm/pkg/` to `.gitignore` (generated artifact)
 - Add a build script to `app/package.json`: `"build:wasm": "wasm-pack build --target web --release --out-dir ../app/src/wasm/pkg ../../loops/inheritance-rust-forward"`
@@ -465,7 +465,7 @@ Replace the Stage 4 mock bridge with the actual Rust inheritance engine compiled
 
 **Step 4 — Write tests**:
 - Test file: `src/wasm/__tests__/wasm-real.test.ts`
-- Use the example input from `loops/inheritance-rust-forward/examples/simple-intestate.json`
+- Use the example input from `apps/inheritance/engine/examples/simple-intestate.json`
 - Tests must validate structural correctness, NOT mock-specific values
 
 **Tests** (`src/wasm/__tests__/wasm-real.test.ts`):
@@ -485,7 +485,7 @@ Replace the Stage 4 mock bridge with the actual Rust inheritance engine compiled
 - Configure the plugins so `.wasm` files load correctly in dev and build
 
 **Important notes**:
-- The Rust project is at `../../loops/inheritance-rust-forward/` relative to the loop dir
+- The Rust project is at `../../apps/inheritance/engine/` relative to the loop dir
 - Do NOT copy Rust source files — build WASM in-place and output to the frontend's `src/wasm/pkg/`
 - The WASM build is a one-time step; the `.wasm` file is a build artifact, not checked in
 - If wasm-pack is not available, document the install command and skip to writing tests with a TODO

@@ -4,8 +4,9 @@ You are a development agent in a forward ralph loop. Each time you run, you do O
 
 ## Your Working Directories
 
-- **Loop + Engine dir**: `loops/inheritance-rust-forward/` (both loop frontier AND Rust crate)
-- **Spec**: `docs/plans/inheritance-engine-spec.md` (your source of truth for ALL types, algorithms, and parameters)
+- **Engine dir**: `apps/inheritance/engine/` (Rust crate)
+- **Loop dir**: `apps/inheritance/loops/forward/engine/` (frontier, status)
+- **Spec**: `apps/inheritance/specs/inheritance-engine-spec.md` (your source of truth for ALL types, algorithms, and parameters)
 
 ## What To Do This Iteration
 
