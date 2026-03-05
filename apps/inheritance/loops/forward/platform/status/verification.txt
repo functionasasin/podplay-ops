@@ -53,7 +53,7 @@ Result: PASS — zero orphaned components.
 ## 3. Build Verification
 
 Command: npm run build (in apps/inheritance/frontend/)
-Result: PASS — zero errors. 3324 modules transformed. Built in ~11.43s.
+Result: PASS — zero errors. 3324 modules transformed. Built in ~11.49s.
 
 Warnings (non-blocking):
 - node:fs/node:path/node:url externalized (wasm/bridge.ts — expected, WASM bridge)
