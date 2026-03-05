@@ -7,6 +7,18 @@ import type {
 } from '@/types';
 import { ROLE_PERMISSIONS } from '@/types';
 
+export async function createOrganization(
+  firmName: string,
+  slug?: string
+): Promise<{ orgId: string }> {
+  const { data, error } = await supabase.rpc('create_organization', {
+    p_name: firmName,
+    p_slug: slug ?? null,
+  });
+  if (error) throw error;
+  return { orgId: (data as any).org_id };
+}
+
 export async function getOrganization(orgId: string): Promise<Organization | null> {
   const { data, error } = await supabase
     .from('organizations')
