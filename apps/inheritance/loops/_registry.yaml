@@ -41,55 +41,47 @@ loops:
     created: 2026-03-04
     converged_at: "2026-03-04"
 
-  # === Forward (active) ===
+  # === Forward (converged) ===
   forward/engine:
     description: "Build PH inheritance distribution engine in Rust, 12-stage TDD pipeline"
     type: forward
-    schedule: "*/30 * * * *"
-    max_iterations: 50
-    timeout_minutes: 30
-    status: active
+    status: converged
     created: 2026-02-24
+    converged_at: "2026-02-28"
   forward/frontend:
     description: "Build PH inheritance wizard frontend (React + TypeScript), 12-stage TDD"
     type: forward
-    schedule: "*/30 * * * *"
-    max_iterations: 50
-    timeout_minutes: 30
-    status: active
+    status: converged
     created: 2026-02-25
+    converged_at: "2026-02-28"
   forward/ui:
     description: "Redesign inheritance calculator with shadcn/ui, Navy + Gold aesthetic"
     type: forward
-    schedule: "*/30 * * * *"
-    max_iterations: 50
-    timeout_minutes: 30
-    status: active
+    status: converged
     created: 2026-02-28
+    converged_at: "2026-03-01"
   forward/wasm:
     description: "Wire real Rust WASM engine into frontend, fixing type conformance"
     type: forward
-    schedule: "*/30 * * * *"
-    max_iterations: 30
-    timeout_minutes: 30
-    status: active
+    status: converged
     created: 2026-02-28
-  forward/v2:
-    description: "Implementation phase of v2 mega-spec"
-    type: forward
-    schedule: "*/30 * * * *"
-    max_iterations: 50
-    timeout_minutes: 30
-    status: active
-    created: 2026-02-28
+    converged_at: "2026-03-01"
   forward/premium:
     description: "Build 23 premium features (auth, PDF, CRM, tax integration, multi-seat)"
     type: forward
-    schedule: "*/30 * * * *"
-    max_iterations: 50
-    timeout_minutes: 30
-    status: active
+    status: converged
     created: 2026-03-02
+    converged_at: "2026-03-05"
+
+  # === Forward (paused — never started) ===
+  forward/v2:
+    description: "Implementation phase of v2 mega-spec"
+    type: forward
+    status: paused
+    created: 2026-02-28
+    paused_reason: "Superseded by individual forward loops (engine, frontend, premium, platform)"
+
+  # === Forward (active) ===
   forward/platform:
     description: "Fix 104 platform-layer gaps (auth, routes, nav, design)"
     type: forward
