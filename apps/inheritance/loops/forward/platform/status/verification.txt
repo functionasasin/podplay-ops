@@ -1,0 +1,44 @@
+Stage 8 Verification — In Progress
+===================================
+
+## 1. Stub Scan
+PASS — Zero stubs found.
+Searched for: TODO, FIXME, STUB, PLACEHOLDER, HACK in all .ts/.tsx files.
+Result: No matches.
+
+## 2. Orphan Scan
+PARTIAL — Pre-existing orphans resolved in this iteration; remaining orphans listed below.
+
+### Resolved this iteration:
+- StatuteCitationsSection → wired into ShareBreakdownSection/HeirBreakdown (legal basis chips per heir)
+- CaseNotesPanel → wired into cases/$caseId.tsx (shown below ResultsView when authenticated)
+
+### Remaining orphans (fix list):
+- EstateTaxWizard (components/tax/) — no route imports it; needs a /tax or /cases/:id tab
+- ClientTimeline (components/case/) — no route imports it; client-facing view, should go in share/$token.tsx
+- TimelineReport (components/case/) — imported only by ClientTimeline; resolved when ClientTimeline is wired
+- TimelineStageCard (components/case/) — imported only by TimelineReport; resolved transitively
+- DeadlineTimeline (components/case/) — no route imports it; per-case vertical timeline, should go in cases/$caseId.tsx
+- DeadlineCard (components/case/) — imported only by DeadlineTimeline; resolved when DeadlineTimeline is wired
+- ConflictCheckDialog (components/clients/) — no route imports it; should trigger from ClientForm on submit
+
+## 3. Build Verification
+PASS — `npm run build` succeeds with zero errors.
+Built in ~6.9s, 3039 modules transformed.
+Only non-blocking warnings: chunk size (>500kB) and mixed dynamic/static imports.
+
+## 4. Completeness Audit (6 User Journeys)
+TODO — Not yet completed. Journeys to audit:
+1. Sign up → onboarding → create org → create case
+2. Sign in → resume existing case → recompute → view results
+3. Share case → client opens share link → views results
+4. Invite team member → accept invite → access org cases
+5. View deadlines across all cases
+6. Manage clients with conflict check
+
+## Fix List (remaining work for stage 8 to be marked complete):
+1. Wire EstateTaxWizard into a route (settings or case detail tax tab)
+2. Wire ClientTimeline into share/$token.tsx client-facing view
+3. Wire DeadlineTimeline into cases/$caseId.tsx case detail
+4. Wire ConflictCheckDialog into ClientForm (conflict check on submit)
+5. Complete completeness audit (journeys 1-6)

@@ -9,6 +9,7 @@
 import { useState } from 'react';
 import type { InheritanceShare } from '../../types';
 import { formatPeso } from '../../types';
+import { StatuteCitationsSection } from './StatuteCitationsSection';
 
 export interface ShareBreakdownSectionProps {
   shares: InheritanceShare[];
@@ -117,6 +118,13 @@ function HeirBreakdown({ share }: { share: InheritanceShare }) {
           bold
         />
       </div>
+
+      {share.legal_basis.length > 0 && (
+        <StatuteCitationsSection
+          legalBasis={share.legal_basis}
+          heirName={share.heir_name}
+        />
+      )}
     </div>
   );
 }

@@ -2,15 +2,18 @@ import { createRoute, redirect } from '@tanstack/react-router';
 import { rootRoute } from '../__root';
 import { useState, useEffect } from 'react';
 import { Loader2, AlertCircle } from 'lucide-react';
-import type { EngineInput, EngineOutput, CaseRow } from '@/types';
+import type { EngineInput, EngineOutput, CaseRow, CaseNote } from '@/types';
 import { loadCase, updateCaseInput, updateCaseOutput } from '@/lib/cases';
 import { toggleShare } from '@/lib/share';
+import { listNotes } from '@/lib/case-notes';
 import { ResultsView } from '@/components/results/ResultsView';
+import { CaseNotesPanel } from '@/components/case/CaseNotesPanel';
 import { WizardContainer } from '@/components/wizard';
 import { compute } from '@/wasm/bridge';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { useAutoSave } from '@/hooks/useAutoSave';
+import { useAuth } from '@/hooks/useAuth';
 
 export const caseIdRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -31,11 +34,13 @@ type PageState =
 
 function CaseEditorPage() {
   const { caseId } = caseIdRoute.useParams();
+  const { user } = useAuth();
   const [state, setState] = useState<PageState>({ phase: 'loading' });
   const [caseRow, setCaseRow] = useState<CaseRow | null>(null);
   const [shareToken, setShareToken] = useState<string>('');
   const [shareEnabled, setShareEnabled] = useState<boolean>(false);
   const [autoSaveInput, setAutoSaveInput] = useState<EngineInput | null>(null);
+  const [notes, setNotes] = useState<CaseNote[]>([]);
 
   useAutoSave(autoSaveInput ? caseId : null, autoSaveInput as EngineInput);
 
@@ -77,6 +82,10 @@ function CaseEditorPage() {
 
     fetchCase();
     return () => { cancelled = true; };
+  }, [caseId]);
+
+  useEffect(() => {
+    listNotes(caseId).then(setNotes).catch(() => {});
   }, [caseId]);
 
   const handleSubmit = async (data: EngineInput) => {
@@ -149,15 +158,27 @@ function CaseEditorPage() {
       )}
 
       {state.phase === 'results' && (
-        <ResultsView
-          input={state.input}
-          output={state.output}
-          onEditInput={handleEditInput}
-          caseId={caseId}
-          shareToken={shareToken}
-          shareEnabled={shareEnabled}
-          onToggleShare={handleToggleShare}
-        />
+        <>
+          <ResultsView
+            input={state.input}
+            output={state.output}
+            onEditInput={handleEditInput}
+            caseId={caseId}
+            shareToken={shareToken}
+            shareEnabled={shareEnabled}
+            onToggleShare={handleToggleShare}
+          />
+          {user && (
+            <div className="mt-8 border-t pt-6">
+              <CaseNotesPanel
+                caseId={caseId}
+                userId={user.id}
+                notes={notes}
+                onNotesChange={setNotes}
+              />
+            </div>
+          )}
+        </>
       )}
 
       {state.phase === 'error' && (
