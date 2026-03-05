@@ -19,8 +19,9 @@ Create backend service routes and CE tools for user settings, teams, team member
 | 111 | `cheerful_unassign_campaign` | `DELETE /api/service/teams/{id}/assignments/{assignment_id}` |
 | 113 | `cheerful_get_onboarding_status` | `GET /api/service/user/onboarding` |
 
-**Priority**: BACKEND ROUTES — Create service routes for users & team tools.
+**Priority**: WRITE TESTS — Backend routes complete. Write tests for users & team tools.
 
 ## Work Log
 - 2026-03-04: Stage 12 complete (66 tests passing, all 10 external integration tools implemented). Advancing to Stage 13.
 - 2026-03-04: Scaffold complete — created `users_team_fixtures.py` with mock responses for all 12 tools.
+- 2026-03-05: Backend routes complete — 12 service routes for all users & team tools (#101-#111, #113). Routes: user settings, connected accounts, list/create/get/delete teams, add/remove members, my-assignments, list/assign/unassign campaign assignments, onboarding status.
