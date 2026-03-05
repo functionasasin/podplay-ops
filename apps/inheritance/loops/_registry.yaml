@@ -1,0 +1,100 @@
+# Inheritance Loop Registry
+# CI reads this to discover which forward loops to run.
+# Status: active | paused | converged
+
+loops:
+  # === Reverse (all converged) ===
+  reverse/core:
+    description: "Extract PH succession/inheritance rules → per-heir distribution engine spec"
+    type: reverse
+    status: converged
+    created: 2026-02-23
+    converged_at: "2026-02-23"
+  reverse/estate-tax:
+    description: "Extract PH estate tax rules (TRAIN + pre-TRAIN + amnesty) → deterministic computation engine spec"
+    type: reverse
+    status: converged
+    created: 2026-02-23
+    converged_at: "2026-02-25"
+  reverse/frontend:
+    description: "Analyze Rust inheritance engine → implementation-ready React + TypeScript frontend spec"
+    type: reverse
+    status: converged
+    created: 2026-02-24
+    converged_at: "2026-02-25"
+  reverse/premium:
+    description: "Research and specify all premium features for PH inheritance professional platform"
+    type: reverse
+    status: converged
+    created: 2026-02-28
+    converged_at: "2026-03-01"
+  reverse/platform:
+    description: "Audit inheritance app platform layer → modernization spec with Navy+Gold aesthetic"
+    type: reverse
+    status: converged
+    created: 2026-03-03
+    converged_at: "2026-03-04"
+  reverse/v2:
+    description: "Full-stack inheritance platform rebuild mega-spec"
+    type: reverse
+    status: converged
+    created: 2026-03-04
+    converged_at: "2026-03-04"
+
+  # === Forward (active) ===
+  forward/engine:
+    description: "Build PH inheritance distribution engine in Rust, 12-stage TDD pipeline"
+    type: forward
+    schedule: "*/30 * * * *"
+    max_iterations: 50
+    timeout_minutes: 30
+    status: active
+    created: 2026-02-24
+  forward/frontend:
+    description: "Build PH inheritance wizard frontend (React + TypeScript), 12-stage TDD"
+    type: forward
+    schedule: "*/30 * * * *"
+    max_iterations: 50
+    timeout_minutes: 30
+    status: active
+    created: 2026-02-25
+  forward/ui:
+    description: "Redesign inheritance calculator with shadcn/ui, Navy + Gold aesthetic"
+    type: forward
+    schedule: "*/30 * * * *"
+    max_iterations: 50
+    timeout_minutes: 30
+    status: active
+    created: 2026-02-28
+  forward/wasm:
+    description: "Wire real Rust WASM engine into frontend, fixing type conformance"
+    type: forward
+    schedule: "*/30 * * * *"
+    max_iterations: 30
+    timeout_minutes: 30
+    status: active
+    created: 2026-02-28
+  forward/v2:
+    description: "Implementation phase of v2 mega-spec"
+    type: forward
+    schedule: "*/30 * * * *"
+    max_iterations: 50
+    timeout_minutes: 30
+    status: active
+    created: 2026-02-28
+  forward/premium:
+    description: "Build 23 premium features (auth, PDF, CRM, tax integration, multi-seat)"
+    type: forward
+    schedule: "*/30 * * * *"
+    max_iterations: 50
+    timeout_minutes: 30
+    status: active
+    created: 2026-03-02
+  forward/platform:
+    description: "Fix 104 platform-layer gaps (auth, routes, nav, design)"
+    type: forward
+    schedule: "*/30 * * * *"
+    max_iterations: 50
+    timeout_minutes: 30
+    status: active
+    created: 2026-03-04
