@@ -112,8 +112,8 @@ No loop converges without a stage that opens the app in a browser and verifies e
 ### 4. Discovery Stages, Not Just Fixed Stages
 The last 3-5 stages should be discovery-based: actively hunt for gaps rather than checking a fixed list. The loop should be able to extend itself when it finds work the brainstorm missed.
 
-### 5. Convergence = User Can Complete Primary Flow
-The convergence check for any user-facing app must include: "a user can navigate the primary flow from start to finish and see real, functional UI at every step." Not "tests pass and build succeeds."
+### 5. Convergence = Every QA-Testable Flow Works
+The convergence check for any user-facing app must verify **every possible user flow**, not just the happy path. Every route, every form, every edge case that can be tested in a browser must be tested. If a user can reach it, the loop must verify it works. "Primary flow works" is not convergence — it's the halfway point. Convergence means a QA tester would find zero broken flows.
 
 ## Anti-Patterns to Avoid
 
