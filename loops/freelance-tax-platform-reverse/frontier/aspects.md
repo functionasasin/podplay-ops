@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 37
-- Analyzed: 31
-- Pending: 6
-- Convergence: 84%
+- Analyzed: 32
+- Pending: 5
+- Convergence: 86%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -56,7 +56,7 @@ Depends on Wave 5. Production readiness.
 - [x] supabase-gotchas — Anon grants for public RPCs, search_path on SECURITY DEFINER, RLS bypass patterns, storage bucket policies. Prevents "works in Supabase dashboard, fails from client" failures.
 - [x] fly-io-deployment — Dockerfile, fly.toml, build args, Supabase project setup, domain config
 - [x] ci-cd-pipeline — GitHub Actions: typecheck -> lint -> test -> build -> e2e -> deploy
-- [ ] monitoring-and-alerts — Sentry, health checks, client-side error tracking
+- [x] monitoring-and-alerts — Sentry, health checks, client-side error tracking
 
 ### Wave 7: Synthesis
 Depends on ALL previous waves. **Strict internal dependency order — do NOT skip ahead.**
@@ -90,3 +90,4 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 | action-trigger-map | 5 | 2026-03-06 | COMPLETE — 23 action-triggered features with exact button text, icon, parent, handler bodies (with loading/error/toast), premium gating, and anti-orphan verification points. PDF dynamic import documented. |
 | toast-catalog | 5 | 2026-03-06 | COMPLETE — 41 toasts (13 success, 25 error, 1 info, 2 loading) across 8 categories. Sonner setup, richColors config, loading+update pattern for PDF/logo, no-toast interactions list, critical trap: do NOT install shadcn toast alongside Sonner. |
 | supabase-gotchas | 6 | 2026-03-06 | COMPLETE — 12 gotchas: anon GRANT for public RPCs, search_path on SECURITY DEFINER, RLS bypass audit, storage bucket policies, onAuthStateChange race condition, email confirmation in dev, direct DB URL prohibition, Realtime replication, explicit RLS enable, redirect URL whitelist, free tier pause, signed URL for private buckets. Forward loop integration points for all 12. |
+| monitoring-and-alerts | 6 | 2026-03-06 | COMPLETE — Sentry Browser SDK init (before React), ErrorBoundary component, WASM computation error tracking (ValidationError vs ComputeError vs WasmInitError), Fly.io HTTP health check (30s interval), BetterUptime external uptime probe, lib/monitoring.ts centralized wrapper, 6 critical traps (init order, validation errors not to Sentry, VITE_SENTRY_DSN as build arg, tracesSampleRate in dev, session restore identity, BetterUptime cold-start timeout). |
