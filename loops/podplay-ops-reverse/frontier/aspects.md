@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 57
-- Analyzed: 45
-- Pending: 12
-- Convergence: 79%
+- Analyzed: 46
+- Pending: 11
+- Convergence: 81%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -62,7 +62,7 @@
 - [x] design-wizard-deployment — Stage 3: 15-phase smart checklist UI with auto-fill, warnings, troubleshooting tips, notes, non-linear navigation, ISP validation, cable estimation
 - [x] design-wizard-financials — Stage 4: invoicing, expenses, P&L review, go-live/handoff
 - [x] design-inventory-view — Global inventory: stock levels, categories, low stock flags, movement history, adjustments
-- [ ] design-financials-view — Global financials: funnel, monthly P&L, HER charts, per-project P&L, reconciliation, team OpEx config
+- [x] design-financials-view — Global financials: funnel, monthly P&L, HER charts, per-project P&L, reconciliation, team OpEx config
 - [ ] design-settings — Settings page: pricing tiers (Pro/Autonomous/Autonomous+/PBK), rates, catalog management, travel defaults, team salary allocations, contacts directory
 - [ ] design-database-schema — Complete Supabase migration: all tables, enums, indexes, RLS policies, seed data
 - [ ] design-supabase-functions — Client-side service layer: all CRUD operations, queries, filters per table
