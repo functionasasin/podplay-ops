@@ -1,6 +1,6 @@
 Stage 8 Verification Report
 ===========================
-Date: 2026-03-05 (final pass — re-verified clean build 2026-03-05, confirmed 2026-03-05)
+Date: 2026-03-06 (re-verified clean build 2026-03-06)
 
 ## 1. Stub Scan
 
@@ -53,12 +53,12 @@ Result: PASS — zero orphaned components.
 ## 3. Build Verification
 
 Command: npm run build (in apps/inheritance/frontend/)
-Result: PASS — zero errors. 3324 modules transformed. Built in ~11.49s.
+Result: PASS — zero errors. Built in ~10.05s.
 
 Warnings (non-blocking):
 - node:fs/node:path/node:url externalized (wasm/bridge.ts — expected, WASM bridge)
 - Dynamic/static import mixing on supabase.ts (pre-existing pattern, not a regression)
-- Chunk size warning on index bundle (2129 kB — not a build error)
+- Chunk size warning on index bundle (>500 kB — not a build error)
 
 ## 4. User Journey Completeness
 
@@ -87,5 +87,5 @@ Journey 6 — Manage clients with conflict check:
 All checks pass. Stage 8 complete.
 - Zero stubs
 - Zero orphans (all 30+ components wired to routes or parents)
-- Build succeeds with zero errors (3324 modules)
+- Build succeeds with zero errors
 - All 6 user journeys covered end-to-end
