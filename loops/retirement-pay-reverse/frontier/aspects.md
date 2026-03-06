@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 55
-- Analyzed: 47
-- Pending: 8
-- Convergence: 85%
+- Analyzed: 48
+- Pending: 7
+- Convergence: 87%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -69,7 +69,7 @@ Depends on Wave 3 + Wave 4.
 - [x] navigation — Auth-aware sidebar (desktop) + drawer (mobile), active states, sign-out, org switcher
 - [x] org-model — Organizations for HR departments, members, roles (owner/admin/member), invitations, seat limits, useOrganization() hook
 - [x] computation-management — CRUD for saved computations, auto-save, status workflow (draft/computed/shared), ComputationCard grid
-- [ ] sharing — Token-based read-only sharing, get_shared_computation() RPC with UUID parameter, /share/$token route, anon GRANT
+- [x] sharing — Token-based read-only sharing, get_shared_computation() RPC with UUID parameter, /share/$token route, anon GRANT
 - [ ] component-wiring-map — Every component -> parent route/page/tab/dialog, navigation path from home, trigger (for modals), props source. Zero orphans.
 - [ ] action-trigger-map — Every action (PDF export, share toggle, delete, batch export, NLRC print) -> which button triggers it, which parent has the button, onClick handler, feedback (toast/download/navigation)
 - [ ] visual-verification-checklist — Every major component -> required shadcn wrapper (Card/Alert/Badge/Table), key Tailwind classes, lucide icon, color variant, status indicator styling
