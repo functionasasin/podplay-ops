@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 55
-- Analyzed: 31
-- Pending: 24
-- Convergence: 56%
+- Analyzed: 32
+- Pending: 23
+- Convergence: 58%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -53,7 +53,7 @@ Depends on Wave 3 data model.
 ### Wave 5: Frontend Data Model + UI Design
 Depends on Wave 3 + Wave 4.
 - [x] typescript-types — Map every Rust struct/enum to TypeScript interface (exact field names matching serde camelCase)
-- [ ] zod-schemas — Strict Zod schemas: z.object({}).strict(), z.boolean() not z.coerce.boolean(), z.nullable() not z.optional()
+- [x] zod-schemas — Strict Zod schemas: z.object({}).strict(), z.boolean() not z.coerce.boolean(), z.nullable() not z.optional()
 - [ ] wizard-steps — Single employee wizard: Step 1 (employee info), Step 2 (employment details), Step 3 (salary & benefits), Step 4 (retirement details), Step 5 (company plan optional)
 - [ ] batch-upload-ui — CSV upload component, file validation, progress bar, results table with per-employee rows, summary card, export options
 - [ ] company-plan-ui — Company plan input form, side-by-side comparison view, gap analysis per employee
@@ -95,6 +95,7 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 - [ ] spec-review — Final review: can the forward loop build the ENTIRE product from this spec alone?
 
 ## Recently Analyzed
+- zod-schemas (Wave 5) — 2026-03-06
 - typescript-types (Wave 5) — 2026-03-06
 - initialization-patterns (Wave 4) — 2026-03-06
 - error-contract (Wave 4) — 2026-03-06

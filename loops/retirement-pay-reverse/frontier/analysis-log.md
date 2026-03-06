@@ -33,3 +33,4 @@
 | 29 | error-contract | 4 | 2026-03-06 | analysis/error-contract.md |
 | 30 | initialization-patterns | 4 | 2026-03-06 | analysis/initialization-patterns.md |
 | 31 | typescript-types | 5 | 2026-03-06 | analysis/typescript-types.md |
+| 32 | zod-schemas | 5 | 2026-03-06 | analysis/zod-schemas.md |
