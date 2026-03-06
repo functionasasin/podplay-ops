@@ -19,3 +19,5 @@
 | 15 | company-plan-comparison-rules | 2 | 2026-03-06 | analysis/company-plan-comparison-rules.md |
 | 16 | death-before-retirement | 2 | 2026-03-06 | analysis/death-before-retirement.md |
 | 17 | batch-computation-rules | 2 | 2026-03-06 | analysis/batch-computation-rules.md |
+| 18 | data-model | 3 | 2026-03-06 | analysis/data-model.md |
+| 19 | nlrc-worksheet-format | 2 | 2026-03-06 | analysis/nlrc-worksheet-format.md |

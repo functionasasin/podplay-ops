@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 55
-- Analyzed: 17
-- Pending: 38
-- Convergence: 31%
+- Analyzed: 19
+- Pending: 36
+- Convergence: 35%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -30,12 +30,12 @@ Depends on Wave 1 sources being cached.
 - [x] company-plan-comparison-rules — How statutory minimum compares to company plans, which prevails, gap calculation
 - [x] death-before-retirement — Heirs' entitlement to retirement pay as if employee retired on date of death
 - [x] batch-computation-rules — CSV input schema, per-employee computation, aggregation rules, summary statistics
-- [ ] nlrc-worksheet-format — NLRC money claim statement of computation format, required fields, exhibit structure
+- [x] nlrc-worksheet-format — NLRC money claim statement of computation format, required fields, exhibit structure
 - [ ] edge-cases-catalog — Company transfers, contractual vs regular employees, CBA retirement provisions, DOLE exemptions
 
 ### Wave 3: Engine Design
 Depends on Wave 2 rule extraction.
-- [ ] data-model — Define all Rust types: RetirementInput, RetirementOutput, EligibilityResult, TaxTreatment, SeparationPayComparison, BatchInput, BatchOutput, NlrcWorksheet, CompanyPlanAnalysis
+- [x] data-model — Define all Rust types: RetirementInput, RetirementOutput, EligibilityResult, TaxTreatment, SeparationPayComparison, BatchInput, BatchOutput, NlrcWorksheet, CompanyPlanAnalysis
 - [ ] computation-pipeline — Design ordered pipeline: eligibility check -> credited years -> daily rate -> retirement pay -> tax treatment -> separation pay comparison -> company plan gap
 - [ ] algorithms — Exact arithmetic: integer centavos, rational fractions for 22.5-day decomposition, rounding rules
 - [ ] batch-engine — Batch processing pipeline: CSV parse -> validate rows -> compute per-employee -> aggregate -> summary
@@ -95,6 +95,7 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 - [ ] spec-review — Final review: can the forward loop build the ENTIRE product from this spec alone?
 
 ## Recently Analyzed
+- data-model (Wave 3) — 2026-03-06
 - cache-existing-analysis (Wave 1) — 2026-03-06
 - fetch-ra7641-full-text (Wave 1) — 2026-03-06
 - fetch-labor-code-art302 (Wave 1) — 2026-03-06
