@@ -2,4 +2,5 @@
 
 | # | Timestamp | Aspect | Duration | Key Findings |
 |---|-----------|--------|----------|--------------|
+| 2 | 2026-03-06 | source-hardware-guide | ~10 min | Hardware guide fully extracted: 3 tiers (Pro/Autonomous/Autonomous+). Per-court: TV 8'9" AFF, iPad 4'8" AFF, EmpireTech IPC-T54IR-ZE camera ideal 16–20' from baseline at 11' AFF. 3x Cat6 drops per court + 1x 120V. Cat6 formula: courts×dist×3 + doors×dist + cams×dist. Rack 7–12U, top-to-bottom order documented. Front desk: BBPOS WisePOS E PIN 07139, QR scanner, webcam. Bluetooth buttons: 2/court, single/double/long press actions. ISP speed table 1–30 courts all 4 circuit types. Starlink NOT compatible. Port 4000 TCP+UDP forwarding OR static IP. |
 | 1 | 2026-03-06 | source-deployment-guide | ~15 min | 25-page PDF fully extracted: 16 phases (0–15), 129 steps, 6 appendices. 14 troubleshooting pairs. Exact camera encoding values (H.264 main, H.265 sub). VLAN IDs (32/31/33) and all IP addresses. V1 vs V2 replay service distinction. App Lock window 2–3 AM. ISP speed table 1–30 courts. Philippines requirements. Cat6 formula. All key contacts. source-mrp-sheets BLOCKED (XLSX not in repo). |
