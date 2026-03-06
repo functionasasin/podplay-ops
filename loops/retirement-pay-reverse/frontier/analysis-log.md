@@ -2,6 +2,7 @@
 
 | # | Aspect | Wave | Date | Files Modified |
 |---|--------|------|------|----------------|
+| 52 | empty-states-and-loading | 5 | 2026-03-06 | analysis/empty-states-and-loading.md |
 | 51 | visual-verification-checklist | 5 | 2026-03-06 | analysis/visual-verification-checklist.md |
 | 50 | action-trigger-map | 5 | 2026-03-06 | analysis/action-trigger-map.md |
 | 49 | component-wiring-map | 5 | 2026-03-06 | analysis/component-wiring-map.md |
