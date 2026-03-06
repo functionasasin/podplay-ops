@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 57
-- Analyzed: 24
-- Pending: 33
-- Convergence: 42%
+- Analyzed: 25
+- Pending: 32
+- Convergence: 44%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -39,7 +39,7 @@
 ### Wave 3: Business Logic & Workflows
 - [x] logic-customer-onboarding — Complete onboarding workflow: form → master → tab creation → cost analysis → SOW
 - [x] logic-bom-generation — Auto-BOM logic: tier + courts + doors + cameras → complete hardware list with costs
-- [ ] logic-cost-analysis — Cost calculation chain: unit cost → total → tax → shipping → landed → margin → customer price
+- [x] logic-cost-analysis — Cost calculation chain: unit cost → total → tax → shipping → landed → margin → customer price
 - [ ] logic-inventory-management — Stock tracking: order → receive → stock → allocate → ship → deduct, low stock alerts
 - [ ] logic-deployment-tracking — Status progression: not_started → config → ready_to_ship → shipped → installing → qc → completed
 - [ ] logic-progress-calculation — Progress % from QA checklist completion, status derivation rules
