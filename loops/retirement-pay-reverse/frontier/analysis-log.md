@@ -21,3 +21,4 @@
 | 17 | batch-computation-rules | 2 | 2026-03-06 | analysis/batch-computation-rules.md |
 | 18 | data-model | 3 | 2026-03-06 | analysis/data-model.md |
 | 19 | nlrc-worksheet-format | 2 | 2026-03-06 | analysis/nlrc-worksheet-format.md |
+| 20 | edge-cases-catalog | 2 | 2026-03-06 | analysis/edge-cases-catalog.md |
