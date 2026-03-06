@@ -2,6 +2,8 @@
 
 | # | Aspect | Wave | Date | Files Modified |
 |---|--------|------|------|----------------|
+| 39 | fill-toast-catalog | 7.5 | 2026-03-06 | analysis/fill-toast-catalog.md, docs/plans/freelance-tax-spec.md (Section 8.4 expanded from 13-row summary table to full 8.4.1–8.4.12 with all 41 toasts: exact message text, variant, trigger, handler, loading+update pattern, SaveStatusIndicator spec, no-toast table, forward loop instructions, shadcn conflict trap), frontier/aspects.md, frontier/analysis-log.md |
+|---|--------|------|------|----------------|
 | 38 | fill-empty-states | 7.5 | 2026-03-06 | docs/plans/freelance-tax-spec.md (new Section 8.5: EmptyState.tsx + ErrorState.tsx shared components, loading pattern, per-page specs for 11 pages — Dashboard, Computations, Computation Detail, Clients, Client Detail, Deadlines, Settings, Team Settings, Share, Auth Callback, Invite Accept — with exact skeleton JSX, error messages, empty state icons/descriptions/CTAs, anti-scaffolding verification), frontier/aspects.md, frontier/analysis-log.md |
 | 37 | fill-e2e-specs | 7.5 | 2026-03-06 | analysis/fill-e2e-specs.md, docs/plans/freelance-tax-spec.md (Section 15.2 expanded: full playwright.config.ts, test data fixtures, 13 test suites T-AUTH-01–T-ERROR-03 with exact steps/assertions/data-testid, orphan-scan script, 6-phase CI order, 8 critical traps), frontier/aspects.md, frontier/analysis-log.md |
 | 36 | fill-wizard-step-fields | 7.5 | 2026-03-06 | analysis/fill-wizard-step-fields.md, docs/plans/freelance-tax-spec.md (new Section 7.7: 17 wizard steps with all field specs, routing matrix, GV-01–GV-20, DA-01–DA-14), frontier/aspects.md, frontier/analysis-log.md |

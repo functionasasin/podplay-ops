@@ -2795,39 +2795,326 @@ Real-time advisories computed client-side as user fills the wizard. These do NOT
 
 ### 8.4 Toast Catalog (Sonner)
 
-Setup in `main.tsx`:
+**Total: 42 toasts** (success: 22, error: 15, info: 2, loading+update: 3)
+
+Toast library: **Sonner** (`import { toast } from 'sonner'`). Never use shadcn/ui `useToast()`.
+
+#### 8.4.1 Setup
+
 ```typescript
+// src/main.tsx — add Toaster to root (outside RouterProvider)
 import { Toaster } from 'sonner';
-// In render:
-<Toaster richColors position="bottom-right" />
+
+<Toaster
+  position="bottom-right"
+  richColors
+  closeButton
+  duration={4000}
+  toastOptions={{
+    classNames: {
+      toast: 'font-sans text-sm',
+    },
+  }}
+/>
 ```
 
-Key toasts (41 total):
+```json
+// package.json dependency
+"sonner": "^1.5.0"
+```
 
-| Action | Variant | Message |
-|--------|---------|---------|
-| Compute success | success | "Computation complete. See results below." |
-| Save failed | error | "Failed to save. Check your connection." |
-| Sharing enabled | success | "Sharing enabled. Link is ready." |
-| Share link copied | info | "Link copied to clipboard." |
-| PDF downloaded | success | "PDF downloaded." |
-| PDF preparing | loading → success | "Preparing PDF..." → "PDF downloaded." |
-| Finalized | success | "Computation finalized." |
-| Invitation sent | success | "Invitation sent to {email}." |
-| Member removed | success | "Team member removed." |
-| Client saved | success | "Client added successfully." |
-| Settings saved | success | "Settings saved." |
-| Logo uploaded | success | "Logo uploaded." |
-| Share link rotated | success | "Share link rotated." |
+**`richColors` mapping to TaxKlaro palette:**
+- `toast.success` → green (#16A34A background tint)
+- `toast.error` → red (#DC2626 background tint)
+- `toast.info` → blue (#1D4ED8 background tint)
+- `toast.loading` → neutral (spinner animation)
 
-**Loading + update pattern for PDF:**
+#### 8.4.2 Computation Actions
+
 ```typescript
-const toastId = toast.loading('Preparing PDF...');
-// ... after download
-toast.success('PDF downloaded.', { id: toastId });
-// ... on error
-toast.error('Failed to generate PDF.', { id: toastId });
+// 1. Compute — Success
+toast.success('Computation complete!');
+// Trigger: handleCompute() success in routes/computations/$compId.tsx
+// Shown after: WASM returns result + output_json saved to Supabase
+
+// 2. Compute — No Input Error
+toast.error('Please complete the input form before computing.');
+// Trigger: handleCompute() when computation.inputJson is null/empty
+
+// 3. Compute — Validation Error (Zod)
+toast.error('Input validation failed. Please review the form.');
+// Trigger: handleCompute() when TaxpayerInputSchema.safeParse() fails
+// Additional effect: Switches to Input tab, highlights per-field errors
+
+// 4. Compute — Engine Error
+toast.error(result.errors[0]?.message ?? 'Computation failed. Please review inputs.');
+// Trigger: handleCompute() when WASM returns { type: 'error' }
+// Note: Uses engine's first error message verbatim
+
+// 5. Compute — Unexpected Error
+toast.error('An unexpected error occurred. Please try again.');
+// Trigger: handleCompute() catch block (network/Supabase failure)
+
+// 6. Finalize — Success
+toast.success('Computation finalized. Locked for editing.');
+// Trigger: handleFinalize() success in routes/computations/$compId.tsx
+
+// 7. Finalize — Error
+toast.error('Failed to finalize. Please try again.');
+// Trigger: handleFinalize() catch block
+
+// 8. Unlock — Success
+toast.success('Computation unlocked for editing.');
+// Trigger: handleUnlock() success in routes/computations/$compId.tsx
+
+// 9. Unlock — Error
+toast.error('Failed to unlock. Please try again.');
+// Trigger: handleUnlock() catch block
+
+// 10. Archive — Success
+toast.success('Computation archived.');
+// Trigger: handleArchive() success (from ActionsBar or ComputationCard overflow)
+
+// 11. Archive — Error
+toast.error('Failed to archive. Please try again.');
+// Trigger: handleArchive() catch block
+
+// 12. Delete — Success
+toast.success('Computation deleted.');
+// Trigger: handleDelete() success after user confirms in DeleteComputationDialog
+
+// 13. Delete — Error
+toast.error('Failed to delete. Please try again.');
+// Trigger: handleDelete() catch block
+
+// 14. Edit Title — Error (no success toast — visible title update is the feedback)
+toast.error('Failed to save title.');
+// Trigger: handleTitleSave() catch block in ComputationPageHeader
+
+// 15. Add Note — Success
+toast.success('Note added.');
+// Trigger: handleAddNote() success in AddNoteForm
+
+// 16. Add Note — Error
+toast.error('Failed to add note.');
+// Trigger: handleAddNote() catch block
 ```
+
+#### 8.4.3 PDF Export
+
+```typescript
+// Loading + update pattern (mandatory):
+const toastId = toast.loading('Preparing PDF...');
+// Trigger: handleExportPdf() start, before dynamic import and rendering
+
+toast.success('PDF downloaded!', { id: toastId });
+// Trigger: handleExportPdf() after browser download triggered
+// Replaces the loading toast via shared toastId
+
+toast.error('No computation results to export. Please compute first.');
+// Trigger: handleExportPdf() when computation.outputJson is null
+// Note: no loading toast created yet for this case
+
+toast.error('PDF export failed. Please try again.', { id: toastId });
+// Trigger: handleExportPdf() catch block
+// Replaces the loading toast via shared toastId
+```
+
+#### 8.4.4 Sharing
+
+```typescript
+// 1. Share Enabled — Success
+toast.success('Sharing enabled! Anyone with the link can view.');
+// Trigger: handleToggle(true) success in ShareToggle
+
+// 2. Share Disabled — Info (blue, not green)
+toast.info('Share link disabled.');
+// Trigger: handleToggle(false) success in ShareToggle
+
+// 3. Share Toggle — Error
+toast.error('Failed to update sharing. Please try again.');
+// Trigger: handleToggle() catch block
+
+// 4. Copy Link — Success
+toast.success('Link copied to clipboard!');
+// Trigger: handleCopy() success in ShareToggle
+
+// 5. Copy Link — Clipboard Error
+toast.error('Could not copy. Please copy the URL manually.');
+// Trigger: handleCopy() catch block (clipboard API denied/unavailable)
+
+// 6. Rotate Share Link — Success (duration: 5000ms — message is longer)
+toast.success('Share link rotated. Previous link is now invalid.', { duration: 5000 });
+// Trigger: handleRotate() success in ShareToggle
+
+// 7. Rotate Share Link — Error
+toast.error('Failed to rotate link. Please try again.');
+// Trigger: handleRotate() catch block
+```
+
+#### 8.4.5 Deadlines
+
+```typescript
+// Mark Deadline Complete — Error
+// (no success toast — checked checkbox visual is the feedback)
+toast.error('Failed to mark deadline complete.');
+// Trigger: handleCompleteDeadline() catch block in DeadlineCard
+```
+
+#### 8.4.6 Team Management
+
+```typescript
+// 1. Send Invitation — Success (interpolated)
+toast.success(`Invitation sent to ${data.email}`);
+// Trigger: handleInvite() success in InviteMemberForm
+// Note: email-already-member and already-invited shown as inline field errors, NOT toasts
+
+// 2. Send Invitation — Generic Error
+toast.error('Failed to send invitation. Please try again.');
+// Trigger: handleInvite() catch block or unknown RPC error
+
+// 3. Remove Team Member — Success
+toast.success('Team member removed.');
+// Trigger: handleRemove() success in MembersTable
+
+// 4. Remove Team Member — Error
+toast.error('Failed to remove team member.');
+// Trigger: handleRemove() catch block
+
+// 5. Revoke Invitation — Success
+toast.success('Invitation revoked.');
+// Trigger: handleRevoke() success in PendingInvitationsTable
+
+// 6. Revoke Invitation — Error
+toast.error('Failed to revoke invitation.');
+// Trigger: handleRevoke() catch block
+```
+
+#### 8.4.7 Settings
+
+```typescript
+// 1. Save Settings — Success
+toast.success('Settings saved.');
+// Trigger: handleSave() success in any settings section
+// (PersonalInfoSection, FirmBrandingSection, BirInfoSection)
+
+// 2. Save Settings — Error
+toast.error('Failed to save settings. Please try again.');
+// Trigger: handleSave() catch block
+
+// 3. Logo Upload — Loading
+const toastId = toast.loading('Uploading logo...');
+// Trigger: handleLogoUpload() start in FirmBrandingSection
+
+// 4. Logo Upload — Success
+toast.success('Logo uploaded!', { id: toastId });
+// Trigger: handleLogoUpload() success, after logo_url saved to user_profiles
+
+// 5. Logo Upload — Not Image Error (early validation, no loading toast yet)
+toast.error('Please upload an image file.');
+// Trigger: handleLogoUpload() when !file.type.startsWith('image/')
+
+// 6. Logo Upload — Too Large Error (early validation, no loading toast yet)
+toast.error('Logo must be under 2MB.');
+// Trigger: handleLogoUpload() when file.size > 2 * 1024 * 1024
+
+// 7. Logo Upload — Storage Error
+toast.error('Logo upload failed. Please try again.', { id: toastId });
+// Trigger: handleLogoUpload() catch block
+```
+
+#### 8.4.8 Auth and Onboarding
+
+```typescript
+// 1. Accept Invitation — Success
+toast.success('Welcome to the team!');
+// Trigger: handleAccept() success in routes/invite/$token.tsx
+// Post-action: navigate to /
+
+// 2. Accept Invitation — Generic Error
+toast.error('Failed to accept invitation. Please try again.');
+// Trigger: handleAccept() catch block
+// Note: expired and already-accepted shown as page-level states, NOT toasts
+
+// 3. Accept Invitation — Unexpected Error
+toast.error('An unexpected error occurred.');
+// Trigger: handleAccept() outer catch block
+
+// 4. Create Organization — Error
+toast.error('Failed to create firm. Please try again.');
+// Trigger: handleSubmit() in OnboardingForm on generic RPC error
+// Note: slug-already-taken is an inline field error, NOT a toast
+
+// 5. Create Organization — Unexpected Error
+toast.error('An unexpected error occurred.');
+// Trigger: handleSubmit() outer catch block in OnboardingForm
+```
+
+#### 8.4.9 Auto-save
+
+Auto-save uses `SaveStatusIndicator` inline component, NOT toasts for success. Only error toasts.
+
+```typescript
+// Auto-save failure only:
+toast.error('Error saving computation. Check your connection.');
+// Trigger: useAutoSave() catch block
+```
+
+**`SaveStatusIndicator`** (inline in ComputationPageHeader, top-right near title):
+```tsx
+// src/components/computation/SaveStatusIndicator.tsx
+// Three states:
+// - Saving: <span className="text-muted-foreground text-sm">Saving...</span>
+// - Saved:  <span className="text-muted-foreground text-sm flex items-center gap-1">
+//             <Check className="h-3 w-3" /> Saved
+//           </span>
+// - Error:  <span className="text-destructive text-sm flex items-center gap-1">
+//             <AlertCircle className="h-3 w-3" /> Save failed
+//           </span>
+```
+
+**Rationale:** 1.5s debounce fires frequently during form editing — a success toast on every save would be disruptive noise.
+
+#### 8.4.10 No-Toast Interactions
+
+| Action | Why No Toast |
+|--------|-------------|
+| Sign out | Router redirect to `/auth` is the feedback |
+| Auto-save success | Inline SaveStatusIndicator used instead |
+| Title inline edit save | Updated title text is immediately visible |
+| Mark deadline complete | Checked checkbox + strikethrough text is feedback |
+| Form field validation errors | Inline field-level error messages (not toasts) |
+| Already-member invite error | Inline field error on email input |
+| Already-invited error | Inline field error on email input |
+| Slug-taken error (onboarding) | Inline field error on slug input |
+| Expired invitation | Full page state change (not a toast) |
+| Already-accepted invitation | Full page state change (not a toast) |
+
+#### 8.4.11 Toast Count Summary
+
+| Category | Success | Error | Info | Loading | Total |
+|----------|---------|-------|------|---------|-------|
+| Computation actions | 3 | 7 | 0 | 0 | 10 |
+| PDF export | 1 | 2 | 0 | 1 | 4 |
+| Sharing | 3 | 3 | 1 | 0 | 7 |
+| Deadlines | 0 | 1 | 0 | 0 | 1 |
+| Team management | 3 | 3 | 0 | 0 | 6 |
+| Settings | 2 | 4 | 0 | 1 | 7 |
+| Auth / onboarding | 1 | 4 | 0 | 0 | 5 |
+| Auto-save error | 0 | 1 | 0 | 0 | 1 |
+| **Total** | **13** | **25** | **1** | **2** | **41** |
+
+#### 8.4.12 Forward Loop Instructions
+
+1. Install `sonner` as a dependency (NOT `@radix-ui/react-toast` or shadcn toast)
+2. Add `<Toaster />` to `src/main.tsx` (NOT `src/App.tsx` — needs to be outside the router)
+3. Use `toast.success/error/info/loading` from `'sonner'` exclusively
+4. **Do NOT install or use shadcn/ui `toast` component** (`components/ui/toast.tsx`, `hooks/use-toast.ts`)
+5. For loading+update flows (PDF export, logo upload): generate `toastId` with `toast.loading()` and pass `{ id: toastId }` to replacement call
+6. Auto-save uses `SaveStatusIndicator` inline component — NOT a toast for success
+7. Inline field errors (validation) stay as field-level messages — never replaced with toasts
+
+**Critical trap:** If the forward loop installs shadcn/ui's toast component, it will conflict with Sonner. `components/ui/toast.tsx` and `hooks/use-toast.ts` must NOT exist.
 
 ---
 

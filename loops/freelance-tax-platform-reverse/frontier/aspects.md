@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 41
-- Analyzed: 38
-- Pending: 3
-- Convergence: 93%
+- Analyzed: 39
+- Pending: 2
+- Convergence: 95%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -69,7 +69,7 @@ Depends on completeness-audit FAIL results. All 4 must complete before cross-lay
 - [x] fill-wizard-step-fields — Merge wizard-steps.md per-field detail (label/type/placeholder/validation/error) for all 17 wizard steps into spec Section 7.7
 - [x] fill-e2e-specs — Merge playwright-e2e-specs.md detailed test scenarios (steps, assertions, data-testid, test fixtures) into spec Section 15.2
 - [x] fill-empty-states — Merge empty-states-and-loading.md per-page specs (icon/title/description/CTA/skeleton) into spec Section 8.5
-- [ ] fill-toast-catalog — Merge remaining 28 toasts from toast-catalog.md into spec Section 8.4 (currently only 13/41 documented)
+- [x] fill-toast-catalog — Merge remaining 28 toasts from toast-catalog.md into spec Section 8.4 (currently only 13/41 documented)
 
 ### Wave 7 (continued — after Wave 7.5 complete)
 - [ ] cross-layer-consistency — Field-by-field verification: Rust <-> JSON <-> TypeScript <-> Zod
