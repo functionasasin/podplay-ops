@@ -1,6 +1,6 @@
 Stage 8 Verification Report
 ===========================
-Date: 2026-03-06 (re-verified clean build 2026-03-06)
+Date: 2026-03-06 (re-verified clean build 2026-03-06, re-verified 2026-03-06)
 
 ## 1. Stub Scan
 
