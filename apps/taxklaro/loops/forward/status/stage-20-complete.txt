@@ -1,0 +1,12 @@
+Stage 20 - Monitoring - COMPLETE
+Timestamp: 2026-03-06
+
+Summary:
+- Created src/lib/monitoring.ts with Sentry init, error categorization, and captureError
+- Created src/components/ErrorBoundary.tsx with Sentry.captureException
+- Sentry initialized BEFORE React render in main.tsx (§17.1)
+- Error categories wired: ValidationError → no Sentry, ComputeError → Sentry (§17.2)
+- 13 monitoring tests pass
+
+Test command: npx vitest run src/lib/__tests__/monitoring.test.ts
+Result: 13/13 tests passing

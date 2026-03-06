@@ -1,18 +1,18 @@
-# Current Stage: 20 (Monitoring)
+# Current Stage: 21 (Deployment Config)
 
 ## Status
-Stage 19 complete. All 41 ui-states tests pass. EmptyState, ErrorState, skeleton loaders, Sonner toasts (41 across 8 categories), and loading/error/empty states wired to all async pages.
+Stage 20 complete. All 13 monitoring tests pass. Sentry monitoring, ErrorBoundary, and error categorization implemented.
 
 ## What To Do
-Read spec §17. Implement Sentry monitoring, health checks, and error boundaries.
+Read spec §16.1–§16.4. Create Docker + nginx + Fly.io deployment config.
 
 Tasks:
-- Create `src/lib/monitoring.ts` from spec §17.3
-- Init Sentry BEFORE React render in main.tsx from spec §17.1
-- Create `ErrorBoundary.tsx` with Sentry.captureException
-- Wire error categories from spec §17.2 (ValidationError → no Sentry, ComputeError → Sentry)
+- Create `apps/taxklaro/frontend/Dockerfile` from spec §16.1 (multi-stage: Rust WASM build → Node build → nginx)
+- Create `nginx.conf` from spec §16.2 (SPA fallback, cache headers, gzip)
+- Create `fly.toml` from spec §16.3 (Singapore region, health check)
+- Document required secrets from spec §16.4
 
-Test command: `npx vitest run src/lib/monitoring`
+Test command: `docker build .`
 
 ## Work Log
 - 2026-03-06: Stage 1 complete — cargo check passes, advancing to stage 2
@@ -34,3 +34,4 @@ Test command: `npx vitest run src/lib/monitoring`
 - 2026-03-06: Stage 17 complete — 19 share + auto-save tests pass, SharePage + SaveStatusIndicator + useAutoSave wired, advancing to stage 18
 - 2026-03-06: Stage 18 complete — 86 wiring tests pass, all 90 component files exist, §14.1–§14.5 verified, advancing to stage 19
 - 2026-03-06: Stage 19 complete — 41 ui-states tests pass, EmptyState/ErrorState/skeletons/toasts wired, advancing to stage 20
+- 2026-03-06: Stage 20 complete — 13 monitoring tests pass, Sentry + ErrorBoundary + error categories implemented, advancing to stage 21
