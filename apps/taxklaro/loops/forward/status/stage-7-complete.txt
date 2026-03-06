@@ -1,0 +1,5 @@
+Stage 7 complete — 2026-03-06
+77 Zod schema tests passing.
+Schemas: primitives.ts, enums.ts, input.ts, output.ts, bridge.ts, index.ts all implemented per spec §6.
+All .strict() on inputs, .nullable() on optional fields, no .coerce() on booleans.
+Per-step wizard schemas: TaxpayerProfileSchema, TaxYearInfoSchema, GrossReceiptsSchema, DepreciationEntrySchema, Form2307EntrySchema.
