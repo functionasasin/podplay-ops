@@ -2,6 +2,7 @@
 
 | # | Aspect | Wave | Date | Files Modified |
 |---|--------|------|------|----------------|
+| 28 | migration-verification | 6 | 2026-03-06 | analysis/migration-verification.md, frontier/aspects.md, frontier/analysis-log.md |
 | 27 | production-build-verification | 6 | 2026-03-06 | analysis/production-build-verification.md, frontier/aspects.md, frontier/analysis-log.md |
 | 26 | playwright-e2e-specs | 6 | 2026-03-06 | analysis/playwright-e2e-specs.md, frontier/aspects.md, frontier/analysis-log.md |
 | 25 | pdf-export-layout | 5 | 2026-03-06 | analysis/pdf-export-layout.md, frontier/aspects.md, frontier/analysis-log.md |
