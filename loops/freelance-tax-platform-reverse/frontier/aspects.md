@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 37
-- Analyzed: 18
-- Pending: 19
-- Convergence: 49%
+- Analyzed: 19
+- Pending: 18
+- Convergence: 51%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -40,7 +40,7 @@ Depends on Wave 3. The biggest wave — where inheritance had the most issues.
 
 ### Wave 5: Component Wiring + UI
 Depends on Wave 4. Every component must have a home.
-- [ ] component-wiring-map — Every component -> parent route, navigation path, trigger, props source (zero orphans)
+- [x] component-wiring-map — Every component -> parent route, navigation path, trigger, props source (zero orphans)
 - [ ] action-trigger-map — Every action-triggered feature (PDF export, share toggle, delete, etc.) -> which button triggers it, which parent has the button, onClick handler. Prevents "PDF infra built but no button" failure.
 - [ ] design-system-alignment — Map TaxKlaro palette to shadcn/ui + Radix + Tailwind CSS 4 theming
 - [ ] visual-verification-checklist — For every major component: required shadcn wrapper (Card/Alert/Badge), key Tailwind classes, lucide icon, color variant. Prevents unstyled test-scaffolding shipping as "complete."
