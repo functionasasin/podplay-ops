@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 57
-- Analyzed: 19
-- Pending: 38
-- Convergence: 33%
+- Analyzed: 20
+- Pending: 37
+- Convergence: 35%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -32,7 +32,7 @@
 - [x] model-device-migration — Apple Business Manager transfer workflow: release → factory reset → re-enroll → re-configure, MDM comparison (Mosyle vs Jamf)
 - [x] model-international-deployment — Asia deployment: Philippines ISP requirements (PLDT/Globe/Converge, business plan + static IP mandatory), PAL vs NTSC, 220V/60Hz power, vendor availability, open questions
 - [x] model-network-reference — VLAN architecture seed data (Default .30, REPLAY .32, SURVEILLANCE .31, ACCESS CONTROL .33), key IP addresses, port 4000 reference, bandwidth guidance
-- [ ] model-team-opex — Team member salary allocations for HER/P&L: Niko 50/50 direct/indirect, Chad 20% indirect, rent $27.6K/yr, indirect salaries $147K/yr
+- [x] model-team-opex — Team member salary allocations for HER/P&L: Niko 50/50 direct/indirect, Chad 20% indirect, rent $27.6K/yr, indirect salaries $147K/yr
 - [ ] model-contacts-directory — Internal team contacts: Andy (PM), Nico (hardware/installs), Chad (ops), Stan (config), Agustin (app readiness), CS Team (booking)
 - [ ] model-tier-variants — PBK tier (Pickleball Kingdom custom pricing), PingPod-specific hardware (audio, speakers, Bluetooth), front desk hardware category (webcam, barcode scanner)
 
