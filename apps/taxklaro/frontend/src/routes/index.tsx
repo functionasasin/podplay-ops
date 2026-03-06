@@ -126,7 +126,7 @@ function IndexPage() {
   // Authenticated dashboard
   return (
     <div className="space-y-6" data-testid="index-page">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-y-3">
         <h1
           className="font-display text-foreground"
           style={{ fontSize: 'var(--text-h1)', lineHeight: 'var(--text-h1-lh)' }}

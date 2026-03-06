@@ -141,7 +141,7 @@ function ComputationsNewPage() {
       )}
 
       <div
-        className="rounded-xl bg-card border p-8"
+        className="rounded-xl bg-card border p-4 sm:p-8"
         style={{ boxShadow: 'var(--shadow-md)' }}
       >
         {isReview ? (

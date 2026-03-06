@@ -75,7 +75,7 @@ function AuthPage() {
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-xl p-8 shadow-[var(--shadow-lg)]">
+        <div className="bg-white rounded-xl p-4 sm:p-8 shadow-[var(--shadow-lg)]">
           <div className="mb-6">
             <h1 className="font-display text-foreground" style={{ fontSize: 'var(--text-h2)', lineHeight: 'var(--text-h2-lh)' }}>
               {mode === 'signup' ? 'Create Account' : mode === 'magic' ? 'Magic Link' : 'Sign In'}

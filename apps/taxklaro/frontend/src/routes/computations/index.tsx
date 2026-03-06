@@ -95,7 +95,7 @@ function ComputationsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-y-3">
         <h1 className="font-display text-3xl font-normal">Computations</h1>
         <Button onClick={() => navigate({ to: '/computations/new' })}>
           <Plus className="h-4 w-4 mr-2" /> New Computation

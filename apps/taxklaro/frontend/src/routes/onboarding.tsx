@@ -36,7 +36,7 @@ function OnboardingPage() {
             <span className="text-primary">₱</span>TaxKlaro
           </span>
         </div>
-        <div className="bg-white rounded-xl p-8 shadow-[var(--shadow-lg)]">
+        <div className="bg-white rounded-xl p-4 sm:p-8 shadow-[var(--shadow-lg)]">
           <OnboardingForm onCreateOrg={handleCreateOrg} />
         </div>
       </div>

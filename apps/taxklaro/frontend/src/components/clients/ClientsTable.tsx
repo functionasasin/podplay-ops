@@ -17,7 +17,11 @@ export function ClientsTable({ clients, isLoading, onSelect }: ClientsTableProps
   if (isLoading) {
     return (
       <div className="rounded-xl bg-card shadow-sm overflow-hidden">
-        {Array.from({ length: 5 }).map((_, i) => <ClientRowSkeleton key={i} />)}
+        <table className="w-full">
+          <tbody>
+            {Array.from({ length: 5 }).map((_, i) => <ClientRowSkeleton key={i} />)}
+          </tbody>
+        </table>
       </div>
     );
   }

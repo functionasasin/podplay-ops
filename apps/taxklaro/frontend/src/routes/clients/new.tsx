@@ -67,7 +67,7 @@ function ClientsNewPage() {
         </div>
       )}
 
-      <div className="rounded-xl bg-card shadow-md p-8">
+      <div className="rounded-xl bg-card shadow-md p-4 sm:p-8">
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-1.5">
             <Label htmlFor="name">Client Name *</Label>
