@@ -45,3 +45,4 @@
 | 41 | landing-page | 5 | 2026-03-06 | analysis/landing-page.md |
 | 42 | route-table | 5 | 2026-03-06 | analysis/route-table.md |
 | 43 | env-configuration | 5 | 2026-03-06 | analysis/env-configuration.md |
+| 44 | database-migrations | 5 | 2026-03-06 | analysis/database-migrations.md |
