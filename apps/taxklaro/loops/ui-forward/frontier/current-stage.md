@@ -1,16 +1,16 @@
-# Current Stage: 8 (Utility Pages)
+# Current Stage: 9 (Responsive + Spacing Audit)
 
 ## Status
-Stage 7 complete. List pages polished: ComputationCard uses DM Serif Display title with shadow-sm/hover:shadow-md,
-ComputationCardSkeleton matches new card sizing, computations list uses serif h1 + line-variant tabs + polished
-empty states with icon circles. ClientsTable has clean uppercase headers, proper padding, hover transitions.
-ClientInfoCard has serif h2 name + section rows with labels. New client form wrapped in shadow-md card with h-11
-inputs. Client detail page uses serif h1 for client name + polished back nav. Build passes.
+Stage 8 complete. Utility pages polished: DeadlineCard has date prominence (DM Serif Display day), urgency
+color-coded left borders (red/amber/green), shadow transitions. Settings sections wrapped in bg-card cards
+with serif h2 headings, h-11 inputs. InviteMemberForm in card. MembersTable + PendingInvitationsTable with
+uppercase headers, hover rows, card wrappers. Settings routes: serif h1/h2. share/$token: "Shared via
+TaxKlaro" read-only banner + serif h1. quarterly: serif h1 + styled back link + empty state card. Build passes.
 
 ## What To Do
-Restyle utility pages. Routes: /deadlines, /settings, /settings/team, /share/$token, /computations/$compId/quarterly.
-Polish deadline cards with date prominence, settings section cards with serif headings, team members table,
-share view header, quarterly breakdown table.
+Responsive + spacing audit. Check all routes at 375px/768px/1280px. Ensure consistent padding (p-4 mobile,
+p-6 tablet, p-8 desktop). Touch targets ≥44px on mobile. Tables scrollable on mobile. Hero text scales
+down. Run npx vitest run — no regressions.
 
 ## Work Log
 - Stage 1: Installed fonts, defined CSS design tokens, verified build ✓
@@ -20,3 +20,4 @@ share view header, quarterly breakdown table.
 - Stage 5: Wizard polish — progress bar, step card, radio cards, DM Serif Display h2s, PesoInput h-11, nav buttons ✓
 - Stage 6: Results + Detail — serif headings, savings in DM Serif Display, amber penalties, blue BIR form card, large bottom-line numbers ✓
 - Stage 7: List pages — serif h1s, shadow cards, line tabs, polished empty states, ClientsTable polish, ClientInfoCard sections ✓
+- Stage 8: Utility pages — DeadlineCard date prominence + urgency borders, settings section cards, team tables polish, share banner, quarterly serif h1 ✓
