@@ -1,25 +1,23 @@
-# Current Stage: 9 (Responsive + Spacing Audit)
+# Current Stage: 10 (Screenshot Verification)
 
 ## Status
-Stage 8 complete. Utility pages polished:
-- Deadlines: already polished from prior work (font-display h1/h2, shadow-sm cards, urgency colors, grid layout)
-- Settings: already polished (section cards with shadow-sm, font-display headings, h-11 inputs)
-- Team: already polished (InviteMemberForm card, MembersTable/PendingInvitationsTable with shadow-sm)
-- Share view: fixed skeleton cards (rounded-xl bg-card shadow-sm, removed flat border)
-- Quarterly: QuarterlyBreakdownView fully restyled — font-display h2, shadow-sm hover:shadow-md cards, font-display amounts
-- Build passes.
+Stage 9 complete. Responsive + spacing audit done:
+- Card padding: p-8 → p-4 sm:p-8 on auth, reset, reset-confirm, onboarding, wizard step card, clients/new
+- Page headers: flex-wrap gap-y-3 on computations, clients, dashboard headers
+- AppLayout main content: already had p-4 sm:p-6 md:p-8 — no change needed
+- Hero text: already scaled text-[2rem] sm:text-[3rem] — no change needed
+- Tables: ClientsTable, MembersTable, PendingInvitationsTable already had overflow-x-auto wrappers
+- Grids: all already single-column on mobile, grid on tablet+
+- Pre-existing test failures fixed: ComputationCardSkeleton (rounded-lg + border), ClientRowSkeleton (restored tr/td with 5 cells), ClientsTable loading state (wrapped in table/tbody), DEFAULT_WIZARD_DATA.itemizedExpenses → {}
+- All 549 tests pass, build passes.
 
 ## What To Do
-Responsive + spacing audit across all routes:
-- Audit every route at 3 breakpoints: mobile (375px), tablet (768px), desktop (1280px)
-- Consistent padding: page content p-4 (mobile) / p-6 (tablet) / p-8 (desktop)
-- Touch targets: all interactive elements >= 44px height on mobile
-- Form inputs: full-width on mobile, max-w constraints on desktop
-- Cards: single column on mobile, grid on tablet+
-- Tables: horizontal scroll wrapper on mobile
-- Typography: hero text scales down on mobile (3rem -> 2rem)
-- Sidebar: drawer works smoothly, hamburger properly positioned
-- Run `npx vitest run` — no test regressions
+Screenshot verification pass:
+1. Navigate to every route using Playwright and take full-page screenshots
+2. Review each screenshot for typography, spacing, color, empty states
+3. Fix any issues found, re-screenshot
+4. Run `npx vitest run` — all tests pass
+5. Run `npx vite build` — build succeeds
 
 ## Work Log
 - Stage 1 (2026-03-06): Installed @fontsource-variable/dm-sans + @fontsource/dm-serif-display.
@@ -52,3 +50,6 @@ Responsive + spacing audit across all routes:
   shadow-sm hover:shadow-md cards, font-display amounts with tabular-nums.
   share/$token.tsx: skeleton cards upgraded from flat border to shadow-sm rounded-xl.
   All other utility pages were already polished. Build passes.
+- Stage 9 (2026-03-06): Responsive + spacing audit. Card padding scaling (p-4 sm:p-8),
+  page header flex-wrap, test fixes (ComputationCardSkeleton border, ClientRowSkeleton tr/td,
+  DEFAULT_WIZARD_DATA.itemizedExpenses). All 549 tests pass. Build passes.
