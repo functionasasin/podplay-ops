@@ -6,3 +6,5 @@
 | 2 | validate-engine-spec | 1 | 2026-03-06 | analysis/validate-engine-spec.md, frontier/aspects.md, frontier/analysis-log.md |
 | 3 | audit-stack-assumptions | 1 | 2026-03-06 | analysis/audit-stack-assumptions.md, frontier/aspects.md, frontier/analysis-log.md |
 | 4 | wasm-export-signature | 2 | 2026-03-06 | analysis/wasm-export-signature.md, frontier/aspects.md, frontier/analysis-log.md |
+| 5 | serde-wire-format | 2 | 2026-03-06 | analysis/serde-wire-format.md, frontier/aspects.md, frontier/analysis-log.md |
+| 6 | error-contract | 2 | 2026-03-06 | analysis/error-contract.md, frontier/aspects.md, frontier/analysis-log.md |

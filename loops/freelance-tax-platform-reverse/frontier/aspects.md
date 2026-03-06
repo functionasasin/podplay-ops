@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 37
-- Analyzed: 5
-- Pending: 32
-- Convergence: 14%
+- Analyzed: 6
+- Pending: 31
+- Convergence: 16%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -18,7 +18,7 @@ Verify existing domain/engine spec and catalog wrong-stack assumptions.
 Depends on Wave 1. Design the WASM boundary between Rust engine and JavaScript frontend.
 - [x] wasm-export-signature — Define compute_json() and other WASM exports with exact parameter/return types
 - [x] serde-wire-format — Document exact JSON serialization rules for every struct/enum (rename_all, deny_unknown_fields, Optional as null)
-- [ ] error-contract — Define error JSON shape from WASM, severity levels, frontend handling
+- [x] error-contract — Define error JSON shape from WASM, severity levels, frontend handling
 - [ ] initialization-patterns — Document initSync vs init for Node.js (vitest) vs browser, bridge.ts pattern
 
 ### Wave 3: Frontend Data Model
@@ -74,3 +74,4 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 | audit-stack-assumptions | 1 | 2026-03-06 | COMPLETE — 13 files to DISCARD, 9 files need adaptation (specific line-by-line refs cataloged), 27 files fully reusable. Comprehensive translation map produced for all 6 layer types. |
 | wasm-export-signature | 2 | 2026-03-06 | COMPLETE — Single compute_json() + validate_json() exports. WasmResult discriminated union envelope. Decimal→string serialization. bridge.ts pattern with Node.js/browser init detection. useTaxBridge hook interface defined. |
 | serde-wire-format | 2 | 2026-03-06 | COMPLETE — camelCase fields, SCREAMING_SNAKE_CASE enums, Decimal→string, Option→null, Date→"YYYY-MM-DD", FormOutputUnion adjacently tagged, deny_unknown_fields on inputs only. Full Cargo.toml deps + wire examples. |
+| error-contract | 2 | 2026-03-06 | COMPLETE — All 29 ERR_* codes, 5 ineligibility errors, 8 assertion errors, 9 WARN_* codes, 5 IN-* codes, MRF_* types. Rust serde attrs, JSON wire format, TypeScript interfaces, Zod schemas, frontend handling (ValidationError vs ComputeError vs Sentry). Dynamic field name mapping table. |
