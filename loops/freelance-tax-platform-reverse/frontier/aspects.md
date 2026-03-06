@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 37
-- Analyzed: 3
-- Pending: 34
-- Convergence: 8%
+- Analyzed: 4
+- Pending: 33
+- Convergence: 11%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -16,7 +16,7 @@ Verify existing domain/engine spec and catalog wrong-stack assumptions.
 
 ### Wave 2: Bridge Contract
 Depends on Wave 1. Design the WASM boundary between Rust engine and JavaScript frontend.
-- [ ] wasm-export-signature — Define compute_json() and other WASM exports with exact parameter/return types
+- [x] wasm-export-signature — Define compute_json() and other WASM exports with exact parameter/return types
 - [ ] serde-wire-format — Document exact JSON serialization rules for every struct/enum (rename_all, deny_unknown_fields, Optional as null)
 - [ ] error-contract — Define error JSON shape from WASM, severity levels, frontend handling
 - [ ] initialization-patterns — Document initSync vs init for Node.js (vitest) vs browser, bridge.ts pattern
@@ -72,3 +72,4 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 | validate-domain-spec | 1 | 2026-03-06 | PASS — Domain/engine spec complete for Rust impl. 6 minor issues flagged for Bridge Contract wave. |
 | validate-engine-spec | 1 | 2026-03-06 | PASS — Pipeline is pure (no I/O), Decimal arithmetic throughout, all 20+ types concrete. 4 minor inconsistencies flagged. Action items for Bridge Contract wave documented. |
 | audit-stack-assumptions | 1 | 2026-03-06 | COMPLETE — 13 files to DISCARD, 9 files need adaptation (specific line-by-line refs cataloged), 27 files fully reusable. Comprehensive translation map produced for all 6 layer types. |
+| wasm-export-signature | 2 | 2026-03-06 | COMPLETE — Single compute_json() + validate_json() exports. WasmResult discriminated union envelope. Decimal→string serialization. bridge.ts pattern with Node.js/browser init detection. useTaxBridge hook interface defined. |
