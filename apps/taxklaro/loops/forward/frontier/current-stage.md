@@ -1,18 +1,17 @@
-# Current Stage: 23 (Unit Tests — full suite)
+# Current Stage: 24 (E2E Tests)
 
 ## Status
-Stage 22 complete. ci.yml (§16.5) and deploy.yml (§16.6) created. YAML lint passes.
+Stage 23 complete. 549 unit tests pass across 11 test files. Zero failures.
 
 ## What To Do
-Read spec §15.1. Audit and expand Vitest unit test coverage. Run full test suite and fix failures.
+Read spec §15.2. Create Playwright E2E tests covering 13 test suites.
 
 Tasks:
-- Audit coverage for src/lib/, src/hooks/, src/components/
-- Add missing tests to reach spec §15.1 requirements
-- Run `npx vitest run --reporter=verbose`
-- Fix any failures
+- Create `playwright.config.ts` from spec §15.2
+- Create test data fixtures in `e2e/fixtures/`
+- Implement 13 test suites (T-AUTH-01 through T-ERROR-03) from spec §15.2
 
-Test command: `npx vitest run --reporter=verbose`
+Test command: `npx playwright test`
 
 ## Work Log
 - 2026-03-06: Stage 1 complete — cargo check passes, advancing to stage 2
@@ -37,3 +36,4 @@ Test command: `npx vitest run --reporter=verbose`
 - 2026-03-06: Stage 20 complete — 13 monitoring tests pass, Sentry + ErrorBoundary + error categories implemented, advancing to stage 21
 - 2026-03-06: Stage 21 complete — Dockerfile + nginx.conf + fly.toml created, fly.toml TOML-valid, advancing to stage 22
 - 2026-03-06: Stage 22 complete — ci.yml + deploy.yml created, YAML lint passes, advancing to stage 23
+- 2026-03-06: Stage 23 complete — 549 unit tests pass, TIN branch code regex fixed, advancing to stage 24
