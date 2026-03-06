@@ -1,18 +1,17 @@
-# Current Stage: 21 (Deployment Config)
+# Current Stage: 22 (CI/CD Workflows)
 
 ## Status
-Stage 20 complete. All 13 monitoring tests pass. Sentry monitoring, ErrorBoundary, and error categorization implemented.
+Stage 21 complete. Dockerfile (multi-stage), nginx.conf (SPA + WASM MIME), fly.toml (Singapore), and SECRETS.md created. fly.toml validated as valid TOML.
 
 ## What To Do
-Read spec §16.1–§16.4. Create Docker + nginx + Fly.io deployment config.
+Read spec §16.5, §16.6. Create GitHub Actions CI and deploy workflows.
 
 Tasks:
-- Create `apps/taxklaro/frontend/Dockerfile` from spec §16.1 (multi-stage: Rust WASM build → Node build → nginx)
-- Create `nginx.conf` from spec §16.2 (SPA fallback, cache headers, gzip)
-- Create `fly.toml` from spec §16.3 (Singapore region, health check)
-- Document required secrets from spec §16.4
+- Create `.github/workflows/ci.yml` from spec §16.5 (typecheck → lint → test → build → e2e)
+- Create `.github/workflows/deploy.yml` from spec §16.6 (build Docker → fly deploy)
+- Include migration verification step: `supabase db reset` + RPC verification
 
-Test command: `docker build .`
+Test command: lint yaml
 
 ## Work Log
 - 2026-03-06: Stage 1 complete — cargo check passes, advancing to stage 2
@@ -35,3 +34,4 @@ Test command: `docker build .`
 - 2026-03-06: Stage 18 complete — 86 wiring tests pass, all 90 component files exist, §14.1–§14.5 verified, advancing to stage 19
 - 2026-03-06: Stage 19 complete — 41 ui-states tests pass, EmptyState/ErrorState/skeletons/toasts wired, advancing to stage 20
 - 2026-03-06: Stage 20 complete — 13 monitoring tests pass, Sentry + ErrorBoundary + error categories implemented, advancing to stage 21
+- 2026-03-06: Stage 21 complete — Dockerfile + nginx.conf + fly.toml created, fly.toml TOML-valid, advancing to stage 22
