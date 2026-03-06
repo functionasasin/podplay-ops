@@ -274,6 +274,13 @@ CREATE TABLE projects (
   -- macOS login password; stored in plain text per MRP convention
   -- NOTE: future hardening should encrypt or move to secrets vault (1Password)
 
+  location_id                 TEXT,
+  -- PodPlay backend venue ID provided by dev team (Agustin)
+  -- Used in Mosyle MDM P-List config: <dict><key>id</key><string>LOCATION_ID</string></dict>
+  -- Routes iPad/Apple TV app to correct venue backend
+  -- Set during Phase 1 (Pre-Configuration), confirmed with Agustin before iPad setup
+  -- Token {{LOCATION_ID}} in checklist templates resolves from this field
+
   replay_api_url              TEXT,
   -- Auto-derived: http://{ddns_subdomain}.podplaydns.com:4000
   -- Stored for quick reference; regenerated when ddns_subdomain changes
@@ -421,6 +428,7 @@ CREATE POLICY "authenticated users can delete projects"
 | unifi_site_name | MASTER ACCOUNTS | "UniFi Site Name" |
 | mac_mini_username | MASTER ACCOUNTS | "Mac Mini Username" |
 | mac_mini_password | MASTER ACCOUNTS | "Mac Mini Password" |
+| location_id | dev team (Agustin) | PodPlay venue ID for MDM P-List config |
 
 ---
 
@@ -1082,22 +1090,22 @@ CREATE TABLE deployment_checklist_templates (
   id              UUID    PRIMARY KEY DEFAULT gen_random_uuid(),
 
   phase           INTEGER NOT NULL CHECK (phase >= 0 AND phase <= 15),
-  -- Phase 0: Pre-Purchase & Planning
-  -- Phase 1: Pre-Configuration (PodPlay Office)
-  -- Phase 2: Unboxing & Labeling
-  -- Phase 3: Network Rack Assembly
-  -- Phase 4: Networking Setup (UniFi)
-  -- Phase 5: ISP Router Configuration
-  -- Phase 6: DDNS Setup (FreeDNS)
-  -- Phase 7: Camera Configuration
-  -- Phase 8: iPad Setup
-  -- Phase 9: Apple TV Setup
-  -- Phase 10: Mac Mini Setup
-  -- Phase 11: Replay Service Deployment
-  -- Phase 12: Testing & Verification
-  -- Phase 13: Packing & Shipping
-  -- Phase 14: On-Site Installation
-  -- Phase 15: Go-Live & Handoff
+  -- Phase 0:  Pre-Purchase & Planning
+  -- Phase 1:  Pre-Configuration (PodPlay Office)
+  -- Phase 2:  Unboxing & Labeling
+  -- Phase 3:  Network Rack Assembly
+  -- Phase 4:  Networking Setup (UniFi)
+  -- Phase 5:  ISP Router Configuration
+  -- Phase 6:  Camera Configuration
+  -- Phase 7:  DDNS Setup (FreeDNS)
+  -- Phase 8:  Mac Mini Setup
+  -- Phase 9:  Replay Service Deployment (V1)
+  -- Phase 10: iPad Setup
+  -- Phase 11: Apple TV Setup
+  -- Phase 12: Physical Installation (On-Site)
+  -- Phase 13: Testing & Verification
+  -- Phase 14: Health Monitoring Setup
+  -- Phase 15: Packaging & Shipping
 
   phase_name      TEXT    NOT NULL,
   -- Human-readable phase name (e.g., "Phase 4: Networking Setup (UniFi)")

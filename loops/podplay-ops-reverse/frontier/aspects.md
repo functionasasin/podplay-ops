@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 57
-- Analyzed: 12
-- Pending: 45
-- Convergence: 21%
+- Analyzed: 13
+- Pending: 44
+- Convergence: 23%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -25,7 +25,7 @@
 - [x] model-installers — Installer directory: fields, search patterns, project associations
 - [x] model-settings — All configurable values: pricing tiers, tax rates, margins, labor rates, travel defaults
 - [x] model-bom-templates — Template structures for auto-generating BOMs per tier (Pro/Autonomous/Autonomous+/PBK)
-- [ ] model-checklist-templates — Template structures for seeding deployment checklists per tier
+- [x] model-checklist-templates — Template structures for seeding deployment checklists per tier
 - [ ] model-cc-terminals — CC Form sheet: BBPOS WisePOS E terminal ordering, cost tracking, delivery status, front desk equipment (QR scanner, webcam)
 - [ ] model-replay-signs — Customer Replay Signs sheet: sign fulfillment lifecycle (Staged > Shipped > Delivered > Installed), qty calc (2x courts), outreach tracking, inventory decrement
 - [ ] model-support-tiers — Three-tier support escalation model: Tier 1 (on-site), Tier 2 (config specialist), Tier 3 (engineer), per-tier examples, escalation paths
