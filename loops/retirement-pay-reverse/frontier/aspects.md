@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 55
-- Analyzed: 45
-- Pending: 10
-- Convergence: 82%
+- Analyzed: 46
+- Pending: 9
+- Convergence: 84%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -67,7 +67,7 @@ Depends on Wave 3 + Wave 4.
 - [x] env-configuration — VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, .env.local.example, SetupPage pattern for missing vars
 - [x] database-migrations — Tables (computations, organizations, members, invitations, shared_links), RLS policies, RPC functions (get_shared_computation, create_org), triggers, idempotent (IF NOT EXISTS)
 - [x] navigation — Auth-aware sidebar (desktop) + drawer (mobile), active states, sign-out, org switcher
-- [ ] org-model — Organizations for HR departments, members, roles (owner/admin/member), invitations, seat limits, useOrganization() hook
+- [x] org-model — Organizations for HR departments, members, roles (owner/admin/member), invitations, seat limits, useOrganization() hook
 - [ ] computation-management — CRUD for saved computations, auto-save, status workflow (draft/computed/shared), ComputationCard grid
 - [ ] sharing — Token-based read-only sharing, get_shared_computation() RPC with UUID parameter, /share/$token route, anon GRANT
 - [ ] component-wiring-map — Every component -> parent route/page/tab/dialog, navigation path from home, trigger (for modals), props source. Zero orphans.
@@ -95,6 +95,7 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 - [ ] spec-review — Final review: can the forward loop build the ENTIRE product from this spec alone?
 
 ## Recently Analyzed
+- org-model (Wave 5) — 2026-03-06
 - navigation (Wave 5) — 2026-03-06
 - database-migrations (Wave 5) — 2026-03-06
 - env-configuration (Wave 5) — 2026-03-06
