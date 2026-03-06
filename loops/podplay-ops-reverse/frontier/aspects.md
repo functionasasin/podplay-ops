@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 57
-- Analyzed: 40
-- Pending: 17
-- Convergence: 70%
+- Analyzed: 41
+- Pending: 16
+- Convergence: 72%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -57,7 +57,7 @@
 ### Wave 4: Full-Stack Product Design
 - [x] design-routes — Complete route map with auth guards, layout hierarchy, navigation structure
 - [x] design-dashboard — Home dashboard: project list, status pills, progress bars, top-line metrics, filters
-- [ ] design-wizard-intake — Stage 1 wizard: 6 steps, form fields, validation rules, conditional logic for tiers (including PBK)
+- [x] design-wizard-intake — Stage 1 wizard: 6 steps, form fields, validation rules, conditional logic for tiers (including PBK)
 - [ ] design-wizard-procurement — Stage 2: BOM review, inventory check, PO creation, receiving, packing, CC terminal ordering, replay sign fulfillment
 - [ ] design-wizard-deployment — Stage 3: 15-phase smart checklist UI with auto-fill, warnings, troubleshooting tips, notes, non-linear navigation, ISP validation, cable estimation
 - [ ] design-wizard-financials — Stage 4: invoicing, expenses, P&L review, go-live/handoff
