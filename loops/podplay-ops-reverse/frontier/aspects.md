@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 57
-- Analyzed: 2
-- Pending: 55
-- Convergence: 4%
+- Analyzed: 3
+- Pending: 54
+- Convergence: 5%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -12,7 +12,7 @@
 - [ ] source-mrp-sheets — Map all 24 MRP spreadsheet sheets: columns, formulas, data types, row counts, relationships [BLOCKED: docs/Kim Lapus PodPlay MRP.xlsx not present in repo]
 - [x] source-deployment-guide — Extract all 15 deployment phases + 6 appendices with exact steps, settings values, warnings, prerequisites
 - [x] source-hardware-guide — Extract all hardware specs, mounting options, cable requirements, camera angles, measurements, front desk equipment
-- [ ] source-mrp-usage-guide — Extract all workflows, formula logic, Apps Script functions, pricing tiers, vendor reference
+- [x] source-mrp-usage-guide — Extract all workflows, formula logic, Apps Script functions, pricing tiers, vendor reference [PARTIAL: PDF not in repo; derived from config-guide-v1, hardware-bom, design doc, training transcripts]
 - [ ] source-existing-data — Catalog all real customer data, inventory items, vendors, installers from the XLSX
 - [ ] source-pricing-model — Extract complete pricing formulas: cost chains, margins, tax, shipping, per-venue vs per-court
 
