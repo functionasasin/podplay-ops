@@ -1,27 +1,25 @@
-# Current Stage: 13 (Supabase + Migrations)
+# Current Stage: 14 (Auth)
 
 ## Status
-Stage 12 complete. 42 tests pass for all results components + format utilities.
+Stage 13 complete. supabase db reset passes, all 4 migrations created, .env.local.example created.
 
 ## What To Do
-Read spec §10. Initialize Supabase and create all database migrations.
+Read spec §9. Implement Supabase PKCE auth with email/password and magic link.
 
 Tasks:
-- Run `supabase init` in apps/taxklaro/frontend/
-- Create supabase/migrations/001_initial_schema.sql (8 tables, 5 enums, triggers)
-- Create supabase/migrations/002_rls_policies.sql (32 RLS policies)
-- Create supabase/migrations/003_rpc_functions.sql (6 RPCs with explicit GRANTs)
-- Create supabase/migrations/004_storage.sql (firm-logos bucket)
-- Create .env.local.example
+- Create src/lib/supabase.ts (supabaseConfigured guard)
+- Update src/main.tsx (getSession + onAuthStateChange bootstrap)
+- Create src/lib/auth.ts (signInWithPassword, signInWithOtp, signUp, signOut, resetPassword)
+- Create src/hooks/useAuth.ts (auth state hook)
+- Create auth routes: /auth, /auth/callback, /auth/reset, /auth/reset-confirm
+- Create SetupPage.tsx (shown when VITE_SUPABASE_URL is missing)
 
 Critical traps:
-- p_token parameters MUST be UUID not TEXT
-- GRANT EXECUTE ON FUNCTION ... TO anon for public RPCs
-- SET search_path = public on all SECURITY DEFINER functions
-- ENABLE ROW LEVEL SECURITY explicit on every table
-- UNIQUE constraint on computation_deadlines(computation_id, milestone_key)
+- getSession() BEFORE onAuthStateChange listener (spec §9.5)
+- PKCE flow: callback route handles code exchange
+- Email redirect URLs must be whitelisted in Supabase dashboard
 
-Test command: `npx supabase db reset`
+Test command: `npx vitest run src/lib/auth`
 
 ## Work Log
 - 2026-03-06: Stage 1 complete — cargo check passes, advancing to stage 2
@@ -36,3 +34,4 @@ Test command: `npx supabase db reset`
 - 2026-03-06: Stage 10 complete — 80 tests pass for wizard steps WS-00 through WS-07D, advancing to stage 11
 - 2026-03-06: Stage 11 complete — 128 tests pass for wizard steps WS-08 through WS-13 + REVIEW, advancing to stage 12
 - 2026-03-06: Stage 12 complete — 42 tests pass for results components + format utilities, advancing to stage 13
+- 2026-03-06: Stage 13 complete — supabase db reset passes, all 4 migrations match spec §10, .env.local.example created, advancing to stage 14
