@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 57
-- Analyzed: 41
-- Pending: 16
-- Convergence: 72%
+- Analyzed: 42
+- Pending: 15
+- Convergence: 74%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -58,7 +58,7 @@
 - [x] design-routes — Complete route map with auth guards, layout hierarchy, navigation structure
 - [x] design-dashboard — Home dashboard: project list, status pills, progress bars, top-line metrics, filters
 - [x] design-wizard-intake — Stage 1 wizard: 6 steps, form fields, validation rules, conditional logic for tiers (including PBK)
-- [ ] design-wizard-procurement — Stage 2: BOM review, inventory check, PO creation, receiving, packing, CC terminal ordering, replay sign fulfillment
+- [x] design-wizard-procurement — Stage 2: BOM review, inventory check, PO creation, receiving, packing, CC terminal ordering, replay sign fulfillment
 - [ ] design-wizard-deployment — Stage 3: 15-phase smart checklist UI with auto-fill, warnings, troubleshooting tips, notes, non-linear navigation, ISP validation, cable estimation
 - [ ] design-wizard-financials — Stage 4: invoicing, expenses, P&L review, go-live/handoff
 - [ ] design-inventory-view — Global inventory: stock levels, categories, low stock flags, movement history, adjustments
