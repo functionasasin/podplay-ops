@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 57
-- Analyzed: 46
-- Pending: 11
-- Convergence: 81%
+- Analyzed: 47
+- Pending: 10
+- Convergence: 82%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -63,7 +63,7 @@
 - [x] design-wizard-financials — Stage 4: invoicing, expenses, P&L review, go-live/handoff
 - [x] design-inventory-view — Global inventory: stock levels, categories, low stock flags, movement history, adjustments
 - [x] design-financials-view — Global financials: funnel, monthly P&L, HER charts, per-project P&L, reconciliation, team OpEx config
-- [ ] design-settings — Settings page: pricing tiers (Pro/Autonomous/Autonomous+/PBK), rates, catalog management, travel defaults, team salary allocations, contacts directory
+- [x] design-settings — Settings page: pricing tiers (Pro/Autonomous/Autonomous+/PBK), rates, catalog management, travel defaults, team salary allocations, contacts directory
 - [ ] design-database-schema — Complete Supabase migration: all tables, enums, indexes, RLS policies, seed data
 - [ ] design-supabase-functions — Client-side service layer: all CRUD operations, queries, filters per table
 
