@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 57
-- Analyzed: 4
-- Pending: 53
-- Convergence: 7%
+- Analyzed: 5
+- Pending: 52
+- Convergence: 9%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -17,7 +17,7 @@
 - [x] source-pricing-model — Extract complete pricing formulas: cost chains, margins, tax, shipping, per-venue vs per-court
 
 ### Wave 2: Data Model Extraction
-- [ ] model-project — Complete project entity: all fields from Form Responses + CUSTOMER MASTER + Status tabs
+- [x] model-project — Complete project entity: all fields from Form Responses + CUSTOMER MASTER + Status tabs
 - [ ] model-bom — BOM structure: item categories, qty formulas (per-venue/court/door/camera), cost chain
 - [ ] model-inventory — Inventory lifecycle: items, stock levels, order input, inventory input, adjustments, reconciliation
 - [ ] model-financials — Invoice, expense, P&L, HER, revenue pipeline, reconciliation data structures
