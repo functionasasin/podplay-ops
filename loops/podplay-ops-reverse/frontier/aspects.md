@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 57
-- Analyzed: 22
-- Pending: 35
-- Convergence: 39%
+- Analyzed: 23
+- Pending: 34
+- Convergence: 40%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -37,7 +37,7 @@
 - [x] model-tier-variants — PBK tier (Pickleball Kingdom custom pricing), PingPod-specific hardware (audio, speakers, Bluetooth), front desk hardware category (webcam, barcode scanner)
 
 ### Wave 3: Business Logic & Workflows
-- [ ] logic-customer-onboarding — Complete onboarding workflow: form → master → tab creation → cost analysis → SOW
+- [x] logic-customer-onboarding — Complete onboarding workflow: form → master → tab creation → cost analysis → SOW
 - [ ] logic-bom-generation — Auto-BOM logic: tier + courts + doors + cameras → complete hardware list with costs
 - [ ] logic-cost-analysis — Cost calculation chain: unit cost → total → tax → shipping → landed → margin → customer price
 - [ ] logic-inventory-management — Stock tracking: order → receive → stock → allocate → ship → deduct, low stock alerts
