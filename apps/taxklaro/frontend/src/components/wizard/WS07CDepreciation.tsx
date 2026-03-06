@@ -314,12 +314,12 @@ export function WS07CDepreciation({ data, onChange, onNext, onBack }: Props) {
       </Button>
 
       <div className="flex justify-between">
-        <Button variant="ghost" onClick={onBack}>Back</Button>
+        <Button variant="outline" onClick={onBack} className="h-11 px-5">Back</Button>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleSkip}>
+          <Button variant="outline" onClick={handleSkip} className="h-11">
             Skip depreciation — I have no qualifying assets
           </Button>
-          <Button onClick={handleNext}>Continue</Button>
+          <Button onClick={handleNext} className="h-11 px-6">Continue</Button>
         </div>
       </div>
     </div>

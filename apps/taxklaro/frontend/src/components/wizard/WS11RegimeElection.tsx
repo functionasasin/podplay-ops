@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { cn } from '@/lib/utils';
 import type { WizardFormData } from '@/types/wizard';
 import type { RegimeElection } from '@/types/common';
 
@@ -103,41 +105,36 @@ export function WS11RegimeElection({ data, onChange, onNext, onBack }: Props) {
         </p>
       </div>
 
-      <div className="space-y-2">
-        <Label>Which best describes your situation?</Label>
-        <RadioGroup
-          value={selected}
-          onValueChange={(v) => { setSelected(v); setSubmitError(null); }}
-          className="space-y-3"
-        >
-          {OPTIONS.map((opt) => (
-            <div
-              key={opt.value}
-              className={`border rounded-lg p-4 cursor-pointer transition-colors ${
-                selected === opt.value ? 'border-primary bg-primary/5' : 'border-border'
-              }`}
-              onClick={() => { setSelected(opt.value); setSubmitError(null); }}
-            >
-              <div className="flex items-start gap-3">
-                <RadioGroupItem value={opt.value} id={`regime-${opt.value}`} className="mt-0.5" />
-                <div>
-                  <Label
-                    htmlFor={`regime-${opt.value}`}
-                    className="font-medium cursor-pointer"
-                  >
-                    {opt.title}
-                  </Label>
-                  <p className="text-sm text-muted-foreground mt-0.5">{opt.description}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </RadioGroup>
-        <p className="text-xs text-muted-foreground">
-          Your regime election is how you formally told BIR which tax method you're using. The 8%
-          option must be elected on your first quarterly return (Q1 1701Q).
-        </p>
-      </div>
+      <RadioGroup
+        value={selected}
+        onValueChange={(v) => { setSelected(v); setSubmitError(null); }}
+        className="gap-3"
+      >
+        {OPTIONS.map((opt) => (
+          <div key={opt.value}>
+            <RadioGroupItem value={opt.value} id={`regime-${opt.value}`} className="sr-only" />
+            <Label htmlFor={`regime-${opt.value}`} className="cursor-pointer block">
+              <Card
+                className={cn(
+                  'transition-all duration-200 shadow-sm',
+                  selected === opt.value
+                    ? 'border-primary ring-2 ring-primary/20 bg-primary/5 shadow-md'
+                    : 'hover:border-primary/40 hover:shadow-md'
+                )}
+              >
+                <CardContent className="p-5">
+                  <div className="font-medium">{opt.title}</div>
+                  <div className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{opt.description}</div>
+                </CardContent>
+              </Card>
+            </Label>
+          </div>
+        ))}
+      </RadioGroup>
+      <p className="text-xs text-muted-foreground">
+        Your regime election is how you formally told BIR which tax method you're using. The 8%
+        option must be elected on your first quarterly return (Q1 1701Q).
+      </p>
 
       {selected === NULL_VALUE && (
         <Alert className="border-blue-300 bg-blue-50">
@@ -159,8 +156,8 @@ export function WS11RegimeElection({ data, onChange, onNext, onBack }: Props) {
       {submitError && <p className="text-sm text-destructive">{submitError}</p>}
 
       <div className="flex justify-between">
-        <Button variant="ghost" onClick={onBack}>Back</Button>
-        <Button onClick={handleNext} disabled={eightPctBlocked}>Continue</Button>
+        <Button variant="outline" onClick={onBack} className="h-11 px-5">Back</Button>
+        <Button onClick={handleNext} disabled={eightPctBlocked} className="h-11 px-6">Continue</Button>
       </div>
     </div>
   );

@@ -199,10 +199,10 @@ export function WS04GrossReceipts({ data, onChange, onNext, onBack }: Props) {
       </Accordion>
 
       <div className="flex justify-between">
-        <Button variant="ghost" onClick={onBack}>
+        <Button variant="outline" onClick={onBack} className="h-11 px-5">
           Back
         </Button>
-        <Button onClick={handleNext}>Continue</Button>
+        <Button onClick={handleNext} className="h-11 px-6">Continue</Button>
       </div>
     </div>
   );

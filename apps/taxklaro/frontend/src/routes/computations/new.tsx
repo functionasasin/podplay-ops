@@ -4,7 +4,6 @@ import { authenticatedRoute } from '../__root';
 import { authGuard } from '../../lib/auth-guard';
 import { computeActiveSteps } from '../../lib/wizard-routing';
 import { WizardProgressBar } from '../../components/wizard/WizardProgressBar';
-import { WizardNavControls } from '../../components/wizard/WizardNavControls';
 import {
   WS00ModeSelection,
   WS01TaxpayerProfile,
@@ -151,16 +150,7 @@ function ComputationsNewPage() {
           (() => {
             const StepComponent = STEP_COMPONENTS[currentStepId];
             return StepComponent ? (
-              <>
-                <StepComponent data={formData} onChange={handleChange} onNext={handleNext} onBack={handleBack} />
-                <WizardNavControls
-                  onBack={handleBack}
-                  onNext={handleNext}
-                  isFirstStep={isFirstStep}
-                  isLastStep={false}
-                  isSubmitting={isComputing}
-                />
-              </>
+              <StepComponent data={formData} onChange={handleChange} onNext={handleNext} onBack={handleBack} />
             ) : null;
           })()
         )}

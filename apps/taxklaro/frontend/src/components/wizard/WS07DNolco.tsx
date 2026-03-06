@@ -277,13 +277,14 @@ export function WS07DNolco({ data, onChange, onNext, onBack }: Props) {
       )}
 
       <div className="flex justify-between">
-        <Button variant="ghost" onClick={onBack}>
+        <Button variant="outline" onClick={onBack} className="h-11 px-5">
           Back
         </Button>
         <div className="flex gap-2">
           {hasNolco === 'yes' && (
             <Button
               variant="outline"
+              className="h-11"
               onClick={() => {
                 onChange({ itemizedExpenses: { ...ie, nolcoEntries: [] } });
                 onNext();
@@ -292,7 +293,7 @@ export function WS07DNolco({ data, onChange, onNext, onBack }: Props) {
               Skip — I have no prior-year losses to carry over
             </Button>
           )}
-          <Button onClick={handleNext}>Continue</Button>
+          <Button onClick={handleNext} className="h-11 px-6">Continue</Button>
         </div>
       </div>
     </div>

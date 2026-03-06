@@ -506,8 +506,8 @@ export function WS08CwtForm2307({ data, onChange, onNext, onBack }: Props) {
       )}
 
       <div className="flex justify-between">
-        <Button variant="ghost" onClick={onBack}>Back</Button>
-        <Button onClick={handleNext}>Continue</Button>
+        <Button variant="outline" onClick={onBack} className="h-11 px-5">Back</Button>
+        <Button onClick={handleNext} className="h-11 px-6">Continue</Button>
       </div>
     </div>
   );

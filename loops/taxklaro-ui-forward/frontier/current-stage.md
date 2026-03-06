@@ -1,21 +1,26 @@
-# Current Stage: 5 (Wizard Polish)
+# Current Stage: 6 (Results + Detail)
 
 ## Status
-Stage 4 complete. Landing page has hero + 3-column feature grid + trust copy + footer (copyright).
-Auth pages: DM Serif Display h2 card titles, shadow-lg card, logo above form, full-width button,
-text link secondary actions. Reset + reset-confirm: same card pattern, DM Serif Display h2.
-Onboarding: card with logo above, DM Serif Display h2 heading in OnboardingForm. Build passes.
+Stage 5 complete. Wizard at `/computations/new` polished:
+- WizardProgressBar: h-3, gradient fill, DM Sans step count — already done
+- Step container: shadow-md card with p-8 — already done
+- Radio cards (WS00, WS01, WS02, WS06, WS11): Card-based hover+selected state — WS11 updated to match
+- Navigation: Removed duplicate WizardNavControls from new.tsx. All steps now use
+  variant="outline" h-11 px-5 for Back, h-11 px-6 for Next/Continue.
+- WizardReview: sections as shadow-sm cards, font-display section titles — already done
+- Section headings: font-display text-2xl — already done across all steps
+- Build passes.
 
 ## What To Do
-Restyle the wizard at `/computations/new`:
-- Progress bar: h-3, rounded, subtle gradient fill, step count in DM Sans
-- Step container: card with shadow-md, p-8
-- Radio cards: border + shadow on hover, selected state primary border + light blue bg
-- Form fields: proper label spacing (mb-1.5), h-11 inputs, focus ring in primary
-- PesoInput: peso prefix styled with muted foreground
-- Navigation: Back=outline, Next=primary, proper spacing
-- WizardReview: sections as cards, serif section titles
-- Section headings within steps: DM Serif Display h2
+Restyle the results view at `/computations/$compId`:
+- RecommendationBanner: prominent card with green accent, savings amount in DM Serif Display
+- RegimeComparisonTable: clean table with highlighted recommended column, tabular nums
+- TaxBreakdownPanel: card sections with clear labels, amounts right-aligned
+- PathDetailAccordion: smooth expand/collapse, indented detail rows
+- BalancePayableSection: large bottom-line number in DM Serif Display, green/red coloring
+- PenaltySummary: amber-bordered warning card
+- BirFormRecommendation: subtle info card with form type badge
+- Page header: computation title in DM Serif Display, status badge, back navigation
 
 ## Work Log
 - Stage 1 (2026-03-06): Installed @fontsource-variable/dm-sans + @fontsource/dm-serif-display.
@@ -31,3 +36,7 @@ Restyle the wizard at `/computations/new`:
 - Stage 4 (2026-03-06): Landing page footer added (copyright line). Auth/reset/reset-confirm
   h1 headings updated from text-xl font-semibold to font-display (DM Serif Display, --text-h2).
   Onboarding already polished. Build passes.
+- Stage 5 (2026-03-06): Wizard polish. Removed duplicate WizardNavControls rendering from new.tsx.
+  Updated all 13 wizard steps: Back buttons → variant="outline" h-11 px-5, Continue → h-11 px-6.
+  WS11RegimeElection radio options refactored to Card-based pattern (matching WS00/WS01/WS06).
+  Build passes.
