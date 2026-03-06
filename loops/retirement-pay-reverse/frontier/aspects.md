@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 65
-- Analyzed: 60
-- Pending: 5
-- Convergence: 92%
+- Analyzed: 61
+- Pending: 4
+- Convergence: 94%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -88,13 +88,14 @@ Depends on Wave 5.
 
 ### Wave 7: Synthesis
 Depends on ALL previous waves. **Strict internal dependency order — do NOT skip ahead.**
-- [ ] spec-draft — Assemble docs/plans/retirement-pay-spec.md from all analysis files + domain content. Every section fully written.
+- [x] spec-draft — Assemble docs/plans/retirement-pay-spec.md from all analysis files + domain content. Every section fully written.
 - [ ] placeholder-validation — **HARD GATE.** Line-by-line scan for banned patterns. MUST return PASS before proceeding. If FAIL: create new aspects to resolve each gap.
 - [ ] completeness-audit — Per-feature PASS/FAIL: types match, schemas match, routes wired, components wired, migrations complete, E2E defined. Includes orphan check on component wiring map.
 - [ ] cross-layer-consistency — Field-by-field verification: Rust <-> JSON <-> TypeScript <-> Zod for every struct, enum, and field
 - [ ] spec-review — Final review: can the forward loop build the ENTIRE product from this spec alone?
 
 ## Recently Analyzed
+- spec-draft (Wave 7) — 2026-03-06
 - ci-cd-pipeline (Wave 6) — 2026-03-06
 - fly-io-deployment (Wave 6) — 2026-03-06
 - supabase-gotchas (Wave 6) — 2026-03-06

@@ -2,6 +2,7 @@
 
 | # | Aspect | Wave | Date | Files Modified |
 |---|--------|------|------|----------------|
+| 61 | spec-draft | 7 | 2026-03-06 | docs/plans/retirement-pay-spec.md |
 | 60 | ci-cd-pipeline | 6 | 2026-03-06 | analysis/ci-cd-pipeline.md |
 | 59 | fly-io-deployment | 6 | 2026-03-06 | analysis/fly-io-deployment.md |
 | 58 | supabase-gotchas | 6 | 2026-03-06 | analysis/supabase-gotchas.md |
