@@ -19,11 +19,15 @@
     "@sentry/react": "^8.0.0",
     "@supabase/supabase-js": "^2.0.0",
     "@tanstack/react-router": "^1.0.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "lucide-react": "^0.400.0",
+    "radix-ui": "^1.4.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.0.0",
     "sonner": "^1.0.0",
+    "tailwind-merge": "^3.5.0",
     "zod": "^3.0.0"
   },
   "devDependencies": {
