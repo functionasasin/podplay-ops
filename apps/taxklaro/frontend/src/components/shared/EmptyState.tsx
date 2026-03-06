@@ -1,23 +1,37 @@
 import type { LucideIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface EmptyStateProps {
-  icon?: LucideIcon;
+  icon: LucideIcon;
   title: string;
-  description?: string;
-  action?: React.ReactNode;
+  description: string;
+  ctaLabel?: string;
+  onCta?: () => void;
+  secondaryCtaLabel?: string;
+  onSecondaryCta?: () => void;
+  className?: string;
 }
 
-export function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps) {
+export function EmptyState({
+  icon: Icon,
+  title,
+  description,
+  ctaLabel,
+  onCta,
+  secondaryCtaLabel,
+  onSecondaryCta,
+  className,
+}: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 space-y-4 text-center">
-      {Icon && <Icon className="h-12 w-12 text-muted-foreground" />}
-      <div>
-        <p className="text-lg font-medium">{title}</p>
-        {description && (
-          <p className="text-sm text-muted-foreground mt-1">{description}</p>
-        )}
+    <div className={cn('flex flex-col items-center justify-center py-16 px-4 text-center', className)}>
+      <div className="flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+        <Icon className="w-8 h-8 text-muted-foreground" />
       </div>
-      {action}
+      <h3 className="text-lg font-semibold text-foreground mb-2">{title}</h3>
+      <p className="text-sm text-muted-foreground max-w-sm mb-6">{description}</p>
+      {ctaLabel && <Button onClick={onCta} className="mb-2">{ctaLabel}</Button>}
+      {secondaryCtaLabel && <Button variant="ghost" onClick={onSecondaryCta}>{secondaryCtaLabel}</Button>}
     </div>
   );
 }
