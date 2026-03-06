@@ -31,3 +31,4 @@
 | 27 | wasm-export-signature | 4 | 2026-03-06 | analysis/wasm-export-signature.md |
 | 28 | serde-wire-format | 4 | 2026-03-06 | analysis/serde-wire-format.md |
 | 29 | error-contract | 4 | 2026-03-06 | analysis/error-contract.md |
+| 30 | initialization-patterns | 4 | 2026-03-06 | analysis/initialization-patterns.md |

@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 55
-- Analyzed: 29
-- Pending: 26
-- Convergence: 53%
+- Analyzed: 30
+- Pending: 25
+- Convergence: 55%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -48,7 +48,7 @@ Depends on Wave 3 data model.
 - [x] wasm-export-signature — Define exports: compute_single_json(input: &str) -> String, compute_batch_json(input: &str) -> String, generate_nlrc_json(input: &str) -> String
 - [x] serde-wire-format — Exact JSON rules: deny_unknown_fields, rename_all = "camelCase", null for Optional, boolean as true/false, money as integer centavos
 - [x] error-contract — Error JSON shape: { error: string, code: string, field?: string, severity: "error" | "warning" | "info" }
-- [ ] initialization-patterns — initSync for Node.js (vitest), init for browser, bridge.ts wrapper pattern
+- [x] initialization-patterns — initSync for Node.js (vitest), init for browser, bridge.ts wrapper pattern
 
 ### Wave 5: Frontend Data Model + UI Design
 Depends on Wave 3 + Wave 4.
@@ -95,6 +95,7 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 - [ ] spec-review — Final review: can the forward loop build the ENTIRE product from this spec alone?
 
 ## Recently Analyzed
+- initialization-patterns (Wave 4) — 2026-03-06
 - error-contract (Wave 4) — 2026-03-06
 - serde-wire-format (Wave 4) — 2026-03-06
 - wasm-export-signature (Wave 4) — 2026-03-06
