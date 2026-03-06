@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 57
-- Analyzed: 48
-- Pending: 9
-- Convergence: 84%
+- Analyzed: 49
+- Pending: 8
+- Convergence: 86%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -65,7 +65,7 @@
 - [x] design-financials-view — Global financials: funnel, monthly P&L, HER charts, per-project P&L, reconciliation, team OpEx config
 - [x] design-settings — Settings page: pricing tiers (Pro/Autonomous/Autonomous+/PBK), rates, catalog management, travel defaults, team salary allocations, contacts directory
 - [x] design-database-schema — Complete Supabase migration: all tables, enums, indexes, RLS policies, seed data
-- [ ] design-supabase-functions — Client-side service layer: all CRUD operations, queries, filters per table
+- [x] design-supabase-functions — Client-side service layer: all CRUD operations, queries, filters per table
 
 ### Wave 5: Ship & Polish
 - [ ] ship-deployment — Fly.io config, Dockerfile, nginx.conf, env vars, Supabase Cloud setup
