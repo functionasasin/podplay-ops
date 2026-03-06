@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 55
-- Analyzed: 14
-- Pending: 41
-- Convergence: 25%
+- Analyzed: 15
+- Pending: 40
+- Convergence: 27%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -27,7 +27,7 @@ Depends on Wave 1 sources being cached.
 - [x] salary-basis-inclusions — What's included (basic, integrated COLA, contractual allowances) and excluded (OT, NSD, variable allowances)
 - [x] tax-treatment-conditions — Four conditions for tax exemption: age >= 50, service >= 10 years, first-time benefit, BIR-approved plan
 - [x] separation-pay-interaction — Art. 298 authorized causes overlap, pay-the-higher rule, dual entitlement scenarios
-- [ ] company-plan-comparison-rules — How statutory minimum compares to company plans, which prevails, gap calculation
+- [x] company-plan-comparison-rules — How statutory minimum compares to company plans, which prevails, gap calculation
 - [ ] death-before-retirement — Heirs' entitlement to retirement pay as if employee retired on date of death
 - [ ] batch-computation-rules — CSV input schema, per-employee computation, aggregation rules, summary statistics
 - [ ] nlrc-worksheet-format — NLRC money claim statement of computation format, required fields, exhibit structure
@@ -109,3 +109,4 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 - salary-basis-inclusions (Wave 2) — 2026-03-06
 - tax-treatment-conditions (Wave 2) — 2026-03-06
 - separation-pay-interaction (Wave 2) — 2026-03-06
+- company-plan-comparison-rules (Wave 2) — 2026-03-06
