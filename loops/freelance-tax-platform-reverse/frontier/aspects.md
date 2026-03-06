@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 37
-- Analyzed: 29
-- Pending: 8
-- Convergence: 78%
+- Analyzed: 30
+- Pending: 7
+- Convergence: 81%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -54,7 +54,7 @@ Depends on Wave 5. Production readiness.
 - [x] production-build-verification — Vite plugin inventory, production build smoke test requirements, tree-shaking-sensitive libraries (d3, recharts), WASM loading in prod mode. Prevents "dev works, prod white page" failure.
 - [x] migration-verification — supabase db reset test plan, RPC call tests with real data, parameter type match verification (UUID vs TEXT). Prevents "SQL written but never run" failure.
 - [x] supabase-gotchas — Anon grants for public RPCs, search_path on SECURITY DEFINER, RLS bypass patterns, storage bucket policies. Prevents "works in Supabase dashboard, fails from client" failures.
-- [ ] fly-io-deployment — Dockerfile, fly.toml, build args, Supabase project setup, domain config
+- [x] fly-io-deployment — Dockerfile, fly.toml, build args, Supabase project setup, domain config
 - [ ] ci-cd-pipeline — GitHub Actions: typecheck -> lint -> test -> build -> e2e -> deploy
 - [ ] monitoring-and-alerts — Sentry, health checks, client-side error tracking
 
