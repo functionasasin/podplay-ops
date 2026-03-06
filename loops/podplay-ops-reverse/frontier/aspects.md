@@ -2,15 +2,15 @@
 
 ## Statistics
 - Total aspects discovered: 57
-- Analyzed: 0
-- Pending: 57
-- Convergence: 0%
+- Analyzed: 1
+- Pending: 56
+- Convergence: 2%
 
 ## Pending Aspects (ordered by dependency)
 
 ### Wave 1: Source Acquisition & Domain Mapping
-- [ ] source-mrp-sheets — Map all 24 MRP spreadsheet sheets: columns, formulas, data types, row counts, relationships
-- [ ] source-deployment-guide — Extract all 15 deployment phases + 6 appendices with exact steps, settings values, warnings, prerequisites
+- [ ] source-mrp-sheets — Map all 24 MRP spreadsheet sheets: columns, formulas, data types, row counts, relationships [BLOCKED: docs/Kim Lapus PodPlay MRP.xlsx not present in repo]
+- [x] source-deployment-guide — Extract all 15 deployment phases + 6 appendices with exact steps, settings values, warnings, prerequisites
 - [ ] source-hardware-guide — Extract all hardware specs, mounting options, cable requirements, camera angles, measurements, front desk equipment
 - [ ] source-mrp-usage-guide — Extract all workflows, formula logic, Apps Script functions, pricing tiers, vendor reference
 - [ ] source-existing-data — Catalog all real customer data, inventory items, vendors, installers from the XLSX
