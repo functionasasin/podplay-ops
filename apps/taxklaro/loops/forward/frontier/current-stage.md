@@ -1,19 +1,18 @@
-# Current Stage: 19 (Empty States + Toasts + Loading)
+# Current Stage: 20 (Monitoring)
 
 ## Status
-Stage 18 complete. All 86 wiring tests pass. 38 missing component stubs created, wizard/steps/ re-exports added, wiring test covers §14.1–§14.5.
+Stage 19 complete. All 41 ui-states tests pass. EmptyState, ErrorState, skeleton loaders, Sonner toasts (41 across 8 categories), and loading/error/empty states wired to all async pages.
 
 ## What To Do
-Read spec §8.4, §8.5. Add empty states, toasts, and loading skeletons for every async page.
+Read spec §17. Implement Sentry monitoring, health checks, and error boundaries.
 
 Tasks:
-- Create EmptyState.tsx and ErrorState.tsx shared components from spec §8.5
-- Add skeleton loaders for all async pages from spec §8.5
-- Configure Sonner toasts from spec §8.4 (41 toasts across 8 categories)
-- Wire loading/error/empty states to every page that fetches data
-- Create src/__tests__/ui-states.test.ts — verify no page renders blank on empty data
+- Create `src/lib/monitoring.ts` from spec §17.3
+- Init Sentry BEFORE React render in main.tsx from spec §17.1
+- Create `ErrorBoundary.tsx` with Sentry.captureException
+- Wire error categories from spec §17.2 (ValidationError → no Sentry, ComputeError → Sentry)
 
-Test command: `npx vitest run src/__tests__/ui-states`
+Test command: `npx vitest run src/lib/monitoring`
 
 ## Work Log
 - 2026-03-06: Stage 1 complete — cargo check passes, advancing to stage 2
@@ -34,3 +33,4 @@ Test command: `npx vitest run src/__tests__/ui-states`
 - 2026-03-06: Stage 16 complete — 27 computations CRUD tests pass, ComputationCard + list page with status tabs implemented, advancing to stage 17
 - 2026-03-06: Stage 17 complete — 19 share + auto-save tests pass, SharePage + SaveStatusIndicator + useAutoSave wired, advancing to stage 18
 - 2026-03-06: Stage 18 complete — 86 wiring tests pass, all 90 component files exist, §14.1–§14.5 verified, advancing to stage 19
+- 2026-03-06: Stage 19 complete — 41 ui-states tests pass, EmptyState/ErrorState/skeletons/toasts wired, advancing to stage 20
