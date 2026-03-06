@@ -1,0 +1,16 @@
+Stage 4 Complete — 2026-03-06
+
+wasm-pack build --target web succeeded.
+
+Output in engine/pkg/:
+- taxklaro_engine.js (7.7KB)
+- taxklaro_engine_bg.wasm (237KB)
+- taxklaro_engine.d.ts (1.8KB)
+- taxklaro_engine_bg.wasm.d.ts (645B)
+
+src/wasm.rs matches spec §3.2 exactly:
+- compute_json: deserializes TaxpayerInput, calls run_pipeline, serializes result
+- validate_json: deserializes TaxpayerInput, runs validate_input, serializes errors
+
+Warnings only (no errors) — 7 unused variable/import warnings in pipeline.rs.
+Advancing to stage 5: Frontend Scaffold + WASM Bridge.

@@ -1,15 +1,17 @@
-# Current Stage: 4 (Engine WASM Build)
+# Current Stage: 5 (Frontend Scaffold + WASM Bridge)
 
 ## Status
-Stage 3 complete. Full 16-step pipeline implemented. 37 tests pass (cargo test).
+Stage 4 complete. wasm-pack build --target web succeeded. engine/pkg/ produced (237KB .wasm).
 
 ## What To Do
-Read spec §3.8. Complete src/wasm.rs — wrap run_pipeline in WasmResult envelope.
-Run `wasm-pack build --target web` in engine directory. Verify engine/pkg/ is produced.
+Read spec §2, §4, §7.1. Create frontend Vite project with React 19, TanStack Router, shadcn/ui.
+Wire WASM bridge (src/wasm/bridge.ts). Set up Vitest with Node.js WASM initSync.
+Run `npm install` and `npx vitest run` (even with 0 tests).
 
-Test command: `wasm-pack build --target web`
+Test command: `npx vitest run --reporter=verbose`
 
 ## Work Log
 - 2026-03-06: Stage 1 complete — cargo check passes, advancing to stage 2
 - 2026-03-06: Stage 2 complete — all types + rates implemented, cargo check passes
 - 2026-03-06: Stage 3 complete — full pipeline (37 tests pass), advancing to stage 4
+- 2026-03-06: Stage 4 complete — wasm-pack build succeeds, engine/pkg/ produced, advancing to stage 5
