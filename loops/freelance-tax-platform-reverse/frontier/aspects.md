@@ -1,9 +1,9 @@
 # Frontier — TaxKlaro Platform Completion
 
 ## Statistics
-- Total aspects discovered: 32
+- Total aspects discovered: 37
 - Analyzed: 0
-- Pending: 32
+- Pending: 37
 - Convergence: 0%
 
 ## Pending Aspects (ordered by dependency)
@@ -41,7 +41,9 @@ Depends on Wave 3. The biggest wave — where inheritance had the most issues.
 ### Wave 5: Component Wiring + UI
 Depends on Wave 4. Every component must have a home.
 - [ ] component-wiring-map — Every component -> parent route, navigation path, trigger, props source (zero orphans)
+- [ ] action-trigger-map — Every action-triggered feature (PDF export, share toggle, delete, etc.) -> which button triggers it, which parent has the button, onClick handler. Prevents "PDF infra built but no button" failure.
 - [ ] design-system-alignment — Map TaxKlaro palette to shadcn/ui + Radix + Tailwind CSS 4 theming
+- [ ] visual-verification-checklist — For every major component: required shadcn wrapper (Card/Alert/Badge), key Tailwind classes, lucide icon, color variant. Prevents unstyled test-scaffolding shipping as "complete."
 - [ ] empty-states-and-loading — Skeleton loaders, EmptyState components, error states for every async page
 - [ ] toast-catalog — Every user action that produces feedback, with message text and variant
 - [ ] pdf-export-layout — @react-pdf/renderer layout, sections, firm branding, BIR form reference
@@ -49,6 +51,9 @@ Depends on Wave 4. Every component must have a home.
 ### Wave 6: Testing + Deployment
 Depends on Wave 5. Production readiness.
 - [ ] playwright-e2e-specs — E2E test scenarios for every critical flow (auth, wizard, compute, save, share, export)
+- [ ] production-build-verification — Vite plugin inventory, production build smoke test requirements, tree-shaking-sensitive libraries (d3, recharts), WASM loading in prod mode. Prevents "dev works, prod white page" failure.
+- [ ] migration-verification — supabase db reset test plan, RPC call tests with real data, parameter type match verification (UUID vs TEXT). Prevents "SQL written but never run" failure.
+- [ ] supabase-gotchas — Anon grants for public RPCs, search_path on SECURITY DEFINER, RLS bypass patterns, storage bucket policies. Prevents "works in Supabase dashboard, fails from client" failures.
 - [ ] fly-io-deployment — Dockerfile, fly.toml, build args, Supabase project setup, domain config
 - [ ] ci-cd-pipeline — GitHub Actions: typecheck -> lint -> test -> build -> e2e -> deploy
 - [ ] monitoring-and-alerts — Sentry, health checks, client-side error tracking

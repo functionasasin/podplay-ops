@@ -184,3 +184,11 @@ loops:
     timeout_minutes: 30
     status: active
     created: 2026-03-03
+  freelance-tax-platform-reverse:
+    description: "Platform completion loop: add WASM bridge, Supabase, TanStack Router, Fly.io deployment layers to TaxKlaro domain spec"
+    type: reverse
+    schedule: "*/30 * * * *"
+    max_iterations: 60
+    timeout_minutes: 30
+    status: active
+    created: 2026-03-05

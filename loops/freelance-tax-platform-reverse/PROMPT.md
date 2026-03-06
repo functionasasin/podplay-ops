@@ -100,6 +100,49 @@ deployment/domains.md           — needs adaptation
 deployment/environment.md       — needs rewrite for Vite env vars
 ```
 
+## Lessons from the Inheritance Forward Loops (CRITICAL — Read This First)
+
+The inheritance app went through 13 loops and STILL had these failures that required manual fixes. Every one of these is a spec gap. This loop MUST produce spec content that prevents ALL of them:
+
+### Failure 1: Production build never tested
+The forward loop only ran `tsc` + `vitest` (dev mode), never `vite build`. In production, `vite-plugin-top-level-await` broke d3's prototype chain, causing a white page. **Dev mode ≠ production.**
+
+**Spec requirement**: The forward loop's Phase 7 (Completeness Verification) MUST include a production build step (`npm run build`) AND a production serve step (`npx serve dist`) with a smoke test. The spec must list every Vite plugin needed and flag any that require production-mode testing (top-level-await, WASM plugins, tree-shaking-sensitive libraries like d3, recharts).
+
+### Failure 2: Share RPC type mismatch (TEXT vs UUID)
+The `get_shared_case` RPC declared `p_token TEXT` but compared against a `share_token UUID` column. PostgreSQL threw `operator does not exist: uuid = text`. The forward loop wrote the SQL but never ran it against a real database.
+
+**Spec requirement**: Every RPC function in the migration SQL must have explicit parameter types that match the column types they compare against. The spec must include a "Migration Verification" section that requires running `supabase db reset` and calling every RPC with test data. Parameter type mismatches must be called out explicitly: "p_token UUID (not TEXT — must match share_token column type)".
+
+### Failure 3: Share RPC missing anon GRANT
+`SECURITY DEFINER` alone isn't enough in Supabase for anonymous access — you also need `GRANT EXECUTE ON FUNCTION ... TO anon`. The forward loop didn't know this Supabase-specific requirement.
+
+**Spec requirement**: Every RPC function must specify its GRANT targets explicitly:
+- Authenticated-only RPCs: `GRANT EXECUTE ON FUNCTION ... TO authenticated;`
+- Public RPCs (like shared links): `GRANT EXECUTE ON FUNCTION ... TO anon, authenticated;`
+- The spec must include a "Supabase-Specific Gotchas" section covering: anon grants for public RPCs, `search_path = public` on SECURITY DEFINER functions, RLS bypass patterns.
+
+### Failure 4: PDF export button never wired
+The forward loop built the entire PDF infrastructure (component, lazy-loader, filename generator, 8 section components) but forgot to add the actual export button in the UI. The orphan scan didn't catch it because the PDF code was imported by tests — it just wasn't triggered by any UI element.
+
+**Spec requirement**: The Component Wiring Map must include not just "which route renders this component" but also "what user action triggers it." For action-triggered features (PDF export, share toggle, delete, etc.), the spec must specify: (1) which button/menu item triggers it, (2) which parent component contains that button, (3) the exact `onClick` handler. The orphan check in the completeness audit must verify trigger paths, not just import paths.
+
+### Failure 5: Timeline components were unstyled test scaffolding
+TimelineStageCard and TimelineReport had correct DOM structure and data-testid attributes to pass all 58 unit tests, but zero Tailwind classes, no icons, no Card wrapper. They rendered as flat text dumps. Tests only check structure, not appearance.
+
+**Spec requirement**: The spec must include a "Visual Verification Checklist" for every major component, specifying: (1) the shadcn/ui wrapper component (Card, Alert, Badge, etc.), (2) key Tailwind classes for layout (flex, grid, gap, padding), (3) icon from lucide-react, (4) color/variant for status indicators. The completeness audit must include a "visual sanity check" that flags components with fewer than 3 Tailwind classes as likely unstyled scaffolding.
+
+### Summary: What the Forward Loop Cannot Verify
+
+The forward loop verifies that code **compiles and passes tests**. It CANNOT verify:
+1. **Production builds work** — Vite tree-shaking, plugin interactions, WASM loading in production mode
+2. **Database operations succeed** — SQL syntax, type mismatches, missing grants, RLS policy correctness
+3. **UI elements are visually styled** — Tailwind classes, icons, component wrappers, responsive behavior
+4. **Action triggers exist** — Buttons that invoke features, not just the features themselves
+5. **Browser rendering works** — Prototype chain preservation, async initialization, hydration
+
+**The spec must compensate for all five.** Every feature must specify not just WHAT it does but HOW it's triggered, HOW it looks, and WHAT can go wrong in production.
+
 ## Your Goal
 
 Produce a **complete, implementation-ready specification** at `docs/plans/freelance-tax-spec.md` that covers ALL layers:
@@ -452,6 +495,26 @@ Depends on Wave 4 platform layer.
 - Cross-reference against route table — every route must render at least one component, every component must be reachable from a route.
 - This is the **anti-orphan gate**. The forward loop's orphan_scan() will mechanically verify this.
 
+**For `action-trigger-map`**:
+- For EVERY action-triggered feature (not just navigation-triggered), specify:
+  - **Feature**: What happens (e.g., "PDF export", "share toggle", "delete computation")
+  - **Trigger button**: Exact button text and icon (e.g., "Export PDF" with Download icon)
+  - **Parent component**: Which component contains the trigger button (e.g., ActionsBar in ResultsView)
+  - **onClick handler**: What function is called (e.g., `handleExportPdf()` which lazy-loads @react-pdf/renderer)
+  - **Feedback**: What toast/loading state appears after clicking
+- This prevents the inheritance failure where entire PDF infrastructure was built but no button existed to trigger it.
+- The forward loop's orphan scan catches components not imported by routes, but it CANNOT catch features that are imported by tests but never triggered by UI. This map is the defense.
+
+**For `visual-verification-checklist`**:
+- For EVERY major component (not ui/ primitives), specify:
+  - **shadcn wrapper**: Card, Alert, Badge, Dialog, etc.
+  - **Key Tailwind classes**: At minimum layout (flex/grid), spacing (gap/p/m), and color classes
+  - **Icon**: Which lucide-react icon, if any
+  - **Status indicators**: Color/variant for different states (success=green, warning=amber, error=red)
+- Flag any component with fewer than 3 Tailwind utility classes as likely unstyled scaffolding.
+- This prevents the inheritance failure where TimelineStageCard passed 58 unit tests but had zero styling — rendering as flat text.
+- The forward loop's tests check DOM structure and data, not visual appearance. This checklist is the defense.
+
 **For `design-system-alignment`**:
 - Adapt TaxKlaro design system to shadcn/ui + Radix + Tailwind CSS 4:
   - Keep brand palette: Primary blue #1D4ED8, success green #16A34A, warning orange #D97706, error red #DC2626
@@ -522,6 +585,42 @@ Depends on Wave 5 component wiring.
   - **Responsive**: Run key flows at mobile viewport (375px)
   - **Error handling**: Submit invalid data -> see validation errors
 - For each scenario: steps, assertions, test data fixtures
+
+**For `production-build-verification`**:
+- List every Vite plugin the project uses and flag production-mode risks:
+  - `vite-plugin-top-level-await` — breaks prototype chains in production bundles for libraries that rely on `new` (d3, recharts). Test: run `npx serve dist` and verify no white page.
+  - `vite-plugin-wasm` — WASM loading differs in production (bundled vs fetched). Test: verify `compute_json()` works after `npm run build && npx serve dist`.
+  - `@tailwindcss/vite` — must produce CSS > 20KB in production build. If CSS is tiny, plugin isn't processing.
+- Specify the production build smoke test the forward loop MUST run in Phase 7:
+  1. `npm run build` — must succeed with zero errors
+  2. `npx serve dist -l 8080` — start production server
+  3. `curl http://localhost:8080` — must return HTML (not blank)
+  4. Playwright smoke: open `/`, verify page renders, no console errors
+  5. Playwright compute: fill wizard, click compute, verify results render
+- List tree-shaking-sensitive libraries and their production-mode requirements
+
+**For `migration-verification`**:
+- Specify the migration test plan the forward loop MUST run:
+  1. `supabase db reset` — must succeed with zero errors (proves idempotency)
+  2. For every RPC function, specify a test call with expected result:
+     - `SELECT create_organization('Test Firm', 'test-firm')` — returns `{"success": true, "org_id": "..."}`
+     - `SELECT get_shared_computation('00000000-0000-0000-0000-000000000000'::UUID)` — returns null (no match, not an error)
+     - `SELECT accept_invitation('...')` — test with valid + expired + already-accepted tokens
+  3. For every RLS policy, specify a test query from both authorized and unauthorized contexts
+  4. Verify every parameter type matches its compared column type:
+     - `p_token` must be `UUID` if `share_token` column is `UUID`
+     - `p_org_id` must be `UUID` if `org_id` column is `UUID`
+     - List every RPC parameter → column comparison pair explicitly
+
+**For `supabase-gotchas`**:
+- Document every Supabase-specific requirement that differs from vanilla PostgreSQL:
+  1. **GRANT for anon access**: `SECURITY DEFINER` alone does NOT grant access to anonymous users. Public RPCs (shared links, invitation acceptance) MUST have: `GRANT EXECUTE ON FUNCTION ... TO anon, authenticated;`
+  2. **search_path on SECURITY DEFINER**: Always set `SET search_path = public` to prevent schema injection
+  3. **RLS bypass in SECURITY DEFINER**: Functions with `SECURITY DEFINER` bypass RLS — this is intentional for shared links but must be audited for data leakage
+  4. **Storage bucket policies**: Supabase Storage requires separate RLS policies on `storage.objects` table. Pattern: `bucket_id = '<name>' AND auth.uid()::TEXT = (storage.foldername(name))[1]`
+  5. **Auth hooks**: `supabase.auth.onAuthStateChange` fires on page load — always handle the initial session check before subscribing
+  6. **Email confirmation in dev**: `supabase start` auto-confirms by default. Test PKCE callback by setting `enable_signup = true` and `enable_email_autoconfirm = false` in `config.toml`
+  7. **Connection pooling**: Use `supabaseUrl` (not direct database URL) for client queries. Direct connections hit the pooler limit.
 
 **For `fly-io-deployment`**:
 - Dockerfile (matching inheritance):
