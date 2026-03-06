@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 55
-- Analyzed: 21
-- Pending: 34
-- Convergence: 38%
+- Analyzed: 22
+- Pending: 33
+- Convergence: 40%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -37,7 +37,7 @@ Depends on Wave 1 sources being cached.
 Depends on Wave 2 rule extraction.
 - [x] data-model — Define all Rust types: RetirementInput, RetirementOutput, EligibilityResult, TaxTreatment, SeparationPayComparison, BatchInput, BatchOutput, NlrcWorksheet, CompanyPlanAnalysis
 - [x] computation-pipeline — Design ordered pipeline: eligibility check -> credited years -> daily rate -> retirement pay -> tax treatment -> separation pay comparison -> company plan gap
-- [ ] algorithms — Exact arithmetic: integer centavos, rational fractions for 22.5-day decomposition, rounding rules
+- [x] algorithms — Exact arithmetic: integer centavos, rational fractions for 22.5-day decomposition, rounding rules
 - [ ] batch-engine — Batch processing pipeline: CSV parse -> validate rows -> compute per-employee -> aggregate -> summary
 - [ ] nlrc-worksheet-generator — NLRC worksheet output: computation breakdown, legal basis citations, exhibit formatting
 - [ ] test-vectors — 20+ test vectors: basic case, 15-day error case, rounding edge cases, tax exempt/taxable, death, batch, separation pay overlap
@@ -95,6 +95,7 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 - [ ] spec-review — Final review: can the forward loop build the ENTIRE product from this spec alone?
 
 ## Recently Analyzed
+- algorithms (Wave 3) — 2026-03-06
 - computation-pipeline (Wave 3) — 2026-03-06
 - edge-cases-catalog (Wave 2) — 2026-03-06
 - data-model (Wave 3) — 2026-03-06
