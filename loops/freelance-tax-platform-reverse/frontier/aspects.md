@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 37
-- Analyzed: 7
-- Pending: 30
-- Convergence: 19%
+- Analyzed: 8
+- Pending: 29
+- Convergence: 22%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -23,7 +23,7 @@ Depends on Wave 1. Design the WASM boundary between Rust engine and JavaScript f
 
 ### Wave 3: Frontend Data Model
 Depends on Wave 2. Map Rust types to TypeScript + Zod with exact field alignment.
-- [ ] typescript-types — Map every Rust struct/enum to TypeScript interface (exact field names matching serde)
+- [x] typescript-types — Map every Rust struct/enum to TypeScript interface (exact field names matching serde)
 - [ ] zod-schemas — Write strict Zod schemas matching serde wire format (no coercion, null not undefined)
 - [ ] frontend-state-management — Design state flow: wizard state, computation results, auto-save, hooks (useAuth, useAutoSave, useOrganization, useTaxBridge)
 
@@ -75,3 +75,4 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 | wasm-export-signature | 2 | 2026-03-06 | COMPLETE — Single compute_json() + validate_json() exports. WasmResult discriminated union envelope. Decimal→string serialization. bridge.ts pattern with Node.js/browser init detection. useTaxBridge hook interface defined. |
 | serde-wire-format | 2 | 2026-03-06 | COMPLETE — camelCase fields, SCREAMING_SNAKE_CASE enums, Decimal→string, Option→null, Date→"YYYY-MM-DD", FormOutputUnion adjacently tagged, deny_unknown_fields on inputs only. Full Cargo.toml deps + wire examples. |
 | error-contract | 2 | 2026-03-06 | COMPLETE — All 29 ERR_* codes, 5 ineligibility errors, 8 assertion errors, 9 WARN_* codes, 5 IN-* codes, MRF_* types. Rust serde attrs, JSON wire format, TypeScript interfaces, Zod schemas, frontend handling (ValidationError vs ComputeError vs Sentry). Dynamic field name mapping table. |
+| typescript-types | 3 | 2026-03-06 | COMPLETE — 4 files (common.ts, engine-input.ts, engine-output.ts, index.ts). All 14 enums mapped with string literal unions + as-const arrays. All input/output structs mapped with exact camelCase fields. FormOutputUnion discriminated union with type guards. Default factory function. Cross-layer consistency table with critical traps for digit-in-name fields and formType vs formVariant distinction. |

@@ -9,3 +9,4 @@
 | 5 | serde-wire-format | 2 | 2026-03-06 | analysis/serde-wire-format.md, frontier/aspects.md, frontier/analysis-log.md |
 | 6 | error-contract | 2 | 2026-03-06 | analysis/error-contract.md, frontier/aspects.md, frontier/analysis-log.md |
 | 7 | initialization-patterns | 2 | 2026-03-06 | analysis/initialization-patterns.md, frontier/aspects.md, frontier/analysis-log.md |
+| 8 | typescript-types | 3 | 2026-03-06 | analysis/typescript-types.md, frontier/aspects.md, frontier/analysis-log.md |
