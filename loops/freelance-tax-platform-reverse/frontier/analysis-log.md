@@ -2,6 +2,7 @@
 
 | # | Aspect | Wave | Date | Files Modified |
 |---|--------|------|------|----------------|
+| 33 | unified-mega-spec | 7 | 2026-03-06 | docs/plans/freelance-tax-spec.md, frontier/aspects.md, frontier/analysis-log.md |
 | 32 | monitoring-and-alerts | 6 | 2026-03-06 | analysis/monitoring-and-alerts.md, frontier/aspects.md, frontier/analysis-log.md |
 | 31 | ci-cd-pipeline | 6 | 2026-03-06 | analysis/ci-cd-pipeline.md, frontier/aspects.md, frontier/analysis-log.md |
 | 30 | fly-io-deployment | 6 | 2026-03-06 | analysis/fly-io-deployment.md, frontier/aspects.md, frontier/analysis-log.md |

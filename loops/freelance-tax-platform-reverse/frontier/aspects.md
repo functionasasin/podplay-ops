@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 37
-- Analyzed: 32
-- Pending: 5
-- Convergence: 86%
+- Analyzed: 33
+- Pending: 4
+- Convergence: 89%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -60,7 +60,7 @@ Depends on Wave 5. Production readiness.
 
 ### Wave 7: Synthesis
 Depends on ALL previous waves. **Strict internal dependency order — do NOT skip ahead.**
-- [ ] unified-mega-spec — Assemble docs/plans/freelance-tax-spec.md from all analysis files + imported domain content
+- [x] unified-mega-spec — Assemble docs/plans/freelance-tax-spec.md from all analysis files + imported domain content
 - [ ] placeholder-validation — **HARD GATE.** Line-by-line scan for banned patterns. MUST return PASS before proceeding.
 - [ ] completeness-audit — Per-feature PASS/FAIL: types match, schemas match, routes wired, components wired, migrations complete, E2E defined
 - [ ] cross-layer-consistency — Field-by-field verification: Rust <-> JSON <-> TypeScript <-> Zod
@@ -69,6 +69,7 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 ## Recently Analyzed
 | Aspect | Wave | Date | Result |
 |--------|------|------|--------|
+| unified-mega-spec | 7 | 2026-03-06 | COMPLETE — docs/plans/freelance-tax-spec.md assembled (20 sections, 30 critical traps, full cross-layer consistency checklist, all 90 components, all 18 routes, full SQL migrations, full CI/CD pipeline). |
 | validate-domain-spec | 1 | 2026-03-06 | PASS — Domain/engine spec complete for Rust impl. 6 minor issues flagged for Bridge Contract wave. |
 | validate-engine-spec | 1 | 2026-03-06 | PASS — Pipeline is pure (no I/O), Decimal arithmetic throughout, all 20+ types concrete. 4 minor inconsistencies flagged. Action items for Bridge Contract wave documented. |
 | audit-stack-assumptions | 1 | 2026-03-06 | COMPLETE — 13 files to DISCARD, 9 files need adaptation (specific line-by-line refs cataloged), 27 files fully reusable. Comprehensive translation map produced for all 6 layer types. |
