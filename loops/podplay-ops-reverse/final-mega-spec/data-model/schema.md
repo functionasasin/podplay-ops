@@ -1375,3 +1375,479 @@ Run migrations in this order to satisfy foreign key dependencies:
 16. `replay_signs` (references projects)
 17. `cc_terminals` (references projects)
 18. `update_updated_at` function (used by all triggers — create before triggers)
+
+---
+
+## BOM Model: Hardware Catalog, Templates & Cost Chain
+
+**Aspect**: model-bom
+**Date**: 2026-03-06
+**Sources**: research/podplay-hardware-bom.md, analysis/source-hardware-guide.md, analysis/source-pricing-model.md, docs/plans/2026-03-06-podplay-ops-wizard-design.md
+
+---
+
+### Field Source Maps
+
+#### hardware_catalog
+
+| Field | MRP Source | Notes |
+|-------|-----------|-------|
+| sku | Internal convention | CATEGORY-SHORTNAME (e.g., NET-UDM-SE, REPLAY-MACMINI) |
+| name | Hardware BOM research | Display name matching BOM doc |
+| model | Hardware BOM research | Manufacturer model number |
+| vendor | Hardware BOM research | Primary vendor (UniFi / Amazon / EmpireTech / Apple Business / Kisi / Flic / Fast Signs / RC Fasteners / HIDEit / Ingram) |
+| vendor_url | Manual entry | Direct order page URL |
+| unit_cost | MRP COST ANALYSIS sheet | **Unknown — XLSX not in repo. Must be populated from seed data when XLSX is available** |
+| category | Hardware BOM categories | Maps to bom_category enum |
+| notes | Hardware BOM notes | Conditional usage notes |
+| is_active | Default true | Soft delete |
+
+#### bom_templates
+
+| Field | MRP Source | Notes |
+|-------|-----------|-------|
+| tier | BOM template tabs in MRP | One template per tier |
+| hardware_catalog_id | FK to hardware_catalog | Maps to item |
+| qty_per_venue | BOM template column | Flat quantity per install |
+| qty_per_court | BOM template column | Multiplied by project.court_count |
+| qty_per_door | BOM template column | Multiplied by project.door_count (Autonomous/Autonomous+ only) |
+| qty_per_camera | BOM template column | Multiplied by project.security_camera_count (Autonomous+ only) |
+| sort_order | Manual ordering by category | For consistent BOM display |
+
+#### project_bom_items
+
+| Field | MRP Source | Notes |
+|-------|-----------|-------|
+| project_id | FK to projects | |
+| hardware_catalog_id | FK to hardware_catalog | |
+| qty | Computed at BOM generation | qty_per_venue + (qty_per_court × court_count) + (qty_per_door × door_count) + (qty_per_camera × camera_count) |
+| unit_cost | Copied from hardware_catalog.unit_cost | Editable to reflect actual PO cost |
+| est_total_cost | Generated column | qty × unit_cost |
+| shipping_rate | Copied from settings.shipping_rate | Editable per line |
+| landed_cost | Generated column | est_total_cost × (1 + shipping_rate) |
+| margin | Copied from settings.target_margin | Editable per line |
+| customer_price | Generated column | landed_cost / (1 - margin) |
+| allocated | Manual | True when inventory reserved |
+| shipped | Manual | True when shipped to venue |
+| notes | Manual | Per-line notes |
+
+---
+
+### Complete Hardware Catalog — All Items
+
+47 hardware items across 9 categories. SKU convention: `CATEGORY_PREFIX-SHORTNAME`.
+
+#### Category: network_rack (prefix NET-)
+
+| SKU | Name | Model | Vendor | qty Formula | Notes |
+|-----|------|-------|--------|-------------|-------|
+| NET-PDU | TrippLite 12 Outlet PDU | RS-1215-RA | Ingram | 1 per venue | Power distribution unit for rack |
+| NET-UDM-SE | UniFi Dream Machine SE | UDM-SE | UniFi | 1 per venue | Gateway/console with built-in PoE — used for smaller venues |
+| NET-UDM-PRO | UniFi Dream Machine Pro | UDM-Pro | UniFi | 1 per venue | Gateway/console without PoE — standard |
+| NET-UDM-PROMAX | UniFi Dream Machine Pro Max | UDM-Pro-Max | UniFi | 1 per venue | Gateway/console without PoE — large venues |
+| NET-SW24-PRO | UniFi Switch Pro 24 PoE | USW-Pro-24-POE | UniFi | CONDITIONAL — see sizing rules | 24-port PoE managed switch |
+| NET-SW24 | UniFi Switch 24 PoE | USW-24-POE | UniFi | CONDITIONAL — see sizing rules | 24-port PoE standard switch |
+| NET-SW48-PRO | UniFi Switch Pro 48 PoE | USW-Pro-48-POE | UniFi | CONDITIONAL — see sizing rules | 48-port PoE managed switch |
+| NET-SFP-DAC | SFP+ DAC Cable 0.5m | UACC-DAC-SFP10-0.5M | UniFi | 1 per venue | UDM ↔ Switch interconnect |
+| NET-PATCH-1FT | Cat6 Patch Cable 1ft | Monoprice Cat6 1' | Amazon | varies per venue | Switch-to-panel patch |
+| NET-PATCH-3FT | Cat6 Patch Cable 3ft | Monoprice Cat6 3' | Amazon | varies per venue | Mac Mini, PDU connections |
+| NET-PATCH-10FT | Cat6 Patch Cable 10ft | Monoprice Cat6 10' | Amazon | varies per venue | Kisi controller connections |
+| NET-PANEL-24C | 24-Port Patch Panel w/ Couplers | iwillink 24 w/ Couplers | Amazon | 1 per venue | Keystone coupler panel |
+| NET-PANEL-BLANK | Blank Patch Panel 24-Port | UACC-Rack-Panel-Patch-Blank-24 | UniFi | 1 per venue | Blank fill panel for rack |
+| NET-PANEL-PASSTHRU | 24-Port PassThru Patch Panel | Rapink 24 PassThru | Amazon | 1 per venue | Pre-installed keystone panel |
+
+#### Category: replay_system (prefix REPLAY-)
+
+| SKU | Name | Model | Vendor | qty Formula | Notes |
+|-----|------|-------|--------|-------------|-------|
+| REPLAY-MACMINI | Mac Mini 16GB 256GB | Mac Mini (M-series, 16GB RAM, 256GB SSD) | Apple Business | 1 per venue | Replay server; chip year TBD (M1/M2/M4) |
+| REPLAY-SSD-1TB | Samsung T7 1TB SSD | Samsung T7 Shield 1TB | Amazon | CONDITIONAL — 1-4 courts | External SSD for replay storage |
+| REPLAY-SSD-2TB | Samsung T7 2TB SSD | Samsung T7 Shield 2TB | Amazon | CONDITIONAL — 5-12 courts | External SSD for replay storage |
+| REPLAY-SSD-4TB | Samsung T7 4TB SSD | Samsung T7 Shield 4TB | Amazon | CONDITIONAL — 13+ courts | External SSD for replay storage |
+| REPLAY-CAM-WHITE | EmpireTech Replay Camera White | IPC-T54IR-ZE White | EmpireTech | 1 per court | 4MP varifocal turret (Dahua OEM); white — pickleball clubs |
+| REPLAY-CAM-BLACK | EmpireTech Replay Camera Black | IPC-T54IR-ZE Black | EmpireTech | 1 per court | 4MP varifocal turret (Dahua OEM); black — PingPods |
+| REPLAY-JB-WHITE | EmpireTech Camera Junction Box White | PFA130-E White | EmpireTech | 1 per court | White junction box for replay camera mount |
+| REPLAY-JB-BLACK | EmpireTech Camera Junction Box Black | PFA130-E Black | EmpireTech | 1 per court | Black junction box for replay camera; PingPod venues |
+| REPLAY-BTN | Flic Score Button | Flic 2 Button | Flic | 2 per court | Bluetooth score buttons — Left + Right per court |
+| REPLAY-HW-KIT | Hardware Fastener Kit | RC Fasteners Kit | RC Fasteners | 1 per venue | Bolts, nuts, screws, zip ties for sign/camera mounting |
+
+#### Category: displays (prefix DISP-)
+
+| SKU | Name | Model | Vendor | qty Formula | Notes |
+|-----|------|-------|--------|-------------|-------|
+| DISP-TV-65 | 65" Display TV | Various (drop-shipped) | Various | 1 per court | VESA 400×300; center court net-side; 8'9" AFF |
+| DISP-APPLETV | Apple TV 4K with Ethernet | Apple TV 4K (3rd gen) + Ethernet adapter | Apple Business | 1 per court | Connected via HDMI to TV |
+| DISP-ATV-MOUNT | HIDEit Apple TV Mount | HIDEit AV Mount | HIDEit | 1 per court | Wall/rack mount for Apple TV |
+| DISP-HDMI-3FT | HDMI Cable 3ft | Amazon Basics 3ft HDMI 2.0 | Amazon | 1 per court | Apple TV to TV |
+| DISP-IPAD | iPad | iPad (10th gen or current) | Apple Business | 1 per court | Kiosk; 4'8" AFF; PoE-powered |
+| DISP-IPAD-POE | iPad PoE Adapter | (model TBD — confirm during NJ training) | TBD | 1 per court | Powers iPad via Cat6 |
+| DISP-IPAD-CASE | iPad Kiosk Case | (model TBD — confirm during NJ training) | TBD | 1 per court | Enclosure for iPad kiosk |
+
+#### Category: access_control (prefix AC-)
+
+| SKU | Name | Model | Vendor | qty Formula | Notes |
+|-----|------|-------|--------|-------------|-------|
+| AC-KISI-CTRL | Kisi Controller Pro 2 | Kisi Controller Pro 2 | Kisi | 1 per venue | Access control hub; Autonomous/Autonomous+ only |
+| AC-KISI-READER | Kisi Reader Pro 2 | Kisi Reader Pro 2 | Kisi | 1 per door | One reader per access-controlled door |
+
+#### Category: surveillance (prefix SURV-)
+
+| SKU | Name | Model | Vendor | qty Formula | Notes |
+|-----|------|-------|--------|-------------|-------|
+| SURV-NVR-4BAY | UniFi NVR 4-Bay | UNVR | UniFi | CONDITIONAL — ≤4 cameras | Network Video Recorder; Autonomous+ only |
+| SURV-NVR-7BAY | UniFi NVR Pro 7-Bay | UNVR-Pro | UniFi | CONDITIONAL — >4 cameras | Larger NVR; Autonomous+ only |
+| SURV-HDD-8TB | WD Purple 8TB Hard Drive | WD Purple Pro 8TB | Amazon | CONDITIONAL — 1 per NVR bay used | NVR storage drive |
+| SURV-CAM-G5-WHITE | UniFi G5 Turret Ultra White | G5 Turret Ultra (White) | UniFi | 1 per security camera (Autonomous/Autonomous+) | Pickleball club venues |
+| SURV-JB-WHITE | UniFi Camera Junction Box White | UACC-Camera-CJB-White | UniFi | 1 per security camera (white) | Junction box for G5 White |
+| SURV-CAM-G5-BLACK | UniFi G5 Turret Ultra Black | G5 Turret Ultra (Black) | UniFi | 1 per security camera (Autonomous/Autonomous+) | PingPod venues |
+| SURV-JB-BLACK | UniFi Camera Junction Box Black | UACC-Camera-CJB-Black | UniFi | 1 per security camera (black) | Junction box for G5 Black |
+| SURV-CAM-DOME | UniFi G5 Dome Camera | G5 Dome | UniFi | 1 per security camera (alternative) | 2K dome camera for security |
+| SURV-CAM-DOME-BLK | UniFi G5 Dome Ultra Black | G5 Dome Ultra | UniFi | 1 per security camera (alternative) | Smaller form, black; PingPods |
+
+#### Category: front_desk (prefix DESK-)
+
+| SKU | Name | Model | Vendor | qty Formula | Notes |
+|-----|------|-------|--------|-------------|-------|
+| DESK-WEBCAM | Anker PowerConf C200 2K Webcam | Anker PowerConf C200 | Amazon | 1 per venue | Check-in photo capture; optional, front-desk only |
+| DESK-QR-SCANNER | 2D QR Barcode Scanner | 2D QR Barcode Scanner (USB) | Amazon | 1 per venue | Member QR code scan at check-in; front-desk only |
+
+#### Category: infrastructure (prefix INFRA-)
+
+| SKU | Name | Model | Vendor | qty Formula | Notes |
+|-----|------|-------|--------|-------------|-------|
+| INFRA-RACK-SHELF | Pyle 19" 1U Vented Rack Shelf | Pyle PSHELF19 (1U Vented) | Amazon | 1 per venue | Holds Mac Mini in rack |
+
+#### Category: pingpod_specific (prefix PING-)
+
+| SKU | Name | Model | Vendor | qty Formula | Notes |
+|-----|------|-------|--------|-------------|-------|
+| PING-WIFI-AP | UniFi WiFi 6 Access Point | U6-Plus | UniFi | 1 per venue | WiFi AP for PingPod venues only; conditional on project.has_pingpod_wifi |
+
+#### Category: signage (prefix SIGN-)
+
+| SKU | Name | Model | Vendor | qty Formula | Notes |
+|-----|------|-------|--------|-------------|-------|
+| SIGN-REPLAY | Aluminum Printed Replay Sign 6×8" | Custom Print 6x8 Aluminum | Fast Signs | Tracked via replay_signs table (court_count × 2) | NOT a BOM line item; managed separately in replay_signs table |
+
+---
+
+### BOM Template Matrix
+
+Complete specification of which items appear in each tier's BOM template and at what multipliers.
+
+**Quantity formula**:
+```
+qty = (qty_per_venue × 1)
+    + (qty_per_court × project.court_count)
+    + (qty_per_door × project.door_count)
+    + (qty_per_camera × project.security_camera_count)
+```
+
+**Tier inheritance**: Each tier builds on the previous:
+- Pro: network_rack + replay_system + displays + infrastructure + signage hardware
+- Autonomous: Pro + access_control + surveillance cameras (no NVR)
+- Autonomous+: Autonomous + NVR + hard drives
+
+Items marked **CONDITIONAL** use special sizing logic (see next section) — they are NOT in the bom_templates table directly but are added by the BOM generation algorithm.
+
+#### Pro Tier BOM Template
+
+| SKU | qty_per_venue | qty_per_court | qty_per_door | qty_per_camera | Notes |
+|-----|--------------|--------------|-------------|----------------|-------|
+| NET-PDU | 1 | 0 | 0 | 0 | |
+| NET-UDM-SE | CONDITIONAL | — | — | — | One of UDM-SE/PRO/PROMAX selected by court count |
+| NET-UDM-PRO | CONDITIONAL | — | — | — | |
+| NET-UDM-PROMAX | CONDITIONAL | — | — | — | |
+| NET-SW24-PRO | CONDITIONAL | — | — | — | Switch selected by court count |
+| NET-SW48-PRO | CONDITIONAL | — | — | — | |
+| NET-SFP-DAC | 1 | 0 | 0 | 0 | |
+| NET-PATCH-1FT | 1 | 1 | 0 | 0 | Estimate: 1 per venue + 1 per court; exact from XLSX |
+| NET-PATCH-3FT | 1 | 0 | 0 | 0 | Mac Mini + PDU connections; ~2 per venue |
+| NET-PATCH-10FT | 0 | 0 | 0 | 0 | Only for Kisi (Autonomous tier) |
+| NET-PANEL-24C | 1 | 0 | 0 | 0 | |
+| NET-PANEL-BLANK | 1 | 0 | 0 | 0 | |
+| NET-PANEL-PASSTHRU | 1 | 0 | 0 | 0 | |
+| REPLAY-MACMINI | 1 | 0 | 0 | 0 | |
+| REPLAY-SSD-1TB | CONDITIONAL | — | — | — | SSD selected by court count |
+| REPLAY-SSD-2TB | CONDITIONAL | — | — | — | |
+| REPLAY-SSD-4TB | CONDITIONAL | — | — | — | |
+| REPLAY-CAM-WHITE | 0 | 1 | 0 | 0 | Default white; swap for BLACK for PingPod |
+| REPLAY-JB-WHITE | 0 | 1 | 0 | 0 | Default white; swap for BLACK for PingPod |
+| REPLAY-BTN | 0 | 2 | 0 | 0 | 2 buttons per court (Left + Right) |
+| REPLAY-HW-KIT | 1 | 0 | 0 | 0 | |
+| DISP-TV-65 | 0 | 1 | 0 | 0 | |
+| DISP-APPLETV | 0 | 1 | 0 | 0 | |
+| DISP-ATV-MOUNT | 0 | 1 | 0 | 0 | |
+| DISP-HDMI-3FT | 0 | 1 | 0 | 0 | |
+| DISP-IPAD | 0 | 1 | 0 | 0 | |
+| DISP-IPAD-POE | 0 | 1 | 0 | 0 | |
+| DISP-IPAD-CASE | 0 | 1 | 0 | 0 | |
+| INFRA-RACK-SHELF | 1 | 0 | 0 | 0 | |
+
+**Front desk items** (added when project.has_front_desk = true — all per-venue):
+| SKU | qty_per_venue |
+|-----|--------------|
+| DESK-WEBCAM | 1 |
+| DESK-QR-SCANNER | 1 |
+
+**PingPod items** (added when project.has_pingpod_wifi = true):
+| SKU | qty_per_venue |
+|-----|--------------|
+| PING-WIFI-AP | 1 |
+
+#### Autonomous Tier BOM Template
+
+All Pro items PLUS:
+
+| SKU | qty_per_venue | qty_per_court | qty_per_door | qty_per_camera | Notes |
+|-----|--------------|--------------|-------------|----------------|-------|
+| NET-PATCH-10FT | 0 | 0 | 1 | 0 | Kisi controller cable per door |
+| AC-KISI-CTRL | 1 | 0 | 0 | 0 | One controller for entire venue |
+| AC-KISI-READER | 0 | 0 | 1 | 0 | One reader per access-controlled door |
+| SURV-CAM-G5-WHITE | 0 | 0 | 0 | 1 | Default white; swap for BLACK at PingPod |
+| SURV-JB-WHITE | 0 | 0 | 0 | 1 | Default white junction box |
+
+#### Autonomous+ Tier BOM Template
+
+All Autonomous items PLUS:
+
+| SKU | qty_per_venue | qty_per_court | qty_per_door | qty_per_camera | Notes |
+|-----|--------------|--------------|-------------|----------------|-------|
+| SURV-NVR-4BAY | CONDITIONAL | — | — | — | UNVR when security_camera_count ≤ 4 |
+| SURV-NVR-7BAY | CONDITIONAL | — | — | — | UNVR-Pro when security_camera_count > 4 |
+| SURV-HDD-8TB | CONDITIONAL | — | — | — | Qty = NVR bay count (4 or 7) |
+
+---
+
+### Special Sizing Rules
+
+These items cannot use simple multipliers and require conditional logic in the BOM generation algorithm. The BOM generation service selects the appropriate item and removes the alternatives.
+
+#### Switch Sizing (Pro, Autonomous, Autonomous+)
+
+Selection based on `project.court_count` (each court needs 3 PoE ports: replay camera, iPad, Apple TV; plus additional ports for doors and security cameras):
+
+| court_count | Switch Selection | Qty |
+|-------------|-----------------|-----|
+| 1–8 | NET-SW24-PRO (USW-Pro-24-POE) | 1 |
+| 9–16 | NET-SW24-PRO (USW-Pro-24-POE) | 2 |
+| 17–30 | NET-SW48-PRO (USW-Pro-48-POE) | 1 |
+
+**Note**: Exact breakpoints are estimates — the XLSX BOM template sheet has the authoritative breakpoints. These should be confirmed before shipping to seed data.
+
+**Port budget**:
+- Each court = 3 ports (camera, iPad, Apple TV)
+- Each door (Autonomous) = 1 port (Kisi reader)
+- Each security camera (Autonomous/Autonomous+) = 1 port
+- Mac Mini = 1 port
+- Kisi Controller = 1 port
+- NVR (Autonomous+) = 1 port (via SFP or ethernet)
+- Reserve = 2 ports minimum
+
+#### SSD Sizing (Replay System — Pro, Autonomous, Autonomous+)
+
+One Samsung T7 SSD per Mac Mini. Size based on `project.court_count`:
+
+| court_count | SSD Selection | Capacity Rationale |
+|-------------|-------------|-------------------|
+| 1–4 | REPLAY-SSD-1TB (Samsung T7 1TB) | ~250GB per court storage at standard retention |
+| 5–12 | REPLAY-SSD-2TB (Samsung T7 2TB) | ~165GB per court |
+| 13–30 | REPLAY-SSD-4TB (Samsung T7 4TB) | ~130GB per court |
+
+**Note**: Exact breakpoints from XLSX BOM sheet — these are estimates based on storage math. Confirm before seeding.
+
+#### NVR Sizing (Autonomous+ only)
+
+One NVR per venue. Size based on `project.security_camera_count`:
+
+| security_camera_count | NVR Selection | Hard Drive Qty |
+|----------------------|-------------|---------------|
+| 1–4 | SURV-NVR-4BAY (UNVR, 4-bay) | 4 × SURV-HDD-8TB |
+| 5–7 | SURV-NVR-7BAY (UNVR-Pro, 7-bay) | security_camera_count × SURV-HDD-8TB |
+
+**Note**: NVR bay count = one drive per camera + spare bay. Exact rule from XLSX — confirm before seeding.
+
+#### UDM / Gateway Selection
+
+The UDM variant (SE, Pro, Pro Max) is selected based on court count and configuration complexity. Current known rule: one gateway per venue regardless of size. The specific variant is typically selected during intake based on venue needs. Default: NET-UDM-PRO.
+
+| Scenario | Gateway |
+|----------|---------|
+| Standard venue (any size) | NET-UDM-PRO (UDM-Pro) |
+| Venue with built-in PoE needed | NET-UDM-SE (UDM-SE) |
+| Very large / complex venue | NET-UDM-PROMAX (UDM-Pro-Max) |
+
+**Note**: Exact selection rule from XLSX — confirm before seeding. Default to NET-UDM-PRO.
+
+---
+
+### Cost Chain — Complete Formula
+
+The full cost chain is applied per BOM line item in `project_bom_items`:
+
+```
+Step 1: Quantity
+  qty = bom_template.qty_per_venue
+      + (bom_template.qty_per_court × project.court_count)
+      + (bom_template.qty_per_door × project.door_count)
+      + (bom_template.qty_per_camera × project.security_camera_count)
+
+Step 2: Hardware cost (COGS)
+  unit_cost = hardware_catalog.unit_cost   [copied at BOM generation]
+  est_total_cost = qty × unit_cost
+  -- This is COGS: actual amount PodPlay pays vendor
+
+Step 3: Landed cost (add shipping/handling)
+  shipping_rate = settings.shipping_rate   [default 0.10 = 10%]
+  landed_cost = est_total_cost × (1 + shipping_rate)
+  -- Represents total cost to PodPlay including logistics
+
+Step 4: Customer price (apply margin)
+  margin = settings.target_margin         [default 0.10 = 10%]
+  customer_price = landed_cost / (1 - margin)
+  -- customer_price = est_total_cost × 1.10 / 0.90
+  -- Net margin on landed: 10%; gross margin on unit cost: ~22%
+
+Step 5: BOM totals (per project, computed client-side)
+  total_est_cost   = SUM(project_bom_items.est_total_cost)
+  total_landed     = SUM(project_bom_items.landed_cost)
+  total_hw_revenue = SUM(project_bom_items.customer_price)
+
+Step 6: Service fee (computed client-side from project.tier)
+  service_fee = tier_venue_fee + (court_count × tier_court_fee)
+  -- Pro:         $5,000 + (courts × $2,500)
+  -- Autonomous:  $7,500 + (courts × $2,500)
+  -- Autonomous+: $7,500 + (courts × $2,500) [+ surveillance add-on TBD]
+  -- PBK:         pbk_venue_fee + (courts × pbk_court_fee) [unknown — requires XLSX]
+
+Step 7: Invoice total
+  invoice_subtotal = total_hw_revenue + service_fee
+  tax_amount       = invoice_subtotal × settings.sales_tax_rate  [default 0.1025]
+  invoice_total    = invoice_subtotal + tax_amount
+  deposit_amount   = invoice_total × 0.50  [50% assumed; confirm from XLSX]
+  final_amount     = invoice_total - deposit_amount
+
+Step 8: P&L
+  gross_profit     = total_hw_revenue + service_fee - total_est_cost
+  gross_margin_pct = gross_profit / (total_hw_revenue + service_fee)
+  labor_cost       = project.installer_hours × settings.labor_rate_per_hour
+  total_expenses   = SUM(expenses.amount) + labor_cost
+  net_profit       = gross_profit - total_expenses
+  net_margin_pct   = net_profit / (total_hw_revenue + service_fee)
+```
+
+**Concrete example** (6-court Pro, estimated unit costs):
+```
+Tier: Pro | Courts: 6 | Doors: 0 | Cameras: 0
+
+Mac Mini (qty=1, unit=$699):   est=$699  → landed=$769  → cust=$854
+Apple TV (qty=6, unit=$149):   est=$894  → landed=$983  → cust=$1,093
+iPad (qty=6, unit=$349):       est=$2,094 → landed=$2,303 → cust=$2,559
+EmpireTech Cam (qty=6, $180):  est=$1,080 → landed=$1,188 → cust=$1,320
+... (remaining items)
+
+total_est_cost   ≈ $12,000  (COGS — actual unit costs TBD from XLSX)
+total_landed     ≈ $13,200  (×1.10)
+total_hw_revenue ≈ $14,667  (÷0.90)
+
+service_fee = $5,000 + (6 × $2,500) = $20,000
+invoice_subtotal = $14,667 + $20,000 = $34,667
+tax = $34,667 × 0.1025 = $3,553
+invoice_total = $38,220
+deposit = $19,110 (50%)
+```
+
+**All unit costs above are ILLUSTRATIVE ESTIMATES. Actual unit costs require the XLSX.**
+
+---
+
+### BOM Generation Algorithm (Client-Side)
+
+When a project is created (or BOM is regenerated), the following steps run:
+
+```typescript
+function generateProjectBOM(project: Project, templates: BomTemplate[], catalog: HardwareCatalog[], settings: Settings): ProjectBomItem[] {
+  const items: ProjectBomItem[] = [];
+
+  for (const template of templates.filter(t => t.tier === project.tier || isSubTier(project.tier, t.tier))) {
+    const catalogItem = catalog.find(c => c.id === template.hardware_catalog_id);
+    if (!catalogItem) continue;
+
+    // Skip tier-specific items for wrong tier
+    if (template.tier === 'autonomous' && project.tier === 'pro') continue;
+    if (template.tier === 'autonomous_plus' && project.tier !== 'autonomous_plus') continue;
+
+    const qty = template.qty_per_venue
+      + (template.qty_per_court * project.court_count)
+      + (template.qty_per_door * project.door_count)
+      + (template.qty_per_camera * project.security_camera_count);
+
+    if (qty === 0) continue;
+
+    items.push({
+      project_id: project.id,
+      hardware_catalog_id: catalogItem.id,
+      qty,
+      unit_cost: catalogItem.unit_cost,
+      shipping_rate: settings.shipping_rate,
+      margin: settings.target_margin,
+      allocated: false,
+      shipped: false,
+    });
+  }
+
+  // Apply special sizing rules (replace conditional items)
+  applyConditionalSizing(items, project, catalog);
+
+  // Add conditional items (front desk, PingPod)
+  if (project.has_front_desk) {
+    addFrontDeskItems(items, project, catalog, settings);
+  }
+  if (project.has_pingpod_wifi) {
+    addPingPodItems(items, project, catalog, settings);
+  }
+
+  return items;
+}
+
+function applyConditionalSizing(items: ProjectBomItem[], project: Project, catalog: HardwareCatalog[]) {
+  // Switch sizing
+  const swSku = project.court_count <= 8 ? 'NET-SW24-PRO'
+    : project.court_count <= 16 ? 'NET-SW24-PRO'  // qty=2
+    : 'NET-SW48-PRO';
+  const swQty = project.court_count <= 16 ? (project.court_count <= 8 ? 1 : 2) : 1;
+  replaceConditionalItem(items, ['NET-SW24-PRO', 'NET-SW24', 'NET-SW48-PRO'], swSku, swQty, catalog);
+
+  // SSD sizing
+  const ssdSku = project.court_count <= 4 ? 'REPLAY-SSD-1TB'
+    : project.court_count <= 12 ? 'REPLAY-SSD-2TB'
+    : 'REPLAY-SSD-4TB';
+  replaceConditionalItem(items, ['REPLAY-SSD-1TB', 'REPLAY-SSD-2TB', 'REPLAY-SSD-4TB'], ssdSku, 1, catalog);
+
+  // NVR sizing (Autonomous+ only)
+  if (project.tier === 'autonomous_plus') {
+    const nvrSku = project.security_camera_count <= 4 ? 'SURV-NVR-4BAY' : 'SURV-NVR-7BAY';
+    const bayCount = project.security_camera_count <= 4 ? 4 : 7;
+    replaceConditionalItem(items, ['SURV-NVR-4BAY', 'SURV-NVR-7BAY'], nvrSku, 1, catalog);
+    // Hard drives: one per NVR bay
+    addItem(items, 'SURV-HDD-8TB', bayCount, catalog, settings);
+  }
+}
+```
+
+---
+
+### Known Gaps in BOM Model
+
+| Gap | Impact | Resolution Needed |
+|----|--------|-------------------|
+| All hardware unit_costs are NULL | Cannot compute customer prices or project P&L | Requires XLSX COST ANALYSIS sheet or vendor quotes |
+| iPad model (exact) | Cannot confirm DISP-IPAD sku/model | Confirm during NJ lab visit |
+| iPad PoE adapter model | DISP-IPAD-POE has TBD model | Confirm during NJ lab visit |
+| iPad kiosk case model | DISP-IPAD-CASE has TBD model | Confirm during NJ lab visit |
+| Switch/SSD/NVR breakpoints | Sizing rules above are estimates | Confirm from XLSX BOM template tabs |
+| PBK tier BOM template | PBK may have different hardware config | Requires PBK contract/XLSX |
+| patch cable quantities per venue | NET-PATCH-* qty_per_venue is estimated | Confirm from XLSX |
+| UPS | Not in hardware BOM doc; likely in rack | Confirm model and add if in XLSX |
+| Rack enclosure | Not in hardware BOM doc; may be customer-supplied | Confirm from XLSX |
+| Mac Mini chip generation | M1/M2/M4 — affects ABM enrollment and local PH sourcing | Confirm from Apple Business orders |
