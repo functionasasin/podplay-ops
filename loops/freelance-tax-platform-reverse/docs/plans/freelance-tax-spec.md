@@ -1494,13 +1494,330 @@ export interface ValidationResult {
 export type ValidateResult = WasmResult<ValidationResult>;
 
 // ============================================================================
-// BIR Form Output Types (abbreviated — full field list in BIR form mapping docs)
-// The complete field list for Form1701AOutput, Form1701Output, Form1701QOutput,
-// Form2551QOutput is specified in analysis/typescript-types.md Section 3.
+// BIR Form Output Types — full field specifications
 // ============================================================================
 
-// (Form output interfaces are large — ~100+ fields each. Forward loop should
-//  implement them from analysis/typescript-types.md which has the full specification.)
+export interface Form1701AOutput {
+  // Header
+  taxYearCovered: TaxYear;
+  amendedReturn: boolean;
+  shortPeriodReturn: boolean;
+  fiscalYearEnd: ISODate | null;
+
+  // Part I
+  tin: string;
+  rdoCode: string;
+  taxpayerNameLast: string;
+  taxpayerNameFirst: string;
+  taxpayerNameMiddle: string;
+  citizenship: string;
+  civilStatus: string;
+  registeredAddress: string;
+  zipCode: string;
+  contactNumber: string;
+  emailAddress: string;
+  businessName: string;
+  psicCode: string;
+  methodOfDeduction: string;  // "OSD" | "8% FLAT RATE"
+  typeOfTaxpayer: string;     // "Individual"
+  birthday: ISODate;
+  atcCode: string;
+  isAvailingOsd: boolean;
+  isAvailing8pct: boolean;
+
+  // Part II: Tax Payable
+  incomeTaxDue: Peso;
+  lessTaxRelief: Peso;
+  incomeTaxDueNetOfRelief: Peso;
+  addPenaltiesSurcharge: Peso;
+  addPenaltiesInterest: Peso;
+  addPenaltiesCompromise: Peso;
+  totalTaxPayable: Peso;
+  lessTaxCredits: Peso;
+  netTaxPayable: Peso;
+  overpayment: Peso;
+  overpaymentToBeRefunded: boolean;
+  overpaymentToBeIssuedTcc: boolean;
+  overpaymentToCarryOver: boolean;
+
+  // Part III: CPA info
+  cpaTin: string | null;
+  cpaName: string | null;
+  cpaAccreditationNumber: string | null;
+
+  // Part IV-A: OSD path
+  ivaGrossSalesServices: Peso;
+  ivaSalesReturnsAllowances: Peso;
+  ivaNetSales: Peso;
+  ivaCostOfSales: Peso;
+  ivaTotalGrossIncome: Peso;
+  ivaNonOpIncomeInterest: Peso;
+  ivaNonOpIncomeRental: Peso;
+  ivaNonOpIncomeRoyalty: Peso;
+  ivaNonOpIncomeDividend: Peso;
+  ivaNonOpIncomeOthers: Peso;
+  ivaOsdAmount: Peso;
+  ivaNetTaxableIncome: Peso;
+  ivaGraduatedTaxTable1: Peso;
+  ivaGraduatedTaxTable2: Peso;
+  ivaIncomeTaxDue: Peso;
+
+  // Part IV-B: 8% path
+  ivbGrossSalesServices: Peso;
+  ivbSalesReturnsAllowances: Peso;
+  ivbNetSales: Peso;
+  ivbNonOpIncomeInterest: Peso;
+  ivbNonOpIncomeRental: Peso;
+  ivbNonOpIncomeRoyalty: Peso;
+  ivbNonOpIncomeDividend: Peso;
+  ivbNonOpIncomeOthers: Peso;
+  ivbTotalGross: Peso;
+  ivbLess250k: Peso;
+  ivbTaxableIncome: Peso;
+  ivbIncomeTaxDue: Peso;
+
+  // Tax Credits
+  tcPriorYearExcess: Peso;
+  tcQuarterly1701qPayments: Peso;
+  tcCwtQ1Q2Q3: Peso;
+  tcCwtQ4: Peso;
+  tcPriorFilingPayment: Peso;
+  tcForeignTaxCredits: Peso;
+  tcOtherCredits: Peso;
+  tcTotalCredits: Peso;
+}
+
+export interface NolcoScheduleRow {
+  colAYearIncurred: TaxYear;
+  colBOriginalLoss: Peso;
+  colCAppliedPriorYears: Peso;
+  colDBalanceBeginning: Peso;
+  colEAppliedCurrentYear: Peso;
+  colFBalanceEnd: Peso;
+  expiryYear: TaxYear;
+  expired: boolean;
+}
+
+export interface Form1701Output {
+  // Header
+  taxYearCovered: TaxYear;
+  amendedReturn: boolean;
+  shortPeriodReturn: boolean;
+
+  // Part I
+  tin: string;
+  rdoCode: string;
+  taxpayerNameLast: string;
+  taxpayerNameFirst: string;
+  taxpayerNameMiddle: string;
+  citizenship: string;
+  civilStatus: string;
+  registeredAddress: string;
+  zipCode: string;
+  contactNumber: string;
+  emailAddress: string;
+  businessName: string;
+  psicCode: string;
+  methodOfDeduction: string;  // "ITEMIZED" | "OSD"
+  typeOfTaxpayer: string;     // "Individual"
+  birthday: ISODate;
+  atcCode: string;
+  withBusinessIncome: boolean;
+  withCompensationIncome: boolean;
+
+  // Part II: Tax Payable
+  incomeTaxDue: Peso;
+  lessTaxRelief: Peso;
+  netTaxDue: Peso;
+  surcharge: Peso;
+  interest: Peso;
+  compromise: Peso;
+  totalPayable: Peso;
+  lessTaxCreditsTotal: Peso;
+  netPayable: Peso;
+  overpaymentAmount: Peso;
+  overpaymentRefund: boolean;
+  overpaymentTcc: boolean;
+  overpaymentCarryOver: boolean;
+  secondInstallmentAmount: Peso;
+
+  // Schedule 2: Compensation
+  sched2GrossCompensation: Peso;
+  sched2NonTaxableExclusions: Peso;
+  sched2TaxableCompensation: Peso;
+
+  // Schedule 3A: Graduated rates
+  sched3aGrossReceipts: Peso;
+  sched3aLessReturns: Peso;
+  sched3aNetReceipts: Peso;
+  sched3aLessCogs: Peso;
+  sched3aGrossIncomeFromOps: Peso;
+  sched3aNonOpIncome: Peso;
+  sched3aTotalGrossIncome: Peso;
+  sched3aDeductionMethod: string;
+  sched3aTotalDeductions: Peso;
+  sched3aCompNti: Peso;
+  sched3aBizNti: Peso;
+  sched3aTotalNti: Peso;
+  sched3aTaxTable1: Peso;
+  sched3aTaxTable2: Peso;
+  sched3aIncomeTaxDue: Peso;
+
+  // Schedule 3B: 8% rate
+  sched3bGrossReceipts: Peso;
+  sched3bLessReturns: Peso;
+  sched3bNetReceipts: Peso;
+  sched3bNonOpIncome: Peso;
+  sched3bTotalGross: Peso;
+  sched3bLess250k: Peso;
+  sched3bTaxableIncome: Peso;
+  sched3bIncomeTaxDue: Peso;
+
+  // Schedule 4: Itemized Deductions
+  sched4CompensationDeductions: Peso;
+  sched4SssGsisPhilhealth: Peso;
+  sched4Rent: Peso;
+  sched4Interest: Peso;
+  sched4Utilities: Peso;
+  sched4Ear: Peso;
+  sched4Communication: Peso;
+  sched4Depreciation: Peso;
+  sched4TaxesLicenses: Peso;
+  sched4Insurance: Peso;
+  sched4ProfessionalFees: Peso;
+  sched4Travel: Peso;
+  sched4Supplies: Peso;
+  sched4Charitable: Peso;
+  sched4BadDebts: Peso;
+  sched4ResearchDevelopment: Peso;
+  sched4Others: Peso;
+  sched4TotalOrdinaryDeductions: Peso;
+
+  // Schedule 5: Special Deductions
+  sched5PensionTrust: Peso;
+  sched5PremiumHealthHospitalization: Peso;
+  sched5Nolco: Peso;
+  sched5FringeBenefits: Peso;
+  sched5Total: Peso;
+
+  // Schedule 6: NOLCO
+  sched6Entries: NolcoScheduleRow[];
+
+  // Part V: Tax Due
+  v1TaxOnComp: Peso;
+  v2TaxFromSched3aOr3b: Peso;
+  v3LessSpecialDeductions: Peso;
+  v4TotalTax: Peso;
+  v5IncomeTaxDue: Peso;
+
+  // Part VI: Tax Credits
+  vi1PriorYearExcess: Peso;
+  vi2Q1Payment: Peso;
+  vi3Q2Payment: Peso;
+  vi4Q3Payment: Peso;
+  vi5CwtQ1Q2Q3: Peso;
+  vi6CwtQ4: Peso;
+  vi7CompCwt: Peso;
+  vi8PriorAmendedPayment: Peso;
+  vi9ForeignTaxCredit: Peso;
+  vi10OtherCredits: Peso;
+  vi11TotalCredits: Peso;
+  vi12NetTaxPayable: Peso;
+}
+
+export interface Form1701QOutput {
+  // Header
+  taxYear: TaxYear;
+  quarter: Quarter;
+  returnPeriodFrom: ISODate;
+  returnPeriodTo: ISODate;
+  amendedReturn: boolean;
+
+  // Part I
+  tin: string;
+  rdoCode: string;
+  taxpayerName: string;
+  businessName: string;
+
+  // Schedule I: Graduated Method
+  siGrossReceipts: Peso;
+  siLessReturns: Peso;
+  siNetReceipts: Peso;
+  siLessCogs: Peso;
+  siGrossIncome: Peso;
+  siNonOpIncome: Peso;
+  siTotalGrossIncome: Peso;
+  siDeductions: Peso;
+  siPriorQtrNti: Peso;
+  siTotalNti: Peso;
+  siIncomeTaxDueTable1: Peso;
+  siIncomeTaxDueTable2: Peso;
+  siIncomeTaxDue: Peso;
+
+  // Schedule II: 8% Method
+  siiCurrentQtrGross: Peso;
+  siiReturnsAllowances: Peso;
+  siiNetCurrent: Peso;
+  siiPriorQtrCumulative8pct: Peso;
+  siiTotalCumulativeGross: Peso;
+  siiLess250k: Peso;
+  siiTaxableCumulative: Peso;
+  siiTaxDue8pct: Peso;
+
+  // Schedule III: Tax Credits
+  siiiCwtCurrentQuarter: Peso;
+  siiiPriorQtrCwtAlreadyClaimed: Peso;
+  siiiNetCwtThisQtr: Peso;
+  siiiPriorQtr1701qPayments: Peso;
+  siiiPriorYearExcess: Peso;
+  siiiTotalCredits: Peso;
+  siiiNetPayable: Peso;
+
+  // Schedule IV: Penalties
+  sivSurcharge: Peso;
+  sivInterest: Peso;
+  sivCompromise: Peso;
+  sivTotalPenalties: Peso;
+}
+
+export interface PT2551QScheduleRow {
+  atcCode: string;
+  taxBase: Peso;
+  rate: Rate;
+  taxDue: Peso;
+  description: string;
+}
+
+export interface Form2551QOutput {
+  // Header
+  taxYear: TaxYear;
+  quarter: Quarter | 4;  // 2551Q IS filed for Q4 unlike 1701Q
+  returnPeriodFrom: ISODate;
+  returnPeriodTo: ISODate;
+  amendedReturn: boolean;
+  nilReturn: boolean;
+
+  // Part I
+  tin: string;
+  rdoCode: string;
+  taxpayerName: string;
+  businessName: string;
+
+  // Part II: Tax Payable
+  atcCode: string;
+  grossTaxableSalesReceipts: Peso;
+  percentageTaxRate: Rate;
+  percentageTaxDue: Peso;
+  lessPtCwtCredits: Peso;
+  netPtPayable: Peso;
+  addSurcharge: Peso;
+  addInterest: Peso;
+  addCompromise: Peso;
+  totalAmountPayable: Peso;
+
+  // Schedule 1
+  schedule1Rows: PT2551QScheduleRow[];
+}
 ```
 
 **Critical FormType vs formVariant distinction:**

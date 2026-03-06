@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 43
-- Analyzed: 41
-- Pending: 2
-- Convergence: 95%
+- Analyzed: 42
+- Pending: 1
+- Convergence: 98%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -76,7 +76,7 @@ Depends on completeness-audit FAIL results. All 4 must complete before cross-lay
 
 ### Wave 7.5c: Spec Self-Containment Fix (found during spec-review)
 Depends on spec-review. Must complete before spec-review can be signed off.
-- [ ] fill-form-output-types — Inline BIR form output TypeScript interfaces (Form1701AOutput, Form1701Output, Form1701QOutput, Form2551QOutput, NolcoScheduleRow, PT2551QScheduleRow) from analysis/typescript-types.md into spec Section 5.3. The spec currently has a comment deferring to the analysis file, which violates the self-containment requirement. After inlining, the forward loop can build entirely from the spec.
+- [x] fill-form-output-types — Inline BIR form output TypeScript interfaces (Form1701AOutput, Form1701Output, Form1701QOutput, Form2551QOutput, NolcoScheduleRow, PT2551QScheduleRow) from analysis/typescript-types.md into spec Section 5.3. The spec currently has a comment deferring to the analysis file, which violates the self-containment requirement. After inlining, the forward loop can build entirely from the spec.
 
 ### Wave 7 (continued — after Wave 7.5b complete)
 - [x] cross-layer-consistency — Field-by-field verification: Rust <-> JSON <-> TypeScript <-> Zod. Found 3 immediate fixes (PURELY_SE, TCC, PATH_C) + 14 deferred type divergences (fix-ts-input-types).
