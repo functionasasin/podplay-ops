@@ -2,6 +2,7 @@
 
 | # | Aspect | Wave | Date | Files Modified |
 |---|--------|------|------|----------------|
+| 47 | computation-management | 5 | 2026-03-06 | analysis/computation-management.md |
 | 46 | org-model | 5 | 2026-03-06 | analysis/org-model.md |
 | 45 | navigation | 5 | 2026-03-06 | analysis/navigation.md |
 | 1 | cache-existing-analysis | 1 | 2026-03-06 | input/sources/deepdive-retirement-pay-ra7641.md, analysis/cache-existing-analysis.md |
