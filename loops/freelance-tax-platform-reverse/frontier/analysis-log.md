@@ -2,6 +2,7 @@
 
 | # | Aspect | Wave | Date | Files Modified |
 |---|--------|------|------|----------------|
+| 35 | completeness-audit | 7 | 2026-03-06 | analysis/completeness-audit.md, frontier/aspects.md (4 new gap-fill aspects in Wave 7.5), frontier/analysis-log.md. 13 PASS / 4 FAIL. Gaps: wizard step field specs, E2E detailed steps, per-page empty states, 28 missing toasts. |
 | 34 | placeholder-validation | 7 | 2026-03-06 | analysis/placeholder-validation.md, docs/plans/freelance-tax-spec.md (2 fixes: CI stub values + playwright.config.ts), frontier/aspects.md, frontier/analysis-log.md |
 | 33 | unified-mega-spec | 7 | 2026-03-06 | docs/plans/freelance-tax-spec.md, frontier/aspects.md, frontier/analysis-log.md |
 | 32 | monitoring-and-alerts | 6 | 2026-03-06 | analysis/monitoring-and-alerts.md, frontier/aspects.md, frontier/analysis-log.md |

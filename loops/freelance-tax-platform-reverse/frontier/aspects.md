@@ -1,10 +1,10 @@
 # Frontier — TaxKlaro Platform Completion
 
 ## Statistics
-- Total aspects discovered: 37
-- Analyzed: 34
-- Pending: 3
-- Convergence: 92%
+- Total aspects discovered: 41
+- Analyzed: 35
+- Pending: 6
+- Convergence: 85%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -62,7 +62,16 @@ Depends on Wave 5. Production readiness.
 Depends on ALL previous waves. **Strict internal dependency order — do NOT skip ahead.**
 - [x] unified-mega-spec — Assemble docs/plans/freelance-tax-spec.md from all analysis files + imported domain content
 - [x] placeholder-validation — **HARD GATE.** Line-by-line scan for banned patterns. MUST return PASS before proceeding.
-- [ ] completeness-audit — Per-feature PASS/FAIL: types match, schemas match, routes wired, components wired, migrations complete, E2E defined
+- [x] completeness-audit — Per-feature PASS/FAIL: 13 PASS, 4 FAIL → 4 gap-fill aspects created in Wave 7.5.
+
+### Wave 7.5: Spec Gap Fills
+Depends on completeness-audit FAIL results. All 4 must complete before cross-layer-consistency.
+- [ ] fill-wizard-step-fields — Merge wizard-steps.md per-field detail (label/type/placeholder/validation/error) for all 17 wizard steps into spec Section 7.7
+- [ ] fill-e2e-specs — Merge playwright-e2e-specs.md detailed test scenarios (steps, assertions, data-testid, test fixtures) into spec Section 15.2
+- [ ] fill-empty-states — Merge empty-states-and-loading.md per-page specs (icon/title/description/CTA/skeleton) into spec Section 8.5
+- [ ] fill-toast-catalog — Merge remaining 28 toasts from toast-catalog.md into spec Section 8.4 (currently only 13/41 documented)
+
+### Wave 7 (continued — after Wave 7.5 complete)
 - [ ] cross-layer-consistency — Field-by-field verification: Rust <-> JSON <-> TypeScript <-> Zod
 - [ ] spec-review — Final review: can the forward loop build the ENTIRE product from this spec alone?
 
