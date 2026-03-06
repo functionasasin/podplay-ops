@@ -10,3 +10,4 @@
 | 6 | fetch-separation-pay-rules | 1 | 2026-03-06 | input/sources/separation-pay-rules.md, analysis/fetch-separation-pay-rules.md |
 | 7 | fetch-dole-final-pay | 1 | 2026-03-06 | input/sources/dole-final-pay-la06-20.md, analysis/fetch-dole-final-pay.md |
 | 8 | fetch-bir-approved-plans | 1 | 2026-03-06 | input/sources/bir-approved-plans.md, analysis/fetch-bir-approved-plans.md |
+| 9 | core-formula-22-5-days | 2 | 2026-03-06 | analysis/core-formula-22-5-days.md |

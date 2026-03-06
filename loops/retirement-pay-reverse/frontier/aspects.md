@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 55
-- Analyzed: 8
-- Pending: 47
-- Convergence: 15%
+- Analyzed: 9
+- Pending: 46
+- Convergence: 16%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -21,7 +21,7 @@ Fetch and cache primary legal sources.
 
 ### Wave 2: Domain Rule Extraction
 Depends on Wave 1 sources being cached.
-- [ ] core-formula-22-5-days — Extract the 22.5-day formula: 15 days + 5 days SIL + 1/12 of 13th month pay
+- [x] core-formula-22-5-days — Extract the 22.5-day formula: 15 days + 5 days SIL + 1/12 of 13th month pay
 - [ ] eligibility-rules — Age thresholds (60 optional, 65 compulsory), 5-year service minimum, employer size exemption (<=10 employees)
 - [ ] credited-years-rounding — 6-month rounding rule: partial year >= 6 months rounds up, < 6 months drops
 - [ ] salary-basis-inclusions — What's included (basic, integrated COLA, contractual allowances) and excluded (OT, NSD, variable allowances)
@@ -103,3 +103,4 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 - fetch-separation-pay-rules (Wave 1) — 2026-03-06
 - fetch-dole-final-pay (Wave 1) — 2026-03-06
 - fetch-bir-approved-plans (Wave 1) — 2026-03-06
+- core-formula-22-5-days (Wave 2) — 2026-03-06
