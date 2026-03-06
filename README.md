@@ -2,9 +2,12 @@
 
 A personal operating system disguised as a git repo. Everything I need to remember, track, plan, or automate lives here — organized into a 1,036-entity knowledge graph that keeps getting smarter on its own.
 
-**Ralph loops** — autonomous Claude Code jobs that run on 30-minute crons — write to it continuously. Reverse loops analyze a problem into a spec. Forward loops build the spec into code. 7 loops total, 4 active right now.
+Two systems write to it continuously:
 
-Everything converges on the same `entities/` directory. The repo is the single source of truth. There is no database.
+1. **NanoClaw** — a lightweight Claude-powered Telegram bot (Fly.io). I message it with updates, questions, raw info. It reads and writes to the monorepo.
+2. **Ralph loops** — autonomous Claude Code jobs that run on 30-minute crons. Reverse loops analyze a problem into a spec. Forward loops build the spec into code. 7 loops total, 4 active right now.
+
+Both write paths converge on the same `entities/` directory. The repo is the single source of truth. There is no database.
 
 ## what's in here
 
@@ -12,7 +15,7 @@ Everything converges on the same `entities/` directory. The repo is the single s
 entities/           1,036 typed entities (people, places, businesses, trips, meetings, projects, ideas)
 dashboards/         8 Dataview dashboards — at-a-glance views for each entity type
 loops/              7 ralph loops (3 active, 3 converged, 1 forward-building a Rust engine)
-automations/        ingestion scripts, anime recap engine
+automations/        NanoClaw bot, ingestion scripts, anime recap engine
 research/           30 deep research docs
 docs/plans/         specs produced by reverse ralph loops
 inbox/              raw dumps waiting for the ingestion loop to organize

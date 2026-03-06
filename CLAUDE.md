@@ -69,7 +69,17 @@ Everything becomes a typed entity with standardized frontmatter. This enables:
 
 ### The Monorepo is the Persistent State
 
-The monorepo is the single source of truth for everything. There is no separate database.
+The monorepo is the single source of truth for everything. There is no separate database. Two systems write to it:
+
+1. **NanoClaw Bot (Telegram)** — Lightweight Claude-powered bot on Fly.io. Message it with updates, questions, or raw info. It reads and writes to the monorepo. Bot commits are prefixed with `bot:`. See `automations/nanoclaw/` for setup.
+
+2. **Ingestion Loop (CI/cron)** — A periodic Claude Code job that organizes raw content from `inbox/` into structured entities.
+
+Both write paths follow the same entity schema and use the same `entities/` directory.
+
+### Write Path: NanoClaw Bot (Primary)
+
+The bot runs on Fly.io, always listening on Telegram. You can message it anytime with updates, questions, or raw info. It reads `entities/` for context and can create or update entity files. A git-sync cron job pulls every 15 minutes so manual edits are picked up too.
 
 ### Write Path: Ingestion Loop
 
