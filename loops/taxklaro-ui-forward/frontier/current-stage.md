@@ -11,13 +11,13 @@ Stage 9 complete. Responsive + spacing audit done:
 - Pre-existing test failures fixed: ComputationCardSkeleton (rounded-lg + border), ClientRowSkeleton (restored tr/td with 5 cells), ClientsTable loading state (wrapped in table/tbody), DEFAULT_WIZARD_DATA.itemizedExpenses → {}
 - All 549 tests pass, build passes.
 
-## What To Do
-Screenshot verification pass:
-1. Navigate to every route using Playwright and take full-page screenshots
-2. Review each screenshot for typography, spacing, color, empty states
-3. Fix any issues found, re-screenshot
-4. Run `npx vitest run` — all tests pass
-5. Run `npx vite build` — build succeeds
+## Status: CONVERGED
+
+Stage 10 complete. All screenshots pass. See status/converged.txt for full summary.
+
+Critical fix applied: Added `@theme inline` block to index.css mapping CSS variables
+to Tailwind v4 color utilities. bg-primary, bg-muted, text-muted-foreground, etc.
+were generating NO CSS before this fix. All 549 tests pass. Build passes.
 
 ## Work Log
 - Stage 1 (2026-03-06): Installed @fontsource-variable/dm-sans + @fontsource/dm-serif-display.

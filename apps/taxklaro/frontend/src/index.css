@@ -2,6 +2,33 @@
 @import "@fontsource-variable/dm-sans/index.css";
 @import "@fontsource/dm-serif-display/index.css";
 
+/*
+  Map CSS variables to Tailwind v4 color system.
+  Without this block, bg-primary / text-muted-foreground / etc. generate no CSS.
+  Each --color-* entry registers a Tailwind utility backed by the :root variable.
+*/
+@theme inline {
+  --color-background: rgb(var(--background));
+  --color-foreground: rgb(var(--foreground));
+  --color-card: rgb(var(--card));
+  --color-card-foreground: rgb(var(--card-foreground));
+  --color-popover: rgb(var(--popover));
+  --color-popover-foreground: rgb(var(--popover-foreground));
+  --color-primary: rgb(var(--primary));
+  --color-primary-foreground: rgb(var(--primary-foreground));
+  --color-secondary: rgb(var(--secondary));
+  --color-secondary-foreground: rgb(var(--secondary-foreground));
+  --color-muted: rgb(var(--muted));
+  --color-muted-foreground: rgb(var(--muted-foreground));
+  --color-accent: rgb(var(--accent));
+  --color-accent-foreground: rgb(var(--accent-foreground));
+  --color-destructive: rgb(var(--destructive));
+  --color-destructive-foreground: rgb(var(--destructive-foreground));
+  --color-border: rgb(var(--border));
+  --color-input: rgb(var(--input));
+  --color-ring: rgb(var(--ring));
+}
+
 :root {
   /* Brand */
   --brand-600: 29 78 216;          /* #1D4ED8 — Tailwind blue-700 */

@@ -1,0 +1,20 @@
+Converged: 2026-03-06
+
+All 10 stages complete. TaxKlaro UI polish loop finished.
+
+Stage 10 — Screenshot Verification:
+- Critical fix: Added @theme inline block to index.css, wiring CSS variables
+  (--primary, --muted, --card, --border, etc.) to Tailwind v4 color utilities.
+  Without this, bg-primary / text-muted-foreground / bg-card generated NO CSS.
+  CSS bundle grew from 55KB → 70KB as color utilities are now fully generated.
+- Re-ran screenshot-verify.js: all 12 routes × 2 viewports pass.
+- Confirmed DM Serif Display on all headings, DM Sans variable on body.
+- Confirmed brand blue CTAs visible (Sign In button, Get Started CTA).
+- All 549 tests pass. Build passes.
+
+Design system summary:
+- Fonts: DM Serif Display (headings/display) + DM Sans Variable (body/UI)
+- Colors: warm off-white background, brand blue #1D4ED8 for CTAs/active states
+- Shadows: warm 3-tier scale (sm/md/lg) with very subtle opacity
+- Typography: 6-level scale (hero/h1/h2/h3/body/small) with CSS variables
+- Components: shadcn/ui New York style, rounded-xl cards, shadow-sm at rest
