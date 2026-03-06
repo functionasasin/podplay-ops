@@ -17,3 +17,4 @@
 | 13 | tax-treatment-conditions | 2 | 2026-03-06 | analysis/tax-treatment-conditions.md |
 | 14 | separation-pay-interaction | 2 | 2026-03-06 | analysis/separation-pay-interaction.md |
 | 15 | company-plan-comparison-rules | 2 | 2026-03-06 | analysis/company-plan-comparison-rules.md |
+| 16 | death-before-retirement | 2 | 2026-03-06 | analysis/death-before-retirement.md |
