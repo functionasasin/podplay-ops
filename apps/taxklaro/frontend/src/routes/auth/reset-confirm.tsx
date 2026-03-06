@@ -49,67 +49,85 @@ function AuthResetConfirmPage() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-[60vh]" data-testid="auth-reset-confirm-page">
-      <div className="w-full max-w-sm space-y-6">
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl font-semibold">Set New Password</h1>
-          <p className="text-sm text-muted-foreground">
-            Enter your new password below.
-          </p>
+    <div
+      className="min-h-screen flex items-center justify-center p-4 bg-background"
+      data-testid="auth-reset-confirm-page"
+    >
+      <div className="w-full max-w-sm">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <span className="font-display text-3xl tracking-tight text-foreground">
+            <span className="text-primary">₱</span>TaxKlaro
+          </span>
         </div>
 
-        {success ? (
-          <div className="text-center space-y-4">
-            <p className="text-sm text-green-600">
-              Your password has been updated successfully.
+        {/* Card */}
+        <div className="bg-white rounded-xl p-8 shadow-[var(--shadow-lg)]">
+          <div className="mb-6">
+            <h1 className="text-xl font-semibold text-foreground">Set New Password</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Enter your new password below.
             </p>
-            <button
-              className="text-sm text-primary underline"
-              onClick={() => navigate({ to: '/' })}
-            >
-              Go to Dashboard
-            </button>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="new-password" className="text-sm font-medium">
-                New Password
-              </label>
-              <input
-                id="new-password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                disabled={!hashReady}
-                className="w-full rounded-md border px-3 py-2 text-sm disabled:opacity-50"
-                placeholder="Min. 6 characters"
-              />
-            </div>
 
-            {error && <p className="text-sm text-red-600">{error}</p>}
-
-            <button
-              type="submit"
-              disabled={isSubmitting || !hashReady}
-              className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-            >
-              {isSubmitting ? 'Updating...' : 'Update Password'}
-            </button>
-
-            <div className="text-center">
+          {success ? (
+            <div className="text-center space-y-4">
+              <p className="text-sm text-green-700 bg-green-50 rounded-lg px-3 py-2">
+                Your password has been updated successfully.
+              </p>
               <button
-                type="button"
-                className="text-sm text-primary underline"
-                onClick={() => navigate({ to: '/auth', search: { redirect: '/', mode: 'signin' } })}
+                className="text-sm text-primary hover:underline"
+                onClick={() => navigate({ to: '/' })}
               >
-                Back to Sign In
+                Go to Dashboard
               </button>
             </div>
-          </form>
-        )}
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label
+                  htmlFor="new-password"
+                  className="block text-sm font-medium text-foreground mb-1.5"
+                >
+                  New Password
+                </label>
+                <input
+                  id="new-password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  disabled={!hashReady}
+                  className="w-full h-11 rounded-lg border border-border bg-white px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors disabled:opacity-50"
+                  placeholder="Min. 6 characters"
+                />
+              </div>
+
+              {error && (
+                <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+              )}
+
+              <button
+                type="submit"
+                disabled={isSubmitting || !hashReady}
+                className="w-full h-11 rounded-lg bg-primary px-4 text-sm font-medium text-white hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                {isSubmitting ? 'Updating...' : 'Update Password'}
+              </button>
+
+              <div className="text-center">
+                <button
+                  type="button"
+                  className="text-sm text-primary hover:underline"
+                  onClick={() => navigate({ to: '/auth', search: { redirect: '/', mode: 'signin' } })}
+                >
+                  Back to Sign In
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );

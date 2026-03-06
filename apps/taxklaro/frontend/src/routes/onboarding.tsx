@@ -34,8 +34,20 @@ function OnboardingPage() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-[60vh]" data-testid="onboarding-page">
-      <OnboardingForm onCreateOrg={handleCreateOrg} />
+    <div
+      className="min-h-screen flex items-center justify-center p-4 bg-background"
+      data-testid="onboarding-page"
+    >
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-8">
+          <span className="font-display text-3xl tracking-tight text-foreground">
+            <span className="text-primary">₱</span>TaxKlaro
+          </span>
+        </div>
+        <div className="bg-white rounded-xl p-8 shadow-[var(--shadow-lg)]">
+          <OnboardingForm onCreateOrg={handleCreateOrg} />
+        </div>
+      </div>
     </div>
   );
 }

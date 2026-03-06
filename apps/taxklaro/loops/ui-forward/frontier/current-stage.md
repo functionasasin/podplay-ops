@@ -1,17 +1,18 @@
-# Current Stage: 4 (Landing + Auth Pages)
+# Current Stage: 5 (Wizard Polish)
 
 ## Status
-Stage 3 complete. Sidebar polished with DM Serif Display logo (₱TaxKlaro), left-border active
-state (3px primary accent), hover transitions, larger touch targets (py-2.5), sign-out as text
-link with LogOut icon. AppLayout updated with subtle border (border-border/60), p-4 mobile /
-p-8 desktop main content padding. Build passes.
+Stage 4 complete. Landing page restyled with DM Serif Display hero, 3-column feature grid (Compare
+Tax Regimes, BIR-Ready Forms, Instant Computation), and trust signal footer. Auth pages now use
+centered card layout with warm shadow, logo above card, polished inputs (h-11, focus ring),
+full-width primary button, and secondary actions as text links. Onboarding page uses same card
+pattern with DM Serif Display heading. Build passes.
 
 ## What To Do
-Restyle the landing page and auth pages. Routes: /, /auth, /auth/reset, /auth/reset-confirm,
-/onboarding. Landing page needs a hero section with DM Serif Display headline, feature
-highlights grid, and trust signals. Auth pages need centered card layout.
+Restyle the wizard flow. Route: /computations/new. Polish the progress bar, step container cards,
+radio selection cards, form fields (PesoInput), navigation controls, and WizardReview section.
 
 ## Work Log
 - Stage 1: Installed fonts, defined CSS design tokens, verified build ✓
 - Stage 2: Wired AppLayout as authenticated layout route, all 549 tests pass, build passes ✓
 - Stage 3: Sidebar polish — DM Serif Display logo, left-border active state, hover transitions, AppLayout padding ✓
+- Stage 4: Landing page hero + features, auth pages card layout, onboarding card layout ✓

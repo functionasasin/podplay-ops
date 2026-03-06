@@ -24,23 +24,29 @@ export function OnboardingForm({ onCreateOrg }: OnboardingFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-md mx-auto">
+    <form onSubmit={handleSubmit} className="space-y-5">
       <div>
-        <h1 className="text-2xl font-semibold">Create your firm</h1>
+        <h1
+          className="font-display text-foreground"
+          style={{ fontSize: 'var(--text-h2)', lineHeight: 'var(--text-h2-lh)' }}
+        >
+          Create your firm
+        </h1>
         <p className="text-sm text-muted-foreground mt-1">
           Set up your organization to start managing computations.
         </p>
       </div>
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         <Label htmlFor="org-name">Firm Name</Label>
         <Input
           id="org-name"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g. Santos Tax Services"
+          className="h-11"
         />
       </div>
-      <Button type="submit" disabled={isSubmitting || !name.trim()} className="w-full">
+      <Button type="submit" disabled={isSubmitting || !name.trim()} className="w-full h-11">
         Create Firm
       </Button>
     </form>

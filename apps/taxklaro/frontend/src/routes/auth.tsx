@@ -62,118 +62,145 @@ function AuthPage() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-[60vh]" data-testid="auth-page">
-      <div className="w-full max-w-sm space-y-6">
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl font-semibold">
-            {mode === 'signup' ? 'Create Account' : 'Sign In'}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {mode === 'magic'
-              ? 'We will send a magic link to your email.'
-              : mode === 'signup'
-                ? 'Create a new TaxKlaro account.'
-                : 'Sign in to your TaxKlaro account.'}
-          </p>
+    <div
+      className="min-h-screen flex items-center justify-center p-4 bg-background"
+      data-testid="auth-page"
+    >
+      <div className="w-full max-w-sm">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <span className="font-display text-3xl tracking-tight text-foreground">
+            <span className="text-primary">₱</span>TaxKlaro
+          </span>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="auth-email" className="text-sm font-medium">
-              Email
-            </label>
-            <input
-              id="auth-email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full rounded-md border px-3 py-2 text-sm"
-              placeholder="you@example.com"
-            />
+        {/* Card */}
+        <div className="bg-white rounded-xl p-8 shadow-[var(--shadow-lg)]">
+          <div className="mb-6">
+            <h1 className="text-xl font-semibold text-foreground">
+              {mode === 'signup' ? 'Create Account' : mode === 'magic' ? 'Magic Link' : 'Sign In'}
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              {mode === 'magic'
+                ? 'We will send a magic link to your email.'
+                : mode === 'signup'
+                  ? 'Create a new TaxKlaro account.'
+                  : 'Sign in to your TaxKlaro account.'}
+            </p>
           </div>
 
-          {mode !== 'magic' && (
-            <div className="space-y-2">
-              <label htmlFor="auth-password" className="text-sm font-medium">
-                Password
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label
+                htmlFor="auth-email"
+                className="block text-sm font-medium text-foreground mb-1.5"
+              >
+                Email
               </label>
               <input
-                id="auth-password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                id="auth-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
-                minLength={6}
-                className="w-full rounded-md border px-3 py-2 text-sm"
-                placeholder="Min. 6 characters"
+                className="w-full h-11 rounded-lg border border-border bg-white px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                placeholder="you@example.com"
               />
             </div>
-          )}
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          {info && <p className="text-sm text-green-600">{info}</p>}
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-          >
-            {isSubmitting
-              ? 'Please wait...'
-              : mode === 'magic'
-                ? 'Send Magic Link'
-                : mode === 'signup'
-                  ? 'Create Account'
-                  : 'Sign In'}
-          </button>
-        </form>
-
-        <div className="text-center space-y-2 text-sm">
-          {mode === 'signin' && (
-            <>
-              <button
-                className="text-primary underline"
-                onClick={() => { setMode('magic'); setError(null); setInfo(null); }}
-              >
-                Sign in with magic link instead
-              </button>
+            {mode !== 'magic' && (
               <div>
-                <span className="text-muted-foreground">No account? </span>
-                <button
-                  className="text-primary underline"
-                  onClick={() => { setMode('signup'); setError(null); setInfo(null); }}
+                <label
+                  htmlFor="auth-password"
+                  className="block text-sm font-medium text-foreground mb-1.5"
                 >
-                  Create one
+                  Password
+                </label>
+                <input
+                  id="auth-password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="w-full h-11 rounded-lg border border-border bg-white px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                  placeholder="Min. 6 characters"
+                />
+              </div>
+            )}
+
+            {error && (
+              <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+            )}
+            {info && (
+              <p className="text-sm text-green-700 bg-green-50 rounded-lg px-3 py-2">{info}</p>
+            )}
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full h-11 rounded-lg bg-primary px-4 text-sm font-medium text-white hover:bg-primary/90 transition-colors disabled:opacity-50 mt-1"
+            >
+              {isSubmitting
+                ? 'Please wait...'
+                : mode === 'magic'
+                  ? 'Send Magic Link'
+                  : mode === 'signup'
+                    ? 'Create Account'
+                    : 'Sign In'}
+            </button>
+          </form>
+
+          <div className="mt-5 space-y-2 text-center text-sm">
+            {mode === 'signin' && (
+              <>
+                <div>
+                  <button
+                    className="text-primary hover:underline"
+                    onClick={() => { setMode('magic'); setError(null); setInfo(null); }}
+                  >
+                    Sign in with magic link instead
+                  </button>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">No account? </span>
+                  <button
+                    className="text-primary hover:underline"
+                    onClick={() => { setMode('signup'); setError(null); setInfo(null); }}
+                  >
+                    Create one
+                  </button>
+                </div>
+                <div>
+                  <button
+                    className="text-muted-foreground hover:text-foreground hover:underline"
+                    onClick={() => navigate({ to: '/auth/reset' })}
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+              </>
+            )}
+            {mode === 'signup' && (
+              <div>
+                <span className="text-muted-foreground">Already have an account? </span>
+                <button
+                  className="text-primary hover:underline"
+                  onClick={() => { setMode('signin'); setError(null); setInfo(null); }}
+                >
+                  Sign in
                 </button>
               </div>
+            )}
+            {mode === 'magic' && (
               <button
-                className="text-muted-foreground underline"
-                onClick={() => navigate({ to: '/auth/reset' })}
-              >
-                Forgot password?
-              </button>
-            </>
-          )}
-          {mode === 'signup' && (
-            <div>
-              <span className="text-muted-foreground">Already have an account? </span>
-              <button
-                className="text-primary underline"
+                className="text-primary hover:underline"
                 onClick={() => { setMode('signin'); setError(null); setInfo(null); }}
               >
-                Sign in
+                Sign in with password instead
               </button>
-            </div>
-          )}
-          {mode === 'magic' && (
-            <button
-              className="text-primary underline"
-              onClick={() => { setMode('signin'); setError(null); setInfo(null); }}
-            >
-              Sign in with password instead
-            </button>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>

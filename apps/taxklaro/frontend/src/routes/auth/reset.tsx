@@ -36,65 +36,83 @@ function AuthResetPage() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-[60vh]" data-testid="auth-reset-page">
-      <div className="w-full max-w-sm space-y-6">
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl font-semibold">Reset Password</h1>
-          <p className="text-sm text-muted-foreground">
-            Enter your email and we will send you a link to reset your password.
-          </p>
+    <div
+      className="min-h-screen flex items-center justify-center p-4 bg-background"
+      data-testid="auth-reset-page"
+    >
+      <div className="w-full max-w-sm">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <span className="font-display text-3xl tracking-tight text-foreground">
+            <span className="text-primary">₱</span>TaxKlaro
+          </span>
         </div>
 
-        {sent ? (
-          <div className="text-center space-y-4">
-            <p className="text-sm text-green-600">
-              Check your email for a password reset link.
+        {/* Card */}
+        <div className="bg-white rounded-xl p-8 shadow-[var(--shadow-lg)]">
+          <div className="mb-6">
+            <h1 className="text-xl font-semibold text-foreground">Reset Password</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Enter your email and we will send you a link to reset your password.
             </p>
-            <button
-              className="text-sm text-primary underline"
-              onClick={() => navigate({ to: '/auth', search: { redirect: '/', mode: 'signin' } })}
-            >
-              Back to Sign In
-            </button>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="reset-email" className="text-sm font-medium">
-                Email
-              </label>
-              <input
-                id="reset-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full rounded-md border px-3 py-2 text-sm"
-                placeholder="you@example.com"
-              />
-            </div>
 
-            {error && <p className="text-sm text-red-600">{error}</p>}
-
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-            >
-              {isSubmitting ? 'Sending...' : 'Send Reset Link'}
-            </button>
-
-            <div className="text-center">
+          {sent ? (
+            <div className="text-center space-y-4">
+              <p className="text-sm text-green-700 bg-green-50 rounded-lg px-3 py-2">
+                Check your email for a password reset link.
+              </p>
               <button
-                type="button"
-                className="text-sm text-primary underline"
+                className="text-sm text-primary hover:underline"
                 onClick={() => navigate({ to: '/auth', search: { redirect: '/', mode: 'signin' } })}
               >
                 Back to Sign In
               </button>
             </div>
-          </form>
-        )}
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label
+                  htmlFor="reset-email"
+                  className="block text-sm font-medium text-foreground mb-1.5"
+                >
+                  Email
+                </label>
+                <input
+                  id="reset-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full h-11 rounded-lg border border-border bg-white px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                  placeholder="you@example.com"
+                />
+              </div>
+
+              {error && (
+                <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+              )}
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full h-11 rounded-lg bg-primary px-4 text-sm font-medium text-white hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                {isSubmitting ? 'Sending...' : 'Send Reset Link'}
+              </button>
+
+              <div className="text-center">
+                <button
+                  type="button"
+                  className="text-sm text-primary hover:underline"
+                  onClick={() => navigate({ to: '/auth', search: { redirect: '/', mode: 'signin' } })}
+                >
+                  Back to Sign In
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );
