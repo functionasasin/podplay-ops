@@ -34,3 +34,4 @@
 | 30 | initialization-patterns | 4 | 2026-03-06 | analysis/initialization-patterns.md |
 | 31 | typescript-types | 5 | 2026-03-06 | analysis/typescript-types.md |
 | 32 | zod-schemas | 5 | 2026-03-06 | analysis/zod-schemas.md |
+| 33 | wizard-steps | 5 | 2026-03-06 | analysis/wizard-steps.md |
