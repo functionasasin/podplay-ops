@@ -21,3 +21,5 @@
 | 17 | computation-management | 4 | 2026-03-06 | analysis/computation-management.md, frontier/aspects.md, frontier/analysis-log.md |
 | 18 | sharing | 4 | 2026-03-06 | analysis/sharing.md, frontier/aspects.md, frontier/analysis-log.md |
 | 19 | component-wiring-map | 5 | 2026-03-06 | analysis/component-wiring-map.md, frontier/aspects.md, frontier/analysis-log.md |
+| 20 | visual-verification-checklist | 5 | 2026-03-06 | analysis/visual-verification-checklist.md, frontier/aspects.md, frontier/analysis-log.md |
+| 21 | action-trigger-map | 5 | 2026-03-06 | analysis/action-trigger-map.md, frontier/aspects.md, frontier/analysis-log.md |

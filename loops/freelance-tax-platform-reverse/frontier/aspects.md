@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 37
-- Analyzed: 19
-- Pending: 18
-- Convergence: 51%
+- Analyzed: 21
+- Pending: 16
+- Convergence: 57%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -41,9 +41,9 @@ Depends on Wave 3. The biggest wave — where inheritance had the most issues.
 ### Wave 5: Component Wiring + UI
 Depends on Wave 4. Every component must have a home.
 - [x] component-wiring-map — Every component -> parent route, navigation path, trigger, props source (zero orphans)
-- [ ] action-trigger-map — Every action-triggered feature (PDF export, share toggle, delete, etc.) -> which button triggers it, which parent has the button, onClick handler. Prevents "PDF infra built but no button" failure.
+- [x] action-trigger-map — Every action-triggered feature (PDF export, share toggle, delete, etc.) -> which button triggers it, which parent has the button, onClick handler. Prevents "PDF infra built but no button" failure.
 - [ ] design-system-alignment — Map TaxKlaro palette to shadcn/ui + Radix + Tailwind CSS 4 theming
-- [ ] visual-verification-checklist — For every major component: required shadcn wrapper (Card/Alert/Badge), key Tailwind classes, lucide icon, color variant. Prevents unstyled test-scaffolding shipping as "complete."
+- [x] visual-verification-checklist — For every major component: required shadcn wrapper (Card/Alert/Badge), key Tailwind classes, lucide icon, color variant. Prevents unstyled test-scaffolding shipping as "complete."
 - [ ] empty-states-and-loading — Skeleton loaders, EmptyState components, error states for every async page
 - [ ] toast-catalog — Every user action that produces feedback, with message text and variant
 - [ ] pdf-export-layout — @react-pdf/renderer layout, sections, firm branding, BIR form reference
@@ -79,3 +79,12 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 | zod-schemas | 3 | 2026-03-06 | COMPLETE — 6 files (primitives, enums, input, output, bridge, index). All input schemas use .strict(). Output schemas no .strict(). .nullable() throughout (not .optional()). z.boolean() no coerce. Per-step wizard schemas for WS-01/03/04/07C/08. WasmResultSchema factory. 8 critical traps documented. Full cross-layer consistency table. |
 | supabase-auth-flow | 4 | 2026-03-06 | COMPLETE — main.tsx bootstrap with getSession+onAuthStateChange, supabase.ts with supabaseConfigured guard, lib/auth.ts wrappers, all 5 auth routes (auth, callback, reset, reset-confirm, onboarding), SetupPage, beforeLoad guard pattern, RouterContext type, email redirect URLs, 6 critical traps documented. |
 | supabase-migrations | 4 | 2026-03-06 | COMPLETE — 4 migration files: 001 (8 tables, 5 enums, 2 triggers, RLS enable), 002 (user_org_ids() helper + 32 RLS policies), 003 (6 RPCs with explicit GRANTs incl. anon for public RPCs), 004 (firm-logos storage bucket). All p_token params are UUID. Column-type match table. 8 critical traps. lib/organizations.ts, lib/clients.ts, lib/computation-notes.ts. |
+| route-table | 4 | 2026-03-06 | COMPLETE — 18 routes with full beforeLoad guards, data loading, error states. Auth-gated routes redirect to /auth. Route file naming follows TanStack Router file conventions. |
+| env-configuration | 4 | 2026-03-06 | COMPLETE — 4 VITE_* vars, .env.local.example, supabaseConfigured guard, SetupPage component, graceful degradation for missing config. |
+| navigation | 4 | 2026-03-06 | COMPLETE — AppLayout with sidebar (desktop) + Drawer (mobile), auth-aware items, active state, sign-out, useNavigation hook. |
+| org-model | 4 | 2026-03-06 | COMPLETE — useOrganization hook, OrgContext, roles, invitations, seat limits, plan tiers mapped. |
+| computation-management | 4 | 2026-03-06 | COMPLETE — CRUD operations, auto-save with 1.5s debounce, status workflow (draft→computed→finalized→archived), ComputationCard grid, lib/computations.ts. |
+| sharing | 4 | 2026-03-06 | COMPLETE — share_token UUID, share_enabled boolean, get_shared_computation RPC, /share/$token route, ShareView read-only, copy link toast. |
+| component-wiring-map | 5 | 2026-03-06 | COMPLETE — All 47 components mapped to parent routes with navigation paths, trigger actions, and props sources. Zero orphans. |
+| visual-verification-checklist | 5 | 2026-03-06 | COMPLETE — All major components specified with shadcn wrapper, key Tailwind classes, lucide icon, and status indicator colors. Anti-scaffolding rule (>=3 Tailwind classes). |
+| action-trigger-map | 5 | 2026-03-06 | COMPLETE — 23 action-triggered features with exact button text, icon, parent, handler bodies (with loading/error/toast), premium gating, and anti-orphan verification points. PDF dynamic import documented. |
