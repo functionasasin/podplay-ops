@@ -1,5 +1,6 @@
 @import "tailwindcss";
-@import "@fontsource/inter/index.css";
+@import "@fontsource-variable/dm-sans/index.css";
+@import "@fontsource/dm-serif-display/index.css";
 
 :root {
   /* Brand */
@@ -36,8 +37,31 @@
   --regime-optimal-bg: 240 253 244; /* Light green — recommended path */
   --regime-suboptimal-bg: 255 251 235; /* Light yellow */
 
+  /* Fonts */
+  --font-sans: "DM Sans Variable", "DM Sans", system-ui, sans-serif;
+  --font-display: "DM Serif Display", Georgia, serif;
+
+  /* Typography scale */
+  --text-hero: 3rem;
+  --text-hero-lh: 1.1;
+  --text-h1: 2rem;
+  --text-h1-lh: 1.2;
+  --text-h2: 1.5rem;
+  --text-h2-lh: 1.3;
+  --text-h3: 1.125rem;
+  --text-h3-lh: 1.4;
+  --text-body: 0.9375rem;
+  --text-body-lh: 1.6;
+  --text-small: 0.8125rem;
+  --text-small-lh: 1.5;
+
+  /* Shadow scale */
+  --shadow-sm: 0 1px 3px rgb(0 0 0 / 0.04), 0 1px 2px rgb(0 0 0 / 0.02);
+  --shadow-md: 0 4px 12px rgb(0 0 0 / 0.06), 0 2px 4px rgb(0 0 0 / 0.03);
+  --shadow-lg: 0 12px 32px rgb(0 0 0 / 0.08), 0 4px 8px rgb(0 0 0 / 0.04);
+
   /* Typography */
-  font-family: "InterVariable", "Inter", system-ui, sans-serif;
+  font-family: var(--font-sans);
 }
 
 .dark {
@@ -69,4 +93,9 @@
 body {
   background-color: rgb(var(--background));
   color: rgb(var(--foreground));
+  font-family: var(--font-sans);
+}
+
+.font-display {
+  font-family: var(--font-display);
 }
