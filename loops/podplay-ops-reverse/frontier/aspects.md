@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 57
-- Analyzed: 26
-- Pending: 31
-- Convergence: 46%
+- Analyzed: 27
+- Pending: 30
+- Convergence: 47%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -41,7 +41,7 @@
 - [x] logic-bom-generation — Auto-BOM logic: tier + courts + doors + cameras → complete hardware list with costs
 - [x] logic-cost-analysis — Cost calculation chain: unit cost → total → tax → shipping → landed → margin → customer price
 - [x] logic-inventory-management — Stock tracking: order → receive → stock → allocate → ship → deduct, low stock alerts
-- [ ] logic-deployment-tracking — Status progression: not_started → config → ready_to_ship → shipped → installing → qc → completed
+- [x] logic-deployment-tracking — Status progression: not_started → config → ready_to_ship → shipped → installing → qc → completed
 - [ ] logic-progress-calculation — Progress % from QA checklist completion, status derivation rules
 - [ ] logic-invoicing — Two-installment billing: deposit → final, signed/invoiced/paid tracking, aging receivables
 - [ ] logic-expense-tracking — Expense categories, payment methods, per-project attribution, monthly totals
