@@ -1915,19 +1915,253 @@ async function generateBOM(project: Project, settings: Settings): Promise<void> 
 
 ## Section 3: Pricing Tier Defaults
 
-*(to be populated in `model-settings` aspect)*
+Table: `settings` (single-row table, always `id = 1`)
+
+Source: `final-mega-spec/data-model/schema.md` (model-settings aspect) + MRP pricing tiers.
+
+```sql
+INSERT INTO settings (
+  id,
+  pro_venue_fee,
+  pro_court_fee,
+  autonomous_venue_fee,
+  autonomous_court_fee,
+  autonomous_plus_venue_fee,
+  autonomous_plus_court_fee,
+  pbk_venue_fee,
+  pbk_court_fee,
+  shipping_rate,
+  target_margin,
+  sales_tax_rate,
+  deposit_pct,
+  labor_rate_per_hour,
+  lodging_per_day,
+  airfare_default,
+  hours_per_day,
+  rent_per_year,
+  indirect_salaries_per_year,
+  switch_24_max_courts,
+  switch_48_max_courts,
+  ssd_1tb_max_courts,
+  ssd_2tb_max_courts,
+  nvr_4bay_max_cameras,
+  isp_fiber_mbps_per_court,
+  isp_cable_upload_min_mbps,
+  default_replay_service_version,
+  po_number_prefix,
+  mac_mini_local_ip,
+  replay_vlan_id,
+  surveillance_vlan_id,
+  access_control_vlan_id,
+  default_vlan_id,
+  replay_port,
+  ddns_domain,
+  cc_terminal_pin,
+  label_sets_per_court,
+  replay_sign_multiplier
+) VALUES (
+  1,
+  5000.00,     -- pro_venue_fee: $5,000 flat venue setup fee for Pro tier
+  2500.00,     -- pro_court_fee: $2,500 per court for Pro tier
+  7500.00,     -- autonomous_venue_fee: $7,500 flat venue setup fee for Autonomous
+  2500.00,     -- autonomous_court_fee: $2,500 per court for Autonomous
+  7500.00,     -- autonomous_plus_venue_fee: $7,500 flat for Autonomous+
+  2500.00,     -- autonomous_plus_court_fee: $2,500 per court for Autonomous+
+  0.00,        -- pbk_venue_fee: $0 placeholder — must be configured before first PBK project
+  0.00,        -- pbk_court_fee: $0 placeholder — must be configured before first PBK project
+  0.10,        -- shipping_rate: 10% of hardware total added for shipping/freight
+  0.10,        -- target_margin: 10% margin — customer_price = landed_cost / (1 - 0.10)
+  0.1025,      -- sales_tax_rate: 10.25% NJ sales tax applied to invoice total
+  0.50,        -- deposit_pct: 50% of invoice total due at signing (Invoice 1 of 2)
+  120.00,      -- labor_rate_per_hour: $120/hr for installer day rate calculations
+  250.00,      -- lodging_per_day: $250/night default hotel rate for out-of-state installs
+  1800.00,     -- airfare_default: $1,800 round-trip airfare estimate for out-of-state installs
+  10,          -- hours_per_day: 10-hour installer workday default for labor cost
+  27600.00,    -- rent_per_year: $27,600/yr NJ office rent (from HER/OpEx sheet)
+  147000.00,   -- indirect_salaries_per_year: $147,000/yr total indirect team salaries (HER sheet)
+  10,          -- switch_24_max_courts: upgrade to 48-port when court_count > 10
+  20,          -- switch_48_max_courts: two switches needed when court_count > 20
+  4,           -- ssd_1tb_max_courts: use 1TB SSD for 1–4 courts
+  12,          -- ssd_2tb_max_courts: use 2TB SSD for 5–12 courts; 4TB for 13+
+  4,           -- nvr_4bay_max_cameras: UNVR-Pro (7-bay) when security_camera_count > 4
+  12,          -- isp_fiber_mbps_per_court: approx 12 Mbps fiber per court (150/12 = 12.5)
+  60,          -- isp_cable_upload_min_mbps: cable minimum upload for 1–4 courts
+  'v1',        -- default_replay_service_version: 'v1' until V2 launches (~April 2026)
+  'PO',        -- po_number_prefix: PO numbers formatted as PO-YYYY-NNN
+  '192.168.32.100', -- mac_mini_local_ip: hardcoded fixed IP for Mac Mini on REPLAY VLAN 32
+  32,          -- replay_vlan_id: VLAN 32 for all PodPlay replay traffic
+  31,          -- surveillance_vlan_id: VLAN 31 for UniFi NVR + security cameras
+  33,          -- access_control_vlan_id: VLAN 33 for Kisi controllers + door readers
+  30,          -- default_vlan_id: VLAN 30 (untagged) for management/admin traffic
+  4000,        -- replay_port: ALL replay service communication uses port 4000 TCP/UDP
+  'podplaydns.com', -- ddns_domain: FreeDNS domain for DDNS (CUSTOMERNAME.podplaydns.com)
+  '07139',     -- cc_terminal_pin: BBPOS WisePOS E admin PIN (Stripe CC terminal)
+  5,           -- label_sets_per_court: 5 Brother label sets per court (iPad, ATV, camera, PoE, Flic)
+  2            -- replay_sign_multiplier: 2 replay signs per court (one per baseline side)
+) ON CONFLICT (id) DO NOTHING;
+```
+
+### Pricing Notes
+
+| Fee | Value | Source |
+|-----|-------|--------|
+| Pro venue fee | $5,000 | MRP COST ANALYSIS tab (venue_fee row, Pro tier) |
+| Pro court fee | $2,500 | MRP COST ANALYSIS tab (court_fee row, Pro tier) |
+| Autonomous venue fee | $7,500 | MRP COST ANALYSIS (autonomous tier) |
+| Autonomous court fee | $2,500 | Same as Pro per-court |
+| Autonomous+ venue fee | $7,500 | Same as Autonomous |
+| Autonomous+ court fee | $2,500 | Same as Pro per-court |
+| PBK venue fee | 0 (configure before use) | Pickleball Kingdom custom — ask Chad for value |
+| PBK court fee | 0 (configure before use) | Pickleball Kingdom custom — ask Chad for value |
+| Shipping rate | 10% | MRP COST ANALYSIS (shipping_pct column) |
+| Target margin | 10% | MRP COST ANALYSIS (margin_pct column) |
+| Sales tax rate | 10.25% | NJ sales tax applied at invoice creation |
+| Deposit pct | 50% | MRP FINANCIALS — Invoice 1 = 50% at signing |
+
+**Cost chain formula** (spec'd in `business-logic/cost-analysis.md`):
+```
+est_total_cost  = SUM(qty × unit_cost) for all BOM items
+landed_cost     = est_total_cost × (1 + shipping_rate)  → ×1.10
+customer_price  = landed_cost / (1 - target_margin)     → /0.90
+service_fees    = venue_fee + (court_fee × court_count)
+invoice_subtotal = customer_price + service_fees
+sales_tax       = invoice_subtotal × sales_tax_rate     → ×0.1025
+invoice_total   = invoice_subtotal + sales_tax
+deposit_amount  = invoice_total × deposit_pct           → ×0.50
+```
 
 ---
 
 ## Section 4: VLAN Reference Data
 
-*(to be populated in `model-network-reference` aspect)*
+Tables: `network_vlans` (4 rows) + `isp_bandwidth_requirements` (5 rows)
+
+Source: `analysis/model-network-reference.md` — Deployment Guide Phase 4 (Steps 42–44), Phase 0 Step 5, Appendix C.
+
+### 4a: network_vlans
+
+```sql
+INSERT INTO network_vlans
+  (id, display_name, vlan_id, subnet, gateway_ip, dhcp_start, dhcp_end,
+   mdns_enabled, allows_internet, required_for_tiers, is_conditional, notes, sort_order)
+VALUES
+  (
+    'default',
+    'Default (Management)',
+    NULL,
+    '192.168.30.0/24',
+    '192.168.30.1',
+    '192.168.30.2',
+    '192.168.30.254',
+    false,
+    true,
+    NULL,
+    false,
+    'Management VLAN for UDM, Mac Mini admin interface, ISP modem. NOTE: During Phase 6 camera configuration, the Default network temporarily uses 192.168.1.1 (cameras factory-default to 192.168.1.108). After all cameras are configured and moved to REPLAY VLAN, change Default network to 192.168.30.1 (Phase 6 Step 13).',
+    1
+  ),
+  (
+    'replay',
+    'REPLAY',
+    32,
+    '192.168.32.0/24',
+    '192.168.32.254',
+    '192.168.32.1',
+    '192.168.32.254',
+    true,
+    true,
+    NULL,
+    false,
+    'Primary operating VLAN. Carries all PodPlay traffic: Mac Mini (fixed 192.168.32.100), replay cameras (DHCP-fixed), iPads, Apple TVs. mDNS REQUIRED for Apple TV discovery. Port 4000 forwarded to 192.168.32.100. All tiers use this VLAN.',
+    2
+  ),
+  (
+    'surveillance',
+    'SURVEILLANCE',
+    31,
+    '192.168.31.0/24',
+    '192.168.31.254',
+    '192.168.31.1',
+    '192.168.31.254',
+    false,
+    true,
+    ARRAY['autonomous_plus'],
+    true,
+    'Surveillance-only VLAN for UniFi NVR and security cameras. Autonomous+ tier only. Create only if security_camera_count > 0 and has_nvr = true.',
+    3
+  ),
+  (
+    'access_control',
+    'ACCESS CONTROL',
+    33,
+    '192.168.33.0/24',
+    '192.168.33.254',
+    '192.168.33.1',
+    '192.168.33.254',
+    false,
+    true,
+    ARRAY['autonomous', 'autonomous_plus'],
+    true,
+    'Access control VLAN for Kisi Controller Pro 2 and door readers. Autonomous and Autonomous+ tiers. Create only if door_count > 0.',
+    4
+  );
+```
+
+### 4b: isp_bandwidth_requirements
+
+```sql
+INSERT INTO isp_bandwidth_requirements
+  (court_min, court_max, fiber_mbps, cable_upload_mbps, cable_note, dedicated_mbps, sort_order)
+VALUES
+  (1,  4,    50,  60,   '60 Mbps upload minimum',   30,  1),
+  -- Fiber: 50–100 Mbps symmetric (50 minimum, 100 preferred)
+  -- Cable: 60 Mbps upload is the only court-range with a specific cable minimum
+  -- Dedicated: 30/30 Mbps symmetric
+
+  (5,  11,  150, NULL, 'Highest possible upload',   50,  2),
+  -- Fiber: 150/150 Mbps symmetric
+  -- Cable: no fixed minimum — order highest upload tier available from ISP
+  -- Dedicated: 50/50 Mbps symmetric
+
+  (12, 19,  200, NULL, 'Highest possible upload',   50,  3),
+  -- Fiber: 200/200 Mbps symmetric
+  -- Cable: highest possible upload
+  -- Dedicated: 50/50 Mbps symmetric
+
+  (20, 24,  300, NULL, 'Highest possible upload',  100,  4),
+  -- Fiber: 300/300 Mbps symmetric
+  -- Cable: highest possible upload
+  -- Dedicated: 100/100 Mbps symmetric
+
+  (25, NULL, 400, NULL, 'Highest possible upload', 150,  5);
+  -- Fiber: 400/400 Mbps symmetric (25+ courts, no upper bound)
+  -- Cable: highest possible upload
+  -- Dedicated: 150/150 Mbps symmetric
+```
+
+### VLAN Quick Reference
+
+| VLAN | ID | Subnet | Gateway | mDNS | Tiers |
+|------|-----|--------|---------|------|-------|
+| Default (Management) | untagged | 192.168.30.0/24 | 192.168.30.1 | No | All |
+| REPLAY | 32 | 192.168.32.0/24 | 192.168.32.254 | **Yes** | All |
+| SURVEILLANCE | 31 | 192.168.31.0/24 | 192.168.31.254 | No | Autonomous+ |
+| ACCESS CONTROL | 33 | 192.168.33.0/24 | 192.168.33.254 | No | Autonomous, Autonomous+ |
+
+**Fixed IP assignments**:
+- Mac Mini: `192.168.32.100` (REPLAY VLAN, always this IP — hardcoded in port forward and replay service)
+- Camera factory default: `192.168.1.108` (transient — only during Phase 6 camera config)
+- All cameras post-config: `192.168.32.x` (DHCP-fixed on REPLAY VLAN, assigned in UniFi per-venue)
+- Port 4000: TCP/UDP inbound → Mac Mini 192.168.32.100 (all replay service traffic)
 
 ---
 
-## Section 5: Troubleshooting Reference Pairs
+## Section 5: Troubleshooting Tips
 
-*(to be populated in `ship-seed-data` aspect)*
+Table: `troubleshooting_tips` (16 rows)
+
+Source: `analysis/model-support-tiers.md` — Deployment Guide Appendix A + Appendix D.
+See Section 5 SQL block below (after Checklist Template Statistics).
 
 ---
 
@@ -1992,7 +2226,7 @@ for steps that should ONLY appear for V2 projects.
 
 ---
 
-## Section 2: Troubleshooting Tips
+## Section 5 (continued): Troubleshooting Tips — SQL
 
 **Aspect**: model-support-tiers
 **Date**: 2026-03-06
@@ -2107,3 +2341,202 @@ VALUES
 
 **Tier distribution**: Tier 1=10, Tier 2=5, Tier 3=1
 **Severity distribution**: critical=1, warning=12, info=3
+
+---
+
+## Section 7: Team Contacts
+
+Table: `team_contacts` (7 rows)
+
+Source: `analysis/model-contacts-directory.md` — Deployment Guide Appendix C (Key Contacts) + Appendix D (Support Tiers).
+
+```sql
+INSERT INTO team_contacts
+  (slug, name, role, department, phone, email, contact_via, support_tier, notes)
+VALUES
+
+  ('andy',
+   'Andy Korzeniacki',
+   'Project Manager — specs, kickoff, camera positions, site survey',
+   'pm',
+   '917-937-6896',
+   'andyk@podplay.app',
+   NULL,
+   NULL,
+   'First contact for all new venue deployments. Schedule kickoff call at Phase 0 Step 1. Provides site survey, hardware specs, camera positioning guidance, and tier determination. Author of hardware installation guide.'),
+
+  ('nico',
+   'Nico',
+   'Hardware & Installs Lead — replay service, device configuration, live monitoring',
+   'hardware',
+   NULL,
+   NULL,
+   'Via Chad',
+   2,
+   'Contact via Chad for Nico availability. Tier 2 support: VLAN changes, camera re-config, Mosyle profile issues, DDNS troubleshooting, replay service restarts. Monitors ~70 live locations via GCP health checks + Slack alerts.'),
+
+  ('chad',
+   'Chad',
+   'Head of Operations — account decisions, credentials, shipping',
+   'operations',
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   'Holds credentials for sensitive accounts (UniFi PingPodIT, FreeDNS, 1Password). Authoritative contact for Nico access. Contact for BOM mismatch resolution during packing (Phase 15 Step 2). Account and billing decisions.'),
+
+  ('stan',
+   'Stan Wu',
+   'Config Specialist — hardware expert, camera configuration',
+   'config',
+   NULL,
+   NULL,
+   NULL,
+   2,
+   'Author of PodPlay Configuration Guide v1.0. Expert in camera encoding settings, VLAN setup, Mac Mini replay service deployment. Contact for BOM mismatch resolution (Phase 15 Step 2). Tier 2 support escalation.'),
+
+  ('agustin',
+   'Agustin',
+   'App Readiness — LOCATION_ID creation, app release confirmation',
+   'app',
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   'Must be contacted at Phase 1 Step 3 before hardware ships to confirm PodPlay app is ready for the customer. Creates LOCATION_ID per facility (used in Mosyle P-List MDM config). Manages white-labeled app binaries for international deployments via VPP.'),
+
+  ('cs-team',
+   'CS Team',
+   'Customer Success — booking and replay credits',
+   'cs',
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   'Group contact. Handle booking questions and adding free replay credits to user profiles. Contact when testing deployment (Phase 13 Step 5: add free replays before end-to-end testing).'),
+
+  ('patrick',
+   'Patrick',
+   'Engineer/Developer — replay service, video encoding, port 4000 architecture',
+   'engineering',
+   NULL,
+   NULL,
+   NULL,
+   3,
+   'Tier 3 escalation only. Owns replay service codebase (V1 UDP, V2 TCP). Contact for: pixelated video (V1 UDP issue — deploy V2 to fix), stream corruption, port 4000 architecture issues, firmware-level camera problems. Weekly developer call for outstanding Tier 3 issues.');
+```
+
+### Team Contacts Statistics
+
+| Slug | Name | Department | Phone | Email | Support Tier |
+|------|------|-----------|-------|-------|-------------|
+| andy | Andy Korzeniacki | pm | 917-937-6896 | andyk@podplay.app | — |
+| nico | Nico | hardware | — | — | Tier 2 |
+| chad | Chad | operations | — | — | — |
+| stan | Stan Wu | config | — | — | Tier 2 |
+| agustin | Agustin | app | — | — | — |
+| cs-team | CS Team | cs | — | — | — |
+| patrick | Patrick | engineering | — | — | Tier 3 |
+
+**Total**: 7 rows. Andy is the only contact with a known phone + email (from Deployment Guide Appendix C Step 1).
+
+---
+
+## Section 8: Team OpEx
+
+Table: `team_opex` (4 rows)
+
+Source: `analysis/model-team-opex.md` — MRP HER sheet + FINANCIALS tab salary rows.
+
+**Note**: `annual_salary` values are set to 0.00 — actual salary figures require the XLSX (not available).
+The allocation percentages (`direct_pct`, `indirect_pct`) are confirmed from the MRP HER sheet.
+
+```sql
+INSERT INTO team_opex (name, role, annual_salary, direct_pct, indirect_pct) VALUES
+  ('Niko',
+   'Hardware & Installs Lead',
+   0.00,
+   0.50,
+   0.50),
+  -- 50% direct hardware/installation work → contributes to HER numerator
+  -- 50% indirect overhead → contributes to HER denominator
+  -- Source: MRP HER sheet "Niko Salary" row (spelling variant of Nico)
+  -- annual_salary: requires XLSX to confirm; placeholder 0.00
+
+  ('Chad',
+   'Ops / Former Installer',
+   0.00,
+   0.00,
+   0.20),
+  -- 0% direct hardware; 20% indirect overhead
+  -- Remaining 80% assumed non-hardware (not tracked in HER)
+  -- Source: MRP HER sheet "Chad Salary" row
+
+  ('Andy',
+   'Project Manager / Intake',
+   0.00,
+   0.00,
+   0.00),
+  -- Included for completeness; allocation TBD — requires XLSX HER sheet
+  -- No salary row confirmed in MRP
+
+  ('Stan',
+   'Config Specialist',
+   0.00,
+   0.50,
+   0.50);
+  -- Assumed 50/50 split (same as Niko — config + installs role)
+  -- Requires confirmation from XLSX; set to Niko's allocation as best estimate
+```
+
+### HER Calculation Notes
+
+These rows feed the HER (Hardware Efficiency Ratio) calculation:
+
+```
+direct_team_cost  = SUM(annual_salary × direct_pct)  for all team_opex rows
+indirect_overhead = SUM(annual_salary × indirect_pct) + rent_per_year + indirect_salaries_per_year
+HER = hardware_revenue / direct_team_cost
+```
+
+`rent_per_year` ($27,600) and `indirect_salaries_per_year` ($147,000) are in the `settings` table.
+
+---
+
+## Seed Data Summary
+
+| Table | Row Count | Source |
+|-------|-----------|--------|
+| `deployment_checklist_templates` | 121 | Deployment Guide Phases 0–15 |
+| `hardware_catalog` | 47 | Hardware Installation Guide + known models |
+| `bom_templates` | 104 | Derived from hardware catalog + tier logic |
+| `settings` | 1 | MRP COST ANALYSIS + HER sheet |
+| `network_vlans` | 4 | Deployment Guide Phase 4 + Appendix C |
+| `isp_bandwidth_requirements` | 5 | Deployment Guide Phase 0 Step 5 |
+| `troubleshooting_tips` | 16 | Deployment Guide Appendix A + D |
+| `team_contacts` | 7 | Deployment Guide Appendix C + D |
+| `team_opex` | 4 | MRP HER sheet |
+| **TOTAL seed rows** | **309** | |
+
+### Migration Order for Seed Data
+
+Run in this order (respects foreign key dependencies):
+
+```sql
+-- 1. Reference tables (no FKs)
+INSERT INTO settings ...                      -- 1 row
+INSERT INTO network_vlans ...                 -- 4 rows
+INSERT INTO isp_bandwidth_requirements ...    -- 5 rows
+INSERT INTO team_contacts ...                 -- 7 rows
+INSERT INTO team_opex ...                     -- 4 rows
+
+-- 2. Hardware catalog (referenced by BOM templates)
+INSERT INTO hardware_catalog ...              -- 47 rows
+INSERT INTO bom_templates ...                 -- 104 rows (4 INSERT...SELECT blocks)
+
+-- 3. Checklist templates (standalone)
+INSERT INTO deployment_checklist_templates ... -- 121 rows
+
+-- 4. Troubleshooting tips (standalone)
+INSERT INTO troubleshooting_tips ...          -- 16 rows
+```
