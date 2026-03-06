@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 55
-- Analyzed: 34
-- Pending: 21
-- Convergence: 62%
+- Analyzed: 35
+- Pending: 20
+- Convergence: 64%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -56,7 +56,7 @@ Depends on Wave 3 + Wave 4.
 - [x] zod-schemas — Strict Zod schemas: z.object({}).strict(), z.boolean() not z.coerce.boolean(), z.nullable() not z.optional()
 - [x] wizard-steps — Single employee wizard: Step 1 (employee info), Step 2 (employment details), Step 3 (salary & benefits), Step 4 (retirement details), Step 5 (company plan optional)
 - [x] batch-upload-ui — CSV upload component, file validation, progress bar, results table with per-employee rows, summary card, export options
-- [ ] company-plan-ui — Company plan input form, side-by-side comparison view, gap analysis per employee
+- [x] company-plan-ui — Company plan input form, side-by-side comparison view, gap analysis per employee
 - [ ] nlrc-worksheet-ui — NLRC worksheet display component, legal citation formatting, print/PDF layout
 - [ ] results-view — Results components: eligibility badge, pay breakdown card, tax treatment alert, separation pay comparison, 15-day vs 22.5-day visual comparison
 - [ ] shared-components — Reusable widgets: MoneyInput (centavo precision), DateInput, EnumSelect, CsvUploader, ComparisonTable, LegalCitation
@@ -95,6 +95,7 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 - [ ] spec-review — Final review: can the forward loop build the ENTIRE product from this spec alone?
 
 ## Recently Analyzed
+- company-plan-ui (Wave 5) — 2026-03-06
 - batch-upload-ui (Wave 5) — 2026-03-06
 - wizard-steps (Wave 5) — 2026-03-06
 - zod-schemas (Wave 5) — 2026-03-06

@@ -36,3 +36,4 @@
 | 32 | zod-schemas | 5 | 2026-03-06 | analysis/zod-schemas.md |
 | 33 | wizard-steps | 5 | 2026-03-06 | analysis/wizard-steps.md |
 | 34 | batch-upload-ui | 5 | 2026-03-06 | analysis/batch-upload-ui.md |
+| 35 | company-plan-ui | 5 | 2026-03-06 | analysis/company-plan-ui.md |
