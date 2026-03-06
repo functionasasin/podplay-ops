@@ -1,24 +1,22 @@
-# Current Stage: 11 (Wizard Steps WS-08 → WS-13 + REVIEW)
+# Current Stage: 12 (Results View + Compute)
 
 ## Status
-Stage 10 complete. 80 tests pass for wizard steps WS-00 through WS-07D.
+Stage 11 complete. 128 tests pass for all wizard steps WS-00 through WS-13 + REVIEW.
 
 ## What To Do
-Read spec §7.7.
-Implement wizard step components WS-08 through WS-13 plus REVIEW step.
-Each step uses React Hook Form + Zod per-step schema + shadcn/ui.
-All field labels, placeholders, validation, error messages from spec §7.7.
+Read spec §7.4 and §14 (results sections).
+Implement results display components with engine output.
 
-Steps to implement:
-- WS-08: CWT Form 2307
-- WS-09: Prior Quarterly
-- WS-10: Registration/VAT
-- WS-11: Regime Election
-- WS-12: Filing Details
-- WS-13: Prior Year Credits
-- REVIEW: Final Review + Compute
+Components to implement:
+- ResultsView.tsx — main results container
+- PathComparisonTable.tsx — side-by-side 3-path comparison
+- RecommendedBadge.tsx — highlights lowest-tax path
+- FormOutputPanel.tsx — displays BIR form line items
+- WarningsPanel.tsx — validation warnings + ineligibility notices
+- NarrativePanel.tsx — plain-language explanation
+- Wire useCompute hook — compute on wizard submit, display results
 
-Test command: `npx vitest run src/components/wizard/`
+Test command: `npx vitest run src/components/results/`
 
 ## Work Log
 - 2026-03-06: Stage 1 complete — cargo check passes, advancing to stage 2
@@ -31,3 +29,4 @@ Test command: `npx vitest run src/components/wizard/`
 - 2026-03-06: Stage 8 complete — design system set up, vite build produces 33.82 kB CSS
 - 2026-03-06: Stage 9 complete — 36 tests pass for wizard routing + hooks, advancing to stage 10
 - 2026-03-06: Stage 10 complete — 80 tests pass for wizard steps WS-00 through WS-07D, advancing to stage 11
+- 2026-03-06: Stage 11 complete — 128 tests pass for wizard steps WS-08 through WS-13 + REVIEW, advancing to stage 12

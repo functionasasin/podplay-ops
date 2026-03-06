@@ -1,0 +1,14 @@
+Stage 11 complete — 2026-03-06
+
+All 128 wizard step tests pass.
+
+WS-08 through WS-13 + REVIEW step implemented:
+- WS-08: CWT Form 2307 (Form2307EntrySchema validated)
+- WS-09: Prior Quarterly (QuarterlyPaymentSchema validated)
+- WS-10: Registration/VAT (VatStatus, BirRegistrationStatus types)
+- WS-11: Regime Election (RegimeElectionOption types)
+- WS-12: Filing Details (ReturnTypeOption types)
+- WS-13: Prior Year Credits (priorYearExcessCwt defaults)
+- REVIEW: Final Review + Compute step (WizardReview component)
+
+Advancing to stage 12: Results View + Compute.
