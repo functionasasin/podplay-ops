@@ -174,7 +174,9 @@ The litmus test: A forward loop reads ONLY `docs/plans/freelance-tax-spec.md` an
 4. **Update the frontier**:
    - Mark the aspect as `- [x]` in `frontier/aspects.md`
    - Update Statistics (increment Analyzed, decrement Pending, update Convergence %)
-   - If you discovered new aspects, add them to the appropriate Wave
+   - If you discovered new aspects, add them to the appropriate Wave (or create a new Wave if the discovery doesn't fit any existing one)
+   - If a Wave needs to be split, expanded, or reordered based on what you learned, do it — the frontier is a living document, not frozen
+   - Update the Total aspects count in Statistics whenever you add new aspects
    - Add a row to `frontier/analysis-log.md`
 5. **Commit**: `git add -A && git commit -m "loop(freelance-tax-platform-reverse): {aspect-name}"`
 6. **Exit**
@@ -766,7 +768,7 @@ Depends on ALL previous waves. **Strict internal dependency order.**
 - The final assembled spec goes to `docs/plans/freelance-tax-spec.md`.
 - Study the inheritance app at `apps/inheritance/frontend/src/` for patterns — don't copy code, extract patterns.
 - Study the template at `loops/_templates/fullstack-rust-wasm/` for structure.
-- Discover new aspects and add them to the frontier.
+- Discover new aspects and add them to the frontier. You can add new aspects to existing Waves, create entirely new Waves, or split an existing Wave into sub-waves. The initial frontier is a starting point, not a ceiling.
 - **Cross-layer consistency is paramount.** A field name mismatch between Rust and TypeScript means a runtime crash.
 
 ## HARD CONSTRAINT: Zero Placeholders in Final Spec
