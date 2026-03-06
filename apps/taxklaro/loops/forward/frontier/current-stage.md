@@ -1,10 +1,10 @@
-# Current Stage: 1 (Engine Scaffold)
+# Current Stage: 2 (Engine Types + Rates)
 
 ## Status
-Ready to begin. No work done yet.
+Stage 1 complete. Ready to implement types, rates, and errors.
 
 ## What To Do
-Read spec §3.1 and §3.2. Create Cargo.toml, lib.rs, wasm.rs stubs. Run `cargo check`.
+Read spec §3.3, §3.4. Create src/types.rs (all 14 enums + structs), src/rates.rs, src/errors.rs. Run `cargo check`.
 
 ## Work Log
-(empty — loop has not started)
+- 2026-03-06: Stage 1 complete — cargo check passes, advancing to stage 2
