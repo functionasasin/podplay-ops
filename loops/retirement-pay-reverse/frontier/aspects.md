@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 55
-- Analyzed: 38
-- Pending: 17
-- Convergence: 69%
+- Analyzed: 39
+- Pending: 16
+- Convergence: 71%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -60,7 +60,7 @@ Depends on Wave 3 + Wave 4.
 - [x] nlrc-worksheet-ui — NLRC worksheet display component, legal citation formatting, print/PDF layout
 - [x] results-view — Results components: eligibility badge, pay breakdown card, tax treatment alert, separation pay comparison, 15-day vs 22.5-day visual comparison
 - [x] shared-components — Reusable widgets: MoneyInput (centavo precision), DateInput, EnumSelect, CsvUploader, ComparisonTable, LegalCitation
-- [ ] design-system — Palette (professional/trustworthy for labor law), typography, spacing, shadcn/ui + Radix + Tailwind CSS 4
+- [x] design-system — Palette (professional/trustworthy for labor law), typography, spacing, shadcn/ui + Radix + Tailwind CSS 4
 - [ ] auth-flow — Supabase PKCE: email/password + magic link, sign-in/sign-up pages, callback route, password reset, session management
 - [ ] landing-page — Unauthenticated experience: product description, the 33% underpayment hook, clear sign-in/sign-up CTA, sample computation teaser
 - [ ] route-table — Complete TanStack Router table: /, /auth, /auth/callback, /dashboard, /compute/new, /compute/$id, /compute/$id/results, /compute/$id/nlrc, /batch/new, /batch/$id, /share/$token, /settings, /org/*
@@ -95,6 +95,7 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 - [ ] spec-review — Final review: can the forward loop build the ENTIRE product from this spec alone?
 
 ## Recently Analyzed
+- design-system (Wave 5) — 2026-03-06
 - shared-components (Wave 5) — 2026-03-06
 - results-view (Wave 5) — 2026-03-06
 - nlrc-worksheet-ui (Wave 5) — 2026-03-06
