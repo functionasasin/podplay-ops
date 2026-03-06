@@ -2721,3 +2721,533 @@ function generatePoNumber(year: number, sequence: number): string {
 | Whether MRP tracks per-item serial numbers | Serial tracking not in model | Confirm from XLSX — if yes, add serial_number field to inventory_movements |
 | TV drop-ship workflow detail | TVs go direct to venue; not in NJ stock | Confirm from XLSX whether TVs are in inventory or always 0 |
 | qty_on_hand update mechanism | Model assumes client-side update after movement insert | May need Postgres trigger to auto-update inventory.qty_on_hand from movements |
+
+---
+
+## Table: settings
+
+Single-row configuration table. All tunable values that affect pricing calculations, cost
+chains, travel estimates, and team OpEx reporting. The webapp reads this table on startup
+and caches it in React context. The Settings page provides a UI to edit all fields.
+
+**MRP source**: Design document defaults; exact values cross-referenced from
+`source-pricing-model` analysis and `source-mrp-usage-guide` analysis.
+
+**Single-row enforcement**: The table is constrained to exactly one row via a
+`CHECK (id = 1)` constraint and a unique primary key. No multi-tenant isolation needed
+at this layer — settings are global for the single PodPlay ops user.
+
+```sql
+CREATE TABLE settings (
+  id                          INTEGER     PRIMARY KEY DEFAULT 1
+                              CHECK (id = 1),
+  -- Enforces single-row invariant. id is always 1.
+
+  updated_at                  TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+  -- -------------------------------------------------------------------------
+  -- Pricing Tier Fees (customer-facing service fees, not hardware cost)
+  -- Source: source-pricing-model analysis, confirmed from design document
+  -- -------------------------------------------------------------------------
+  pro_venue_fee               NUMERIC(10,2) NOT NULL DEFAULT 5000.00,
+  -- One-time venue fee for Pro tier installations
+  -- MRP: COST ANALYSIS sheet "Venue Fee" row for Pro tier
+
+  pro_court_fee               NUMERIC(10,2) NOT NULL DEFAULT 2500.00,
+  -- Per-court service fee for Pro tier
+  -- MRP: COST ANALYSIS sheet "Per Court Fee" row for Pro tier
+
+  autonomous_venue_fee        NUMERIC(10,2) NOT NULL DEFAULT 7500.00,
+  -- One-time venue fee for Autonomous tier (includes access control + security cameras)
+  -- MRP: COST ANALYSIS sheet "Venue Fee" row for Autonomous tier
+
+  autonomous_court_fee        NUMERIC(10,2) NOT NULL DEFAULT 2500.00,
+  -- Per-court service fee for Autonomous tier
+  -- MRP: COST ANALYSIS sheet "Per Court Fee" row for Autonomous tier
+
+  autonomous_plus_venue_fee   NUMERIC(10,2) NOT NULL DEFAULT 7500.00,
+  -- One-time venue fee for Autonomous+ tier (same base as Autonomous; surveillance is add-on)
+  -- MRP: COST ANALYSIS sheet "Venue Fee" row for Autonomous+ tier
+
+  autonomous_plus_court_fee   NUMERIC(10,2) NOT NULL DEFAULT 2500.00,
+  -- Per-court service fee for Autonomous+ tier
+  -- MRP: COST ANALYSIS sheet "Per Court Fee" row for Autonomous+ tier
+
+  pbk_venue_fee               NUMERIC(10,2) NOT NULL DEFAULT 0.00,
+  -- One-time venue fee for PBK (Pickleball Kingdom) custom tier
+  -- MRP: COST ANALYSIS sheet "Venue Fee" row for PBK tier
+  -- Default 0.00 — must be set by ops admin before creating PBK projects
+  -- Source: XLSX required for exact value; not available from current sources
+
+  pbk_court_fee               NUMERIC(10,2) NOT NULL DEFAULT 0.00,
+  -- Per-court service fee for PBK tier
+  -- MRP: COST ANALYSIS sheet "Per Court Fee" row for PBK tier
+  -- Default 0.00 — must be set by ops admin before creating PBK projects
+
+  -- -------------------------------------------------------------------------
+  -- Cost Chain Rates (applied during BOM cost calculation)
+  -- Source: source-pricing-model analysis Section 3
+  -- -------------------------------------------------------------------------
+  shipping_rate               NUMERIC(5,4) NOT NULL DEFAULT 0.10
+                              CHECK (shipping_rate >= 0 AND shipping_rate <= 1),
+  -- Multiplied onto est_total_cost to get landed_cost
+  -- Formula: landed_cost = est_total_cost * (1 + shipping_rate)
+  -- Default: 10% (0.10)
+  -- MRP: COST ANALYSIS sheet "Shipping Rate" or "Freight %" column
+
+  target_margin               NUMERIC(5,4) NOT NULL DEFAULT 0.10
+                              CHECK (target_margin >= 0 AND target_margin < 1),
+  -- Markup rate: customer_price = landed_cost / (1 - target_margin)
+  -- Default: 10% (0.10) — a 10% margin over landed cost
+  -- MRP: COST ANALYSIS sheet "Margin" or "Markup %" column
+  -- Note: This produces ~11.1% markup on landed cost, 10% of selling price
+
+  sales_tax_rate              NUMERIC(5,4) NOT NULL DEFAULT 0.1025
+                              CHECK (sales_tax_rate >= 0 AND sales_tax_rate <= 1),
+  -- Applied to invoice subtotal (hardware + service fees) at invoice time
+  -- Formula: tax_amount = invoice_subtotal * sales_tax_rate
+  -- Default: 10.25% (0.1025) — reflects California sales tax rate
+  -- MRP: INVOICING sheet "Tax Rate" or applied as fixed percentage in invoice formula
+  -- Note: Tax is NOT embedded in cost chain; it is added on top at invoice generation
+
+  deposit_pct                 NUMERIC(5,4) NOT NULL DEFAULT 0.50
+                              CHECK (deposit_pct > 0 AND deposit_pct < 1),
+  -- Fraction of invoice_total charged as the first (deposit) installment
+  -- Formula: deposit_amount = invoice_total * deposit_pct
+  -- Default: 50% (0.50) — assumed 50/50 split; exact value requires XLSX INVOICING sheet
+  -- MRP: INVOICING sheet "Deposit %" column
+
+  -- -------------------------------------------------------------------------
+  -- Labor Rate
+  -- Source: source-pricing-model analysis Section 4
+  -- -------------------------------------------------------------------------
+  labor_rate_per_hour         NUMERIC(10,2) NOT NULL DEFAULT 120.00,
+  -- Hourly rate applied to installer hours for project P&L labor cost
+  -- Formula: labor_cost = installer_hours * labor_rate_per_hour
+  -- MRP: COST ANALYSIS or EXPENSES sheet "Labor Rate" value
+  -- Applies to both PodPlay staff and vetted installer time
+
+  -- -------------------------------------------------------------------------
+  -- Travel Defaults (pre-populated when creating travel expense estimates)
+  -- Source: source-pricing-model analysis Section 4
+  -- -------------------------------------------------------------------------
+  lodging_per_day             NUMERIC(10,2) NOT NULL DEFAULT 250.00,
+  -- Default lodging estimate per night (hotel)
+  -- Pre-fills expense entry when category = 'lodging'
+  -- MRP: EXPENSES sheet default value or usage guide reference
+
+  airfare_default             NUMERIC(10,2) NOT NULL DEFAULT 1800.00,
+  -- Default airfare estimate for a round trip
+  -- Pre-fills expense entry when category = 'airfare'
+  -- MRP: EXPENSES sheet default value or usage guide reference
+
+  hours_per_day               INTEGER NOT NULL DEFAULT 10
+                              CHECK (hours_per_day >= 1 AND hours_per_day <= 24),
+  -- Standard installer working hours per day; used to estimate multi-day jobs
+  -- Formula: estimated_days = ceil(total_estimated_hours / hours_per_day)
+  -- MRP: referenced in usage guide as 10-hour workdays for installation crews
+
+  -- -------------------------------------------------------------------------
+  -- Team OpEx Allocations (used in HER and P&L reporting)
+  -- Source: frontier aspect model-team-opex; confirmed in source-pricing-model Section 6
+  -- These allocate annual team costs between hardware-direct and indirect overhead
+  -- -------------------------------------------------------------------------
+  rent_per_year               NUMERIC(12,2) NOT NULL DEFAULT 27600.00,
+  -- Annual NJ lab/office rent allocated to OpEx
+  -- Source: frontier aspect model-team-opex — "$27.6K/yr"
+  -- Used in HER denominator as indirect overhead
+
+  indirect_salaries_per_year  NUMERIC(12,2) NOT NULL DEFAULT 147000.00,
+  -- Annual sum of indirect salary allocations across the team
+  -- Source: frontier aspect model-team-opex — "$147K/yr indirect salaries"
+  -- Includes: Chad 20% indirect + other indirect allocations
+  -- Used in HER denominator
+
+  -- -------------------------------------------------------------------------
+  -- BOM Sizing Thresholds (switch, SSD, NVR selection breakpoints)
+  -- Source: source-pricing-model analysis Section 8
+  -- These drive conditional BOM item selection based on project parameters
+  -- -------------------------------------------------------------------------
+  switch_24_max_courts        INTEGER NOT NULL DEFAULT 10,
+  -- Use USW-Pro-24-POE (single) for court_count <= this value
+  -- Use USW-Pro-48-POE or 2x USW-Pro-24-POE for court_count > this value
+  -- Exact breakpoint: requires XLSX BOM template sheet; 10 is best estimate
+
+  switch_48_max_courts        INTEGER NOT NULL DEFAULT 20,
+  -- Use 2x USW-Pro-24-POE or 1x USW-Pro-48-POE for court_count <= this value
+  -- Use 2x USW-Pro-48-POE for court_count > this value
+  -- Exact breakpoint: requires XLSX BOM template sheet; 20 is best estimate
+
+  ssd_1tb_max_courts          INTEGER NOT NULL DEFAULT 4,
+  -- Use Samsung T7 1TB for court_count <= this value
+  -- MRP: BOM template sheet; exact breakpoint requires XLSX
+
+  ssd_2tb_max_courts          INTEGER NOT NULL DEFAULT 12,
+  -- Use Samsung T7 2TB for court_count <= this value (and > ssd_1tb_max_courts)
+  -- Use Samsung T7 4TB for court_count > this value
+  -- MRP: BOM template sheet; exact breakpoint requires XLSX
+
+  nvr_4bay_max_cameras        INTEGER NOT NULL DEFAULT 4,
+  -- Use UNVR (4-bay) for security_camera_count <= this value
+  -- Use UNVR-Pro (7-bay) for security_camera_count > this value
+  -- MRP: BOM template sheet; exact breakpoint requires XLSX
+
+  -- -------------------------------------------------------------------------
+  -- ISP Speed Thresholds (internet requirement validation by court count)
+  -- Source: source-deployment-guide analysis (Appendix or Phase 0)
+  -- Used to warn ops if venue's reported ISP speed is insufficient
+  -- -------------------------------------------------------------------------
+  isp_fiber_mbps_per_court    INTEGER NOT NULL DEFAULT 12,
+  -- Minimum fiber upload Mbps per court (approx: 150Mbps / 12 courts = 12.5/court)
+  -- Rounded recommendation; exact table stored in seed data (isp_speed_thresholds)
+
+  isp_cable_upload_min_mbps   INTEGER NOT NULL DEFAULT 60,
+  -- Minimum cable upload Mbps for any installation (cable is upload-constrained)
+
+  -- -------------------------------------------------------------------------
+  -- Miscellaneous Operational Defaults
+  -- -------------------------------------------------------------------------
+  default_replay_service_version  TEXT NOT NULL DEFAULT 'v1'
+                              CHECK (default_replay_service_version IN ('v1', 'v2')),
+  -- Which replay service version new projects default to
+  -- 'v1' until V2 launches April 2026; ops admin changes to 'v2' at launch
+
+  po_number_prefix            TEXT NOT NULL DEFAULT 'PO',
+  -- Prefix for auto-generated PO numbers: '{prefix}-{YYYY}-{NNN}'
+  -- Default: 'PO' → produces 'PO-2026-001'
+
+  mac_mini_local_ip           TEXT NOT NULL DEFAULT '192.168.32.100',
+  -- Fixed IP address assigned to Mac Mini on REPLAY VLAN (.32 subnet)
+  -- Source: source-mrp-usage-guide analysis Section 1 (VLAN setup)
+  -- This is the port-forward target for port 4000
+
+  replay_vlan_id              INTEGER NOT NULL DEFAULT 32,
+  -- VLAN ID for the REPLAY network segment
+  -- Source: source-mrp-usage-guide analysis (VLAN ID 32)
+
+  surveillance_vlan_id        INTEGER NOT NULL DEFAULT 31,
+  -- VLAN ID for the SURVEILLANCE network segment
+  -- Source: source-mrp-usage-guide analysis (VLAN .31)
+
+  access_control_vlan_id      INTEGER NOT NULL DEFAULT 33,
+  -- VLAN ID for the ACCESS CONTROL network segment
+  -- Source: source-mrp-usage-guide analysis (VLAN .33)
+
+  default_vlan_id             INTEGER NOT NULL DEFAULT 30,
+  -- VLAN ID for the DEFAULT network segment (management, non-AV traffic)
+  -- Source: source-mrp-usage-guide analysis (default .30 subnet)
+
+  replay_port                 INTEGER NOT NULL DEFAULT 4000,
+  -- TCP/UDP port used by the replay service on Mac Mini
+  -- Port-forwarded from ISP router → UDM → Mac Mini
+  -- Source: source-mrp-usage-guide analysis — port 4000 reference
+
+  ddns_domain                 TEXT NOT NULL DEFAULT 'podplaydns.com',
+  -- Base domain for DDNS subdomains
+  -- Full URL pattern: http://{customer_subdomain}.{ddns_domain}:{replay_port}
+  -- Source: source-mrp-usage-guide analysis Section 1 (DDNS Setup)
+
+  cc_terminal_pin             TEXT NOT NULL DEFAULT '07139',
+  -- Default PIN for BBPOS WisePOS E credit card terminal
+  -- Source: source-mrp-usage-guide analysis (hardware BOM notes)
+  -- Stored here for reference; not security-sensitive (it's a device PIN, not a password)
+
+  label_sets_per_court        INTEGER NOT NULL DEFAULT 5
+                              CHECK (label_sets_per_court >= 1),
+  -- Number of device labels printed per court during unboxing
+  -- Set: remote, iPad, camera, Apple TV, PoE adapter
+  -- Source: source-mrp-usage-guide analysis Section 1 (Unboxing & Labeling)
+
+  replay_sign_multiplier      INTEGER NOT NULL DEFAULT 2
+                              CHECK (replay_sign_multiplier >= 1),
+  -- Number of replay signs per court (default: 2)
+  -- Formula: replay_sign_count = court_count * replay_sign_multiplier
+  -- Source: frontier aspect model-replay-signs
+  -- Note: Also enforced at DB level via projects.replay_sign_count GENERATED column
+  -- This setting allows overriding the default if PodPlay changes the sign count per court
+
+  CONSTRAINT settings_single_row CHECK (id = 1)
+);
+```
+
+### Default Row Insert
+
+On first Supabase migration run, insert the single settings row:
+
+```sql
+INSERT INTO settings (
+  id,
+  pro_venue_fee,
+  pro_court_fee,
+  autonomous_venue_fee,
+  autonomous_court_fee,
+  autonomous_plus_venue_fee,
+  autonomous_plus_court_fee,
+  pbk_venue_fee,
+  pbk_court_fee,
+  shipping_rate,
+  target_margin,
+  sales_tax_rate,
+  deposit_pct,
+  labor_rate_per_hour,
+  lodging_per_day,
+  airfare_default,
+  hours_per_day,
+  rent_per_year,
+  indirect_salaries_per_year,
+  switch_24_max_courts,
+  switch_48_max_courts,
+  ssd_1tb_max_courts,
+  ssd_2tb_max_courts,
+  nvr_4bay_max_cameras,
+  isp_fiber_mbps_per_court,
+  isp_cable_upload_min_mbps,
+  default_replay_service_version,
+  po_number_prefix,
+  mac_mini_local_ip,
+  replay_vlan_id,
+  surveillance_vlan_id,
+  access_control_vlan_id,
+  default_vlan_id,
+  replay_port,
+  ddns_domain,
+  cc_terminal_pin,
+  label_sets_per_court,
+  replay_sign_multiplier
+) VALUES (
+  1,
+  5000.00,     -- pro_venue_fee
+  2500.00,     -- pro_court_fee
+  7500.00,     -- autonomous_venue_fee
+  2500.00,     -- autonomous_court_fee
+  7500.00,     -- autonomous_plus_venue_fee
+  2500.00,     -- autonomous_plus_court_fee
+  0.00,        -- pbk_venue_fee (must be configured before creating PBK projects)
+  0.00,        -- pbk_court_fee (must be configured before creating PBK projects)
+  0.10,        -- shipping_rate (10%)
+  0.10,        -- target_margin (10%)
+  0.1025,      -- sales_tax_rate (10.25%)
+  0.50,        -- deposit_pct (50%)
+  120.00,      -- labor_rate_per_hour
+  250.00,      -- lodging_per_day
+  1800.00,     -- airfare_default
+  10,          -- hours_per_day
+  27600.00,    -- rent_per_year
+  147000.00,   -- indirect_salaries_per_year
+  10,          -- switch_24_max_courts
+  20,          -- switch_48_max_courts
+  4,           -- ssd_1tb_max_courts
+  12,          -- ssd_2tb_max_courts
+  4,           -- nvr_4bay_max_cameras
+  12,          -- isp_fiber_mbps_per_court
+  60,          -- isp_cable_upload_min_mbps
+  'v1',        -- default_replay_service_version
+  'PO',        -- po_number_prefix
+  '192.168.32.100', -- mac_mini_local_ip
+  32,          -- replay_vlan_id
+  31,          -- surveillance_vlan_id
+  33,          -- access_control_vlan_id
+  30,          -- default_vlan_id
+  4000,        -- replay_port
+  'podplaydns.com', -- ddns_domain
+  '07139',     -- cc_terminal_pin
+  5,           -- label_sets_per_court
+  2            -- replay_sign_multiplier
+) ON CONFLICT (id) DO NOTHING;
+```
+
+### RLS Policy for settings
+
+```sql
+-- Settings is readable by authenticated users only
+ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Authenticated users can read settings"
+  ON settings FOR SELECT
+  TO authenticated
+  USING (true);
+
+CREATE POLICY "Authenticated users can update settings"
+  ON settings FOR UPDATE
+  TO authenticated
+  USING (true)
+  WITH CHECK (true);
+-- No INSERT policy beyond migration seed — table has exactly one row
+-- No DELETE policy — the row must always exist
+```
+
+### No index needed — single row, always full-table scan via PK.
+
+---
+
+## Table: team_opex
+
+Per-team-member OpEx allocations for HER (Hardware Efficiency Ratio) and P&L reporting.
+Each row represents one team member's annual salary and their allocation percentages
+between direct hardware work and indirect overhead.
+
+**MRP source**: Frontier aspect `model-team-opex` — Niko 50/50 direct/indirect,
+Chad 20% indirect, rent $27.6K/yr, indirect salaries $147K/yr.
+
+**Note**: `rent_per_year` and `indirect_salaries_per_year` are in `settings` (global).
+This table is for per-person allocations.
+
+```sql
+CREATE TABLE team_opex (
+  id                          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at                  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at                  TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+  name                        TEXT        NOT NULL,
+  -- Team member name (e.g., "Niko", "Chad", "Andy")
+  -- MRP: CUSTOMER MASTER or HER sheet team member rows
+
+  role                        TEXT        NOT NULL DEFAULT '',
+  -- Job title / role description (e.g., "Hardware & Installs Lead", "Ops")
+  -- Informational only; not used in calculations
+
+  annual_salary               NUMERIC(12,2) NOT NULL DEFAULT 0.00,
+  -- Total annual salary for this team member in USD
+  -- MRP: HER sheet or EXPENSES sheet salary row
+
+  direct_pct                  NUMERIC(5,4) NOT NULL DEFAULT 0.00
+                              CHECK (direct_pct >= 0 AND direct_pct <= 1),
+  -- Fraction of this person's time allocated to direct hardware/installation work
+  -- Used in HER numerator (direct hardware team cost)
+  -- Example: Niko = 0.50 (50% direct)
+
+  indirect_pct                NUMERIC(5,4) NOT NULL DEFAULT 0.00
+                              CHECK (indirect_pct >= 0 AND indirect_pct <= 1),
+  -- Fraction of this person's time allocated to indirect/overhead work
+  -- Used in HER denominator or excluded from hardware efficiency calc
+  -- Example: Niko = 0.50 (50% indirect); Chad = 0.20 (20% indirect)
+
+  CONSTRAINT direct_indirect_sum_lte_one
+    CHECK (direct_pct + indirect_pct <= 1.0000)
+  -- direct + indirect must not exceed 100%; remainder is non-hardware (e.g., software work)
+);
+```
+
+### team_opex Indexes
+
+```sql
+CREATE UNIQUE INDEX team_opex_name_unique ON team_opex (lower(name));
+-- Prevent duplicate team member entries (case-insensitive)
+```
+
+### team_opex RLS
+
+```sql
+ALTER TABLE team_opex ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Authenticated users can read team_opex"
+  ON team_opex FOR SELECT
+  TO authenticated
+  USING (true);
+
+CREATE POLICY "Authenticated users can manage team_opex"
+  ON team_opex FOR ALL
+  TO authenticated
+  USING (true)
+  WITH CHECK (true);
+```
+
+### team_opex Seed Data
+
+```sql
+INSERT INTO team_opex (name, role, annual_salary, direct_pct, indirect_pct) VALUES
+  ('Niko',  'Hardware & Installs Lead',  0.00,  0.50,  0.50),
+  -- annual_salary: unknown — requires XLSX HER sheet; set to 0 until confirmed
+  -- 50% direct (hardware config + installs), 50% indirect
+  -- Source: frontier aspect model-team-opex
+
+  ('Chad',  'Ops / Former Installer',    0.00,  0.00,  0.20),
+  -- annual_salary: unknown — requires XLSX HER sheet; set to 0 until confirmed
+  -- 0% direct hardware, 20% indirect overhead
+  -- Source: frontier aspect model-team-opex
+
+  ('Andy',  'Project Manager / Intake',  0.00,  0.00,  0.00),
+  -- Included for completeness; allocation TBD (requires XLSX)
+  -- Source: frontier aspect model-contacts-directory
+
+  ('Stan',  'Config Specialist',         0.00,  0.50,  0.50);
+  -- Included for completeness; allocation TBD (requires XLSX)
+  -- Assumed 50/50 split as config work is direct hardware; verify from XLSX
+```
+
+### HER Calculation Using Settings + team_opex
+
+```
+-- Hardware Efficiency Ratio (HER) for a given time period:
+
+direct_team_cost = SUM(annual_salary * direct_pct) for all team members
+                   / 12 * months_in_period
+                   + (rent_per_year / 12 * months_in_period)  -- only rent if direct
+                   -- Note: exact allocation of rent to direct vs indirect unclear;
+                   -- requires XLSX HER sheet formula to confirm
+
+indirect_team_cost = SUM(annual_salary * indirect_pct) for all team members
+                     / 12 * months_in_period
+                     + (indirect_salaries_per_year / 12 * months_in_period)
+
+hardware_revenue = SUM(customer_price) for all BOM items invoiced in period
+
+HER = hardware_revenue / direct_team_cost
+-- Higher HER = more hardware revenue generated per dollar of direct team spend
+-- Target HER > 1.0 to be profitable on hardware alone
+```
+
+---
+
+### Settings Field Source Map
+
+| Field | Default | Source | MRP Sheet |
+|-------|---------|--------|-----------|
+| `pro_venue_fee` | $5,000 | Design doc + source-pricing-model | COST ANALYSIS |
+| `pro_court_fee` | $2,500 | Design doc + source-pricing-model | COST ANALYSIS |
+| `autonomous_venue_fee` | $7,500 | Design doc + source-pricing-model | COST ANALYSIS |
+| `autonomous_court_fee` | $2,500 | Design doc + source-pricing-model | COST ANALYSIS |
+| `autonomous_plus_venue_fee` | $7,500 | Same as autonomous (surveillance is add-on) | COST ANALYSIS |
+| `autonomous_plus_court_fee` | $2,500 | Same as autonomous | COST ANALYSIS |
+| `pbk_venue_fee` | $0 (unknown) | Requires XLSX | COST ANALYSIS |
+| `pbk_court_fee` | $0 (unknown) | Requires XLSX | COST ANALYSIS |
+| `shipping_rate` | 10% | source-pricing-model Section 3 | COST ANALYSIS |
+| `target_margin` | 10% | source-pricing-model Section 3 | COST ANALYSIS |
+| `sales_tax_rate` | 10.25% | source-pricing-model Section 3 | INVOICING |
+| `deposit_pct` | 50% (assumed) | source-pricing-model Section 5 | INVOICING |
+| `labor_rate_per_hour` | $120/hr | source-pricing-model Section 4 | COST ANALYSIS |
+| `lodging_per_day` | $250 | source-pricing-model Section 4 | EXPENSES |
+| `airfare_default` | $1,800 | source-pricing-model Section 4 | EXPENSES |
+| `hours_per_day` | 10 | source-mrp-usage-guide Section 1 | Usage Guide |
+| `rent_per_year` | $27,600 | model-team-opex frontier | HER/P&L |
+| `indirect_salaries_per_year` | $147,000 | model-team-opex frontier | HER/P&L |
+| `switch_24_max_courts` | 10 | source-pricing-model Section 8 (estimate) | BOM template |
+| `switch_48_max_courts` | 20 | source-pricing-model Section 8 (estimate) | BOM template |
+| `ssd_1tb_max_courts` | 4 | source-pricing-model Section 8 (estimate) | BOM template |
+| `ssd_2tb_max_courts` | 12 | source-pricing-model Section 8 (estimate) | BOM template |
+| `nvr_4bay_max_cameras` | 4 | source-pricing-model Section 8 (estimate) | BOM template |
+| `isp_fiber_mbps_per_court` | 12 | source-deployment-guide (ISP table) | Deployment Guide |
+| `isp_cable_upload_min_mbps` | 60 | source-deployment-guide (ISP table) | Deployment Guide |
+| `default_replay_service_version` | 'v1' | source-mrp-usage-guide Section 5 | Config Guide |
+| `po_number_prefix` | 'PO' | Derived from model-inventory | POs |
+| `mac_mini_local_ip` | 192.168.32.100 | source-mrp-usage-guide Section 1 | Config Guide |
+| `replay_vlan_id` | 32 | source-mrp-usage-guide Section 1 | Config Guide |
+| `surveillance_vlan_id` | 31 | source-mrp-usage-guide Section 1 | Config Guide |
+| `access_control_vlan_id` | 33 | source-mrp-usage-guide Section 1 | Config Guide |
+| `default_vlan_id` | 30 | source-mrp-usage-guide Section 1 | Config Guide |
+| `replay_port` | 4000 | source-mrp-usage-guide Section 1 | Config Guide |
+| `ddns_domain` | podplaydns.com | source-mrp-usage-guide Section 1 | Config Guide |
+| `cc_terminal_pin` | 07139 | source-mrp-usage-guide (HW BOM notes) | Hardware BOM |
+| `label_sets_per_court` | 5 | source-mrp-usage-guide Section 1 | Config Guide |
+| `replay_sign_multiplier` | 2 | model-replay-signs frontier | Customer Replay Signs |
+
+### Known Gaps in Settings Model
+
+| Gap | Impact | Resolution |
+|----|--------|-----------|
+| `pbk_venue_fee` and `pbk_court_fee` exact values | PBK projects will have $0 fees until admin manually sets them | Requires XLSX or Kim Lapus input |
+| `deposit_pct` exact value (assumed 50%) | Deposit invoices may be wrong amount | Requires XLSX INVOICING sheet |
+| Switch/SSD/NVR sizing breakpoints (`switch_24_max_courts`, etc.) | BOM may select wrong item for edge-case court counts | Requires XLSX BOM template |
+| All `team_opex.annual_salary` values | HER calculation returns 0 until populated | Requires XLSX HER sheet |
+| Whether rent is split direct/indirect or all-indirect | HER denominator may be over/understated | Requires XLSX HER formula |
+| `isp_fiber_mbps_per_court` and `isp_cable_upload_min_mbps` precise thresholds | ISP validation warnings may fire incorrectly | Requires deployment guide ISP speed table (see source-deployment-guide analysis) |
