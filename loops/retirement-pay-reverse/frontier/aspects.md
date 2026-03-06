@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 55
-- Analyzed: 44
-- Pending: 11
-- Convergence: 80%
+- Analyzed: 45
+- Pending: 10
+- Convergence: 82%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -66,7 +66,7 @@ Depends on Wave 3 + Wave 4.
 - [x] route-table — Complete TanStack Router table: /, /auth, /auth/callback, /dashboard, /compute/new, /compute/$id, /compute/$id/results, /compute/$id/nlrc, /batch/new, /batch/$id, /share/$token, /settings, /org/*
 - [x] env-configuration — VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, .env.local.example, SetupPage pattern for missing vars
 - [x] database-migrations — Tables (computations, organizations, members, invitations, shared_links), RLS policies, RPC functions (get_shared_computation, create_org), triggers, idempotent (IF NOT EXISTS)
-- [ ] navigation — Auth-aware sidebar (desktop) + drawer (mobile), active states, sign-out, org switcher
+- [x] navigation — Auth-aware sidebar (desktop) + drawer (mobile), active states, sign-out, org switcher
 - [ ] org-model — Organizations for HR departments, members, roles (owner/admin/member), invitations, seat limits, useOrganization() hook
 - [ ] computation-management — CRUD for saved computations, auto-save, status workflow (draft/computed/shared), ComputationCard grid
 - [ ] sharing — Token-based read-only sharing, get_shared_computation() RPC with UUID parameter, /share/$token route, anon GRANT
@@ -95,6 +95,7 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 - [ ] spec-review — Final review: can the forward loop build the ENTIRE product from this spec alone?
 
 ## Recently Analyzed
+- navigation (Wave 5) — 2026-03-06
 - database-migrations (Wave 5) — 2026-03-06
 - env-configuration (Wave 5) — 2026-03-06
 - route-table (Wave 5) — 2026-03-06
