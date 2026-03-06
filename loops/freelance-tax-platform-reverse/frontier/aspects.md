@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 37
-- Analyzed: 25
-- Pending: 12
-- Convergence: 68%
+- Analyzed: 26
+- Pending: 11
+- Convergence: 70%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -50,7 +50,7 @@ Depends on Wave 4. Every component must have a home.
 
 ### Wave 6: Testing + Deployment
 Depends on Wave 5. Production readiness.
-- [ ] playwright-e2e-specs — E2E test scenarios for every critical flow (auth, wizard, compute, save, share, export)
+- [x] playwright-e2e-specs — E2E test scenarios for every critical flow (auth, wizard, compute, save, share, export)
 - [ ] production-build-verification — Vite plugin inventory, production build smoke test requirements, tree-shaking-sensitive libraries (d3, recharts), WASM loading in prod mode. Prevents "dev works, prod white page" failure.
 - [ ] migration-verification — supabase db reset test plan, RPC call tests with real data, parameter type match verification (UUID vs TEXT). Prevents "SQL written but never run" failure.
 - [ ] supabase-gotchas — Anon grants for public RPCs, search_path on SECURITY DEFINER, RLS bypass patterns, storage bucket policies. Prevents "works in Supabase dashboard, fails from client" failures.
