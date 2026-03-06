@@ -1851,3 +1851,265 @@ function applyConditionalSizing(items: ProjectBomItem[], project: Project, catal
 | UPS | Not in hardware BOM doc; likely in rack | Confirm model and add if in XLSX |
 | Rack enclosure | Not in hardware BOM doc; may be customer-supplied | Confirm from XLSX |
 | Mac Mini chip generation | M1/M2/M4 — affects ABM enrollment and local PH sourcing | Confirm from Apple Business orders |
+
+---
+
+## Inventory Model — Lifecycle, Movements, Purchase Orders
+
+**Aspect**: model-inventory
+**Date**: 2026-03-06
+**Sources**: analysis/source-mrp-usage-guide.md, analysis/source-pricing-model.md, analysis/source-hardware-guide.md, research/podplay-hardware-bom.md, frontier/aspects.md (model-inventory description)
+
+---
+
+### Overview
+
+PodPlay maintains a physical inventory of hardware at the NJ lab/warehouse. The ops person orders hardware, receives it, allocates items to projects, packs boxes, and ships to venues. The inventory system must track every stock change with a full movement log to enable reconciliation.
+
+**Four tables** handle inventory:
+1. `inventory` — current stock levels per hardware item (one row per hardware_catalog item)
+2. `inventory_movements` — append-only audit log; every qty change recorded here
+3. `purchase_orders` — PO header per vendor order
+4. `purchase_order_items` — line items within each PO
+
+**MRP source sheets** (from MRP Usage Guide analysis, partially derived):
+- `ORDER INPUT` sheet — one row per PO line item: vendor, date, item, qty ordered, unit cost
+- `INVENTORY INPUT` sheet — received quantities, adjustments
+- `INVENTORY` sheet — computed stock levels: On Hand, Allocated, Available, Reorder Point
+
+---
+
+### Field Source Maps
+
+#### inventory
+
+| Field | MRP Source Sheet | MRP Column / Notes |
+|-------|-----------------|-------------------|
+| hardware_catalog_id | INVENTORY sheet | Row per SKU; linked to item name |
+| qty_on_hand | INVENTORY sheet | "On Hand" column — physical count in NJ lab |
+| qty_allocated | INVENTORY sheet | "Allocated" column — reserved for active projects |
+| qty_available | INVENTORY sheet | "Available" column — derived: On Hand − Allocated |
+| reorder_threshold | INVENTORY sheet | "Reorder Point" column — triggers low-stock alert |
+| notes | INVENTORY sheet | Notes column for item-level remarks |
+
+#### inventory_movements
+
+| Field | MRP Source Sheet | MRP Column / Notes |
+|-------|-----------------|-------------------|
+| hardware_catalog_id | ORDER INPUT / INVENTORY INPUT | Item name column |
+| project_id | CUSTOMER MASTER | Project association (NULL for stock orders) |
+| movement_type | Derived from sheet | purchase_order_received (ORDER INPUT), project_allocated/shipped (per-project tabs), adjustment (INVENTORY INPUT manual rows) |
+| qty_delta | ORDER INPUT / INVENTORY INPUT | Positive for receipts, negative for shipments |
+| reference | ORDER INPUT | PO number or tracking number |
+| notes | ORDER INPUT / INVENTORY INPUT | Notes column |
+
+#### purchase_orders
+
+| Field | MRP Source Sheet | MRP Column / Notes |
+|-------|-----------------|-------------------|
+| po_number | ORDER INPUT | "PO Number" column (e.g., "PO-2026-001") |
+| vendor | ORDER INPUT | "Vendor" column (e.g., "UniFi", "EmpireTech", "Apple Business") |
+| project_id | ORDER INPUT | "Project" column — NULL for stock replenishment POs |
+| order_date | ORDER INPUT | "Order Date" column |
+| expected_date | ORDER INPUT | "Expected Date" column |
+| received_date | ORDER INPUT | "Received Date" column — filled when PO fully received |
+| total_cost | ORDER INPUT | Sum of line items (formula in MRP) |
+| status | ORDER INPUT | Derived: pending → ordered → partial → received → cancelled |
+| tracking_number | ORDER INPUT | "Tracking #" column |
+| notes | ORDER INPUT | Notes column |
+
+#### purchase_order_items
+
+| Field | MRP Source Sheet | MRP Column / Notes |
+|-------|-----------------|-------------------|
+| purchase_order_id | ORDER INPUT | FK to parent PO |
+| hardware_catalog_id | ORDER INPUT | "Item" column, matched to hardware_catalog.sku |
+| qty_ordered | ORDER INPUT | "Qty Ordered" column |
+| qty_received | ORDER INPUT | "Qty Received" column — updated on receipt |
+| unit_cost | ORDER INPUT | "Unit Cost" column — actual vendor invoice cost |
+| line_total | ORDER INPUT | "Line Total" = qty_ordered × unit_cost (formula) |
+| notes | ORDER INPUT | Per-line notes (e.g., "backordered", "substitute part") |
+
+---
+
+### Stock Lifecycle State Machine
+
+Every unit of hardware flows through these states. The `inventory_movements` table records each transition.
+
+```
+[VENDOR] → purchase_order_received → [NJ LAB STOCK]
+                                           │
+                                    project_allocated
+                                           │
+                                    [ALLOCATED — reserved for project]
+                                           │
+                                     project_shipped
+                                           │
+                                    [AT VENUE — deducted from on_hand]
+                                           │
+                                        (or)
+                                         return
+                                           │
+                                    [BACK TO NJ STOCK]
+
+[MANUAL CORRECTION] → adjustment_increase / adjustment_decrease → [CORRECTED STOCK]
+```
+
+#### Movement Type Rules
+
+| movement_type | qty_delta sign | Triggers qty_on_hand | Triggers qty_allocated | When |
+|---------------|----------------|---------------------|----------------------|------|
+| `purchase_order_received` | + positive | +qty_delta | no change | PO marked received; purchase_order_items.qty_received updated |
+| `project_allocated` | − negative | no change | +abs(qty_delta) | project_bom_items.allocated set to true for a line |
+| `project_shipped` | − negative | −abs(qty_delta) | −abs(qty_delta) | project_bom_items.shipped set to true; items leave NJ lab |
+| `adjustment_increase` | + positive | +qty_delta | no change | Manual positive correction (received stock without formal PO, found miscount) |
+| `adjustment_decrease` | − negative | −abs(qty_delta) | no change | Manual negative correction (damage, loss, miscount) |
+| `return` | + positive | +qty_delta | −abs(qty_delta) | Items returned from project to NJ stock; project_bom_items.allocated and shipped reset |
+
+#### Invariants
+
+- `qty_on_hand` must always equal the sum of all `inventory_movements.qty_delta` for that item since time_zero.
+- `qty_available` = `qty_on_hand` − `qty_allocated` — generated column, never set directly.
+- `qty_allocated` must never exceed `qty_on_hand`.
+- `qty_on_hand` must never go below 0 — the UI enforces this; no DB constraint because adjustments can correct errors.
+
+#### Reconciliation Formula
+
+```
+-- Verify qty_on_hand is consistent with movement log:
+SELECT
+  hc.sku,
+  i.qty_on_hand AS stored_on_hand,
+  SUM(im.qty_delta) AS computed_on_hand,
+  i.qty_on_hand - SUM(im.qty_delta) AS discrepancy
+FROM inventory i
+JOIN hardware_catalog hc ON hc.id = i.hardware_catalog_id
+LEFT JOIN inventory_movements im ON im.hardware_catalog_id = i.hardware_catalog_id
+GROUP BY hc.sku, i.qty_on_hand
+HAVING i.qty_on_hand != SUM(COALESCE(im.qty_delta, 0));
+
+-- If discrepancy found: create adjustment_increase or adjustment_decrease movement to reconcile.
+```
+
+---
+
+### Allocation Workflow (Project → Inventory)
+
+When the ops person reviews a project BOM in Stage 2 (Procurement):
+
+1. **Check availability**: For each BOM line item, compare `project_bom_items.qty` against `inventory.qty_available`.
+   - Sufficient stock: qty_available >= bom_item.qty → show green checkmark.
+   - Insufficient stock: qty_available < bom_item.qty → show red warning with shortfall count.
+   - Out of stock: qty_available = 0 → show "Order Required" badge.
+
+2. **Allocate**: Ops clicks "Allocate All" or allocates individual line items.
+   - For each allocated item:
+     - `project_bom_items.allocated` → `true`
+     - Insert `inventory_movements` row: `movement_type = 'project_allocated'`, `qty_delta = −bom_item.qty`, `project_id = project.id`
+     - `inventory.qty_allocated` += bom_item.qty  *(updated via trigger or client-side)*
+
+3. **Mark Shipped (Pack & Ship)**: Ops marks the shipment packed and sent.
+   - For each shipped item:
+     - `project_bom_items.shipped` → `true`
+     - Insert `inventory_movements` row: `movement_type = 'project_shipped'`, `qty_delta = −bom_item.qty`, `project_id = project.id`
+     - `inventory.qty_on_hand` -= bom_item.qty
+     - `inventory.qty_allocated` -= bom_item.qty  *(net: allocated reversal; on_hand decremented)*
+
+4. **Return** (if project cancelled or wrong item shipped):
+   - `project_bom_items.allocated` → `false`, `project_bom_items.shipped` → `false`
+   - Insert `inventory_movements` row: `movement_type = 'return'`, `qty_delta = +bom_item.qty`
+   - `inventory.qty_on_hand` += bom_item.qty
+   - `inventory.qty_allocated` -= bom_item.qty
+
+---
+
+### Purchase Order Lifecycle
+
+```
+not_yet_created → [pending] → [ordered] → [partial] → [received]
+                                                ↓
+                                           [cancelled]
+```
+
+| Status | Meaning | Transition Trigger |
+|--------|---------|-------------------|
+| `pending` | PO drafted but not yet submitted to vendor | PO created in UI |
+| `ordered` | PO submitted to vendor; awaiting delivery | Ops marks "Ordered" after placing with vendor |
+| `partial` | Some line items received, not all | qty_received > 0 but qty_received < qty_ordered for ≥1 item |
+| `received` | All line items fully received | All purchase_order_items.qty_received == qty_ordered |
+| `cancelled` | PO cancelled before or during fulfillment | Ops marks cancelled; any received items create adjustment movements |
+
+**On receipt of PO line items**:
+1. Ops enters `qty_received` for each PO line item.
+2. System inserts `inventory_movements` row: `movement_type = 'purchase_order_received'`, `qty_delta = +qty_received`, `reference = po.po_number`.
+3. `inventory.qty_on_hand` += qty_received.
+4. PO status auto-updated: partial if some received, received if all received.
+
+---
+
+### Reorder Thresholds by Category
+
+Default reorder thresholds per hardware category. These are seeded as starting values in the `inventory` table. The ops person can override per item in Settings.
+
+| Category | Default reorder_threshold | Rationale |
+|----------|--------------------------|-----------|
+| network_rack | 1 | Keep 1 spare UDM and switch in stock |
+| replay_system | 1 | Keep 1 spare Mac Mini; cameras ordered per project |
+| displays | 0 | TVs drop-shipped directly to venue; never stocked in NJ |
+| access_control | 1 | Keep 1 spare Kisi controller |
+| surveillance | 0 | NVR and cameras ordered per project |
+| front_desk | 0 | Ordered as needed |
+| infrastructure | 1 | Keep 1 spare rack shelf |
+| pingpod_specific | 0 | PingPod-only; ordered per project |
+| signage | 0 | Managed via replay_signs table, not inventory |
+
+**Low-stock alert rule**: When `inventory.qty_available <= inventory.reorder_threshold` AND `reorder_threshold > 0`, the UI shows a yellow "Low Stock" badge on the inventory view and a warning on any project BOM referencing that item.
+
+---
+
+### Inventory View Grouping Logic
+
+The inventory page groups items by `hardware_catalog.category` in this display order:
+
+1. `network_rack` — Network Rack
+2. `replay_system` — Replay System
+3. `displays` — Displays & Kiosk
+4. `access_control` — Access Control
+5. `surveillance` — Surveillance
+6. `front_desk` — Front Desk
+7. `infrastructure` — Infrastructure
+8. `pingpod_specific` — PingPod-Specific
+9. `signage` — Signage *(typically qty = 0 — managed via replay_signs)*
+
+Within each category, items are ordered by `hardware_catalog.sku` alphabetically.
+
+---
+
+### PO Number Convention
+
+PO numbers follow the format: `PO-{YYYY}-{NNN}` where NNN is zero-padded sequential per year.
+
+Examples:
+- `PO-2026-001` — first PO of 2026
+- `PO-2026-002` — second PO of 2026
+- `PO-2026-015` — fifteenth PO of 2026
+
+Auto-generated by the UI on PO creation:
+```typescript
+function generatePoNumber(year: number, sequence: number): string {
+  return `PO-${year}-${String(sequence).padStart(3, '0')}`;
+}
+// Query max existing PO for year to determine next sequence number
+```
+
+---
+
+### Known Gaps in Inventory Model
+
+| Gap | Impact | Resolution |
+|----|--------|-----------|
+| Exact MRP ORDER INPUT sheet column names | Field source map uses derived names | Requires XLSX (source-existing-data aspect) |
+| Actual reorder thresholds per item | Defaults above are estimates | Confirm from XLSX INVENTORY sheet "Reorder Point" column |
+| Whether MRP tracks per-item serial numbers | Serial tracking not in model | Confirm from XLSX — if yes, add serial_number field to inventory_movements |
+| TV drop-ship workflow detail | TVs go direct to venue; not in NJ stock | Confirm from XLSX whether TVs are in inventory or always 0 |
+| qty_on_hand update mechanism | Model assumes client-side update after movement insert | May need Postgres trigger to auto-update inventory.qty_on_hand from movements |
