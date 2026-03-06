@@ -21,7 +21,7 @@ loops:
     description: "Full-stack TaxKlaro build: Rust engine + WASM + React frontend + Supabase + Fly.io (28 stages)"
     type: forward
     schedule: "0 6,18 * * *"
-    max_iterations: 50
+    max_iterations: 100
     timeout_minutes: 30
     status: active
     created: 2026-03-06
