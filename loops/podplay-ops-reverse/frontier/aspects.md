@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 57
-- Analyzed: 32
-- Pending: 25
-- Convergence: 56%
+- Analyzed: 33
+- Pending: 24
+- Convergence: 58%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -47,7 +47,7 @@
 - [x] logic-expense-tracking — Expense categories, payment methods, per-project attribution, monthly totals
 - [x] logic-financial-reporting — P&L calculation, HER formula (hardware revenue / team spend), monthly close workflow
 - [x] logic-reconciliation — Cross-sheet verification: inventory vs POs vs project costs, discrepancy detection
-- [ ] logic-sign-fulfillment — Replay sign workflow: calculate qty (2x courts), track outreach (Slack/email), shipping, install confirmation, inventory decrement
+- [x] logic-sign-fulfillment — Replay sign workflow: calculate qty (2x courts), track outreach (Slack/email), shipping, install confirmation, inventory decrement
 - [ ] logic-troubleshooting — Contextual troubleshooting tips linked to deployment phases: 14 known issue/solution pairs from Appendix A (Mac Mini crash, PoE issues, button pairing, DDNS, port 4000, .DS_Store, pixelation, Firebase re-sync)
 - [ ] logic-isp-validation — Starlink incompatibility warning, internet speed recommendations by court count (1-30), circuit type guidance (fiber/cable/5G/dedicated), backup ISP requirements for autonomous 24/7 venues, dual ISP backbone rule
 - [ ] logic-cable-estimation — Cat6 cable length calculator: courts x avg distance x 3 drops + doors x avg distance x 1 drop + cameras x avg distance, with example calculations
