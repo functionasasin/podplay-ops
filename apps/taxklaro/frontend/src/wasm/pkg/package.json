@@ -1,0 +1,15 @@
+{
+  "name": "taxklaro-engine",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "taxklaro_engine_bg.wasm",
+    "taxklaro_engine.js",
+    "taxklaro_engine.d.ts"
+  ],
+  "main": "taxklaro_engine.js",
+  "types": "taxklaro_engine.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

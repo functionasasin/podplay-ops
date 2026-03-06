@@ -1,0 +1,21 @@
+Stage 5 complete — 2026-03-06
+
+Frontend scaffold created with:
+- package.json (React 19, TanStack Router, Supabase, Zod, Sonner, etc.)
+  - bumped @react-pdf/renderer to ^4.0.0 (v3 doesn't support React 19)
+  - bumped @sentry/react to ^8.0.0 (v7 doesn't support React 19)
+- tsconfig.json (strict mode, bundler moduleResolution, @/ alias)
+- vite.config.ts (vite-plugin-wasm + vite-plugin-top-level-await + tailwindcss)
+- vitest.config.ts (node env, passWithNoTests, @/ alias)
+- index.html
+- src/main.tsx (React root, no auth bootstrap)
+- src/App.tsx (placeholder)
+- src/wasm/bridge.ts (WASM init + compute/validate wrappers)
+- src/test-setup.ts (Node.js initSync for Vitest)
+- src/types/common.ts, engine-input.ts, engine-output.ts, org.ts, index.ts
+- src/lib/monitoring.ts (stubs)
+- src/wasm/pkg/ (copied from engine/pkg/)
+
+Test results:
+- npx vitest run --reporter=verbose → No test files found, exiting with code 0 ✓
+- npx vite build → built in 990ms ✓
