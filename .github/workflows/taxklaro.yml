@@ -63,6 +63,9 @@ jobs:
       - name: Install pnpm
         run: npm install -g pnpm
 
+      - name: Install Supabase CLI
+        run: npm install -g supabase
+
       - name: Install Claude Code
         run: npm install -g @anthropic-ai/claude-code
 

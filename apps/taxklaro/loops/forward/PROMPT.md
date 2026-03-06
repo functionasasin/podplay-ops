@@ -12,6 +12,8 @@ You are a development agent in a forward ralph loop. Each time you run, you do O
 - **Loop dir**: `apps/taxklaro/loops/forward/` (frontier, status, loop script)
 - **App dir**: `apps/taxklaro/` (engine/ and frontend/ — YOUR BUILD TARGET)
 - **Spec**: `apps/taxklaro/specs/taxklaro-spec.md` (your SOLE source of truth — 20 sections, 6742 lines)
+- **Domain reverse loop**: `apps/taxklaro/loops/reverse/` (original freelance-tax-reverse — domain spec, test vectors, invariants)
+- **Platform reverse loop**: `apps/taxklaro/loops/platform-reverse/` (freelance-tax-platform-reverse — analysis files, platform spec)
 
 ## Tech Stack
 
@@ -80,8 +82,8 @@ You are a development agent in a forward ralph loop. Each time you run, you do O
 | 7 | Zod Schemas | §6 | `npx vitest run src/schemas/` | 6 | Frontend |
 | 8 | Design System | §8.1, §8.2, §8.3 | `npx vite build` | 5 | Frontend |
 | 9 | Wizard State + Step Routing | §7.2, §7.3, §7.4 | `npx vitest run src/hooks/` | 6, 7 | Frontend |
-| 10 | Wizard Steps WS-01 → WS-09 | §7.7 | `npx vitest run src/components/wizard/` | 8, 9 | Frontend |
-| 11 | Wizard Steps WS-10 → WS-17 | §7.7 | `npx vitest run src/components/wizard/` | 10 | Frontend |
+| 10 | Wizard Steps WS-00 → WS-07D | §7.7 | `npx vitest run src/components/wizard/` | 8, 9 | Frontend |
+| 11 | Wizard Steps WS-08 → WS-13 + REVIEW | §7.7 | `npx vitest run src/components/wizard/` | 10 | Frontend |
 | 12 | Results View + Compute | §7.4, §14 (results) | `npx vitest run src/components/results/` | 9 | Frontend |
 | 13 | Supabase + Migrations | §10 | `npx supabase db reset` | 5 | Platform |
 | 14 | Auth | §9 | `npx vitest run src/lib/auth` | 13 | Platform |
@@ -135,13 +137,15 @@ Implement all Rust domain types with correct serde attributes.
 
 ### Stage 3 — Engine Pipeline (§3.5, §3.6, §3.7)
 
-Implement the 16-step computation pipeline.
+Implement the 16-step computation pipeline. The reverse loop produced 83 concrete test vectors (8 basic, 16 edge-case, 59 exhaustive) plus 223 invariants and fuzz properties — use these as the primary validation source.
 
 **Tasks:**
-1. Create `src/pipeline.rs` — `pub fn run_pipeline(input: &TaxpayerInput) -> EngineOutput`
-2. Implement steps PL-01 through PL-17 from spec §3.5
-3. Implement WasmResult envelope (spec §3.7) — `{ ok: true, data }` or `{ ok: false, errors }`
-4. Write unit tests for pipeline: basic graduated, OSD, 8% flat, mixed income, ineligibility
+1. Copy test vectors from `apps/taxklaro/loops/reverse/final-mega-spec/engine/test-vectors/` into `apps/taxklaro/engine/test-vectors/` (basic.md, edge-cases.md, exhaustive.md, fuzz-properties.md)
+2. Copy invariants from `apps/taxklaro/loops/reverse/final-mega-spec/engine/invariants.md` into `apps/taxklaro/engine/test-vectors/invariants.md`
+3. Create `src/pipeline.rs` — `pub fn run_pipeline(input: &TaxpayerInput) -> EngineOutput`
+4. Implement steps PL-01 through PL-17 from spec §3.5
+5. Implement WasmResult envelope (spec §3.7) — `{ ok: true, data }` or `{ ok: false, errors }`
+6. Write unit tests for pipeline sourced from the test vectors: basic graduated, OSD, 8% flat, mixed income, quarterly, penalties, ineligibility
 
 **Critical traps:**
 - 8% flat: `0.08 * (gross - 250_000)` — the ₱250K is subtracted BEFORE applying 8%
@@ -149,7 +153,7 @@ Implement the 16-step computation pipeline.
 - PATH_C eligibility: gross ≤ ₃,000,000 AND taxpayer type ∈ {PURELY_SE, MIXED_BUT_SE_ONLY, PROFESSIONAL}
 - `recommended_regime` is the path with lowest `tax_due` among eligible paths
 
-**Advance when:** `cargo test` passes — at least 5 test cases covering all 3 paths
+**Advance when:** `cargo test` passes — at least 20 test cases passing from basic.md + edge-cases.md test vectors, covering all 3 paths + mixed income + quarterly + penalties
 
 ---
 
@@ -161,9 +165,9 @@ Wire WASM exports and verify build.
 1. Complete `src/wasm.rs` — `compute_json(input_json: &str) -> String` and `validate_json(input_json: &str) -> String`
 2. `compute_json` deserializes input, calls `run_pipeline`, serializes WasmResult
 3. `validate_json` deserializes input, runs validation-only checks, returns WasmResult with warnings
-4. Run `wasm-pack build --target web` in engine directory
+4. Run `wasm-pack build --target web` in engine directory (builds to `engine/pkg/`)
 
-**Advance when:** `wasm-pack build --target web` succeeds, produces `pkg/` directory
+**Advance when:** `wasm-pack build --target web` succeeds, produces `engine/pkg/` directory
 
 ---
 
@@ -172,14 +176,15 @@ Wire WASM exports and verify build.
 Create the Vite project and wire WASM loading.
 
 **Tasks:**
-1. Create `apps/taxklaro/frontend/package.json` with deps from spec §7.1
-2. Create `vite.config.ts` from spec §4.4 (WASM plugin config)
-3. Create `tsconfig.json` (strict mode)
-4. Create `vitest.config.ts`
-5. Create `src/main.tsx` (React root — NO auth bootstrap yet, just render App)
-6. Create `src/wasm/bridge.ts` from spec §4.2 — `initWasm()`, `compute()`, `validate()`
-7. Create `src/test-setup.ts` from spec §4.3 (Node.js WASM init via `initSync`)
-8. Run `npm install`
+1. Copy or symlink `engine/pkg/` to `frontend/src/wasm/pkg/`
+2. Create `apps/taxklaro/frontend/package.json` with deps from spec §7.1
+3. Create `vite.config.ts` from spec §4.4 (WASM plugin config)
+4. Create `tsconfig.json` (strict mode)
+5. Create `vitest.config.ts`
+6. Create `src/main.tsx` (React root — NO auth bootstrap yet, just render App)
+7. Create `src/wasm/bridge.ts` from spec §4.2 — `initWasm()`, `compute()`, `validate()`
+8. Create `src/test-setup.ts` from spec §4.3 (Node.js WASM init via `initSync`)
+9. Run `npm install`
 
 **Critical traps:**
 - Bridge must use `init()` (async, browser) not `initSync()` — except in Vitest where `initSync` with `readFileSync` is required
@@ -238,10 +243,11 @@ Set up visual foundation.
 
 **Tasks:**
 1. Create `src/index.css` with CSS custom properties from spec §8.1
-2. Install and configure shadcn/ui (New York style) — spec §8.2 component list
-3. Install lucide-react icons — spec §8.3 icon mapping
-4. Install Sonner for toasts (NOT shadcn toast — spec §8.4 critical trap)
-5. Verify `npx vite build` produces > 20KB CSS
+2. Create `components.json` manually (do NOT run `npx shadcn-ui init` interactively)
+3. Install components with `npx shadcn@latest add button card input select badge tabs dialog sheet dropdown-menu separator skeleton switch radio-group checkbox accordion alert tooltip --yes`
+4. Install lucide-react icons — spec §8.3 icon mapping
+5. Install Sonner for toasts (NOT shadcn toast — spec §8.4 critical trap)
+6. Verify `npx vite build` produces > 20KB CSS
 
 **Advance when:** `npx vite build` succeeds
 
@@ -266,22 +272,22 @@ Wizard data model and conditional step visibility.
 
 ---
 
-### Stage 10 — Wizard Steps WS-01 → WS-09 (§7.7)
+### Stage 10 — Wizard Steps WS-00 → WS-07D (§7.7)
 
-First 9 wizard steps with full field specs.
+First 8 wizard steps (WS-00 through WS-07D) with full field specs.
 
 **Tasks:**
-1. WS-01: Taxpayer Type (radio group)
-2. WS-02: Tax Year + Period
-3. WS-03: Personal Info (name, TIN, RDO, address, ZIP)
-4. WS-04: Income Sources (gross receipts, non-operating income, CWT 2307 entries)
-5. WS-05: Regime Preference (radio: let engine decide / specific path)
-6. WS-06: OSD Confirmation (shown only if OSD-eligible)
-7. WS-07A: Itemized Expenses (23 fields from spec — exact field names)
-8. WS-07B: OSD Review (read-only computed OSD)
-9. WS-07C: 8% Review (read-only computed flat tax)
-10. WS-08: Tax Credits + CWT (withholding, prior payments, penalties)
-11. WS-09: Review + Compute
+1. WS-00: Mode Selection
+2. WS-01: Taxpayer Profile (taxpayer type, radio group)
+3. WS-02: Business Type
+4. WS-03: Tax Year
+5. WS-04: Gross Receipts
+6. WS-05: Compensation
+7. WS-06: Expense Method
+8. WS-07A: Itemized Expenses (exact field names from spec)
+9. WS-07B: Itemized Expenses (continued)
+10. WS-07C: Itemized Expenses (continued)
+11. WS-07D: Itemized Expenses (continued)
 
 **Each step:**
 - React Hook Form + Zod per-step schema
@@ -292,19 +298,18 @@ First 9 wizard steps with full field specs.
 
 ---
 
-### Stage 11 — Wizard Steps WS-10 → WS-17 (§7.7)
+### Stage 11 — Wizard Steps WS-08 → WS-13 + REVIEW (§7.7)
 
-Remaining wizard steps (conditional/advanced).
+Remaining wizard steps (WS-08 through WS-13 plus REVIEW step).
 
 **Tasks:**
-1. WS-10: NOLCO Schedule (Net Operating Loss Carry-Over, 3-year table)
-2. WS-11: Mixed Income — Employment Details
-3. WS-12: Mixed Income — Compensation Breakdown
-4. WS-13: Mixed Income — Employment Tax Credits
-5. WS-14: Quarterly Filing (Q1-Q3 cumulative data)
-6. WS-15: Partner/Spouse Info (for married filing)
-7. WS-16: Additional BIR Schedules
-8. WS-17: Final Confirmation + Submit
+1. WS-08: CWT Form 2307
+2. WS-09: Prior Quarterly
+3. WS-10: Registration/VAT
+4. WS-11: Regime Election
+5. WS-12: Filing Details
+6. WS-13: Prior Year Credits
+7. REVIEW: Final Review + Compute
 
 **Advance when:** `npx vitest run src/components/wizard/` — all step tests pass
 
@@ -332,12 +337,13 @@ Display engine output with all result components.
 Initialize Supabase and create all database objects.
 
 **Tasks:**
-1. Run `npx supabase init` in `apps/taxklaro/frontend/`
-2. Create `supabase/migrations/001_initial_schema.sql` from spec §10.2 (8 tables, 5 enums, triggers)
-3. Create `supabase/migrations/002_rls_policies.sql` from spec §10.3 (32 RLS policies, `user_org_ids()` helper)
-4. Create `supabase/migrations/003_rpc_functions.sql` from spec §10.4 (6 RPCs with explicit GRANTs)
-5. Create `supabase/migrations/004_storage.sql` from spec §10.5 (firm-logos bucket)
-6. Create `.env.local.example`
+1. Install Supabase CLI: `npm install -g supabase`
+2. Run `npx supabase init` in `apps/taxklaro/frontend/`
+3. Create `supabase/migrations/001_initial_schema.sql` from spec §10.2 (8 tables, 5 enums, triggers)
+4. Create `supabase/migrations/002_rls_policies.sql` from spec §10.3 (32 RLS policies, `user_org_ids()` helper)
+5. Create `supabase/migrations/003_rpc_functions.sql` from spec §10.4 (6 RPCs with explicit GRANTs)
+6. Create `supabase/migrations/004_storage.sql` from spec §10.5 (firm-logos bucket)
+7. Create `.env.local.example`
 
 **Critical traps (from spec §10.6 + §19):**
 - `p_token` parameters MUST be `UUID` not `TEXT` — inheritance app failure root cause
@@ -348,10 +354,17 @@ Initialize Supabase and create all database objects.
 
 **DB Verification (run before advancing):**
 - `npx supabase db reset` succeeds without errors
-- All 6 RPCs callable with test data
-- RLS policies verified: user in org A cannot see org B data
+- All 6 RPCs callable: test each with a SELECT/EXECUTE statement
+- RLS verification: connect as anon, verify cannot read computations table
+- Storage bucket `firm-logos` exists with correct policies
+- UNIQUE constraint on `computation_deadlines(computation_id, milestone_key)` verified
 
-**Advance when:** `npx supabase db reset` succeeds cleanly
+**Advance when:**
+- `npx supabase db reset` succeeds without errors
+- All 6 RPCs callable: test each with a SELECT/EXECUTE statement
+- RLS verification: connect as anon, verify cannot read computations table
+- Storage bucket `firm-logos` exists with correct policies
+- UNIQUE constraint on `computation_deadlines(computation_id, milestone_key)` verified
 
 ---
 

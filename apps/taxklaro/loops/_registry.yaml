@@ -3,8 +3,23 @@
 # Status: active | paused | converged
 
 loops:
+  # === Reverse (converged) ===
+  reverse:
+    description: "Extract PH freelance/self-employed income tax rules into exhaustive domain spec with 83 test vectors"
+    type: reverse
+    status: converged
+    created: 2026-02-28
+    converged_at: "2026-03-02"
+  platform-reverse:
+    description: "Platform completion: WASM bridge, Supabase, TanStack Router, Fly.io deployment layers"
+    type: reverse
+    status: converged
+    created: 2026-03-05
+    converged_at: "2026-03-06"
+
+  # === Forward (active) ===
   forward:
-    description: "Full-stack TaxKlaro build: Rust engine + WASM + React frontend + Supabase + Fly.io"
+    description: "Full-stack TaxKlaro build: Rust engine + WASM + React frontend + Supabase + Fly.io (25 stages)"
     type: forward
     schedule: "0 6,18 * * *"
     max_iterations: 50
