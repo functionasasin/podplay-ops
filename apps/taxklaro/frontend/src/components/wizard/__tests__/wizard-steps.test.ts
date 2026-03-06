@@ -5,6 +5,8 @@ import {
   GrossReceiptsSchema,
   DepreciationEntrySchema,
   NolcoEntrySchema,
+  Form2307EntrySchema,
+  QuarterlyPaymentSchema,
 } from '@/schemas/input';
 import {
   WS00ModeSelection,
@@ -18,10 +20,20 @@ import {
   WS07BFinancialItems,
   WS07CDepreciation,
   WS07DNolco,
+  WS08CwtForm2307,
+  WS09PriorQuarterly,
+  WS10Registration,
+  WS11RegimeElection,
+  WS12FilingDetails,
+  WS13PriorYearCredits,
+  WizardReview,
 } from '@/components/wizard';
 import type { WizardMode } from '@/components/wizard/WS00ModeSelection';
 import type { BusinessCategory } from '@/components/wizard/WS02BusinessType';
 import type { ExpenseInputMethod } from '@/components/wizard/WS06ExpenseMethod';
+import type { VatStatus, BirRegistrationStatus } from '@/components/wizard/WS10Registration';
+import type { RegimeElectionOption } from '@/components/wizard/WS11RegimeElection';
+import type { ReturnTypeOption } from '@/components/wizard/WS12FilingDetails';
 
 // ============================================================================
 // Component exports — all steps export functions
@@ -605,5 +617,377 @@ describe('WizardFormData field presence (via DEFAULT_WIZARD_DATA)', () => {
   it('filingPeriod defaults to ANNUAL', async () => {
     const { DEFAULT_WIZARD_DATA } = await import('@/types/wizard');
     expect(DEFAULT_WIZARD_DATA.filingPeriod).toBe('ANNUAL');
+  });
+});
+
+// ============================================================================
+// Stage 11 — Component exports WS-08 through REVIEW
+// ============================================================================
+
+describe('Stage 11 wizard step component exports', () => {
+  it('WS08CwtForm2307 is a function', () => {
+    expect(typeof WS08CwtForm2307).toBe('function');
+  });
+
+  it('WS09PriorQuarterly is a function', () => {
+    expect(typeof WS09PriorQuarterly).toBe('function');
+  });
+
+  it('WS10Registration is a function', () => {
+    expect(typeof WS10Registration).toBe('function');
+  });
+
+  it('WS11RegimeElection is a function', () => {
+    expect(typeof WS11RegimeElection).toBe('function');
+  });
+
+  it('WS12FilingDetails is a function', () => {
+    expect(typeof WS12FilingDetails).toBe('function');
+  });
+
+  it('WS13PriorYearCredits is a function', () => {
+    expect(typeof WS13PriorYearCredits).toBe('function');
+  });
+
+  it('WizardReview is a function', () => {
+    expect(typeof WizardReview).toBe('function');
+  });
+});
+
+// ============================================================================
+// WS-08 — Form2307EntrySchema (§7.7.13)
+// ============================================================================
+
+const validForm2307Entry = {
+  payorName: 'Acme Corporation',
+  payorTin: '123-456-789',
+  atcCode: 'WI010',
+  incomePayment: '100000.00',
+  taxWithheld: '10000.00',
+  periodFrom: '2024-01-01',
+  periodTo: '2024-12-31',
+  quarterOfCredit: null,
+};
+
+describe('WS08 — Form2307EntrySchema', () => {
+  it('accepts valid Form 2307 entry', () => {
+    const result = Form2307EntrySchema.safeParse(validForm2307Entry);
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts 9-digit TIN format (XXX-XXX-XXX)', () => {
+    const result = Form2307EntrySchema.safeParse({
+      ...validForm2307Entry,
+      payorTin: '123-456-789',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts 12-digit TIN format (XXX-XXX-XXX-XXX)', () => {
+    const result = Form2307EntrySchema.safeParse({
+      ...validForm2307Entry,
+      payorTin: '123-456-789-000',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects malformed TIN', () => {
+    const result = Form2307EntrySchema.safeParse({
+      ...validForm2307Entry,
+      payorTin: '12345678',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects empty payor name', () => {
+    const result = Form2307EntrySchema.safeParse({
+      ...validForm2307Entry,
+      payorName: '',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects missing payor name', () => {
+    const result = Form2307EntrySchema.safeParse({
+      ...validForm2307Entry,
+      payorName: undefined,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects empty ATC code', () => {
+    const result = Form2307EntrySchema.safeParse({
+      ...validForm2307Entry,
+      atcCode: '',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects negative income payment', () => {
+    const result = Form2307EntrySchema.safeParse({
+      ...validForm2307Entry,
+      incomePayment: '-1.00',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects negative tax withheld', () => {
+    const result = Form2307EntrySchema.safeParse({
+      ...validForm2307Entry,
+      taxWithheld: '-1.00',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects invalid period from date', () => {
+    const result = Form2307EntrySchema.safeParse({
+      ...validForm2307Entry,
+      periodFrom: 'not-a-date',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects invalid period to date', () => {
+    const result = Form2307EntrySchema.safeParse({
+      ...validForm2307Entry,
+      periodTo: 'not-a-date',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts zero tax withheld', () => {
+    const result = Form2307EntrySchema.safeParse({
+      ...validForm2307Entry,
+      taxWithheld: '0.00',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts null quarterOfCredit', () => {
+    const result = Form2307EntrySchema.safeParse({
+      ...validForm2307Entry,
+      quarterOfCredit: null,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts valid quarterOfCredit (numeric 1)', () => {
+    const result = Form2307EntrySchema.safeParse({
+      ...validForm2307Entry,
+      quarterOfCredit: 1,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects unknown fields (strict)', () => {
+    const result = Form2307EntrySchema.safeParse({
+      ...validForm2307Entry,
+      extraField: 'bad',
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+// ============================================================================
+// WS-09 — QuarterlyPaymentSchema (§7.7.14)
+// ============================================================================
+
+// Quarter is numeric (1, 2, 3) per QuarterSchema; form1701qPeriod is string enum
+const validQuarterlyPayment = {
+  quarter: 1 as const,
+  amountPaid: '15000.00',
+  datePaid: '2024-05-15',
+  form1701qPeriod: 'Q1' as const,
+};
+
+describe('WS09 — QuarterlyPaymentSchema', () => {
+  it('accepts valid Q1 payment', () => {
+    const result = QuarterlyPaymentSchema.safeParse(validQuarterlyPayment);
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts valid Q2 payment', () => {
+    const result = QuarterlyPaymentSchema.safeParse({
+      ...validQuarterlyPayment,
+      quarter: 2,
+      form1701qPeriod: 'Q2',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts valid Q3 payment', () => {
+    const result = QuarterlyPaymentSchema.safeParse({
+      ...validQuarterlyPayment,
+      quarter: 3,
+      form1701qPeriod: 'Q3',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects negative amount paid', () => {
+    const result = QuarterlyPaymentSchema.safeParse({
+      ...validQuarterlyPayment,
+      amountPaid: '-100.00',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts zero amount paid', () => {
+    const result = QuarterlyPaymentSchema.safeParse({
+      ...validQuarterlyPayment,
+      amountPaid: '0.00',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts null datePaid', () => {
+    const result = QuarterlyPaymentSchema.safeParse({
+      ...validQuarterlyPayment,
+      datePaid: null,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects invalid form1701qPeriod (Q4 not allowed)', () => {
+    const result = QuarterlyPaymentSchema.safeParse({
+      ...validQuarterlyPayment,
+      form1701qPeriod: 'Q4',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects missing quarter field', () => {
+    const result = QuarterlyPaymentSchema.safeParse({
+      amountPaid: '15000.00',
+      datePaid: null,
+      form1701qPeriod: 'Q1',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects unknown fields (strict)', () => {
+    const result = QuarterlyPaymentSchema.safeParse({
+      ...validQuarterlyPayment,
+      extra: 'bad',
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+// ============================================================================
+// WS-10 — Registration/VAT type contracts (§7.7.15)
+// ============================================================================
+
+describe('WS10 registration status types', () => {
+  it('YES is a valid VatStatus', () => {
+    const v: VatStatus = 'YES';
+    expect(v).toBe('YES');
+  });
+
+  it('NO is a valid VatStatus', () => {
+    const v: VatStatus = 'NO';
+    expect(v).toBe('NO');
+  });
+
+  it('YES is a valid BirRegistrationStatus', () => {
+    const s: BirRegistrationStatus = 'YES';
+    expect(s).toBe('YES');
+  });
+
+  it('PLANNING is a valid BirRegistrationStatus', () => {
+    const s: BirRegistrationStatus = 'PLANNING';
+    expect(s).toBe('PLANNING');
+  });
+});
+
+// ============================================================================
+// WS-11 — Regime election type contracts (§7.7.16)
+// ============================================================================
+
+describe('WS11 regime election types', () => {
+  it('ELECT_EIGHT_PCT is a valid RegimeElectionOption', () => {
+    const r: RegimeElectionOption = 'ELECT_EIGHT_PCT';
+    expect(r).toBe('ELECT_EIGHT_PCT');
+  });
+
+  it('ELECT_OSD is a valid RegimeElectionOption', () => {
+    const r: RegimeElectionOption = 'ELECT_OSD';
+    expect(r).toBe('ELECT_OSD');
+  });
+
+  it('ELECT_ITEMIZED is a valid RegimeElectionOption', () => {
+    const r: RegimeElectionOption = 'ELECT_ITEMIZED';
+    expect(r).toBe('ELECT_ITEMIZED');
+  });
+
+  it('null is valid for optimizer mode', () => {
+    const r: RegimeElectionOption = null;
+    expect(r).toBeNull();
+  });
+});
+
+// ============================================================================
+// WS-12 — Filing details type contracts (§7.7.17)
+// ============================================================================
+
+describe('WS12 return type contracts', () => {
+  it('ORIGINAL is a valid ReturnTypeOption', () => {
+    const r: ReturnTypeOption = 'ORIGINAL';
+    expect(r).toBe('ORIGINAL');
+  });
+
+  it('AMENDED is a valid ReturnTypeOption', () => {
+    const r: ReturnTypeOption = 'AMENDED';
+    expect(r).toBe('AMENDED');
+  });
+});
+
+// ============================================================================
+// WS-13 — Prior year carry-over via TaxpayerInputSchema (§7.7.18)
+// ============================================================================
+
+describe('WS13 prior year credits — DEFAULT_WIZARD_DATA', () => {
+  it('priorYearExcessCwt defaults to string "0.00"', async () => {
+    const { DEFAULT_WIZARD_DATA } = await import('@/types/wizard');
+    expect(DEFAULT_WIZARD_DATA).toHaveProperty('priorYearExcessCwt');
+    expect(typeof DEFAULT_WIZARD_DATA.priorYearExcessCwt).toBe('string');
+    expect(DEFAULT_WIZARD_DATA.priorYearExcessCwt).toBe('0.00');
+  });
+});
+
+// ============================================================================
+// REVIEW — WizardReview structural test
+// ============================================================================
+
+describe('WizardReview step', () => {
+  it('WizardReview is a function', () => {
+    expect(typeof WizardReview).toBe('function');
+  });
+
+  it('DEFAULT_WIZARD_DATA has returnType field', async () => {
+    const { DEFAULT_WIZARD_DATA } = await import('@/types/wizard');
+    expect(DEFAULT_WIZARD_DATA).toHaveProperty('returnType');
+  });
+
+  it('DEFAULT_WIZARD_DATA has priorPaymentForReturn field', async () => {
+    const { DEFAULT_WIZARD_DATA } = await import('@/types/wizard');
+    expect(DEFAULT_WIZARD_DATA).toHaveProperty('priorPaymentForReturn');
+  });
+
+  it('DEFAULT_WIZARD_DATA returnType is ORIGINAL', async () => {
+    const { DEFAULT_WIZARD_DATA } = await import('@/types/wizard');
+    expect(DEFAULT_WIZARD_DATA.returnType).toBe('ORIGINAL');
+  });
+
+  it('DEFAULT_WIZARD_DATA actualFilingDate defaults to null', async () => {
+    const { DEFAULT_WIZARD_DATA } = await import('@/types/wizard');
+    expect(DEFAULT_WIZARD_DATA).toHaveProperty('actualFilingDate');
+    expect(DEFAULT_WIZARD_DATA.actualFilingDate).toBeNull();
+  });
+
+  it('DEFAULT_WIZARD_DATA overpaymentPreference defaults to null', async () => {
+    const { DEFAULT_WIZARD_DATA } = await import('@/types/wizard');
+    expect(DEFAULT_WIZARD_DATA).toHaveProperty('overpaymentPreference');
+    expect(DEFAULT_WIZARD_DATA.overpaymentPreference).toBeNull();
   });
 });

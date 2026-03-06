@@ -9,3 +9,10 @@ export { WS07AItemizedExpenses, default as WS07A } from './WS07AItemizedExpenses
 export { WS07BFinancialItems, default as WS07B } from './WS07BFinancialItems';
 export { WS07CDepreciation, default as WS07C } from './WS07CDepreciation';
 export { WS07DNolco, default as WS07D } from './WS07DNolco';
+export { WS08CwtForm2307, default as WS08 } from './WS08CwtForm2307';
+export { WS09PriorQuarterly, default as WS09 } from './WS09PriorQuarterly';
+export { WS10Registration, default as WS10 } from './WS10Registration';
+export { WS11RegimeElection, default as WS11 } from './WS11RegimeElection';
+export { WS12FilingDetails, default as WS12 } from './WS12FilingDetails';
+export { WS13PriorYearCredits, default as WS13 } from './WS13PriorYearCredits';
+export { WizardReview, default as Review } from './WizardReview';
