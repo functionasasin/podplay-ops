@@ -109,6 +109,16 @@ function IndexPage() {
             Built for Philippine freelancers and self-employed professionals.
           </p>
         </div>
+
+        {/* Footer */}
+        <footer className="border-t border-border/60 py-6 px-6 text-center">
+          <p
+            className="text-muted-foreground"
+            style={{ fontSize: 'var(--text-small)', lineHeight: 'var(--text-small-lh)' }}
+          >
+            © {new Date().getFullYear()} TaxKlaro. Simplified tax computation for Filipino freelancers.
+          </p>
+        </footer>
       </div>
     );
   }

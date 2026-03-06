@@ -64,7 +64,7 @@ function AuthResetConfirmPage() {
         {/* Card */}
         <div className="bg-white rounded-xl p-8 shadow-[var(--shadow-lg)]">
           <div className="mb-6">
-            <h1 className="text-xl font-semibold text-foreground">Set New Password</h1>
+            <h1 className="font-display text-foreground" style={{ fontSize: 'var(--text-h2)', lineHeight: 'var(--text-h2-lh)' }}>Set New Password</h1>
             <p className="text-sm text-muted-foreground mt-1">
               Enter your new password below.
             </p>

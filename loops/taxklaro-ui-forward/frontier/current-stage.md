@@ -1,17 +1,21 @@
-# Current Stage: 4 (Landing + Auth Pages)
+# Current Stage: 5 (Wizard Polish)
 
 ## Status
-Stage 3 complete. Sidebar already polished from prior run — DM Serif Display logo with
-peso sign, left-border active state, nav items at 0.9375rem with vertical padding,
-hover transitions, clean user section. AppLayout has proper desktop border, off-white bg,
-p-4 sm:p-6 md:p-8 main content padding. Build passes.
+Stage 4 complete. Landing page has hero + 3-column feature grid + trust copy + footer (copyright).
+Auth pages: DM Serif Display h2 card titles, shadow-lg card, logo above form, full-width button,
+text link secondary actions. Reset + reset-confirm: same card pattern, DM Serif Display h2.
+Onboarding: card with logo above, DM Serif Display h2 heading in OnboardingForm. Build passes.
 
 ## What To Do
-Restyle the landing page and auth routes:
-- `/`: Hero with DM Serif Display headline, feature grid (3 columns), CTA button, trust copy, footer
-- `/auth`: Centered card with warm shadow, DM Serif Display logo above form, full-width primary button
-- `/auth/reset`, `/auth/reset-confirm`: Same centered card pattern
-- `/onboarding`: Clean centered card, welcoming DM Serif Display heading
+Restyle the wizard at `/computations/new`:
+- Progress bar: h-3, rounded, subtle gradient fill, step count in DM Sans
+- Step container: card with shadow-md, p-8
+- Radio cards: border + shadow on hover, selected state primary border + light blue bg
+- Form fields: proper label spacing (mb-1.5), h-11 inputs, focus ring in primary
+- PesoInput: peso prefix styled with muted foreground
+- Navigation: Back=outline, Next=primary, proper spacing
+- WizardReview: sections as cards, serif section titles
+- Section headings within steps: DM Serif Display h2
 
 ## Work Log
 - Stage 1 (2026-03-06): Installed @fontsource-variable/dm-sans + @fontsource/dm-serif-display.
@@ -24,3 +28,6 @@ Restyle the landing page and auth routes:
 - Stage 3 (2026-03-06): Sidebar + AppLayout already polished from prior loop run.
   DM Serif Display logo, left-border active state, proper padding, hover transitions.
   Verified build passes.
+- Stage 4 (2026-03-06): Landing page footer added (copyright line). Auth/reset/reset-confirm
+  h1 headings updated from text-xl font-semibold to font-display (DM Serif Display, --text-h2).
+  Onboarding already polished. Build passes.
