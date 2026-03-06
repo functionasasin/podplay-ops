@@ -1,15 +1,17 @@
-# Current Stage: 8 (Design System)
+# Current Stage: 9 (Wizard State + Step Routing)
 
 ## Status
-Stage 7 complete. All Zod schemas implemented per spec §6. 77 schema tests pass.
+Stage 8 complete. Design system fully set up. vite build produces 33.82 kB CSS.
 
 ## What To Do
-Read spec §8.1, §8.2, §8.3. Set up visual foundation.
-Create src/index.css with CSS custom properties. Create components.json manually.
-Install shadcn components, lucide-react icons, Sonner for toasts.
-Run `npx vite build` — must succeed.
+Read spec §7.2, §7.3, §7.4.
+Create WizardFormData type and DEFAULT_WIZARD_DATA.
+Create computeActiveSteps(data) function.
+Create useCompute hook.
+Create useAutoSave hook (stub Supabase calls).
+Create WizardContainer component.
 
-Test command: `npx vite build`
+Test command: `npx vitest run src/hooks/`
 
 ## Work Log
 - 2026-03-06: Stage 1 complete — cargo check passes, advancing to stage 2
@@ -19,3 +21,4 @@ Test command: `npx vite build`
 - 2026-03-06: Stage 5 complete — frontend scaffold created, vitest passes (0 tests), vite build succeeds
 - 2026-03-06: Stage 6 complete — TypeScript types fully implemented, tsc --noEmit passes with zero errors
 - 2026-03-06: Stage 7 complete — Zod schemas implemented, 77 tests pass
+- 2026-03-06: Stage 8 complete — design system set up, vite build produces 33.82 kB CSS
