@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 37
-- Analyzed: 11
-- Pending: 26
-- Convergence: 30%
+- Analyzed: 12
+- Pending: 25
+- Convergence: 32%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -30,7 +30,7 @@ Depends on Wave 2. Map Rust types to TypeScript + Zod with exact field alignment
 ### Wave 4: Platform Layer
 Depends on Wave 3. The biggest wave — where inheritance had the most issues.
 - [x] supabase-auth-flow — PKCE email/password, magic link, sign-in/sign-up UI, callback route, password reset, session management
-- [ ] supabase-migrations — Full SQL: tables, RLS policies, RPC functions, triggers, storage buckets (idempotent)
+- [x] supabase-migrations — Full SQL: tables, RLS policies, RPC functions, triggers, storage buckets (idempotent)
 - [ ] route-table — Complete TanStack Router route table with beforeLoad auth guards, 18+ routes
 - [ ] env-configuration — All VITE_* env vars, .env.local.example, graceful missing-var handling (SetupPage pattern)
 - [ ] navigation — Auth-aware sidebar (desktop) + drawer (mobile), active states, sign-out
@@ -78,3 +78,4 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 | typescript-types | 3 | 2026-03-06 | COMPLETE — 4 files (common.ts, engine-input.ts, engine-output.ts, index.ts). All 14 enums mapped with string literal unions + as-const arrays. All input/output structs mapped with exact camelCase fields. FormOutputUnion discriminated union with type guards. Default factory function. Cross-layer consistency table with critical traps for digit-in-name fields and formType vs formVariant distinction. |
 | zod-schemas | 3 | 2026-03-06 | COMPLETE — 6 files (primitives, enums, input, output, bridge, index). All input schemas use .strict(). Output schemas no .strict(). .nullable() throughout (not .optional()). z.boolean() no coerce. Per-step wizard schemas for WS-01/03/04/07C/08. WasmResultSchema factory. 8 critical traps documented. Full cross-layer consistency table. |
 | supabase-auth-flow | 4 | 2026-03-06 | COMPLETE — main.tsx bootstrap with getSession+onAuthStateChange, supabase.ts with supabaseConfigured guard, lib/auth.ts wrappers, all 5 auth routes (auth, callback, reset, reset-confirm, onboarding), SetupPage, beforeLoad guard pattern, RouterContext type, email redirect URLs, 6 critical traps documented. |
+| supabase-migrations | 4 | 2026-03-06 | COMPLETE — 4 migration files: 001 (8 tables, 5 enums, 2 triggers, RLS enable), 002 (user_org_ids() helper + 32 RLS policies), 003 (6 RPCs with explicit GRANTs incl. anon for public RPCs), 004 (firm-logos storage bucket). All p_token params are UUID. Column-type match table. 8 critical traps. lib/organizations.ts, lib/clients.ts, lib/computation-notes.ts. |

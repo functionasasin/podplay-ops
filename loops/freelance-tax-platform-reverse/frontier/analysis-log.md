@@ -12,3 +12,5 @@
 | 8 | typescript-types | 3 | 2026-03-06 | analysis/typescript-types.md, frontier/aspects.md, frontier/analysis-log.md |
 | 9 | zod-schemas | 3 | 2026-03-06 | analysis/zod-schemas.md, frontier/aspects.md, frontier/analysis-log.md |
 | 10 | frontend-state-management | 3 | 2026-03-06 | analysis/frontend-state-management.md, frontier/aspects.md, frontier/analysis-log.md |
+| 11 | supabase-auth-flow | 4 | 2026-03-06 | analysis/supabase-auth-flow.md, frontier/aspects.md, frontier/analysis-log.md |
+| 12 | supabase-migrations | 4 | 2026-03-06 | analysis/supabase-migrations.md, frontier/aspects.md, frontier/analysis-log.md |
