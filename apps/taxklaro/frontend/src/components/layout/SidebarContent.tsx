@@ -1,6 +1,5 @@
 import { Link, useRouterState } from '@tanstack/react-router';
-import { LayoutDashboard, Calculator, Users, Calendar, Settings } from 'lucide-react';
-import { Button } from '../ui/button';
+import { LayoutDashboard, Calculator, Users, Calendar, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { signOut } from '../../lib/auth';
 
@@ -20,12 +19,14 @@ export function SidebarContent() {
   return (
     <div className="flex h-full flex-col" data-testid="sidebar-content">
       {/* Logo */}
-      <div className="flex h-16 items-center border-b px-6">
-        <span className="text-lg font-bold">TaxKlaro</span>
+      <div className="flex h-16 items-center border-b border-border/60 px-6">
+        <span className="font-display text-xl tracking-tight text-foreground">
+          <span className="text-primary">₱</span>TaxKlaro
+        </span>
       </div>
 
       {/* Nav items */}
-      <nav className="flex-1 space-y-1 px-3 py-4" data-testid="nav-items">
+      <nav className="flex-1 space-y-0.5 px-3 py-4" data-testid="nav-items">
         {navItems.map(({ label, to, icon: Icon }) => {
           const isActive = pathname === to || (to !== '/' && pathname.startsWith(to + '/'));
           return (
@@ -33,10 +34,10 @@ export function SidebarContent() {
               key={to}
               to={to}
               className={[
-                'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                'flex items-center gap-3 rounded-md border-l-[3px] px-3 py-2.5 text-[0.9375rem] font-medium transition-colors duration-150',
                 isActive
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                  ? 'border-l-primary bg-primary/5 text-primary'
+                  : 'border-l-transparent text-muted-foreground hover:bg-muted/70 hover:text-foreground',
               ].join(' ')}
               data-testid={`nav-${label.toLowerCase()}`}
             >
@@ -48,20 +49,20 @@ export function SidebarContent() {
       </nav>
 
       {/* User section */}
-      <div className="border-t px-3 py-4 space-y-2" data-testid="sidebar-user">
+      <div className="space-y-1 border-t border-border/60 px-3 py-4" data-testid="sidebar-user">
         {user && (
-          <p className="truncate px-3 text-sm text-muted-foreground" data-testid="user-email">
+          <p className="truncate px-3 pb-2 text-xs text-muted-foreground" data-testid="user-email">
             {user.email}
           </p>
         )}
-        <Button
-          variant="ghost"
-          className="w-full justify-start text-sm"
+        <button
+          className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors duration-150 hover:bg-muted/70 hover:text-foreground"
           onClick={() => signOut()}
           data-testid="sign-out-button"
         >
-          Sign Out
-        </Button>
+          <LogOut className="h-3.5 w-3.5 shrink-0" />
+          Sign out
+        </button>
       </div>
     </div>
   );
