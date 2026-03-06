@@ -2831,6 +2831,526 @@ toast.error('Failed to generate PDF.', { id: toastId });
 
 ---
 
+### 8.5 Empty States, Skeleton Loaders, and Error States
+
+Every async page has three states beyond "loaded with data": skeleton (data in-flight), error (fetch failed), and empty (zero items).
+
+#### 8.5.1 Shared Components
+
+**`src/components/shared/EmptyState.tsx`**
+
+```typescript
+interface EmptyStateProps {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  ctaLabel?: string;
+  onCta?: () => void;
+  secondaryCtaLabel?: string;
+  onSecondaryCta?: () => void;
+  className?: string;
+}
+```
+
+Structure (6+ Tailwind classes required — anti-scaffolding gate):
+```tsx
+<div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+  <div className="flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+    <Icon className="w-8 h-8 text-muted-foreground" />
+  </div>
+  <h3 className="text-lg font-semibold text-foreground mb-2">{title}</h3>
+  <p className="text-sm text-muted-foreground max-w-sm mb-6">{description}</p>
+  {ctaLabel && <Button onClick={onCta} className="mb-2">{ctaLabel}</Button>}
+  {secondaryCtaLabel && <Button variant="ghost" onClick={onSecondaryCta}>{secondaryCtaLabel}</Button>}
+</div>
+```
+
+**`src/components/shared/ErrorState.tsx`**
+
+```typescript
+interface ErrorStateProps {
+  title?: string;      // defaults to "Something went wrong"
+  message?: string;    // optional specific message
+  onRetry?: () => void;
+  className?: string;
+}
+```
+
+Structure:
+```tsx
+<Alert variant="destructive" className="my-6">
+  <AlertCircle className="h-4 w-4" />
+  <AlertTitle>{title ?? 'Something went wrong'}</AlertTitle>
+  <AlertDescription className="mt-2">
+    {message ?? 'Unable to load data. Please check your connection and try again.'}
+    {onRetry && (
+      <Button variant="outline" size="sm" onClick={onRetry} className="mt-3 block">
+        Try again
+      </Button>
+    )}
+  </AlertDescription>
+</Alert>
+```
+
+**`src/components/ui/skeleton.tsx`** (shadcn/ui primitive):
+```tsx
+function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn("animate-pulse rounded-md bg-muted", className)} {...props} />
+}
+```
+
+#### 8.5.2 Loading State Pattern (ALL async pages)
+
+```tsx
+function ExamplePage() {
+  const [data, setData] = useState<Item[]>([]);
+  const [isLoading, setIsLoading] = useState(true); // starts true — no flash of empty
+  const [error, setError] = useState<Error | null>(null);
+
+  const loadData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      setData(await fetchData());
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  if (isLoading) return <SkeletonLayout />;
+  if (error) return <ErrorState title="Unable to load" onRetry={loadData} />;
+  if (data.length === 0) return <EmptyState ... />;
+  return <DataView data={data} />;
+}
+```
+
+Rules:
+1. `isLoading` starts `true` — skeleton renders on first load, not a flash of empty state
+2. `error` is reset before each `loadData()` call
+3. Empty state only renders when `!isLoading && !error && data.length === 0`
+4. Retry button calls `loadData()`, NOT `window.location.reload()`
+5. NO React Suspense boundaries for data fetching — explicit loading state with useState
+
+#### 8.5.3 Dashboard Page (`/`)
+
+**Skeleton — Recent Computations:**
+```tsx
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+  {Array.from({ length: 3 }).map((_, i) => (
+    <div key={i} className="rounded-lg border bg-card p-4 space-y-3">
+      <Skeleton className="h-5 w-3/4" />
+      <Skeleton className="h-4 w-1/2" />
+      <Skeleton className="h-4 w-1/3" />
+    </div>
+  ))}
+</div>
+```
+
+**Skeleton — Upcoming Deadlines:**
+```tsx
+<div className="space-y-2">
+  {Array.from({ length: 2 }).map((_, i) => (
+    <div key={i} className="flex items-center gap-3 p-3 rounded-lg border bg-card">
+      <Skeleton className="h-8 w-8 rounded-full" />
+      <div className="flex-1 space-y-1.5">
+        <Skeleton className="h-4 w-2/3" />
+        <Skeleton className="h-3 w-1/3" />
+      </div>
+    </div>
+  ))}
+</div>
+```
+
+**Error:** `title="Unable to load dashboard"`, `message="Could not fetch your recent computations. Please refresh the page."`, `onRetry={() => window.location.reload()}`
+
+**Empty — No computations:** `icon=Calculator`, `title="No computations yet"`, `description="Start by creating your first tax computation for a client."`, `ctaLabel="New Computation"`, `onCta: navigate({ to: '/computations/new' })`
+
+**Empty — No deadlines:** `icon=Calendar`, `title="No upcoming deadlines"`, `description="Deadlines will appear here as you finalize computations."`, no CTA
+
+#### 8.5.4 Computations List Page (`/computations`)
+
+**`src/components/computation/ComputationCardSkeleton.tsx`** (exported separately — reused in Dashboard):
+```tsx
+<div className="rounded-lg border bg-card p-4 space-y-3 animate-pulse">
+  <div className="flex items-start justify-between">
+    <Skeleton className="h-5 w-2/3" />
+    <Skeleton className="h-5 w-16 rounded-full" />
+  </div>
+  <Skeleton className="h-4 w-1/2" />
+  <div className="flex gap-2 mt-2">
+    <Skeleton className="h-4 w-20" />
+    <Skeleton className="h-4 w-16" />
+  </div>
+</div>
+```
+Grid of 6 skeleton cards while loading (same grid layout as data: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4`).
+
+**Error:** `title="Unable to load computations"`, `message="There was a problem fetching your computations. Please try again."`, `onRetry: refetch()`
+
+**Empty — No computations (no filters):** `icon=FileText`, `title="No computations yet"`, `description="Create a computation to get BIR-compliant tax analysis for any freelancer or self-employed client."`, `ctaLabel="New Computation"`, `onCta: navigate({ to: '/computations/new' })`
+
+**Empty — No filter match:** `icon=SearchX`, `title="No results"`, `description="No computations match the selected filters. Try adjusting your status or tax year filters."`, `ctaLabel="Clear filters"`, `onCta: () => { setStatusFilter('all'); setTaxYearFilter('all'); }`
+
+**Plan limit alert (FREE, 5/5 used)** — rendered ABOVE the grid, not instead of it:
+```tsx
+<Alert variant="default" className="mb-4 border-amber-200 bg-amber-50">
+  <AlertCircle className="h-4 w-4 text-amber-600" />
+  <AlertTitle className="text-amber-800">Computation limit reached</AlertTitle>
+  <AlertDescription className="text-amber-700">
+    You've used 5/5 computations on the Free plan.{' '}
+    <a href="/settings?section=billing" className="underline font-medium">Upgrade to Pro</a>{' '}
+    to create unlimited computations.
+  </AlertDescription>
+</Alert>
+```
+
+#### 8.5.5 Computation Detail Page (`/computations/$compId`)
+
+**Skeleton:**
+```tsx
+<div className="space-y-6">
+  <div className="flex items-center justify-between">
+    <div className="space-y-2">
+      <Skeleton className="h-8 w-64" />
+      <Skeleton className="h-4 w-40" />
+    </div>
+    <Skeleton className="h-9 w-32" />
+  </div>
+  <div className="flex gap-2 border-b pb-0">
+    <Skeleton className="h-9 w-24" />
+    <Skeleton className="h-9 w-24" />
+    <Skeleton className="h-9 w-24" />
+  </div>
+  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    {Array.from({ length: 3 }).map((_, i) => (
+      <div key={i} className="rounded-lg border bg-card p-5 space-y-3">
+        <Skeleton className="h-5 w-1/2" />
+        <Skeleton className="h-8 w-3/4" />
+        <Skeleton className="h-4 w-full" />
+      </div>
+    ))}
+  </div>
+</div>
+```
+
+**Error — Not found (404):**
+```tsx
+<EmptyState
+  icon={FileQuestion}
+  title="Computation not found"
+  description="This computation doesn't exist or you don't have access to it."
+  ctaLabel="Back to computations"
+  onCta={() => navigate({ to: '/computations' })}
+/>
+```
+
+**Error — Load failure:** `<ErrorState title="Unable to load computation" message="There was a problem loading this computation." onRetry={() => refetch()} />`
+
+**Empty — No results yet (status=draft, Results tab):**
+```tsx
+<EmptyState icon={Calculator} title="Not computed yet"
+  description="Fill in the wizard inputs and click 'Compute' to see the tax analysis."
+  ctaLabel="Edit inputs" onCta={() => setActiveTab('inputs')} />
+```
+
+**Empty — No notes:** `icon=MessageSquare`, `title="No notes yet"`, `description="Add notes to track decisions, client discussions, or BIR instructions."`, no CTA
+
+**Empty — No deadlines:** `icon=Calendar`, `title="No deadlines set"`, `description="Deadlines are calculated based on the computation's tax year and filing type."`, no CTA
+
+#### 8.5.6 Clients List Page (`/clients`)
+
+**`src/components/clients/ClientRowSkeleton.tsx`** (exported — used per-row in ClientsTable):
+```tsx
+<tr className="border-b">
+  <td className="px-4 py-3"><Skeleton className="h-4 w-40" /></td>
+  <td className="px-4 py-3"><Skeleton className="h-4 w-32" /></td>
+  <td className="px-4 py-3"><Skeleton className="h-4 w-24" /></td>
+  <td className="px-4 py-3"><Skeleton className="h-4 w-16" /></td>
+  <td className="px-4 py-3"><Skeleton className="h-4 w-8" /></td>
+</tr>
+```
+Render 8 skeleton rows in ClientsTable while loading. Container: `<table className="rounded-lg border overflow-hidden w-full text-sm">`.
+
+**Error:** `title="Unable to load clients"`, `message="There was a problem fetching your client directory."`, `onRetry: refetch()`
+
+**Empty — No clients:** `icon=Users`, `title="No clients yet"`, `description="Add your first client to start creating computations on their behalf."`, `ctaLabel="Add client"`, `onCta: navigate({ to: '/clients/new' })`
+
+**Empty — No search match:** `icon=SearchX`, `title="No clients found"`, `description="No clients match your search. Try a different name or TIN."`, `ctaLabel="Clear search"`, `onCta: () => setSearchQuery('')`
+
+#### 8.5.7 Client Detail Page (`/clients/$clientId`)
+
+**Skeleton:**
+```tsx
+<div className="space-y-6">
+  <div className="rounded-lg border bg-card p-6 space-y-4">
+    <Skeleton className="h-6 w-48" />
+    <div className="grid grid-cols-2 gap-4">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="space-y-1">
+          <Skeleton className="h-3 w-20" />
+          <Skeleton className="h-4 w-32" />
+        </div>
+      ))}
+    </div>
+  </div>
+  <div className="space-y-2">
+    <Skeleton className="h-5 w-40" />
+    {Array.from({ length: 3 }).map((_, i) => (
+      <div key={i} className="rounded-lg border bg-card p-4 space-y-2">
+        <Skeleton className="h-4 w-2/3" />
+        <Skeleton className="h-3 w-1/3" />
+      </div>
+    ))}
+  </div>
+</div>
+```
+
+**Error — Not found:** `icon=UserX`, `title="Client not found"`, `description="This client doesn't exist or you don't have access to their profile."`, `ctaLabel="Back to clients"`, `onCta: navigate({ to: '/clients' })`
+
+**Empty — No computations for client:** `icon=FileText`, `title="No computations for this client"`, `description="Create a computation to analyze this client's tax obligations."`, `ctaLabel="New Computation"`, `onCta: navigate({ to: '/computations/new', search: { clientId: client.id } })`
+
+#### 8.5.8 Deadlines Page (`/deadlines`)
+
+**Skeleton:**
+```tsx
+<div className="space-y-3">
+  {Array.from({ length: 5 }).map((_, i) => (
+    <div key={i} className="flex items-start gap-4 p-4 rounded-lg border bg-card">
+      <Skeleton className="h-12 w-12 rounded-lg flex-shrink-0" />
+      <div className="flex-1 space-y-2">
+        <Skeleton className="h-4 w-2/3" />
+        <Skeleton className="h-3 w-1/2" />
+      </div>
+      <Skeleton className="h-6 w-20 rounded-full" />
+    </div>
+  ))}
+</div>
+```
+
+**Error:** `title="Unable to load deadlines"`, `message="There was a problem fetching your filing deadlines."`, `onRetry: refetch()`
+
+**Empty:** `icon=CalendarCheck`, `title="No deadlines yet"`, `description="Filing deadlines appear here once computations are finalized. Finalize a computation to generate its deadline schedule."`, `ctaLabel="View computations"`, `onCta: navigate({ to: '/computations' })`
+
+#### 8.5.9 Settings Page (`/settings`)
+
+**Skeleton:**
+```tsx
+<div className="space-y-6">
+  <div className="rounded-lg border bg-card p-6 space-y-4">
+    <Skeleton className="h-5 w-32" />
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="space-y-1.5"><Skeleton className="h-3 w-20" /><Skeleton className="h-9 w-full rounded-md" /></div>
+      <div className="space-y-1.5"><Skeleton className="h-3 w-20" /><Skeleton className="h-9 w-full rounded-md" /></div>
+    </div>
+  </div>
+  <div className="rounded-lg border bg-card p-6 space-y-4">
+    <Skeleton className="h-5 w-40" />
+    <div className="flex items-center gap-4">
+      <Skeleton className="h-20 w-20 rounded-lg" />
+      <Skeleton className="h-9 w-32 rounded-md" />
+    </div>
+  </div>
+</div>
+```
+
+**Error:** `title="Unable to load settings"`, `message="There was a problem loading your profile. Please try again."`, `onRetry: refetch()`
+
+**No empty state** — a user always has a profile (created on sign-up). Unfilled fields render as empty inputs with placeholder values.
+
+#### 8.5.10 Team Settings Page (`/settings/team`)
+
+**Skeleton — Members Table:**
+```tsx
+<div className="rounded-lg border overflow-hidden">
+  <table className="w-full text-sm">
+    <thead className="bg-muted text-muted-foreground">
+      <tr>
+        <th className="px-4 py-3 text-left">Member</th>
+        <th className="px-4 py-3 text-left">Role</th>
+        <th className="px-4 py-3 text-left">Joined</th>
+        <th className="px-4 py-3" />
+      </tr>
+    </thead>
+    <tbody className="divide-y">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <tr key={i}>
+          <td className="px-4 py-3">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <div className="space-y-1">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-40" />
+              </div>
+            </div>
+          </td>
+          <td className="px-4 py-3"><Skeleton className="h-5 w-20 rounded-full" /></td>
+          <td className="px-4 py-3"><Skeleton className="h-4 w-24" /></td>
+          <td className="px-4 py-3"><Skeleton className="h-7 w-7 rounded-md" /></td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+```
+
+**Skeleton — Pending Invitations:**
+```tsx
+<div className="space-y-2">
+  {Array.from({ length: 2 }).map((_, i) => (
+    <div key={i} className="flex items-center justify-between p-3 rounded-lg border bg-card">
+      <div className="space-y-1">
+        <Skeleton className="h-4 w-48" />
+        <Skeleton className="h-3 w-32" />
+      </div>
+      <Skeleton className="h-7 w-16 rounded-md" />
+    </div>
+  ))}
+</div>
+```
+
+**Error:** `title="Unable to load team"`, `message="There was a problem fetching your team members."`, `onRetry: refetch()`
+
+**Empty — Solo plan (FREE):**
+```tsx
+<EmptyState
+  icon={UserPlus}
+  title="Team features are not available on your plan"
+  description="Upgrade to Enterprise to add team members and collaborate on computations."
+  ctaLabel="View plans"
+  onCta={() => navigate({ to: '/settings', search: { section: 'billing' } })}
+/>
+```
+
+**No pending invitations:** PendingInvitationsTable section is simply hidden (not rendered) when `pendingInvitations.length === 0`.
+
+#### 8.5.11 Shared Computation Page (`/share/$token`)
+
+No AppLayout chrome (no sidebar, no nav).
+
+**Loading:**
+```tsx
+<div className="max-w-4xl mx-auto py-10 px-4 space-y-6">
+  <div className="space-y-2">
+    <Skeleton className="h-7 w-56" />
+    <Skeleton className="h-4 w-40" />
+  </div>
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    {Array.from({ length: 3 }).map((_, i) => (
+      <div key={i} className="rounded-lg border bg-card p-5 space-y-3">
+        <Skeleton className="h-5 w-1/2" />
+        <Skeleton className="h-8 w-3/4" />
+      </div>
+    ))}
+  </div>
+</div>
+```
+
+**`src/components/shared-computation/SharedComputationNotFound.tsx`** (6+ Tailwind classes — anti-scaffolding gate):
+```tsx
+<div className="flex flex-col items-center justify-center min-h-screen px-4 text-center">
+  <div className="flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+    <LinkOff className="w-8 h-8 text-muted-foreground" />
+  </div>
+  <h1 className="text-2xl font-bold text-foreground mb-2">Link not found or expired</h1>
+  <p className="text-muted-foreground max-w-sm">
+    This shared computation link is no longer active or doesn't exist.
+    Please ask the sender for a new link.
+  </p>
+</div>
+```
+
+Used when RPC returns null (token not found OR share disabled — RPC only returns rows where `share_enabled = true`).
+
+#### 8.5.12 Auth Callback Page (`/auth/callback`)
+
+**Loading:**
+```tsx
+<div className="flex flex-col items-center justify-center min-h-screen gap-4">
+  <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+  <p className="text-sm text-muted-foreground">Confirming your email...</p>
+</div>
+```
+
+**Error:**
+```tsx
+<div className="flex flex-col items-center justify-center min-h-screen px-4 text-center gap-4">
+  <Alert variant="destructive" className="max-w-md">
+    <AlertCircle className="h-4 w-4" />
+    <AlertTitle>Email confirmation failed</AlertTitle>
+    <AlertDescription>
+      The confirmation link has expired or is invalid. Please request a new one.
+      <Button variant="outline" size="sm" className="mt-3 block" onClick={() => navigate({ to: '/auth' })}>
+        Back to sign in
+      </Button>
+    </AlertDescription>
+  </Alert>
+</div>
+```
+
+#### 8.5.13 Invite Accept Page (`/invite/$token`)
+
+**Loading:**
+```tsx
+<div className="flex flex-col items-center justify-center min-h-screen gap-4">
+  <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+  <p className="text-sm text-muted-foreground">Loading invitation...</p>
+</div>
+```
+
+**Error — Expired:** `icon=Clock`, `title="Invitation expired"`, `description="This invitation link has expired (invitations are valid for 7 days). Please ask your admin to send a new invitation."`, `ctaLabel="Sign in to TaxKlaro"`, `onCta: navigate({ to: '/auth' })`
+
+**Error — Already accepted:** `icon=CheckCircle2`, `title="Invitation already accepted"`, `description="You've already joined this organization. Sign in to access your account."`, `ctaLabel="Sign in"`, `onCta: navigate({ to: '/auth' })`
+
+**Error — Invalid token:** `icon=LinkOff`, `title="Invalid invitation link"`, `description="This invitation link is not valid. Please check the link in your email or ask your admin to resend it."`, `ctaLabel="Sign in to TaxKlaro"`, `onCta: navigate({ to: '/auth' })`
+
+#### 8.5.14 Empty State Icons Reference
+
+| Page | Empty State Icon | lucide-react import |
+|------|-----------------|---------------------|
+| Dashboard — no computations | `Calculator` | `lucide-react` |
+| Dashboard — no deadlines | `Calendar` | `lucide-react` |
+| Computations — no data | `FileText` | `lucide-react` |
+| Computations — no filter match | `SearchX` | `lucide-react` |
+| Computation detail — 404 | `FileQuestion` | `lucide-react` |
+| Computation detail — no results | `Calculator` | `lucide-react` |
+| Computation detail — no notes | `MessageSquare` | `lucide-react` |
+| Computation detail — no deadlines | `Calendar` | `lucide-react` |
+| Clients — no data | `Users` | `lucide-react` |
+| Clients — no search match | `SearchX` | `lucide-react` |
+| Client detail — 404 | `UserX` | `lucide-react` |
+| Client detail — no computations | `FileText` | `lucide-react` |
+| Deadlines — no data | `CalendarCheck` | `lucide-react` |
+| Team — solo plan | `UserPlus` | `lucide-react` |
+| Share — not found | `LinkOff` | `lucide-react` |
+| Invite — expired | `Clock` | `lucide-react` |
+| Invite — already accepted | `CheckCircle2` | `lucide-react` |
+| Invite — invalid token | `LinkOff` | `lucide-react` |
+| All error states | `AlertCircle` | `lucide-react` |
+
+Only `lucide-react` is used — no other icon libraries.
+
+#### 8.5.15 Anti-Scaffolding Verification (Phase 7 — Forward Loop)
+
+The forward loop's Phase 7 visual check MUST verify:
+1. `EmptyState.tsx` root element has 6+ Tailwind classes — FAIL if fewer
+2. `ComputationCardSkeleton.tsx` root element has 6+ Tailwind classes (`rounded-lg border bg-card p-4 space-y-3 animate-pulse`) — FAIL if fewer
+3. `ClientRowSkeleton.tsx` `<tr>` element has at least `border-b` — FAIL if bare `<tr>`
+4. `SharedComputationNotFound.tsx` root element has 6+ Tailwind classes — FAIL if fewer
+5. Every page must render a skeleton before data arrives — test: add `await new Promise(r => setTimeout(r, 5000))` to data fetcher, verify skeleton appears
+6. Every page's error state has a working retry button — test: mock Supabase to throw, click retry, verify reload
+
+**Separately exported skeleton components** (reused across pages):
+- `src/components/computation/ComputationCardSkeleton.tsx` — reused in ComputationsList grid AND Dashboard RecentComputations widget
+- `src/components/clients/ClientRowSkeleton.tsx` — reused per-row in ClientsTable
+
+All other skeleton layouts are inline JSX in the `isLoading` branch of each page component (not extracted to separate files).
+
+---
+
 ## 9. Platform Layer — Auth
 
 ### 9.1 Environment Variables
