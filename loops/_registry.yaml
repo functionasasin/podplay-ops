@@ -208,9 +208,17 @@ loops:
     schedule: "0 6,18 * * *"
     max_iterations: 50
     timeout_minutes: 30
-    status: active
+    status: converged
     created: 2026-03-06
     reopened: "2026-03-06"
+    converged_at: "2026-03-06"
+  taxklaro-ui-forward:
+    description: "UI polish: DM Serif Display + DM Sans typography, AppLayout wiring, page-by-page visual refinement, responsive audit (10 stages)"
+    type: forward
+    max_iterations: 40
+    timeout_minutes: 30
+    status: active
+    created: 2026-03-06
   podplay-ops-reverse:
     description: "Extract complete spec from PodPlay MRP docs → ops wizard webapp mega-spec (57 aspects)"
     type: reverse
