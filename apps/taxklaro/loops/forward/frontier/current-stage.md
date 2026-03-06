@@ -1,18 +1,20 @@
-# Current Stage: 17 (Sharing + Auto-save)
+# Current Stage: 18 (Component Wiring)
 
 ## Status
-Stage 16 complete. All 27 computations CRUD tests pass. ComputationCard, ComputationCardSkeleton, and computations list page with status tabs implemented.
+Stage 17 complete. All 19 share + auto-save tests pass. share.ts, SaveStatusIndicator, SharePage, and useAutoSave wired to Supabase implemented.
 
 ## What To Do
-Read spec §7.6, §7.4 (useAutoSave). Implement sharing and auto-save.
+Read spec §14. Wire all 90 components to their parent routes — zero orphans.
 
 Tasks:
-- Create src/lib/share.ts from spec §7.6 — enableSharing, disableSharing, getSharedComputation
-- Create ShareView.tsx — read-only results at /share/$token
-- Wire useAutoSave hook to real Supabase calls (1500ms debounce)
-- Create SaveStatusIndicator.tsx — "Saving..." / "Saved" / "Error"
+- Walk spec §14.1 directory structure — verify every component file exists
+- Walk spec §14.2 orphan prevention rules — verify every component is imported by a route
+- Walk spec §14.3 action trigger map — verify every button has an onClick handler
+- Walk spec §14.4 visibility rules — verify auth-gated components check user state
+- Wire ResultsView readOnly contract from spec §14.5
+- Create src/__tests__/wiring.test.ts — import scan for orphaned exports
 
-Test command: `npx vitest run src/lib/share`
+Test command: `npx vitest run src/__tests__/wiring`
 
 ## Work Log
 - 2026-03-06: Stage 1 complete — cargo check passes, advancing to stage 2
@@ -31,3 +33,4 @@ Test command: `npx vitest run src/lib/share`
 - 2026-03-06: Stage 14 complete — 17 auth tests pass, advancing to stage 15
 - 2026-03-06: Stage 15 complete — 63 route tests pass, advancing to stage 16
 - 2026-03-06: Stage 16 complete — 27 computations CRUD tests pass, ComputationCard + list page with status tabs implemented, advancing to stage 17
+- 2026-03-06: Stage 17 complete — 19 share + auto-save tests pass, SharePage + SaveStatusIndicator + useAutoSave wired, advancing to stage 18
