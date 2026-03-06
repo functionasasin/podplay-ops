@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 55
-- Analyzed: 26
-- Pending: 29
-- Convergence: 47%
+- Analyzed: 27
+- Pending: 28
+- Convergence: 49%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -45,7 +45,7 @@ Depends on Wave 2 rule extraction.
 
 ### Wave 4: Bridge Contract
 Depends on Wave 3 data model.
-- [ ] wasm-export-signature — Define exports: compute_single_json(input: &str) -> String, compute_batch_json(input: &str) -> String, generate_nlrc_json(input: &str) -> String
+- [x] wasm-export-signature — Define exports: compute_single_json(input: &str) -> String, compute_batch_json(input: &str) -> String, generate_nlrc_json(input: &str) -> String
 - [ ] serde-wire-format — Exact JSON rules: deny_unknown_fields, rename_all = "camelCase", null for Optional, boolean as true/false, money as integer centavos
 - [ ] error-contract — Error JSON shape: { error: string, code: string, field?: string, severity: "error" | "warning" | "info" }
 - [ ] initialization-patterns — initSync for Node.js (vitest), init for browser, bridge.ts wrapper pattern
@@ -95,6 +95,7 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 - [ ] spec-review — Final review: can the forward loop build the ENTIRE product from this spec alone?
 
 ## Recently Analyzed
+- wasm-export-signature (Wave 4) — 2026-03-06
 - invariants (Wave 3) — 2026-03-06
 - test-vectors (Wave 3) — 2026-03-06
 - nlrc-worksheet-generator (Wave 3) — 2026-03-06
