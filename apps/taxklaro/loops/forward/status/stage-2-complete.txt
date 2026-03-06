@@ -1,0 +1,17 @@
+Stage 2 complete — 2026-03-06
+
+cargo check passes with zero errors.
+
+Implemented:
+- src/types.rs: 14 enums + ErrorSeverity, all input structs (TaxpayerInput,
+  ItemizedExpenseInput, Form2307Entry, QuarterlyPayment, DepreciationEntry,
+  NolcoEntry), all output structs (TaxComputationResult and all sub-types
+  including 3 BIR form outputs + FormOutputUnion + WasmResult<T>).
+  FormType uses explicit serde renames to avoid FORM_1701_A (wrong) vs
+  FORM_1701A (correct per spec critical trap).
+- src/rates.rs: TRAIN Schedule 1 (2018-2022) and Schedule 2 (2023+)
+  graduated tax computation with full boundary verification tests.
+  Also exports OSD_RATE, EIGHT_PCT_RATE, EIGHT_PCT_EXEMPTION, PT rates.
+- src/errors.rs: EngineError, ValidationWarning, IneligibilityNotification,
+  ManualReviewFlag with correct serde camelCase.
+- src/lib.rs: added pub mod rates.
