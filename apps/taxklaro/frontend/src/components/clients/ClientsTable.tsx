@@ -23,25 +23,25 @@ export function ClientsTable({ clients, isLoading, onSelect }: ClientsTableProps
   }
 
   return (
-    <div className="border rounded-lg overflow-hidden">
-      <table className="w-full text-sm">
+    <div className="rounded-xl shadow-sm overflow-hidden bg-card">
+      <table className="w-full text-[0.9375rem]">
         <thead>
-          <tr className="border-b bg-muted/50">
-            <th className="px-4 py-3 text-left font-medium">Name</th>
-            <th className="px-4 py-3 text-left font-medium">Email</th>
-            <th className="px-4 py-3 text-right font-medium">Computations</th>
+          <tr className="border-b bg-muted/40">
+            <th className="px-5 py-3.5 text-left text-[0.8125rem] font-medium text-muted-foreground uppercase tracking-wide">Name</th>
+            <th className="px-5 py-3.5 text-left text-[0.8125rem] font-medium text-muted-foreground uppercase tracking-wide">Email</th>
+            <th className="px-5 py-3.5 text-right text-[0.8125rem] font-medium text-muted-foreground uppercase tracking-wide">Computations</th>
           </tr>
         </thead>
         <tbody>
           {clients.map((c) => (
             <tr
               key={c.id}
-              className="border-b last:border-0 hover:bg-muted/30 cursor-pointer"
+              className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer"
               onClick={() => onSelect?.(c.id)}
             >
-              <td className="px-4 py-3">{c.name}</td>
-              <td className="px-4 py-3 text-muted-foreground">{c.email ?? '—'}</td>
-              <td className="px-4 py-3 text-right">{c.computationCount ?? 0}</td>
+              <td className="px-5 py-4 font-medium">{c.name}</td>
+              <td className="px-5 py-4 text-muted-foreground">{c.email ?? '—'}</td>
+              <td className="px-5 py-4 text-right tabular-nums">{c.computationCount ?? 0}</td>
             </tr>
           ))}
         </tbody>

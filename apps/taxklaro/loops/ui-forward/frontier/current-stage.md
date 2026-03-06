@@ -1,16 +1,16 @@
-# Current Stage: 7 (List Pages)
+# Current Stage: 8 (Utility Pages)
 
 ## Status
-Stage 6 complete. Results + Detail polished: RecommendationBanner now shows savings amount in DM Serif
-Display, RegimeComparisonTable highlights recommended row in green with bolder totals, TaxBreakdownPanel
-and BalancePayableSection use DM Serif Display for large monetary amounts, PathDetailAccordion items
-are card-style with shadows and hover transitions, PenaltySummary has amber border/bg, BirFormRecommendation
-has blue info-card styling, page header h1 uses DM Serif Display text-3xl. Build passes.
+Stage 7 complete. List pages polished: ComputationCard uses DM Serif Display title with shadow-sm/hover:shadow-md,
+ComputationCardSkeleton matches new card sizing, computations list uses serif h1 + line-variant tabs + polished
+empty states with icon circles. ClientsTable has clean uppercase headers, proper padding, hover transitions.
+ClientInfoCard has serif h2 name + section rows with labels. New client form wrapped in shadow-md card with h-11
+inputs. Client detail page uses serif h1 for client name + polished back nav. Build passes.
 
 ## What To Do
-Restyle list pages. Routes: /computations, /clients, /clients/new, /clients/$clientId.
-Polish ComputationCard, computations list tabs, empty states, ClientsTable, ClientInfoCard,
-new client form, and page headers.
+Restyle utility pages. Routes: /deadlines, /settings, /settings/team, /share/$token, /computations/$compId/quarterly.
+Polish deadline cards with date prominence, settings section cards with serif headings, team members table,
+share view header, quarterly breakdown table.
 
 ## Work Log
 - Stage 1: Installed fonts, defined CSS design tokens, verified build ✓
@@ -19,3 +19,4 @@ new client form, and page headers.
 - Stage 4: Landing page hero + features, auth pages card layout, onboarding card layout ✓
 - Stage 5: Wizard polish — progress bar, step card, radio cards, DM Serif Display h2s, PesoInput h-11, nav buttons ✓
 - Stage 6: Results + Detail — serif headings, savings in DM Serif Display, amber penalties, blue BIR form card, large bottom-line numbers ✓
+- Stage 7: List pages — serif h1s, shadow cards, line tabs, polished empty states, ClientsTable polish, ClientInfoCard sections ✓

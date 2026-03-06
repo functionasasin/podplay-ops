@@ -50,83 +50,89 @@ function ClientsNewPage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto p-6 space-y-6" data-testid="clients-new-page">
+    <div className="max-w-xl mx-auto p-8 space-y-6" data-testid="clients-new-page">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">New Client</h1>
+        <h1 className="font-display text-3xl font-normal">New Client</h1>
         <button
-          className="text-sm text-primary underline"
+          className="text-[0.8125rem] text-muted-foreground hover:text-foreground transition-colors"
           onClick={() => navigate({ to: '/clients' })}
         >
-          Back to Clients
+          ← Back to Clients
         </button>
       </div>
 
       {error && (
-        <div className="rounded-md border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
+        <div className="rounded-lg border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="name">Client Name *</Label>
-          <Input
-            id="name"
-            data-testid="client-name-input"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Juan dela Cruz"
-            required
-          />
-        </div>
+      <div className="rounded-xl bg-card shadow-md p-8">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="space-y-1.5">
+            <Label htmlFor="name">Client Name *</Label>
+            <Input
+              id="name"
+              data-testid="client-name-input"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Juan dela Cruz"
+              className="h-11"
+              required
+            />
+          </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="tin">TIN</Label>
-          <Input
-            id="tin"
-            data-testid="client-tin-input"
-            value={tin}
-            onChange={(e) => setTin(e.target.value)}
-            placeholder="e.g. 123-456-789-000"
-          />
-        </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="tin">TIN</Label>
+            <Input
+              id="tin"
+              data-testid="client-tin-input"
+              value={tin}
+              onChange={(e) => setTin(e.target.value)}
+              placeholder="e.g. 123-456-789-000"
+              className="h-11"
+            />
+          </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            data-testid="client-email-input"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="e.g. juan@example.com"
-          />
-        </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              data-testid="client-email-input"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="e.g. juan@example.com"
+              className="h-11"
+            />
+          </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="address">Address</Label>
-          <Input
-            id="address"
-            data-testid="client-address-input"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            placeholder="e.g. 123 Rizal Ave, Manila"
-          />
-        </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="address">Address</Label>
+            <Input
+              id="address"
+              data-testid="client-address-input"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="e.g. 123 Rizal Ave, Manila"
+              className="h-11"
+            />
+          </div>
 
-        <div className="flex gap-3 pt-2">
-          <Button type="submit" disabled={isSubmitting || !name.trim()}>
-            {isSubmitting ? 'Creating...' : 'Create Client'}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate({ to: '/clients' })}
-          >
-            Cancel
-          </Button>
-        </div>
-      </form>
+          <div className="flex gap-3 pt-2">
+            <Button type="submit" disabled={isSubmitting || !name.trim()}>
+              {isSubmitting ? 'Creating...' : 'Create Client'}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate({ to: '/clients' })}
+            >
+              Cancel
+            </Button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

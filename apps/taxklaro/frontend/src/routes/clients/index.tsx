@@ -58,25 +58,27 @@ function ClientsPage() {
   useEffect(() => { load(); }, [load]);
 
   return (
-    <div className="p-6 space-y-6" data-testid="clients-page">
+    <div className="p-8 space-y-6" data-testid="clients-page">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Clients</h1>
+        <h1 className="font-display text-3xl font-normal">Clients</h1>
         <Button onClick={() => navigate({ to: '/clients/new' })}>
           <Plus className="h-4 w-4 mr-2" /> New Client
         </Button>
       </div>
 
       {error ? (
-        <div className="text-center py-12">
+        <div className="text-center py-16">
           <p className="text-muted-foreground mb-4">Unable to load clients. {error}</p>
           <Button variant="outline" onClick={load}>Try again</Button>
         </div>
       ) : clients.length === 0 && !isLoading ? (
-        <div className="text-center py-16 space-y-4" data-testid="empty-clients">
-          <Users className="h-12 w-12 mx-auto text-muted-foreground" />
+        <div className="text-center py-20 space-y-4" data-testid="empty-clients">
+          <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+            <Users className="h-8 w-8 text-muted-foreground" />
+          </div>
           <div>
-            <p className="text-lg font-medium">No clients yet</p>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="font-display text-xl font-normal">No clients yet</p>
+            <p className="text-[0.9375rem] text-muted-foreground mt-1">
               Add a client to start organizing your computations.
             </p>
           </div>

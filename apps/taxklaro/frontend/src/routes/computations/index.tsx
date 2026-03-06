@@ -63,11 +63,11 @@ function ComputationsPage() {
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-6">
+      <div className="p-8 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">Computations</h1>
+          <h1 className="font-display text-3xl font-normal">Computations</h1>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {Array.from({ length: 6 }).map((_, i) => (
             <ComputationCardSkeleton key={i} />
           ))}
@@ -78,14 +78,14 @@ function ComputationsPage() {
 
   if (error) {
     return (
-      <div className="p-6 space-y-6">
+      <div className="p-8 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">Computations</h1>
+          <h1 className="font-display text-3xl font-normal">Computations</h1>
           <Button onClick={() => navigate({ to: '/computations/new' })}>
             <Plus className="h-4 w-4 mr-2" /> New Computation
           </Button>
         </div>
-        <div className="text-center py-12">
+        <div className="text-center py-16">
           <p className="text-muted-foreground mb-4">Unable to load computations. There was a problem fetching your computations. Please try again.</p>
           <Button variant="outline" onClick={load}>Try again</Button>
         </div>
@@ -94,16 +94,16 @@ function ComputationsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-8 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Computations</h1>
+        <h1 className="font-display text-3xl font-normal">Computations</h1>
         <Button onClick={() => navigate({ to: '/computations/new' })}>
           <Plus className="h-4 w-4 mr-2" /> New Computation
         </Button>
       </div>
 
       <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
-        <TabsList>
+        <TabsList variant="line">
           <TabsTrigger value="all">All</TabsTrigger>
           <TabsTrigger value="draft">Draft</TabsTrigger>
           <TabsTrigger value="computed">Computed</TabsTrigger>
@@ -113,26 +113,33 @@ function ComputationsPage() {
       </Tabs>
 
       {computations.length === 0 ? (
-        <div className="text-center py-16 space-y-4" data-testid="empty-computations">
-          <FileText className="h-12 w-12 mx-auto text-muted-foreground" />
+        <div className="text-center py-20 space-y-4" data-testid="empty-computations">
+          <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+            <FileText className="h-8 w-8 text-muted-foreground" />
+          </div>
           <div>
-            <p className="text-lg font-medium">No computations yet</p>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="font-display text-xl font-normal">No computations yet</p>
+            <p className="text-[0.9375rem] text-muted-foreground mt-1 max-w-sm mx-auto">
               Create a computation to get BIR-compliant tax analysis for any freelancer or self-employed client.
             </p>
           </div>
           <Button onClick={() => navigate({ to: '/computations/new' })}>New Computation</Button>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16 space-y-4">
-          <p className="text-lg font-medium">No results</p>
-          <p className="text-sm text-muted-foreground">
-            No computations match the selected filters. Try adjusting your status or tax year filters.
-          </p>
+        <div className="text-center py-20 space-y-4">
+          <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+            <FileText className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <div>
+            <p className="font-display text-xl font-normal">No results</p>
+            <p className="text-[0.9375rem] text-muted-foreground max-w-sm mx-auto">
+              No computations match the selected filters. Try adjusting your status filter.
+            </p>
+          </div>
           <Button variant="outline" onClick={() => setStatusFilter('all')}>Clear filters</Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filtered.map((c) => (
             <ComputationCard
               key={c.id}

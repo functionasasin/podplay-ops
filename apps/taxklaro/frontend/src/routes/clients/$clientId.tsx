@@ -64,7 +64,7 @@ function ClientDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="max-w-2xl mx-auto p-6" data-testid="client-detail-page">
+      <div className="max-w-2xl mx-auto p-8" data-testid="client-detail-page">
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-muted rounded w-1/3" />
           <div className="h-32 bg-muted rounded" />
@@ -75,27 +75,27 @@ function ClientDetailPage() {
 
   if (error || !client) {
     return (
-      <div className="max-w-2xl mx-auto p-6 text-center space-y-4" data-testid="client-detail-page">
+      <div className="max-w-2xl mx-auto p-8 text-center space-y-4" data-testid="client-detail-page">
         <p className="text-muted-foreground">{error ?? 'Client not found'}</p>
         <button
-          className="text-sm text-primary underline"
+          className="text-[0.8125rem] text-muted-foreground hover:text-foreground transition-colors"
           onClick={() => navigate({ to: '/clients' })}
         >
-          Back to Clients
+          ← Back to Clients
         </button>
       </div>
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-6 space-y-6" data-testid="client-detail-page">
+    <div className="max-w-2xl mx-auto p-8 space-y-6" data-testid="client-detail-page">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">{client.name}</h1>
+        <h1 className="font-display text-3xl font-normal">{client.name}</h1>
         <button
-          className="text-sm text-primary underline"
+          className="text-[0.8125rem] text-muted-foreground hover:text-foreground transition-colors"
           onClick={() => navigate({ to: '/clients' })}
         >
-          Back to Clients
+          ← Back to Clients
         </button>
       </div>
 
