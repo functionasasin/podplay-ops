@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 37
-- Analyzed: 13
-- Pending: 24
-- Convergence: 35%
+- Analyzed: 14
+- Pending: 23
+- Convergence: 38%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -32,7 +32,7 @@ Depends on Wave 3. The biggest wave — where inheritance had the most issues.
 - [x] supabase-auth-flow — PKCE email/password, magic link, sign-in/sign-up UI, callback route, password reset, session management
 - [x] supabase-migrations — Full SQL: tables, RLS policies, RPC functions, triggers, storage buckets (idempotent)
 - [x] route-table — Complete TanStack Router route table with beforeLoad auth guards, 18+ routes
-- [ ] env-configuration — All VITE_* env vars, .env.local.example, graceful missing-var handling (SetupPage pattern)
+- [x] env-configuration — All VITE_* env vars, .env.local.example, graceful missing-var handling (SetupPage pattern)
 - [ ] navigation — Auth-aware sidebar (desktop) + drawer (mobile), active states, sign-out
 - [ ] org-model — Organizations, members, roles, invitations, seat limits, useOrganization() hook
 - [ ] computation-management — CRUD for computations, auto-save, status workflow, ComputationCard grid
