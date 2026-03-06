@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 57
-- Analyzed: 42
-- Pending: 15
-- Convergence: 74%
+- Analyzed: 43
+- Pending: 14
+- Convergence: 75%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -59,7 +59,7 @@
 - [x] design-dashboard — Home dashboard: project list, status pills, progress bars, top-line metrics, filters
 - [x] design-wizard-intake — Stage 1 wizard: 6 steps, form fields, validation rules, conditional logic for tiers (including PBK)
 - [x] design-wizard-procurement — Stage 2: BOM review, inventory check, PO creation, receiving, packing, CC terminal ordering, replay sign fulfillment
-- [ ] design-wizard-deployment — Stage 3: 15-phase smart checklist UI with auto-fill, warnings, troubleshooting tips, notes, non-linear navigation, ISP validation, cable estimation
+- [x] design-wizard-deployment — Stage 3: 15-phase smart checklist UI with auto-fill, warnings, troubleshooting tips, notes, non-linear navigation, ISP validation, cable estimation
 - [ ] design-wizard-financials — Stage 4: invoicing, expenses, P&L review, go-live/handoff
 - [ ] design-inventory-view — Global inventory: stock levels, categories, low stock flags, movement history, adjustments
 - [ ] design-financials-view — Global financials: funnel, monthly P&L, HER charts, per-project P&L, reconciliation, team OpEx config
