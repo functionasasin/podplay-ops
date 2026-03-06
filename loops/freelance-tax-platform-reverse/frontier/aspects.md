@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 37
-- Analyzed: 21
-- Pending: 16
-- Convergence: 57%
+- Analyzed: 22
+- Pending: 15
+- Convergence: 59%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -42,7 +42,7 @@ Depends on Wave 3. The biggest wave — where inheritance had the most issues.
 Depends on Wave 4. Every component must have a home.
 - [x] component-wiring-map — Every component -> parent route, navigation path, trigger, props source (zero orphans)
 - [x] action-trigger-map — Every action-triggered feature (PDF export, share toggle, delete, etc.) -> which button triggers it, which parent has the button, onClick handler. Prevents "PDF infra built but no button" failure.
-- [ ] design-system-alignment — Map TaxKlaro palette to shadcn/ui + Radix + Tailwind CSS 4 theming
+- [x] design-system-alignment — Map TaxKlaro palette to shadcn/ui + Radix + Tailwind CSS 4 theming
 - [x] visual-verification-checklist — For every major component: required shadcn wrapper (Card/Alert/Badge), key Tailwind classes, lucide icon, color variant. Prevents unstyled test-scaffolding shipping as "complete."
 - [ ] empty-states-and-loading — Skeleton loaders, EmptyState components, error states for every async page
 - [ ] toast-catalog — Every user action that produces feedback, with message text and variant
