@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 41
-- Analyzed: 35
-- Pending: 6
-- Convergence: 85%
+- Analyzed: 36
+- Pending: 5
+- Convergence: 88%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -66,7 +66,7 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 
 ### Wave 7.5: Spec Gap Fills
 Depends on completeness-audit FAIL results. All 4 must complete before cross-layer-consistency.
-- [ ] fill-wizard-step-fields — Merge wizard-steps.md per-field detail (label/type/placeholder/validation/error) for all 17 wizard steps into spec Section 7.7
+- [x] fill-wizard-step-fields — Merge wizard-steps.md per-field detail (label/type/placeholder/validation/error) for all 17 wizard steps into spec Section 7.7
 - [ ] fill-e2e-specs — Merge playwright-e2e-specs.md detailed test scenarios (steps, assertions, data-testid, test fixtures) into spec Section 15.2
 - [ ] fill-empty-states — Merge empty-states-and-loading.md per-page specs (icon/title/description/CTA/skeleton) into spec Section 8.5
 - [ ] fill-toast-catalog — Merge remaining 28 toasts from toast-catalog.md into spec Section 8.4 (currently only 13/41 documented)

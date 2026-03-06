@@ -1307,6 +1307,1412 @@ export async function getSharedComputation(token: string): Promise<SharedComputa
 
 ---
 
+### 7.7 Wizard Step Field Specifications
+
+This section specifies every field in every wizard step. The forward loop MUST implement each field
+with the exact label, type, placeholder, validation rules, and error messages listed here.
+
+#### 7.7.1 Field Spec Conventions
+
+**Field property table format (used for every field below):**
+
+| Property | Meaning |
+|----------|---------|
+| **ID** | Field identifier matching engine data model field name (or `(UI-only)` for routing fields) |
+| **Label** | Exact text label displayed above the field |
+| **Type** | `peso`, `radio`, `select`, `checkbox`, `date`, `text`, `toggle`, `radio-card` |
+| **Placeholder** | Placeholder inside the field when empty; never a substitute for label |
+| **Default** | Initial value on page load |
+| **Required** | Whether field must be filled before advancing |
+| **Visible When** | Condition for display; `always` means no condition |
+| **Validation Rules** | Ordered list applied on blur and on "Continue" click |
+| **Error Messages** | Exact text shown when each rule fails |
+| **Help Text** | Tooltip or inline explanation; shown as ? icon or below label |
+
+**Peso field behavior (applies to ALL fields with type `peso`):**
+- Display prefix: "₱" rendered as non-editable left adornment
+- Numeric input only; commas auto-inserted for thousands separators on blur (e.g., "1200000" → "1,200,000")
+- Accepts decimal point for centavos (e.g., "12500.50")
+- On paste: strips non-numeric characters except decimal point
+- Min value: 0 (negative values rejected with "Amount cannot be negative")
+- Max value: 9,999,999,999.99 ("Amount exceeds maximum allowed value. If your income exceeds ₱10 billion, please contact us.")
+- Empty = treated as ₱0 only if field is not Required; for Required fields empty triggers "This field is required."
+
+**ATC code auto-classification (used in WS-08):**
+
+| ATC Code | Classification | Credit Applied To |
+|----------|---------------|------------------|
+| WI010 | Income Tax CWT | Income tax due |
+| WI011 | Income Tax CWT | Income tax due |
+| WI157 | Income Tax CWT | Income tax due |
+| WI160 | Income Tax CWT | Income tax due |
+| WI760 | Income Tax CWT (RR 16-2023 Platform) | Income tax due |
+| WC010 | Income Tax CWT | Income tax due |
+| WC760 | Income Tax CWT (RR 16-2023 Platform) | Income tax due |
+| PT010 | Percentage Tax CWT | Percentage tax due (2551Q), NOT income tax |
+| Any other | Unknown — Manual Review Required | Not credited until confirmed |
+
+**Navigation controls (present on every step):**
+- "Back" button: returns to previous visible step; disabled on WS-00
+- "Continue" button: validates current step and advances; label changes to "See My Results" on last step
+- Progress bar: shows N of M steps completed (M = total visible steps for this user's path)
+- "Save and continue later" link (Pro feature): visible after authentication
+
+---
+
+#### 7.7.2 Step WS-00: Mode Selection
+
+**Screen title:** "What would you like to compute?"
+**Engine field set:** `filing_period` (preliminary)
+
+**Field: mode_selection**
+
+| Property | Value |
+|----------|-------|
+| ID | `mode_selection` (UI-only) |
+| Label | "What are you computing?" |
+| Type | Radio card group |
+| Default | "Annual Return" |
+| Required | Yes |
+| Visible When | Always |
+
+**Options:**
+
+| Value | Card Title | Card Description |
+|-------|-----------|-----------------|
+| `ANNUAL` | "Annual Income Tax Return" | "Compute your full-year income tax and decide which tax method saves you the most. Filing deadline: April 15. Forms: 1701 or 1701A." |
+| `QUARTERLY` | "Quarterly Income Tax Return" | "Pay your income tax for Q1, Q2, or Q3. Uses the cumulative method — earlier quarters are credited. Forms: 1701Q." |
+| `PENALTY` | "Penalty and Late Filing" | "Missed a deadline? Compute the exact surcharge, interest, and compromise penalty owed for a late return." |
+
+**Validation:** A selection is required to continue.
+**Error:** (no selection): "Please select what you'd like to compute."
+
+---
+
+#### 7.7.3 Step WS-01: Taxpayer Profile
+
+**Screen title:** "Let's find your best tax option"
+**Engine fields set:** `taxpayer_type`, `is_mixed_income`
+
+**Field: taxpayer_type**
+
+| Property | Value |
+|----------|-------|
+| ID | `taxpayer_type` |
+| Label | "Which best describes your income situation?" |
+| Type | Radio card group |
+| Default | None (no pre-selection) |
+| Required | Yes |
+| Visible When | Always |
+
+**Options:**
+
+| Value | Card Title | Card Description |
+|-------|-----------|-----------------|
+| `PURELY_SE` | "I'm purely self-employed or freelancing" | "Your only income is from your own business, practice, or freelance work. No salary from any employer. You can choose the 8% flat rate if eligible." |
+| `MIXED_INCOME` | "I have both a job AND freelance/business income" | "You receive a salary from an employer AND earn extra income from a side business or profession. Your compensation is taxed separately." |
+| `COMPENSATION_ONLY` | "I only have a salary from an employer" | "You receive only a payslip. Your employer already handles your income tax via payroll (BIR Form 2316). This tool has limited use for you." |
+
+**Conditional action — COMPENSATION_ONLY selected:**
+Shows modal overlay before advancing:
+- Title: "This tool is for self-employed and freelance income"
+- Body: "If you only earn a salary from an employer, your employer already handles your income tax withheld through payroll. You receive a BIR Form 2316 from your employer. You typically don't need to file your own income tax return unless you have multiple employers or other income. If you also have any business income on the side, please select 'I have both a job AND freelance/business income' instead."
+- Button 1: "I have business income too — go back" → closes modal, re-selects nothing
+- Button 2: "I understand — show me what applies to me" → advances but shows limited-applicability state (no regime comparison; engine returns COMPENSATION_ONLY result with no optimization)
+
+**Dynamic behavior:**
+- When `MIXED_INCOME` is selected: `is_mixed_income` set to `true` automatically; progress bar updates to show 2 additional steps
+- When `PURELY_SE` is selected: `is_mixed_income` set to `false` automatically
+
+**Validation:** Required.
+**Error:** (no selection): "Please tell us which best describes you."
+
+---
+
+#### 7.7.4 Step WS-02: Business Type
+
+**Screen title:** "What type of business or profession do you have?"
+**Engine fields set:** `taxpayer_class` (via UI), `is_gpp_partner`
+**Visible When:** `taxpayer_type` is `PURELY_SE` or `MIXED_INCOME`
+
+**Field: business_category**
+
+| Property | Value |
+|----------|-------|
+| ID | `business_category` (UI-only; maps to `taxpayer_class` and `cost_of_goods_sold` logic) |
+| Label | "What type of business or profession do you have?" |
+| Type | Radio card group |
+| Default | None |
+| Required | Yes |
+| Visible When | Always (within WS-02) |
+
+**Options:**
+
+| Value | Card Title | Card Description | Engine mapping |
+|-------|-----------|-----------------|---------------|
+| `PROFESSIONAL_SERVICES` | "Professional or freelance services" | "IT, software, design, writing, marketing, consulting, tutoring, photography, video production, virtual assistant, or any work where you exchange time and skill for payment. No physical goods sold." | `taxpayer_class = SERVICE_PROVIDER`; `cost_of_goods_sold` hidden |
+| `REGULATED_PROFESSIONAL` | "Licensed / government-regulated profession" | "Lawyer, doctor, dentist, nurse, CPA, engineer, architect, pharmacist, or other profession regulated by PRC or the Supreme Court. May practice solo or through a partnership." | `taxpayer_class = SERVICE_PROVIDER`; shows GPP sub-question |
+| `TRADER` | "Product-based business (I sell goods)" | "Retail, wholesale, buy-and-sell, manufacturing, or any business where you primarily sell physical products or merchandise. You have cost of goods sold." | `taxpayer_class = TRADER`; shows `cost_of_goods_sold` field |
+| `MIXED_BUSINESS` | "Both products and services" | "Your business sells both goods and services — e.g., a repair shop, a restaurant, a product + installation business." | `taxpayer_class = TRADER` (engine uses TRADER logic when COGS > 0); shows `cost_of_goods_sold` |
+| `NOT_SURE` | "I'm not sure how to categorize my work" | "See the helper guide below to determine which category fits your work." | Shows helper panel; no selection made until user re-selects |
+
+**NOT_SURE conditional action:** Shows inline expandable helper panel explaining service vs trader vs mixed vs licensed profession. User must select one of the first four options before advancing.
+
+---
+
+**Field: is_gpp_partner**
+
+| Property | Value |
+|----------|-------|
+| ID | `is_gpp_partner` |
+| Label | "Do you practice through a General Professional Partnership (GPP)?" |
+| Type | Toggle (Yes / No) |
+| Default | No |
+| Required | Yes (when visible) |
+| Visible When | `business_category == REGULATED_PROFESSIONAL` |
+| Help Text | "A GPP is a partnership formed by licensed professionals (e.g., a law firm, accounting firm, or medical group) that is itself tax-exempt at the entity level. If you are a partner receiving a distributive share of GPP net income, your income is classified differently. Most solo practitioners select 'No'." |
+
+**Conditional action — is_gpp_partner = Yes:** Shows amber advisory: "GPP partners are subject to special rules. The 8% flat rate option is NOT available to GPP distributive share income. Computation will proceed under Graduated + Itemized or Graduated + OSD." Sets `is_gpp_partner = true`; triggers MRF-025 in engine output.
+
+**Validation:** Required when `business_category == REGULATED_PROFESSIONAL`.
+**Error:** (no selection): "Please indicate whether you practice through a General Professional Partnership."
+
+---
+
+**Field: cost_of_goods_sold**
+
+| Property | Value |
+|----------|-------|
+| ID | `cost_of_goods_sold` |
+| Label | "Cost of goods sold (COGS)" |
+| Type | Peso |
+| Placeholder | "0.00" |
+| Default | 0 |
+| Required | No (defaults to ₱0) |
+| Visible When | `business_category == TRADER` OR `business_category == MIXED_BUSINESS` |
+| Help Text | "Enter the total cost of the goods you purchased or manufactured for sale. This includes the purchase price of inventory, shipping costs to acquire goods, and direct production costs. Do NOT include your own salaries, rent, or overhead here — those go in the expenses section." |
+
+**Validation Rules:**
+1. Must be ≥ ₱0.
+2. Must be ≤ `gross_receipts` (cross-field check after WS-04).
+
+**Error Messages:**
+1. (negative): "Cost of goods sold cannot be negative."
+2. (exceeds gross receipts): "Cost of goods sold cannot exceed your gross receipts. If your COGS exceeded your revenue, you have a gross loss — please verify your numbers."
+
+---
+
+#### 7.7.5 Step WS-03: Tax Year and Filing Period
+
+**Screen title:** "What period are you filing for?"
+**Engine fields set:** `tax_year`, `filing_period`
+
+**Field: tax_year**
+
+| Property | Value |
+|----------|-------|
+| ID | `tax_year` |
+| Label | "Tax year" |
+| Type | Select (dropdown) |
+| Default | 2025 |
+| Required | Yes |
+| Visible When | Always |
+| Help Text | "Select the calendar year you are filing for. For the Annual ITR due April 15, 2026: select 2025. For quarterly returns during 2026: select 2026." |
+
+**Options:**
+
+| Value | Display Label |
+|-------|--------------|
+| 2018 | "2018" |
+| 2019 | "2019" |
+| 2020 | "2020" |
+| 2021 | "2021" |
+| 2022 | "2022" |
+| 2023 | "2023" |
+| 2024 | "2024" |
+| 2025 | "2025 (most common)" |
+| 2026 | "2026 (current year — quarterly filers only)" |
+
+**Validation Rules:**
+1. Must be integer between 2018 and 2030 inclusive.
+2. Cannot select future year for Annual returns (`mode_selection == ANNUAL` AND `tax_year > 2025` for 2026 current date).
+3. For QUARTERLY mode: `tax_year` can be 2026 for current-year quarterly returns.
+
+**Error Messages:**
+1. (out of range): "Please select a valid tax year between 2018 and 2026."
+2. (future annual): "You cannot file an Annual ITR for a year that has not yet ended. For quarterly returns in progress, select 'Quarterly Income Tax Return' mode."
+
+**Dynamic advisories:**
+- `tax_year == 2023`: Amber — "For 2023, there are two rate tables. The OLD TRAIN rates apply to January–December 2022 only. The NEW (lower) TRAIN rates apply to 2023 onwards. This tool applies the 2023+ rate table for Tax Year 2023, which is correct per BIR."
+- `tax_year <= 2022`: Blue — "You are computing tax for {tax_year}. The 2018–2022 graduated rate table applies, with higher brackets than the 2023+ table."
+
+---
+
+**Field: filing_period**
+
+| Property | Value |
+|----------|-------|
+| ID | `filing_period` |
+| Label | "Filing period" |
+| Type | Radio buttons |
+| Default | `ANNUAL` (if Annual mode); `Q1` (if Quarterly mode) |
+| Required | Yes |
+| Visible When | Always |
+| Help Text | "Annual: covers the full calendar year (Jan 1–Dec 31). Quarterly: covers Jan–Mar (Q1), Jan–Jun (Q2), or Jan–Sep (Q3) on a cumulative basis." |
+
+**Options (conditional on mode_selection):**
+
+If `mode_selection == ANNUAL`: Single option `ANNUAL` — "Annual Return — Full year (January 1–December 31)" (pre-selected, read-only).
+
+If `mode_selection == QUARTERLY`:
+- `Q1` — "Q1 — January 1 through March 31" (Due May 15)
+- `Q2` — "Q2 — January 1 through June 30 (cumulative)" (Due August 15)
+- `Q3` — "Q3 — January 1 through September 30 (cumulative)" (Due November 15)
+
+Note shown below: "There is no Q4 quarterly return for income tax. Q4 data is reported on your Annual ITR (Form 1701/1701A) due April 15 of the following year."
+
+If `mode_selection == PENALTY`: Show `ANNUAL`, `Q1`, `Q2`, `Q3` (all four).
+
+**Validation Rules:**
+1. Required; must match options for selected mode.
+2. For QUARTERLY mode: must be Q1, Q2, or Q3; Q4 not valid.
+
+**Error Messages:**
+1. (no selection): "Please select the filing period."
+2. (Q4 attempted): "Q4 is not a valid quarterly filing period for income tax. Select Annual Return to compute your full-year balance."
+
+---
+
+#### 7.7.6 Step WS-04: Gross Receipts
+
+**Screen title:** "How much did you earn?"
+**Engine fields set:** `gross_receipts`, `sales_returns_allowances`, `non_operating_income`, `fwt_income`
+
+**Field: gross_receipts**
+
+| Property | Value |
+|----------|-------|
+| ID | `gross_receipts` |
+| Label | "Total gross receipts or sales" |
+| Type | Peso |
+| Placeholder | "0.00" |
+| Default | None (empty) |
+| Required | Yes |
+| Visible When | Always |
+| Help Text | "Enter all income you received from your business or profession during the period — before subtracting any expenses. For freelancers: all amounts clients paid you. For quarterly returns: the cumulative total from January 1 through the end of the quarter, not just the current quarter's receipts." |
+
+**Validation Rules:**
+1. Required — cannot be empty.
+2. Must be ≥ ₱0.
+3. Must be ≥ `sales_returns_allowances` (cross-field; checked on step completion).
+4. Maximum: ₱9,999,999,999.99.
+5. If `filing_period == Q1` AND `gross_receipts == 0`: show WARN advisory but do not block.
+
+**Error Messages:**
+1. (empty): "Please enter your gross receipts. Enter ₱0 if you had no income this period."
+2. (negative): "Gross receipts cannot be negative."
+3. (less than returns): "Gross receipts cannot be less than your sales returns and allowances."
+4. (over maximum): "Amount exceeds maximum allowed value. If your income exceeds ₱10 billion, please contact us."
+
+**Dynamic advisories (shown inline, updated on keypress with 300ms debounce):**
+
+| Condition | Type | Text |
+|-----------|------|------|
+| `0 < gross_receipts <= 250000` | Amber | "Your income is ₱250,000 or below. Under the 8% flat rate option, your income tax would be ₱0 — the ₱250,000 is fully exempt. You still need to file a return with BIR." |
+| `250000 < gross_receipts <= 3000000` | Green | "You may be eligible for the 8% flat rate option. The optimizer will compare all available methods and recommend the one that saves you the most." |
+| `gross_receipts > 3000000` | Orange | "Your gross receipts exceed ₱3,000,000. The 8% flat rate option is NOT available. The optimizer will compare Graduated + OSD versus Graduated + Itemized Deductions." |
+| `gross_receipts > 3000000` AND not VAT-registered | Orange (appended) | "At this income level, you may be required to register for VAT. See Registration Details in a later step." |
+| `gross_receipts == 0` | Amber | "You have entered ₱0 for gross receipts. If you had no income this period, you are still required to file a 'no-income' return with BIR by the deadline." |
+
+---
+
+**Field: sales_returns_allowances**
+
+| Property | Value |
+|----------|-------|
+| ID | `sales_returns_allowances` |
+| Label | "Sales returns and allowances (if any)" |
+| Type | Peso |
+| Placeholder | "0.00" |
+| Default | 0 |
+| Required | No |
+| Visible When | Always |
+| Help Text | "Refunds you gave back to clients, credit memos, or discounts off the invoice price that reduce your gross receipts. Most freelancers leave this at ₱0. Do NOT enter your business expenses here — those are entered separately." |
+
+**Validation Rules:** (1) ≥ ₱0; (2) ≤ `gross_receipts`.
+**Error Messages:** (1) "Sales returns and allowances cannot be negative." (2) "Returns and allowances cannot exceed your gross receipts."
+
+---
+
+**Field: non_operating_income**
+
+| Property | Value |
+|----------|-------|
+| ID | `non_operating_income` |
+| Label | "Other business-related income (not subject to final tax)" |
+| Type | Peso |
+| Placeholder | "0.00" |
+| Default | 0 |
+| Required | No |
+| Visible When | Always (collapsed inside expandable "Additional income" section) |
+| Help Text | "Passive income from your business that is not subject to final withholding tax and is not already included in your gross receipts above. Examples: rental income from a property you own for business use, royalties from professional work where no final tax was withheld." |
+
+**Validation:** ≥ ₱0. **Error:** "Income cannot be negative."
+
+---
+
+**Field: fwt_income**
+
+| Property | Value |
+|----------|-------|
+| ID | `fwt_income` |
+| Label | "Income already subject to final withholding tax" |
+| Type | Peso |
+| Placeholder | "0.00" |
+| Default | 0 |
+| Required | No |
+| Visible When | Always (collapsed inside expandable "Additional income" section) |
+| Help Text | "Income on which the payor already withheld the FINAL tax — meaning this income is fully taxed and excluded from your income tax return computation. Examples: interest income on bank savings/time deposits (20% FWT), PCSO prize winnings (20% FWT), dividends from domestic corporations (10% FWT). This amount is excluded from the taxable base." |
+
+**Validation:** ≥ ₱0. **Error:** "Amount cannot be negative."
+
+---
+
+#### 7.7.7 Step WS-05: Compensation Income
+
+**Screen title:** "Your employment income"
+**Engine fields set:** `taxable_compensation`, `compensation_cwt`
+**Visible When:** `taxpayer_type == MIXED_INCOME`
+
+**Step introduction text:** "For mixed-income earners, your salary from employers and your business income are computed together for tax purposes. Your employer(s) already withheld income tax from your salary — enter the NET taxable compensation after all exclusions."
+
+**Field: taxable_compensation**
+
+| Property | Value |
+|----------|-------|
+| ID | `taxable_compensation` |
+| Label | "Total taxable compensation income" |
+| Type | Peso |
+| Placeholder | "0.00" |
+| Default | None (empty) |
+| Required | Yes (when WS-05 is visible) |
+| Visible When | `taxpayer_type == MIXED_INCOME` |
+| Help Text | "From your BIR Form 2316, use the amount on 'Gross Taxable Compensation Income' or Item 22 — which is your gross compensation MINUS non-taxable exclusions (SSS, PhilHealth, Pag-IBIG employee share, 13th month pay up to ₱90,000, de minimis benefits). If you have multiple employers, add up all Form 2316 amounts. Do NOT reduce by income tax withheld — that goes in the next field." |
+
+**Validation Rules:** (1) Required; (2) ≥ ₱0; (3) If `== 0`: amber advisory "You entered ₱0 for compensation. If you truly have no salary income, consider selecting 'Purely Self-Employed' instead."
+**Error Messages:** (1) "Please enter your taxable compensation. Use ₱0 if your compensation was fully excluded." (2) "Taxable compensation cannot be negative."
+
+---
+
+**Field: number_of_employers** (UI-only)
+
+| Property | Value |
+|----------|-------|
+| ID | `number_of_employers` (UI-only) |
+| Label | "How many employers did you have this year?" |
+| Type | Select |
+| Default | "1" |
+| Required | No |
+| Visible When | `taxpayer_type == MIXED_INCOME` |
+| Help Text | "If you had more than one employer in the tax year, enter the combined totals from all your Form 2316 certificates in the fields below." |
+
+**Options:** "1 employer", "2 employers", "3 or more employers". **Conditional advisory if > 1:** Amber — "With multiple employers, your total tax withheld may exceed what a single employer would withhold. Make sure you combine all Form 2316 amounts."
+
+---
+
+**Field: compensation_cwt**
+
+| Property | Value |
+|----------|-------|
+| ID | `compensation_cwt` |
+| Label | "Total income tax withheld from your salary (from all Form 2316s)" |
+| Type | Peso |
+| Placeholder | "0.00" |
+| Default | None (empty) |
+| Required | Yes (when WS-05 is visible) |
+| Visible When | `taxpayer_type == MIXED_INCOME` |
+| Help Text | "From your BIR Form 2316, use Item 33 'Total Taxes Withheld'. If you have multiple Form 2316s, add the Item 33 amounts from each. This amount credits against your total income tax due." |
+
+**Validation Rules:** (1) Required; (2) ≥ ₱0; (3) ≤ `taxable_compensation × 0.35` (soft warning, non-blocking); (4) If `compensation_cwt > taxable_compensation`: amber warning "Tax withheld exceeds your taxable compensation. Please verify your Form 2316 figures."
+**Error Messages:** (1) "Please enter the total tax withheld from your salary." (2) "Amount cannot be negative."
+
+---
+
+#### 7.7.8 Step WS-06: Expense Method Selection
+
+**Screen title:** "How would you like to handle your business expenses?"
+**Engine fields set:** `osd_elected` (preliminary), routing for WS-07A–WS-07D
+**Visible When:** `taxpayer_type == PURELY_SE` OR `taxpayer_type == MIXED_INCOME`
+
+**Step introduction text:** "To recommend the best tax method, the optimizer needs to know your business expenses. You have two options:"
+
+**Field: expense_input_method**
+
+| Property | Value |
+|----------|-------|
+| ID | `expense_input_method` (UI-only routing) |
+| Label | "How will you enter your expenses?" |
+| Type | Radio card group |
+| Default | "OSD" |
+| Required | Yes |
+| Visible When | Always (within WS-06) |
+
+**Options:**
+
+| Value | Card Title | Card Description |
+|-------|-----------|-----------------|
+| `ITEMIZED` | "Enter my actual expenses" | "I'll enter a detailed breakdown of what I spent on my business. This may save you more tax if your actual expenses exceed 40% of your income. You'll need your receipts and records." |
+| `OSD` | "Use the 40% standard deduction (easier)" | "I don't want to track individual expenses. The BIR allows you to deduct 40% of your gross income automatically — no receipts needed. Great if your expenses are below 40% of income or you don't keep detailed records." |
+| `NO_EXPENSES` | "I had no significant business expenses" | "My only income source is services billed to clients and I had no notable business costs. The tool will compute using OSD (40%) and 8% flat rate (if eligible)." |
+
+**Routing:**
+- `ITEMIZED` selected: Steps WS-07A, WS-07B, WS-07C, WS-07D added to wizard flow.
+- `OSD` or `NO_EXPENSES` selected: WS-07A–WS-07D skipped; engine receives `ItemizedExpenseInput` with all fields ₱0.
+
+**Advisory when `OSD` or `NO_EXPENSES` selected and `gross_receipts > 0`:**
+Blue info showing: "Estimated OSD deduction: ₱{gross_receipts × 0.40}. This is 40% of your gross receipts. Taxable income under OSD would be approximately ₱{(gross_receipts - sales_returns_allowances) × 0.60}."
+
+**Note shown below option cards:** "Regardless of which you choose, the optimizer will always compare all three tax methods (8%, OSD, and Itemized) and tell you which saves the most."
+
+**Validation:** Required. **Error:** "Please select how you'll enter your expenses."
+
+---
+
+#### 7.7.9 Step WS-07A: Itemized Expenses — General Business Costs
+
+**Screen title:** "Your business expenses — General costs"
+**Engine fields set:** `itemized_expenses.salaries_and_wages`, `.sss_philhealth_pagibig_employer_share`, `.rent`, `.utilities`, `.communication`, `.office_supplies`, `.professional_fees_paid`, `.travel_transportation`, `.insurance_premiums`, `.taxes_and_licenses`, `.entertainment_representation`, `.home_office_expense`, `.home_office_exclusive_use`
+**Visible When:** `expense_input_method == ITEMIZED`
+
+**Step introduction text:** "Enter the amounts you spent on your business this year. Enter ₱0 for any category that doesn't apply to you. All deductions are subject to BIR rules — the engine applies the correct caps and rules automatically."
+
+All fields below have: Type=Peso, Placeholder="0.00", Default=0, Required=No, Visible When=Always (within WS-07A). All validate: (1) ≥ ₱0. All error: "Amount cannot be negative."
+
+| Field ID | Label | Help Text |
+|----------|-------|-----------|
+| `itemized_expenses.salaries_and_wages` | "Salaries and wages paid to employees" | "Total gross salaries and wages you paid to your employees or helpers during the year. Do NOT include your own compensation." |
+| `itemized_expenses.sss_philhealth_pagibig_employer_share` | "Employer's share of SSS, PhilHealth, and Pag-IBIG contributions" | "Only the mandatory employer's share paid for your employees is deductible. The employee's share is not your expense. Your own voluntary contributions as a self-employed individual are NOT deductible under this line." |
+| `itemized_expenses.rent` | "Office or workspace rent" | "Rent paid for your dedicated office space, co-working desk, or business premises. For home offices, use the 'Home office' field instead." |
+| `itemized_expenses.utilities` | "Utilities (electricity, water — business portion)" | "Electricity and water bills attributable to your business operations. If you work from home, enter only the business-use portion." |
+| `itemized_expenses.communication` | "Communication and internet costs (business portion)" | "Phone, mobile load, and internet subscription costs for business use. If your internet is used for both personal and business purposes, enter only the business portion." |
+| `itemized_expenses.office_supplies` | "Office supplies and materials" | "Stationery, printer ink and paper, small tools, and other consumable supplies used in your business. Do NOT include computers or equipment lasting more than one year — those are depreciated." |
+| `itemized_expenses.professional_fees_paid` | "Professional fees paid to others" | "Fees paid to accountants, lawyers, consultants, subcontractors, or other professionals who helped your business. Do NOT include your own professional income here." |
+| `itemized_expenses.travel_transportation` | "Business travel and transportation" | "Transportation costs for business-related travel: fuel, parking, Grab/taxi rides to client sites, airfare and hotel for business trips within the Philippines. Personal travel is NOT deductible." |
+| `itemized_expenses.insurance_premiums` | "Business insurance premiums" | "Premiums for business insurance policies: general liability, professional indemnity, property insurance on business assets. Life insurance is deductible ONLY if the death benefit goes to the business, not to your family." |
+| `itemized_expenses.taxes_and_licenses` | "Business taxes and licenses (excluding income tax)" | "Business registration fees (barangay, municipal, city), professional tax receipts (PTR), documentary stamp taxes paid, and other taxes that are NOT income tax. Do NOT include your income tax or percentage tax here." |
+
+**Field: entertainment_representation** (additional dynamic advisory)
+
+| Property | Value |
+|----------|-------|
+| ID | `itemized_expenses.entertainment_representation` |
+| Label | "Entertainment, meals, and representation expenses" |
+| Help Text | "Client meals, entertainment costs, and gifts spent for business development. Important: the BIR limits this deduction to 1% of your net revenue (for service businesses) or 0.5% of net sales (for traders). The engine automatically computes the cap. Enter your actual spending — the engine applies the cap." |
+
+**Dynamic advisory when value > 0:** Blue info: "The BIR caps entertainment deductions at 1% of net revenue for service providers. Your estimated cap is ₱{(gross_receipts - sales_returns_allowances) × 0.01}. If you entered more than this, the engine will automatically reduce your deductible amount to the cap."
+
+---
+
+**Field: home_office_expense**
+
+| Property | Value |
+|----------|-------|
+| ID | `itemized_expenses.home_office_expense` |
+| Label | "Home office expense (monthly rent or mortgage interest)" |
+| Type | Peso |
+| Placeholder | "0.00" |
+| Default | 0 |
+| Required | No |
+| Visible When | Always (within WS-07A) |
+| Help Text | "If you work from home and have a space used exclusively for business (a dedicated room, not a shared living area), enter the business-use portion of your monthly home rent or mortgage interest × 12. Example: if your rent is ₱15,000/month and your home office is 15% of your home's total floor area, enter ₱15,000 × 12 × 0.15 = ₱27,000." |
+
+**Validation:** (1) ≥ ₱0; (2) If `> 0` AND `home_office_exclusive_use == false`: engine sets deductible to ₱0; show warning.
+
+---
+
+**Field: home_office_exclusive_use**
+
+| Property | Value |
+|----------|-------|
+| ID | `itemized_expenses.home_office_exclusive_use` |
+| Label | "Is this space used exclusively and regularly for business?" |
+| Type | Toggle (Yes / No) |
+| Default | No |
+| Required | Yes (when `home_office_expense > 0`) |
+| Visible When | `itemized_expenses.home_office_expense > 0` |
+| Help Text | "BIR requires the space to be used EXCLUSIVELY for business — meaning you do no personal activities there. A dedicated home office room qualifies. A dining table, bedroom, or shared living space does NOT qualify even if you work there regularly." |
+
+**Validation:** Required when `home_office_expense > 0`.
+**Error:** "Please indicate whether the space is used exclusively for business."
+**Advisory when `false` AND expense > 0:** Amber: "Since the space is not exclusively used for business, the BIR home office deduction does NOT apply. Your home office expense of ₱{home_office_expense} will NOT be deducted."
+
+---
+
+#### 7.7.10 Step WS-07B: Itemized Expenses — Financial and Special Items
+
+**Screen title:** "Your business expenses — Financial and special items"
+**Engine fields set:** `interest_expense`, `final_taxed_interest_income`, `casualty_theft_losses`, `bad_debts`, `is_accrual_basis`, `charitable_contributions`, `charitable_accredited`, `research_development`
+**Visible When:** `expense_input_method == ITEMIZED`
+
+**Field: interest_expense**
+
+| Property | Value |
+|----------|-------|
+| ID | `itemized_expenses.interest_expense` |
+| Label | "Interest expense on business loans" |
+| Type | Peso |
+| Placeholder | "0.00" |
+| Default | 0 |
+| Required | No |
+| Visible When | Always |
+| Help Text | "Gross interest paid on loans used for your business. Personal loans are not deductible. The BIR reduces this deduction by 33% of your interest income on bank deposits. The engine automatically applies this reduction." |
+
+**Validation:** ≥ ₱0. **Error:** "Amount cannot be negative."
+
+---
+
+**Field: final_taxed_interest_income**
+
+| Property | Value |
+|----------|-------|
+| ID | `itemized_expenses.final_taxed_interest_income` |
+| Label | "Interest income from bank deposits (subject to 20% final tax)" |
+| Type | Peso |
+| Placeholder | "0.00" |
+| Default | 0 |
+| Required | No |
+| Visible When | `itemized_expenses.interest_expense > 0` |
+| Help Text | "If you earned interest on bank savings accounts or time deposits, enter the gross interest (before the 20% withholding). This is used to compute the 33% arbitrage reduction to your interest expense deduction." |
+
+**Validation:** ≥ ₱0. **Error:** "Amount cannot be negative."
+
+**Dynamic advisory when both > 0:** Blue info: "BIR requires a reduction to your interest expense deduction: 33% × ₱{final_taxed_interest_income} = ₱{final_taxed_interest_income × 0.33} will be subtracted from the gross interest expense. Net deductible interest: ₱{interest_expense - (final_taxed_interest_income × 0.33)}."
+
+---
+
+**Field: casualty_theft_losses**
+
+| Property | Value |
+|----------|-------|
+| ID | `itemized_expenses.casualty_theft_losses` |
+| Label | "Casualty or theft losses (not covered by insurance)" |
+| Type | Peso | Placeholder | "0.00" | Default | 0 | Required | No |
+| Visible When | Always |
+| Help Text | "Losses of business property due to fire, typhoon, earthquake, flood, or theft that were NOT compensated by insurance. Only business assets qualify." |
+
+**Validation:** ≥ ₱0. **Error:** "Amount cannot be negative."
+
+---
+
+**Field: is_accrual_basis**
+
+| Property | Value |
+|----------|-------|
+| ID | `itemized_expenses.is_accrual_basis` |
+| Label | "Do you use accrual accounting?" |
+| Type | Toggle (Yes / No) |
+| Default | No |
+| Required | Yes (when bad_debts field is visible) |
+| Visible When | Always (within WS-07B) |
+| Help Text | "Accrual basis: you record income when earned (invoiced) and expenses when incurred, even if not yet paid. Cash basis: you record income and expenses only when cash changes hands. Most freelancers use cash basis. Bad debts are only deductible under accrual basis." |
+
+---
+
+**Field: bad_debts**
+
+| Property | Value |
+|----------|-------|
+| ID | `itemized_expenses.bad_debts` |
+| Label | "Bad debts written off" |
+| Type | Peso |
+| Placeholder | "0.00" |
+| Default | 0 |
+| Required | No |
+| Visible When | `is_accrual_basis == true` |
+| Help Text | "Receivables from clients that you have formally written off as uncollectible this year. The client owed you money, you previously recognized this as income (accrual basis), you made reasonable collection efforts, and you've now given up on collecting. This deduction is NOT available to cash-basis taxpayers." |
+
+**Validation Rules:** (1) ≥ ₱0; (2) If `is_accrual_basis == false` AND `bad_debts > 0`: show error.
+**Error Messages:** (1) "Amount cannot be negative." (2) "Bad debts deduction is only available to accrual-basis taxpayers. You indicated you use cash basis accounting. Please correct your accounting method selection or remove this amount."
+
+---
+
+**Field: charitable_contributions**
+
+| Property | Value |
+|----------|-------|
+| ID | `itemized_expenses.charitable_contributions` |
+| Label | "Charitable contributions and donations" |
+| Type | Peso |
+| Placeholder | "0.00" |
+| Default | 0 |
+| Required | No |
+| Visible When | Always |
+| Help Text | "Donations to BIR-accredited charitable organizations, foundations, or institutions. Capped at 10% of your taxable income before this deduction. Donations to non-accredited organizations are NOT deductible. The engine automatically applies the cap." |
+
+**Validation:** ≥ ₱0. **Error:** "Amount cannot be negative."
+
+---
+
+**Field: charitable_accredited**
+
+| Property | Value |
+|----------|-------|
+| ID | `itemized_expenses.charitable_accredited` |
+| Label | "Is the recipient a BIR-accredited charitable organization?" |
+| Type | Toggle (Yes / No) |
+| Default | No |
+| Required | Yes (when `charitable_contributions > 0`) |
+| Visible When | `itemized_expenses.charitable_contributions > 0` |
+| Help Text | "BIR-accredited organizations have a certificate of accreditation. If you're unsure, select 'No' to be safe — unaccredited donations are not deductible." |
+
+**Advisory when `false` AND contributions > 0:** Amber: "Donations to non-accredited organizations are NOT deductible under NIRC Sec. 34(H). Your charitable contribution of ₱{charitable_contributions} will be excluded from your deductions."
+**Validation:** Required when `charitable_contributions > 0`. **Error:** "Please indicate whether the charitable organization is BIR-accredited."
+
+---
+
+**Field: research_development**
+
+| Property | Value |
+|----------|-------|
+| ID | `itemized_expenses.research_development` |
+| Label | "Research and development expenses" |
+| Type | Peso |
+| Placeholder | "0.00" |
+| Default | 0 |
+| Required | No |
+| Visible When | Always |
+| Help Text | "Expenditures for research, product development, or technological innovation directly connected to your business. Must be ordinary and necessary for your business." |
+
+**Validation:** ≥ ₱0. **Error:** "Amount cannot be negative."
+
+---
+
+#### 7.7.11 Step WS-07C: Itemized Expenses — Depreciation Assets
+
+**Screen title:** "Your business assets (for depreciation)"
+**Engine fields set:** `itemized_expenses.depreciation_entries`
+**Visible When:** `expense_input_method == ITEMIZED`
+
+**Step introduction text:** "If you own business equipment, computers, furniture, or vehicles used for your work, you can deduct a portion of their cost each year as depreciation. Enter each asset separately."
+
+**Controls:**
+- "+ Add another asset" button appends a new asset entry form
+- Initial state: one asset entry form shown pre-opened
+- "Skip depreciation — I have no qualifying assets" sets `depreciation_entries = []` and proceeds
+
+**Per-asset entry fields (each instance identified by 1-based index N):**
+
+**Field: asset_name[N]**
+
+| Property | Value |
+|----------|-------|
+| ID | `itemized_expenses.depreciation_entries[N].asset_name` |
+| Label | "Asset description" |
+| Type | Text |
+| Placeholder | "e.g., MacBook Pro 2023, Office desk, Delivery motorcycle" |
+| Default | Empty |
+| Required | Yes (if entry exists) |
+| Help Text | "A descriptive name so you can identify this asset in your records." |
+
+**Validation Rules:** (1) Required; (2) At least 2 characters; (3) Maximum 100 characters.
+**Error Messages:** (1) "Please describe this asset." (2) — (3) "Asset description must be 100 characters or fewer."
+
+---
+
+**Field: asset_cost[N]**
+
+| Property | Value |
+|----------|-------|
+| ID | `itemized_expenses.depreciation_entries[N].asset_cost` |
+| Label | "Original purchase price" |
+| Type | Peso |
+| Placeholder | "0.00" |
+| Default | None |
+| Required | Yes |
+| Help Text | "The amount you paid to acquire this asset. For used assets, enter the price you paid." |
+
+**Validation Rules:** (1) Required; (2) Must be > ₱0.
+**Error Messages:** (1) "Please enter the purchase price." (2) "Purchase price must be greater than ₱0."
+
+**Dynamic advisory for vehicles:** If `asset_name` contains "car", "van", "vehicle", "truck", "SUV", "sedan", "motorcycle" (case-insensitive) AND `asset_cost > 2400000`: Amber — "Vehicle cost exceeds the BIR's ₱2,400,000 ceiling (RR 12-2012). The engine will cap the depreciation base at ₱2,400,000. The excess ₱{asset_cost - 2400000} is non-deductible."
+
+---
+
+**Field: salvage_value[N]**
+
+| Property | Value |
+|----------|-------|
+| ID | `itemized_expenses.depreciation_entries[N].salvage_value` |
+| Label | "Estimated residual value at end of useful life" |
+| Type | Peso |
+| Placeholder | "0.00" |
+| Default | 0 |
+| Required | No |
+| Help Text | "The estimated value of the asset when it's fully depreciated (e.g., scrap value). Most freelancers leave this at ₱0. For vehicles, a common estimate is ₱50,000–₱100,000." |
+
+**Validation Rules:** (1) ≥ ₱0; (2) < `asset_cost`.
+**Error Messages:** (1) "Salvage value cannot be negative." (2) "Salvage value must be less than the original purchase price."
+
+---
+
+**Field: useful_life_years[N]**
+
+| Property | Value |
+|----------|-------|
+| ID | `itemized_expenses.depreciation_entries[N].useful_life_years` |
+| Label | "Useful life (years)" |
+| Type | Select (dropdown) |
+| Default | "5" |
+| Required | Yes |
+| Help Text | "The number of years this asset is expected to be useful for your business. BIR-prescribed useful lives apply." |
+
+**Options:** 1, 2, 3 ("3 years — software, mobile phones"), 4, 5 ("5 years — computers, laptops, office equipment, cameras, vehicles"), 6, 7, 8, 9, 10 ("10 years — office furniture, heavy equipment, generators"), 15, 20, 25, 50.
+
+**BIR-prescribed useful lives reference (expandable panel below the field):**
+- Computer / laptop / tablet: 5 years
+- Mobile phone: 3 years
+- Camera / video equipment: 5 years
+- Software license (perpetual): 3 years
+- Office furniture and fixtures: 5–10 years
+- Office equipment (printer, scanner): 5 years
+- Air conditioning unit: 5–10 years
+- Generator set: 10 years
+- Delivery motorcycle: 5 years
+- Delivery van or light vehicle: 5 years
+- Heavy trucks: 10 years
+- Building improvements (leasehold): lease term or 5 years, whichever is shorter
+
+**Validation Rules:** (1) Required; (2) Integer between 1 and 50.
+**Error Messages:** (1) "Please select the useful life." (2) "Useful life must be between 1 and 50 years."
+
+---
+
+**Field: acquisition_date[N]**
+
+| Property | Value |
+|----------|-------|
+| ID | `itemized_expenses.depreciation_entries[N].acquisition_date` |
+| Label | "Date placed in service" |
+| Type | Date picker (YYYY-MM-DD) |
+| Default | None (empty) |
+| Required | Yes |
+| Help Text | "The date this asset was first used for business. If unsure of the exact date, use the first of the month of purchase." |
+
+**Validation Rules:** (1) Required; (2) Valid date; (3) ≤ December 31 of `tax_year`; (4) ≥ 1970-01-01.
+**Error Messages:** (1) "Please enter the date this asset was placed in service." (2) "Please enter a valid date in YYYY-MM-DD format." (3) "The acquisition date cannot be in the future relative to the tax year being filed."
+
+---
+
+**Field: depreciation_method[N]**
+
+| Property | Value |
+|----------|-------|
+| ID | `itemized_expenses.depreciation_entries[N].method` |
+| Label | "Depreciation method" |
+| Type | Radio buttons |
+| Default | `STRAIGHT_LINE` |
+| Required | Yes |
+| Help Text | "Straight-line divides the cost equally over the useful life. Declining balance gives higher deductions in early years. Most freelancers use straight-line for simplicity." |
+
+**Options:**
+- `STRAIGHT_LINE` — "Straight-line (recommended)" — "Equal deduction each year: (Cost − Salvage) ÷ Useful Life."
+- `DECLINING_BALANCE` — "Declining balance (double)" — "Higher deductions in early years; 2× the straight-line rate applied to the remaining book value."
+
+**Validation:** Required. **Error:** "Please select a depreciation method."
+
+---
+
+**Field: prior_accumulated_depreciation[N]**
+
+| Property | Value |
+|----------|-------|
+| ID | `itemized_expenses.depreciation_entries[N].prior_accumulated_depreciation` |
+| Label | "Prior accumulated depreciation (if asset was acquired in a previous year)" |
+| Type | Peso |
+| Placeholder | "0.00" |
+| Default | 0 |
+| Required | No |
+| Visible When | Asset entry N exists AND (`acquisition_date` year < `tax_year`) |
+| Help Text | "If you already claimed depreciation on this asset in prior years' tax returns, enter the total amount already deducted. Leave at ₱0 if this is the first year you're deducting depreciation on this asset." |
+
+**Validation Rules:** (1) ≥ ₱0; (2) < `asset_cost`.
+**Error Messages:** (1) "Prior depreciation cannot be negative." (2) "Prior accumulated depreciation cannot equal or exceed the original cost of the asset."
+
+**Delete Asset button (per entry):** "Remove this asset" — removes entry; no confirmation required.
+
+---
+
+#### 7.7.12 Step WS-07D: Itemized Expenses — NOLCO Carry-Over
+
+**Screen title:** "Net Operating Loss Carry-Over (NOLCO)"
+**Engine fields set:** `itemized_expenses.nolco_entries`
+**Visible When:** `expense_input_method == ITEMIZED`
+
+**Step introduction text:** "If your business had a net operating loss in a prior year (2022, 2023, or 2024) and you are using itemized deductions, you can carry over that loss as an additional deduction this year. This deduction is ONLY available under Itemized Deductions (not OSD or 8%)."
+
+**Skip option:** "I have no prior-year losses to carry over" → sets `nolco_entries = []` and proceeds.
+
+**Field: has_nolco**
+
+| Property | Value |
+|----------|-------|
+| ID | `has_nolco` (UI-only routing) |
+| Label | "Do you have any unused net operating losses from prior years?" |
+| Type | Toggle (Yes / No) |
+| Default | No |
+| Required | Yes |
+| Help Text | "A net operating loss occurs when your total allowable deductions exceed your gross income for the year. Under NIRC Sec. 34(D)(3), you can carry this loss forward for up to 3 years." |
+
+**Per-NOLCO entry fields (shown only when `has_nolco == true`; "+ Add another loss year" button adds entries; max 3 entries):**
+
+**Field: loss_year[N]**
+
+| Property | Value |
+|----------|-------|
+| ID | `itemized_expenses.nolco_entries[N].loss_year` |
+| Label | "Year the loss was incurred" |
+| Type | Select (dropdown) |
+| Default | `tax_year - 1` |
+| Required | Yes |
+| Help Text | "The calendar year in which your net operating loss was incurred — not the year you're carrying it over to." |
+
+**Options:** Dynamically generated — the three years prior to `tax_year` (e.g., for 2025: 2022, 2023, 2024).
+
+**Validation Rules:** (1) Required; (2) Must be between `tax_year - 3` and `tax_year - 1`; (3) No duplicate `loss_year` across entries.
+**Error Messages:** (1) "Please select the year the loss was incurred." (2) "NOLCO can only be carried over for 3 years. Loss from {loss_year} has expired and cannot be claimed in {tax_year}." (3) "You already entered a NOLCO entry for {loss_year}. Each loss year can only appear once."
+
+---
+
+**Field: original_loss[N]**
+
+| Property | Value |
+|----------|-------|
+| ID | `itemized_expenses.nolco_entries[N].original_loss` |
+| Label | "Original net operating loss amount for {loss_year}" |
+| Type | Peso |
+| Default | None |
+| Required | Yes |
+| Help Text | "The full amount of the net operating loss as reported on your {loss_year} income tax return." |
+
+**Validation:** (1) Required; (2) > ₱0. **Error:** (1) "Please enter the original loss amount." (2) "The original net operating loss must be greater than ₱0."
+
+---
+
+**Field: remaining_balance[N]**
+
+| Property | Value |
+|----------|-------|
+| ID | `itemized_expenses.nolco_entries[N].remaining_balance` |
+| Label | "Remaining undeducted balance" |
+| Type | Peso |
+| Default | Equals `original_loss` when `original_loss` is entered |
+| Required | Yes |
+| Help Text | "How much of the original loss you have NOT yet claimed. If this is the first year you're claiming it, enter the same amount as the original loss." |
+
+**Validation Rules:** (1) Required; (2) ≥ ₱0; (3) ≤ `original_loss`.
+**Error Messages:** (1) "Please enter the remaining undeducted balance." (2) "Remaining balance cannot be negative." (3) "Remaining balance cannot exceed the original loss amount."
+
+---
+
+#### 7.7.13 Step WS-08: Creditable Withholding Tax (Form 2307)
+
+**Screen title:** "Tax withheld by your clients (BIR Form 2307)"
+**Engine fields set:** `cwt_2307_entries`
+**Visible When:** Always (after WS-01; applicable to all self-employed taxpayers)
+
+**Step introduction text:** "When Philippine clients pay you for services, they are often required to withhold a portion of your fee and give you a BIR Form 2307. This withheld amount is like a tax pre-payment — you deduct it from your computed income tax due."
+
+**Field: has_2307**
+
+| Property | Value |
+|----------|-------|
+| ID | `has_2307` (UI-only routing) |
+| Label | "Did you receive any BIR Form 2307 certificates from clients this year?" |
+| Type | Toggle (Yes / No) |
+| Default | No |
+| Required | Yes |
+| Visible When | Always |
+| Help Text | "Form 2307 is a certificate your client gives you when they withhold tax. It shows: (1) the client's name and TIN, (2) the amount they paid you, (3) the rate they withheld (usually 5% or 10%), and (4) the total tax withheld. If you only worked for foreign clients or platforms that don't withhold Philippine tax, select No." |
+
+**Advisory when `has_2307 == false`:** Blue info: "If you worked through platforms like Upwork or Fiverr, check whether your payment processor (e.g., Payoneer, PayPal, GCash) issued you a Form 2307 under BIR RR 16-2023. These may withhold 1% (WI760) on remittances."
+
+**Per-2307 entry fields (shown when `has_2307 == true`; "+ Add another Form 2307" appends; max 50 entries — show error at submission if exceeded):**
+
+**Field: payor_name[N]**
+
+| Property | Value |
+|----------|-------|
+| ID | `cwt_2307_entries[N].payor_name` |
+| Label | "Client or company name (withholding agent)" |
+| Type | Text |
+| Placeholder | "e.g., Acme Corporation, Juan Santos" |
+| Default | Empty |
+| Required | Yes |
+| Help Text | "The name of the person or company that withheld the tax. This is the name on your Form 2307 as the 'Withholding Agent'." |
+
+**Validation:** (1) Required; (2) 2–200 characters. **Error:** (1) "Please enter the name of the client who withheld this tax." (2/3) "Please enter at least 2 characters." / "Name must be 200 characters or fewer."
+
+---
+
+**Field: payor_tin[N]**
+
+| Property | Value |
+|----------|-------|
+| ID | `cwt_2307_entries[N].payor_tin` |
+| Label | "Client's TIN (Tax Identification Number)" |
+| Type | Text |
+| Placeholder | "XXX-XXX-XXX-XXXX" |
+| Default | Empty |
+| Required | No |
+| Help Text | "The 9- or 12-digit TIN of the withholding agent as shown on their Form 2307. Format: 123-456-789 or 123-456-789-000. Optional — leaving this blank will not affect your tax computation." |
+
+**Validation:** If not empty: must match pattern `\d{3}-\d{3}-\d{3}(-\d{3})?`.
+**Error:** "Please enter the TIN in the format XXX-XXX-XXX or XXX-XXX-XXX-XXX (e.g., 123-456-789-000)."
+
+---
+
+**Field: atc_code[N]**
+
+| Property | Value |
+|----------|-------|
+| ID | `cwt_2307_entries[N].atc_code` |
+| Label | "ATC code (Alphanumeric Tax Code)" |
+| Type | Select with free-text fallback |
+| Default | "WI010" |
+| Required | Yes |
+| Help Text | "The ATC code tells BIR what type of income was withheld. It appears on your Form 2307 in the 'ATC' column. If you're not sure, WI010 (5–10% professional fee) is the most common for freelancers." |
+
+**Dropdown options (searchable):**
+
+| ATC | Display Label |
+|-----|--------------|
+| WI010 | "WI010 — Professional fee, individual (5% or 10%)" |
+| WI011 | "WI011 — Rental income, individual" |
+| WI157 | "WI157 — Professional fee ≥ ₱720K, individual (15%)" |
+| WI160 | "WI160 — Additional professional fees, individual (10%)" |
+| WI760 | "WI760 — E-marketplace / DFSP remittance (1%, RR 16-2023)" |
+| WC010 | "WC010 — Professional fee, corporate payee (5% or 10%)" |
+| WC760 | "WC760 — E-marketplace, corporate payee (1%)" |
+| PT010 | "PT010 — Percentage tax (3%), withheld by government" |
+| OTHER | "Other — I'll enter the code manually" |
+
+When "OTHER" selected: show free-text input with placeholder "Enter ATC code (e.g., WI162)".
+
+**ATC classification preview shown below dropdown:**
+
+| ATC | Preview Text |
+|-----|-------------|
+| WI010–WI160, WC010, WC760, WI760 | Green: "This credit will apply to your **income tax** due." |
+| PT010 | Amber: "This credit applies to your **percentage tax** (2551Q), NOT your income tax. It does not reduce your Form 1701/1701A balance." |
+| OTHER with unrecognized code | Amber: "Unrecognized ATC code — this will require manual review. The credit will be flagged and NOT automatically applied until the code is confirmed." |
+
+**Validation:** (1) Required; (2) If "OTHER": free-text field must be non-empty.
+**Error:** (1) "Please select an ATC code." (2) "Please enter the ATC code."
+
+---
+
+**Field: income_payment[N]**
+
+| Property | Value |
+|----------|-------|
+| ID | `cwt_2307_entries[N].income_payment` |
+| Label | "Gross income on which tax was withheld" |
+| Type | Peso |
+| Default | None |
+| Required | Yes |
+| Help Text | "The total amount the client paid you during this period — before they withheld tax. Found in the 'Amount of Income Payment' column of your Form 2307." |
+
+**Validation:** (1) Required; (2) > ₱0; (3) ≥ `tax_withheld`.
+**Error:** (1) "Please enter the income amount." (2) "Income payment must be greater than ₱0." (3) "The income payment cannot be less than the tax withheld."
+
+---
+
+**Field: tax_withheld[N]**
+
+| Property | Value |
+|----------|-------|
+| ID | `cwt_2307_entries[N].tax_withheld` |
+| Label | "Amount of tax withheld" |
+| Type | Peso |
+| Default | None |
+| Required | Yes |
+| Help Text | "The actual amount withheld by your client. Shown in the 'Amount of Tax Withheld' column of your Form 2307." |
+
+**Auto-hint shown when `income_payment > 0` and `atc_code` is known:**
+- WI010: "At 5%: ₱{income_payment × 0.05} | At 10%: ₱{income_payment × 0.10}"
+- WI157: "At 15%: ₱{income_payment × 0.15}"
+- WI760: "At 1% (on ½ remittance): ₱{income_payment × 0.005} (0.5% effective rate per RR 16-2023)"
+- PT010: "At 3%: ₱{income_payment × 0.03}"
+
+**Validation:** (1) Required; (2) ≥ ₱0; (3) ≤ `income_payment`.
+**Error:** (1) "Please enter the amount withheld." (2) "Tax withheld cannot be negative." (3) "Tax withheld cannot exceed the income payment amount."
+
+---
+
+**Field: period_from[N] and period_to[N]**
+
+| Property | period_from | period_to |
+|----------|------------|----------|
+| ID | `cwt_2307_entries[N].period_from` | `cwt_2307_entries[N].period_to` |
+| Label | "Period start date" | "Period end date" |
+| Type | Date picker | Date picker |
+| Default | January 1 of `tax_year` | December 31 of `tax_year` |
+| Required | Yes | Yes |
+
+**Validation:** (1) Both required; (2) `period_from` ≤ `period_to`; (3) Both dates within `tax_year`.
+**Error:** (1) "Please enter the period start/end date." (2) "Period start date cannot be after period end date." (3) "The period dates must fall within tax year {tax_year}."
+
+**Running total display (shown at bottom of WS-08 when at least one 2307 entry exists):**
+```
+┌─────────────────────────────────────────────────────┐
+│  Summary of Tax Credits from Form 2307              │
+│                                                     │
+│  Income Tax Credits (WI/WC series):    ₱XX,XXX.XX  │
+│  Percentage Tax Credits (PT010):       ₱X,XXX.XX   │
+│  Credits requiring review (unknown):   ₱X,XXX.XX   │
+│                                                     │
+│  Total Income Tax Credits:             ₱XX,XXX.XX  │
+└─────────────────────────────────────────────────────┘
+```
+
+---
+
+#### 7.7.14 Step WS-09: Prior Quarterly Payments
+
+**Screen title:** "Previous quarterly tax payments this year"
+**Engine fields set:** `prior_quarterly_payments`
+**Visible When:** `filing_period == ANNUAL` OR `filing_period == Q2` OR `filing_period == Q3`
+
+**Step introduction text:**
+- For ANNUAL: "If you made quarterly income tax payments during the year (Q1, Q2, or Q3 using Form 1701Q), enter them here. These payments will be credited against your annual tax due."
+- For Q2: "If you made a Q1 quarterly income tax payment earlier this year, enter it here. The Q2 return uses the cumulative method — your Q1 payment is credited against the Q2 tax due."
+- For Q3: "If you made Q1 and/or Q2 quarterly income tax payments earlier this year, enter them here."
+
+**Field: has_prior_payments**
+
+| Property | Value |
+|----------|-------|
+| ID | `has_prior_payments` (UI-only routing) |
+| Label | "Did you make any quarterly income tax payments this year?" |
+| Type | Toggle (Yes / No) |
+| Default | No |
+| Required | Yes |
+| Help Text | "Quarterly payments are made using BIR Form 1701Q. If this is your first time filing or you didn't file quarterly returns, select 'No'." |
+
+**Available entry slots (shown when `has_prior_payments == true`):**
+- ANNUAL: Q1, Q2, Q3 entries
+- Q2: Q1 entry only
+- Q3: Q1 and Q2 entries
+
+**Per-quarter fields (Q1 shown; Q2 and Q3 follow same pattern with respective labels):**
+
+| Field ID | Label | Type | Default | Visible When |
+|----------|-------|------|---------|-------------|
+| `prior_quarterly_payments[Q1].amount_paid` | "Q1 payment made (January–March)" | Peso | 0 | `has_prior_payments == true` AND filing_period allows Q1 |
+| `prior_quarterly_payments[Q1].date_paid` | "Q1 payment date" | Date picker | None | `amount_paid[Q1] > 0` |
+| `prior_quarterly_payments[Q2].amount_paid` | "Q2 payment made (January–June)" | Peso | 0 | `has_prior_payments == true` AND Q2/Q3/ANNUAL |
+| `prior_quarterly_payments[Q2].date_paid` | "Q2 payment date" | Date picker | None | `amount_paid[Q2] > 0` |
+| `prior_quarterly_payments[Q3].amount_paid` | "Q3 payment made (January–September)" | Peso | 0 | `has_prior_payments == true` AND ANNUAL |
+| `prior_quarterly_payments[Q3].date_paid` | "Q3 payment date" | Date picker | None | `amount_paid[Q3] > 0` |
+
+Help text for amount fields: "The net amount you actually paid to BIR for your QN 1701Q return. This is the payment amount, not the computed tax — enter the actual amount remitted."
+**Validation:** amount ≥ ₱0. **Error:** "Payment amount cannot be negative."
+
+---
+
+#### 7.7.15 Step WS-10: Registration and VAT Status
+
+**Screen title:** "Your BIR registration details"
+**Engine fields set:** `is_vat_registered`, `is_bmbe_registered`, `subject_to_sec_117_128`
+**Visible When:** Always (after WS-01; all self-employed taxpayers)
+
+**Field: is_bir_registered** (UI-only)
+
+| Property | Value |
+|----------|-------|
+| ID | `is_bir_registered` (UI-only) |
+| Label | "Are you registered with BIR?" |
+| Type | Radio buttons |
+| Default | "Yes" |
+| Required | Yes |
+| Options | `YES` — "Yes — I have a TIN and Certificate of Registration (Form 2303)"; `PLANNING` — "Not yet — I'm planning to register" |
+| Help Text | "BIR registration means you have a TIN and a Certificate of Registration (COR)." |
+
+**Advisory when `PLANNING` selected:** Amber — "BIR registration is required if your annual income from business or profession exceeds ₱250,000. This tool can still estimate your taxes. Note that you may be subject to penalties for late registration."
+
+---
+
+**Field: is_vat_registered**
+
+| Property | Value |
+|----------|-------|
+| ID | `is_vat_registered` |
+| Label | "Are you VAT-registered?" |
+| Type | Radio buttons |
+| Default | "No" |
+| Required | Yes |
+| Help Text | "VAT registration is mandatory if your annual gross sales exceed ₱3,000,000. The 8% flat rate option is NOT available to VAT-registered taxpayers." |
+
+**Options:**
+- `NO` — "No — I am not VAT-registered (Non-VAT)" — Path C (8%) may be available; 3% percentage tax applies if gross < ₱3M
+- `YES` — "Yes — I am VAT-registered" — Path C blocked; only Paths A and B available
+
+**Advisories:**
+- `YES` selected: Orange — "VAT-registered taxpayers cannot use the 8% flat rate option. The optimizer will compare only Graduated + OSD (Path B) vs Graduated + Itemized Deductions (Path A)."
+- `NO` selected AND `gross_receipts > 3000000`: Orange — "Your gross receipts of ₱{gross_receipts} exceed ₱3,000,000. You may be required to register for VAT. Operating above the VAT threshold without VAT registration may result in BIR penalties."
+
+---
+
+**Field: is_bmbe_registered**
+
+| Property | Value |
+|----------|-------|
+| ID | `is_bmbe_registered` |
+| Label | "Are you registered as a Barangay Micro Business Enterprise (BMBE)?" |
+| Type | Toggle (Yes / No) |
+| Default | No |
+| Required | Yes |
+| Visible When | Always (collapsed inside expandable "Special registrations" section) |
+| Help Text | "BMBE registration (under RA 9178) exempts micro businesses with total assets of ₱3,000,000 or less from income tax. If you are BMBE-registered with a valid BMBE certificate, your income tax due is ₱0 regardless of income." |
+
+**Advisory when `YES` selected:** Green — "BMBE-registered businesses are exempt from income tax under RA 9178. The engine will return ₱0 income tax for all paths. You still have percentage tax obligations (3%) if non-VAT registered."
+
+---
+
+**Field: subject_to_sec_117_128**
+
+| Property | Value |
+|----------|-------|
+| ID | `subject_to_sec_117_128` |
+| Label | "Is your business subject to special percentage taxes (e.g., telecom, transport, electricity, gas, water, franchise)?" |
+| Type | Toggle (Yes / No) |
+| Default | No |
+| Required | Yes |
+| Visible When | Always (collapsed inside expandable "Special registrations" section) |
+| Help Text | "Certain industries pay industry-specific percentage taxes under NIRC Sections 117–128 instead of the general 3% percentage tax under Section 116. Most freelancers and professionals select 'No'." |
+
+**Advisory when `YES` selected:** Amber — "Industry-specific percentage taxes (Sec. 117–128) disqualify you from the 8% flat rate option. The engine will compute Paths A and B only."
+
+---
+
+#### 7.7.16 Step WS-11: Regime Election
+
+**Screen title:** "Have you elected a specific tax method?"
+**Engine fields set:** `elected_regime`
+**Visible When:** Always (for PURELY_SE and MIXED_INCOME taxpayers)
+
+**Field: elected_regime**
+
+| Property | Value |
+|----------|-------|
+| ID | `elected_regime` |
+| Label | "Which best describes your situation?" |
+| Type | Radio card group |
+| Default | null (Optimizer mode) |
+| Required | Yes |
+| Help Text | "Your 'election' is how you formally told BIR which tax method you're using. The 8% option must be elected on your first quarterly return (Q1 1701Q). If you're not sure what you elected, select 'I want the optimizer to recommend the best method'." |
+
+**Options:**
+
+| Value | Card Title | Card Description |
+|-------|-----------|-----------------|
+| `null` | "Show me the best option (Optimizer Mode)" | "I want the tool to compute all applicable methods and recommend the one that saves me the most. Best for planning or first-time filers." |
+| `ELECT_EIGHT_PCT` | "I elected the 8% flat rate" | "I formally elected the 8% flat rate on my Q1 1701Q return (or first quarterly return)." |
+| `ELECT_OSD` | "I elected the graduated method + 40% OSD" | "I use the standard 40% deduction without tracking individual expenses." |
+| `ELECT_ITEMIZED` | "I elected the graduated method + itemized deductions" | "I track my actual business expenses and claim them as deductions." |
+
+**Blocking advisories for `ELECT_EIGHT_PCT`:**
+- If `is_vat_registered == true`: Error — "You indicated you are VAT-registered. The 8% flat rate is NOT available to VAT-registered taxpayers. Please change your election to Graduated + OSD or Graduated + Itemized, or go back and correct your VAT registration status."
+- If `gross_receipts > 3000000`: Error — "Your gross receipts exceed ₱3,000,000. The 8% flat rate option is only available to taxpayers with gross receipts at or below ₱3,000,000. Please change your election."
+- If `is_gpp_partner == true`: Error — "GPP partners cannot elect the 8% flat rate. Please change your election."
+
+**Advisory when `null` (optimizer) selected:** Blue — "The optimizer will compute all eligible methods and present a three-way comparison. You are not locked into the recommendation — it's for planning only."
+
+**Validation:** Required. If `ELECT_EIGHT_PCT` and any blocking condition, wizard blocks advancement.
+**Error:** "Please select your regime election status."
+
+---
+
+#### 7.7.17 Step WS-12: Filing Details and Return Type
+
+**Screen title:** "Filing details"
+**Engine fields set:** `return_type`, `prior_payment_for_return`, `actual_filing_date`
+**Visible When:** Always (final data step before results)
+
+**Field: return_type**
+
+| Property | Value |
+|----------|-------|
+| ID | `return_type` |
+| Label | "Is this an original or amended return?" |
+| Type | Radio buttons |
+| Default | `ORIGINAL` |
+| Required | Yes |
+| Options | `ORIGINAL` — "Original — I am filing this for the first time"; `AMENDED` — "Amended — I am correcting a previously filed return" |
+| Help Text | "Original: you are filing this return for the first time. Amended: you are correcting a return you already filed. Amendments must be filed within 3 years of the original due date." |
+
+---
+
+**Field: prior_payment_for_return**
+
+| Property | Value |
+|----------|-------|
+| ID | `prior_payment_for_return` |
+| Label | "Amount already paid on your original return" |
+| Type | Peso |
+| Placeholder | "0.00" |
+| Default | 0 |
+| Required | No |
+| Visible When | `return_type == AMENDED` |
+| Help Text | "If you already paid tax when you filed the original return, enter that amount here. It will be credited against the amended balance." |
+
+**Validation:** ≥ ₱0. **Error:** "Prior payment cannot be negative."
+
+---
+
+**Field: is_late_filing**
+
+| Property | Value |
+|----------|-------|
+| ID | `is_late_filing` (UI-only routing) |
+| Label | "Are you filing after the deadline?" |
+| Type | Toggle (Yes / No) |
+| Default | No |
+| Required | Yes |
+| Help Text | "Deadlines: Annual ITR — April 15. Q1 — May 15. Q2 — August 15. Q3 — November 15. If you are filing after your deadline, select 'Yes' to compute penalties (surcharge, interest, and compromise penalty)." |
+
+---
+
+**Field: actual_filing_date**
+
+| Property | Value |
+|----------|-------|
+| ID | `actual_filing_date` |
+| Label | "Actual (or planned) filing date" |
+| Type | Date picker |
+| Default | Today's date |
+| Required | Yes (when `is_late_filing == true`) |
+| Visible When | `is_late_filing == true` |
+| Help Text | "Enter today's date if you are computing penalties as of today. Enter a future date if you want to estimate penalties for filing on a future date." |
+
+**Validation Rules:** (1) Required; (2) Valid date; (3) Must be after the deadline for the selected `filing_period` and `tax_year`.
+**Error Messages:** (1) "Please enter the filing date." (2) "Please enter a valid date." (3) "The date you entered is on or before the deadline for this return. If you are filing on time, select 'No' for late filing."
+
+---
+
+#### 7.7.18 Step WS-13: Prior Year Carry-Over Credits
+
+**Screen title:** "Prior year carry-over tax credits"
+**Engine fields set:** `prior_year_excess_cwt`
+**Visible When:** `filing_period == ANNUAL`
+
+**Field: has_prior_year_carryover**
+
+| Property | Value |
+|----------|-------|
+| ID | `has_prior_year_carryover` (UI-only routing) |
+| Label | "Did you carry over an excess tax credit from last year's annual return?" |
+| Type | Toggle (Yes / No) |
+| Default | No |
+| Required | Yes |
+| Help Text | "If your tax credits (from CWT and quarterly payments) exceeded your income tax due on last year's annual return and you elected 'Carry Over' as your overpayment disposition, you have a credit to apply this year. You can find this on your prior year's Form 1701 or 1701A under 'Tax Credit Carried Over'." |
+
+---
+
+**Field: prior_year_excess_cwt**
+
+| Property | Value |
+|----------|-------|
+| ID | `prior_year_excess_cwt` |
+| Label | "Amount of credit carried over from prior year" |
+| Type | Peso |
+| Placeholder | "0.00" |
+| Default | 0 |
+| Required | Yes (when `has_prior_year_carryover == true`) |
+| Visible When | `has_prior_year_carryover == true` |
+| Help Text | "The exact peso amount shown as 'Carry Over' or 'Credit to be Applied Next Year' on your prior year's annual ITR. This reduces your current year's income tax balance payable." |
+
+**Validation Rules:** (1) Required when visible; (2) ≥ ₱0.
+**Error Messages:** (1) "Please enter the carry-over credit amount." (2) "Credit amount cannot be negative."
+
+---
+
+#### 7.7.19 Step Routing Matrix
+
+| Step | Annual PURELY_SE OSD/8% | Annual PURELY_SE Itemized | Annual MIXED_INCOME | Quarterly Q1 | Quarterly Q2/Q3 | Late Filing |
+|------|:---:|:---:|:---:|:---:|:---:|:---:|
+| WS-00 Mode Selection | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| WS-01 Taxpayer Profile | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| WS-02 Business Type | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| WS-03 Tax Year & Period | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| WS-04 Gross Receipts | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| WS-05 Compensation | — | — | ✓ | Mixed only | Mixed only | Mixed only |
+| WS-06 Expense Method | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| WS-07A Gen. Expenses | — | ✓ | ✓ if itemized | ✓ if itemized | ✓ if itemized | ✓ if itemized |
+| WS-07B Financial Items | — | ✓ | ✓ if itemized | ✓ if itemized | ✓ if itemized | ✓ if itemized |
+| WS-07C Depreciation | — | ✓ | ✓ if itemized | ✓ if itemized | ✓ if itemized | ✓ if itemized |
+| WS-07D NOLCO | — | ✓ | ✓ if itemized | ✓ if itemized | ✓ if itemized | ✓ if itemized |
+| WS-08 Form 2307 CWT | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| WS-09 Prior Qtly Pmts | ✓ | ✓ | ✓ | — | ✓ Q2/Q3 | ✓ if annual |
+| WS-10 Registration/VAT | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| WS-11 Regime Election | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| WS-12 Filing Details | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| WS-13 Prior Year Credits | ✓ | ✓ | ✓ | — | — | ✓ if annual |
+
+---
+
+#### 7.7.20 Global Validation Constraints
+
+Checked at "See My Results" click (cross-field, in addition to per-step validation):
+
+| ID | Rule | Error Message |
+|----|------|--------------|
+| GV-01 | `gross_receipts >= sales_returns_allowances` | "Sales returns (₱{sales_returns_allowances}) cannot exceed gross receipts (₱{gross_receipts}). Please correct your income figures." |
+| GV-02 | `cost_of_goods_sold <= gross_receipts` | "Cost of goods sold (₱{cost_of_goods_sold}) cannot exceed your gross receipts (₱{gross_receipts}). If your costs exceeded revenue, you have a gross loss — verify your numbers." |
+| GV-03 | If `MIXED_INCOME`: `taxable_compensation > 0` | "Mixed-income earners must have compensation income greater than ₱0. If you have no salary income, change your taxpayer type to 'Purely Self-Employed'." |
+| GV-04 | If `PURELY_SE`: `taxable_compensation == 0` | "Purely self-employed taxpayers should have ₱0 compensation income. If you have a salary, change your taxpayer type to 'Mixed Income'." |
+| GV-05 | `compensation_cwt <= taxable_compensation` (soft/amber, non-blocking) | Advisory: "Tax withheld (₱{compensation_cwt}) exceeds compensation (₱{taxable_compensation}). Verify your Form 2316 figures." |
+| GV-06 | Each DepreciationEntry: `salvage_value < asset_cost` | "For asset '{asset_name}': salvage value (₱{salvage_value}) must be less than purchase price (₱{asset_cost})." |
+| GV-07 | Each DepreciationEntry: `prior_accumulated_depreciation < asset_cost` | "For asset '{asset_name}': prior depreciation (₱{prior_accumulated_depreciation}) cannot equal or exceed the purchase price." |
+| GV-08 | Each Form2307Entry: `tax_withheld <= income_payment` | "For Form 2307 from {payor_name}: tax withheld (₱{tax_withheld}) cannot exceed income payment (₱{income_payment})." |
+| GV-09 | Each Form2307Entry: `period_from <= period_to` | "For Form 2307 from {payor_name}: period start date cannot be after period end date." |
+| GV-10 | Each NolcoEntry: `remaining_balance <= original_loss` | "For NOLCO from {loss_year}: remaining balance cannot exceed the original loss." |
+| GV-11 | `ELECT_EIGHT_PCT` AND `is_vat_registered == true` | "You elected the 8% flat rate but you are VAT-registered. The 8% option is not available to VAT-registered taxpayers. Please change your election." |
+| GV-12 | `ELECT_EIGHT_PCT` AND `gross_receipts > 3000000` | "You elected the 8% flat rate but your gross receipts exceed ₱3,000,000. The 8% option is only available at or below the ₱3,000,000 threshold." |
+| GV-13 | If `is_late_filing == true`: `actual_filing_date` must be after deadline | "The filing date you entered ({actual_filing_date}) is on or before the deadline for this return. Change 'Are you filing late?' to 'No' or enter a later date." |
+| GV-14 | Each NolcoEntry: no duplicate `loss_year` values | "You have two NOLCO entries for {loss_year}. Each loss year can only appear once." |
+| GV-15 | Each QuarterlyPayment: `amount_paid >= 0` | "Quarterly payment amounts cannot be negative." |
+| GV-16 | `prior_year_excess_cwt >= 0` | "Prior year carry-over credit cannot be negative." |
+| GV-17 | `bad_debts > 0` AND `is_accrual_basis == false` | "Bad debts deduction requires accrual-basis accounting. You indicated you use cash basis. Please correct your accounting method or remove the bad debts amount." |
+| GV-18 | `home_office_expense > 0` AND `home_office_exclusive_use == false` (soft/amber, non-blocking) | Advisory: "Home office deduction requires exclusive business use of the space. Since you indicated mixed use, the engine will set the home office deduction to ₱0." |
+| GV-19 | `prior_quarterly_payments` length ≤ 3 | "Cannot enter more than 3 quarterly payment entries (Q1, Q2, Q3)." |
+| GV-20 | `cwt_2307_entries` length ≤ 50 | "Maximum 50 Form 2307 entries allowed. Please combine multiple forms from the same payor into a single entry." |
+
+---
+
+#### 7.7.21 Dynamic Advisories and Contextual Guidance
+
+Real-time advisories computed client-side as user fills the wizard. These do NOT block form submission — informational only.
+
+| ID | Trigger Condition | Type | Advisory Text |
+|----|------------------|------|--------------|
+| DA-01 | `0 < gross_receipts <= 250000` | Amber | "Your income is at or below ₱250,000. Under the 8% flat rate, your income tax is ₱0 — you are fully covered by the ₱250,000 exemption. You still need to file a return with BIR." |
+| DA-02 | `gross_receipts > 3000000` AND not VAT-registered | Orange | "Gross receipts exceed ₱3,000,000. The 8% flat rate is unavailable. Consider speaking with a CPA about VAT registration obligations." |
+| DA-03 | `is_vat_registered == true` | Orange | "VAT-registered taxpayers cannot use the 8% flat rate. Only Paths A and B will be computed." |
+| DA-04 | `is_bmbe_registered == true` | Green | "BMBE-registered businesses are exempt from income tax. All paths will show ₱0 income tax due." |
+| DA-05 | `is_gpp_partner == true` | Amber | "GPP partners cannot use the 8% flat rate. The computation will be limited to Paths A and B, with certain items flagged for manual review." |
+| DA-06 | `expense_input_method == ITEMIZED` AND sum of expense fields < `gross_receipts × 0.40` | Blue | "Your itemized expenses total ₱{total_itemized}. This is less than the 40% OSD (₱{osd_amount}). Unless your receipts include more expenses not yet entered, the OSD method may save you more." |
+| DA-07 | `expense_input_method == ITEMIZED` AND sum of expense fields > `gross_receipts × 0.40` | Green | "Your itemized expenses total ₱{total_itemized}, which exceeds the 40% OSD (₱{osd_amount}). Itemized deductions may give you a better result if you have documentation." |
+| DA-08 | Sum of income-tax-type CWT credits > estimated income tax under best regime | Blue | "Your CWT credits (₱{total_cwt}) may exceed your estimated income tax due. You may have an overpayment. The results screen will show your options: carry over, refund, or TCC." |
+| DA-09 | `return_type == AMENDED` | Amber | "Amended returns must be filed within 3 years of the original due date. For tax year {tax_year}, the last date to amend is April 15, {tax_year + 4}. Verify that this deadline has not passed." |
+| DA-10 | `filing_period == ANNUAL` AND `prior_quarterly_payments` is empty | Blue | "You have not entered any quarterly tax payments. If you filed quarterly returns (1701Q) for Q1, Q2, or Q3, those payments reduce your annual balance. Go back to add them if applicable." |
+| DA-11 | Any 2307 entry has `atc_code == PT010` | Amber | "Form 2307 with ATC PT010 is a percentage tax credit — it applies to your 2551Q percentage tax, NOT your income tax. This will be shown separately in your results." |
+| DA-12 | `is_late_filing == true` | Orange | "Late filing penalties will be computed and shown in your results. Penalties include: surcharge, interest (6% or 12% per annum depending on your tier), and a compromise penalty." |
+| DA-13 | `tax_year <= 2022` | Blue | "You are computing for tax year {tax_year}. Older rate tables apply. Verify your results against BIR issuances for that year." |
+| DA-14 | All `cwt_2307_entries` have `atc_code == WI760` | Blue | "All your Form 2307 entries use WI760 (RR 16-2023 platform withholding). This is correct for Upwork/Fiverr payments via Payoneer or GCash. The 1% rate applies on half the remittance amount (0.5% effective rate)." |
+
+---
+
 ## 8. Design System
 
 ### 8.1 CSS Custom Properties — `src/index.css`
