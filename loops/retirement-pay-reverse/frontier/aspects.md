@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 55
-- Analyzed: 16
-- Pending: 39
-- Convergence: 29%
+- Analyzed: 17
+- Pending: 38
+- Convergence: 31%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -29,7 +29,7 @@ Depends on Wave 1 sources being cached.
 - [x] separation-pay-interaction — Art. 298 authorized causes overlap, pay-the-higher rule, dual entitlement scenarios
 - [x] company-plan-comparison-rules — How statutory minimum compares to company plans, which prevails, gap calculation
 - [x] death-before-retirement — Heirs' entitlement to retirement pay as if employee retired on date of death
-- [ ] batch-computation-rules — CSV input schema, per-employee computation, aggregation rules, summary statistics
+- [x] batch-computation-rules — CSV input schema, per-employee computation, aggregation rules, summary statistics
 - [ ] nlrc-worksheet-format — NLRC money claim statement of computation format, required fields, exhibit structure
 - [ ] edge-cases-catalog — Company transfers, contractual vs regular employees, CBA retirement provisions, DOLE exemptions
 
@@ -111,3 +111,4 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 - separation-pay-interaction (Wave 2) — 2026-03-06
 - company-plan-comparison-rules (Wave 2) — 2026-03-06
 - death-before-retirement (Wave 2) — 2026-03-06
+- batch-computation-rules (Wave 2) — 2026-03-06
