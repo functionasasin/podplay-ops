@@ -22,9 +22,9 @@ export type Quarter = 1 | 2 | 3;
 // ============================================================================
 
 export type TaxpayerType =
-  | 'PURELY_SE'
-  | 'MIXED_INCOME'
-  | 'COMPENSATION_ONLY';
+  | 'PURELY_SE'           // Rust: PurelySe
+  | 'MIXED_INCOME'        // Rust: MixedIncome
+  | 'COMPENSATION_ONLY';  // Rust: CompensationOnly
 
 export const TAXPAYER_TYPES: readonly TaxpayerType[] = [
   'PURELY_SE', 'MIXED_INCOME', 'COMPENSATION_ONLY',
@@ -36,64 +36,89 @@ export const TAXPAYER_TIERS: readonly TaxpayerTier[] = [
   'MICRO', 'SMALL', 'MEDIUM', 'LARGE',
 ];
 
-/** Q4 is NOT a valid FilingPeriod for ITR. */
+/** Engine input: the period this computation covers. Q4 is NOT a valid FilingPeriod for ITR. */
 export type FilingPeriod = 'Q1' | 'Q2' | 'Q3' | 'ANNUAL';
 
 export const FILING_PERIODS: readonly FilingPeriod[] = ['Q1', 'Q2', 'Q3', 'ANNUAL'];
 
+/** Derived output — more granular than TaxpayerType. */
+export type IncomeType =
+  | 'PURELY_SE'
+  | 'MIXED_INCOME'
+  | 'COMPENSATION_ONLY'
+  | 'ZERO_INCOME';
+
+export type TaxpayerClass = 'SERVICE_PROVIDER' | 'TRADER';
+
+export type RegimePath = 'PATH_A' | 'PATH_B' | 'PATH_C';
+
+export const REGIME_PATHS: readonly RegimePath[] = ['PATH_A', 'PATH_B', 'PATH_C'];
+
+/**
+ * User's explicit regime election (input only).
+ * null = optimizer mode — engine recommends best path.
+ */
 export type RegimeElection =
-  | 'ELECT_ITEMIZED'
+  | 'ELECT_EIGHT_PCT'
   | 'ELECT_OSD'
-  | 'ELECT_EIGHT_PERCENT';
+  | 'ELECT_ITEMIZED';
 
-export const REGIME_ELECTIONS: readonly RegimeElection[] = [
-  'ELECT_ITEMIZED', 'ELECT_OSD', 'ELECT_EIGHT_PERCENT',
-];
+export type DeductionMethod = 'ITEMIZED' | 'OSD' | 'NONE';
 
-export type TaxPath = 'PATH_A' | 'PATH_B' | 'PATH_C';
-
-export const TAX_PATHS: readonly TaxPath[] = ['PATH_A', 'PATH_B', 'PATH_C'];
-
-export type FormType =
-  | 'Form1701A'
-  | 'Form1701'
-  | 'Form1701Q'
-  | 'Form2551Q';
-
-export const FORM_TYPES: readonly FormType[] = [
-  'Form1701A', 'Form1701', 'Form1701Q', 'Form2551Q',
-];
+export type BalanceDisposition =
+  | 'BALANCE_PAYABLE'
+  | 'ZERO_BALANCE'
+  | 'OVERPAYMENT';
 
 export type ReturnType = 'ORIGINAL' | 'AMENDED';
 
-export const RETURN_TYPES: readonly ReturnType[] = ['ORIGINAL', 'AMENDED'];
+/**
+ * Which ITR form to file.
+ * IMPORTANT: Uses SCREAMING_SNAKE_CASE WITHOUT underscore before A/Q.
+ * "FORM_1701A" not "FORM_1701_A" — distinct from FormOutputUnion.formVariant tag.
+ */
+export type FormType = 'FORM_1701' | 'FORM_1701A' | 'FORM_1701Q';
 
-export type OverpaymentPreferenceInput = 'REFUND' | 'CARRY_OVER' | 'ISSUANCE_OF_TAX_CREDIT';
+export type CwtClassification =
+  | 'INCOME_TAX_CWT'
+  | 'PERCENTAGE_TAX_CWT'
+  | 'UNKNOWN';
 
-export const OVERPAYMENT_PREFERENCES: readonly OverpaymentPreferenceInput[] = [
-  'REFUND', 'CARRY_OVER', 'ISSUANCE_OF_TAX_CREDIT',
-];
+export type DepreciationMethod = 'STRAIGHT_LINE' | 'DECLINING_BALANCE';
 
-export type IncomeType =
-  | 'SELF_EMPLOYMENT'
-  | 'PROFESSIONAL'
-  | 'MIXED'
-  | 'COMPENSATION';
+/**
+ * Overpayment handling.
+ * PENDING_ELECTION is engine OUTPUT only — never valid as user input.
+ * Input must be CARRY_OVER | REFUND | TCC | null.
+ */
+export type OverpaymentDisposition =
+  | 'CARRY_OVER'
+  | 'REFUND'
+  | 'TCC'
+  | 'PENDING_ELECTION';
 
-export type BusinessType =
-  | 'TRADE_OR_BUSINESS'
-  | 'PRACTICE_OF_PROFESSION'
-  | 'BOTH';
+/** Valid input values for overpayment_preference (excludes PENDING_ELECTION). */
+export type OverpaymentPreferenceInput = 'CARRY_OVER' | 'REFUND' | 'TCC';
 
-export const BUSINESS_TYPES: readonly BusinessType[] = [
-  'TRADE_OR_BUSINESS', 'PRACTICE_OF_PROFESSION', 'BOTH',
-];
+// ============================================================================
+// Shared Small Structs
+// ============================================================================
 
-export type ExpenseMethod = 'ITEMIZED' | 'OSD';
+/** Non-fatal issue from PL-01 input validation or PL-04 eligibility check. */
+export interface ValidationWarning {
+  code: string;       // e.g., "WARN-001"
+  message: string;    // user-facing text
+  severity: 'WARNING' | 'INFO';
+}
 
-export const EXPENSE_METHODS: readonly ExpenseMethod[] = ['ITEMIZED', 'OSD'];
-
-export type FilingStatus = 'DRAFT' | 'COMPUTED' | 'FINALIZED' | 'ARCHIVED';
+/** Item requiring human judgment (engine cannot fully resolve). */
+export interface ManualReviewFlag {
+  code: string;         // e.g., "MRF-010"
+  title: string;        // short title
+  message: string;      // full user-facing description
+  fieldAffected: string; // which input field triggered this
+  engineAction: string;  // what the engine did in lieu of judgment
+}
 
 // ============================================================================
 // WasmResult Envelope
@@ -115,8 +140,8 @@ export type WasmResult<T> = WasmOk<T> | WasmError;
 
 /** Single error from the engine (validation or computation failure). */
 export interface EngineError {
-  code: string;
-  message: string;
-  field: string | null;
-  severity: 'ERROR' | 'WARNING';
+  code: string;          // "VAL-001", "ERR-001", "PARSE_ERROR", etc.
+  message: string;       // user-facing message
+  field: string | null;  // camelCase field name or null if not field-specific
+  severity: 'ERROR' | 'WARNING' | 'INFO';
 }

@@ -1,0 +1,9 @@
+Stage 6 complete — 2026-03-06
+
+TypeScript types fully implemented per spec §5.
+- src/types/common.ts: 14 enums as string literal unions + as-const arrays, ValidationWarning, ManualReviewFlag, WasmResult envelope, EngineError
+- src/types/engine-input.ts: TaxpayerInput (25 fields), ItemizedExpenseInput (23 fields), Form2307Entry, QuarterlyPayment, NolcoEntry, DepreciationEntry, createDefaultTaxpayerInput()
+- src/types/engine-output.ts: TaxComputationResult, PathAResult/PathBResult/PathCResult, FormOutputUnion (adjacently-tagged discriminated union), Form1701Output/Form1701AOutput/Form1701QOutput/Form2551QOutput (full field specs), all support types
+- src/types/org.ts: Organization, OrganizationMember, ROLE_PERMISSIONS per spec §5.4
+
+npx tsc --noEmit passes with zero errors.

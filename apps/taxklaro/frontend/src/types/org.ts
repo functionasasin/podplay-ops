@@ -1,32 +1,26 @@
-import type { ISODate, FilingStatus } from './common';
-
-export type OrgPlan = 'solo' | 'team' | 'firm';
+export type OrgRole = 'admin' | 'accountant' | 'staff' | 'readonly';
+export type OrgPlan = 'free' | 'pro' | 'enterprise';
 
 export interface Organization {
   id: string;
   name: string;
+  slug: string;
   plan: OrgPlan;
-  logoUrl: string | null;
-  createdAt: ISODate;
+  seatLimit: number;
+  createdAt: string;
 }
 
-export interface UserProfile {
-  id: string;
-  email: string;
-  fullName: string | null;
-  orgId: string | null;
-  role: 'owner' | 'admin' | 'member';
-}
-
-export interface Computation {
+export interface OrganizationMember {
   id: string;
   orgId: string;
-  title: string;
-  status: FilingStatus;
-  inputData: Record<string, unknown>;
-  outputData: Record<string, unknown> | null;
-  shareToken: string | null;
-  shareEnabled: boolean;
-  createdAt: ISODate;
-  updatedAt: ISODate;
+  userId: string;
+  role: OrgRole;
+  joinedAt: string;
 }
+
+export const ROLE_PERMISSIONS: Record<OrgRole, { canInvite: boolean; canEdit: boolean; canDelete: boolean; canExportPdf: boolean }> = {
+  admin: { canInvite: true, canEdit: true, canDelete: true, canExportPdf: true },
+  accountant: { canInvite: false, canEdit: true, canDelete: false, canExportPdf: true },
+  staff: { canInvite: false, canEdit: true, canDelete: false, canExportPdf: false },
+  readonly: { canInvite: false, canEdit: false, canDelete: false, canExportPdf: false },
+};
