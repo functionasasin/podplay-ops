@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 57
-- Analyzed: 51
-- Pending: 6
-- Convergence: 89%
+- Analyzed: 52
+- Pending: 5
+- Convergence: 91%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -70,7 +70,7 @@
 ### Wave 5: Ship & Polish
 - [x] ship-deployment — Fly.io config, Dockerfile, nginx.conf, env vars, Supabase Cloud setup
 - [x] ship-seed-data — Complete seed data: all ~50 hardware items, BOM templates, checklist templates, pricing defaults, VLAN reference, troubleshooting pairs, ISP speed chart, contacts
-- [ ] ship-testing — Test strategy: key test files, smoke tests, form validation tests, BOM generation tests, cost analysis tests
+- [x] ship-testing — Test strategy: key test files, smoke tests, form validation tests, BOM generation tests, cost analysis tests
 
 ### Wave 6: Synthesis & Audit
 - [ ] audit-completeness — Verify every MRP sheet (all 24) has a webapp equivalent, every deployment appendix (A-F) is covered, no workflow gaps
