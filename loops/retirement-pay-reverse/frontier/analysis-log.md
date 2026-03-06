@@ -29,3 +29,4 @@
 | 25 | test-vectors | 3 | 2026-03-06 | analysis/test-vectors.md |
 | 26 | invariants | 3 | 2026-03-06 | analysis/invariants.md |
 | 27 | wasm-export-signature | 4 | 2026-03-06 | analysis/wasm-export-signature.md |
+| 28 | serde-wire-format | 4 | 2026-03-06 | analysis/serde-wire-format.md |
