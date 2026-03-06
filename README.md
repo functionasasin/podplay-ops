@@ -2,12 +2,9 @@
 
 A personal operating system disguised as a git repo. Everything I need to remember, track, plan, or automate lives here — organized into a 1,036-entity knowledge graph that keeps getting smarter on its own.
 
-Two systems write to it continuously:
+**Ralph loops** — autonomous Claude Code jobs that run on 30-minute crons — write to it continuously. Reverse loops analyze a problem into a spec. Forward loops build the spec into code. 7 loops total, 4 active right now.
 
-1. **OpenClaw** — an always-on Telegram bot (Fly.io). I message it with meeting notes, decisions, random updates. It extracts entities, commits them back, pushes.
-2. **Ralph loops** — autonomous Claude Code jobs that run on 30-minute crons. Reverse loops analyze a problem into a spec. Forward loops build the spec into code. 7 loops total, 4 active right now.
-
-Both write paths converge on the same `entities/` directory. The repo is the single source of truth. There is no database.
+Everything converges on the same `entities/` directory. The repo is the single source of truth. There is no database.
 
 ## what's in here
 
@@ -15,7 +12,7 @@ Both write paths converge on the same `entities/` directory. The repo is the sin
 entities/           1,036 typed entities (people, places, businesses, trips, meetings, projects, ideas)
 dashboards/         8 Dataview dashboards — at-a-glance views for each entity type
 loops/              7 ralph loops (3 active, 3 converged, 1 forward-building a Rust engine)
-automations/        OpenClaw bot, ingestion scripts, anime recap engine
+automations/        ingestion scripts, anime recap engine
 research/           30 deep research docs
 docs/plans/         specs produced by reverse ralph loops
 inbox/              raw dumps waiting for the ingestion loop to organize
@@ -56,15 +53,6 @@ Cross-references use `[[wikilinks]]`. Dataview queries power the dashboards. The
 
 983 of the 1,036 entities are places — most were batch-extracted from trip research. The rest are people, businesses, trips, projects, meetings, and ideas that accumulate as I dump info into the system.
 
-## the bot
-
-OpenClaw runs on Fly.io, always listening on Telegram. I send it anything:
-- "Had a meeting with Carlos about the wallet launch" — extracts person + meeting + project entities
-- "We're going with Stripe for payments" — logs decision, updates project entity
-- Paste a transcript — extracts everything, links entities, commits
-
-It reads `entities/` for context before writing, so it gets smarter as the graph grows.
-
 ## active loops
 
 | Loop | Type | What it's doing |
@@ -76,4 +64,4 @@ It reads `entities/` for context before writing, so it gets smarter as the graph
 
 ## 281 commits and counting
 
-This repo has been running since early 2026. Bot commits are prefixed with `bot:`, loop commits with `loop(<name>):` or `forward:`. Human commits are everything else.
+This repo has been running since early 2026. Loop commits are prefixed with `loop(<name>):` or `forward:`. Human commits are everything else.
