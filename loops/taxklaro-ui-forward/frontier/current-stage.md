@@ -1,30 +1,25 @@
-# Current Stage: 7 (List Pages)
+# Current Stage: 8 (Utility Pages)
 
 ## Status
-Stage 6 complete. Results view at `/computations/$compId` polished:
-- RecommendationBanner: green accent card, savings in font-display text-2xl — already done
-- RegimeComparisonTable: font-display title, shadow-sm, tabular-nums, green recommended row — already done
-- TaxBreakdownPanel: font-display title, shadow-sm, right-aligned amounts — already done
-- PathDetailAccordion: shadow-sm + hover:shadow-md, rounded-xl, smooth expand — already done
-- BalancePayableSection: font-display text-2xl for big numbers, color-coded — already done
-- PenaltySummary: amber-bordered card, font-display title + total amount — already done
-- BirFormRecommendation: blue-tinted info card, primary badge — already done
-- InstallmentSection: upgraded to shadow-sm Card, font-display text-xl title
-- PercentageTaxSummary: upgraded to shadow-sm Card, font-display text-xl title
-- ManualReviewFlags: upgraded to yellow-tinted card with font-display title
-- Page header ($compId.tsx): status Badge added (green for complete, secondary otherwise)
-- ResultsView: space-y-6 for more breathing room
+Stage 7 complete. List pages polished:
+- ComputationCard: shadow-sm + hover:shadow-md, font-display title, clean metadata — already done
+- Computations list: font-display h1, tabs with line variant, empty states with icons/copy/CTA — already done
+- ClientsTable: shadow-sm card wrapper, hover row highlight, clean table styling — already done
+- ClientInfoCard: shadow-sm card, replaced redundant name h2 with "Client Information" section label
+- ClientRowSkeleton: fixed invalid HTML (was rendering <tr> inside <div>); refactored to div-based skeleton
+- ClientsTable loading: now wraps skeletons in rounded-xl bg-card shadow-sm card
+- ComputationCardSkeleton: removed flat border-border/40 (shadows only, no flat borders)
+- clients/new: rounded-xl bg-card shadow-md form card, h-11 inputs — already done
+- $clientId: font-display h1 for client name — already done
 - Build passes.
 
 ## What To Do
-Restyle list pages at `/computations`, `/clients`, `/clients/new`, `/clients/$clientId`:
-- ComputationCard: shadow-sm, hover shadow-md transition, serif title, clean metadata layout
-- Computations list: proper grid gap, tabs styled with underline variant
-- Empty states: illustration or large icon, helpful copy, clear CTA
-- ClientsTable: clean borders, hover row highlight, proper cell padding
-- Client detail: ClientInfoCard with sections, serif name heading
-- New client form: same form styling as auth (full-width inputs, proper spacing)
-- Page headers: DM Serif Display h1, action buttons right-aligned
+Restyle utility pages at `/deadlines`, `/settings`, `/settings/team`, `/share/$token`, `/computations/$compId/quarterly`:
+- Deadlines: card grid with date prominence, status indicators, color-coded urgency
+- Settings: section cards with clear headings (DM Serif Display), form fields consistent with rest of app
+- Team: members table polished, invite form in a card, pending invitations styled
+- Share view: read-only results with "Shared via TaxKlaro" header
+- Quarterly: breakdown table matching results view styling
 
 ## Work Log
 - Stage 1 (2026-03-06): Installed @fontsource-variable/dm-sans + @fontsource/dm-serif-display.
@@ -48,3 +43,8 @@ Restyle list pages at `/computations`, `/clients`, `/clients/new`, `/clients/$cl
   to shadow-sm cards with font-display titles. ManualReviewFlags given yellow-tinted card styling
   and font-display title. $compId.tsx page header now shows status Badge (green for complete).
   ResultsView spacing increased to space-y-6. Build passes.
+- Stage 7 (2026-03-06): List pages polish. ComputationCardSkeleton: removed flat border.
+  ClientRowSkeleton: fixed invalid <tr>-in-div HTML, refactored to div-based skeleton.
+  ClientsTable loading state: wrapped in rounded-xl bg-card shadow-sm card.
+  ClientInfoCard: replaced redundant name h2 with "Client Information" section label.
+  Build passes.

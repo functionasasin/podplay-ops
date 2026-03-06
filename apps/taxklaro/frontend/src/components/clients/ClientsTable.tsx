@@ -16,7 +16,7 @@ interface ClientsTableProps {
 export function ClientsTable({ clients, isLoading, onSelect }: ClientsTableProps) {
   if (isLoading) {
     return (
-      <div className="space-y-2">
+      <div className="rounded-xl bg-card shadow-sm overflow-hidden">
         {Array.from({ length: 5 }).map((_, i) => <ClientRowSkeleton key={i} />)}
       </div>
     );

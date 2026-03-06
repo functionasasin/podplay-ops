@@ -2,7 +2,7 @@ import { Skeleton } from '../ui/skeleton';
 
 export function ComputationCardSkeleton() {
   return (
-    <div className="rounded-xl border border-border/40 bg-card shadow-sm p-4 space-y-3 animate-pulse">
+    <div className="rounded-xl bg-card shadow-sm p-4 space-y-3 animate-pulse">
       <div className="flex items-start justify-between">
         <Skeleton className="h-5 w-2/3" />
         <Skeleton className="h-5 w-16 rounded-full" />

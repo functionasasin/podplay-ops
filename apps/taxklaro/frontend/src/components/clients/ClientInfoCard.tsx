@@ -6,10 +6,10 @@ interface ClientInfoCardProps {
   address?: string | null;
 }
 
-export function ClientInfoCard({ name, email, tin, address }: ClientInfoCardProps) {
+export function ClientInfoCard({ email, tin, address }: ClientInfoCardProps) {
   return (
     <div className="rounded-xl bg-card shadow-sm p-6 space-y-4">
-      <h2 className="font-display text-2xl font-normal">{name}</h2>
+      <h2 className="font-display text-lg font-normal text-muted-foreground">Client Information</h2>
       <div className="divide-y">
         {email && (
           <div className="py-3 flex gap-4">
