@@ -20,6 +20,9 @@ automations/anime-recap-engine/data/
 # Worktrees
 .worktrees/
 
+# People entities (private)
+entities/people/
+
 # OS files
 .DS_Store
 *.Zone.Identifier
