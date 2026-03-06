@@ -29,12 +29,12 @@ export function TaxBreakdownPanel({
   const ptDue = parseFloat(selectedPercentageTaxDue);
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-semibold">Tax Breakdown</CardTitle>
-        <p className="text-xs text-muted-foreground">{PATH_LABELS[selectedPath]}</p>
+    <Card className="shadow-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="font-display text-xl font-normal">Tax Breakdown</CardTitle>
+        <p className="text-sm text-muted-foreground">{PATH_LABELS[selectedPath]}</p>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className="space-y-2.5">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Income Tax Due</span>
           <span className="font-medium tabular-nums">{formatPeso(selectedIncomeTaxDue)}</span>
@@ -46,9 +46,9 @@ export function TaxBreakdownPanel({
           </div>
         )}
         <Separator />
-        <div className="flex justify-between text-sm font-semibold">
-          <span>Total Tax Burden</span>
-          <span className="tabular-nums">{formatPeso(selectedTotalTax)}</span>
+        <div className="flex justify-between items-baseline">
+          <span className="text-sm font-semibold">Total Tax Burden</span>
+          <span className="font-display text-xl tabular-nums">{formatPeso(selectedTotalTax)}</span>
         </div>
       </CardContent>
     </Card>

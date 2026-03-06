@@ -33,29 +33,29 @@ export function BirFormRecommendation({
   const variant = formOutput.formVariant;
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-semibold">Recommended BIR Form</CardTitle>
+    <Card className="border-blue-200/70 bg-blue-50/30 shadow-sm dark:bg-blue-900/10 dark:border-blue-800/40">
+      <CardHeader className="pb-3">
+        <CardTitle className="font-display text-xl font-normal">Recommended BIR Form</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-4">
         <div className="flex items-start gap-3">
-          <Badge className="mt-0.5 text-sm font-semibold" variant="secondary">
+          <Badge className="mt-0.5 text-sm font-semibold shrink-0 bg-primary/10 text-primary hover:bg-primary/20 border-primary/20" variant="outline">
             {formInfo.name}
           </Badge>
           <p className="text-sm text-muted-foreground">{formInfo.description}</p>
         </div>
 
-        <div className="text-xs text-muted-foreground font-mono bg-muted/50 rounded px-2 py-1 inline-block">
+        <div className="text-xs text-muted-foreground font-mono bg-muted/50 rounded-md px-2.5 py-1.5 inline-block">
           Variant: {variant}
         </div>
 
         {requiredAttachments.length > 0 && (
           <div>
-            <p className="text-xs font-medium text-muted-foreground mb-1">Required attachments:</p>
-            <ul className="space-y-0.5">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Required attachments:</p>
+            <ul className="space-y-1">
               {requiredAttachments.map((attachment, i) => (
-                <li key={i} className="text-sm flex items-start gap-1.5">
-                  <span className="text-muted-foreground mt-0.5">•</span>
+                <li key={i} className="text-sm flex items-start gap-2">
+                  <span className="text-primary mt-0.5 font-bold">•</span>
                   <span>{attachment}</span>
                 </li>
               ))}

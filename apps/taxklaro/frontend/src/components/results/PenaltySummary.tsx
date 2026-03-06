@@ -27,12 +27,12 @@ export function PenaltySummary({ penalties }: PenaltySummaryProps) {
   const hasPtPenalties = parseFloat(ptPenalties.total) > 0;
 
   return (
-    <Card className="border-destructive/40">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-semibold text-destructive">
+    <Card className="border-amber-400/60 bg-amber-50/40 shadow-sm dark:bg-amber-900/10">
+      <CardHeader className="pb-3">
+        <CardTitle className="font-display text-xl font-normal text-amber-800 dark:text-amber-300">
           Late Filing Penalties
         </CardTitle>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           {daysLate} day{daysLate !== 1 ? 's' : ''} late ({monthsLate} month{monthsLate !== 1 ? 's' : ''})
         </p>
       </CardHeader>
@@ -76,9 +76,9 @@ export function PenaltySummary({ penalties }: PenaltySummaryProps) {
         )}
 
         <Separator />
-        <div className="flex justify-between text-sm font-semibold text-destructive">
-          <span>Total Penalties</span>
-          <span className="tabular-nums">{formatPeso(totalPenalties)}</span>
+        <div className="flex justify-between items-baseline">
+          <span className="text-sm font-semibold text-amber-800 dark:text-amber-300">Total Penalties</span>
+          <span className="font-display text-2xl tabular-nums text-amber-800 dark:text-amber-300">{formatPeso(totalPenalties)}</span>
         </div>
       </CardContent>
     </Card>

@@ -47,17 +47,17 @@ export function BalancePayableSection({
   const hasOverpayment = disposition === 'OVERPAYMENT' && parseFloat(overpayment) > 0;
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
+    <Card className="shadow-sm">
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-semibold">Balance &amp; Credits</CardTitle>
+          <CardTitle className="font-display text-xl font-normal">Balance &amp; Credits</CardTitle>
           <Badge variant={variant} className="text-xs">{label}</Badge>
         </div>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className="space-y-2.5">
         {hasCredits && (
           <>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Tax Credits Applied</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Tax Credits Applied</p>
             {parseFloat(cwtCredits) > 0 && (
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Creditable Withholding Tax (CWT)</span>
@@ -85,24 +85,24 @@ export function BalancePayableSection({
         )}
 
         {disposition === 'BALANCE_PAYABLE' && (
-          <div className="flex justify-between text-sm font-semibold text-destructive">
-            <span>Net Balance Payable</span>
-            <span className="tabular-nums">{formatPeso(balance)}</span>
+          <div className="flex justify-between items-baseline">
+            <span className="text-sm font-semibold text-destructive">Net Balance Payable</span>
+            <span className="font-display text-2xl tabular-nums text-destructive">{formatPeso(balance)}</span>
           </div>
         )}
 
         {disposition === 'ZERO_BALANCE' && (
-          <div className="flex justify-between text-sm font-semibold text-muted-foreground">
-            <span>Net Balance</span>
-            <span className="tabular-nums">₱0.00</span>
+          <div className="flex justify-between items-baseline">
+            <span className="text-sm font-semibold text-muted-foreground">Net Balance</span>
+            <span className="font-display text-2xl tabular-nums text-muted-foreground">₱0.00</span>
           </div>
         )}
 
         {hasOverpayment && (
           <div className="space-y-1">
-            <div className="flex justify-between text-sm font-semibold text-green-700 dark:text-green-400">
-              <span>Overpayment</span>
-              <span className="tabular-nums">{formatPeso(overpayment)}</span>
+            <div className="flex justify-between items-baseline">
+              <span className="text-sm font-semibold text-green-700 dark:text-green-400">Overpayment</span>
+              <span className="font-display text-2xl tabular-nums text-green-700 dark:text-green-400">{formatPeso(overpayment)}</span>
             </div>
             {overpaymentDisposition && (
               <p className="text-xs text-muted-foreground">

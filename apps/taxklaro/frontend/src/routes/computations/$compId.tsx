@@ -67,26 +67,28 @@ function ComputationDetailPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6" data-testid="computation-detail-page">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">{computation.title || 'Untitled Computation'}</h1>
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1.5 min-w-0">
+          <h1 className="font-display text-3xl font-normal truncate">
+            {computation.title || 'Untitled Computation'}
+          </h1>
           <p className="text-sm text-muted-foreground">
-            Tax Year {computation.taxYear} &middot; Status: {computation.status}
+            Tax Year {computation.taxYear} &middot; <span className="capitalize">{computation.status}</span>
           </p>
         </div>
         <button
-          className="text-sm text-primary underline"
+          className="text-sm text-primary hover:text-primary/80 underline underline-offset-2 shrink-0 transition-colors"
           onClick={() => navigate({ to: '/computations' })}
         >
-          Back to Computations
+          ← Back
         </button>
       </div>
 
       {result ? (
         <ResultsView result={result} readOnly />
       ) : (
-        <div className="rounded-md border p-8 text-center text-muted-foreground">
-          <p>This computation has not been run yet.</p>
+        <div className="rounded-xl border p-10 text-center text-muted-foreground shadow-sm">
+          <p className="text-[0.9375rem]">This computation has not been run yet.</p>
           <p className="text-sm mt-1">Input data is saved as a draft.</p>
         </div>
       )}
