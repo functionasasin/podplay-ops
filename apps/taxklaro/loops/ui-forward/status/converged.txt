@@ -1,22 +1,22 @@
 converged: 2026-03-06
 
-TaxKlaro UI Polish loop completed all 10 stages.
+All 10 stages of TaxKlaro UI Polish complete.
 
 Summary:
-- Stage 1: Installed DM Serif Display + DM Sans fonts, defined CSS design tokens (typography scale, shadow scale, utility classes)
-- Stage 2: Wired AppLayout as authenticated layout route in TanStack Router, all 549 tests pass
-- Stage 3: Sidebar polish — DM Serif Display logo, left-border active state, hover transitions, AppLayout padding
-- Stage 4: Landing page hero + feature grid, auth pages card layout, onboarding card layout
-- Stage 5: Wizard polish — progress bar, step card, radio cards, DM Serif Display h2s, PesoInput h-11, nav buttons
-- Stage 6: Results + Detail — serif headings, savings in DM Serif Display, amber penalties, blue BIR form card, large bottom-line numbers
-- Stage 7: List pages — serif h1s, shadow cards, line tabs, polished empty states, ClientsTable and ClientInfoCard polish
-- Stage 8: Utility pages — DeadlineCard date prominence + urgency borders, settings section cards, team table polish, share banner, quarterly serif h1
-- Stage 9: Responsive audit — tablet breakpoints, consistent padding, responsive hero, table scroll wrappers, touch targets, skeleton fix
-- Stage 10: Screenshot verification — fixed App.tsx RouterProvider wiring (was a placeholder div), all font/layout checks pass
+- Stage 1: Fonts installed (DM Serif Display + DM Sans), CSS design tokens defined
+- Stage 2: AppLayout wired as authenticated layout route in TanStack Router
+- Stage 3: Sidebar polished — DM Serif Display logo, left-border active state, hover transitions
+- Stage 4: Landing page hero + feature cards, auth pages centered card layout, onboarding card
+- Stage 5: Wizard polish — progress bar, step card, radio cards, form fields, navigation controls
+- Stage 6: Results + Detail — serif headings, savings amount, amber penalties, blue BIR card
+- Stage 7: List pages — computation cards, client table, empty states, page headers
+- Stage 8: Utility pages — deadlines urgency, settings sections, team table, share banner, quarterly
+- Stage 9: Responsive audit — tablet breakpoints, touch targets, table scroll wrappers, hero scaling
+- Stage 10: Screenshot verification — fixed App.tsx RouterProvider wiring, all checks pass
 
 Final state:
-- 549 tests pass
+- 549 tests passing
 - Build passes (npx vite build)
-- All routes render correctly with DM Serif Display headings and DM Sans body text
-- Professional/financial aesthetic: warm off-white background, warm shadows, primary blue for CTAs only
-- Fully responsive at mobile (375px), tablet (768px), desktop (1280px)
+- All routes render with DM Serif Display headings + DM Sans body
+- Warm off-white background, shadow-sm/md cards, primary blue CTAs only
+- Mobile responsive at 375px, 768px, 1280px breakpoints
