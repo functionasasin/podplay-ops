@@ -1,17 +1,18 @@
-# Current Stage: 22 (CI/CD Workflows)
+# Current Stage: 23 (Unit Tests — full suite)
 
 ## Status
-Stage 21 complete. Dockerfile (multi-stage), nginx.conf (SPA + WASM MIME), fly.toml (Singapore), and SECRETS.md created. fly.toml validated as valid TOML.
+Stage 22 complete. ci.yml (§16.5) and deploy.yml (§16.6) created. YAML lint passes.
 
 ## What To Do
-Read spec §16.5, §16.6. Create GitHub Actions CI and deploy workflows.
+Read spec §15.1. Audit and expand Vitest unit test coverage. Run full test suite and fix failures.
 
 Tasks:
-- Create `.github/workflows/ci.yml` from spec §16.5 (typecheck → lint → test → build → e2e)
-- Create `.github/workflows/deploy.yml` from spec §16.6 (build Docker → fly deploy)
-- Include migration verification step: `supabase db reset` + RPC verification
+- Audit coverage for src/lib/, src/hooks/, src/components/
+- Add missing tests to reach spec §15.1 requirements
+- Run `npx vitest run --reporter=verbose`
+- Fix any failures
 
-Test command: lint yaml
+Test command: `npx vitest run --reporter=verbose`
 
 ## Work Log
 - 2026-03-06: Stage 1 complete — cargo check passes, advancing to stage 2
@@ -35,3 +36,4 @@ Test command: lint yaml
 - 2026-03-06: Stage 19 complete — 41 ui-states tests pass, EmptyState/ErrorState/skeletons/toasts wired, advancing to stage 20
 - 2026-03-06: Stage 20 complete — 13 monitoring tests pass, Sentry + ErrorBoundary + error categories implemented, advancing to stage 21
 - 2026-03-06: Stage 21 complete — Dockerfile + nginx.conf + fly.toml created, fly.toml TOML-valid, advancing to stage 22
+- 2026-03-06: Stage 22 complete — ci.yml + deploy.yml created, YAML lint passes, advancing to stage 23
