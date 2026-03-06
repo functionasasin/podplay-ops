@@ -796,3 +796,407 @@ The `invoices.deposit_pct` field is stored per-invoice (not just in settings) to
 non-standard splits (e.g., 30/70 for a specific client). The UI defaults to 0.50 but
 allows the ops person to override before the invoice is sent. Once sent, the split is
 locked.
+
+---
+
+## 12. Global Expense Queries (Cross-Project)
+
+These queries power the Global Financials view and monthly close workflow.
+They aggregate expenses across all projects.
+
+### All Expenses for a Date Range
+
+```typescript
+interface ExpenseDateRangeFilter {
+  start_date: string;  // ISO date 'YYYY-MM-DD', inclusive
+  end_date: string;    // ISO date 'YYYY-MM-DD', inclusive
+  project_id?: string; // optional: restrict to one project
+  category?: ExpenseCategory; // optional: restrict to one category
+}
+
+async function getExpensesInRange(filter: ExpenseDateRangeFilter): Promise<Expense[]> {
+  let query = supabase
+    .from('expenses')
+    .select(`
+      id,
+      project_id,
+      expense_date,
+      category,
+      amount,
+      payment_method,
+      description,
+      receipt_url,
+      notes,
+      projects (customer_name, venue_name, tier)
+    `)
+    .gte('expense_date', filter.start_date)
+    .lte('expense_date', filter.end_date)
+    .order('expense_date', { ascending: false });
+
+  if (filter.project_id) {
+    query = query.eq('project_id', filter.project_id);
+  }
+  if (filter.category) {
+    query = query.eq('category', filter.category);
+  }
+
+  const { data } = await query;
+  return data ?? [];
+}
+```
+
+### Monthly Expense Totals (all projects combined)
+
+Used in the Global Financials page to show monthly spend breakdown.
+
+```typescript
+interface MonthlyExpenseSummary {
+  year: number;
+  month: number;          // 1–12
+  label: string;          // e.g. "Mar 2026"
+  total_expenses: number; // sum of all expense amounts in month
+  by_category: Record<ExpenseCategory, number>; // per-category subtotals
+  by_payment_method: {
+    podplay_card: number;
+    ramp_reimburse: number;
+  };
+  project_count: number;  // distinct projects with expenses in month
+}
+
+function computeMonthlyExpenseSummaries(
+  expenses: Expense[]
+): MonthlyExpenseSummary[] {
+  // Group expenses by year-month
+  const byMonth = new Map<string, Expense[]>();
+  for (const exp of expenses) {
+    const d = new Date(exp.expense_date);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    if (!byMonth.has(key)) byMonth.set(key, []);
+    byMonth.get(key)!.push(exp);
+  }
+
+  const summaries: MonthlyExpenseSummary[] = [];
+
+  for (const [key, monthExpenses] of byMonth) {
+    const [yearStr, monthStr] = key.split('-');
+    const year = parseInt(yearStr, 10);
+    const month = parseInt(monthStr, 10);
+
+    const by_category = {} as Record<ExpenseCategory, number>;
+    for (const exp of monthExpenses) {
+      by_category[exp.category] = (by_category[exp.category] ?? 0) + exp.amount;
+    }
+
+    const podplay_card = monthExpenses
+      .filter(e => e.payment_method === 'podplay_card')
+      .reduce((s, e) => s + e.amount, 0);
+
+    const ramp_reimburse = monthExpenses
+      .filter(e => e.payment_method === 'ramp_reimburse')
+      .reduce((s, e) => s + e.amount, 0);
+
+    const projectIds = new Set(monthExpenses.map(e => e.project_id));
+
+    summaries.push({
+      year,
+      month,
+      label: new Date(year, month - 1, 1).toLocaleString('en-US', { month: 'short', year: 'numeric' }),
+      total_expenses: monthExpenses.reduce((s, e) => s + e.amount, 0),
+      by_category,
+      by_payment_method: { podplay_card, ramp_reimburse },
+      project_count: projectIds.size,
+    });
+  }
+
+  // Sort chronologically ascending
+  return summaries.sort((a, b) =>
+    a.year !== b.year ? a.year - b.year : a.month - b.month
+  );
+}
+```
+
+### Month Range Helper (for Financial Year view)
+
+```typescript
+function getMonthRange(
+  startYear: number, startMonth: number,
+  endYear: number, endMonth: number
+): { start_date: string; end_date: string } {
+  const startDate = new Date(startYear, startMonth - 1, 1);
+  const endDate = new Date(endYear, endMonth - 1 + 1, 0); // last day of endMonth
+  return {
+    start_date: startDate.toISOString().split('T')[0],
+    end_date: endDate.toISOString().split('T')[0],
+  };
+}
+
+// Example: Full calendar year 2026
+// getMonthRange(2026, 1, 2026, 12)
+// → { start_date: '2026-01-01', end_date: '2026-12-31' }
+```
+
+---
+
+## 13. Per-Project Expense Attribution
+
+Each expense is attributed to exactly one project via `expenses.project_id` (NOT NULL,
+enforced by DB constraint). There are no shared expenses or overhead expenses in this
+table — overhead is handled separately via `monthly_opex_snapshots`.
+
+### Project Expense Roll-Up (for Financials list view)
+
+```typescript
+interface ProjectExpenseRollup {
+  project_id: string;
+  customer_name: string;
+  venue_name: string;
+  tier: ServiceTier;
+  total_expenses: number;
+  labor_cost: number;       // professional_services only
+  travel_cost: number;      // airfare + car + fuel + lodging + meals + taxi + train + parking
+  shipping_cost: number;    // outbound_shipping
+  hardware_misc: number;    // misc_hardware + other
+}
+
+function computeProjectExpenseRollup(
+  project: { id: string; customer_name: string; venue_name: string; tier: ServiceTier },
+  expenses: Expense[]
+): ProjectExpenseRollup {
+  const TRAVEL_CATEGORIES: ExpenseCategory[] = [
+    'airfare', 'car', 'fuel', 'lodging', 'meals', 'taxi', 'train', 'parking'
+  ];
+
+  const labor_cost = expenses
+    .filter(e => e.category === 'professional_services')
+    .reduce((s, e) => s + e.amount, 0);
+
+  const travel_cost = expenses
+    .filter(e => TRAVEL_CATEGORIES.includes(e.category))
+    .reduce((s, e) => s + e.amount, 0);
+
+  const shipping_cost = expenses
+    .filter(e => e.category === 'outbound_shipping')
+    .reduce((s, e) => s + e.amount, 0);
+
+  const hardware_misc = expenses
+    .filter(e => e.category === 'misc_hardware' || e.category === 'other')
+    .reduce((s, e) => s + e.amount, 0);
+
+  return {
+    project_id: project.id,
+    customer_name: project.customer_name,
+    venue_name: project.venue_name,
+    tier: project.tier,
+    total_expenses: expenses.reduce((s, e) => s + e.amount, 0),
+    labor_cost,
+    travel_cost,
+    shipping_cost,
+    hardware_misc,
+  };
+}
+```
+
+### Default Travel Expense Estimates (Pre-Fill at Project Creation)
+
+When a new project is created (Stage 1 intake), default travel expenses are NOT
+auto-created. They are pre-filled only when ops opens the "Add Expense" form in Stage 4.
+
+| Category | Pre-fill logic |
+|----------|---------------|
+| `airfare` | `settings.airfare_default` = $1,800 (round-trip) |
+| `lodging` | `settings.lodging_per_day` × days on site = $250 × N |
+| `car` | blank (actual rental cost varies) |
+| `fuel` | blank |
+| `meals` | blank |
+| `outbound_shipping` | blank (actual FedEx/UPS invoice) |
+| `professional_services` | computed: `installer_hours × rate` via `logInstallerLabor()` |
+| All others | blank |
+
+---
+
+## 14. Monthly Expense Close Workflow
+
+At the end of each month, the ops person performs a "monthly close" to lock expenses and
+produce the monthly P&L snapshot. This is a manual workflow step — there is no automatic
+lock trigger.
+
+### Monthly Close Steps
+
+1. **Navigate**: Global Financials > Monthly Close tab > select month
+2. **Review**: System shows all expenses for the month grouped by project + category
+3. **Verify**: Ops checks that all receipts are uploaded (`receipt_url` is filled)
+4. **Confirm total**: Review grand total vs Ramp card statement
+5. **Snapshot**: Click "Close Month" → system writes a `monthly_opex_snapshots` row
+
+### `monthly_opex_snapshots` Row Creation
+
+```typescript
+async function closeMonth(
+  year: number,
+  month: number,
+  settings: Settings
+): Promise<void> {
+  const { start_date, end_date } = getMonthRange(year, month, year, month);
+
+  // Fetch all expenses in month
+  const expenses = await getExpensesInRange({ start_date, end_date });
+  const total_project_expenses = expenses.reduce((s, e) => s + e.amount, 0);
+
+  // Fetch all final invoices paid in month (hardware revenue recognition)
+  const { data: paidFinalInvoices } = await supabase
+    .from('invoices')
+    .select('hardware_subtotal')
+    .eq('invoice_type', 'final')
+    .eq('status', 'paid')
+    .gte('date_paid', start_date)
+    .lte('date_paid', end_date);
+
+  const hardware_revenue = (paidFinalInvoices ?? [])
+    .reduce((s, inv) => s + (inv.hardware_subtotal ?? 0), 0);
+
+  // Build snapshot (salary values come from settings defaults; ops overrides if needed)
+  const niko_monthly = settings.niko_annual_salary / 12;
+  const chad_monthly = settings.chad_annual_salary / 12;
+
+  await supabase.from('monthly_opex_snapshots').upsert({
+    year,
+    month,
+    niko_monthly_salary: niko_monthly,
+    niko_direct_allocation: settings.niko_direct_allocation,
+    chad_monthly_salary: chad_monthly,
+    chad_indirect_allocation: settings.chad_indirect_allocation,
+    monthly_rent: settings.annual_rent / 12,
+    monthly_indirect_salaries: settings.annual_indirect_salaries / 12,
+    hardware_revenue,
+    total_project_expenses,
+    // team_hardware_spend and her_ratio are GENERATED ALWAYS columns — computed by Postgres
+  }, { onConflict: 'year,month' });
+}
+```
+
+### Guard: Expenses Already Closed
+
+The `monthly_opex_snapshots` table has a UNIQUE constraint on `(year, month)`. If a
+snapshot row already exists for the month, `upsert` overwrites it. The UI shows a
+warning: "Month already closed — re-closing will update the snapshot with current data."
+
+### Missing Receipts Warning
+
+Before allowing close, the UI queries:
+
+```typescript
+async function getMissingReceiptExpenses(
+  start_date: string,
+  end_date: string
+): Promise<Expense[]> {
+  const { data } = await supabase
+    .from('expenses')
+    .select('id, project_id, expense_date, category, amount, projects(customer_name)')
+    .gte('expense_date', start_date)
+    .lte('expense_date', end_date)
+    .is('receipt_url', null)
+    .gt('amount', 100); // only flag expenses > $100 for missing receipts
+  return data ?? [];
+}
+```
+
+If any expenses > $100 have no `receipt_url`, the UI shows a yellow warning banner:
+"X expenses over $100 are missing receipts. Upload receipts before closing."
+Ops can proceed anyway (soft block — not enforced at DB level).
+
+---
+
+## 15. Expense Validation (Zod Schema)
+
+File path: `src/lib/schemas/expense.ts`
+
+```typescript
+import { z } from 'zod';
+
+export const EXPENSE_CATEGORIES = [
+  'airfare', 'car', 'fuel', 'lodging', 'meals', 'misc_hardware',
+  'outbound_shipping', 'professional_services', 'taxi', 'train', 'parking', 'other',
+] as const;
+
+export const PAYMENT_METHODS = ['podplay_card', 'ramp_reimburse'] as const;
+
+export const expenseSchema = z.object({
+  project_id: z.string().uuid('Invalid project ID'),
+  expense_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD')
+    .refine(
+      (d) => new Date(d) <= new Date(Date.now() + 86400000), // allow up to +1 day
+      'Expense date cannot be more than 1 day in the future'
+    ),
+  category: z.enum(EXPENSE_CATEGORIES, {
+    errorMap: () => ({ message: 'Expense category is required' }),
+  }),
+  amount: z
+    .number({ invalid_type_error: 'Amount must be a number' })
+    .positive('Amount must be greater than $0')
+    .max(100000, 'Amount exceeds $100,000 — verify before saving'),
+  payment_method: z.enum(PAYMENT_METHODS, {
+    errorMap: () => ({ message: 'Payment method is required' }),
+  }),
+  description: z.string().max(500, 'Description must be 500 characters or less').optional(),
+  receipt_url: z
+    .string()
+    .url('Receipt URL must be a valid URL')
+    .optional()
+    .or(z.literal('')),
+  notes: z.string().max(1000, 'Notes must be 1,000 characters or less').optional(),
+});
+
+export type ExpenseFormValues = z.infer<typeof expenseSchema>;
+```
+
+---
+
+## 16. Service Layer Additions (Supabase Client)
+
+Appended to `src/services/invoicingService.ts`:
+
+```typescript
+// Global expense queries
+export async function getExpensesInRange(
+  filter: ExpenseDateRangeFilter
+): Promise<Expense[]>
+
+export async function getMissingReceiptExpenses(
+  start_date: string,
+  end_date: string
+): Promise<Expense[]>
+
+// Monthly close
+export async function closeMonth(
+  year: number,
+  month: number,
+  settings: Settings
+): Promise<void>
+
+export async function getMonthlyOpexSnapshot(
+  year: number,
+  month: number
+): Promise<MonthlyOpexSnapshot | null>
+
+export async function getMonthlyOpexSnapshots(
+  startYear: number, startMonth: number,
+  endYear: number, endMonth: number
+): Promise<MonthlyOpexSnapshot[]>
+
+// Client-side aggregators
+export function computeMonthlyExpenseSummaries(
+  expenses: Expense[]
+): MonthlyExpenseSummary[]
+
+export function computeProjectExpenseRollup(
+  project: ProjectSummary,
+  expenses: Expense[]
+): ProjectExpenseRollup
+
+export function getMonthRange(
+  startYear: number, startMonth: number,
+  endYear: number, endMonth: number
+): { start_date: string; end_date: string }
+```
