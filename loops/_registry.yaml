@@ -217,8 +217,9 @@ loops:
     type: forward
     max_iterations: 40
     timeout_minutes: 30
-    status: active
+    status: converged
     created: 2026-03-06
+    converged_at: "2026-03-06"
   podplay-ops-reverse:
     description: "Extract complete spec from PodPlay MRP docs → ops wizard webapp mega-spec (57 aspects)"
     type: reverse
