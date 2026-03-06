@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 57
-- Analyzed: 9
-- Pending: 48
-- Convergence: 16%
+- Analyzed: 10
+- Pending: 47
+- Convergence: 18%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -22,7 +22,7 @@
 - [x] model-inventory — Inventory lifecycle: items, stock levels, order input, inventory input, adjustments, reconciliation
 - [x] model-financials — Invoice, expense, P&L, HER, revenue pipeline, reconciliation data structures
 - [x] model-deployment-checklist — All 15 phases decomposed into individual checkable steps with warnings and auto-fill tokens
-- [ ] model-installers — Installer directory: fields, search patterns, project associations
+- [x] model-installers — Installer directory: fields, search patterns, project associations
 - [ ] model-settings — All configurable values: pricing tiers, tax rates, margins, labor rates, travel defaults
 - [ ] model-bom-templates — Template structures for auto-generating BOMs per tier (Pro/Autonomous/Autonomous+/PBK)
 - [ ] model-checklist-templates — Template structures for seeding deployment checklists per tier

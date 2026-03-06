@@ -427,29 +427,101 @@ CREATE POLICY "authenticated users can delete projects"
 ## Table: installers
 
 Installer directory. PodPlay maintains a vetted network in NY, CT, NJ.
+Installers are assigned to projects; their hourly rate drives the labor cost calculation.
 
-**MRP source**: Installer directory tab (sheet name unknown; referenced in CUSTOMER MASTER)
+**MRP source**: Installer directory tab (referenced as "Installer" column in CUSTOMER MASTER).
+Sheet name not confirmed from XLSX; content derived from design doc and training transcripts.
+
+**Relationship to projects**:
+- `projects.installer_id` → `installers.id` (FK, SET NULL on delete)
+- `projects.installer_type` records whether the installer for that project is `podplay_vetted` or `client_own`
+- `projects.installer_hours` × `COALESCE(installers.hourly_rate, settings.labor_rate_per_hour)` = labor cost
 
 ```sql
 CREATE TABLE installers (
-  id           UUID  PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  id                UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-  name         TEXT  NOT NULL,          -- Full name (e.g., "John Smith")
-  company      TEXT,                    -- Company name if a contractor business
-  email        TEXT,                    -- Contact email
-  phone        TEXT,                    -- Contact phone
-  regions      TEXT[],                  -- Service regions (e.g., ['NY', 'NJ', 'CT'])
-  is_active    BOOLEAN NOT NULL DEFAULT true,
-  notes        TEXT
+  -- -------------------------------------------------------------------------
+  -- Identity
+  -- -------------------------------------------------------------------------
+  name              TEXT        NOT NULL,
+  -- Full name of the installer (e.g., "Mike Torres")
+
+  company           TEXT,
+  -- Company name if the installer operates as a business (e.g., "Torres AV Services")
+  -- NULL for individual contractors
+
+  -- -------------------------------------------------------------------------
+  -- Contact
+  -- -------------------------------------------------------------------------
+  email             TEXT,
+  -- Contact email; used for coordination emails and SOW copies
+
+  phone             TEXT,
+  -- Cell phone preferred — needed for on-site coordination during installation
+
+  -- -------------------------------------------------------------------------
+  -- Classification
+  -- -------------------------------------------------------------------------
+  installer_type    installer_type NOT NULL DEFAULT 'podplay_vetted',
+  -- podplay_vetted: from PodPlay's pre-vetted contractor network (NY/NJ/CT area)
+  --   → higher confidence in quality; PodPlay manages relationship
+  -- client_own: client's own installer
+  --   → client manages; PodPlay provides remote troubleshooting support
+  -- NOTE: projects.installer_type also records the classification per-project,
+  -- but this field acts as the default/classification for the installer record itself.
+
+  -- -------------------------------------------------------------------------
+  -- Service Area
+  -- -------------------------------------------------------------------------
+  regions           TEXT[],
+  -- List of US state codes where this installer is available
+  -- (e.g., ARRAY['NY', 'NJ', 'CT'])
+  -- Used to filter/suggest installers based on project.venue_state
+  -- International installers: use country codes (e.g., ARRAY['PH'] for Philippines)
+
+  -- -------------------------------------------------------------------------
+  -- Pricing
+  -- -------------------------------------------------------------------------
+  hourly_rate       NUMERIC(10, 2),
+  -- Negotiated hourly rate in USD. NULL = use global settings.labor_rate_per_hour
+  -- When set, overrides global default for all projects assigned to this installer:
+  --   labor_cost = project.installer_hours
+  --              × COALESCE(installers.hourly_rate, settings.labor_rate_per_hour)
+  -- Typical range: $75–$150/hr for AV/network contractors in NY metro area
+  -- PodPlay default from settings: $120.00/hr
+
+  -- -------------------------------------------------------------------------
+  -- Availability & History
+  -- -------------------------------------------------------------------------
+  is_active         BOOLEAN     NOT NULL DEFAULT true,
+  -- false = retired or unavailable installer
+  -- Inactive installers: hidden from new project dropdowns but retained on
+  -- historical projects for data integrity (FK SET NULL does NOT apply here —
+  -- SET NULL only fires on DELETE; use is_active = false to hide from UI)
+
+  -- -------------------------------------------------------------------------
+  -- Notes
+  -- -------------------------------------------------------------------------
+  notes             TEXT
+  -- Internal ops notes: specializations, past project feedback, any issues
+  -- Examples:
+  --   "Strong networking background — good for complex Autonomous+ installs"
+  --   "NJ/NY only — does not travel"
+  --   "Client's own electrician — no AV experience, needs full remote support"
 );
 
 CREATE TRIGGER installers_updated_at
   BEFORE UPDATE ON installers
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
-CREATE INDEX idx_installers_is_active ON installers (is_active);
+-- Indexes
+CREATE INDEX idx_installers_is_active      ON installers (is_active);
+CREATE INDEX idx_installers_installer_type ON installers (installer_type);
+CREATE INDEX idx_installers_regions        ON installers USING GIN (regions);
+-- GIN index on regions array supports: WHERE 'NY' = ANY(regions)
 
 ALTER TABLE installers ENABLE ROW LEVEL SECURITY;
 
@@ -458,6 +530,61 @@ CREATE POLICY "authenticated users full access installers"
   TO authenticated
   USING (true)
   WITH CHECK (true);
+```
+
+### Field Source Map
+
+| Field | MRP Source | Notes |
+|-------|-----------|-------|
+| name | Installer directory tab | Full name column |
+| company | Installer directory tab | Company/business name column |
+| email | Installer directory tab | Email contact column |
+| phone | Installer directory tab | Phone contact column |
+| installer_type | Installer directory tab / CUSTOMER MASTER | Derived from whether PodPlay or client sourced |
+| regions | Installer directory tab | Service area column (state codes) |
+| hourly_rate | Installer directory tab | Negotiated rate; NULL if using global default |
+| is_active | Installer directory tab | Active/inactive flag |
+| notes | Installer directory tab | Notes column |
+
+### Seed Data: Known PodPlay Installer Network
+
+PodPlay's vetted installer network (NY/NJ/CT area) is populated at launch. Exact names
+from the MRP installer directory tab require the XLSX (blocked: `source-mrp-sheets`).
+The following structure is confirmed; names/rates are placeholders to be filled from XLSX:
+
+```sql
+-- Seed: PodPlay vetted network (NY/NJ/CT)
+-- INSERT INTO installers (name, company, installer_type, regions, is_active)
+-- VALUES
+--   ('TBD from XLSX', NULL, 'podplay_vetted', ARRAY['NY', 'NJ', 'CT'], true),
+--   ...;
+-- NOTE: Unlock when source-mrp-sheets is unblocked (XLSX available)
+```
+
+Confirmed from design doc: PodPlay has vetted contractors covering NY, NJ, CT.
+International venues (Philippines) use local contractors sourced per-project.
+
+### Querying Installers
+
+**Find active installers for a venue state:**
+```sql
+SELECT * FROM installers
+WHERE is_active = true
+  AND (
+    venue_state = ANY(regions)
+    OR regions IS NULL  -- available anywhere (remote support only)
+  )
+ORDER BY name;
+```
+Where `venue_state` comes from `projects.venue_state`.
+
+**Count projects per installer:**
+```sql
+SELECT i.name, COUNT(p.id) AS project_count
+FROM installers i
+LEFT JOIN projects p ON p.installer_id = i.id
+GROUP BY i.id, i.name
+ORDER BY project_count DESC;
 ```
 
 ---
