@@ -8,3 +8,4 @@
 | 4 | fetch-elegir-v-pal | 1 | 2026-03-06 | input/sources/elegir-v-pal.md, analysis/fetch-elegir-v-pal.md |
 | 5 | fetch-nirc-tax-exemption | 1 | 2026-03-06 | input/sources/nirc-tax-exemption.md, analysis/fetch-nirc-tax-exemption.md |
 | 6 | fetch-separation-pay-rules | 1 | 2026-03-06 | input/sources/separation-pay-rules.md, analysis/fetch-separation-pay-rules.md |
+| 7 | fetch-dole-final-pay | 1 | 2026-03-06 | input/sources/dole-final-pay-la06-20.md, analysis/fetch-dole-final-pay.md |
