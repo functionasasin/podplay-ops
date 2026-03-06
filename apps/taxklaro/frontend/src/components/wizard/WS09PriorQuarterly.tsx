@@ -117,7 +117,7 @@ export function WS09PriorQuarterly({ data, onChange, onNext, onBack }: Props) {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-xl font-semibold">Previous quarterly tax payments this year</h2>
+          <h2 className="font-display text-2xl font-normal">Previous quarterly tax payments this year</h2>
           <p className="text-sm text-muted-foreground mt-1">
             This is a Q1 return — no prior quarterly payments apply.
           </p>
@@ -133,7 +133,7 @@ export function WS09PriorQuarterly({ data, onChange, onNext, onBack }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold">Previous quarterly tax payments this year</h2>
+        <h2 className="font-display text-2xl font-normal">Previous quarterly tax payments this year</h2>
         <p className="text-sm text-muted-foreground mt-1">{getIntroText(filingPeriod)}</p>
       </div>
 

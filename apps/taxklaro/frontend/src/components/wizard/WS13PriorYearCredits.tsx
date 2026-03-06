@@ -50,7 +50,7 @@ export function WS13PriorYearCredits({ data, onChange, onNext, onBack }: Props) 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold">Prior year carry-over tax credits</h2>
+        <h2 className="font-display text-2xl font-normal">Prior year carry-over tax credits</h2>
         <p className="text-sm text-muted-foreground mt-1">
           If you had excess tax credits from your prior year's annual return and elected to carry
           them over, enter the amount here.

@@ -22,7 +22,7 @@ export function PesoInput({ value, onChange, placeholder = '0.00', disabled, cla
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         disabled={disabled}
-        className="pl-7"
+        className="pl-7 h-11"
       />
     </div>
   );

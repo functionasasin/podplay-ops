@@ -82,7 +82,7 @@ export function WS07BFinancialItems({ data, onChange, onNext, onBack }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold">Your business expenses — Financial and special items</h2>
+        <h2 className="font-display text-2xl font-normal">Your business expenses — Financial and special items</h2>
       </div>
 
       <div className="space-y-1">

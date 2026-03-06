@@ -159,7 +159,7 @@ export function WS07DNolco({ data, onChange, onNext, onBack }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold">Net Operating Loss Carry-Over (NOLCO)</h2>
+        <h2 className="font-display text-2xl font-normal">Net Operating Loss Carry-Over (NOLCO)</h2>
         <p className="text-sm text-muted-foreground mt-1">
           If your business had a net operating loss in a prior year ({lossYearOptions.join(', ')}) and you
           are using itemized deductions, you can carry over that loss as an additional deduction this

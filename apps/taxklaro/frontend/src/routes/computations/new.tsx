@@ -99,9 +99,9 @@ function ComputationsNewPage() {
     return (
       <div className="max-w-4xl mx-auto space-y-6" data-testid="computations-new-page">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">Computation Results</h1>
+          <h1 className="font-display text-3xl font-normal">Computation Results</h1>
           <button
-            className="text-sm text-primary underline"
+            className="text-sm text-primary hover:underline transition-colors"
             onClick={() => navigate({ to: '/computations' })}
           >
             Back to Computations
@@ -113,38 +113,46 @@ function ComputationsNewPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6" data-testid="computations-new-page">
-      <h1 className="text-2xl font-semibold">New Computation</h1>
+    <div className="max-w-2xl mx-auto space-y-6" data-testid="computations-new-page">
+      <div>
+        <h1 className="font-display text-3xl font-normal">New Computation</h1>
+        <p className="text-sm text-muted-foreground mt-1">Answer a few questions and we'll compute your tax.</p>
+      </div>
 
       <WizardProgressBar currentStep={stepIndex + 1} totalSteps={allSteps.length} />
 
       {errors.length > 0 && (
-        <div className="rounded-md border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
+        <div className="rounded-lg border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
           {errors.map((e, i) => (
             <p key={i}>{e.message}</p>
           ))}
         </div>
       )}
 
-      {isReview ? (
-        <WizardReview data={formData} onBack={handleBack} onSubmit={handleSubmit} />
-      ) : (
-        (() => {
-          const StepComponent = STEP_COMPONENTS[currentStepId];
-          return StepComponent ? (
-            <>
-              <StepComponent data={formData} onChange={handleChange} onNext={handleNext} onBack={handleBack} />
-              <WizardNavControls
-                onBack={handleBack}
-                onNext={handleNext}
-                isFirstStep={isFirstStep}
-                isLastStep={false}
-                isSubmitting={isComputing}
-              />
-            </>
-          ) : null;
-        })()
-      )}
+      <div
+        className="rounded-xl bg-card border p-8"
+        style={{ boxShadow: 'var(--shadow-md)' }}
+      >
+        {isReview ? (
+          <WizardReview data={formData} onBack={handleBack} onSubmit={handleSubmit} />
+        ) : (
+          (() => {
+            const StepComponent = STEP_COMPONENTS[currentStepId];
+            return StepComponent ? (
+              <>
+                <StepComponent data={formData} onChange={handleChange} onNext={handleNext} onBack={handleBack} />
+                <WizardNavControls
+                  onBack={handleBack}
+                  onNext={handleNext}
+                  isFirstStep={isFirstStep}
+                  isLastStep={false}
+                  isSubmitting={isComputing}
+                />
+              </>
+            ) : null;
+          })()
+        )}
+      </div>
     </div>
   );
 }

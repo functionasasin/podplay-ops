@@ -270,7 +270,7 @@ export function WS08CwtForm2307({ data, onChange, onNext, onBack }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold">Tax withheld by your clients (BIR Form 2307)</h2>
+        <h2 className="font-display text-2xl font-normal">Tax withheld by your clients (BIR Form 2307)</h2>
         <p className="text-sm text-muted-foreground mt-1">
           When Philippine clients pay you for services, they are often required to withhold a
           portion of your fee and give you a BIR Form 2307. This withheld amount is like a tax

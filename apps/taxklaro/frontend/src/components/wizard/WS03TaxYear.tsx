@@ -73,7 +73,7 @@ export function WS03TaxYear({ data, onChange, onNext, onBack }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold">What period are you filing for?</h2>
+        <h2 className="font-display text-2xl font-normal">What period are you filing for?</h2>
       </div>
 
       <div className="space-y-2">

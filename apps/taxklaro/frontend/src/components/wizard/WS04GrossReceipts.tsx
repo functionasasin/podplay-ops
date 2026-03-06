@@ -95,7 +95,7 @@ export function WS04GrossReceipts({ data, onChange, onNext, onBack }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold">How much did you earn?</h2>
+        <h2 className="font-display text-2xl font-normal">How much did you earn?</h2>
       </div>
 
       <div className="space-y-2">

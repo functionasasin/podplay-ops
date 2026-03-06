@@ -64,7 +64,7 @@ export function WS05Compensation({ data, onChange, onNext, onBack }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold">Your employment income</h2>
+        <h2 className="font-display text-2xl font-normal">Your employment income</h2>
         <p className="text-sm text-muted-foreground mt-1">
           For mixed-income earners, your salary from employers and your business income are
           computed together for tax purposes. Your employer(s) already withheld income tax from

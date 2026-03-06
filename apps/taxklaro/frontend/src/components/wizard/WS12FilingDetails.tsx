@@ -68,7 +68,7 @@ export function WS12FilingDetails({ data, onChange, onNext, onBack }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold">Filing details</h2>
+        <h2 className="font-display text-2xl font-normal">Filing details</h2>
         <p className="text-sm text-muted-foreground mt-1">
           Tell us about the type of return and whether you are filing on time.
         </p>

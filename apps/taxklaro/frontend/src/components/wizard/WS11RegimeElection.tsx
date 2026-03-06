@@ -96,7 +96,7 @@ export function WS11RegimeElection({ data, onChange, onNext, onBack }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold">Have you elected a specific tax method?</h2>
+        <h2 className="font-display text-2xl font-normal">Have you elected a specific tax method?</h2>
         <p className="text-sm text-muted-foreground mt-1">
           Your 'election' is how you formally told BIR which tax method you're using. If you're not
           sure what you elected, select the optimizer mode.

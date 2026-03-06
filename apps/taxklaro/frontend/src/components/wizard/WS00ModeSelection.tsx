@@ -66,8 +66,8 @@ export function WS00ModeSelection({ data, onChange, onNext }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold">What would you like to compute?</h2>
-        <p className="text-sm text-muted-foreground mt-1">What are you computing?</p>
+        <h2 className="font-display text-2xl font-normal">What would you like to compute?</h2>
+        <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">Choose the type of computation to get started.</p>
       </div>
 
       <RadioGroup
@@ -81,15 +81,20 @@ export function WS00ModeSelection({ data, onChange, onNext }: Props) {
             <Label htmlFor={`mode-${opt.value}`} className="cursor-pointer block">
               <Card
                 className={cn(
-                  'transition-colors',
+                  'transition-all duration-200',
                   selected === opt.value
-                    ? 'border-primary bg-primary/5'
-                    : 'hover:border-primary/50'
+                    ? 'border-primary ring-2 ring-primary/20 bg-primary/5'
+                    : 'hover:border-primary/40'
                 )}
+                style={{
+                  boxShadow: selected === opt.value
+                    ? 'var(--shadow-md)'
+                    : 'var(--shadow-sm)',
+                }}
               >
-                <CardContent className="p-4">
-                  <div className="font-medium">{opt.title}</div>
-                  <div className="text-sm text-muted-foreground mt-1">{opt.description}</div>
+                <CardContent className="p-5">
+                  <div className="font-medium text-[0.9375rem]">{opt.title}</div>
+                  <div className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{opt.description}</div>
                 </CardContent>
               </Card>
             </Label>
@@ -100,7 +105,7 @@ export function WS00ModeSelection({ data, onChange, onNext }: Props) {
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       <div className="flex justify-end">
-        <Button onClick={handleNext}>Continue</Button>
+        <Button onClick={handleNext} className="h-11 px-6">Continue</Button>
       </div>
     </div>
   );

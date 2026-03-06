@@ -48,7 +48,7 @@ export function WS10Registration({ data, onChange, onNext, onBack }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold">Your BIR registration details</h2>
+        <h2 className="font-display text-2xl font-normal">Your BIR registration details</h2>
         <p className="text-sm text-muted-foreground mt-1">
           Tell us about your tax registration status so we can compute the correct taxes.
         </p>

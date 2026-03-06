@@ -100,7 +100,7 @@ export function WS07AItemizedExpenses({ data, onChange, onNext, onBack }: Props)
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold">Your business expenses — General costs</h2>
+        <h2 className="font-display text-2xl font-normal">Your business expenses — General costs</h2>
         <p className="text-sm text-muted-foreground mt-1">
           Enter the amounts you spent on your business this year. Enter ₱0 for any category that
           doesn't apply to you. All deductions are subject to BIR rules — the engine applies the

@@ -25,8 +25,8 @@ function SectionRow({ label, value }: { label: string; value: string | null | un
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-lg border p-4 space-y-1">
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+    <div className="rounded-xl border bg-card p-5 space-y-1" style={{ boxShadow: 'var(--shadow-sm)' }}>
+      <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
         {title}
       </p>
       {children}
@@ -83,7 +83,7 @@ export function WizardReview({ data, onBack, onSubmit }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold">Review your inputs</h2>
+        <h2 className="font-display text-2xl font-normal">Review your inputs</h2>
         <p className="text-sm text-muted-foreground mt-1">
           Verify everything below before computing your tax. Click "See My Results" when ready.
         </p>
@@ -174,9 +174,9 @@ export function WizardReview({ data, onBack, onSubmit }: Props) {
         </div>
       )}
 
-      <div className="flex justify-between items-center pt-2">
-        <Button variant="ghost" onClick={onBack}>Back</Button>
-        <Button onClick={onSubmit} size="lg" className="gap-2">
+      <div className="flex justify-between items-center pt-4">
+        <Button variant="outline" onClick={onBack} className="h-11 px-5">Back</Button>
+        <Button onClick={onSubmit} size="lg" className="h-11 px-6 gap-2">
           <Badge variant="secondary" className="text-xs">
             Compute
           </Badge>

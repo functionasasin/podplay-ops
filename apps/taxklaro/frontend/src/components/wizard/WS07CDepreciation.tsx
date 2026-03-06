@@ -167,7 +167,7 @@ export function WS07CDepreciation({ data, onChange, onNext, onBack }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold">Your business assets (for depreciation)</h2>
+        <h2 className="font-display text-2xl font-normal">Your business assets (for depreciation)</h2>
         <p className="text-sm text-muted-foreground mt-1">
           If you own business equipment, computers, furniture, or vehicles used for your work, you
           can deduct a portion of their cost each year as depreciation. Enter each asset separately.
