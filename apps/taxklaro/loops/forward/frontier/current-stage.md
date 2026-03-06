@@ -1,26 +1,22 @@
-# Current Stage: 10 (Wizard Steps WS-00 → WS-07D)
+# Current Stage: 11 (Wizard Steps WS-08 → WS-13 + REVIEW)
 
 ## Status
-Stage 9 complete. 36 tests pass for wizard routing + hooks.
+Stage 10 complete. 80 tests pass for wizard steps WS-00 through WS-07D.
 
 ## What To Do
 Read spec §7.7.
-Implement wizard step components WS-00 through WS-07D.
+Implement wizard step components WS-08 through WS-13 plus REVIEW step.
 Each step uses React Hook Form + Zod per-step schema + shadcn/ui.
 All field labels, placeholders, validation, error messages from spec §7.7.
 
 Steps to implement:
-- WS-00: Mode Selection
-- WS-01: Taxpayer Profile
-- WS-02: Business Type
-- WS-03: Tax Year
-- WS-04: Gross Receipts
-- WS-05: Compensation
-- WS-06: Expense Method
-- WS-07A: Itemized Expenses (part 1)
-- WS-07B: Itemized Expenses (part 2)
-- WS-07C: Itemized Expenses (part 3)
-- WS-07D: NOLCO entries
+- WS-08: CWT Form 2307
+- WS-09: Prior Quarterly
+- WS-10: Registration/VAT
+- WS-11: Regime Election
+- WS-12: Filing Details
+- WS-13: Prior Year Credits
+- REVIEW: Final Review + Compute
 
 Test command: `npx vitest run src/components/wizard/`
 
@@ -34,3 +30,4 @@ Test command: `npx vitest run src/components/wizard/`
 - 2026-03-06: Stage 7 complete — Zod schemas implemented, 77 tests pass
 - 2026-03-06: Stage 8 complete — design system set up, vite build produces 33.82 kB CSS
 - 2026-03-06: Stage 9 complete — 36 tests pass for wizard routing + hooks, advancing to stage 10
+- 2026-03-06: Stage 10 complete — 80 tests pass for wizard steps WS-00 through WS-07D, advancing to stage 11
