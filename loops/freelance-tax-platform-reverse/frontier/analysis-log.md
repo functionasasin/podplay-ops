@@ -19,3 +19,4 @@
 | 15 | navigation | 4 | 2026-03-06 | analysis/navigation.md, frontier/aspects.md, frontier/analysis-log.md |
 | 16 | org-model | 4 | 2026-03-06 | analysis/org-model.md, frontier/aspects.md, frontier/analysis-log.md |
 | 17 | computation-management | 4 | 2026-03-06 | analysis/computation-management.md, frontier/aspects.md, frontier/analysis-log.md |
+| 18 | sharing | 4 | 2026-03-06 | analysis/sharing.md, frontier/aspects.md, frontier/analysis-log.md |
