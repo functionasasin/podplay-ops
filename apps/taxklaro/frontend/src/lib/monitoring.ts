@@ -1,25 +1,24 @@
-// Stub monitoring module — full implementation in Stage 20
+import * as Sentry from '@sentry/react';
 
-export function trackValidationError(_code: string, _fieldName?: string): void {
-  // no-op — spec §17.2: validation errors are NOT sent to Sentry
+// spec §17.2: ValidationErrors are NOT sent to Sentry — noise
+export function trackValidationError(_code: string, _fieldName?: string): void { /* no-op */ }
+
+export function trackComputationError(error: unknown, context?: Record<string, unknown>): void {
+  Sentry.captureException(error, { tags: { category: 'wasm_computation' }, extra: context });
 }
 
-export function trackComputationError(_error: unknown, _context?: Record<string, unknown>): void {
-  // Stage 20: wire to Sentry
+export function trackWasmInitError(error: unknown): void {
+  Sentry.captureException(error, { tags: { category: 'wasm_init' }, level: 'fatal' });
 }
 
-export function trackWasmInitError(_error: unknown): void {
-  // Stage 20: wire to Sentry
+export function trackWarning(message: string, extra?: Record<string, unknown>): void {
+  Sentry.captureMessage(message, { level: 'warning', extra });
 }
 
-export function trackWarning(_message: string, _extra?: Record<string, unknown>): void {
-  // Stage 20: wire to Sentry
-}
-
-export function identifyUser(_userId: string, _email: string): void {
-  // Stage 20: wire to Sentry
+export function identifyUser(userId: string, email: string): void {
+  Sentry.setUser({ id: userId, email });
 }
 
 export function clearUser(): void {
-  // Stage 20: wire to Sentry
+  Sentry.setUser(null);
 }

@@ -1,5 +1,6 @@
 import { Component } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
+import * as Sentry from '@sentry/react';
 import { Button } from '@/components/ui/button';
 
 interface Props {
@@ -23,8 +24,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    // In production, capture with Sentry (wired in stage 20)
-    console.error('ErrorBoundary caught:', error, info);
+    Sentry.captureException(error, { extra: { componentStack: info.componentStack } });
   }
 
   render() {
