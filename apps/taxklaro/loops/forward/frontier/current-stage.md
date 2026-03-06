@@ -1,24 +1,19 @@
-# Current Stage: 15 (Routes + Navigation)
+# Current Stage: 16 (Org Model + Computations CRUD)
 
 ## Status
-Stage 14 complete. All 17 auth tests pass. src/lib/auth.ts fully implemented.
+Stage 15 complete. All 63 route tests pass. Router, 18 routes, and layout implemented.
 
 ## What To Do
-Read spec §11, §12. Implement TanStack Router with 18 routes and auth-aware layout.
+Read spec §13, §7.5. Implement org model and computation CRUD.
 
 Tasks:
-- Create src/router.ts (createRouter with context)
-- Create all 18 route files from spec §11.2 (route table)
-- Implement beforeLoad auth guard pattern from spec §11.3
-- Create AppLayout.tsx from spec §12.1 (sidebar desktop + drawer mobile)
-- Create SidebarContent.tsx from spec §12.2 (auth-aware nav items)
+- Create src/hooks/useOrganization.ts from spec §13.2
+- Implement plan tiers from spec §13.1 (free: 3, pro: 10, enterprise: unlimited)
+- Create src/lib/computations.ts from spec §7.5 — full CRUD
+- Create ComputationCard.tsx — grid card with status, regime, last modified
+- Create computations list page with status tabs (draft/computed/finalized/archived)
 
-Critical traps:
-- Public routes (/, /auth/*, /share/$token) must NOT have auth guard
-- Route file naming must follow TanStack Router file conventions exactly
-- RouterContext type must include `auth: { user: User | null }`
-
-Test command: `npx vitest run src/routes/`
+Test command: `npx vitest run src/lib/computations`
 
 ## Work Log
 - 2026-03-06: Stage 1 complete — cargo check passes, advancing to stage 2
@@ -35,3 +30,4 @@ Test command: `npx vitest run src/routes/`
 - 2026-03-06: Stage 12 complete — 42 tests pass for results components + format utilities, advancing to stage 13
 - 2026-03-06: Stage 13 complete — supabase db reset passes, all 4 migrations match spec §10, .env.local.example created, advancing to stage 14
 - 2026-03-06: Stage 14 complete — 17 auth tests pass, advancing to stage 15
+- 2026-03-06: Stage 15 complete — 63 route tests pass, advancing to stage 16

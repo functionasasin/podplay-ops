@@ -1,0 +1,12 @@
+Stage 15 complete — 2026-03-06
+
+All 63 route tests pass.
+
+Summary:
+- router.ts: createRouter with RouterContext { auth: { user: User | null } }
+- 18 routes registered across public and authenticated trees
+- authGuard (src/lib/auth-guard.ts) applied to all 11 authenticated routes
+- Public routes (/, /auth/*, /share/$token, /invite/$token) have no guard
+- /computations/new registered before /computations/$compId (spec §11.4)
+- AppLayout.tsx: fixed sidebar (256px desktop) + Sheet drawer (mobile)
+- SidebarContent.tsx: 5 nav items with active state + sign out button
