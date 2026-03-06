@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 57
-- Analyzed: 35
-- Pending: 22
-- Convergence: 60%
+- Analyzed: 36
+- Pending: 21
+- Convergence: 63%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -50,7 +50,7 @@
 - [x] logic-sign-fulfillment — Replay sign workflow: calculate qty (2x courts), track outreach (Slack/email), shipping, install confirmation, inventory decrement
 - [x] logic-troubleshooting — Contextual troubleshooting tips linked to deployment phases: 14 known issue/solution pairs from Appendix A (Mac Mini crash, PoE issues, button pairing, DDNS, port 4000, .DS_Store, pixelation, Firebase re-sync)
 - [x] logic-isp-validation — Starlink incompatibility warning, internet speed recommendations by court count (1-30), circuit type guidance (fiber/cable/5G/dedicated), backup ISP requirements for autonomous 24/7 venues, dual ISP backbone rule
-- [ ] logic-cable-estimation — Cat6 cable length calculator: courts x avg distance x 3 drops + doors x avg distance x 1 drop + cameras x avg distance, with example calculations
+- [x] logic-cable-estimation — Cat6 cable length calculator: courts x avg distance x 3 drops + doors x avg distance x 1 drop + cameras x avg distance, with example calculations
 - [ ] logic-replay-service-version — V1 vs V2 replay service: conditional deployment steps, V1 uses UDP (pixelation known issue), V2 uses TCP (coming April 2026), V2 deploys from GitHub + config via dashboard
 - [ ] logic-power-calculations — PoE port count per configuration, power consumption in watts, UPS runtime calculation (e.g., 43 min for 6-court), available rack unit space, switch size selection
 
