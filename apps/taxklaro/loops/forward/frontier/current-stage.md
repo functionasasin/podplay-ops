@@ -1,19 +1,18 @@
-# Current Stage: 16 (Org Model + Computations CRUD)
+# Current Stage: 17 (Sharing + Auto-save)
 
 ## Status
-Stage 15 complete. All 63 route tests pass. Router, 18 routes, and layout implemented.
+Stage 16 complete. All 27 computations CRUD tests pass. ComputationCard, ComputationCardSkeleton, and computations list page with status tabs implemented.
 
 ## What To Do
-Read spec §13, §7.5. Implement org model and computation CRUD.
+Read spec §7.6, §7.4 (useAutoSave). Implement sharing and auto-save.
 
 Tasks:
-- Create src/hooks/useOrganization.ts from spec §13.2
-- Implement plan tiers from spec §13.1 (free: 3, pro: 10, enterprise: unlimited)
-- Create src/lib/computations.ts from spec §7.5 — full CRUD
-- Create ComputationCard.tsx — grid card with status, regime, last modified
-- Create computations list page with status tabs (draft/computed/finalized/archived)
+- Create src/lib/share.ts from spec §7.6 — enableSharing, disableSharing, getSharedComputation
+- Create ShareView.tsx — read-only results at /share/$token
+- Wire useAutoSave hook to real Supabase calls (1500ms debounce)
+- Create SaveStatusIndicator.tsx — "Saving..." / "Saved" / "Error"
 
-Test command: `npx vitest run src/lib/computations`
+Test command: `npx vitest run src/lib/share`
 
 ## Work Log
 - 2026-03-06: Stage 1 complete — cargo check passes, advancing to stage 2
@@ -31,3 +30,4 @@ Test command: `npx vitest run src/lib/computations`
 - 2026-03-06: Stage 13 complete — supabase db reset passes, all 4 migrations match spec §10, .env.local.example created, advancing to stage 14
 - 2026-03-06: Stage 14 complete — 17 auth tests pass, advancing to stage 15
 - 2026-03-06: Stage 15 complete — 63 route tests pass, advancing to stage 16
+- 2026-03-06: Stage 16 complete — 27 computations CRUD tests pass, ComputationCard + list page with status tabs implemented, advancing to stage 17

@@ -1,0 +1,12 @@
+Stage 16 complete — 2026-03-06
+
+All 27 computations CRUD tests pass.
+
+Implemented:
+- src/lib/computations.ts — full CRUD (createComputation, loadComputation, updateComputationInput, saveComputationOutput, listComputations, updateComputationStatus, deleteComputation)
+- src/hooks/useOrganization.ts — org + role fetch, plan tier caps (canExportPdf/canShare gated by plan !== 'free')
+- src/components/computation/ComputationCard.tsx — grid card with status badge, regime, last modified, archive/delete dropdown
+- src/components/computation/ComputationCardSkeleton.tsx — animate-pulse skeleton (6 Tailwind classes on root)
+- src/routes/computations/index.tsx — full computations list page with status tabs (all/draft/computed/finalized/archived), loading skeletons (6 cards), error state, empty states
+
+Advancing to stage 17.
