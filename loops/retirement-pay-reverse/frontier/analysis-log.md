@@ -2,6 +2,7 @@
 
 | # | Aspect | Wave | Date | Files Modified |
 |---|--------|------|------|----------------|
+| 60 | ci-cd-pipeline | 6 | 2026-03-06 | analysis/ci-cd-pipeline.md |
 | 59 | fly-io-deployment | 6 | 2026-03-06 | analysis/fly-io-deployment.md |
 | 58 | supabase-gotchas | 6 | 2026-03-06 | analysis/supabase-gotchas.md |
 | 57 | migration-verification | 6 | 2026-03-06 | analysis/migration-verification.md |
