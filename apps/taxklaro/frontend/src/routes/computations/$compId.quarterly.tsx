@@ -68,27 +68,27 @@ function QuarterlyPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6" data-testid="quarterly-page">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">{computation.title || 'Untitled Computation'}</h1>
-          <p className="text-sm text-muted-foreground">
-            Tax Year {computation.taxYear} &middot; Quarterly View
+          <h1 className="font-display text-3xl text-foreground">{computation.title || 'Untitled Computation'}</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Tax Year {computation.taxYear} · Quarterly View
           </p>
         </div>
         <button
-          className="text-sm text-primary underline"
+          className="text-sm text-primary hover:text-primary/80 font-medium transition-colors shrink-0 mt-1"
           onClick={() => navigate({ to: '/computations/$compId', params: { compId } })}
         >
-          Back to Computation
+          ← Back to Computation
         </button>
       </div>
 
       {result ? (
         <QuarterlyBreakdownView results={[result]} taxYear={computation.taxYear} />
       ) : (
-        <div className="rounded-md border p-8 text-center text-muted-foreground">
-          <p>This computation has not been run yet.</p>
-          <p className="text-sm mt-1">Run the computation to see the quarterly breakdown.</p>
+        <div className="bg-card rounded-xl shadow-sm border border-border/50 p-10 text-center space-y-2">
+          <p className="font-medium text-foreground">No results yet</p>
+          <p className="text-sm text-muted-foreground">Run the computation to see the quarterly breakdown.</p>
         </div>
       )}
     </div>

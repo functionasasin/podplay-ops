@@ -23,26 +23,28 @@ export function FirmBrandingSection({ firmName, logoUrl, onSave, onUploadLogo }:
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <h2 className="text-lg font-semibold">Firm Branding</h2>
-      <div className="space-y-2">
-        <Label htmlFor="firmName">Firm Name</Label>
-        <Input id="firmName" name="firmName" defaultValue={firmName} />
-      </div>
-      <div className="space-y-2">
-        <Label>Logo</Label>
-        {logoUrl && <img src={logoUrl} alt="Firm logo" className="h-12 object-contain" />}
-        <label className="cursor-pointer">
-          <Button type="button" variant="outline" size="sm" asChild>
-            <span><Upload className="h-4 w-4 mr-2" />Upload Logo</span>
-          </Button>
-          <input type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
-        </label>
-      </div>
-      <Button type="submit" size="sm">
-        <Save className="h-4 w-4 mr-2" />Save Changes
-      </Button>
-    </form>
+    <div className="bg-card rounded-xl shadow-sm border border-border/50 p-6">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <h2 className="font-display text-xl text-foreground">Firm Branding</h2>
+        <div className="space-y-1.5">
+          <Label htmlFor="firmName">Firm Name</Label>
+          <Input id="firmName" name="firmName" defaultValue={firmName} className="h-11" />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Logo</Label>
+          {logoUrl && <img src={logoUrl} alt="Firm logo" className="h-12 object-contain" />}
+          <label className="cursor-pointer">
+            <Button type="button" variant="outline" size="sm" asChild>
+              <span><Upload className="h-4 w-4 mr-2" />Upload Logo</span>
+            </Button>
+            <input type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
+          </label>
+        </div>
+        <Button type="submit" size="sm">
+          <Save className="h-4 w-4 mr-2" />Save Changes
+        </Button>
+      </form>
+    </div>
   );
 }
 

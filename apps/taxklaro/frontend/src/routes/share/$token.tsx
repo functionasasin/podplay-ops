@@ -47,21 +47,31 @@ function SharePage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-10 px-4 space-y-6">
-      <div className="space-y-1">
-        <h1 className="text-2xl font-bold text-foreground">{data.title}</h1>
-        <p className="text-sm text-muted-foreground">
-          Tax Year {data.taxYear} · Shared by {data.orgName}
-        </p>
+    <div className="min-h-screen bg-background">
+      {/* Shared via TaxKlaro banner */}
+      <div className="border-b border-border/60 bg-card px-4 py-3">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <span className="font-display text-base text-foreground">TaxKlaro</span>
+          <span className="text-xs text-muted-foreground">Shared computation · read-only</span>
+        </div>
       </div>
-      {data.outputJson ? (
-        <ResultsView
-          result={data.outputJson as unknown as TaxComputationResult}
-          readOnly={true}
-        />
-      ) : (
-        <p className="text-muted-foreground">No computation results available.</p>
-      )}
+
+      <div className="max-w-4xl mx-auto py-10 px-4 space-y-6">
+        <div className="space-y-1">
+          <h1 className="font-display text-3xl text-foreground">{data.title}</h1>
+          <p className="text-sm text-muted-foreground">
+            Tax Year {data.taxYear} · Shared by {data.orgName}
+          </p>
+        </div>
+        {data.outputJson ? (
+          <ResultsView
+            result={data.outputJson as unknown as TaxComputationResult}
+            readOnly={true}
+          />
+        ) : (
+          <p className="text-muted-foreground">No computation results available.</p>
+        )}
+      </div>
     </div>
   );
 }

@@ -111,12 +111,12 @@ function SettingsTeamPage() {
 
   return (
     <div data-testid="settings-team-page" className="space-y-8 max-w-3xl">
-      <h1 className="text-2xl font-semibold">Team Management</h1>
+      <h1 className="font-display text-3xl text-foreground">Team Management</h1>
 
       {canInvite && <InviteMemberForm onInvite={handleInvite} />}
 
       <section className="space-y-4">
-        <h2 className="text-lg font-medium">Members</h2>
+        <h2 className="font-display text-xl text-foreground">Members</h2>
         <MembersTable
           members={members}
           currentUserId={user?.id}
@@ -125,7 +125,7 @@ function SettingsTeamPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-lg font-medium">Pending Invitations</h2>
+        <h2 className="font-display text-xl text-foreground">Pending Invitations</h2>
         <PendingInvitationsTable
           invitations={invitations}
           onRevoke={canInvite ? handleRevokeInvitation : undefined}

@@ -24,36 +24,39 @@ export function InviteMemberForm({ onInvite }: InviteMemberFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <h3 className="font-medium">Invite Member</h3>
-      <div className="flex gap-3">
-        <div className="flex-1 space-y-1">
-          <Label htmlFor="invite-email">Email</Label>
-          <Input
-            id="invite-email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="colleague@example.com"
-          />
+    <div className="bg-card rounded-xl shadow-sm border border-border/50 p-6">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <h2 className="font-display text-xl text-foreground">Invite Member</h2>
+        <div className="flex gap-3">
+          <div className="flex-1 space-y-1.5">
+            <Label htmlFor="invite-email">Email</Label>
+            <Input
+              id="invite-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="colleague@example.com"
+              className="h-11"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Role</Label>
+            <Select value={role} onValueChange={setRole}>
+              <SelectTrigger className="w-32 h-11">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="member">Member</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-        <div className="space-y-1">
-          <Label>Role</Label>
-          <Select value={role} onValueChange={setRole}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="member">Member</SelectItem>
-              <SelectItem value="admin">Admin</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      <Button type="submit" size="sm" disabled={isSubmitting || !email.trim()}>
-        <UserPlus className="h-4 w-4 mr-2" />Send Invitation
-      </Button>
-    </form>
+        <Button type="submit" size="sm" disabled={isSubmitting || !email.trim()}>
+          <UserPlus className="h-4 w-4 mr-2" />Send Invitation
+        </Button>
+      </form>
+    </div>
   );
 }
 

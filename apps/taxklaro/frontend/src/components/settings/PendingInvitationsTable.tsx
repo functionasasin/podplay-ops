@@ -19,21 +19,21 @@ export function PendingInvitationsTable({ invitations, onRevoke }: PendingInvita
   }
 
   return (
-    <div className="border rounded-lg overflow-hidden">
+    <div className="bg-card rounded-xl shadow-sm border border-border/50 overflow-hidden">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b bg-muted/50">
-            <th className="px-4 py-3 text-left font-medium">Email</th>
-            <th className="px-4 py-3 text-left font-medium">Role</th>
-            <th className="px-4 py-3 text-left font-medium">Sent</th>
+          <tr className="border-b bg-muted/40">
+            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Email</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Role</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Sent</th>
             <th className="px-4 py-3" />
           </tr>
         </thead>
         <tbody>
           {invitations.map((inv) => (
-            <tr key={inv.id} className="border-b last:border-0">
-              <td className="px-4 py-3">{inv.email}</td>
-              <td className="px-4 py-3">{inv.role}</td>
+            <tr key={inv.id} className="border-b last:border-0 hover:bg-muted/20 transition-colors">
+              <td className="px-4 py-3 font-medium">{inv.email}</td>
+              <td className="px-4 py-3 capitalize">{inv.role}</td>
               <td className="px-4 py-3 text-muted-foreground">
                 {new Date(inv.createdAt).toLocaleDateString('en-PH')}
               </td>

@@ -95,7 +95,7 @@ function DeadlinesPage() {
   if (orgLoading || isLoading) {
     return (
       <div className="space-y-4" data-testid="deadlines-page">
-        <h1 className="text-2xl font-semibold">Deadlines</h1>
+        <h1 className="font-display text-3xl text-foreground">Deadlines</h1>
         <div className="animate-pulse space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="h-20 bg-muted rounded-lg" />
@@ -110,16 +110,20 @@ function DeadlinesPage() {
 
   return (
     <div className="space-y-6" data-testid="deadlines-page">
-      <h1 className="text-2xl font-semibold">Deadlines</h1>
+      <h1 className="font-display text-3xl text-foreground">Deadlines</h1>
 
       {deadlines.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          No deadlines yet. Create a computation to see filing deadlines.
-        </p>
+        <div className="rounded-lg bg-card shadow-sm border border-border/50 p-12 flex flex-col items-center text-center">
+          <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-4">
+            <span className="text-2xl text-muted-foreground">📅</span>
+          </div>
+          <p className="font-medium text-foreground mb-1">No deadlines yet</p>
+          <p className="text-sm text-muted-foreground">Create a computation to see filing deadlines.</p>
+        </div>
       ) : (
         <>
           <section className="space-y-3">
-            <h2 className="text-lg font-medium">Upcoming</h2>
+            <h2 className="font-display text-xl text-foreground">Upcoming</h2>
             {upcoming.length === 0 ? (
               <p className="text-sm text-muted-foreground">All deadlines completed.</p>
             ) : (
@@ -140,7 +144,7 @@ function DeadlinesPage() {
 
           {completed.length > 0 && (
             <section className="space-y-3">
-              <h2 className="text-lg font-medium">Completed</h2>
+              <h2 className="font-display text-xl text-foreground">Completed</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {completed.map((d) => (
                   <DeadlineCard

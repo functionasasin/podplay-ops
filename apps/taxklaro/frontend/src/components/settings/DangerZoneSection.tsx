@@ -8,8 +8,8 @@ interface DangerZoneSectionProps {
 
 export function DangerZoneSection({ orgName, onDeleteOrg }: DangerZoneSectionProps) {
   return (
-    <div className="border border-destructive rounded-lg p-4 space-y-3">
-      <h2 className="text-lg font-semibold text-destructive">Danger Zone</h2>
+    <div className="bg-destructive/5 border border-destructive/40 rounded-xl p-6 space-y-3">
+      <h2 className="font-display text-xl text-destructive">Danger Zone</h2>
       <p className="text-sm text-muted-foreground">
         Delete the organization <strong>{orgName}</strong>. This action is irreversible.
       </p>

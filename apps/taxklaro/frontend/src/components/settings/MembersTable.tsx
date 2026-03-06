@@ -16,22 +16,22 @@ interface MembersTableProps {
 
 export function MembersTable({ members, currentUserId, onRemove }: MembersTableProps) {
   return (
-    <div className="border rounded-lg overflow-hidden">
+    <div className="bg-card rounded-xl shadow-sm border border-border/50 overflow-hidden">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b bg-muted/50">
-            <th className="px-4 py-3 text-left font-medium">Name</th>
-            <th className="px-4 py-3 text-left font-medium">Email</th>
-            <th className="px-4 py-3 text-left font-medium">Role</th>
+          <tr className="border-b bg-muted/40">
+            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Name</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Email</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Role</th>
             <th className="px-4 py-3" />
           </tr>
         </thead>
         <tbody>
           {members.map((m) => (
-            <tr key={m.id} className="border-b last:border-0">
-              <td className="px-4 py-3">{m.name}</td>
+            <tr key={m.id} className="border-b last:border-0 hover:bg-muted/20 transition-colors">
+              <td className="px-4 py-3 font-medium">{m.name}</td>
               <td className="px-4 py-3 text-muted-foreground">{m.email}</td>
-              <td className="px-4 py-3">{m.role}</td>
+              <td className="px-4 py-3 capitalize">{m.role}</td>
               <td className="px-4 py-3 text-right">
                 {m.id !== currentUserId && onRemove && (
                   <Button size="sm" variant="ghost" onClick={() => onRemove(m.id)}>

@@ -17,20 +17,22 @@ export function PersonalInfoSection({ fullName, email, onSave }: PersonalInfoSec
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <h2 className="text-lg font-semibold">Personal Information</h2>
-      <div className="space-y-2">
-        <Label htmlFor="fullName">Full Name</Label>
-        <Input id="fullName" name="fullName" defaultValue={fullName} />
-      </div>
-      <div className="space-y-2">
-        <Label>Email</Label>
-        <Input value={email} disabled />
-      </div>
-      <Button type="submit" size="sm">
-        <Save className="h-4 w-4 mr-2" />Save Changes
-      </Button>
-    </form>
+    <div className="bg-card rounded-xl shadow-sm border border-border/50 p-6">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <h2 className="font-display text-xl text-foreground">Personal Information</h2>
+        <div className="space-y-1.5">
+          <Label htmlFor="fullName">Full Name</Label>
+          <Input id="fullName" name="fullName" defaultValue={fullName} className="h-11" />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Email</Label>
+          <Input value={email} disabled className="h-11" />
+        </div>
+        <Button type="submit" size="sm">
+          <Save className="h-4 w-4 mr-2" />Save Changes
+        </Button>
+      </form>
+    </div>
   );
 }
 

@@ -17,20 +17,22 @@ export function BirInfoSection({ tin, rdoCode, onSave }: BirInfoSectionProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <h2 className="text-lg font-semibold">BIR Information</h2>
-      <div className="space-y-2">
-        <Label htmlFor="tin">TIN</Label>
-        <Input id="tin" name="tin" defaultValue={tin ?? ''} placeholder="000-000-000-000" />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="rdoCode">RDO Code</Label>
-        <Input id="rdoCode" name="rdoCode" defaultValue={rdoCode ?? ''} placeholder="e.g. 051" />
-      </div>
-      <Button type="submit" size="sm">
-        <Save className="h-4 w-4 mr-2" />Save Changes
-      </Button>
-    </form>
+    <div className="bg-card rounded-xl shadow-sm border border-border/50 p-6">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <h2 className="font-display text-xl text-foreground">BIR Information</h2>
+        <div className="space-y-1.5">
+          <Label htmlFor="tin">TIN</Label>
+          <Input id="tin" name="tin" defaultValue={tin ?? ''} placeholder="000-000-000-000" className="h-11" />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="rdoCode">RDO Code</Label>
+          <Input id="rdoCode" name="rdoCode" defaultValue={rdoCode ?? ''} placeholder="e.g. 051" className="h-11" />
+        </div>
+        <Button type="submit" size="sm">
+          <Save className="h-4 w-4 mr-2" />Save Changes
+        </Button>
+      </form>
+    </div>
   );
 }
 
