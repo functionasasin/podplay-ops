@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 57
-- Analyzed: 27
-- Pending: 30
-- Convergence: 47%
+- Analyzed: 28
+- Pending: 29
+- Convergence: 49%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -42,7 +42,7 @@
 - [x] logic-cost-analysis — Cost calculation chain: unit cost → total → tax → shipping → landed → margin → customer price
 - [x] logic-inventory-management — Stock tracking: order → receive → stock → allocate → ship → deduct, low stock alerts
 - [x] logic-deployment-tracking — Status progression: not_started → config → ready_to_ship → shipped → installing → qc → completed
-- [ ] logic-progress-calculation — Progress % from QA checklist completion, status derivation rules
+- [x] logic-progress-calculation — Progress % from QA checklist completion, status derivation rules
 - [ ] logic-invoicing — Two-installment billing: deposit → final, signed/invoiced/paid tracking, aging receivables
 - [ ] logic-expense-tracking — Expense categories, payment methods, per-project attribution, monthly totals
 - [ ] logic-financial-reporting — P&L calculation, HER formula (hardware revenue / team spend), monthly close workflow
