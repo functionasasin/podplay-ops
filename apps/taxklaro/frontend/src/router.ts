@@ -1,5 +1,5 @@
 import { createRouter } from '@tanstack/react-router';
-import { rootRoute, publicRootRoute } from './routes/__root';
+import { rootRoute, publicRootRoute, authenticatedRoute } from './routes/__root';
 
 import { IndexRoute } from './routes/index';
 import { AuthRoute } from './routes/auth';
@@ -32,16 +32,18 @@ const routeTree = rootRoute.addChildren([
     InviteTokenRoute,
     ShareTokenRoute,
   ]),
-  ComputationsIndexRoute,
-  ComputationsNewRoute,
-  ComputationsCompIdRoute,
-  ComputationsCompIdQuarterlyRoute,
-  ClientsIndexRoute,
-  ClientsNewRoute,
-  ClientsClientIdRoute,
-  DeadlinesRoute,
-  SettingsIndexRoute,
-  SettingsTeamRoute,
+  authenticatedRoute.addChildren([
+    ComputationsIndexRoute,
+    ComputationsNewRoute,
+    ComputationsCompIdRoute,
+    ComputationsCompIdQuarterlyRoute,
+    ClientsIndexRoute,
+    ClientsNewRoute,
+    ClientsClientIdRoute,
+    DeadlinesRoute,
+    SettingsIndexRoute,
+    SettingsTeamRoute,
+  ]),
 ]);
 
 export const router = createRouter({

@@ -246,11 +246,16 @@ describe('route paths match spec §11.2', () => {
 describe('route tree ordering', () => {
   it('ComputationsNewRoute is registered before ComputationsCompIdRoute', () => {
     const routeTree = (router as any).routeTree;
-    const children = routeTree.children as any[];
-    const newIdx = children.findIndex(
+    // Routes are nested under the authenticated layout route — search recursively
+    function findAll(node: any): any[] {
+      const children: any[] = node.children ?? [];
+      return children.flatMap((c: any) => [c, ...findAll(c)]);
+    }
+    const allRoutes = findAll(routeTree);
+    const newIdx = allRoutes.findIndex(
       (r: any) => r.options?.path === '/computations/new'
     );
-    const compIdIdx = children.findIndex(
+    const compIdIdx = allRoutes.findIndex(
       (r: any) => r.options?.path === '/computations/$compId'
     );
     expect(newIdx).toBeGreaterThanOrEqual(0);

@@ -2,7 +2,7 @@ import { createRoute } from '@tanstack/react-router';
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { Plus, FileText } from 'lucide-react';
-import { rootRoute } from '../__root';
+import { authenticatedRoute } from '../__root';
 import { authGuard } from '../../lib/auth-guard';
 import { listComputations, deleteComputation, updateComputationStatus } from '../../lib/computations';
 import { useOrganization } from '../../hooks/useOrganization';
@@ -13,7 +13,7 @@ import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import type { ComputationListItem, ComputationStatus } from '../../types/org';
 
 export const ComputationsIndexRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => authenticatedRoute,
   path: '/computations',
   beforeLoad: authGuard,
   component: ComputationsPage,

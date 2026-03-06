@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createRoute } from '@tanstack/react-router';
-import { rootRoute } from './__root';
+import { authenticatedRoute } from './__root';
 import { authGuard } from '../lib/auth-guard';
 import { useOrganization } from '../hooks/useOrganization';
 import { listComputations } from '../lib/computations';
@@ -8,7 +8,7 @@ import { DeadlineCard } from '../components/deadlines/DeadlineCard';
 import type { ComputationListItem } from '../types/org';
 
 export const DeadlinesRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => authenticatedRoute,
   path: '/deadlines',
   beforeLoad: authGuard,
   component: DeadlinesPage,

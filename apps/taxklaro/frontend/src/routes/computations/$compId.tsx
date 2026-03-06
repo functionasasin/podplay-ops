@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createRoute, useNavigate } from '@tanstack/react-router';
-import { rootRoute } from '../__root';
+import { authenticatedRoute } from '../__root';
 import { authGuard } from '../../lib/auth-guard';
 import { loadComputation } from '../../lib/computations';
 import { ResultsView } from '../../components/computation/ResultsView';
@@ -8,7 +8,7 @@ import type { ComputationRow } from '../../types/org';
 import type { TaxComputationResult } from '../../types/engine-output';
 
 export const ComputationsCompIdRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => authenticatedRoute,
   path: '/computations/$compId',
   beforeLoad: authGuard,
   component: ComputationDetailPage,

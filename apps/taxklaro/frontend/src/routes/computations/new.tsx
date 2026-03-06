@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { createRoute, useNavigate } from '@tanstack/react-router';
-import { rootRoute } from '../__root';
+import { authenticatedRoute } from '../__root';
 import { authGuard } from '../../lib/auth-guard';
 import { computeActiveSteps } from '../../lib/wizard-routing';
 import { WizardProgressBar } from '../../components/wizard/WizardProgressBar';
@@ -31,7 +31,7 @@ import { useCompute } from '../../hooks/useCompute';
 import { ResultsView } from '../../components/computation/ResultsView';
 
 export const ComputationsNewRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => authenticatedRoute,
   path: '/computations/new',
   beforeLoad: authGuard,
   component: ComputationsNewPage,

@@ -1,5 +1,5 @@
 import { createRoute } from '@tanstack/react-router';
-import { rootRoute } from '../__root';
+import { authenticatedRoute } from '../__root';
 import { authGuard } from '../../lib/auth-guard';
 import { useAuth } from '../../hooks/useAuth';
 import { useOrganization } from '../../hooks/useOrganization';
@@ -10,7 +10,7 @@ import { DangerZoneSection } from '../../components/settings/DangerZoneSection';
 import { supabase } from '../../lib/supabase';
 
 export const SettingsIndexRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => authenticatedRoute,
   path: '/settings',
   beforeLoad: authGuard,
   component: SettingsPage,

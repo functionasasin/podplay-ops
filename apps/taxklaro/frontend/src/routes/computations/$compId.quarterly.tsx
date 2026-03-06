@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createRoute, useNavigate } from '@tanstack/react-router';
-import { rootRoute } from '../__root';
+import { authenticatedRoute } from '../__root';
 import { authGuard } from '../../lib/auth-guard';
 import { loadComputation } from '../../lib/computations';
 import { QuarterlyBreakdownView } from '../../components/computation/QuarterlyBreakdownView';
@@ -9,7 +9,7 @@ import type { TaxComputationResult } from '../../types/engine-output';
 
 // Dot notation makes this a sibling, not a nested child of $compId
 export const ComputationsCompIdQuarterlyRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => authenticatedRoute,
   path: '/computations/$compId/quarterly',
   beforeLoad: authGuard,
   component: QuarterlyPage,

@@ -1,6 +1,6 @@
 import { createRoute } from '@tanstack/react-router';
 import { useState, useEffect, useCallback } from 'react';
-import { rootRoute } from '../__root';
+import { authenticatedRoute } from '../__root';
 import { authGuard } from '../../lib/auth-guard';
 import { useAuth } from '../../hooks/useAuth';
 import { useOrganization } from '../../hooks/useOrganization';
@@ -24,7 +24,7 @@ interface Invitation {
 }
 
 export const SettingsTeamRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => authenticatedRoute,
   path: '/settings/team',
   beforeLoad: authGuard,
   component: SettingsTeamPage,

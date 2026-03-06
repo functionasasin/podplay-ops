@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createRoute, useNavigate } from '@tanstack/react-router';
 import { Plus, Users } from 'lucide-react';
-import { rootRoute } from '../__root';
+import { authenticatedRoute } from '../__root';
 import { authGuard } from '../../lib/auth-guard';
 import { supabase } from '../../lib/supabase';
 import { useOrganization } from '../../hooks/useOrganization';
@@ -9,7 +9,7 @@ import { ClientsTable } from '../../components/clients/ClientsTable';
 import { Button } from '../../components/ui/button';
 
 export const ClientsIndexRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => authenticatedRoute,
   path: '/clients',
   beforeLoad: authGuard,
   component: ClientsPage,

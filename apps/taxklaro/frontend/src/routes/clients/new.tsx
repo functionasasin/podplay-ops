@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { createRoute, useNavigate } from '@tanstack/react-router';
-import { rootRoute } from '../__root';
+import { authenticatedRoute } from '../__root';
 import { authGuard } from '../../lib/auth-guard';
 import { supabase } from '../../lib/supabase';
 import { useOrganization } from '../../hooks/useOrganization';
@@ -9,7 +9,7 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 
 export const ClientsNewRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => authenticatedRoute,
   path: '/clients/new',
   beforeLoad: authGuard,
   component: ClientsNewPage,

@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { createRoute, useNavigate } from '@tanstack/react-router';
-import { rootRoute } from '../__root';
+import { authenticatedRoute } from '../__root';
 import { authGuard } from '../../lib/auth-guard';
 import { supabase } from '../../lib/supabase';
 import { ClientInfoCard } from '../../components/clients/ClientInfoCard';
 
 export const ClientsClientIdRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => authenticatedRoute,
   path: '/clients/$clientId',
   beforeLoad: authGuard,
   component: ClientDetailPage,
