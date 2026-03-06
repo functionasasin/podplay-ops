@@ -1,15 +1,15 @@
-# Current Stage: 3 (Engine Pipeline)
+# Current Stage: 4 (Engine WASM Build)
 
 ## Status
-Stage 2 complete. Types, rates, and errors fully implemented. cargo check passes.
+Stage 3 complete. Full 16-step pipeline implemented. 37 tests pass (cargo test).
 
 ## What To Do
-Read spec §3.5, §3.6, §3.7. Implement the 16-step computation pipeline in
-src/pipeline.rs. Copy test vectors from reverse loop. Write unit tests sourced
-from basic.md and edge-cases.md covering all 3 paths.
+Read spec §3.8. Complete src/wasm.rs — wrap run_pipeline in WasmResult envelope.
+Run `wasm-pack build --target web` in engine directory. Verify engine/pkg/ is produced.
 
-Test command: `cargo test`
+Test command: `wasm-pack build --target web`
 
 ## Work Log
 - 2026-03-06: Stage 1 complete — cargo check passes, advancing to stage 2
 - 2026-03-06: Stage 2 complete — all types + rates implemented, cargo check passes
+- 2026-03-06: Stage 3 complete — full pipeline (37 tests pass), advancing to stage 4

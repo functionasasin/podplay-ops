@@ -1,0 +1,10 @@
+Stage 3 complete — 2026-03-06T12:56:55Z
+
+Summary:
+- Full 16-step pipeline (PL-01 to PL-17) implemented in src/pipeline.rs
+- 37 tests pass (cargo test): 17 pipeline + 20 rate boundary tests
+- Covers: TV-BASIC-001..004, TV-EDGE-001..002, boundary cases, penalties, regimes
+- Test vectors copied from reverse loop to engine/test-vectors/
+- Key fix: PT computed unconditionally for PATH_A/B comparison; waived in output for PATH_C
+- Path A: PT added to total burden, not deducted from NTI (per test vectors)
+
