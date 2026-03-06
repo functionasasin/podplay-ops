@@ -2,6 +2,8 @@
 
 | # | Aspect | Wave | Date | Files Modified |
 |---|--------|------|------|----------------|
+| 42 | spec-review | 7 | 2026-03-06 | analysis/spec-review.md, frontier/aspects.md (new Wave 7.5c aspect fill-form-output-types, spec-review blocked pending fix), frontier/analysis-log.md. Result: CONDITIONAL PASS — 7 phases pass, 1 gap: BIR form output types (Form1701AOutput/Form1701Output/Form1701QOutput/Form2551QOutput) not inlined in spec (referenced to analysis file instead). Created fill-form-output-types aspect in Wave 7.5c to resolve. |
+|---|--------|------|------|----------------|
 | 41 | fix-ts-input-types | 7.5b | 2026-03-06 | analysis/fix-ts-input-types.md, docs/plans/freelance-tax-spec.md (Section 3 Rust enums 14→correct 14, TaxpayerInput 15→25 fields, ItemizedExpenseInput 11→23 fields, Form2307Entry corrected, Section 5.1/5.2/5.3 TypeScript types replaced, Section 6 Zod schemas corrected, Section 7 WizardFormData + computeActiveSteps corrected, Section 18 cross-layer table updated, Section 19 critical traps updated), frontier/aspects.md, frontier/analysis-log.md |
 |---|--------|------|------|----------------|
 | 40 | cross-layer-consistency | 7 | 2026-03-06 | analysis/cross-layer-consistency.md, docs/plans/freelance-tax-spec.md (4 fixes: TaxpayerType PurelySe, OverpaymentDisposition+TCC, recommendedRegime PATH_C, test fixture). Discovered 14 TypeScript input type divergences deferred to fix-ts-input-types aspect. frontier/aspects.md (new Wave 7.5b aspect), frontier/analysis-log.md |

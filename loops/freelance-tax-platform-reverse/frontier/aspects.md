@@ -1,10 +1,10 @@
 # Frontier — TaxKlaro Platform Completion
 
 ## Statistics
-- Total aspects discovered: 42
+- Total aspects discovered: 43
 - Analyzed: 41
-- Pending: 1
-- Convergence: 98%
+- Pending: 2
+- Convergence: 95%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -74,9 +74,13 @@ Depends on completeness-audit FAIL results. All 4 must complete before cross-lay
 ### Wave 7.5b: Cross-Layer Fix (found during cross-layer-consistency)
 - [x] fix-ts-input-types — Replace spec Section 5 TypeScript types with authoritative types from analysis/typescript-types.md. The spec's TaxpayerInput uses wrong field names (grossReceiptsAmount vs grossReceipts, form2307Entries vs cwt2307Entries) and a simplified ItemizedExpenseInput (11 fields vs 23). Fix all 14 field-level mismatches documented in analysis/cross-layer-consistency.md.
 
+### Wave 7.5c: Spec Self-Containment Fix (found during spec-review)
+Depends on spec-review. Must complete before spec-review can be signed off.
+- [ ] fill-form-output-types — Inline BIR form output TypeScript interfaces (Form1701AOutput, Form1701Output, Form1701QOutput, Form2551QOutput, NolcoScheduleRow, PT2551QScheduleRow) from analysis/typescript-types.md into spec Section 5.3. The spec currently has a comment deferring to the analysis file, which violates the self-containment requirement. After inlining, the forward loop can build entirely from the spec.
+
 ### Wave 7 (continued — after Wave 7.5b complete)
 - [x] cross-layer-consistency — Field-by-field verification: Rust <-> JSON <-> TypeScript <-> Zod. Found 3 immediate fixes (PURELY_SE, TCC, PATH_C) + 14 deferred type divergences (fix-ts-input-types).
-- [ ] spec-review — Final review: can the forward loop build the ENTIRE product from this spec alone?
+- [ ] spec-review — Final review: can the forward loop build the ENTIRE product from this spec alone? First pass found 1 gap (BIR form output types not inlined). Blocked by fill-form-output-types (Wave 7.5c). After fill-form-output-types, re-run to confirm PASS.
 
 ## Recently Analyzed
 | Aspect | Wave | Date | Result |
