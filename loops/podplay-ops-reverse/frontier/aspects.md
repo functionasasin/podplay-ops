@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 57
-- Analyzed: 38
-- Pending: 19
-- Convergence: 67%
+- Analyzed: 39
+- Pending: 18
+- Convergence: 68%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -55,7 +55,7 @@
 - [x] logic-power-calculations — PoE port count per configuration, power consumption in watts, UPS runtime calculation (e.g., 43 min for 6-court), available rack unit space, switch size selection
 
 ### Wave 4: Full-Stack Product Design
-- [ ] design-routes — Complete route map with auth guards, layout hierarchy, navigation structure
+- [x] design-routes — Complete route map with auth guards, layout hierarchy, navigation structure
 - [ ] design-dashboard — Home dashboard: project list, status pills, progress bars, top-line metrics, filters
 - [ ] design-wizard-intake — Stage 1 wizard: 6 steps, form fields, validation rules, conditional logic for tiers (including PBK)
 - [ ] design-wizard-procurement — Stage 2: BOM review, inventory check, PO creation, receiving, packing, CC terminal ordering, replay sign fulfillment
