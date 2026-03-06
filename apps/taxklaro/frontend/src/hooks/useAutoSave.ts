@@ -1,18 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import type { TaxpayerInput } from '@/types/engine-input';
 import type { AutoSaveStatus } from '@/types/wizard';
-
-// Stub: updateComputationInput will be wired to Supabase in Stage 17
-async function updateComputationInput(
-  _id: string,
-  _data: TaxpayerInput
-): Promise<{ error: Error | null }> {
-  return { error: null };
-}
+import { updateComputationInput } from '@/lib/computations';
 
 /**
  * Auto-saves TaxpayerInput to the computations table with 1500ms debounce.
- * Stub Supabase calls — wired in Stage 17.
  */
 export function useAutoSave(computationId: string, input: TaxpayerInput) {
   const [status, setStatus] = useState<AutoSaveStatus>('idle');
