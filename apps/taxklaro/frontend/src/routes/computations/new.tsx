@@ -27,6 +27,8 @@ import {
 } from '../../components/wizard';
 import type { WizardFormData, WizardStepId } from '../../types/wizard';
 import { DEFAULT_WIZARD_DATA } from '../../types/wizard';
+import { createDefaultTaxpayerInput } from '../../types/engine-input';
+import type { TaxpayerInput } from '../../types/engine-input';
 import { useCompute } from '../../hooks/useCompute';
 import { ResultsView } from '../../components/computation/ResultsView';
 
@@ -91,7 +93,17 @@ function ComputationsNewPage() {
   }, []);
 
   const handleSubmit = useCallback(async () => {
-    await runCompute(formData as Parameters<typeof runCompute>[0]);
+    const defaults = createDefaultTaxpayerInput();
+    const { clientId, computationTitle, ...wizardFields } = formData as WizardFormData;
+    const engineInput: TaxpayerInput = {
+      ...defaults,
+      ...wizardFields,
+      itemizedExpenses: {
+        ...defaults.itemizedExpenses,
+        ...(wizardFields.itemizedExpenses ?? {}),
+      },
+    };
+    await runCompute(engineInput);
   }, [formData, runCompute]);
 
   // Show results after computation

@@ -31,7 +31,12 @@ export async function computeTax(
   try {
     const { compute_json } = await import('./pkg/taxklaro_engine.js');
     const resultJson = compute_json(JSON.stringify(input));
-    const result = JSON.parse(resultJson) as WasmResult<TaxComputationResult>;
+    const parsed = JSON.parse(resultJson);
+
+    // Engine returns raw TaxComputationResult, wrap in WasmResult envelope
+    const result: WasmResult<TaxComputationResult> = parsed.status
+      ? parsed
+      : { status: 'ok' as const, data: parsed as TaxComputationResult };
 
     const durationMs = performance.now() - startMs;
     if (durationMs > 500) {

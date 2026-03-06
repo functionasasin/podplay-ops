@@ -15,20 +15,12 @@ function OnboardingPage() {
   const navigate = useNavigate();
 
   async function handleCreateOrg(name: string, slug: string) {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    const { data, error } = await supabase.rpc('create_org_with_member', {
+      org_name: name,
+      org_slug: slug,
+    });
 
-    const { data: org, error: orgError } = await supabase
-      .from('organizations')
-      .insert({ name, slug })
-      .select('id')
-      .single();
-
-    if (orgError || !org) return;
-
-    await supabase
-      .from('organization_members')
-      .insert({ org_id: org.id, user_id: user.id, role: 'admin' });
+    if (error || !data) return;
 
     navigate({ to: '/' });
   }
