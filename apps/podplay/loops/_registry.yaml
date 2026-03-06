@@ -1,0 +1,9 @@
+loops:
+  reverse/core:
+    description: "Extract complete spec from PodPlay MRP docs for ops wizard webapp"
+    type: reverse
+    status: active
+    created: 2026-03-06
+    schedule: "0 6,18 * * *"
+    max_iterations: 50
+    timeout_minutes: 30
