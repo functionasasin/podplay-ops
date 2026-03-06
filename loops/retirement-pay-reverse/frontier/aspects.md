@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 55
-- Analyzed: 7
-- Pending: 48
-- Convergence: 13%
+- Analyzed: 8
+- Pending: 47
+- Convergence: 15%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -17,7 +17,7 @@ Fetch and cache primary legal sources.
 - [x] fetch-nirc-tax-exemption — Fetch NIRC Sec. 32(B)(6)(a) + Revenue Regulation 1-68 on retirement pay tax exemption
 - [x] fetch-separation-pay-rules — Fetch Labor Code Art. 298-299 (authorized causes for separation pay)
 - [x] fetch-dole-final-pay — Fetch DOLE Labor Advisory 06-20 on final pay computation rules
-- [ ] fetch-bir-approved-plans — Fetch BIR requirements for approved retirement plans (RR 1-68 conditions)
+- [x] fetch-bir-approved-plans — Fetch BIR requirements for approved retirement plans (RR 1-68 conditions)
 
 ### Wave 2: Domain Rule Extraction
 Depends on Wave 1 sources being cached.
@@ -102,3 +102,4 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 - fetch-nirc-tax-exemption (Wave 1) — 2026-03-06
 - fetch-separation-pay-rules (Wave 1) — 2026-03-06
 - fetch-dole-final-pay (Wave 1) — 2026-03-06
+- fetch-bir-approved-plans (Wave 1) — 2026-03-06
