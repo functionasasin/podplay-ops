@@ -1,17 +1,28 @@
-# Current Stage: 9 (Wizard State + Step Routing)
+# Current Stage: 10 (Wizard Steps WS-00 → WS-07D)
 
 ## Status
-Stage 8 complete. Design system fully set up. vite build produces 33.82 kB CSS.
+Stage 9 complete. 36 tests pass for wizard routing + hooks.
 
 ## What To Do
-Read spec §7.2, §7.3, §7.4.
-Create WizardFormData type and DEFAULT_WIZARD_DATA.
-Create computeActiveSteps(data) function.
-Create useCompute hook.
-Create useAutoSave hook (stub Supabase calls).
-Create WizardContainer component.
+Read spec §7.7.
+Implement wizard step components WS-00 through WS-07D.
+Each step uses React Hook Form + Zod per-step schema + shadcn/ui.
+All field labels, placeholders, validation, error messages from spec §7.7.
 
-Test command: `npx vitest run src/hooks/`
+Steps to implement:
+- WS-00: Mode Selection
+- WS-01: Taxpayer Profile
+- WS-02: Business Type
+- WS-03: Tax Year
+- WS-04: Gross Receipts
+- WS-05: Compensation
+- WS-06: Expense Method
+- WS-07A: Itemized Expenses (part 1)
+- WS-07B: Itemized Expenses (part 2)
+- WS-07C: Itemized Expenses (part 3)
+- WS-07D: NOLCO entries
+
+Test command: `npx vitest run src/components/wizard/`
 
 ## Work Log
 - 2026-03-06: Stage 1 complete — cargo check passes, advancing to stage 2
@@ -22,3 +33,4 @@ Test command: `npx vitest run src/hooks/`
 - 2026-03-06: Stage 6 complete — TypeScript types fully implemented, tsc --noEmit passes with zero errors
 - 2026-03-06: Stage 7 complete — Zod schemas implemented, 77 tests pass
 - 2026-03-06: Stage 8 complete — design system set up, vite build produces 33.82 kB CSS
+- 2026-03-06: Stage 9 complete — 36 tests pass for wizard routing + hooks, advancing to stage 10

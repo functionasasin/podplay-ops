@@ -1,0 +1,11 @@
+Stage 9 complete — 2026-03-06
+
+All 36 tests pass for Wizard State + Step Routing.
+
+Implemented:
+- src/types/wizard.ts — WizardFormData, WizardStepId, AutoSaveStatus, DEFAULT_WIZARD_DATA
+- src/lib/wizard-routing.ts — computeActiveSteps() matching spec §7.3 routing matrix exactly
+- src/hooks/useCompute.ts — calls bridge.computeTax(), returns typed WasmResult
+- src/hooks/useAutoSave.ts — 1500ms debounced save with stub Supabase calls
+
+Test command: npx vitest run src/hooks/ — 36/36 pass
