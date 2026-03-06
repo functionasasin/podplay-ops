@@ -12,3 +12,4 @@
 | 8 | fetch-bir-approved-plans | 1 | 2026-03-06 | input/sources/bir-approved-plans.md, analysis/fetch-bir-approved-plans.md |
 | 9 | core-formula-22-5-days | 2 | 2026-03-06 | analysis/core-formula-22-5-days.md |
 | 10 | eligibility-rules | 2 | 2026-03-06 | analysis/eligibility-rules.md |
+| 11 | credited-years-rounding | 2 | 2026-03-06 | analysis/credited-years-rounding.md |
