@@ -24,3 +24,4 @@
 | 20 | edge-cases-catalog | 2 | 2026-03-06 | analysis/edge-cases-catalog.md |
 | 21 | computation-pipeline | 3 | 2026-03-06 | analysis/computation-pipeline.md |
 | 22 | algorithms | 3 | 2026-03-06 | analysis/algorithms.md |
+| 23 | batch-engine | 3 | 2026-03-06 | analysis/batch-engine.md |
