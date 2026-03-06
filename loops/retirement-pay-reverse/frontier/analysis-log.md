@@ -2,6 +2,7 @@
 
 | # | Aspect | Wave | Date | Files Modified |
 |---|--------|------|------|----------------|
+| 49 | component-wiring-map | 5 | 2026-03-06 | analysis/component-wiring-map.md |
 | 48 | sharing | 5 | 2026-03-06 | analysis/sharing.md |
 | 47 | computation-management | 5 | 2026-03-06 | analysis/computation-management.md |
 | 46 | org-model | 5 | 2026-03-06 | analysis/org-model.md |

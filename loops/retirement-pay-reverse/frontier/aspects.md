@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 55
-- Analyzed: 48
-- Pending: 7
-- Convergence: 87%
+- Analyzed: 49
+- Pending: 6
+- Convergence: 89%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -70,7 +70,7 @@ Depends on Wave 3 + Wave 4.
 - [x] org-model — Organizations for HR departments, members, roles (owner/admin/member), invitations, seat limits, useOrganization() hook
 - [x] computation-management — CRUD for saved computations, auto-save, status workflow (draft/computed/shared), ComputationCard grid
 - [x] sharing — Token-based read-only sharing, get_shared_computation() RPC with UUID parameter, /share/$token route, anon GRANT
-- [ ] component-wiring-map — Every component -> parent route/page/tab/dialog, navigation path from home, trigger (for modals), props source. Zero orphans.
+- [x] component-wiring-map — Every component -> parent route/page/tab/dialog, navigation path from home, trigger (for modals), props source. Zero orphans.
 - [ ] action-trigger-map — Every action (PDF export, share toggle, delete, batch export, NLRC print) -> which button triggers it, which parent has the button, onClick handler, feedback (toast/download/navigation)
 - [ ] visual-verification-checklist — Every major component -> required shadcn wrapper (Card/Alert/Badge/Table), key Tailwind classes, lucide icon, color variant, status indicator styling
 - [ ] empty-states-and-loading — Skeleton loaders for every async page, EmptyState components (no computations yet, no org members, empty batch), error states
@@ -95,6 +95,7 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 - [ ] spec-review — Final review: can the forward loop build the ENTIRE product from this spec alone?
 
 ## Recently Analyzed
+- component-wiring-map (Wave 5) — 2026-03-06
 - computation-management (Wave 5) — 2026-03-06
 - org-model (Wave 5) — 2026-03-06
 - navigation (Wave 5) — 2026-03-06
