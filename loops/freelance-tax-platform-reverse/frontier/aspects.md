@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 37
-- Analyzed: 30
-- Pending: 7
-- Convergence: 81%
+- Analyzed: 31
+- Pending: 6
+- Convergence: 84%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -55,7 +55,7 @@ Depends on Wave 5. Production readiness.
 - [x] migration-verification — supabase db reset test plan, RPC call tests with real data, parameter type match verification (UUID vs TEXT). Prevents "SQL written but never run" failure.
 - [x] supabase-gotchas — Anon grants for public RPCs, search_path on SECURITY DEFINER, RLS bypass patterns, storage bucket policies. Prevents "works in Supabase dashboard, fails from client" failures.
 - [x] fly-io-deployment — Dockerfile, fly.toml, build args, Supabase project setup, domain config
-- [ ] ci-cd-pipeline — GitHub Actions: typecheck -> lint -> test -> build -> e2e -> deploy
+- [x] ci-cd-pipeline — GitHub Actions: typecheck -> lint -> test -> build -> e2e -> deploy
 - [ ] monitoring-and-alerts — Sentry, health checks, client-side error tracking
 
 ### Wave 7: Synthesis
