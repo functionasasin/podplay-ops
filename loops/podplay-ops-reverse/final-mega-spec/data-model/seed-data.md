@@ -263,7 +263,957 @@ V2 uses TCP (fixing V1 pixelation known issue). When V2 is available, these step
 
 ## Section 2: Hardware Catalog
 
-*(to be populated in `ship-seed-data` aspect)*
+Table: `hardware_catalog`
+
+All hardware items PodPlay orders, ships, or drop-ships. 47 items across 8 categories.
+
+**Unit cost notes**: Costs derived from 2026 market pricing (XLSX not available). Costs marked
+`NULL` in schema are unknown without XLSX; concrete estimates provided here for BOM cost analysis.
+The `ship-seed-data` aspect should reconcile against XLSX once available.
+
+**Drop-shipped items** (TV, TV mount, rack enclosure, UPS): shipped directly to venue by vendor,
+not staged at PodPlay NJ lab. Still tracked in BOM for cost analysis.
+
+```sql
+INSERT INTO hardware_catalog (sku, name, model, vendor, unit_cost, category, notes, is_active)
+VALUES
+
+  -- =========================================================================
+  -- NETWORK RACK
+  -- =========================================================================
+  ('NET-UDM-SE',
+   'UniFi UDM-SE Gateway',
+   'UDM-SE',
+   'UniFi',
+   379.00,
+   'network_rack',
+   'Firewall/gateway with built-in PoE switch. Default for most venues. Built-in PoE eliminates need for separate injector on UDM ports.',
+   true),
+
+  ('NET-UDM-PRO',
+   'UniFi UDM-Pro Gateway',
+   'UDM-Pro',
+   'UniFi',
+   379.00,
+   'network_rack',
+   'Firewall/gateway, no built-in PoE. Alternative to UDM-SE for venues where PoE on gateway ports is not needed.',
+   true),
+
+  ('NET-UDM-PRO-MAX',
+   'UniFi UDM-Pro-Max Gateway',
+   'UDM-Pro-Max',
+   'UniFi',
+   599.00,
+   'network_rack',
+   'High-performance gateway with 2.5G ports. For large venues (12+ courts) with high throughput needs.',
+   true),
+
+  ('NET-USW-PRO-24-POE',
+   'UniFi USW-Pro-24-POE Switch',
+   'USW-Pro-24-POE',
+   'UniFi',
+   249.00,
+   'network_rack',
+   '24-port PoE+ switch. Default for venues up to 8 courts (24 ports accommodate 3 drops/court + uplink + Mac Mini + spares). SFP+ uplink to UDM.',
+   true),
+
+  ('NET-USW-24-POE',
+   'UniFi USW-24-POE Switch',
+   'USW-24-POE',
+   'UniFi',
+   189.00,
+   'network_rack',
+   '24-port PoE switch, lower power budget than Pro-24-POE. Alternative for cost-sensitive smaller venues.',
+   true),
+
+  ('NET-USW-PRO-48-POE',
+   'UniFi USW-Pro-48-POE Switch',
+   'USW-Pro-48-POE',
+   'UniFi',
+   519.00,
+   'network_rack',
+   '48-port PoE+ switch. For venues 9+ courts where 24-port is insufficient. Large clubs may require two switches.',
+   true),
+
+  ('NET-SFP-DAC',
+   'UniFi SFP+ DAC Cable 0.5m',
+   'UACC-DAC-SFP10-0.5M',
+   'UniFi',
+   12.00,
+   'network_rack',
+   'SFP+ Direct Attach Copper cable. Connects UDM ↔ switch (and switch ↔ NVR on Autonomous+). 0.5m length fits within rack.',
+   true),
+
+  ('NET-PATCH-1FT',
+   'Monoprice Cat6 1ft Patch Cable',
+   NULL,
+   'Amazon',
+   3.00,
+   'network_rack',
+   'Short patch cable for switch port-to-patch-panel connections within rack. Ordered in bulk; 3 per court for display/kiosk/camera drops.',
+   true),
+
+  ('NET-PATCH-3FT',
+   'Monoprice Cat6 3ft Patch Cable',
+   NULL,
+   'Amazon',
+   5.00,
+   'network_rack',
+   'Standard patch cable for UDM, Mac Mini, and inter-rack connections. ~6 per venue for rack equipment.',
+   true),
+
+  ('NET-PATCH-10FT',
+   'Monoprice Cat6 10ft Patch Cable',
+   NULL,
+   'Amazon',
+   8.00,
+   'network_rack',
+   'Longer patch cable for Kisi Controller connection (ACCESS CONTROL VLAN port on switch to Kisi Controller). Autonomous/Autonomous+ only.',
+   true),
+
+  ('NET-PDU',
+   'TrippLite 12-Outlet Rack PDU',
+   'RS-1215-RA',
+   'Ingram',
+   45.00,
+   'network_rack',
+   '12-outlet 1U rack PDU. Mounts on back of rack to conserve front rack units. All rack devices → PDU → UPS → dedicated 20A circuit.',
+   true),
+
+  ('NET-PATCH-PANEL-24',
+   'iwillink 24-Port Patch Panel with Couplers',
+   NULL,
+   'Amazon',
+   30.00,
+   'network_rack',
+   '24-port patch panel with pre-installed inline coupler keystones. Default for field terminations. Punch-down keystones preferred if capable.',
+   true),
+
+  -- =========================================================================
+  -- INFRASTRUCTURE
+  -- =========================================================================
+  ('INFRA-UPS',
+   'APC 1500VA Rack-Mount UPS',
+   'SMT1500RM2U',
+   'Various',
+   250.00,
+   'infrastructure',
+   '2U rack-mount UPS. Always at bottom of rack. Connect internal UPS battery BEFORE installing any equipment above. Drop-shipped to venue.',
+   true),
+
+  ('INFRA-RACK',
+   '12U Network Rack Enclosure',
+   NULL,
+   'Various',
+   180.00,
+   'infrastructure',
+   'Open or closed rack enclosure, 7–12U depending on court count and tier. Drop-shipped to venue. Exact model selected by ops based on venue IT room.',
+   true),
+
+  ('INFRA-RACK-SHELF',
+   'Pyle 19-Inch 1U Vented Rack Shelf',
+   NULL,
+   'Amazon',
+   20.00,
+   'infrastructure',
+   '1U vented rack shelf for Mac Mini at top of rack. Provides 2U space with breathing room above. Mac Mini overheating is a known failure mode.',
+   true),
+
+  -- =========================================================================
+  -- REPLAY SYSTEM
+  -- =========================================================================
+  ('REPLAY-MACMINI',
+   'Mac Mini 16GB 256GB',
+   NULL,
+   'Apple Business',
+   700.00,
+   'replay_system',
+   'Replay server. Mac Mini (M4 or current chip at time of order). Assigned fixed IP 192.168.32.100 on REPLAY VLAN 32. Labeled with venue name.',
+   true),
+
+  ('REPLAY-SSD-1TB',
+   'Samsung T7 1TB External SSD',
+   'MU-PC1T0T',
+   'Amazon',
+   90.00,
+   'replay_system',
+   'External SSD for replay video storage. Use for venues with 1–4 courts. Connected to Mac Mini via USB-C.',
+   true),
+
+  ('REPLAY-SSD-2TB',
+   'Samsung T7 2TB External SSD',
+   'MU-PC2T0T',
+   'Amazon',
+   160.00,
+   'replay_system',
+   'External SSD for replay video storage. Use for venues with 5–8 courts. Connected to Mac Mini via USB-C.',
+   true),
+
+  ('REPLAY-SSD-4TB',
+   'Samsung T7 4TB External SSD',
+   'MU-PC4T0T',
+   'Amazon',
+   310.00,
+   'replay_system',
+   'External SSD for replay video storage. Use for venues with 9+ courts. Connected to Mac Mini via USB-C.',
+   true),
+
+  ('REPLAY-CAMERA-WHITE',
+   'EmpireTech Replay Camera White',
+   'IPC-T54IR-ZE',
+   'EmpireTech',
+   120.00,
+   'replay_system',
+   '4MP varifocal turret IP camera (Dahua OEM). White housing for light-colored courts. Default for pickleball clubs. 1 per court, mounted behind baseline.',
+   true),
+
+  ('REPLAY-CAMERA-BLACK',
+   'EmpireTech Replay Camera Black',
+   'IPC-T54IR-ZE',
+   'EmpireTech',
+   120.00,
+   'replay_system',
+   '4MP varifocal turret IP camera (Dahua OEM). Black housing for darker court environments. Alternative to white; same model, different color.',
+   true),
+
+  ('REPLAY-CAMERA-JB-WHITE',
+   'EmpireTech Replay Camera Junction Box White',
+   'PFA130-E',
+   'EmpireTech',
+   15.00,
+   'replay_system',
+   'Junction box for EmpireTech IPC-T54IR-ZE replay camera. White. Use when mounting on column, ceiling, or pole (provides 3/4" threaded conduit opening).',
+   true),
+
+  ('REPLAY-CAMERA-JB-BLACK',
+   'EmpireTech Replay Camera Junction Box Black',
+   'PFA130-E',
+   'EmpireTech',
+   15.00,
+   'replay_system',
+   'Junction box for EmpireTech IPC-T54IR-ZE replay camera. Black. For darker environments. Same specs as white junction box.',
+   true),
+
+  ('REPLAY-FLIC',
+   'Flic Button',
+   NULL,
+   'Flic',
+   35.00,
+   'replay_system',
+   'Bluetooth scoring and replay button. 2 per court (left + right baseline positions). Mounted on acrylic sign on fence/wall. Battery: CR2032 coin cell. Single press=score, double=undo, long=replay.',
+   true),
+
+  ('REPLAY-SIGN',
+   'Aluminum Printed Sign 6x8',
+   NULL,
+   'Fast Signs',
+   25.00,
+   'replay_system',
+   'Printed 6"×8" aluminum sign for Flic button mounting. 1 per court. Affixed to fence/wall behind baseline. Labeled "Court X Left/Right".',
+   true),
+
+  ('REPLAY-HW-KIT',
+   'Sign Mounting Hardware Kit',
+   NULL,
+   'RC Fasteners',
+   15.00,
+   'replay_system',
+   'Bolts, nuts, screws, and zip ties for aluminum sign and junction box mounting. 1 kit per venue covers all courts.',
+   true),
+
+  -- =========================================================================
+  -- DISPLAYS
+  -- =========================================================================
+  ('DISPLAY-TV-65',
+   '65" TV Display',
+   NULL,
+   'Various',
+   500.00,
+   'displays',
+   '65" LED/QLED TV for court display. VESA 400×300 compatible. Drop-shipped to venue. Mounted at 8''9" AFF, center court, net-side. HDMI 1 used for Apple TV.',
+   true),
+
+  ('DISPLAY-TV-MOUNT',
+   'VESA 400x300 TV Tilt Wall Mount',
+   NULL,
+   'Various',
+   30.00,
+   'displays',
+   'VESA 400×300 tilt wall mount for 65" TV. Included with TV order; drop-shipped. Surface options: drywall (lag/toggle bolts), concrete (Tapcon), column (Unistrut), ceiling (beam clamps).',
+   true),
+
+  ('DISPLAY-APPLETV',
+   'Apple TV 4K with Ethernet',
+   NULL,
+   'Apple Business',
+   130.00,
+   'displays',
+   'Apple TV 4K with built-in Ethernet port. Enrolled in Mosyle MDM under client Apple TV group. Connects to TV HDMI 1 via 3ft HDMI cable.',
+   true),
+
+  ('DISPLAY-HDMI-3FT',
+   'Amazon Basics 3ft HDMI Cable',
+   NULL,
+   'Amazon',
+   7.00,
+   'displays',
+   '3ft HDMI cable connecting Apple TV output to TV HDMI 1 port. 1 per court.',
+   true),
+
+  ('DISPLAY-ATV-MOUNT',
+   'HIDEit Apple TV Wall Mount',
+   NULL,
+   'HIDEit',
+   25.00,
+   'displays',
+   'Wall/column mount for Apple TV. Mount behind TV on wall. NOT on column with double-sided adhesive — heat from TV causes adhesive failure and Apple TV falls.',
+   true),
+
+  ('DISPLAY-IPAD',
+   'iPad 64GB WiFi+Cellular',
+   NULL,
+   'Apple Business',
+   600.00,
+   'displays',
+   'iPad kiosk. 10th gen (A2696) or current model at time of order. Enrolled in Mosyle MDM. PoE-powered. App Lock enabled. Powered on in strict court-number order for correct MDM enrollment.',
+   true),
+
+  ('DISPLAY-IPAD-POE',
+   'iPad PoE Adapter',
+   NULL,
+   'PoE Texas',
+   40.00,
+   'displays',
+   'PoE-to-USB-C adapter powering iPad from Cat6 drop. Ethernet in, USB-C out to iPad. Hidden behind drywall wall or behind TV for concrete/masonry venues.',
+   true),
+
+  ('DISPLAY-IPAD-CASE',
+   'iPad Kiosk Case with Lock',
+   NULL,
+   'CTA Digital',
+   80.00,
+   'displays',
+   'Lockable kiosk enclosure for iPad. Mounted at 4''8" AFF, center court. Mounting surface options: fence (VESA bracket), drywall, concrete, column, floor kiosk. Hand keys to customer at go-live.',
+   true),
+
+  -- =========================================================================
+  -- ACCESS CONTROL (Autonomous and Autonomous+ tiers only)
+  -- =========================================================================
+  ('AC-KISI-CONTROLLER',
+   'Kisi Controller Pro 2',
+   'Controller Pro 2',
+   'Kisi',
+   299.00,
+   'access_control',
+   '1 per venue. Manages all Kisi door readers at the venue. Mounted in secure location with power and Ethernet to ACCESS CONTROL VLAN (192.168.33.x).',
+   true),
+
+  ('AC-KISI-READER',
+   'Kisi Reader Pro 2',
+   'Reader Pro 2',
+   'Kisi',
+   179.00,
+   'access_control',
+   '1 per access-controlled door. Connects back to Kisi Controller. Door lock types: mag lock for glass doors (fail-safe), electric strike for panic bar doors (fail-secure).',
+   true),
+
+  -- =========================================================================
+  -- SURVEILLANCE (Autonomous and Autonomous+ tiers)
+  -- =========================================================================
+  ('SURV-UNVR',
+   'UniFi UNVR 4-Bay NVR',
+   'UNVR',
+   'UniFi',
+   279.00,
+   'surveillance',
+   '4-bay NVR for local surveillance recording. Default for Autonomous+. Rack-mounted below switch. Connects to UDM via SFP DAC cable. Supports up to 4 WD Purple 8TB drives.',
+   true),
+
+  ('SURV-UNVR-PRO',
+   'UniFi UNVR-Pro 7-Bay NVR',
+   'UNVR-Pro',
+   'UniFi',
+   499.00,
+   'surveillance',
+   '7-bay NVR for larger surveillance deployments. Use instead of UNVR when venue has 5+ security cameras. Supports up to 7 WD Purple 8TB drives.',
+   true),
+
+  ('SURV-HDD',
+   'WD Purple 8TB Surveillance Hard Drive',
+   'WD8PURZ',
+   'Amazon',
+   140.00,
+   'surveillance',
+   'Surveillance-grade HDD rated for 24/7 operation. 4 drives fill UNVR (4-bay); 7 drives fill UNVR-Pro (7-bay). Pre-installed in NVR before shipping.',
+   true),
+
+  ('SURV-CAMERA-WHITE',
+   'UniFi G5 Turret Ultra Security Camera White',
+   'UVC-G5-Turret-Ultra',
+   'UniFi',
+   109.00,
+   'surveillance',
+   'UniFi G5 Turret Ultra 4K security camera. White housing. Default for pickleball clubs. PoE-powered. Connects to SURVEILLANCE VLAN (VLAN 31) on Autonomous+.',
+   true),
+
+  ('SURV-CAMERA-BLACK',
+   'UniFi G5 Turret Ultra Security Camera Black',
+   'UVC-G5-Turret-Ultra',
+   'UniFi',
+   109.00,
+   'surveillance',
+   'UniFi G5 Turret Ultra 4K security camera. Black housing. For PingPod venues with dark court environments. Same model as white variant.',
+   true),
+
+  ('SURV-CAMERA-JB-WHITE',
+   'UniFi Security Camera Junction Box White',
+   'UACC-Camera-CJB-White',
+   'UniFi',
+   12.00,
+   'surveillance',
+   'White junction box for UniFi G5 security cameras. For pickleball club deployments. 1 per camera.',
+   true),
+
+  ('SURV-CAMERA-JB-BLACK',
+   'UniFi Security Camera Junction Box Black',
+   'UACC-Camera-CJB-Black',
+   'UniFi',
+   12.00,
+   'surveillance',
+   'Black junction box for UniFi G5 security cameras. For PingPod deployments. 1 per camera.',
+   true),
+
+  -- =========================================================================
+  -- FRONT DESK (conditional: projects.has_front_desk = true)
+  -- =========================================================================
+  ('FD-CC-TERMINAL',
+   'BBPOS WisePOS E Credit Card Terminal',
+   'WisePOS E',
+   'Stripe',
+   249.00,
+   'front_desk',
+   'Stripe-integrated credit card terminal. Admin PIN: 07139. Ordered separately via CC Form workflow (not standard BOM). 1 per venue when has_front_desk = true.',
+   true),
+
+  ('FD-QR-SCANNER',
+   '2D QR Code Barcode Scanner',
+   NULL,
+   'Amazon',
+   40.00,
+   'front_desk',
+   'USB QR code scanner for member check-in at front desk. 1 per venue when has_front_desk = true.',
+   true),
+
+  ('FD-WEBCAM',
+   'Anker PowerConf C200 2K Webcam',
+   'C200',
+   'Amazon',
+   46.00,
+   'front_desk',
+   '2K USB webcam for front desk check-in photo capture. 1 per venue when has_front_desk = true.',
+   true),
+
+  -- =========================================================================
+  -- PINGPOD SPECIFIC (conditional: projects.has_pingpod_wifi = true)
+  -- =========================================================================
+  ('PP-WIFI-AP',
+   'UniFi U6-Plus WiFi Access Point',
+   'U6-Plus',
+   'UniFi',
+   99.00,
+   'pingpod_specific',
+   'WiFi AP for PingPod venues requiring wireless connectivity. Not used for standard pickleball clubs. 1 per venue when has_pingpod_wifi = true.',
+   true);
+```
+
+### Hardware Catalog Statistics
+
+| Category | Item Count | Notes |
+|----------|-----------|-------|
+| network_rack | 12 | UDM variants + switch variants + cables + PDU + patch panel |
+| infrastructure | 3 | UPS, rack enclosure, rack shelf (all drop-shipped or variable) |
+| replay_system | 11 | Mac Mini, SSD variants, cameras, junction boxes, Flic, signs, hardware kit |
+| displays | 8 | TV, mount, Apple TV, HDMI, ATV mount, iPad, PoE adapter, kiosk case |
+| access_control | 2 | Kisi controller + reader |
+| surveillance | 7 | UNVR, UNVR-Pro, HDD, G5 cameras (white + black), junction boxes |
+| front_desk | 3 | CC terminal, QR scanner, webcam |
+| pingpod_specific | 1 | WiFi AP |
+| **TOTAL** | **47** | |
+
+### Alternative Items (not in default BOM templates, operator selects if needed)
+
+| SKU | When to Use |
+|-----|-------------|
+| NET-UDM-PRO | Venues needing non-PoE gateway (unusual) |
+| NET-UDM-PRO-MAX | Large venues 12+ courts with high throughput |
+| NET-USW-24-POE | Cost-sensitive small venues as alternative to Pro-24-POE |
+| NET-USW-PRO-48-POE | Venues 9+ courts where 24-port insufficient |
+| REPLAY-SSD-2TB | Manually override for 5–8 court venues |
+| REPLAY-SSD-4TB | Manually override for 9+ court venues |
+| REPLAY-CAMERA-BLACK | When venue prefers black hardware |
+| REPLAY-CAMERA-JB-BLACK | When using black cameras |
+| SURV-UNVR-PRO | Override when venue has 5+ security cameras |
+| SURV-CAMERA-BLACK | PingPod venues |
+| SURV-CAMERA-JB-BLACK | PingPod venues |
+
+---
+
+## Section 6: BOM Templates
+
+Table: `bom_templates`
+
+One row per (tier, hardware_catalog_id) pair. Each row specifies how many of that item
+appear in a BOM generated for that tier. The final quantity formula (computed client-side):
+
+```
+qty = qty_per_venue
+    + (qty_per_court × project.court_count)
+    + (qty_per_door × project.door_count)
+    + (qty_per_camera × project.security_camera_count)
+```
+
+**Template coverage**: 4 tiers (pro, autonomous, autonomous_plus, pbk).
+- `pro`: Core replay + display system only
+- `autonomous`: Pro + Kisi access control + G5 security cameras (no NVR)
+- `autonomous_plus`: Autonomous + NVR + hard drives
+- `pbk`: Identical hardware to Pro; custom pricing handled in settings (pbk_venue_fee, pbk_court_fee)
+
+**Conditional items NOT in templates** (added programmatically at BOM generation):
+- Front desk items (FD-*): added when `project.has_front_desk = true`; always qty 1/venue
+- PingPod WiFi (PP-WIFI-AP): added when `project.has_pingpod_wifi = true`; always qty 1/venue
+- These require a separate BOM generation code path since bom_templates only supports tier-based filtering
+
+```sql
+-- =============================================================================
+-- PRO TIER BOM TEMPLATE
+-- =============================================================================
+-- Scope: Display + kiosk + replay camera per court + network rack
+-- Per-court drops: 3 Cat6 (display, kiosk, camera) + 1 outlet
+-- =============================================================================
+
+INSERT INTO bom_templates (tier, hardware_catalog_id, qty_per_venue, qty_per_court, qty_per_door, qty_per_camera, sort_order)
+
+-- Network Rack
+SELECT 'pro', id, 1, 0, 0, 0, 100 FROM hardware_catalog WHERE sku = 'NET-UDM-SE'
+UNION ALL
+SELECT 'pro', id, 1, 0, 0, 0, 110 FROM hardware_catalog WHERE sku = 'NET-USW-PRO-24-POE'
+-- NOTE: Default 24-port switch. Operator must manually swap to NET-USW-PRO-48-POE
+-- for venues with 9+ courts (24 ports fills at: 3 drops/court × 8 courts = 24 ports).
+UNION ALL
+SELECT 'pro', id, 1, 0, 0, 0, 120 FROM hardware_catalog WHERE sku = 'NET-SFP-DAC'
+UNION ALL
+SELECT 'pro', id, 1, 0, 0, 0, 130 FROM hardware_catalog WHERE sku = 'NET-PDU'
+UNION ALL
+SELECT 'pro', id, 1, 0, 0, 0, 140 FROM hardware_catalog WHERE sku = 'NET-PATCH-PANEL-24'
+UNION ALL
+SELECT 'pro', id, 0, 3, 0, 0, 150 FROM hardware_catalog WHERE sku = 'NET-PATCH-1FT'
+-- 3 short patch cables per court: one for display drop, one for kiosk drop, one for camera drop
+-- at the switch side of the patch panel
+UNION ALL
+SELECT 'pro', id, 6, 0, 0, 0, 160 FROM hardware_catalog WHERE sku = 'NET-PATCH-3FT'
+-- 6 per venue: Mac Mini × 1, UDM WAN × 1, UDM LAN × 1, Mac Mini USB adapter × 1, spare × 2
+
+-- Infrastructure
+UNION ALL
+SELECT 'pro', id, 1, 0, 0, 0, 200 FROM hardware_catalog WHERE sku = 'INFRA-UPS'
+UNION ALL
+SELECT 'pro', id, 1, 0, 0, 0, 210 FROM hardware_catalog WHERE sku = 'INFRA-RACK'
+UNION ALL
+SELECT 'pro', id, 1, 0, 0, 0, 220 FROM hardware_catalog WHERE sku = 'INFRA-RACK-SHELF'
+
+-- Replay System
+UNION ALL
+SELECT 'pro', id, 1, 0, 0, 0, 300 FROM hardware_catalog WHERE sku = 'REPLAY-MACMINI'
+UNION ALL
+SELECT 'pro', id, 1, 0, 0, 0, 310 FROM hardware_catalog WHERE sku = 'REPLAY-SSD-1TB'
+-- NOTE: Default 1TB SSD. Operator must manually swap:
+--   → REPLAY-SSD-2TB for 5–8 court venues
+--   → REPLAY-SSD-4TB for 9+ court venues
+UNION ALL
+SELECT 'pro', id, 0, 1, 0, 0, 320 FROM hardware_catalog WHERE sku = 'REPLAY-CAMERA-WHITE'
+-- 1 replay camera per court. Operator swaps to REPLAY-CAMERA-BLACK for dark environments.
+UNION ALL
+SELECT 'pro', id, 0, 1, 0, 0, 330 FROM hardware_catalog WHERE sku = 'REPLAY-CAMERA-JB-WHITE'
+-- 1 junction box per camera (for column/ceiling/pole mounts). Matches camera color.
+UNION ALL
+SELECT 'pro', id, 0, 2, 0, 0, 340 FROM hardware_catalog WHERE sku = 'REPLAY-FLIC'
+-- 2 Flic buttons per court (left baseline + right baseline)
+UNION ALL
+SELECT 'pro', id, 0, 1, 0, 0, 350 FROM hardware_catalog WHERE sku = 'REPLAY-SIGN'
+-- 1 aluminum sign per court for Flic button mounting
+UNION ALL
+SELECT 'pro', id, 1, 0, 0, 0, 360 FROM hardware_catalog WHERE sku = 'REPLAY-HW-KIT'
+-- 1 hardware kit per venue for all sign and junction box mounting
+
+-- Displays
+UNION ALL
+SELECT 'pro', id, 0, 1, 0, 0, 400 FROM hardware_catalog WHERE sku = 'DISPLAY-TV-65'
+UNION ALL
+SELECT 'pro', id, 0, 1, 0, 0, 410 FROM hardware_catalog WHERE sku = 'DISPLAY-TV-MOUNT'
+UNION ALL
+SELECT 'pro', id, 0, 1, 0, 0, 420 FROM hardware_catalog WHERE sku = 'DISPLAY-APPLETV'
+UNION ALL
+SELECT 'pro', id, 0, 1, 0, 0, 430 FROM hardware_catalog WHERE sku = 'DISPLAY-HDMI-3FT'
+UNION ALL
+SELECT 'pro', id, 0, 1, 0, 0, 440 FROM hardware_catalog WHERE sku = 'DISPLAY-ATV-MOUNT'
+UNION ALL
+SELECT 'pro', id, 0, 1, 0, 0, 450 FROM hardware_catalog WHERE sku = 'DISPLAY-IPAD'
+UNION ALL
+SELECT 'pro', id, 0, 1, 0, 0, 460 FROM hardware_catalog WHERE sku = 'DISPLAY-IPAD-POE'
+UNION ALL
+SELECT 'pro', id, 0, 1, 0, 0, 470 FROM hardware_catalog WHERE sku = 'DISPLAY-IPAD-CASE';
+
+
+-- =============================================================================
+-- AUTONOMOUS TIER BOM TEMPLATE
+-- =============================================================================
+-- Scope: Pro + Kisi access control (per door) + UniFi G5 security cameras (per camera, no NVR)
+-- Security cameras connect to the existing switch on SURVEILLANCE VLAN (VLAN 31).
+-- No local video recording in Autonomous tier — cameras are cloud-managed via UniFi.
+-- =============================================================================
+
+INSERT INTO bom_templates (tier, hardware_catalog_id, qty_per_venue, qty_per_court, qty_per_door, qty_per_camera, sort_order)
+
+-- Network Rack (identical to Pro)
+SELECT 'autonomous', id, 1, 0, 0, 0, 100 FROM hardware_catalog WHERE sku = 'NET-UDM-SE'
+UNION ALL
+SELECT 'autonomous', id, 1, 0, 0, 0, 110 FROM hardware_catalog WHERE sku = 'NET-USW-PRO-24-POE'
+UNION ALL
+SELECT 'autonomous', id, 1, 0, 0, 0, 120 FROM hardware_catalog WHERE sku = 'NET-SFP-DAC'
+UNION ALL
+SELECT 'autonomous', id, 1, 0, 0, 0, 130 FROM hardware_catalog WHERE sku = 'NET-PDU'
+UNION ALL
+SELECT 'autonomous', id, 1, 0, 0, 0, 140 FROM hardware_catalog WHERE sku = 'NET-PATCH-PANEL-24'
+UNION ALL
+SELECT 'autonomous', id, 0, 3, 0, 0, 150 FROM hardware_catalog WHERE sku = 'NET-PATCH-1FT'
+UNION ALL
+SELECT 'autonomous', id, 6, 0, 0, 0, 160 FROM hardware_catalog WHERE sku = 'NET-PATCH-3FT'
+UNION ALL
+SELECT 'autonomous', id, 2, 0, 0, 0, 165 FROM hardware_catalog WHERE sku = 'NET-PATCH-10FT'
+-- 2 × 10ft patch cables for Kisi Controller connection (ACCESS CONTROL VLAN port → Kisi)
+
+-- Infrastructure (identical to Pro)
+UNION ALL
+SELECT 'autonomous', id, 1, 0, 0, 0, 200 FROM hardware_catalog WHERE sku = 'INFRA-UPS'
+UNION ALL
+SELECT 'autonomous', id, 1, 0, 0, 0, 210 FROM hardware_catalog WHERE sku = 'INFRA-RACK'
+UNION ALL
+SELECT 'autonomous', id, 1, 0, 0, 0, 220 FROM hardware_catalog WHERE sku = 'INFRA-RACK-SHELF'
+
+-- Replay System (identical to Pro)
+UNION ALL
+SELECT 'autonomous', id, 1, 0, 0, 0, 300 FROM hardware_catalog WHERE sku = 'REPLAY-MACMINI'
+UNION ALL
+SELECT 'autonomous', id, 1, 0, 0, 0, 310 FROM hardware_catalog WHERE sku = 'REPLAY-SSD-1TB'
+UNION ALL
+SELECT 'autonomous', id, 0, 1, 0, 0, 320 FROM hardware_catalog WHERE sku = 'REPLAY-CAMERA-WHITE'
+UNION ALL
+SELECT 'autonomous', id, 0, 1, 0, 0, 330 FROM hardware_catalog WHERE sku = 'REPLAY-CAMERA-JB-WHITE'
+UNION ALL
+SELECT 'autonomous', id, 0, 2, 0, 0, 340 FROM hardware_catalog WHERE sku = 'REPLAY-FLIC'
+UNION ALL
+SELECT 'autonomous', id, 0, 1, 0, 0, 350 FROM hardware_catalog WHERE sku = 'REPLAY-SIGN'
+UNION ALL
+SELECT 'autonomous', id, 1, 0, 0, 0, 360 FROM hardware_catalog WHERE sku = 'REPLAY-HW-KIT'
+
+-- Displays (identical to Pro)
+UNION ALL
+SELECT 'autonomous', id, 0, 1, 0, 0, 400 FROM hardware_catalog WHERE sku = 'DISPLAY-TV-65'
+UNION ALL
+SELECT 'autonomous', id, 0, 1, 0, 0, 410 FROM hardware_catalog WHERE sku = 'DISPLAY-TV-MOUNT'
+UNION ALL
+SELECT 'autonomous', id, 0, 1, 0, 0, 420 FROM hardware_catalog WHERE sku = 'DISPLAY-APPLETV'
+UNION ALL
+SELECT 'autonomous', id, 0, 1, 0, 0, 430 FROM hardware_catalog WHERE sku = 'DISPLAY-HDMI-3FT'
+UNION ALL
+SELECT 'autonomous', id, 0, 1, 0, 0, 440 FROM hardware_catalog WHERE sku = 'DISPLAY-ATV-MOUNT'
+UNION ALL
+SELECT 'autonomous', id, 0, 1, 0, 0, 450 FROM hardware_catalog WHERE sku = 'DISPLAY-IPAD'
+UNION ALL
+SELECT 'autonomous', id, 0, 1, 0, 0, 460 FROM hardware_catalog WHERE sku = 'DISPLAY-IPAD-POE'
+UNION ALL
+SELECT 'autonomous', id, 0, 1, 0, 0, 470 FROM hardware_catalog WHERE sku = 'DISPLAY-IPAD-CASE'
+
+-- Access Control (Autonomous addition)
+UNION ALL
+SELECT 'autonomous', id, 1, 0, 0, 0, 500 FROM hardware_catalog WHERE sku = 'AC-KISI-CONTROLLER'
+-- 1 Kisi Controller Pro 2 per venue (manages all door readers)
+UNION ALL
+SELECT 'autonomous', id, 0, 0, 1, 0, 510 FROM hardware_catalog WHERE sku = 'AC-KISI-READER'
+-- 1 Kisi Reader Pro 2 per access-controlled door
+
+-- Surveillance (Autonomous addition — cameras without NVR)
+UNION ALL
+SELECT 'autonomous', id, 0, 0, 0, 1, 600 FROM hardware_catalog WHERE sku = 'SURV-CAMERA-WHITE'
+-- 1 UniFi G5 Turret Ultra per security camera. Connects to switch on SURVEILLANCE VLAN.
+UNION ALL
+SELECT 'autonomous', id, 0, 0, 0, 1, 610 FROM hardware_catalog WHERE sku = 'SURV-CAMERA-JB-WHITE';
+-- 1 junction box per security camera
+
+
+-- =============================================================================
+-- AUTONOMOUS+ TIER BOM TEMPLATE
+-- =============================================================================
+-- Scope: Autonomous + NVR (UNVR) + WD Purple 8TB hard drives for local recording
+-- NVR connects to switch via SFP DAC cable on SURVEILLANCE VLAN (VLAN 31).
+-- =============================================================================
+
+INSERT INTO bom_templates (tier, hardware_catalog_id, qty_per_venue, qty_per_court, qty_per_door, qty_per_camera, sort_order)
+
+-- Network Rack (identical to Autonomous — note extra SFP DAC for NVR link added below)
+SELECT 'autonomous_plus', id, 1, 0, 0, 0, 100 FROM hardware_catalog WHERE sku = 'NET-UDM-SE'
+UNION ALL
+SELECT 'autonomous_plus', id, 1, 0, 0, 0, 110 FROM hardware_catalog WHERE sku = 'NET-USW-PRO-24-POE'
+UNION ALL
+SELECT 'autonomous_plus', id, 2, 0, 0, 0, 120 FROM hardware_catalog WHERE sku = 'NET-SFP-DAC'
+-- 2 SFP DAC cables for Autonomous+: (1) UDM ↔ switch, (2) switch ↔ UNVR
+UNION ALL
+SELECT 'autonomous_plus', id, 1, 0, 0, 0, 130 FROM hardware_catalog WHERE sku = 'NET-PDU'
+UNION ALL
+SELECT 'autonomous_plus', id, 1, 0, 0, 0, 140 FROM hardware_catalog WHERE sku = 'NET-PATCH-PANEL-24'
+UNION ALL
+SELECT 'autonomous_plus', id, 0, 3, 0, 0, 150 FROM hardware_catalog WHERE sku = 'NET-PATCH-1FT'
+UNION ALL
+SELECT 'autonomous_plus', id, 6, 0, 0, 0, 160 FROM hardware_catalog WHERE sku = 'NET-PATCH-3FT'
+UNION ALL
+SELECT 'autonomous_plus', id, 2, 0, 0, 0, 165 FROM hardware_catalog WHERE sku = 'NET-PATCH-10FT'
+
+-- Infrastructure (identical to Autonomous)
+UNION ALL
+SELECT 'autonomous_plus', id, 1, 0, 0, 0, 200 FROM hardware_catalog WHERE sku = 'INFRA-UPS'
+UNION ALL
+SELECT 'autonomous_plus', id, 1, 0, 0, 0, 210 FROM hardware_catalog WHERE sku = 'INFRA-RACK'
+UNION ALL
+SELECT 'autonomous_plus', id, 1, 0, 0, 0, 220 FROM hardware_catalog WHERE sku = 'INFRA-RACK-SHELF'
+
+-- Replay System (identical to Autonomous)
+UNION ALL
+SELECT 'autonomous_plus', id, 1, 0, 0, 0, 300 FROM hardware_catalog WHERE sku = 'REPLAY-MACMINI'
+UNION ALL
+SELECT 'autonomous_plus', id, 1, 0, 0, 0, 310 FROM hardware_catalog WHERE sku = 'REPLAY-SSD-1TB'
+UNION ALL
+SELECT 'autonomous_plus', id, 0, 1, 0, 0, 320 FROM hardware_catalog WHERE sku = 'REPLAY-CAMERA-WHITE'
+UNION ALL
+SELECT 'autonomous_plus', id, 0, 1, 0, 0, 330 FROM hardware_catalog WHERE sku = 'REPLAY-CAMERA-JB-WHITE'
+UNION ALL
+SELECT 'autonomous_plus', id, 0, 2, 0, 0, 340 FROM hardware_catalog WHERE sku = 'REPLAY-FLIC'
+UNION ALL
+SELECT 'autonomous_plus', id, 0, 1, 0, 0, 350 FROM hardware_catalog WHERE sku = 'REPLAY-SIGN'
+UNION ALL
+SELECT 'autonomous_plus', id, 1, 0, 0, 0, 360 FROM hardware_catalog WHERE sku = 'REPLAY-HW-KIT'
+
+-- Displays (identical to Autonomous)
+UNION ALL
+SELECT 'autonomous_plus', id, 0, 1, 0, 0, 400 FROM hardware_catalog WHERE sku = 'DISPLAY-TV-65'
+UNION ALL
+SELECT 'autonomous_plus', id, 0, 1, 0, 0, 410 FROM hardware_catalog WHERE sku = 'DISPLAY-TV-MOUNT'
+UNION ALL
+SELECT 'autonomous_plus', id, 0, 1, 0, 0, 420 FROM hardware_catalog WHERE sku = 'DISPLAY-APPLETV'
+UNION ALL
+SELECT 'autonomous_plus', id, 0, 1, 0, 0, 430 FROM hardware_catalog WHERE sku = 'DISPLAY-HDMI-3FT'
+UNION ALL
+SELECT 'autonomous_plus', id, 0, 1, 0, 0, 440 FROM hardware_catalog WHERE sku = 'DISPLAY-ATV-MOUNT'
+UNION ALL
+SELECT 'autonomous_plus', id, 0, 1, 0, 0, 450 FROM hardware_catalog WHERE sku = 'DISPLAY-IPAD'
+UNION ALL
+SELECT 'autonomous_plus', id, 0, 1, 0, 0, 460 FROM hardware_catalog WHERE sku = 'DISPLAY-IPAD-POE'
+UNION ALL
+SELECT 'autonomous_plus', id, 0, 1, 0, 0, 470 FROM hardware_catalog WHERE sku = 'DISPLAY-IPAD-CASE'
+
+-- Access Control (identical to Autonomous)
+UNION ALL
+SELECT 'autonomous_plus', id, 1, 0, 0, 0, 500 FROM hardware_catalog WHERE sku = 'AC-KISI-CONTROLLER'
+UNION ALL
+SELECT 'autonomous_plus', id, 0, 0, 1, 0, 510 FROM hardware_catalog WHERE sku = 'AC-KISI-READER'
+
+-- Surveillance (Autonomous+ additions: G5 cameras + NVR + drives)
+UNION ALL
+SELECT 'autonomous_plus', id, 0, 0, 0, 1, 600 FROM hardware_catalog WHERE sku = 'SURV-CAMERA-WHITE'
+UNION ALL
+SELECT 'autonomous_plus', id, 0, 0, 0, 1, 610 FROM hardware_catalog WHERE sku = 'SURV-CAMERA-JB-WHITE'
+UNION ALL
+SELECT 'autonomous_plus', id, 1, 0, 0, 0, 620 FROM hardware_catalog WHERE sku = 'SURV-UNVR'
+-- Default: UNVR (4-bay). Operator swaps to SURV-UNVR-PRO for 5+ security cameras.
+UNION ALL
+SELECT 'autonomous_plus', id, 4, 0, 0, 0, 630 FROM hardware_catalog WHERE sku = 'SURV-HDD';
+-- 4 WD Purple 8TB drives fills all bays of UNVR (4-bay).
+-- Operator changes to 7 when using SURV-UNVR-PRO (7-bay).
+
+
+-- =============================================================================
+-- PBK TIER BOM TEMPLATE (Pickleball Kingdom)
+-- =============================================================================
+-- Scope: Identical hardware to Pro tier. Custom pricing handled via settings
+-- (pbk_venue_fee, pbk_court_fee). No structural hardware differences from Pro.
+-- =============================================================================
+
+INSERT INTO bom_templates (tier, hardware_catalog_id, qty_per_venue, qty_per_court, qty_per_door, qty_per_camera, sort_order)
+
+-- Network Rack (identical to Pro)
+SELECT 'pbk', id, 1, 0, 0, 0, 100 FROM hardware_catalog WHERE sku = 'NET-UDM-SE'
+UNION ALL
+SELECT 'pbk', id, 1, 0, 0, 0, 110 FROM hardware_catalog WHERE sku = 'NET-USW-PRO-24-POE'
+UNION ALL
+SELECT 'pbk', id, 1, 0, 0, 0, 120 FROM hardware_catalog WHERE sku = 'NET-SFP-DAC'
+UNION ALL
+SELECT 'pbk', id, 1, 0, 0, 0, 130 FROM hardware_catalog WHERE sku = 'NET-PDU'
+UNION ALL
+SELECT 'pbk', id, 1, 0, 0, 0, 140 FROM hardware_catalog WHERE sku = 'NET-PATCH-PANEL-24'
+UNION ALL
+SELECT 'pbk', id, 0, 3, 0, 0, 150 FROM hardware_catalog WHERE sku = 'NET-PATCH-1FT'
+UNION ALL
+SELECT 'pbk', id, 6, 0, 0, 0, 160 FROM hardware_catalog WHERE sku = 'NET-PATCH-3FT'
+
+-- Infrastructure (identical to Pro)
+UNION ALL
+SELECT 'pbk', id, 1, 0, 0, 0, 200 FROM hardware_catalog WHERE sku = 'INFRA-UPS'
+UNION ALL
+SELECT 'pbk', id, 1, 0, 0, 0, 210 FROM hardware_catalog WHERE sku = 'INFRA-RACK'
+UNION ALL
+SELECT 'pbk', id, 1, 0, 0, 0, 220 FROM hardware_catalog WHERE sku = 'INFRA-RACK-SHELF'
+
+-- Replay System (identical to Pro)
+UNION ALL
+SELECT 'pbk', id, 1, 0, 0, 0, 300 FROM hardware_catalog WHERE sku = 'REPLAY-MACMINI'
+UNION ALL
+SELECT 'pbk', id, 1, 0, 0, 0, 310 FROM hardware_catalog WHERE sku = 'REPLAY-SSD-1TB'
+UNION ALL
+SELECT 'pbk', id, 0, 1, 0, 0, 320 FROM hardware_catalog WHERE sku = 'REPLAY-CAMERA-WHITE'
+UNION ALL
+SELECT 'pbk', id, 0, 1, 0, 0, 330 FROM hardware_catalog WHERE sku = 'REPLAY-CAMERA-JB-WHITE'
+UNION ALL
+SELECT 'pbk', id, 0, 2, 0, 0, 340 FROM hardware_catalog WHERE sku = 'REPLAY-FLIC'
+UNION ALL
+SELECT 'pbk', id, 0, 1, 0, 0, 350 FROM hardware_catalog WHERE sku = 'REPLAY-SIGN'
+UNION ALL
+SELECT 'pbk', id, 1, 0, 0, 0, 360 FROM hardware_catalog WHERE sku = 'REPLAY-HW-KIT'
+
+-- Displays (identical to Pro)
+UNION ALL
+SELECT 'pbk', id, 0, 1, 0, 0, 400 FROM hardware_catalog WHERE sku = 'DISPLAY-TV-65'
+UNION ALL
+SELECT 'pbk', id, 0, 1, 0, 0, 410 FROM hardware_catalog WHERE sku = 'DISPLAY-TV-MOUNT'
+UNION ALL
+SELECT 'pbk', id, 0, 1, 0, 0, 420 FROM hardware_catalog WHERE sku = 'DISPLAY-APPLETV'
+UNION ALL
+SELECT 'pbk', id, 0, 1, 0, 0, 430 FROM hardware_catalog WHERE sku = 'DISPLAY-HDMI-3FT'
+UNION ALL
+SELECT 'pbk', id, 0, 1, 0, 0, 440 FROM hardware_catalog WHERE sku = 'DISPLAY-ATV-MOUNT'
+UNION ALL
+SELECT 'pbk', id, 0, 1, 0, 0, 450 FROM hardware_catalog WHERE sku = 'DISPLAY-IPAD'
+UNION ALL
+SELECT 'pbk', id, 0, 1, 0, 0, 460 FROM hardware_catalog WHERE sku = 'DISPLAY-IPAD-POE'
+UNION ALL
+SELECT 'pbk', id, 0, 1, 0, 0, 470 FROM hardware_catalog WHERE sku = 'DISPLAY-IPAD-CASE';
+```
+
+### BOM Template Statistics
+
+| Tier | Total Line Items | Per-Venue Items | Per-Court Items | Per-Door Items | Per-Camera Items |
+|------|-----------------|----------------|----------------|---------------|-----------------|
+| pro | 24 | 14 | 10 (some qty > 1) | 0 | 0 |
+| autonomous | 27 | 17 | 10 (some qty > 1) | 1 | 2 |
+| autonomous_plus | 29 | 19 | 10 (some qty > 1) | 1 | 2 |
+| pbk | 24 | 14 | 10 (some qty > 1) | 0 | 0 |
+
+### Example BOM Generation — 4-Court Pro Venue
+
+| Item | qty_per_venue | qty_per_court × 4 | Final Qty | Unit Cost | Total Cost |
+|------|-------------|-------------------|-----------|-----------|------------|
+| NET-UDM-SE | 1 | 0 | 1 | $379 | $379 |
+| NET-USW-PRO-24-POE | 1 | 0 | 1 | $249 | $249 |
+| NET-SFP-DAC | 1 | 0 | 1 | $12 | $12 |
+| NET-PDU | 1 | 0 | 1 | $45 | $45 |
+| NET-PATCH-PANEL-24 | 1 | 0 | 1 | $30 | $30 |
+| NET-PATCH-1FT | 0 | 3 × 4 | 12 | $3 | $36 |
+| NET-PATCH-3FT | 6 | 0 | 6 | $5 | $30 |
+| INFRA-UPS | 1 | 0 | 1 | $250 | $250 |
+| INFRA-RACK | 1 | 0 | 1 | $180 | $180 |
+| INFRA-RACK-SHELF | 1 | 0 | 1 | $20 | $20 |
+| REPLAY-MACMINI | 1 | 0 | 1 | $700 | $700 |
+| REPLAY-SSD-1TB | 1 | 0 | 1 | $90 | $90 |
+| REPLAY-CAMERA-WHITE | 0 | 1 × 4 | 4 | $120 | $480 |
+| REPLAY-CAMERA-JB-WHITE | 0 | 1 × 4 | 4 | $15 | $60 |
+| REPLAY-FLIC | 0 | 2 × 4 | 8 | $35 | $280 |
+| REPLAY-SIGN | 0 | 1 × 4 | 4 | $25 | $100 |
+| REPLAY-HW-KIT | 1 | 0 | 1 | $15 | $15 |
+| DISPLAY-TV-65 | 0 | 1 × 4 | 4 | $500 | $2,000 |
+| DISPLAY-TV-MOUNT | 0 | 1 × 4 | 4 | $30 | $120 |
+| DISPLAY-APPLETV | 0 | 1 × 4 | 4 | $130 | $520 |
+| DISPLAY-HDMI-3FT | 0 | 1 × 4 | 4 | $7 | $28 |
+| DISPLAY-ATV-MOUNT | 0 | 1 × 4 | 4 | $25 | $100 |
+| DISPLAY-IPAD | 0 | 1 × 4 | 4 | $600 | $2,400 |
+| DISPLAY-IPAD-POE | 0 | 1 × 4 | 4 | $40 | $160 |
+| DISPLAY-IPAD-CASE | 0 | 1 × 4 | 4 | $80 | $320 |
+| **TOTAL** | | | | | **$8,604** |
+
+Cost chain for 4-court Pro:
+```
+est_total_cost = $8,604
+landed_cost    = $8,604 × 1.10 = $9,464
+customer_price = $9,464 / 0.90 = $10,516
+service_fees   = $5,000 (venue) + ($2,500 × 4 courts) = $15,000
+invoice_subtotal = $10,516 + $15,000 = $25,516
+sales_tax      = $25,516 × 0.1025 = $2,615
+invoice_total  = $25,516 + $2,615 = $28,131
+```
+
+### BOM Generation Code Pseudocode
+
+```typescript
+// Called on project creation or manual BOM regeneration
+async function generateBOM(project: Project, settings: Settings): Promise<void> {
+  // Step 1: Get tier template rows
+  const templates = await supabase
+    .from('bom_templates')
+    .select('*, hardware_catalog(*)')
+    .eq('tier', project.tier);
+
+  // Step 2: Calculate qty for each template row
+  const bomItems = templates.data.map(t => ({
+    project_id: project.id,
+    hardware_catalog_id: t.hardware_catalog_id,
+    qty: t.qty_per_venue
+       + (t.qty_per_court * project.court_count)
+       + (t.qty_per_door * project.door_count)
+       + (t.qty_per_camera * project.security_camera_count),
+    unit_cost: t.hardware_catalog.unit_cost,
+    shipping_rate: settings.shipping_rate,
+    margin: settings.target_margin,
+  })).filter(item => item.qty > 0);
+
+  // Step 3: Add conditional items (not tier-based)
+  if (project.has_front_desk) {
+    const frontDeskSkus = ['FD-CC-TERMINAL', 'FD-QR-SCANNER', 'FD-WEBCAM'];
+    for (const sku of frontDeskSkus) {
+      const item = await supabase.from('hardware_catalog').select().eq('sku', sku).single();
+      bomItems.push({ project_id: project.id, hardware_catalog_id: item.data.id, qty: 1,
+        unit_cost: item.data.unit_cost, shipping_rate: settings.shipping_rate, margin: settings.target_margin });
+    }
+  }
+  if (project.has_pingpod_wifi) {
+    const ap = await supabase.from('hardware_catalog').select().eq('sku', 'PP-WIFI-AP').single();
+    bomItems.push({ project_id: project.id, hardware_catalog_id: ap.data.id, qty: 1,
+      unit_cost: ap.data.unit_cost, shipping_rate: settings.shipping_rate, margin: settings.target_margin });
+  }
+
+  // Step 4: Delete existing BOM rows (for regeneration) then insert
+  await supabase.from('project_bom_items').delete().eq('project_id', project.id);
+  await supabase.from('project_bom_items').insert(bomItems);
+}
+```
+
+### Operator Override Scenarios
+
+| Scenario | Action Required |
+|----------|----------------|
+| 9+ court venue | Swap NET-USW-PRO-24-POE → NET-USW-PRO-48-POE (or add second 24-POE) |
+| 5–8 court venue | Swap REPLAY-SSD-1TB → REPLAY-SSD-2TB |
+| 9+ court venue | Swap REPLAY-SSD-1TB → REPLAY-SSD-4TB |
+| Black camera preference | Swap REPLAY-CAMERA-WHITE → REPLAY-CAMERA-BLACK + JB-BLACK |
+| 5+ security cameras | Swap SURV-UNVR → SURV-UNVR-PRO; change SURV-HDD qty 4 → 7 |
+| PingPod venue | Use PBK or Pro template; manually add PP-WIFI-AP via has_pingpod_wifi flag |
+| No junction box needed | Remove REPLAY-CAMERA-JB-WHITE (drywall mount: camera routes cable directly into wall) |
 
 ---
 
