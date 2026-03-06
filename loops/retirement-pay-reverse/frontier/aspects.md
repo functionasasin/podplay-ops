@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 55
-- Analyzed: 36
-- Pending: 19
-- Convergence: 65%
+- Analyzed: 37
+- Pending: 18
+- Convergence: 67%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -58,7 +58,7 @@ Depends on Wave 3 + Wave 4.
 - [x] batch-upload-ui — CSV upload component, file validation, progress bar, results table with per-employee rows, summary card, export options
 - [x] company-plan-ui — Company plan input form, side-by-side comparison view, gap analysis per employee
 - [x] nlrc-worksheet-ui — NLRC worksheet display component, legal citation formatting, print/PDF layout
-- [ ] results-view — Results components: eligibility badge, pay breakdown card, tax treatment alert, separation pay comparison, 15-day vs 22.5-day visual comparison
+- [x] results-view — Results components: eligibility badge, pay breakdown card, tax treatment alert, separation pay comparison, 15-day vs 22.5-day visual comparison
 - [ ] shared-components — Reusable widgets: MoneyInput (centavo precision), DateInput, EnumSelect, CsvUploader, ComparisonTable, LegalCitation
 - [ ] design-system — Palette (professional/trustworthy for labor law), typography, spacing, shadcn/ui + Radix + Tailwind CSS 4
 - [ ] auth-flow — Supabase PKCE: email/password + magic link, sign-in/sign-up pages, callback route, password reset, session management
@@ -95,6 +95,7 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 - [ ] spec-review — Final review: can the forward loop build the ENTIRE product from this spec alone?
 
 ## Recently Analyzed
+- results-view (Wave 5) — 2026-03-06
 - nlrc-worksheet-ui (Wave 5) — 2026-03-06
 - company-plan-ui (Wave 5) — 2026-03-06
 - batch-upload-ui (Wave 5) — 2026-03-06
