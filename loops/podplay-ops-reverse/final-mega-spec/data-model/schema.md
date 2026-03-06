@@ -1414,8 +1414,8 @@ CREATE TABLE cc_terminals (
   delivered_date  DATE,
   installed_date  DATE,
 
-  square_order_id TEXT,
-  -- Square (BBPOS vendor) order reference number
+  stripe_order_id TEXT,
+  -- Stripe order reference number (BBPOS WisePOS E is ordered via Stripe, not Square)
 
   cost_per_unit   NUMERIC(10, 2),
   -- Actual cost paid; used in project expense tracking
@@ -3248,6 +3248,250 @@ HER = hardware_revenue / direct_team_cost
 | `cc_terminal_pin` | 07139 | source-mrp-usage-guide (HW BOM notes) | Hardware BOM |
 | `label_sets_per_court` | 5 | source-mrp-usage-guide Section 1 | Config Guide |
 | `replay_sign_multiplier` | 2 | model-replay-signs frontier | Customer Replay Signs |
+
+---
+
+## CC Terminal & Front Desk Equipment Model
+
+**Aspect**: model-cc-terminals
+**MRP Sources**: "CC Form" sheet (terminal ordering), "Customer Replay Signs" sheet (sign fulfillment)
+
+---
+
+### Overview
+
+Two parallel fulfillment workflows run alongside the standard BOM/PO flow:
+
+1. **CC Terminal Ordering** — BBPOS WisePOS E Stripe terminals ordered separately per-project when `has_front_desk = true`. Tracked in `cc_terminals` table. Does NOT go through standard PO flow.
+2. **Replay Sign Fulfillment** — Aluminum printed signs ordered from Fast Signs, qty = `court_count × 2`. Tracked in `replay_signs` table. Does NOT go through standard PO flow.
+
+Both use their own status enums with distinct lifecycles. Both rows are auto-created when a project reaches the Procurement stage (Stage 2).
+
+---
+
+### Field Source Map: cc_terminals
+
+**MRP Source**: "CC Form" sheet — one row per customer with terminal ordering details.
+
+| Field | MRP Column | Type | Notes |
+|-------|-----------|------|-------|
+| `id` | — | UUID | PK, auto-generated |
+| `project_id` | "Customer Name" column | UUID FK → projects | One row per project |
+| `qty` | "# Terminals" | INTEGER DEFAULT 1 | Always 1 for standard venues; edge case may be 2 if large front desk |
+| `status` | Derived from date columns | cc_terminal_status | Computed from which date columns are filled |
+| `order_date` | "Date Ordered" | DATE | When ops placed order via Stripe dashboard |
+| `expected_date` | "Expected Delivery" | DATE | Estimated arrival at NJ lab; from Stripe order confirmation |
+| `delivered_date` | "Date Delivered" | DATE | When terminal arrived at NJ lab |
+| `installed_date` | "Date Installed" | DATE | When terminal was set up at venue front desk |
+| `stripe_order_id` | "Stripe Order #" / "Order Reference" | TEXT | Stripe hardware order number |
+| `cost_per_unit` | Implicit | NUMERIC(10,2) DEFAULT 249.00 | $249 per BBPOS WisePOS E; from hardware catalog FD-CC-TERMINAL |
+| `notes` | "Notes" | TEXT | Free text; e.g., "Delivered to Kim directly" |
+
+**Derived**: `total_cost = qty × cost_per_unit` (computed client-side; not stored)
+
+---
+
+### CC Terminal Status State Machine
+
+```
+not_ordered ──order placed──→ ordered ──arrives at NJ lab──→ delivered ──set up at venue──→ installed
+```
+
+| Transition | Condition | Who Triggers |
+|-----------|-----------|-------------|
+| `not_ordered → ordered` | Ops enters `order_date` + `stripe_order_id` in webapp | Ops (Stage 2 Procurement) |
+| `ordered → delivered` | Ops enters `delivered_date` | Ops (when box arrives at NJ lab) |
+| `delivered → installed` | Ops enters `installed_date` | Ops (during on-site Stage 3 or Stage 4) |
+
+Status is stored explicitly in `status` column and must be updated manually. The UI shows a status stepper with inline date fields for each transition.
+
+**Admin PIN**: `settings.cc_terminal_pin` = `'07139'`
+- Displayed to ops in the deployment checklist during Phase 15 (Handoff & Training).
+- Used to configure the BBPOS WisePOS E terminal during on-site setup.
+- Stored in settings so it can be updated org-wide if Stripe issues a new PIN.
+
+---
+
+### Field Source Map: replay_signs
+
+**MRP Source**: "Customer Replay Signs" sheet — one row per customer.
+
+| Field | MRP Column | Type | Notes |
+|-------|-----------|------|-------|
+| `id` | — | UUID | PK, auto-generated |
+| `project_id` | "Customer" | UUID FK → projects | One row per project |
+| `qty` | Computed: courts × 2 | INTEGER | Copied from `projects.replay_sign_count` at row creation |
+| `status` | Derived / explicit | sign_status DEFAULT 'staged' | Manual status tracking |
+| `outreach_channel` | "Outreach Method" | TEXT | 'slack' \| 'email' \| 'other' |
+| `outreach_date` | "Date Outreach Sent" | DATE | When PodPlay ops contacted Fast Signs |
+| `shipped_date` | "Date Shipped" | DATE | When Fast Signs shipped the order |
+| `delivered_date` | "Date Delivered" | DATE | When signs arrived at venue |
+| `installed_date` | "Date Installed" | DATE | When ops/installer mounted signs on courts |
+| `tracking_number` | "Tracking #" | TEXT | Carrier tracking number |
+| `vendor_order_id` | "Fast Signs Order #" | TEXT | Fast Signs order reference |
+| `notes` | "Notes" | TEXT | Free text |
+
+**Qty formula**: `qty = projects.court_count × settings.replay_sign_multiplier` (default: `court_count × 2`)
+
+**Note**: `projects.replay_sign_count` is a generated column (`court_count * 2`) that stores this at the DB level. The `replay_signs.qty` column copies this value at row creation time. If `court_count` changes post-creation, `replay_signs.qty` must be manually updated.
+
+---
+
+### Replay Sign Status State Machine
+
+```
+staged ──outreach sent──→ shipped ──arrives at venue──→ delivered ──mounted on courts──→ installed
+```
+
+| Status | Meaning | Transition Trigger |
+|--------|---------|-------------------|
+| `staged` | Signs queued; no order placed yet | Default at row creation |
+| `shipped` | Fast Signs has shipped the order | Ops enters `shipped_date` + `tracking_number` |
+| `delivered` | Signs at venue | Ops enters `delivered_date` |
+| `installed` | Mounted on courts | Ops enters `installed_date` |
+
+**Note**: Outreach is tracked separately (`outreach_date` + `outreach_channel`) and does not change status. Status transitions when shipping/delivery/install dates are entered.
+
+---
+
+### Front Desk Equipment Bundling Logic
+
+The `has_front_desk` flag on a project triggers three BOM items AND one `cc_terminals` row:
+
+**BOM items added** (all `qty_per_venue = 1`):
+
+| SKU | Item | Unit Cost | Notes |
+|-----|------|-----------|-------|
+| `FD-CC-TERMINAL` | BBPOS WisePOS E Credit Card Terminal | $249.00 | Ordered via Stripe separately — NOT via standard PO |
+| `FD-QR-SCANNER` | 2D QR Code Barcode Scanner | $40.00 | Ordered via standard PO (Amazon) |
+| `FD-WEBCAM` | Anker PowerConf C200 2K Webcam | $46.00 | Ordered via standard PO (Amazon) |
+
+**Important distinction**: `FD-CC-TERMINAL` appears in the BOM for cost analysis and invoicing purposes, but its **physical procurement** is tracked exclusively in the `cc_terminals` table. It is NOT ordered via a `purchase_orders` row. The QR scanner and webcam ARE ordered via standard POs.
+
+**Auto-row creation**: When a project transitions to Stage 2 (Procurement) with `has_front_desk = true`, the service layer calls `ensureFrontDeskRecords()`:
+
+```typescript
+// services/procurementService.ts
+async function ensureFrontDeskRecords(projectId: string): Promise<void> {
+  const project = await getProject(projectId);
+  if (!project.has_front_desk) return;
+
+  // Check if cc_terminals row already exists
+  const { data: existing } = await supabase
+    .from('cc_terminals')
+    .select('id')
+    .eq('project_id', projectId)
+    .maybeSingle();
+
+  if (!existing) {
+    await supabase.from('cc_terminals').insert({
+      project_id: projectId,
+      qty: 1,
+      status: 'not_ordered',
+      cost_per_unit: 249.00,
+    });
+  }
+}
+```
+
+**Auto-row creation for replay_signs**: When a project transitions to Stage 2 (Procurement), a `replay_signs` row is ALWAYS created (all tiers include replay cameras → all get signs):
+
+```typescript
+// services/procurementService.ts
+async function ensureReplaySignRecord(projectId: string): Promise<void> {
+  const project = await getProject(projectId);
+
+  const { data: existing } = await supabase
+    .from('replay_signs')
+    .select('id')
+    .eq('project_id', projectId)
+    .maybeSingle();
+
+  if (!existing) {
+    await supabase.from('replay_signs').insert({
+      project_id: projectId,
+      qty: project.replay_sign_count,  // court_count * 2
+      status: 'staged',
+    });
+  }
+}
+```
+
+---
+
+### Stage Entry Trigger (Stage 2 → Procurement)
+
+When `projects.status` is updated to `'procurement'`, call both:
+
+```typescript
+await ensureFrontDeskRecords(projectId);
+await ensureReplaySignRecord(projectId);
+```
+
+These are idempotent — safe to call multiple times.
+
+---
+
+### CC Terminal Ordering Workflow (Replaces MRP "CC Form" Sheet)
+
+Step-by-step workflow as it appears in the webapp:
+
+1. **Stage 2 entry**: System auto-creates `cc_terminals` row (status: `not_ordered`) when `has_front_desk = true`.
+
+2. **Procurement stage UI**: The "Front Desk" section in Stage 2 wizard shows:
+   - Status stepper: `not_ordered → ordered → delivered → installed`
+   - "Order Terminal" button (enabled when status = `not_ordered`)
+   - Clicking opens a form: qty (default 1), Stripe order reference, expected date
+   - On submit: inserts `order_date = today`, `stripe_order_id`, `expected_date`, `status = 'ordered'`
+
+3. **Delivery confirmation**: When terminal arrives at NJ lab:
+   - Ops clicks "Mark Delivered" in Stage 2 UI
+   - Enters `delivered_date` (defaults to today)
+   - Status → `'delivered'`
+
+4. **On-site installation**: During Stage 3 deployment or Stage 4 financial close:
+   - Ops clicks "Mark Installed"
+   - Enters `installed_date`
+   - Status → `'installed'`
+
+5. **Cost tracking**: `cc_terminals.cost_per_unit × qty` feeds into project expense summary (shown in Stage 4 P&L review as a front desk line item).
+
+---
+
+### Replay Sign Ordering Workflow (Replaces MRP "Customer Replay Signs" Sheet)
+
+1. **Stage 2 entry**: System auto-creates `replay_signs` row (status: `staged`, qty = `court_count × 2`).
+
+2. **Procurement stage UI**: "Replay Signs" section in Stage 2 wizard shows:
+   - Qty: `{court_count × 2} signs` (read-only, derived)
+   - Status stepper: `staged → shipped → delivered → installed`
+   - Outreach tracking: "Record Outreach" button → form with `outreach_channel` (dropdown: Slack / Email / Other) + `outreach_date`
+   - "Mark Shipped" button: enter `shipped_date`, `tracking_number`, `vendor_order_id`
+   - "Mark Delivered" button: enter `delivered_date`
+   - "Mark Installed" button: enter `installed_date`
+
+3. **Inventory decrement**: When status → `'installed'`, the system decrements inventory for `REPLAY-SIGN` SKU:
+   ```typescript
+   await createInventoryMovement({
+     hardware_catalog_id: replaySignCatalogId,
+     project_id: projectId,
+     movement_type: 'shipped',
+     qty_delta: -(replay_signs.qty),
+     reference: `Replay signs installed for project ${project.customer_name}`,
+   });
+   ```
+
+---
+
+### Known Gaps in CC Terminal Model
+
+| Gap | Impact | Resolution |
+|----|--------|-----------|
+| Exact "CC Form" sheet column names | Field source map derived from frontier aspect description, not XLSX inspection | Requires source-existing-data aspect (XLSX blocked) |
+| Whether `qty > 1` ever occurs | Model assumes 1 per venue; real data may show 2 for large front desks | Requires XLSX real data |
+| Stripe hardware ordering URL/process | Unknown whether Stripe has a dedicated hardware portal or reps handle manually | Requires Kim Lapus input |
+| Sign status vs outreach status distinction | Current model separates them; MRP may have treated outreach as a status change | Requires XLSX "Customer Replay Signs" sheet inspection |
+| Whether replay sign qty ever deviates from `court_count × 2` | `replay_sign_count` generated column enforces 2×; real data may have exceptions | Requires XLSX real data |
 
 ### Known Gaps in Settings Model
 
