@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 55
-- Analyzed: 50
-- Pending: 5
-- Convergence: 91%
+- Analyzed: 51
+- Pending: 4
+- Convergence: 93%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -72,7 +72,7 @@ Depends on Wave 3 + Wave 4.
 - [x] sharing — Token-based read-only sharing, get_shared_computation() RPC with UUID parameter, /share/$token route, anon GRANT
 - [x] component-wiring-map — Every component -> parent route/page/tab/dialog, navigation path from home, trigger (for modals), props source. Zero orphans.
 - [x] action-trigger-map — Every action (PDF export, share toggle, delete, batch export, NLRC print) -> which button triggers it, which parent has the button, onClick handler, feedback (toast/download/navigation)
-- [ ] visual-verification-checklist — Every major component -> required shadcn wrapper (Card/Alert/Badge/Table), key Tailwind classes, lucide icon, color variant, status indicator styling
+- [x] visual-verification-checklist — Every major component -> required shadcn wrapper (Card/Alert/Badge/Table), key Tailwind classes, lucide icon, color variant, status indicator styling
 - [ ] empty-states-and-loading — Skeleton loaders for every async page, EmptyState components (no computations yet, no org members, empty batch), error states
 - [ ] toast-catalog — Every user action that produces feedback: save (success/error), delete (confirm + success), share (link copied), PDF (downloading), batch upload (processing/complete/errors), auth (signed in/out/error)
 - [ ] pdf-export-layout — @react-pdf/renderer layouts: single computation PDF, batch summary PDF, NLRC worksheet PDF, firm branding, legal disclaimers
@@ -95,6 +95,7 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 - [ ] spec-review — Final review: can the forward loop build the ENTIRE product from this spec alone?
 
 ## Recently Analyzed
+- visual-verification-checklist (Wave 5) — 2026-03-06
 - action-trigger-map (Wave 5) — 2026-03-06
 - component-wiring-map (Wave 5) — 2026-03-06
 - computation-management (Wave 5) — 2026-03-06
