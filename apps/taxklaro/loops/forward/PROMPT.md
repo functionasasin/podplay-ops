@@ -98,6 +98,9 @@ You are a development agent in a forward ralph loop. Each time you run, you do O
 | 23 | Unit Tests (full suite) | §15.1 | `npx vitest run --reporter=verbose` | 18 | Testing |
 | 24 | E2E Tests | §15.2 | `npx playwright test` | 18 | Testing |
 | 25 | Integration Sweep | — | grep + build + full tests | all | Final |
+| 26 | Wizard Step Implementations | §7.7 | `npx vitest run src/components/wizard/` | 10, 11 | Stubs |
+| 27 | Results Panel Implementations | §7.4, §14 | `npx vitest run src/components/results/` | 12 | Stubs |
+| 28 | Structural Stub Sweep | — | structural scan + build + full tests | 26, 27 | Final |
 
 ## Stage Details
 
@@ -556,7 +559,116 @@ Final cleanup — zero placeholders, zero stubs, production-ready.
 
 **Advance/Converge when:** Zero grep hits for placeholder/stub in `src/` (excluding node_modules, test mocks, HTML placeholder attrs). All tests pass. Build succeeds.
 
-When this stage is complete, write `status/converged.txt` with final summary.
+When this stage is complete, advance to stage 26. Do NOT write converged.txt yet.
+
+---
+
+### Stage 26 — Wizard Step Implementations (§7.7)
+
+The original stages 10-11 created typed stubs (`return null`) instead of real UI. All 17 wizard step components and WizardReview are empty shells that accept props but render nothing.
+
+**Stub files to implement (each iteration picks 2-3 related steps):**
+- `src/components/wizard/WS00ModeSelection.tsx` — radio group: quick estimate vs detailed
+- `src/components/wizard/WS01TaxpayerProfile.tsx` — taxpayer type radio, TIN input
+- `src/components/wizard/WS02BusinessType.tsx` — business activity select, industry
+- `src/components/wizard/WS03TaxYear.tsx` — year select, period, filing frequency
+- `src/components/wizard/WS04GrossReceipts.tsx` — PesoInput for gross receipts/sales
+- `src/components/wizard/WS05Compensation.tsx` — compensation income, tax withheld
+- `src/components/wizard/WS06ExpenseMethod.tsx` — OSD vs itemized radio
+- `src/components/wizard/WS07AItemizedExpenses.tsx` — itemized expense line items
+- `src/components/wizard/WS07BFinancialItems.tsx` — financial items (interest, depreciation)
+- `src/components/wizard/WS07CDepreciation.tsx` — depreciation schedule
+- `src/components/wizard/WS07DNolco.tsx` — net operating loss carryover
+- `src/components/wizard/WS08CwtForm2307.tsx` — Form 2307 creditable withholding entries
+- `src/components/wizard/WS09PriorQuarterly.tsx` — prior quarterly payments
+- `src/components/wizard/WS10Registration.tsx` — BIR registration details, VAT status
+- `src/components/wizard/WS11RegimeElection.tsx` — regime preference radio
+- `src/components/wizard/WS12FilingDetails.tsx` — filing date, RDO, attachments
+- `src/components/wizard/WS13PriorYearCredits.tsx` — excess credits from prior year
+- `src/components/wizard/WizardReview.tsx` — summary of all inputs, edit buttons per section, compute button
+
+**Implementation pattern for each step:**
+1. Read spec §7.7 for the exact fields, labels, validation rules, and conditional visibility
+2. Use React Hook Form field registration (the wizard container manages the form)
+3. Use shadcn/ui components (Input, Select, RadioGroup, etc.)
+4. Use PesoInput for monetary fields
+5. Component must render actual form fields — NOT return null
+
+**How to detect you're done:**
+```bash
+grep -l "return null" apps/taxklaro/frontend/src/components/wizard/WS*.tsx apps/taxklaro/frontend/src/components/wizard/WizardReview.tsx 2>/dev/null
+```
+Zero results = all wizard steps implemented.
+
+**Advance when:** Zero wizard stubs returning null. `npx vitest run src/components/wizard/` passes. All 17 steps + review render actual form UI.
+
+---
+
+### Stage 27 — Results Panel Implementations (§7.4, §14)
+
+The original stage 12 created typed stubs for all 11 results panel components. They accept props but render nothing.
+
+**Stub files to implement (each iteration picks 2-3 related panels):**
+- `src/components/results/TaxBreakdownPanel.tsx` — income tax + percentage tax + total, per selected path
+- `src/components/results/RegimeComparisonTable.tsx` — side-by-side 3-path comparison table (PATH_A graduated, PATH_B 8% flat, PATH_C OSD)
+- `src/components/results/RecommendationBanner.tsx` — highlighted banner showing recommended regime + savings
+- `src/components/results/BirFormRecommendation.tsx` — which BIR form to file (1701A/1701/1701Q)
+- `src/components/results/PathDetailAccordion.tsx` — expandable per-path detail with line items
+- `src/components/results/BalancePayableSection.tsx` — net tax payable after credits/withholding
+- `src/components/results/PenaltySummary.tsx` — surcharge + interest + compromise penalty breakdown
+- `src/components/results/PercentageTaxSummary.tsx` — 3% percentage tax computation display
+- `src/components/results/InstallmentSection.tsx` — quarterly installment schedule
+- `src/components/results/WarningsBanner.tsx` — validation warnings and ineligibility notices
+- `src/components/results/ManualReviewFlags.tsx` — flags requiring manual CPA review
+
+**Implementation pattern:**
+1. Read spec for exact data fields and display format
+2. Use the typed props already defined in each file
+3. Format monetary values as ₱ with comma separators
+4. Use shadcn Card, Table, Badge, Accordion, Alert components
+5. Component must render actual data visualization — NOT return null
+
+**How to detect you're done:**
+```bash
+grep -l "return null" apps/taxklaro/frontend/src/components/results/*.tsx 2>/dev/null
+```
+Zero results = all panels implemented.
+
+**Advance when:** Zero results stubs returning null. `npx vitest run src/components/results/` passes. All 11 panels render actual data.
+
+---
+
+### Stage 28 — Structural Stub Sweep
+
+Final convergence check with STRUCTURAL stub detection (not just text grep).
+
+**Tasks (each iteration picks ONE):**
+1. **Structural stub scan** — find ALL components that accept props but return null:
+   ```bash
+   for f in $(find apps/taxklaro/frontend/src -name "*.tsx" -not -path "*/node_modules/*" -not -path "*/__tests__/*" -not -name "*.test.*"); do
+     lines=$(wc -l < "$f")
+     if [ "$lines" -lt 25 ] && grep -q "return null" "$f"; then
+       echo "STUB: $f ($lines lines)"
+     fi
+   done
+   ```
+   Fix any found stubs.
+2. **No-op function scan** — find functions with empty bodies or `/* no-op */`:
+   ```bash
+   grep -rn "{ /\* no-op \*/ }\|{ }\|=> {}" apps/taxklaro/frontend/src/ --include="*.ts" --include="*.tsx" | grep -v node_modules | grep -v test
+   ```
+   Implement or remove any found.
+3. **Full test suite** — `npx vitest run --reporter=verbose`, fix failures
+4. **Production build** — `npx vite build` succeeds
+5. **Cross-layer consistency** — spec §18 checklist
+
+**Converge when:**
+- Zero structural stubs (no component < 25 lines returning null with typed props)
+- Zero no-op functions (except intentional monitoring stubs documented in spec)
+- All tests pass
+- Build succeeds
+
+Write `status/converged.txt` when ALL checks pass.
 
 ---
 

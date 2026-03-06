@@ -18,11 +18,12 @@ loops:
     converged_at: "2026-03-06"
   # === Forward (active) ===
   forward:
-    description: "Full-stack TaxKlaro build: Rust engine + WASM + React frontend + Supabase + Fly.io (25 stages)"
+    description: "Full-stack TaxKlaro build: Rust engine + WASM + React frontend + Supabase + Fly.io (28 stages)"
     type: forward
     schedule: "0 6,18 * * *"
     max_iterations: 50
     timeout_minutes: 30
-    status: converged
+    status: active
     created: 2026-03-06
-    converged_at: "2026-03-06"
+    reopened: "2026-03-06"
+    reopened_reason: "29 structural stubs (return null components) missed by text-pattern convergence check — added stages 26-28"
