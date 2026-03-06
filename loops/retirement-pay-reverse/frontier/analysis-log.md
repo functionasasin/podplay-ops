@@ -2,6 +2,7 @@
 
 | # | Aspect | Wave | Date | Files Modified |
 |---|--------|------|------|----------------|
+| 59 | fly-io-deployment | 6 | 2026-03-06 | analysis/fly-io-deployment.md |
 | 58 | supabase-gotchas | 6 | 2026-03-06 | analysis/supabase-gotchas.md |
 | 57 | migration-verification | 6 | 2026-03-06 | analysis/migration-verification.md |
 | 56 | production-build-verification | 6 | 2026-03-06 | analysis/production-build-verification.md |
