@@ -28,3 +28,10 @@ loops:
     reopened: "2026-03-06"
     reopened_reason: "29 structural stubs (return null components) missed by text-pattern convergence check — added stages 26-28"
     converged_at: "2026-03-06"
+  ui-forward:
+    description: "UI polish: DM Serif Display + DM Sans typography, AppLayout wiring, page-by-page visual refinement, responsive audit (10 stages)"
+    type: forward
+    max_iterations: 40
+    timeout_minutes: 30
+    status: active
+    created: 2026-03-06
