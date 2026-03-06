@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 57
-- Analyzed: 14
-- Pending: 43
-- Convergence: 25%
+- Analyzed: 15
+- Pending: 42
+- Convergence: 26%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -27,7 +27,7 @@
 - [x] model-bom-templates — Template structures for auto-generating BOMs per tier (Pro/Autonomous/Autonomous+/PBK)
 - [x] model-checklist-templates — Template structures for seeding deployment checklists per tier
 - [x] model-cc-terminals — CC Form sheet: BBPOS WisePOS E terminal ordering, cost tracking, delivery status, front desk equipment (QR scanner, webcam)
-- [ ] model-replay-signs — Customer Replay Signs sheet: sign fulfillment lifecycle (Staged > Shipped > Delivered > Installed), qty calc (2x courts), outreach tracking, inventory decrement
+- [x] model-replay-signs — Customer Replay Signs sheet: sign fulfillment lifecycle (Staged > Shipped > Delivered > Installed), qty calc (2x courts), outreach tracking, inventory decrement
 - [ ] model-support-tiers — Three-tier support escalation model: Tier 1 (on-site), Tier 2 (config specialist), Tier 3 (engineer), per-tier examples, escalation paths
 - [ ] model-device-migration — Apple Business Manager transfer workflow: release → factory reset → re-enroll → re-configure, MDM comparison (Mosyle vs Jamf)
 - [ ] model-international-deployment — Asia deployment: Philippines ISP requirements (PLDT/Globe/Converge, business plan + static IP mandatory), PAL vs NTSC, 220V/60Hz power, vendor availability, open questions

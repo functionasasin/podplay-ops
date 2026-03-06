@@ -1358,7 +1358,7 @@ CREATE TABLE replay_signs (
 
   status          sign_status NOT NULL DEFAULT 'staged',
 
-  outreach_channel TEXT,
+  outreach_channel TEXT CHECK (outreach_channel IN ('slack', 'email', 'other')),
   -- How the order was communicated: 'slack' | 'email' | 'other'
 
   outreach_date   DATE,
@@ -1378,6 +1378,9 @@ CREATE TABLE replay_signs (
 CREATE TRIGGER replay_signs_updated_at
   BEFORE UPDATE ON replay_signs
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+CREATE INDEX idx_replay_signs_project ON replay_signs (project_id);
+CREATE INDEX idx_replay_signs_status  ON replay_signs (status);
 
 ALTER TABLE replay_signs ENABLE ROW LEVEL SECURITY;
 
@@ -1434,6 +1437,101 @@ CREATE POLICY "authenticated users full access cc_terminals"
   TO authenticated
   USING (true)
   WITH CHECK (true);
+```
+
+---
+
+## Replay Signs Model
+**Aspect**: model-replay-signs
+**Date**: 2026-03-06
+**MRP Source**: "Customer Replay Signs" sheet
+
+### Overview
+
+Replay signs are 6×8 inch aluminum printed signs (Fast Signs vendor, $25/unit) placed on
+each court to indicate the replay button location and scoring procedure. Every project gets
+a `replay_signs` row created at Stage 2 entry, regardless of tier.
+
+### Qty Rule
+
+```
+qty = court_count × 2
+```
+
+Copied from `projects.replay_sign_count` (GENERATED ALWAYS computed column) at row creation.
+Stored as a snapshot — can be overridden in edge cases (extra backup sign ordered).
+
+### State Machine
+
+```
+staged → shipped → delivered → installed
+```
+
+| Status | Description | Date Field Set |
+|--------|-------------|---------------|
+| staged | Queued for order, outreach not yet sent | — |
+| shipped | Fast Signs shipped the order | shipped_date |
+| delivered | Package received at venue | delivered_date |
+| installed | Signs mounted on courts by venue staff | installed_date |
+
+**Side effect on `installed` transition**: Creates an `inventory_movements` record:
+- `movement_type = 'project_shipped'`
+- `qty_delta = -replay_signs.qty`
+- `hardware_catalog_id` = REPLAY-SIGN SKU
+- `project_id` = this project
+
+### Outreach Tracking
+
+`outreach_channel` records how ops communicated the order to Fast Signs:
+- `'slack'` — Slack DM to Fast Signs rep
+- `'email'` — Email to Fast Signs ordering contact
+- `'other'` — Phone, web form, or other
+
+`outreach_date` = date the initial request was sent.
+`vendor_order_id` = Fast Signs confirmation number.
+
+### Field Source Map
+
+| Field | MRP Column | Notes |
+|-------|------------|-------|
+| project_id | Customer Name (FK lookup) | Links to projects |
+| qty | Qty | court_count × 2 at creation |
+| status | Status | staged/shipped/delivered/installed |
+| outreach_channel | (implied) | slack/email/other |
+| outreach_date | Outreach Date | When ops contacted Fast Signs |
+| shipped_date | Shipped Date | Fast Signs shipping date |
+| delivered_date | Delivered Date | Arrival at venue |
+| installed_date | Installed Date | Signs mounted on courts |
+| tracking_number | Tracking | Carrier tracking number |
+| vendor_order_id | Order Ref | Fast Signs order ID |
+| notes | Notes | Free-form |
+
+### Auto-Row Creation
+
+Called when project transitions to `procurement` wizard stage (idempotent):
+
+```typescript
+async function ensureReplaySignRecord(projectId: string): Promise<void> {
+  const { data: project } = await supabase
+    .from('projects')
+    .select('id, replay_sign_count')
+    .eq('id', projectId)
+    .single();
+
+  const { data: existing } = await supabase
+    .from('replay_signs')
+    .select('id')
+    .eq('project_id', projectId)
+    .maybeSingle();
+
+  if (existing) return;  // Idempotent
+
+  await supabase.from('replay_signs').insert({
+    project_id: projectId,
+    qty: project.replay_sign_count,  // court_count × 2
+    status: 'staged',
+  });
+}
 ```
 
 ---
