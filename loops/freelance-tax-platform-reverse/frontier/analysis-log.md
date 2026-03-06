@@ -11,3 +11,4 @@
 | 7 | initialization-patterns | 2 | 2026-03-06 | analysis/initialization-patterns.md, frontier/aspects.md, frontier/analysis-log.md |
 | 8 | typescript-types | 3 | 2026-03-06 | analysis/typescript-types.md, frontier/aspects.md, frontier/analysis-log.md |
 | 9 | zod-schemas | 3 | 2026-03-06 | analysis/zod-schemas.md, frontier/aspects.md, frontier/analysis-log.md |
+| 10 | frontend-state-management | 3 | 2026-03-06 | analysis/frontend-state-management.md, frontier/aspects.md, frontier/analysis-log.md |
