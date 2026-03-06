@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 37
-- Analyzed: 22
-- Pending: 15
-- Convergence: 59%
+- Analyzed: 23
+- Pending: 14
+- Convergence: 62%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -44,7 +44,7 @@ Depends on Wave 4. Every component must have a home.
 - [x] action-trigger-map — Every action-triggered feature (PDF export, share toggle, delete, etc.) -> which button triggers it, which parent has the button, onClick handler. Prevents "PDF infra built but no button" failure.
 - [x] design-system-alignment — Map TaxKlaro palette to shadcn/ui + Radix + Tailwind CSS 4 theming
 - [x] visual-verification-checklist — For every major component: required shadcn wrapper (Card/Alert/Badge), key Tailwind classes, lucide icon, color variant. Prevents unstyled test-scaffolding shipping as "complete."
-- [ ] empty-states-and-loading — Skeleton loaders, EmptyState components, error states for every async page
+- [x] empty-states-and-loading — Skeleton loaders, EmptyState components, error states for every async page
 - [ ] toast-catalog — Every user action that produces feedback, with message text and variant
 - [ ] pdf-export-layout — @react-pdf/renderer layout, sections, firm branding, BIR form reference
 
