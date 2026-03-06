@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 37
-- Analyzed: 24
-- Pending: 13
-- Convergence: 65%
+- Analyzed: 25
+- Pending: 12
+- Convergence: 68%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -46,7 +46,7 @@ Depends on Wave 4. Every component must have a home.
 - [x] visual-verification-checklist — For every major component: required shadcn wrapper (Card/Alert/Badge), key Tailwind classes, lucide icon, color variant. Prevents unstyled test-scaffolding shipping as "complete."
 - [x] empty-states-and-loading — Skeleton loaders, EmptyState components, error states for every async page
 - [x] toast-catalog — Every user action that produces feedback, with message text and variant
-- [ ] pdf-export-layout — @react-pdf/renderer layout, sections, firm branding, BIR form reference
+- [x] pdf-export-layout — @react-pdf/renderer layout, sections, firm branding, BIR form reference
 
 ### Wave 6: Testing + Deployment
 Depends on Wave 5. Production readiness.

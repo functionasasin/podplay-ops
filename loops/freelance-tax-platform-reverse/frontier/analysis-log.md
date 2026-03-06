@@ -2,6 +2,7 @@
 
 | # | Aspect | Wave | Date | Files Modified |
 |---|--------|------|------|----------------|
+| 25 | pdf-export-layout | 5 | 2026-03-06 | analysis/pdf-export-layout.md, frontier/aspects.md, frontier/analysis-log.md |
 | 23 | empty-states-and-loading | 5 | 2026-03-06 | analysis/empty-states-and-loading.md, frontier/aspects.md, frontier/analysis-log.md |
 | 22 | design-system-alignment | 5 | 2026-03-06 | analysis/design-system-alignment.md, frontier/aspects.md, frontier/analysis-log.md |
 | 1 | validate-domain-spec | 1 | 2026-03-06 | analysis/validate-domain-spec.md, frontier/aspects.md, frontier/analysis-log.md |
