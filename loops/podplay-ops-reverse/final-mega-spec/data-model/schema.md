@@ -3675,3 +3675,275 @@ Step-by-step workflow as it appears in the webapp:
 | All `team_opex.annual_salary` values | HER calculation returns 0 until populated | Requires XLSX HER sheet |
 | Whether rent is split direct/indirect or all-indirect | HER denominator may be over/understated | Requires XLSX HER formula |
 | `isp_fiber_mbps_per_court` and `isp_cable_upload_min_mbps` precise thresholds | ISP validation warnings may fire incorrectly | Requires deployment guide ISP speed table (see source-deployment-guide analysis) |
+
+---
+
+## Device Migration Model (ABM Transfer Workflow)
+
+**Aspect**: model-device-migration
+**Date**: 2026-03-06
+**Sources**: analysis/source-deployment-guide.md (Appendix E, Appendix F Q9-Q11), analysis/model-device-migration.md
+
+Tracks Apple Business Manager (ABM) org transfer events — when devices from one ABM/MDM
+environment must be migrated to another (e.g., PingPod Inc → Cosmos PH for Asia expansion).
+
+---
+
+### New Enums (Device Migration)
+
+```sql
+-- MDM provider options for target org
+CREATE TYPE mdm_provider AS ENUM (
+  'mosyle',  -- Apple-only, cheaper, current PodPlay choice
+  'jamf',    -- Apple-only, premier, more configuration options
+  'other'    -- Cross-platform or custom MDM (needed if Android added)
+);
+
+-- Overall migration event status
+CREATE TYPE device_migration_status AS ENUM (
+  'planning',    -- Migration planned; source org not yet contacted
+  'released',    -- Source org confirmed device release in their ABM
+  'enrolled',    -- Devices powered on and auto-enrolled in target MDM
+  'configured',  -- Naming + apps + App Lock + P-List all re-applied
+  'completed',   -- End-to-end verified; migration closed
+  'cancelled'    -- Migration cancelled before completion
+);
+
+-- Physical device type being migrated
+CREATE TYPE migration_device_type AS ENUM (
+  'ipad',       -- iPad kiosk (App Lock, VPP, P-List LOCATION_ID)
+  'apple_tv',   -- Apple TV 4K display (App Install, naming)
+  'mac_mini'    -- Mac Mini replay server (re-enroll only; replay service unaffected)
+);
+
+-- Per-device item status within a migration
+CREATE TYPE migration_device_status AS ENUM (
+  'pending',     -- Not yet released from source ABM
+  'released',    -- Released from source ABM; factory reset occurs on next boot
+  'enrolled',    -- Auto-enrolled in target MDM (confirmed in Mosyle/Jamf console)
+  'configured'   -- Naming, apps, App Lock, P-List all re-applied and verified
+);
+```
+
+---
+
+### Table: `device_migrations`
+
+One row per ABM transfer event. May cover multiple device types for the same venue.
+`project_id` is optional — a migration may be initiated before a project is created,
+or may relate to an existing project during a handoff.
+
+```sql
+CREATE TABLE device_migrations (
+  id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  -- Linked project (nullable — can migrate a device pool before project assignment)
+  project_id            UUID REFERENCES projects(id) ON DELETE SET NULL,
+  -- Human-readable label for this migration event
+  migration_label       TEXT NOT NULL,
+  -- Source organization (the org releasing devices from their ABM)
+  source_org_name       TEXT NOT NULL,   -- e.g., "PingPod Inc"
+  source_abm_org_id     TEXT,            -- Apple internal org ID (optional, informational)
+  -- Target organization (receiving devices into their ABM + MDM)
+  target_org_name       TEXT NOT NULL,   -- e.g., "Cosmos PH"
+  target_abm_org_id     TEXT,
+  target_mdm            mdm_provider NOT NULL DEFAULT 'mosyle',
+  -- Mosyle group to create for this venue after enrollment
+  -- Pattern: "{Client} - {VenueName}" (e.g., "Cosmos PH - Quezon City")
+  target_mosyle_group   TEXT,
+  -- Migration status
+  status                device_migration_status NOT NULL DEFAULT 'planning',
+  -- Timeline — each state transition stamps a date
+  initiated_date        DATE,            -- When ops contacts source org to request release
+  devices_released_date DATE,            -- When source org confirms release in their ABM
+  devices_enrolled_date DATE,            -- When all/most devices appear in target MDM
+  configs_applied_date  DATE,            -- When naming/apps/App Lock all re-applied
+  completed_date        DATE,
+  -- Free-form notes (async coordination with Andy, Nico, external contacts)
+  notes                 TEXT,
+  created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_device_migrations_project ON device_migrations(project_id);
+CREATE INDEX idx_device_migrations_status  ON device_migrations(status);
+
+CREATE TRIGGER update_device_migrations_updated_at
+  BEFORE UPDATE ON device_migrations
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+```
+
+---
+
+### Table: `device_migration_items`
+
+One row per physical device. Serial numbers are the canonical identifier (from
+Apple Configurator or Mosyle device list). Items advance independently — partial
+enrollment is normal (some devices may fail on first attempt).
+
+```sql
+CREATE TABLE device_migration_items (
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  migration_id      UUID NOT NULL REFERENCES device_migrations(id) ON DELETE CASCADE,
+  serial_number     TEXT NOT NULL,                    -- Apple serial (12 chars)
+  device_type       migration_device_type NOT NULL,
+  -- Court assignment (NULL for Mac Mini — one per venue, not per court)
+  court_number      INTEGER CHECK (court_number >= 1),
+  -- Target label to apply in MDM after enrollment
+  -- iPad pattern:    "iPad {Client} Court {N}"    — Phase 10, Step 91
+  -- AppleTV pattern: "AppleTV {Client} Court {N}" — Phase 11, Step 96b
+  -- Mac Mini pattern: "{Client} Mac Mini"
+  target_mdm_label  TEXT,
+  -- Item-level status (independent of migration-level status)
+  status            migration_device_status NOT NULL DEFAULT 'pending',
+  -- Per-device step timestamps
+  enrolled_at       TIMESTAMPTZ,         -- When confirmed in Mosyle/Jamf
+  configured_at     TIMESTAMPTZ,         -- When naming/apps/App Lock verified
+  -- iPad-specific: power-on sequence must match court-number order
+  -- (Mosyle enrolls devices in the order they power on)
+  -- WARNING from Phase 10: "If you power on out of order, device-to-court mapping will be wrong"
+  enrollment_order  INTEGER,             -- Expected power-on sequence (1=first, 2=second...)
+  notes             TEXT,
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  -- Serial must be unique within a migration event
+  CONSTRAINT uq_migration_serial UNIQUE (migration_id, serial_number)
+);
+
+CREATE INDEX idx_migration_items_migration ON device_migration_items(migration_id);
+CREATE INDEX idx_migration_items_serial    ON device_migration_items(serial_number);
+CREATE INDEX idx_migration_items_status    ON device_migration_items(status);
+
+CREATE TRIGGER update_device_migration_items_updated_at
+  BEFORE UPDATE ON device_migration_items
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+```
+
+---
+
+### RLS Policies
+
+```sql
+ALTER TABLE device_migrations      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE device_migration_items ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY device_migrations_all      ON device_migrations      USING (true) WITH CHECK (true);
+CREATE POLICY device_migration_items_all ON device_migration_items USING (true) WITH CHECK (true);
+```
+
+---
+
+### Field Source Map — `device_migrations`
+
+| Field | Source | Notes |
+|-------|--------|-------|
+| project_id | New field | Links migration to project; NULL allowed |
+| migration_label | No MRP equivalent | Internal ops label |
+| source_org_name | Appendix F Q9 — "PingPod Inc" | Known source for Asia migration |
+| target_org_name | Appendix F Q9 — "Cosmos PH" | Known target for Asia migration |
+| target_mdm | Appendix E — Mosyle (current) | Jamf mentioned as alternative |
+| target_mosyle_group | Phase 10 Step 91 — naming group | Created per venue in Mosyle |
+| status | Appendix E 6-step workflow → 5 status values | planning through completed |
+| initiated_date | Appendix E Step 1 | When ops asks source to release |
+| devices_released_date | Appendix E Step 2 | Factory reset follows automatically |
+| devices_enrolled_date | Appendix E Step 5 | Auto-enrollment on device power-on |
+| configs_applied_date | Appendix E Step 6 | Naming + apps + App Lock |
+
+### Field Source Map — `device_migration_items`
+
+| Field | Source | Notes |
+|-------|--------|-------|
+| serial_number | Apple Business Manager / Configurator | 12-char Apple serial |
+| device_type | Appendix E device list | Determines which configs to re-apply |
+| court_number | Phase 10 Step 91 naming scheme | NULL for Mac Mini (1 per venue) |
+| target_mdm_label | Phase 10 Step 91 + Phase 11 Step 96b naming | Formatted at config time |
+| status | Per-device tracking | Independent of migration-level status |
+| enrollment_order | Phase 10 WARNING — power-on order critical | Must be 1, 2, 3... in court order |
+
+---
+
+### Migration Progress Calculation
+
+Migration-level status derives from item statuses plus manual ops advancement:
+
+| Transition | Trigger |
+|------------|---------|
+| `planning` → `released` | Ops manually advances when source org confirms release |
+| `released` → `enrolled` | Auto-derived: ALL items have `status IN ('enrolled', 'configured')` |
+| `enrolled` → `configured` | Auto-derived: ALL items have `status = 'configured'` |
+| `configured` → `completed` | Ops manually marks complete after end-to-end test |
+| Any → `cancelled` | Ops manually cancels |
+
+Progress percentage (for UI progress bar):
+```typescript
+// Weights: pending=0%, released=25%, enrolled=75%, configured=100%
+const WEIGHT: Record<MigrationDeviceStatus, number> = {
+  pending: 0, released: 25, enrolled: 75, configured: 100
+};
+const migrationProgress = (items: DeviceMigrationItem[]): number => {
+  if (items.length === 0) return 0;
+  const total = items.reduce((sum, i) => sum + WEIGHT[i.status], 0);
+  return Math.round(total / items.length);
+};
+```
+
+---
+
+### Key Business Rules
+
+1. **iPad enrollment order is critical**: Power on iPads sequentially in court-number order.
+   Mosyle assigns devices in power-on order. If out of order, court mapping is wrong.
+   After enrollment, verify by filtering Mosyle by "enrolled date" — should match court 1, 2, 3...
+   The `enrollment_order` field documents the intended sequence.
+
+2. **Mac Mini replay service survives**: Factory reset removes MDM profiles only.
+   Samsung SSD content (clips, cache folders), DDNS cron, and replay service binary all persist.
+   Mac Mini still needs ABM re-enrollment to receive future MDM configuration pushes.
+
+3. **App Lock must be OFF before Flic button re-pairing**: After re-enrollment,
+   Bluetooth buttons must be re-paired. Turn App Lock to 24/7 OFF until all pairing is complete.
+   Then schedule the 2:00–3:00 AM daily window.
+
+4. **VPP licenses are not auto-transferred**: New ABM org must have VPP licenses for
+   PodPlay's white-labeled app before app installation can proceed.
+   Coordinate with Agustin (app readiness) before device power-on.
+
+---
+
+### Updated Migration Order (Full)
+
+```
+1.  Create all enums (including mdm_provider, device_migration_status, migration_device_type, migration_device_status)
+2.  update_updated_at() function
+3.  installers
+4.  settings
+5.  hardware_catalog
+6.  projects
+7.  bom_templates
+8.  project_bom_items
+9.  inventory
+10. inventory_movements
+11. purchase_orders
+12. purchase_order_items
+13. deployment_checklist_templates
+14. deployment_checklist_items
+15. invoices
+16. expenses
+17. replay_signs
+18. cc_terminals
+19. monthly_opex_snapshots
+20. troubleshooting_tips
+21. device_migrations     (references projects — nullable FK)
+22. device_migration_items (references device_migrations — cascade delete)
+```
+
+---
+
+### Known Gaps in Device Migration Model
+
+| Gap | Impact | Resolution |
+|----|--------|-----------|
+| VPP license transfer process | Migration completes but apps won't install without licenses in new org | Requires Agustin / Apple Business Manager confirmation |
+| `source_abm_org_id` / `target_abm_org_id` exact format | Apple's internal org ID format not documented | Non-blocking — fields are optional TEXT |
+| Android MDM path | If Android kiosks added, Mosyle/Jamf won't work | Requires product decision — not a current concern |
+| Jamf pricing | Unknown — Mosyle is current choice | Non-blocking |
+| Serial numbers may not be available before migration | Items can be added progressively as serials are gathered | `device_migration_items` rows added as needed; no blocking constraint |
