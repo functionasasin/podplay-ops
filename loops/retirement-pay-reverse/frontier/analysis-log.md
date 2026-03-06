@@ -43,3 +43,4 @@
 | 39 | design-system | 5 | 2026-03-06 | analysis/design-system.md |
 | 40 | auth-flow | 5 | 2026-03-06 | analysis/auth-flow.md |
 | 41 | landing-page | 5 | 2026-03-06 | analysis/landing-page.md |
+| 42 | route-table | 5 | 2026-03-06 | analysis/route-table.md |
