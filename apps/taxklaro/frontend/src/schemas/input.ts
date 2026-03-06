@@ -54,7 +54,7 @@ export const ItemizedExpenseInputSchema = z.object({
 // Form2307Entry sub-schema (CWT certificate)
 export const Form2307EntrySchema = z.object({
   payorName: z.string().min(1),
-  payorTin: z.string().regex(/^\d{3}-\d{3}-\d{3}(-\d{3})?$/),
+  payorTin: z.string().regex(/^\d{3}-\d{3}-\d{3}(-\d{3,4})?$/),
   atcCode: z.string().min(1),
   incomePayment: PesoSchema,
   taxWithheld: PesoSchema,
