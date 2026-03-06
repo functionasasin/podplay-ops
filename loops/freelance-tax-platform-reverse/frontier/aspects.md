@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 37
-- Analyzed: 33
-- Pending: 4
-- Convergence: 89%
+- Analyzed: 34
+- Pending: 3
+- Convergence: 92%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -61,7 +61,7 @@ Depends on Wave 5. Production readiness.
 ### Wave 7: Synthesis
 Depends on ALL previous waves. **Strict internal dependency order — do NOT skip ahead.**
 - [x] unified-mega-spec — Assemble docs/plans/freelance-tax-spec.md from all analysis files + imported domain content
-- [ ] placeholder-validation — **HARD GATE.** Line-by-line scan for banned patterns. MUST return PASS before proceeding.
+- [x] placeholder-validation — **HARD GATE.** Line-by-line scan for banned patterns. MUST return PASS before proceeding.
 - [ ] completeness-audit — Per-feature PASS/FAIL: types match, schemas match, routes wired, components wired, migrations complete, E2E defined
 - [ ] cross-layer-consistency — Field-by-field verification: Rust <-> JSON <-> TypeScript <-> Zod
 - [ ] spec-review — Final review: can the forward loop build the ENTIRE product from this spec alone?

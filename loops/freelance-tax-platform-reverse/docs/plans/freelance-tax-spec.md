@@ -2291,7 +2291,70 @@ Tests that require WASM: import functions from `bridge.ts` — the `test-setup.t
 
 ### 15.2 E2E — Playwright
 
-**File:** `playwright.config.ts` (see Section 16 CI/CD for full config)
+**File:** `playwright.config.ts`
+
+```typescript
+import { defineConfig, devices } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './e2e',
+  fullyParallel: false,          // sequential — avoids auth race conditions in shared test DB
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: 1,
+  reporter: process.env.CI ? 'github' : 'list',
+  use: {
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:4173',
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+  },
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'mobile-chrome',
+      use: { ...devices['Pixel 5'] },
+      testMatch: /smoke\.prod\.spec\.ts/,   // only smoke tests on mobile
+    },
+  ],
+  // In local dev, start the preview server automatically
+  webServer: process.env.CI
+    ? undefined
+    : {
+        command: 'npm run preview',
+        url: 'http://localhost:4173',
+        reuseExistingServer: true,
+        timeout: 30_000,
+      },
+});
+```
+
+**E2E test user credentials** (set via GitHub secrets or `.env.test`):
+- `E2E_TEST_EMAIL` — e.g. `smoketest@taxklaro.ph`
+- `E2E_TEST_PASSWORD` — min 8 chars, no special chars that need shell escaping
+
+The test user must be pre-created in Supabase Auth with email confirmed. In CI, use `supabase auth admin create-user` before running tests.
+
+**Global setup** — `e2e/global-setup.ts`:
+```typescript
+import { chromium } from '@playwright/test';
+
+async function globalSetup() {
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+  await page.goto('/auth');
+  await page.fill('[data-testid="email-input"]', process.env.E2E_TEST_EMAIL!);
+  await page.fill('[data-testid="password-input"]', process.env.E2E_TEST_PASSWORD!);
+  await page.click('[data-testid="sign-in-button"]');
+  await page.waitForURL('/');
+  await page.context().storageState({ path: 'e2e/.auth/user.json' });
+  await browser.close();
+}
+
+export default globalSetup;
+```
 
 E2E tests in `frontend/e2e/`:
 
@@ -2462,7 +2525,14 @@ Jobs:
 1. **Type Check + Lint**: `tsc --noEmit`, `eslint src --max-warnings 0`
 2. **Build WASM**: `wasm-pack build engine --target web`
 3. **Unit Tests**: `npm run test` (Vitest)
-4. **Production Build**: `npm run build` with placeholder VITE_* vars
+4. **Production Build**: Run with stub env vars (syntactically valid but not connected to real Supabase):
+   ```sh
+   VITE_SUPABASE_URL=https://placeholder-project.supabase.co \
+   VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdWJhc2UiLCJyZWYiOiJwbGFjZWhvbGRlciIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNjAwMDAwMDAwLCJleHAiOjk5OTk5OTk5OTl9.stub \
+   VITE_APP_URL=http://localhost:5173 \
+   npm run build
+   ```
+   These stub values match Supabase URL and JWT formats so Vite embeds them without error. Purpose: verify Vite + WASM + Tailwind compilation succeeds. NOT connected to a real backend.
 5. **Verify Outputs**: Check `.wasm > 100KB`, `.css > 20KB`
 
 Rust caching:
