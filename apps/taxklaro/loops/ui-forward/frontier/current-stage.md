@@ -1,11 +1,14 @@
-# Current Stage: 1 (Design Tokens + Fonts)
+# Current Stage: 2 (AppLayout Wiring)
 
 ## Status
-Starting fresh. App is functionally complete but visually bare — default shadcn/ui
-styling, Inter font everywhere, no layout wiring, no visual hierarchy.
+Stage 1 complete. Fonts installed (DM Sans Variable + DM Serif Display), design tokens
+defined in index.css (typography scale, shadow scale, font utility classes). Build passes.
 
 ## What To Do
-Install DM Serif Display + DM Sans fonts, update index.css with design tokens
-(typography scale, shadow scale, font utility classes).
+Wire AppLayout into the route tree so all authenticated pages get the sidebar + main
+content structure. Update __root.tsx to create an authenticated layout route that uses
+AppLayout. Move computations/*, clients/*, deadlines, settings/* under it. Keep public
+routes (/, auth/*, share/*, invite/*, onboarding) outside AppLayout.
 
 ## Work Log
+- Stage 1: Installed fonts, defined CSS design tokens, verified build ✓
