@@ -1989,3 +1989,121 @@ Steps where `is_v2_only = true`: None of the current 121 steps are V2-only.
 Steps that ARE V1-only (Phase 9): All 10 steps. When V2 launches (~April 2026), Phase 9 will be replaced
 with a new phase using GitHub deploy and dashboard config. The `is_v2_only` flag is reserved
 for steps that should ONLY appear for V2 projects.
+
+---
+
+## Section 2: Troubleshooting Tips
+
+**Aspect**: model-support-tiers
+**Date**: 2026-03-06
+**Source**: Venue Deployment Guide, Appendix A + Appendix D
+
+Table: `troubleshooting_tips` — 16 rows
+
+Support tiers: 1=On-site/remote ops, 2=Config specialist (Nico-level), 3=Engineer/developer (Patrick-level)
+Severity values: 'info', 'warning', 'critical'
+phase_number: matches deployment phase (0–15); NULL = globally applicable
+
+```sql
+INSERT INTO troubleshooting_tips
+  (phase_number, issue, solution, support_tier, severity, sort_order)
+VALUES
+  -- Phase 3: Rack Assembly
+  (3,
+   'Mac Mini overheating',
+   'Mac Mini needs breathing room in rack. Do not install flush against other equipment. Leave at least 1U of clearance above and below the Mac Mini shelf.',
+   1, 'warning', 1),
+
+  -- Phase 5: ISP Router Configuration
+  (5,
+   'Port 4000 unreachable from outside network',
+   'Verify the full forwarding chain: (1) ISP router forwards port 4000 → UDM IP, OR UDM IP is in ISP DMZ, OR ISP has issued a static IP. (2) UDM forwards port 4000 TCP/UDP → 192.168.32.100 (Mac Mini). (3) Mac Mini is on REPLAY VLAN at 192.168.32.100. Test from cellular network: http://CUSTOMERNAME.podplaydns.com:4000/health',
+   2, 'critical', 1),
+
+  -- Phase 6: Camera Configuration
+  (6,
+   'Camera image is warped or distorted',
+   'Lens distortion coefficients need adjustment. Set all coefficients to zero first to get the raw uncorrected image. Calibrate coefficients after physical installation when final camera position and angle are confirmed.',
+   2, 'warning', 1),
+
+  -- Phase 7: DDNS Setup
+  (7,
+   'DDNS not updating — CUSTOMERNAME.podplaydns.com resolves to wrong IP',
+   'Check the cron job on Mac Mini: run `crontab -l` to verify the FreeDNS cron entry exists. Check the update log: `cat /tmp/freedns_CUSTOMERNAME_podplaydns_com.log` for errors. If cron is missing, re-run `crontab -e` and re-paste the curl command from FreeDNS quick cron example.',
+   2, 'warning', 1),
+
+  -- Phase 8: Mac Mini Setup
+  (8,
+   'Mac Mini black screen (crash — screen share unresponsive)',
+   'Screen sharing will not work if the screen is black (GPU crash). SSH into Mac Mini instead: `ssh USERNAME@192.168.32.100` (from REPLAY VLAN) or `ssh USERNAME@CUSTOMERNAME.podplaydns.com` (via DDNS). Once connected, run `sudo reboot` to restart.',
+   1, 'warning', 1),
+
+  (8,
+   '.DS_Store file in cache folder breaking replay processing',
+   'Run in Mac Mini terminal: `cd ~/cache && rm .DS_Store`. CRITICAL: Never open the cache folder in macOS Finder — Finder automatically recreates .DS_Store which corrupts the rename service. Always navigate to the cache folder via terminal only.',
+   1, 'warning', 2),
+
+  -- Phase 9: Replay Service Deployment
+  (9,
+   'Replays not generating for a specific time window',
+   'The rename service may have failed during that window. Files need timestamps (e.g., filename 0225 = 2:25 AM). Check rename service status via the health endpoint: http://CUSTOMERNAME.podplaydns.com:4000/health — look for rename_service field. Restart the replay service if rename_service shows as down.',
+   2, 'warning', 1),
+
+  (9,
+   'Replay video is pixelated or has visual artifacts',
+   'V1 replay service uses UDP transport — pixelation is a known architectural limitation. The fix is to deploy V2 (TCP-based) when it launches ~April 2026. Contact the developer (Patrick) to discuss V2 migration timeline. For V1, ensure upload bandwidth meets the speed table requirements for court count.',
+   3, 'info', 2),
+
+  -- Phase 10: iPad Setup
+  (10,
+   'PodPlay app on iPad does not show the customer''s club name',
+   'Check the Mosyle "Install App" group for this customer. The P-List configuration must have the correct LOCATION_ID string: <dict><key>id</key><string>LOCATION_ID</string></dict>. Confirm the LOCATION_ID value with Agustin (app readiness team). If P-List is wrong, update in Mosyle and force-reinstall the app.',
+   2, 'warning', 1),
+
+  (10,
+   'iPad not receiving MDM commands from Mosyle',
+   'iPad may be asleep with auto-lock enabled. During configuration: go to iPad Settings → Display & Brightness → Auto-Lock → Never. For deployed iPads, MDM commands are sent during the 2:00–3:00 AM App Lock off window when the device restarts. Schedule commands for ~2:30 AM.',
+   1, 'warning', 2),
+
+  (10,
+   'iPads enrolled in wrong court order in Mosyle',
+   'Mosyle assigns device names in the order iPads are powered on. If powered on out of order, court-to-device mapping will be wrong. In Mosyle, filter by enrolled date to see the actual enrollment order. To fix: either rename devices manually in Mosyle, or factory reset and re-enroll in correct court-number order (C1 first, then C2, etc.).',
+   1, 'warning', 3),
+
+  -- Phase 12: Physical Installation
+  (12,
+   'Flic buttons won''t pair to iPad (''Bluetooth Pairing Failed'' / ''Verification Failed'')',
+   'App Lock MUST be completely off before pairing Flic buttons. In Mosyle, go to this location''s App Lock settings and turn it off entirely. On the iPad, exit Guided Access if active. Then retry the Flic pairing process in the PodPlay app. Re-enable App Lock after all buttons are successfully paired.',
+   1, 'warning', 1),
+
+  (12,
+   'Flic button is unresponsive (no LED, no action)',
+   'Replace the CR2032 coin cell battery. Yellow LED blink = low battery warning. If new battery does not fix it: factory reset the button. Remove battery, wait 5 seconds, reinsert battery, then hold both the top and bottom of the button simultaneously for 10 seconds until the LED blinks red. Re-pair to iPad after reset.',
+   1, 'info', 2),
+
+  (12,
+   'PoE adapter intermittent connection drops',
+   'Cable runs must be clean, straight, and under 100 meters total length. PoE adapters are very sensitive to cable quality. Do not bunch or coil excess cable tightly. If drops continue, re-terminate the RJ45 connectors — a bad crimp is the most common cause. Test with a cable tester if available.',
+   1, 'warning', 3),
+
+  -- Phase 13: Testing & Verification
+  (13,
+   'Button paired but scoring not updating on display',
+   'Restart the iPad to re-sync the Firebase real-time connection. Single press should increment score; double press should undo; long press should trigger replay. If scoring still fails after restart, check Firebase service status at status.firebase.google.com. If Firebase is operational, open the iPad configuration menu (long-press logo in corner) and verify both button assignments show green on press.',
+   1, 'warning', 1);
+```
+
+**Row count**: 16 rows
+**Phase distribution**:
+- Phase 3: 1 row (Tier 1)
+- Phase 5: 1 row (Tier 2)
+- Phase 6: 1 row (Tier 2)
+- Phase 7: 1 row (Tier 2)
+- Phase 8: 2 rows (Tier 1)
+- Phase 9: 2 rows (Tier 2, Tier 3)
+- Phase 10: 3 rows (Tier 2, Tier 1, Tier 1)
+- Phase 12: 3 rows (Tier 1, Tier 1, Tier 1)
+- Phase 13: 1 row (Tier 1)
+
+**Tier distribution**: Tier 1=10, Tier 2=5, Tier 3=1
+**Severity distribution**: critical=1, warning=12, info=3

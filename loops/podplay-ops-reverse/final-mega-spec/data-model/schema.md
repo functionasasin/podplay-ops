@@ -2060,6 +2060,79 @@ ORDER BY ABS(inv.qty_on_hand - (COALESCE(r.total_received, 0) - COALESCE(s.total
 
 ---
 
+---
+
+## Support Tiers Model
+
+**Aspect**: model-support-tiers
+**Date**: 2026-03-06
+**Source**: analysis/source-deployment-guide.md (Appendix D + Appendix A)
+
+Three fixed support tiers (integers 1/2/3 — no separate reference table):
+
+| Tier | Handled By | Examples |
+|------|------------|---------|
+| 1 | On-site staff / remote monitoring | Device restart, app lock toggle, button battery replacement, basic connectivity checks |
+| 2 | Config specialist (Nico-level) | VLAN changes, camera re-config, Mosyle issues, DDNS troubleshooting, replay service restart |
+| 3 | Engineer / Developer (Patrick-level) | Replay service code bugs, video encoding issues, port 4000 architecture, firmware-level camera problems |
+
+### Table: troubleshooting_tips
+
+16 known issue/solution pairs from Appendix A, tagged by phase and support tier.
+Used in the deployment wizard to show contextual troubleshooting per phase.
+
+**MRP source**: Venue Deployment Guide Appendix A (troubleshooting table)
+
+```sql
+CREATE TABLE troubleshooting_tips (
+  id              UUID    PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  phase_number    INTEGER CHECK (phase_number >= 0 AND phase_number <= 15),
+  -- NULL = applies globally (not phase-specific)
+
+  issue           TEXT    NOT NULL,
+  -- Short problem description — shown as the tip title
+
+  solution        TEXT    NOT NULL,
+  -- Full resolution steps — shown as the tip body
+
+  support_tier    INTEGER NOT NULL CHECK (support_tier IN (1, 2, 3)),
+  -- 1 = On-site / remote ops
+  -- 2 = Config specialist (Nico-level)
+  -- 3 = Engineer / developer (Patrick-level)
+
+  severity        TEXT    NOT NULL DEFAULT 'warning'
+                  CHECK (severity IN ('info', 'warning', 'critical')),
+  -- info     = FYI, non-blocking
+  -- warning  = Something to watch out for
+  -- critical = Blocks deployment if not resolved
+
+  sort_order      INTEGER NOT NULL DEFAULT 0
+  -- Ordering within same phase (lower = shown first)
+);
+
+CREATE INDEX idx_troubleshooting_tips_phase ON troubleshooting_tips (phase_number);
+CREATE INDEX idx_troubleshooting_tips_tier  ON troubleshooting_tips (support_tier);
+
+ALTER TABLE troubleshooting_tips ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "authenticated users full access troubleshooting_tips"
+  ON troubleshooting_tips FOR ALL
+  TO authenticated
+  USING (true)
+  WITH CHECK (true);
+```
+
+**UI integration**:
+- Deployment wizard Phase panels: query `WHERE phase_number = $current_phase`, show in collapsed accordion
+- Severity badge: critical=red, warning=amber, info=blue
+- Support tier badge: T1=gray, T2=yellow, T3=red
+- Tier 2+ tips show escalation callout: "Escalate to Config Specialist" / "Escalate to Engineer"
+
+**Seed data**: See `seed-data.md` — "Troubleshooting Tips" section (16 rows).
+
+---
+
 ### Updated Migration Order
 
 Insert `monthly_opex_snapshots` after `expenses` (no foreign keys):
@@ -2089,6 +2162,7 @@ Updated full migration order (replacing prior list):
 17. `replay_signs` (references projects)
 18. `cc_terminals` (references projects)
 19. `monthly_opex_snapshots` (no foreign keys)
+20. `troubleshooting_tips` (no foreign keys — standalone reference data)
 
 ---
 
