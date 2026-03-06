@@ -2,6 +2,7 @@
 
 | # | Aspect | Wave | Date | Files Modified |
 |---|--------|------|------|----------------|
+| 29 | supabase-gotchas | 6 | 2026-03-06 | analysis/supabase-gotchas.md, frontier/aspects.md, frontier/analysis-log.md |
 | 28 | migration-verification | 6 | 2026-03-06 | analysis/migration-verification.md, frontier/aspects.md, frontier/analysis-log.md |
 | 27 | production-build-verification | 6 | 2026-03-06 | analysis/production-build-verification.md, frontier/aspects.md, frontier/analysis-log.md |
 | 26 | playwright-e2e-specs | 6 | 2026-03-06 | analysis/playwright-e2e-specs.md, frontier/aspects.md, frontier/analysis-log.md |

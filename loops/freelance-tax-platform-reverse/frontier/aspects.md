@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 37
-- Analyzed: 28
-- Pending: 9
-- Convergence: 76%
+- Analyzed: 29
+- Pending: 8
+- Convergence: 78%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -53,7 +53,7 @@ Depends on Wave 5. Production readiness.
 - [x] playwright-e2e-specs — E2E test scenarios for every critical flow (auth, wizard, compute, save, share, export)
 - [x] production-build-verification — Vite plugin inventory, production build smoke test requirements, tree-shaking-sensitive libraries (d3, recharts), WASM loading in prod mode. Prevents "dev works, prod white page" failure.
 - [x] migration-verification — supabase db reset test plan, RPC call tests with real data, parameter type match verification (UUID vs TEXT). Prevents "SQL written but never run" failure.
-- [ ] supabase-gotchas — Anon grants for public RPCs, search_path on SECURITY DEFINER, RLS bypass patterns, storage bucket policies. Prevents "works in Supabase dashboard, fails from client" failures.
+- [x] supabase-gotchas — Anon grants for public RPCs, search_path on SECURITY DEFINER, RLS bypass patterns, storage bucket policies. Prevents "works in Supabase dashboard, fails from client" failures.
 - [ ] fly-io-deployment — Dockerfile, fly.toml, build args, Supabase project setup, domain config
 - [ ] ci-cd-pipeline — GitHub Actions: typecheck -> lint -> test -> build -> e2e -> deploy
 - [ ] monitoring-and-alerts — Sentry, health checks, client-side error tracking
@@ -89,3 +89,4 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 | visual-verification-checklist | 5 | 2026-03-06 | COMPLETE — All major components specified with shadcn wrapper, key Tailwind classes, lucide icon, and status indicator colors. Anti-scaffolding rule (>=3 Tailwind classes). |
 | action-trigger-map | 5 | 2026-03-06 | COMPLETE — 23 action-triggered features with exact button text, icon, parent, handler bodies (with loading/error/toast), premium gating, and anti-orphan verification points. PDF dynamic import documented. |
 | toast-catalog | 5 | 2026-03-06 | COMPLETE — 41 toasts (13 success, 25 error, 1 info, 2 loading) across 8 categories. Sonner setup, richColors config, loading+update pattern for PDF/logo, no-toast interactions list, critical trap: do NOT install shadcn toast alongside Sonner. |
+| supabase-gotchas | 6 | 2026-03-06 | COMPLETE — 12 gotchas: anon GRANT for public RPCs, search_path on SECURITY DEFINER, RLS bypass audit, storage bucket policies, onAuthStateChange race condition, email confirmation in dev, direct DB URL prohibition, Realtime replication, explicit RLS enable, redirect URL whitelist, free tier pause, signed URL for private buckets. Forward loop integration points for all 12. |
