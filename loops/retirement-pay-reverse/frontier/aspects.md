@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 55
-- Analyzed: 52
-- Pending: 3
-- Convergence: 95%
+- Analyzed: 53
+- Pending: 2
+- Convergence: 96%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -74,7 +74,7 @@ Depends on Wave 3 + Wave 4.
 - [x] action-trigger-map — Every action (PDF export, share toggle, delete, batch export, NLRC print) -> which button triggers it, which parent has the button, onClick handler, feedback (toast/download/navigation)
 - [x] visual-verification-checklist — Every major component -> required shadcn wrapper (Card/Alert/Badge/Table), key Tailwind classes, lucide icon, color variant, status indicator styling
 - [x] empty-states-and-loading — Skeleton loaders for every async page, EmptyState components (no computations yet, no org members, empty batch), error states
-- [ ] toast-catalog — Every user action that produces feedback: save (success/error), delete (confirm + success), share (link copied), PDF (downloading), batch upload (processing/complete/errors), auth (signed in/out/error)
+- [x] toast-catalog — Every user action that produces feedback: save (success/error), delete (confirm + success), share (link copied), PDF (downloading), batch upload (processing/complete/errors), auth (signed in/out/error)
 - [ ] pdf-export-layout — @react-pdf/renderer layouts: single computation PDF, batch summary PDF, NLRC worksheet PDF, firm branding, legal disclaimers
 
 ### Wave 6: Testing + Deployment
@@ -95,6 +95,7 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 - [ ] spec-review — Final review: can the forward loop build the ENTIRE product from this spec alone?
 
 ## Recently Analyzed
+- toast-catalog (Wave 5) — 2026-03-06
 - empty-states-and-loading (Wave 5) — 2026-03-06
 - visual-verification-checklist (Wave 5) — 2026-03-06
 - action-trigger-map (Wave 5) — 2026-03-06
