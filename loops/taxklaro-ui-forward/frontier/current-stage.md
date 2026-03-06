@@ -1,25 +1,25 @@
-# Current Stage: 8 (Utility Pages)
+# Current Stage: 9 (Responsive + Spacing Audit)
 
 ## Status
-Stage 7 complete. List pages polished:
-- ComputationCard: shadow-sm + hover:shadow-md, font-display title, clean metadata — already done
-- Computations list: font-display h1, tabs with line variant, empty states with icons/copy/CTA — already done
-- ClientsTable: shadow-sm card wrapper, hover row highlight, clean table styling — already done
-- ClientInfoCard: shadow-sm card, replaced redundant name h2 with "Client Information" section label
-- ClientRowSkeleton: fixed invalid HTML (was rendering <tr> inside <div>); refactored to div-based skeleton
-- ClientsTable loading: now wraps skeletons in rounded-xl bg-card shadow-sm card
-- ComputationCardSkeleton: removed flat border-border/40 (shadows only, no flat borders)
-- clients/new: rounded-xl bg-card shadow-md form card, h-11 inputs — already done
-- $clientId: font-display h1 for client name — already done
+Stage 8 complete. Utility pages polished:
+- Deadlines: already polished from prior work (font-display h1/h2, shadow-sm cards, urgency colors, grid layout)
+- Settings: already polished (section cards with shadow-sm, font-display headings, h-11 inputs)
+- Team: already polished (InviteMemberForm card, MembersTable/PendingInvitationsTable with shadow-sm)
+- Share view: fixed skeleton cards (rounded-xl bg-card shadow-sm, removed flat border)
+- Quarterly: QuarterlyBreakdownView fully restyled — font-display h2, shadow-sm hover:shadow-md cards, font-display amounts
 - Build passes.
 
 ## What To Do
-Restyle utility pages at `/deadlines`, `/settings`, `/settings/team`, `/share/$token`, `/computations/$compId/quarterly`:
-- Deadlines: card grid with date prominence, status indicators, color-coded urgency
-- Settings: section cards with clear headings (DM Serif Display), form fields consistent with rest of app
-- Team: members table polished, invite form in a card, pending invitations styled
-- Share view: read-only results with "Shared via TaxKlaro" header
-- Quarterly: breakdown table matching results view styling
+Responsive + spacing audit across all routes:
+- Audit every route at 3 breakpoints: mobile (375px), tablet (768px), desktop (1280px)
+- Consistent padding: page content p-4 (mobile) / p-6 (tablet) / p-8 (desktop)
+- Touch targets: all interactive elements >= 44px height on mobile
+- Form inputs: full-width on mobile, max-w constraints on desktop
+- Cards: single column on mobile, grid on tablet+
+- Tables: horizontal scroll wrapper on mobile
+- Typography: hero text scales down on mobile (3rem -> 2rem)
+- Sidebar: drawer works smoothly, hamburger properly positioned
+- Run `npx vitest run` — no test regressions
 
 ## Work Log
 - Stage 1 (2026-03-06): Installed @fontsource-variable/dm-sans + @fontsource/dm-serif-display.
@@ -48,3 +48,7 @@ Restyle utility pages at `/deadlines`, `/settings`, `/settings/team`, `/share/$t
   ClientsTable loading state: wrapped in rounded-xl bg-card shadow-sm card.
   ClientInfoCard: replaced redundant name h2 with "Client Information" section label.
   Build passes.
+- Stage 8 (2026-03-06): Utility pages polish. QuarterlyBreakdownView: font-display h2,
+  shadow-sm hover:shadow-md cards, font-display amounts with tabular-nums.
+  share/$token.tsx: skeleton cards upgraded from flat border to shadow-sm rounded-xl.
+  All other utility pages were already polished. Build passes.
