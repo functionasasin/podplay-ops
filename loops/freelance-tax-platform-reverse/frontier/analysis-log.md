@@ -8,3 +8,4 @@
 | 4 | wasm-export-signature | 2 | 2026-03-06 | analysis/wasm-export-signature.md, frontier/aspects.md, frontier/analysis-log.md |
 | 5 | serde-wire-format | 2 | 2026-03-06 | analysis/serde-wire-format.md, frontier/aspects.md, frontier/analysis-log.md |
 | 6 | error-contract | 2 | 2026-03-06 | analysis/error-contract.md, frontier/aspects.md, frontier/analysis-log.md |
+| 7 | initialization-patterns | 2 | 2026-03-06 | analysis/initialization-patterns.md, frontier/aspects.md, frontier/analysis-log.md |

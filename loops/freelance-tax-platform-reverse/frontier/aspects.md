@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 37
-- Analyzed: 6
-- Pending: 31
-- Convergence: 16%
+- Analyzed: 7
+- Pending: 30
+- Convergence: 19%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -19,7 +19,7 @@ Depends on Wave 1. Design the WASM boundary between Rust engine and JavaScript f
 - [x] wasm-export-signature — Define compute_json() and other WASM exports with exact parameter/return types
 - [x] serde-wire-format — Document exact JSON serialization rules for every struct/enum (rename_all, deny_unknown_fields, Optional as null)
 - [x] error-contract — Define error JSON shape from WASM, severity levels, frontend handling
-- [ ] initialization-patterns — Document initSync vs init for Node.js (vitest) vs browser, bridge.ts pattern
+- [x] initialization-patterns — Document initSync vs init for Node.js (vitest) vs browser, bridge.ts pattern
 
 ### Wave 3: Frontend Data Model
 Depends on Wave 2. Map Rust types to TypeScript + Zod with exact field alignment.
