@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 55
-- Analyzed: 11
-- Pending: 44
-- Convergence: 20%
+- Analyzed: 12
+- Pending: 43
+- Convergence: 22%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -24,7 +24,7 @@ Depends on Wave 1 sources being cached.
 - [x] core-formula-22-5-days — Extract the 22.5-day formula: 15 days + 5 days SIL + 1/12 of 13th month pay
 - [x] eligibility-rules — Age thresholds (60 optional, 65 compulsory), 5-year service minimum, employer size exemption (<=10 employees)
 - [x] credited-years-rounding — 6-month rounding rule: partial year >= 6 months rounds up, < 6 months drops
-- [ ] salary-basis-inclusions — What's included (basic, integrated COLA, contractual allowances) and excluded (OT, NSD, variable allowances)
+- [x] salary-basis-inclusions — What's included (basic, integrated COLA, contractual allowances) and excluded (OT, NSD, variable allowances)
 - [ ] tax-treatment-conditions — Four conditions for tax exemption: age >= 50, service >= 10 years, first-time benefit, BIR-approved plan
 - [ ] separation-pay-interaction — Art. 298 authorized causes overlap, pay-the-higher rule, dual entitlement scenarios
 - [ ] company-plan-comparison-rules — How statutory minimum compares to company plans, which prevails, gap calculation
@@ -106,3 +106,4 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 - core-formula-22-5-days (Wave 2) — 2026-03-06
 - eligibility-rules (Wave 2) — 2026-03-06
 - credited-years-rounding (Wave 2) — 2026-03-06
+- salary-basis-inclusions (Wave 2) — 2026-03-06
