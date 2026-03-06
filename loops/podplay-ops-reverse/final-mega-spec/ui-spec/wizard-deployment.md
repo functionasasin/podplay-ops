@@ -340,7 +340,7 @@ Shown at top of Phase 9, before step checklist:
 - Radio bound to `project.replay_service_version` (`v1` / `v2`)
 - V2 option disabled with tooltip "V2 not yet released (expected April 2026)" — ops can select but the checklist steps remain V1 until V2 templates exist.
 - If V1 selected: show the 10-step V1 deploy checklist.
-- If V2 selected: show informational note "V2 steps will be added when V2 launches."
+- If V2 selected: show informational note "V2 deployment checklist is pending the V2 service release (targeted April 2026). V1 steps are shown until V2 templates are seeded."
 
 ### Phase 0, Step 3: Court Count / Cable Estimation Panel
 

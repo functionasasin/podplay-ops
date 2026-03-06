@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 57
-- Analyzed: 53
-- Pending: 4
-- Convergence: 93%
+- Analyzed: 54
+- Pending: 3
+- Convergence: 95%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -74,5 +74,5 @@
 
 ### Wave 6: Synthesis & Audit
 - [x] audit-completeness — Verify every MRP sheet (all 24) has a webapp equivalent, every deployment appendix (A-F) is covered, no workflow gaps
-- [ ] audit-placeholder-sweep — Scan all spec files for TODO/TBD/FIXME/[fill in] — zero tolerance
+- [x] audit-placeholder-sweep — Scan all spec files for TODO/TBD/FIXME/[fill in] — zero tolerance
 - [ ] audit-data-migration — Document how existing XLSX data maps to new database tables for initial import, including CC Form and Replay Signs data

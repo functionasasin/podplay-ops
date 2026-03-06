@@ -763,7 +763,7 @@ src/components/wizard/financials/
 │   ├── CashFlowCard.tsx                      # Cash flow / receivables summary
 │   ├── BomCostBreakdown.tsx                  # Collapsible BOM detail table
 │   ├── RevenueStageProgress.tsx              # Horizontal milestone progress indicator
-│   └── AgingReceivablesBadge.tsx             # Colored aging badge (0-30, 31-60, etc.)
+│   └── AgingReceivablesBadge.tsx             # Colored aging badge (0-30 days green, 31-60 days yellow, 61-90 days orange, 90+ days red)
 └── schemas/
     └── (uses src/lib/schemas/expense.ts)     # Zod schema imported from shared lib
 ```

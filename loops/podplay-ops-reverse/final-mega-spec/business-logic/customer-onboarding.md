@@ -595,8 +595,8 @@ PAYMENT TERMS:
   Final Payment (50%):    ${final_amount} — due upon go-live
 
 INSTALLATION:
-  Installer: {installer_name or 'TBD'}
-  Estimated Timeline: {installation_start_date} – {installation_end_date or 'TBD'}
+  Installer: {installer_name or '(not yet assigned)'}
+  Estimated Timeline: {installation_start_date} – {installation_end_date or '(not yet scheduled)'}
 
 NOTES:
   {notes}
@@ -775,7 +775,7 @@ Final payment:        $40,600
 
 | Case | Behavior |
 |------|----------|
-| court_count = 1 | BOM generates minimum quantities (1 camera, 1 iPad, 1 Apple TV, etc.). replay_sign_count = 2. |
+| court_count = 1 | BOM generates minimum quantities (1 replay camera, 1 iPad, 1 Apple TV, 1 PoE adapter, 1 iPad case, 1 HDMI cable, 2 Flic buttons, 1 junction box). replay_sign_count = 2. |
 | tier = pbk, court_count = 10 | PBK pricing used for service_fee. BOM same as Pro tier (Pro template). |
 | has_front_desk = false initially, set to true in edit | CC terminal record created. BOM not regenerated — front desk hardware items already in Pro BOM template (they are always present in templates; qty forced to 0 when has_front_desk=false via conditional qty override). |
 | door_count = 0 on autonomous tier | Wizard shows error on Step 2 — cannot submit. |

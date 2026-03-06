@@ -1447,7 +1447,9 @@ Shown inline below DDNS subdomain field, updates live:
 Each section header has an "Edit" button that navigates back to that step:
 - `[Edit ↑]` → `setCurrentStep(1)` for Customer & Venue
 - `[Edit ↑]` → `setCurrentStep(2)` for Configuration
-- etc.
+- `[Edit ↑]` → `setCurrentStep(3)` for Network & Credentials
+- `[Edit ↑]` → `setCurrentStep(4)` for Installer & Timeline
+- `[Edit ↑]` → `setCurrentStep(5)` for Location & IDs
 
 ### Blocking Validation on Step 6
 
@@ -1780,8 +1782,8 @@ PAYMENT TERMS:
   Final Payment (50%):      $${cost.final_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} — due upon go-live
 
 INSTALLATION:
-  Installer: ${project.installer_id ? '(from database)' : 'TBD'}
-  Timeline: ${project.installation_start_date || 'TBD'} – ${project.installation_end_date || 'TBD'}
+  Installer: ${project.installer_id ? '(assigned — see project)' : '(not yet assigned)'}
+  Timeline: ${project.installation_start_date || '(not scheduled)'} – ${project.installation_end_date || '(not scheduled)'}
 
 ${project.notes ? 'NOTES:\n  ' + project.notes : ''}`
 }

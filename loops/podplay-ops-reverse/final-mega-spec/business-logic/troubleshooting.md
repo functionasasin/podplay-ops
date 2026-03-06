@@ -445,7 +445,7 @@ Solution text may contain `{{DDNS_SUBDOMAIN}}` or other project tokens. Render u
 ```typescript
 function renderSolution(solution: string, project: Project): string {
   return renderStepDescription(solution, project);
-  // Same token map: CUSTOMER_NAME, DDNS_SUBDOMAIN, COURT_COUNT, etc.
+  // Same token map: CUSTOMER_NAME, DDNS_SUBDOMAIN, COURT_COUNT, LOCATION_ID, MAC_MINI_USERNAME, UNIFI_SITE_NAME
 }
 ```
 

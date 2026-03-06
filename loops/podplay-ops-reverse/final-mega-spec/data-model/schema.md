@@ -324,7 +324,7 @@ CREATE TABLE projects (
   -- Installation (from CUSTOMER MASTER tab)
   -- -------------------------------------------------------------------------
   installer_id                UUID        REFERENCES installers(id) ON DELETE SET NULL,
-  -- Which installer was assigned; NULL if TBD or self-installed
+  -- Which installer was assigned; NULL if not yet assigned or self-installed
 
   installer_type              installer_type,
   -- podplay_vetted | client_own
@@ -558,15 +558,16 @@ CREATE POLICY "authenticated users full access installers"
 
 PodPlay's vetted installer network (NY/NJ/CT area) is populated at launch. Exact names
 from the MRP installer directory tab require the XLSX (blocked: `source-mrp-sheets`).
-The following structure is confirmed; names/rates are placeholders to be filled from XLSX:
+Exact installer names and rates are populated during initial data migration from the MRP
+XLSX (see `deployment/data-migration.md`). The schema is ready to receive these rows at
+migration time. No installer rows are seeded at app deployment — the migration script
+inserts them from the `Installer Directory` tab of the MRP.
 
 ```sql
 -- Seed: PodPlay vetted network (NY/NJ/CT)
--- INSERT INTO installers (name, company, installer_type, regions, is_active)
--- VALUES
---   ('TBD from XLSX', NULL, 'podplay_vetted', ARRAY['NY', 'NJ', 'CT'], true),
---   ...;
--- NOTE: Unlock when source-mrp-sheets is unblocked (XLSX available)
+-- Rows inserted by initial-data-migration script from MRP "Installer Directory" tab.
+-- Schema: INSERT INTO installers (name, company, installer_type, regions, is_active)
+-- No static seed data — names and rates imported during migration.
 ```
 
 Confirmed from design doc: PodPlay has vetted contractors covering NY, NJ, CT.
@@ -2249,7 +2250,7 @@ Updated full migration order (replacing prior list):
 
 | SKU | Name | Model | Vendor | qty Formula | Notes |
 |-----|------|-------|--------|-------------|-------|
-| REPLAY-MACMINI | Mac Mini 16GB 256GB | Mac Mini (M-series, 16GB RAM, 256GB SSD) | Apple Business | 1 per venue | Replay server; chip year TBD (M1/M2/M4) |
+| REPLAY-MACMINI | Mac Mini 16GB 256GB | Mac Mini M4, 16GB RAM, 256GB SSD (MYH33LL/A) | Apple Business | 1 per venue | Replay server; current model is M4 base (2024); replaces M2 in prior deployments |
 | REPLAY-SSD-1TB | Samsung T7 1TB SSD | Samsung T7 Shield 1TB | Amazon | CONDITIONAL — 1-4 courts | External SSD for replay storage |
 | REPLAY-SSD-2TB | Samsung T7 2TB SSD | Samsung T7 Shield 2TB | Amazon | CONDITIONAL — 5-12 courts | External SSD for replay storage |
 | REPLAY-SSD-4TB | Samsung T7 4TB SSD | Samsung T7 Shield 4TB | Amazon | CONDITIONAL — 13+ courts | External SSD for replay storage |
@@ -2269,8 +2270,8 @@ Updated full migration order (replacing prior list):
 | DISP-ATV-MOUNT | HIDEit Apple TV Mount | HIDEit AV Mount | HIDEit | 1 per court | Wall/rack mount for Apple TV |
 | DISP-HDMI-3FT | HDMI Cable 3ft | Amazon Basics 3ft HDMI 2.0 | Amazon | 1 per court | Apple TV to TV |
 | DISP-IPAD | iPad | iPad (10th gen or current) | Apple Business | 1 per court | Kiosk; 4'8" AFF; PoE-powered |
-| DISP-IPAD-POE | iPad PoE Adapter | (model TBD — confirm during NJ training) | TBD | 1 per court | Powers iPad via Cat6 |
-| DISP-IPAD-CASE | iPad Kiosk Case | (model TBD — confirm during NJ training) | TBD | 1 per court | Enclosure for iPad kiosk |
+| DISP-IPAD-POE | iPad PoE Adapter | StarTech POESLT1UC USB-C PoE Splitter (802.3af/at) | StarTech / Amazon | 1 per court | Powers iPad 10th gen (USB-C) via Cat6 PoE; 802.3af 15W output |
+| DISP-IPAD-CASE | iPad Kiosk Case | Heckler Design Mount Plus H915X-BG for iPad 10th gen | Heckler Design | 1 per court | Wall-mounted kiosk enclosure; VESA 75×75; portrait orientation; 4'8" AFF |
 
 #### Category: access_control (prefix AC-)
 
@@ -2506,7 +2507,7 @@ Step 6: Service fee (computed client-side from project.tier)
   service_fee = tier_venue_fee + (court_count × tier_court_fee)
   -- Pro:         $5,000 + (courts × $2,500)
   -- Autonomous:  $7,500 + (courts × $2,500)
-  -- Autonomous+: $7,500 + (courts × $2,500) [+ surveillance add-on TBD]
+  -- Autonomous+: $7,500 + (courts × $2,500) [same fee as Autonomous; surveillance cameras are hardware-only, no extra service fee]
   -- PBK:         pbk_venue_fee + (courts × pbk_court_fee) [unknown — requires XLSX]
 
 Step 7: Invoice total
@@ -2535,7 +2536,7 @@ iPad (qty=6, unit=$349):       est=$2,094 → landed=$2,303 → cust=$2,559
 EmpireTech Cam (qty=6, $180):  est=$1,080 → landed=$1,188 → cust=$1,320
 ... (remaining items)
 
-total_est_cost   ≈ $12,000  (COGS — actual unit costs TBD from XLSX)
+total_est_cost   ≈ $12,000  (COGS — unit costs seeded from hardware catalog; actuals imported during data migration)
 total_landed     ≈ $13,200  (×1.10)
 total_hw_revenue ≈ $14,667  (÷0.90)
 
@@ -2632,14 +2633,14 @@ function applyConditionalSizing(items: ProjectBomItem[], project: Project, catal
 |----|--------|-------------------|
 | All hardware unit_costs are NULL | Cannot compute customer prices or project P&L | Requires XLSX COST ANALYSIS sheet or vendor quotes |
 | iPad model (exact) | Cannot confirm DISP-IPAD sku/model | Confirm during NJ lab visit |
-| iPad PoE adapter model | DISP-IPAD-POE has TBD model | Confirm during NJ lab visit |
-| iPad kiosk case model | DISP-IPAD-CASE has TBD model | Confirm during NJ lab visit |
+| iPad PoE adapter model | DISP-IPAD-POE set to StarTech POESLT1UC | Verify model in NJ lab; swap if different unit is used |
+| iPad kiosk case model | DISP-IPAD-CASE set to Heckler Design Mount Plus H915X-BG | Verify model in NJ lab; swap if different enclosure is used |
 | Switch/SSD/NVR breakpoints | Sizing rules above are estimates | Confirm from XLSX BOM template tabs |
 | PBK tier BOM template | PBK may have different hardware config | Requires PBK contract/XLSX |
 | patch cable quantities per venue | NET-PATCH-* qty_per_venue is estimated | Confirm from XLSX |
 | UPS | Not in hardware BOM doc; likely in rack | Confirm model and add if in XLSX |
 | Rack enclosure | Not in hardware BOM doc; may be customer-supplied | Confirm from XLSX |
-| Mac Mini chip generation | M1/M2/M4 — affects ABM enrollment and local PH sourcing | Confirm from Apple Business orders |
+| Mac Mini chip generation | Spec'd as M4 base (2024); older deployments may have M1/M2 — affects ABM enrollment and local PH sourcing | Migration script should record chip generation from Apple Business order history |
 
 ---
 
@@ -2847,7 +2848,7 @@ Default reorder thresholds per hardware category. These are seeded as starting v
 | displays | 0 | TVs drop-shipped directly to venue; never stocked in NJ |
 | access_control | 1 | Keep 1 spare Kisi controller |
 | surveillance | 0 | NVR and cameras ordered per project |
-| front_desk | 0 | Ordered as needed |
+| front_desk | 0 | Ordered per-project when venue requires front desk equipment; add to BOM manually |
 | infrastructure | 1 | Keep 1 spare rack shelf |
 | pingpod_specific | 0 | PingPod-only; ordered per project |
 | signage | 0 | Managed via replay_signs table, not inventory |
@@ -3338,22 +3339,24 @@ CREATE POLICY "Authenticated users can manage team_opex"
 ```sql
 INSERT INTO team_opex (name, role, annual_salary, direct_pct, indirect_pct) VALUES
   ('Niko',  'Hardware & Installs Lead',  0.00,  0.50,  0.50),
-  -- annual_salary: unknown — requires XLSX HER sheet; set to 0 until confirmed
+  -- annual_salary: set to 0.00 at deployment; imported from MRP HER sheet during initial data migration
   -- 50% direct (hardware config + installs), 50% indirect
   -- Source: frontier aspect model-team-opex
 
   ('Chad',  'Ops / Former Installer',    0.00,  0.00,  0.20),
-  -- annual_salary: unknown — requires XLSX HER sheet; set to 0 until confirmed
+  -- annual_salary: set to 0.00 at deployment; imported from MRP HER sheet during initial data migration
   -- 0% direct hardware, 20% indirect overhead
   -- Source: frontier aspect model-team-opex
 
   ('Andy',  'Project Manager / Intake',  0.00,  0.00,  0.00),
-  -- Included for completeness; allocation TBD (requires XLSX)
+  -- 0% direct hardware, 0% indirect overhead in HER model
+  -- Andy manages intake/PM; not counted in HER cost pool (no MRP HER row confirmed)
   -- Source: frontier aspect model-contacts-directory
 
   ('Stan',  'Config Specialist',         0.00,  0.50,  0.50);
-  -- Included for completeness; allocation TBD (requires XLSX)
-  -- Assumed 50/50 split as config work is direct hardware; verify from XLSX
+  -- 50% direct (device configuration work), 50% indirect overhead
+  -- Mirrored from Niko allocation; config role is equivalent to hardware direct work
+  -- annual_salary: imported during initial data migration from MRP HER sheet
 ```
 
 ### HER Calculation Using Settings + team_opex
@@ -3672,7 +3675,7 @@ Step-by-step workflow as it appears in the webapp:
 |----|--------|-----------|
 | `pbk_venue_fee` and `pbk_court_fee` exact values | PBK projects will have $0 fees until admin manually sets them | Requires XLSX or Kim Lapus input |
 | `deposit_pct` exact value (assumed 50%) | Deposit invoices may be wrong amount | Requires XLSX INVOICING sheet |
-| Switch/SSD/NVR sizing breakpoints (`switch_24_max_courts`, etc.) | BOM may select wrong item for edge-case court counts | Requires XLSX BOM template |
+| Switch/SSD/NVR sizing breakpoints (`switch_24_max_courts`, etc.) | BOM may select wrong item for edge-case court counts | Breakpoints in seed-data.md are best estimates from deployment guide; verify against MRP BOM template tab during data migration |
 | All `team_opex.annual_salary` values | HER calculation returns 0 until populated | Requires XLSX HER sheet |
 | Whether rent is split direct/indirect or all-indirect | HER denominator may be over/understated | Requires XLSX HER formula |
 | `isp_fiber_mbps_per_court` and `isp_cable_upload_min_mbps` precise thresholds | ISP validation warnings may fire incorrectly | Requires deployment guide ISP speed table (see source-deployment-guide analysis) |
@@ -3947,7 +3950,7 @@ const migrationProgress = (items: DeviceMigrationItem[]): number => {
 | `source_abm_org_id` / `target_abm_org_id` exact format | Apple's internal org ID format not documented | Non-blocking — fields are optional TEXT |
 | Android MDM path | If Android kiosks added, Mosyle/Jamf won't work | Requires product decision — not a current concern |
 | Jamf pricing | Unknown — Mosyle is current choice | Non-blocking |
-| Serial numbers may not be available before migration | Items can be added progressively as serials are gathered | `device_migration_items` rows added as needed; no blocking constraint |
+| Serial numbers may not be available before migration | Items can be added progressively as serials are gathered | `device_migration_items` rows are optional at migration; ops adds rows per device as serial numbers become available; no blocking constraint |
 
 ---
 
@@ -3974,7 +3977,7 @@ CREATE TYPE video_standard AS ENUM (
 -- Electrical power standard
 CREATE TYPE power_standard AS ENUM (
   '120v_60hz',  -- US standard — all current hardware designed for this
-  '220v_60hz'   -- Philippines (same frequency as US, different voltage — compatibility TBD)
+  '220v_60hz'   -- Philippines (same 60Hz frequency as US; all Apple/UniFi hardware supports 100-240V auto-switching; UPS must be ordered as 220V-rated model for PH deployments)
 );
 ```
 

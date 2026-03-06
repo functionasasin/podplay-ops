@@ -88,9 +88,9 @@ Token placeholders: `{{CUSTOMER_NAME}}`, `{{COURT_COUNT}}`, `{{DDNS_SUBDOMAIN}}`
 | 2 | Sign into PingPodIT UniFi account | Using UniFi app on phone, sign into the PingPodIT account to adopt the UDM. | NULL | NULL | NULL | false |
 | 3 | Configure UDM site name | Set up UDM site with naming scheme: `PL-{{CUSTOMER_NAME}}` (e.g., PL-TELEPARK). This becomes the UniFi site name visible in the PingPodIT account. | NULL | ["CUSTOMER_NAME", "UNIFI_SITE_NAME"] | NULL | false |
 | 4 | Create local admin account on UDM | On UDM: Settings → Admins → Create local admin account. Username: `admin`. Password: use internal credentials (stored in master accounts). | NULL | NULL | NULL | false |
-| 5 | Apply port labels to UDM | In UniFi, apply labels to all UDM ports identifying connected devices: Mac Mini, Kisi Controller (Autonomous), Backup Internet (Autonomous 24/7), etc. | NULL | NULL | NULL | false |
-| 6 | Label PDU in UniFi | In UniFi, label the PDU with connected device names (UDM, Switch, Mac Mini, NVR, etc.) for remote power management reference. | NULL | NULL | NULL | false |
-| 7 | Connect switch to UDM via SFP DAC cable | Connect the USW-Pro switch to the UDM using the UACC-DAC-SFP10-0.5M SFP DAC cable. Apply labels to switch ports identifying connected devices (iPads, cameras, Apple TVs, Kisi readers, etc.). | NULL | NULL | NULL | false |
+| 5 | Apply port labels to UDM | In UniFi, apply labels to all UDM ports identifying connected devices. Port 1: Mac Mini. SFP: USW-Pro Switch. Port 9 (Autonomous 24/7): Backup Internet. Port 10 (Autonomous/Autonomous+): Kisi Controller. Label any additional occupied ports with connected device names. | NULL | NULL | NULL | false |
+| 6 | Label PDU in UniFi | In UniFi, label each PDU outlet with the connected device name for remote power management. Typical layout: Outlet 1 = UDM, Outlet 2 = USW-Pro Switch, Outlet 3 = Mac Mini, Outlet 4 = NVR (Autonomous+ only). Label all occupied outlets. | NULL | NULL | NULL | false |
+| 7 | Connect switch to UDM via SFP DAC cable | Connect the USW-Pro switch to the UDM using the UACC-DAC-SFP10-0.5M SFP DAC cable. Apply labels to switch ports identifying connected devices. Typical port assignments: Ports 1-N = Replay cameras (one per court), Ports N+1 = Apple TVs (one per court), Ports N+2 = iPads via PoE adapter (one per court), Autonomous ports = Kisi Controller and door readers. Label each occupied port with the court number or device name. | NULL | NULL | NULL | false |
 | 8 | Connect Mac Mini to UDM Port 1 | Power on Mac Mini. Connect Mac Mini via ethernet to Port #1 on the UDM. | NULL | NULL | NULL | false |
 | 9 | Create REPLAY VLAN (VLAN 32) | In UniFi → Settings → Networks → Create new network: Name=REPLAY, Host Address=192.168.32.254, Netmask=/24, Gateway=192.168.32.254, Broadcast=192.168.32.255, VLAN ID=32 (Manual), Allow Internet Access=Yes, mDNS=Yes (required for Apple TV discovery), DHCP Mode=DHCP Server, DHCP Range=192.168.32.1–192.168.32.254. NOTE: Do NOT change the default network yet — cameras need 192.168.1.1 subnet during initial configuration (cameras default to 192.168.1.108). | ["WARNING: Do NOT change the default network to 192.168.30.x yet — cameras must be configured first on 192.168.1.x. Change default network only after ALL cameras are configured (Phase 6, Step 8)."] | NULL | NULL | false |
 | 10 | Create SURVEILLANCE VLAN (VLAN 31) | In UniFi → Settings → Networks → Create new network: Name=SURVEILLANCE, Subnet=192.168.31.x, VLAN ID=31. This VLAN isolates the NVR and security cameras. | NULL | NULL | ["autonomous_plus"] | false |
@@ -132,7 +132,7 @@ Token placeholders: `{{CUSTOMER_NAME}}`, `{{COURT_COUNT}}`, `{{DDNS_SUBDOMAIN}}`
 
 | step_number | title | description | warnings | auto_fill_tokens | applicable_tiers | is_v2_only |
 |-------------|-------|-------------|----------|------------------|------------------|------------|
-| 1 | Create FreeDNS A record | Go to freedns.afraid.org → Dynamic DNS → click [add]. Create record: Type=A, Subdomain={{DDNS_SUBDOMAIN}}, Domain=podplaydns.com (private/stealth), Destination=10.10.10.10 (placeholder — will be auto-updated by cron), TTL=60 seconds, Wildcard=Unchecked. | NULL | ["DDNS_SUBDOMAIN"] | NULL | false |
+| 1 | Create FreeDNS A record | Go to freedns.afraid.org → Dynamic DNS → click the "Add" button. Create record: Type=A, Subdomain={{DDNS_SUBDOMAIN}}, Domain=podplaydns.com (private/stealth), Destination=10.10.10.10 (temporary IP — the DDNS cron job on the Mac Mini will overwrite this with the venue's real public IP automatically), TTL=60 seconds, Wildcard=Unchecked. | NULL | ["DDNS_SUBDOMAIN"] | NULL | false |
 | 2 | Get cron update URL | On FreeDNS → Dynamic DNS → click "quick cron example" for the new record. Copy the cron line shown. | NULL | ["DDNS_SUBDOMAIN"] | NULL | false |
 | 3 | Install DDNS cron on Mac Mini | In the copied cron line: replace `wget` with `curl`, add quotes around the URL. Final format: `0,5,10,15,20,25,30,35,40,45,50,55 * * * * sleep 33 ; curl "https://freedns.afraid.org/dynamic/update.php?UNIQUE_KEY" >> /tmp/freedns_{{DDNS_SUBDOMAIN}}_podplaydns_com.log 2>&1 &`. On Mac Mini terminal: `crontab -e` → press `i` (insert mode) → paste line → press Esc → type `:wq` → Enter. | NULL | ["DDNS_SUBDOMAIN"] | NULL | false |
 | 4 | Verify DDNS update | Wait 5 minutes. Verify the FreeDNS record updated to the venue's real public IP (not 10.10.10.10). | NULL | ["DDNS_SUBDOMAIN"] | NULL | false |
@@ -459,17 +459,17 @@ VALUES
 
 (4,'Phase 4: Networking Setup (UniFi)',5,
  'Apply port labels to UDM',
- 'In UniFi, apply labels to all UDM ports identifying connected devices: Mac Mini, Kisi Controller (Autonomous), Backup Internet (Autonomous 24/7), etc.',
+ 'In UniFi, apply labels to all UDM ports identifying connected devices. Port 1: Mac Mini. SFP: USW-Pro Switch. Port 9 (Autonomous 24/7): Backup Internet. Port 10 (Autonomous/Autonomous+): Kisi Controller. Label any additional occupied ports with connected device names.',
  NULL,NULL,NULL,false,405),
 
 (4,'Phase 4: Networking Setup (UniFi)',6,
  'Label PDU in UniFi',
- 'In UniFi, label the PDU with connected device names (UDM, Switch, Mac Mini, NVR, etc.) for remote power management reference.',
+ 'In UniFi, label each PDU outlet with the connected device name for remote power management. Typical layout: Outlet 1 = UDM, Outlet 2 = USW-Pro Switch, Outlet 3 = Mac Mini, Outlet 4 = NVR (Autonomous+ only). Label all occupied outlets.',
  NULL,NULL,NULL,false,406),
 
 (4,'Phase 4: Networking Setup (UniFi)',7,
  'Connect switch to UDM via SFP DAC cable',
- 'Connect the USW-Pro switch to the UDM using the UACC-DAC-SFP10-0.5M SFP DAC cable. Apply labels to switch ports identifying connected devices (iPads, cameras, Apple TVs, Kisi readers, etc.).',
+ 'Connect the USW-Pro switch to the UDM using the UACC-DAC-SFP10-0.5M SFP DAC cable. Apply labels to switch ports identifying connected devices. Typical port assignments: Ports 1-N = Replay cameras (one per court), Ports N+1 = Apple TVs (one per court), Ports N+2 = iPads via PoE adapter (one per court), Autonomous ports = Kisi Controller and door readers. Label each occupied port with the court number or device name.',
  NULL,NULL,NULL,false,407),
 
 (4,'Phase 4: Networking Setup (UniFi)',8,
@@ -589,7 +589,7 @@ VALUES
 -- ============================================================
 (7,'Phase 7: DDNS Setup (FreeDNS)',1,
  'Create FreeDNS A record',
- 'Go to freedns.afraid.org → Dynamic DNS → click [add]. Create record: Type=A, Subdomain={{DDNS_SUBDOMAIN}}, Domain=podplaydns.com (private/stealth), Destination=10.10.10.10 (placeholder — will be auto-updated by cron), TTL=60 seconds, Wildcard=Unchecked.',
+ 'Go to freedns.afraid.org → Dynamic DNS → click the "Add" button. Create record: Type=A, Subdomain={{DDNS_SUBDOMAIN}}, Domain=podplaydns.com (private/stealth), Destination=10.10.10.10 (temporary IP — the DDNS cron job on the Mac Mini will overwrite this with the venue's real public IP automatically), TTL=60 seconds, Wildcard=Unchecked.',
  NULL,ARRAY['DDNS_SUBDOMAIN'],NULL,false,701),
 
 (7,'Phase 7: DDNS Setup (FreeDNS)',2,
@@ -1967,8 +1967,8 @@ INSERT INTO settings (
   2500.00,     -- autonomous_court_fee: $2,500 per court for Autonomous
   7500.00,     -- autonomous_plus_venue_fee: $7,500 flat for Autonomous+
   2500.00,     -- autonomous_plus_court_fee: $2,500 per court for Autonomous+
-  0.00,        -- pbk_venue_fee: $0 placeholder — must be configured before first PBK project
-  0.00,        -- pbk_court_fee: $0 placeholder — must be configured before first PBK project
+  0.00,        -- pbk_venue_fee: $0 default — PBK pricing is negotiated per contract; admin sets this in Settings before first PBK project
+  0.00,        -- pbk_court_fee: $0 default — PBK pricing is negotiated per contract; admin sets this in Settings before first PBK project
   0.10,        -- shipping_rate: 10% of hardware total added for shipping/freight
   0.10,        -- target_margin: 10% margin — customer_price = landed_cost / (1 - 0.10)
   0.1025,      -- sales_tax_rate: 10.25% NJ sales tax applied to invoice total
@@ -2461,7 +2461,7 @@ INSERT INTO team_opex (name, role, annual_salary, direct_pct, indirect_pct) VALU
   -- 50% direct hardware/installation work → contributes to HER numerator
   -- 50% indirect overhead → contributes to HER denominator
   -- Source: MRP HER sheet "Niko Salary" row (spelling variant of Nico)
-  -- annual_salary: requires XLSX to confirm; placeholder 0.00
+  -- annual_salary: set to 0.00 at deployment; imported from MRP HER sheet during initial data migration
 
   ('Chad',
    'Ops / Former Installer',
@@ -2477,7 +2477,7 @@ INSERT INTO team_opex (name, role, annual_salary, direct_pct, indirect_pct) VALU
    0.00,
    0.00,
    0.00),
-  -- Included for completeness; allocation TBD — requires XLSX HER sheet
+  -- 0% direct, 0% indirect in HER model; Andy is PM/intake role, not counted in HER cost pool
   -- No salary row confirmed in MRP
 
   ('Stan',

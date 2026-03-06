@@ -51,7 +51,7 @@ installers ←──────────────────────
 
 | Child Table | FK Column | Parent Table | On Delete | On Update | Notes |
 |-------------|-----------|--------------|-----------|-----------|-------|
-| `projects` | `installer_id` | `installers.id` | SET NULL | CASCADE | Installer assignment; NULL if TBD |
+| `projects` | `installer_id` | `installers.id` | SET NULL | CASCADE | Installer assignment; NULL if not yet assigned or self-installed |
 | `bom_templates` | `hardware_catalog_id` | `hardware_catalog.id` | CASCADE | CASCADE | Template row deleted if catalog item deleted |
 | `project_bom_items` | `project_id` | `projects.id` | CASCADE | CASCADE | BOM deleted when project deleted |
 | `project_bom_items` | `hardware_catalog_id` | `hardware_catalog.id` | RESTRICT | CASCADE | Cannot delete catalog item used in project BOM |
