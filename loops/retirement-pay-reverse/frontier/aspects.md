@@ -1,10 +1,10 @@
 # Frontier — RA 7641 Retirement Pay Calculator
 
 ## Statistics
-- Total aspects discovered: 55
-- Analyzed: 54
-- Pending: 1
-- Convergence: 98%
+- Total aspects discovered: 65
+- Analyzed: 55
+- Pending: 10
+- Convergence: 85%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -79,7 +79,7 @@ Depends on Wave 3 + Wave 4.
 
 ### Wave 6: Testing + Deployment
 Depends on Wave 5.
-- [ ] playwright-e2e-specs — E2E scenarios: auth flow, single computation wizard, batch upload, share link, PDF export, NLRC worksheet, org management
+- [x] playwright-e2e-specs — E2E scenarios: auth flow, single computation wizard, batch upload, share link, PDF export, NLRC worksheet, org management
 - [ ] production-build-verification — Vite plugin inventory (exact order), production build smoke test (npm run build + npx serve dist), tree-shaking-sensitive libs, WASM loading in prod mode
 - [ ] migration-verification — supabase db reset test plan, RPC call tests with real data, parameter type matching (UUID vs TEXT), RLS policy verification
 - [ ] supabase-gotchas — Anon grants for public RPCs (sharing), search_path on SECURITY DEFINER, RLS bypass patterns, storage bucket policies, auth email confirmation in dev
@@ -95,6 +95,7 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 - [ ] spec-review — Final review: can the forward loop build the ENTIRE product from this spec alone?
 
 ## Recently Analyzed
+- playwright-e2e-specs (Wave 6) — 2026-03-06
 - pdf-export-layout (Wave 5) — 2026-03-06
 - toast-catalog (Wave 5) — 2026-03-06
 - empty-states-and-loading (Wave 5) — 2026-03-06
