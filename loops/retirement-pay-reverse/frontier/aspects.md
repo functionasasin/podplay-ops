@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 65
-- Analyzed: 61
-- Pending: 4
-- Convergence: 94%
+- Analyzed: 65
+- Pending: 0
+- Convergence: 100%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -89,12 +89,16 @@ Depends on Wave 5.
 ### Wave 7: Synthesis
 Depends on ALL previous waves. **Strict internal dependency order — do NOT skip ahead.**
 - [x] spec-draft — Assemble docs/plans/retirement-pay-spec.md from all analysis files + domain content. Every section fully written.
-- [ ] placeholder-validation — **HARD GATE.** Line-by-line scan for banned patterns. MUST return PASS before proceeding. If FAIL: create new aspects to resolve each gap.
-- [ ] completeness-audit — Per-feature PASS/FAIL: types match, schemas match, routes wired, components wired, migrations complete, E2E defined. Includes orphan check on component wiring map.
-- [ ] cross-layer-consistency — Field-by-field verification: Rust <-> JSON <-> TypeScript <-> Zod for every struct, enum, and field
-- [ ] spec-review — Final review: can the forward loop build the ENTIRE product from this spec alone?
+- [x] placeholder-validation — **HARD GATE.** Line-by-line scan for banned patterns. MUST return PASS before proceeding. If FAIL: create new aspects to resolve each gap.
+- [x] completeness-audit — Per-feature PASS/FAIL: types match, schemas match, routes wired, components wired, migrations complete, E2E defined. Includes orphan check on component wiring map.
+- [x] cross-layer-consistency — Field-by-field verification: Rust <-> JSON <-> TypeScript <-> Zod for every struct, enum, and field
+- [x] spec-review — Final review: can the forward loop build the ENTIRE product from this spec alone?
 
 ## Recently Analyzed
+- spec-review (Wave 7) — 2026-03-06
+- cross-layer-consistency (Wave 7) — 2026-03-06
+- completeness-audit (Wave 7) — 2026-03-06
+- placeholder-validation (Wave 7) — 2026-03-06
 - spec-draft (Wave 7) — 2026-03-06
 - ci-cd-pipeline (Wave 6) — 2026-03-06
 - fly-io-deployment (Wave 6) — 2026-03-06

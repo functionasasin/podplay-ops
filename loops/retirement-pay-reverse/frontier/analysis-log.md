@@ -2,6 +2,10 @@
 
 | # | Aspect | Wave | Date | Files Modified |
 |---|--------|------|------|----------------|
+| 65 | spec-review | 7 | 2026-03-06 | analysis/spec-review.md |
+| 64 | cross-layer-consistency | 7 | 2026-03-06 | analysis/cross-layer-consistency.md |
+| 63 | completeness-audit | 7 | 2026-03-06 | analysis/completeness-audit.md |
+| 62 | placeholder-validation | 7 | 2026-03-06 | analysis/placeholder-validation.md |
 | 61 | spec-draft | 7 | 2026-03-06 | docs/plans/retirement-pay-spec.md |
 | 60 | ci-cd-pipeline | 6 | 2026-03-06 | analysis/ci-cd-pipeline.md |
 | 59 | fly-io-deployment | 6 | 2026-03-06 | analysis/fly-io-deployment.md |
