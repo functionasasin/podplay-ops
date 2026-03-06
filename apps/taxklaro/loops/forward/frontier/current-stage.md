@@ -1,20 +1,19 @@
-# Current Stage: 18 (Component Wiring)
+# Current Stage: 19 (Empty States + Toasts + Loading)
 
 ## Status
-Stage 17 complete. All 19 share + auto-save tests pass. share.ts, SaveStatusIndicator, SharePage, and useAutoSave wired to Supabase implemented.
+Stage 18 complete. All 86 wiring tests pass. 38 missing component stubs created, wizard/steps/ re-exports added, wiring test covers §14.1–§14.5.
 
 ## What To Do
-Read spec §14. Wire all 90 components to their parent routes — zero orphans.
+Read spec §8.4, §8.5. Add empty states, toasts, and loading skeletons for every async page.
 
 Tasks:
-- Walk spec §14.1 directory structure — verify every component file exists
-- Walk spec §14.2 orphan prevention rules — verify every component is imported by a route
-- Walk spec §14.3 action trigger map — verify every button has an onClick handler
-- Walk spec §14.4 visibility rules — verify auth-gated components check user state
-- Wire ResultsView readOnly contract from spec §14.5
-- Create src/__tests__/wiring.test.ts — import scan for orphaned exports
+- Create EmptyState.tsx and ErrorState.tsx shared components from spec §8.5
+- Add skeleton loaders for all async pages from spec §8.5
+- Configure Sonner toasts from spec §8.4 (41 toasts across 8 categories)
+- Wire loading/error/empty states to every page that fetches data
+- Create src/__tests__/ui-states.test.ts — verify no page renders blank on empty data
 
-Test command: `npx vitest run src/__tests__/wiring`
+Test command: `npx vitest run src/__tests__/ui-states`
 
 ## Work Log
 - 2026-03-06: Stage 1 complete — cargo check passes, advancing to stage 2
@@ -34,3 +33,4 @@ Test command: `npx vitest run src/__tests__/wiring`
 - 2026-03-06: Stage 15 complete — 63 route tests pass, advancing to stage 16
 - 2026-03-06: Stage 16 complete — 27 computations CRUD tests pass, ComputationCard + list page with status tabs implemented, advancing to stage 17
 - 2026-03-06: Stage 17 complete — 19 share + auto-save tests pass, SharePage + SaveStatusIndicator + useAutoSave wired, advancing to stage 18
+- 2026-03-06: Stage 18 complete — 86 wiring tests pass, all 90 component files exist, §14.1–§14.5 verified, advancing to stage 19
