@@ -1,8 +1,8 @@
 # Frontier — TaxKlaro Platform Completion
 
 ## Statistics
-- Total aspects discovered: 41
-- Analyzed: 39
+- Total aspects discovered: 42
+- Analyzed: 40
 - Pending: 2
 - Convergence: 95%
 
@@ -71,8 +71,11 @@ Depends on completeness-audit FAIL results. All 4 must complete before cross-lay
 - [x] fill-empty-states — Merge empty-states-and-loading.md per-page specs (icon/title/description/CTA/skeleton) into spec Section 8.5
 - [x] fill-toast-catalog — Merge remaining 28 toasts from toast-catalog.md into spec Section 8.4 (currently only 13/41 documented)
 
-### Wave 7 (continued — after Wave 7.5 complete)
-- [ ] cross-layer-consistency — Field-by-field verification: Rust <-> JSON <-> TypeScript <-> Zod
+### Wave 7.5b: Cross-Layer Fix (found during cross-layer-consistency)
+- [ ] fix-ts-input-types — Replace spec Section 5 TypeScript types with authoritative types from analysis/typescript-types.md. The spec's TaxpayerInput uses wrong field names (grossReceiptsAmount vs grossReceipts, form2307Entries vs cwt2307Entries) and a simplified ItemizedExpenseInput (11 fields vs 23). Fix all 14 field-level mismatches documented in analysis/cross-layer-consistency.md.
+
+### Wave 7 (continued — after Wave 7.5b complete)
+- [x] cross-layer-consistency — Field-by-field verification: Rust <-> JSON <-> TypeScript <-> Zod. Found 3 immediate fixes (PURELY_SE, TCC, PATH_C) + 14 deferred type divergences (fix-ts-input-types).
 - [ ] spec-review — Final review: can the forward loop build the ENTIRE product from this spec alone?
 
 ## Recently Analyzed

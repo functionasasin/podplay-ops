@@ -2,6 +2,8 @@
 
 | # | Aspect | Wave | Date | Files Modified |
 |---|--------|------|------|----------------|
+| 40 | cross-layer-consistency | 7 | 2026-03-06 | analysis/cross-layer-consistency.md, docs/plans/freelance-tax-spec.md (4 fixes: TaxpayerType PurelySe, OverpaymentDisposition+TCC, recommendedRegime PATH_C, test fixture). Discovered 14 TypeScript input type divergences deferred to fix-ts-input-types aspect. frontier/aspects.md (new Wave 7.5b aspect), frontier/analysis-log.md |
+|---|--------|------|------|----------------|
 | 39 | fill-toast-catalog | 7.5 | 2026-03-06 | analysis/fill-toast-catalog.md, docs/plans/freelance-tax-spec.md (Section 8.4 expanded from 13-row summary table to full 8.4.1–8.4.12 with all 41 toasts: exact message text, variant, trigger, handler, loading+update pattern, SaveStatusIndicator spec, no-toast table, forward loop instructions, shadcn conflict trap), frontier/aspects.md, frontier/analysis-log.md |
 |---|--------|------|------|----------------|
 | 38 | fill-empty-states | 7.5 | 2026-03-06 | docs/plans/freelance-tax-spec.md (new Section 8.5: EmptyState.tsx + ErrorState.tsx shared components, loading pattern, per-page specs for 11 pages — Dashboard, Computations, Computation Detail, Clients, Client Detail, Deadlines, Settings, Team Settings, Share, Auth Callback, Invite Accept — with exact skeleton JSX, error messages, empty state icons/descriptions/CTAs, anti-scaffolding verification), frontier/aspects.md, frontier/analysis-log.md |

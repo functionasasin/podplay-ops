@@ -206,9 +206,9 @@ All types live in `src/types.rs`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum TaxpayerType {
-    PurelySelfEmployed,
-    MixedIncome,
-    CompensationOnly,
+    PurelySe,           // → "PURELY_SE"
+    MixedIncome,        // → "MIXED_INCOME"
+    CompensationOnly,   // → "COMPENSATION_ONLY"
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -760,7 +760,7 @@ export type ISODate = string;        // "YYYY-MM-DD"
 export type Quarter = 'Q1' | 'Q2' | 'Q3' | 'Q4';
 
 // All 14 enumerations (SCREAMING_SNAKE_CASE — exact match to Rust serde)
-export type TaxpayerType = 'PURELY_SELF_EMPLOYED' | 'MIXED_INCOME' | 'COMPENSATION_ONLY';
+export type TaxpayerType = 'PURELY_SE' | 'MIXED_INCOME' | 'COMPENSATION_ONLY';
 export type TaxRegimePath = 'PATH_A' | 'PATH_B' | 'PATH_C';
 export type ExpenseMethod = 'ITEMIZED' | 'OSD';
 export type FilingMode = 'ANNUAL' | 'QUARTERLY';
@@ -770,7 +770,7 @@ export type TaxpayerTier = 'MICRO' | 'SMALL' | 'MEDIUM' | 'LARGE';
 export type DepreciationMethod = 'STRAIGHT_LINE' | 'DOUBLE_DECLINING_BALANCE' | 'SUM_OF_YEARS_DIGITS';
 export type BirFormType = 'FORM_1701_A' | 'FORM_1701' | 'FORM_1701_Q' | 'FORM_2551_Q';
 export type BirFormVariant = 'GRADUATED_ITEMIZED' | 'GRADUATED_OSD' | 'EIGHT_PERCENT';
-export type OverpaymentDisposition = 'CARRY_OVER' | 'REFUND' | 'PENDING_ELECTION';
+export type OverpaymentDisposition = 'CARRY_OVER' | 'REFUND' | 'TCC' | 'PENDING_ELECTION';
 export type ErrorSeverity = 'ERROR' | 'WARNING' | 'INFO';
 export type InstallmentEligibility = 'ELIGIBLE' | 'NOT_ELIGIBLE' | 'NOT_APPLICABLE';
 
@@ -1028,7 +1028,7 @@ export const TaxYearSchema = z.number().int().min(2018).max(2030);
 // src/schemas/enums.ts
 import { z } from 'zod';
 
-export const TaxpayerTypeSchema = z.enum(['PURELY_SELF_EMPLOYED', 'MIXED_INCOME', 'COMPENSATION_ONLY']);
+export const TaxpayerTypeSchema = z.enum(['PURELY_SE', 'MIXED_INCOME', 'COMPENSATION_ONLY']);
 export const TaxRegimePathSchema = z.enum(['PATH_A', 'PATH_B', 'PATH_C']);
 export const ExpenseMethodSchema = z.enum(['ITEMIZED', 'OSD']);
 export const FilingModeSchema = z.enum(['ANNUAL', 'QUARTERLY']);
@@ -4606,7 +4606,7 @@ export const TEST_COMPUTATION = {
     returnType: 'ORIGINAL',
   },
   expectedResults: {
-    recommendedRegime: 'PATH_B_8_PERCENT',
+    recommendedRegime: 'PATH_C',  // 8% flat rate = Path C (NOT Path B which is OSD)
     // 8% of (₱700,000 − ₱250,000 exemption) = 8% × ₱450,000 = ₱36,000
     taxDue8Percent: '36,000.00',
   },
