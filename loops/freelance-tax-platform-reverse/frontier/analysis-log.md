@@ -2,6 +2,8 @@
 
 | # | Aspect | Wave | Date | Files Modified |
 |---|--------|------|------|----------------|
+| 41 | fix-ts-input-types | 7.5b | 2026-03-06 | analysis/fix-ts-input-types.md, docs/plans/freelance-tax-spec.md (Section 3 Rust enums 14→correct 14, TaxpayerInput 15→25 fields, ItemizedExpenseInput 11→23 fields, Form2307Entry corrected, Section 5.1/5.2/5.3 TypeScript types replaced, Section 6 Zod schemas corrected, Section 7 WizardFormData + computeActiveSteps corrected, Section 18 cross-layer table updated, Section 19 critical traps updated), frontier/aspects.md, frontier/analysis-log.md |
+|---|--------|------|------|----------------|
 | 40 | cross-layer-consistency | 7 | 2026-03-06 | analysis/cross-layer-consistency.md, docs/plans/freelance-tax-spec.md (4 fixes: TaxpayerType PurelySe, OverpaymentDisposition+TCC, recommendedRegime PATH_C, test fixture). Discovered 14 TypeScript input type divergences deferred to fix-ts-input-types aspect. frontier/aspects.md (new Wave 7.5b aspect), frontier/analysis-log.md |
 |---|--------|------|------|----------------|
 | 39 | fill-toast-catalog | 7.5 | 2026-03-06 | analysis/fill-toast-catalog.md, docs/plans/freelance-tax-spec.md (Section 8.4 expanded from 13-row summary table to full 8.4.1–8.4.12 with all 41 toasts: exact message text, variant, trigger, handler, loading+update pattern, SaveStatusIndicator spec, no-toast table, forward loop instructions, shadcn conflict trap), frontier/aspects.md, frontier/analysis-log.md |

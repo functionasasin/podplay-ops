@@ -200,9 +200,10 @@ pub fn validate_json(input_json: &str) -> Result<String, JsValue> {
 
 All types live in `src/types.rs`.
 
-#### Enumerations (14 total)
+#### Enumerations (14 total — all SCREAMING_SNAKE_CASE in JSON)
 
 ```rust
+// ─── Input classification ─────────────────────────────────────────────────
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum TaxpayerType {
@@ -213,108 +214,127 @@ pub enum TaxpayerType {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-pub enum TaxRegimePath {
-    PathA,
-    PathB,
-    PathC,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-pub enum ExpenseMethod {
-    Itemized,
-    Osd,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-pub enum FilingMode {
-    Annual,
-    Quarterly,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-pub enum BusinessNature {
-    Professional,
-    Trader,
-    Both,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-pub enum VatStatus {
-    VatRegistered,
-    NonVat,
-    ExemptFromVat,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum TaxpayerTier {
-    Micro,   // < ₱3M
-    Small,   // ₱3M–₱20M
-    Medium,  // ₱20M–₱1B
-    Large,   // ≥ ₱1B
+    Micro,   // < ₱3M → "MICRO"
+    Small,   // ₱3M–₱20M → "SMALL"
+    Medium,  // ₱20M–₱1B → "MEDIUM"
+    Large,   // ≥ ₱1B → "LARGE"
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-pub enum Quarter {
-    Q1,
-    Q2,
-    Q3,
-    Q4,
+pub enum FilingPeriod {
+    Q1,      // → "Q1"    (Jan 1 – Mar 31, cumulative)
+    Q2,      // → "Q2"    (Jan 1 – Jun 30, cumulative)
+    Q3,      // → "Q3"    (Jan 1 – Sep 30, cumulative)
+    Annual,  // → "ANNUAL" (full year Jan 1 – Dec 31)
+    // NOTE: Q4 is NOT a valid FilingPeriod for income tax (no 1701Q for Q4).
+}
+
+/// Derived output — more granular than TaxpayerType (reflects actual income in this computation).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum IncomeType {
+    PurelySe,          // → "PURELY_SE"
+    MixedIncome,       // → "MIXED_INCOME"
+    CompensationOnly,  // → "COMPENSATION_ONLY"
+    ZeroIncome,        // → "ZERO_INCOME"
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum TaxpayerClass {
+    ServiceProvider,  // → "SERVICE_PROVIDER"
+    Trader,           // → "TRADER"
+}
+
+// ─── Regime ───────────────────────────────────────────────────────────────
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum RegimePath {
+    PathA,  // → "PATH_A"  (graduated + itemized deductions)
+    PathB,  // → "PATH_B"  (graduated + OSD 40%)
+    PathC,  // → "PATH_C"  (8% flat rate, PURELY_SE only)
+}
+
+/// User's explicit election. None = optimizer mode.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum RegimeElection {
+    ElectEightPct,  // → "ELECT_EIGHT_PCT"
+    ElectOsd,       // → "ELECT_OSD"
+    ElectItemized,  // → "ELECT_ITEMIZED"
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum DeductionMethod {
+    Itemized,  // → "ITEMIZED"  (Path A)
+    Osd,       // → "OSD"       (Path B, 40%)
+    None,      // → "NONE"      (Path C, no deduction)
+}
+
+// ─── Balance / forms ──────────────────────────────────────────────────────
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum BalanceDisposition {
+    BalancePayable,  // → "BALANCE_PAYABLE"
+    ZeroBalance,     // → "ZERO_BALANCE"
+    Overpayment,     // → "OVERPAYMENT"
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ReturnType {
+    Original,  // → "ORIGINAL"
+    Amended,   // → "AMENDED"
+}
+
+/// Which ITR form to file. SCREAMING_SNAKE_CASE WITHOUT extra underscore before A/Q.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum FormType {
+    Form1701,   // → "FORM_1701"   (mixed income or itemized)
+    Form1701a,  // → "FORM_1701A"  (purely SE, OSD or 8%)
+    Form1701q,  // → "FORM_1701Q"  (quarterly)
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum CwtClassification {
+    IncomeTaxCwt,      // → "INCOME_TAX_CWT"
+    PercentageTaxCwt,  // → "PERCENTAGE_TAX_CWT"
+    Unknown,           // → "UNKNOWN" — triggers MRF-021
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum DepreciationMethod {
-    StraightLine,
-    DoubleDecliningBalance,
-    SumOfYearsDigits,
+    StraightLine,     // → "STRAIGHT_LINE"
+    DecliningBalance, // → "DECLINING_BALANCE" (double-declining formula)
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-pub enum BirFormType {
-    Form1701A,
-    Form1701,
-    Form1701Q,
-    Form2551Q,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-pub enum BirFormVariant {
-    GraduatedItemized,
-    GraduatedOsd,
-    EightPercent,
-}
-
+/// Engine output only. Input accepts only CARRY_OVER | REFUND | TCC.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum OverpaymentDisposition {
-    CarryOver,
-    Refund,
-    PendingElection,
+    CarryOver,       // → "CARRY_OVER"
+    Refund,          // → "REFUND"
+    Tcc,             // → "TCC"
+    PendingElection, // → "PENDING_ELECTION" (output only — engine auto-assigns when >₱50K)
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ErrorSeverity {
-    Error,
-    Warning,
-    Info,
+    Error,    // → "ERROR"
+    Warning,  // → "WARNING"
+    Info,     // → "INFO"
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-pub enum InstallmentEligibility {
-    Eligible,
-    NotEligible,
-    NotApplicable,
-}
+// Quarter is NOT an enum — it is a plain integer (u8): 1, 2, or 3.
+// Form2551Q uses quarter = 1|2|3|4 (all four quarters). 1701Q uses only 1|2|3.
+pub type Quarter = u8;  // valid values: 1, 2, 3 (or 4 for 2551Q)
 ```
 
 #### Primary Input — `TaxpayerInput`
@@ -324,114 +344,181 @@ pub enum InstallmentEligibility {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TaxpayerInput {
-    pub tax_year: u16,                                    // 2018–2030
+    // --- Identity / Classification ---
     pub taxpayer_type: TaxpayerType,
-    pub business_nature: BusinessNature,
-    pub filing_mode: FilingMode,
-    pub vat_status: VatStatus,
+    pub tax_year: u16,                                    // 2018–2030
+    pub filing_period: FilingPeriod,
+    pub is_mixed_income: bool,                            // true iff taxpayer_type == MIXED_INCOME
 
+    // --- Registration Status ---
+    pub is_vat_registered: bool,                          // true → Path C ineligible
+    pub is_bmbe_registered: bool,                         // true → income tax exempt
+    pub subject_to_sec_117_128: bool,                     // true → Path C ineligible
+    pub is_gpp_partner: bool,                             // true → Path C ineligible
+
+    // --- Business Income ---
     #[serde_as(as = "DisplayFromStr")]
-    pub gross_receipts_amount: Decimal,                   // String in JSON
+    pub gross_receipts: Decimal,                          // String in JSON: "1234.56"
+    #[serde_as(as = "DisplayFromStr")]
+    pub sales_returns_allowances: Decimal,
+    #[serde_as(as = "DisplayFromStr")]
+    pub non_operating_income: Decimal,
+    #[serde_as(as = "DisplayFromStr")]
+    pub fwt_income: Decimal,                              // Income with final withholding tax
+    #[serde_as(as = "DisplayFromStr")]
+    pub cost_of_goods_sold: Decimal,                      // Traders only; zero for service providers
 
-    pub has_compensation_income: bool,
-    #[serde_as(as = "Option<DisplayFromStr>")]
-    pub compensation_income: Option<Decimal>,
+    // --- Compensation Income ---
+    #[serde_as(as = "DisplayFromStr")]
+    pub taxable_compensation: Decimal,                    // Zero for PURELY_SE
+    #[serde_as(as = "DisplayFromStr")]
+    pub compensation_cwt: Decimal,                        // CWT from all Form 2316s; zero for PURELY_SE
 
-    pub expense_method: Option<ExpenseMethod>,            // None if 8% elected
-    pub itemized_expenses: Option<ItemizedExpenseInput>,
-    pub nolco_entries: Option<Vec<NolcoEntry>>,
-    pub depreciation_entries: Option<Vec<DepreciationEntry>>,
-    pub form_2307_entries: Option<Vec<Form2307Entry>>,
-    pub quarterly_payments: Option<Vec<QuarterlyPayment>>,
+    // --- Itemized Expenses (Path A only) ---
+    pub itemized_expenses: ItemizedExpenseInput,          // Zero-filled if not applicable
 
-    pub elected_8_percent: Option<bool>,
-    pub has_prior_year_excess_credits: bool,
-    #[serde_as(as = "Option<DisplayFromStr>")]
-    pub prior_year_excess_credits: Option<Decimal>,
+    // --- Regime Election ---
+    pub elected_regime: Option<RegimeElection>,           // None = optimizer mode
+    pub osd_elected: Option<bool>,                        // Overridden by elected_regime
 
-    pub filing_date: Option<String>,                      // "YYYY-MM-DD"
-    pub bir_rdo_code: Option<String>,
-    pub registered_address: Option<String>,
+    // --- Prior Period Data ---
+    pub prior_quarterly_payments: Vec<QuarterlyPayment>, // [] if none; max 3 for ANNUAL
+    pub cwt_2307_entries: Vec<Form2307Entry>,             // [] if none
+    #[serde_as(as = "DisplayFromStr")]
+    pub prior_year_excess_cwt: Decimal,
+
+    // --- Penalty Inputs ---
+    pub actual_filing_date: Option<String>,               // "YYYY-MM-DD"; null = assume on-time
+    pub return_type: ReturnType,
+    #[serde_as(as = "DisplayFromStr")]
+    pub prior_payment_for_return: Decimal,                // "0.00" for ORIGINAL
+
+    // --- Overpayment Preference ---
+    pub overpayment_preference: Option<OverpaymentDisposition>,
+    // Allowed non-null values: CARRY_OVER | REFUND | TCC (NOT PENDING_ELECTION)
+    // null = engine auto-assigns: CARRY_OVER if ≤₱50K, PENDING_ELECTION if >₱50K
 }
 ```
 
 #### Sub-input Types
 
 ```rust
+// ─── ItemizedExpenseInput (23 fields — Path A only) ───────────────────────
 #[serde_as]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ItemizedExpenseInput {
+    // Sec. 34(A): Ordinary and necessary business expenses
     #[serde_as(as = "DisplayFromStr")]
     pub salaries_and_wages: Decimal,
     #[serde_as(as = "DisplayFromStr")]
-    pub rental_expense: Decimal,
+    pub sss_philhealth_pagibig_employer_share: Decimal,  // Employer's mandatory share only
     #[serde_as(as = "DisplayFromStr")]
-    pub interest_expense: Decimal,
-    #[serde_as(as = "DisplayFromStr")]
-    pub professional_fees: Decimal,
-    #[serde_as(as = "DisplayFromStr")]
-    pub office_supplies: Decimal,
+    pub rent: Decimal,
     #[serde_as(as = "DisplayFromStr")]
     pub utilities: Decimal,
     #[serde_as(as = "DisplayFromStr")]
-    pub representation_expenses: Decimal,
+    pub communication: Decimal,
     #[serde_as(as = "DisplayFromStr")]
-    pub transportation: Decimal,
+    pub office_supplies: Decimal,
     #[serde_as(as = "DisplayFromStr")]
-    pub miscellaneous: Decimal,
+    pub professional_fees_paid: Decimal,             // Fees paid to OTHER professionals
     #[serde_as(as = "DisplayFromStr")]
-    pub charitable_contributions: Decimal,          // Sec. 34(H) — limited to 10%
+    pub travel_transportation: Decimal,
     #[serde_as(as = "DisplayFromStr")]
-    pub sss_gsis_contributions: Decimal,            // Sec. 34(M)
+    pub insurance_premiums: Decimal,
+    // Sec. 34(B): Interest expense
+    #[serde_as(as = "DisplayFromStr")]
+    pub interest_expense: Decimal,
+    #[serde_as(as = "DisplayFromStr")]
+    pub final_taxed_interest_income: Decimal,        // For 33% arbitrage reduction
+    // Sec. 34(C): Taxes and licenses
+    #[serde_as(as = "DisplayFromStr")]
+    pub taxes_and_licenses: Decimal,                 // Business taxes (excl. income tax)
+    // Sec. 34(D): Losses
+    #[serde_as(as = "DisplayFromStr")]
+    pub casualty_theft_losses: Decimal,
+    // Sec. 34(E): Bad debts
+    #[serde_as(as = "DisplayFromStr")]
+    pub bad_debts: Decimal,
+    pub is_accrual_basis: bool,
+    // Sec. 34(F): Depreciation
+    pub depreciation_entries: Vec<DepreciationEntry>,  // [] if none
+    // Sec. 34(H): Charitable contributions
+    #[serde_as(as = "DisplayFromStr")]
+    pub charitable_contributions: Decimal,           // Capped at 10% of net taxable income
+    pub charitable_accredited: bool,                 // True = accredited donee, full deduction
+    // Sec. 34(I): Research and development
+    #[serde_as(as = "DisplayFromStr")]
+    pub research_development: Decimal,
+    // Sec. 34(J): Entertainment, amusement, recreation (EAR)
+    #[serde_as(as = "DisplayFromStr")]
+    pub entertainment_representation: Decimal,       // Capped at 0.5% of net sales or 1% of net revenue
+    // Home office (Rev. Regs. 12-2003 interpretation)
+    #[serde_as(as = "DisplayFromStr")]
+    pub home_office_expense: Decimal,
+    pub home_office_exclusive_use: bool,             // True = full deduction; false = proportionate
+    // NOLCO (Net Operating Loss Carry-Over)
+    pub nolco_entries: Vec<NolcoEntry>,              // [] if none; losses from prior 3 years
 }
 
+// ─── Form2307Entry (CWT Certificate) ──────────────────────────────────────
 #[serde_as]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Form2307Entry {
-    pub withholding_agent_name: String,
-    pub tin: String,
-    pub quarter: Quarter,
+    pub payor_name: String,                          // Non-empty
+    pub payor_tin: String,                           // "XXX-XXX-XXX" or "XXX-XXX-XXX-XXXX"
+    pub atc_code: String,                            // e.g., "WI010", "PT010" — determines classification
     #[serde_as(as = "DisplayFromStr")]
-    pub amount_of_income_payment: Decimal,
+    pub income_payment: Decimal,                     // ≥ 0
     #[serde_as(as = "DisplayFromStr")]
-    pub tax_withheld: Decimal,
+    pub tax_withheld: Decimal,                       // ≥ 0, ≤ income_payment
+    pub period_from: String,                         // "YYYY-MM-DD"
+    pub period_to: String,                           // "YYYY-MM-DD", ≥ period_from
+    pub quarter_of_credit: Option<u8>,               // 1/2/3 for quarterly filing; null for annual
 }
 
+// ─── QuarterlyPayment ─────────────────────────────────────────────────────
 #[serde_as]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct QuarterlyPayment {
-    pub quarter: Quarter,
+    pub quarter: u8,                                 // 1, 2, or 3 (Q4 filed as annual, not 1701Q)
     #[serde_as(as = "DisplayFromStr")]
     pub amount_paid: Decimal,
-    pub payment_date: Option<String>,               // "YYYY-MM-DD"
+    pub date_paid: Option<String>,                   // "YYYY-MM-DD" or null if unknown
+    pub form1701q_period: String,                    // "Q1" | "Q2" | "Q3" (must match quarter)
 }
 
+// ─── DepreciationEntry ────────────────────────────────────────────────────
 #[serde_as]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DepreciationEntry {
-    pub asset_description: String,
-    pub depreciation_method: DepreciationMethod,
+    pub asset_name: String,                          // Non-empty
     #[serde_as(as = "DisplayFromStr")]
-    pub cost: Decimal,
+    pub asset_cost: Decimal,                         // ≥ 0
     #[serde_as(as = "DisplayFromStr")]
-    pub salvage_value: Decimal,
-    pub useful_life_years: u16,
-    pub year_acquired: u16,
+    pub salvage_value: Decimal,                      // ≥ 0, ≤ asset_cost
+    pub useful_life_years: u16,                      // 1–50
+    pub acquisition_date: String,                    // "YYYY-MM-DD"
+    pub method: DepreciationMethod,
+    #[serde_as(as = "DisplayFromStr")]
+    pub prior_accumulated_depreciation: Decimal,     // ≥ 0
 }
 
+// ─── NolcoEntry ───────────────────────────────────────────────────────────
 #[serde_as]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct NolcoEntry {
-    pub year_incurred: u16,
+    pub loss_year: u16,                              // Year loss was incurred
     #[serde_as(as = "DisplayFromStr")]
-    pub amount: Decimal,
+    pub original_loss: Decimal,                      // > 0
     #[serde_as(as = "DisplayFromStr")]
-    pub amount_applied_previously: Decimal,
+    pub remaining_balance: Decimal,                  // ≥ 0, ≤ original_loss
+    pub expiry_year: u16,                            // = loss_year + 3
 }
 ```
 
@@ -442,65 +529,91 @@ pub struct NolcoEntry {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TaxComputationResult {
-    // Paths
-    pub path_a: Option<PathAResult>,
-    pub path_b: Option<PathBResult>,
-    pub path_c: Option<PathCResult>,
-    pub recommended_path: TaxRegimePath,
+    // --- Input Echo ---
+    pub input_summary: InputSummary,
 
-    // Percentage tax (if non-VAT)
-    pub percentage_tax: Option<PercentageTaxResult>,
-
-    // Form recommendation
-    pub bir_form: BirFormType,
-    pub bir_form_variant: BirFormVariant,
-    pub form_output: FormOutputUnion,
-
-    // CWT summary
+    // --- Regime Comparison ---
+    pub comparison: Vec<RegimeOption>,               // Always 3 entries (PATH_A/B/C)
+    pub recommended_regime: RegimePath,
+    pub using_locked_regime: bool,                   // true if elected_regime was set
     #[serde_as(as = "DisplayFromStr")]
-    pub total_cwt_credits: Decimal,
-
-    // Quarterly payments
+    pub savings_vs_worst: Decimal,
     #[serde_as(as = "DisplayFromStr")]
-    pub total_quarterly_paid: Decimal,
+    pub savings_vs_next_best: Decimal,
 
-    // Balance
-    #[serde_as(as = "Option<DisplayFromStr>")]
-    pub balance_due: Option<Decimal>,
-    #[serde_as(as = "Option<DisplayFromStr>")]
-    pub overpayment: Option<Decimal>,
+    // --- Selected Regime Details ---
+    pub selected_path: RegimePath,
+    #[serde_as(as = "DisplayFromStr")]
+    pub selected_income_tax_due: Decimal,
+    #[serde_as(as = "DisplayFromStr")]
+    pub selected_percentage_tax_due: Decimal,
+    #[serde_as(as = "DisplayFromStr")]
+    pub selected_total_tax: Decimal,
+
+    // --- Path Details (null if ineligible/not applicable) ---
+    pub path_a_details: Option<PathAResult>,         // null if COMPENSATION_ONLY
+    pub path_b_details: Option<PathBResult>,         // null if COMPENSATION_ONLY
+    pub path_c_details: Option<PathCResult>,         // null if ineligible (all 8 conditions)
+
+    // --- Gross Aggregates ---
+    pub gross_aggregates: GrossAggregates,
+
+    // --- Credits ---
+    #[serde_as(as = "DisplayFromStr")]
+    pub total_it_credits: Decimal,
+    #[serde_as(as = "DisplayFromStr")]
+    pub cwt_credits: Decimal,
+    #[serde_as(as = "DisplayFromStr")]
+    pub quarterly_payments: Decimal,
+    #[serde_as(as = "DisplayFromStr")]
+    pub prior_year_excess: Decimal,
+    #[serde_as(as = "DisplayFromStr")]
+    pub compensation_cwt: Decimal,
+
+    // --- Balance ---
+    #[serde_as(as = "DisplayFromStr")]
+    pub balance: Decimal,
+    pub disposition: BalanceDisposition,
+    #[serde_as(as = "DisplayFromStr")]
+    pub overpayment: Decimal,                        // "0.00" if no overpayment
     pub overpayment_disposition: Option<OverpaymentDisposition>,
+    pub installment_eligible: bool,
+    #[serde_as(as = "DisplayFromStr")]
+    pub installment_first_due: Decimal,              // April 15 installment
+    #[serde_as(as = "DisplayFromStr")]
+    pub installment_second_due: Decimal,             // July 15 installment
 
-    // Installment
-    pub installment_eligible: InstallmentEligibility,
-    #[serde_as(as = "Option<DisplayFromStr>")]
-    pub installment_amount: Option<Decimal>,
+    // --- Percentage Tax ---
+    pub pt_result: PercentageTaxResult,
 
-    // Penalties (if late filing_date)
-    pub penalties: Option<PenaltyResult>,
+    // --- Form Output ---
+    pub form_type: FormType,
+    pub form_output: FormOutputUnion,
+    pub pt_form_output: Option<Form2551QOutput>,
+    pub required_attachments: Vec<String>,
 
-    // Manual review flags
+    // --- Penalties ---
+    pub penalties: Option<PenaltyResult>,            // null if on-time filing
+
+    // --- Flags & Warnings ---
     pub manual_review_flags: Vec<ManualReviewFlag>,
-
-    // Soft warnings
     pub warnings: Vec<ValidationWarning>,
 
-    // Ineligibility notifications
-    pub ineligibility_notifications: Vec<IneligibilityNotification>,
-
-    // Metadata
-    pub tax_year: u16,
-    pub computed_at: String,                        // ISO 8601
+    // --- Metadata ---
+    pub engine_version: String,                      // e.g., "1.0.0"
+    pub computed_at: String,                         // "YYYY-MM-DD"
 }
 
-// FormOutputUnion — adjacently tagged
+/// FormOutputUnion — adjacently tagged.
+/// NOTE: `formVariant` tag uses PascalCase Rust variant names (NOT SCREAMING_SNAKE_CASE).
+/// This differs from FormType enum which uses SCREAMING_SNAKE_CASE.
+/// "Form1701a" ≠ "FORM_1701A" — use formType for routing, formVariant only for type narrowing.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "formVariant", content = "fields", rename_all = "SCREAMING_SNAKE_CASE")]
+#[serde(tag = "formVariant", content = "fields")]
 pub enum FormOutputUnion {
-    Form1701A(Form1701AOutput),
     Form1701(Form1701Output),
-    Form1701Q(Form1701QOutput),
-    Form2551Q(Form2551QOutput),
+    Form1701a(Form1701AOutput),
+    Form1701q(Form1701QOutput),
 }
 ```
 
@@ -562,7 +675,7 @@ pub struct ValidationWarning {
 pub struct IneligibilityNotification {
     pub code: String,       // IN-01 to IN-05
     pub message: String,
-    pub path_excluded: TaxRegimePath,
+    pub path_excluded: RegimePath,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -598,7 +711,7 @@ JSON examples:
 {"status":"ok","data":{...TaxComputationResult...}}
 
 // Error
-{"status":"error","errors":[{"code":"ERR_GROSS_RECEIPTS_REQUIRED","message":"...","field":"grossReceiptsAmount","severity":"ERROR"}]}
+{"status":"error","errors":[{"code":"ERR_GROSS_RECEIPTS_REQUIRED","message":"...","field":"grossReceipts","severity":"ERROR"}]}
 ```
 
 ### 3.8 Build Command
@@ -752,208 +865,648 @@ export default defineConfig({
 ### 5.1 `src/types/common.ts`
 
 ```typescript
-// Branded primitives
-export type Peso = string;           // Decimal serialized as string — NEVER number
-export type Rate = string;           // Percentage as string
-export type TaxYear = number;        // 2018–2030
-export type ISODate = string;        // "YYYY-MM-DD"
-export type Quarter = 'Q1' | 'Q2' | 'Q3' | 'Q4';
+// ============================================================================
+// Primitive Type Aliases
+// ============================================================================
 
-// All 14 enumerations (SCREAMING_SNAKE_CASE — exact match to Rust serde)
-export type TaxpayerType = 'PURELY_SE' | 'MIXED_INCOME' | 'COMPENSATION_ONLY';
-export type TaxRegimePath = 'PATH_A' | 'PATH_B' | 'PATH_C';
-export type ExpenseMethod = 'ITEMIZED' | 'OSD';
-export type FilingMode = 'ANNUAL' | 'QUARTERLY';
-export type BusinessNature = 'PROFESSIONAL' | 'TRADER' | 'BOTH';
-export type VatStatus = 'VAT_REGISTERED' | 'NON_VAT' | 'EXEMPT_FROM_VAT';
+/** All monetary peso amounts. Serialized as decimal string: "1234.56". NEVER number. */
+export type Peso = string;
+
+/** Percentage as decimal string: "0.08" for 8%. Never bare integer "8". */
+export type Rate = string;
+
+/** Calendar year integer: 2018–2030 */
+export type TaxYear = number;
+
+/** ISO 8601 date string: "YYYY-MM-DD" */
+export type ISODate = string;
+
+/** Quarter number: 1, 2, or 3. NOT a string — matches Rust u8. */
+export type Quarter = 1 | 2 | 3;
+
+// ============================================================================
+// Enumerations — all serialize as SCREAMING_SNAKE_CASE strings
+// ============================================================================
+
+export type TaxpayerType =
+  | 'PURELY_SE'           // Rust: PurelySe
+  | 'MIXED_INCOME'        // Rust: MixedIncome
+  | 'COMPENSATION_ONLY';  // Rust: CompensationOnly
+
+export const TAXPAYER_TYPES: readonly TaxpayerType[] = [
+  'PURELY_SE', 'MIXED_INCOME', 'COMPENSATION_ONLY',
+];
+
 export type TaxpayerTier = 'MICRO' | 'SMALL' | 'MEDIUM' | 'LARGE';
-export type DepreciationMethod = 'STRAIGHT_LINE' | 'DOUBLE_DECLINING_BALANCE' | 'SUM_OF_YEARS_DIGITS';
-export type BirFormType = 'FORM_1701_A' | 'FORM_1701' | 'FORM_1701_Q' | 'FORM_2551_Q';
-export type BirFormVariant = 'GRADUATED_ITEMIZED' | 'GRADUATED_OSD' | 'EIGHT_PERCENT';
-export type OverpaymentDisposition = 'CARRY_OVER' | 'REFUND' | 'TCC' | 'PENDING_ELECTION';
-export type ErrorSeverity = 'ERROR' | 'WARNING' | 'INFO';
-export type InstallmentEligibility = 'ELIGIBLE' | 'NOT_ELIGIBLE' | 'NOT_APPLICABLE';
 
-// As-const arrays for iteration/validation
-export const TAX_REGIME_PATHS = ['PATH_A', 'PATH_B', 'PATH_C'] as const;
-export const BIR_FORM_TYPES = ['FORM_1701_A', 'FORM_1701', 'FORM_1701_Q', 'FORM_2551_Q'] as const;
+export const TAXPAYER_TIERS: readonly TaxpayerTier[] = [
+  'MICRO', 'SMALL', 'MEDIUM', 'LARGE',
+];
 
-// WasmResult discriminated union
-export type WasmResult<T> =
-  | { status: 'ok'; data: T }
-  | { status: 'error'; errors: EngineError[] };
+/** Engine input: the period this computation covers. Q4 is NOT a valid FilingPeriod for ITR. */
+export type FilingPeriod = 'Q1' | 'Q2' | 'Q3' | 'ANNUAL';
 
-// Error types
-export interface EngineError {
-  code: string;
-  message: string;
-  field: string | null;
-  severity: ErrorSeverity;
-}
+export const FILING_PERIODS: readonly FilingPeriod[] = ['Q1', 'Q2', 'Q3', 'ANNUAL'];
 
+/** Derived output — more granular than TaxpayerType. */
+export type IncomeType =
+  | 'PURELY_SE'
+  | 'MIXED_INCOME'
+  | 'COMPENSATION_ONLY'
+  | 'ZERO_INCOME';
+
+export type TaxpayerClass = 'SERVICE_PROVIDER' | 'TRADER';
+
+export type RegimePath = 'PATH_A' | 'PATH_B' | 'PATH_C';
+
+export const REGIME_PATHS: readonly RegimePath[] = ['PATH_A', 'PATH_B', 'PATH_C'];
+
+/**
+ * User's explicit regime election (input only).
+ * null = optimizer mode — engine recommends best path.
+ */
+export type RegimeElection =
+  | 'ELECT_EIGHT_PCT'
+  | 'ELECT_OSD'
+  | 'ELECT_ITEMIZED';
+
+export type DeductionMethod = 'ITEMIZED' | 'OSD' | 'NONE';
+
+export type BalanceDisposition =
+  | 'BALANCE_PAYABLE'
+  | 'ZERO_BALANCE'
+  | 'OVERPAYMENT';
+
+export type ReturnType = 'ORIGINAL' | 'AMENDED';
+
+/**
+ * Which ITR form to file.
+ * IMPORTANT: Uses SCREAMING_SNAKE_CASE WITHOUT underscore before A/Q.
+ * "FORM_1701A" not "FORM_1701_A" — distinct from FormOutputUnion.formVariant tag.
+ */
+export type FormType = 'FORM_1701' | 'FORM_1701A' | 'FORM_1701Q';
+
+export type CwtClassification =
+  | 'INCOME_TAX_CWT'
+  | 'PERCENTAGE_TAX_CWT'
+  | 'UNKNOWN';
+
+export type DepreciationMethod = 'STRAIGHT_LINE' | 'DECLINING_BALANCE';
+
+/**
+ * Overpayment handling.
+ * PENDING_ELECTION is engine OUTPUT only — never valid as user input.
+ * Input must be CARRY_OVER | REFUND | TCC | null.
+ */
+export type OverpaymentDisposition =
+  | 'CARRY_OVER'
+  | 'REFUND'
+  | 'TCC'
+  | 'PENDING_ELECTION';
+
+/** Valid input values for overpayment_preference (excludes PENDING_ELECTION). */
+export type OverpaymentPreferenceInput = 'CARRY_OVER' | 'REFUND' | 'TCC';
+
+// ============================================================================
+// Shared Small Structs
+// ============================================================================
+
+/** Non-fatal issue from PL-01 input validation or PL-04 eligibility check. */
 export interface ValidationWarning {
-  code: string;
-  message: string;
-  field: string | null;
+  code: string;       // e.g., "WARN-001"
+  message: string;    // user-facing text
+  severity: 'WARNING' | 'INFO';
 }
 
-export interface IneligibilityNotification {
-  code: string;
-  message: string;
-  pathExcluded: TaxRegimePath;
-}
-
+/** Item requiring human judgment (engine cannot fully resolve). */
 export interface ManualReviewFlag {
-  code: string;
-  message: string;
-  suggestedAction: string;
+  code: string;         // e.g., "MRF-010"
+  title: string;        // short title
+  message: string;      // full user-facing description
+  fieldAffected: string; // which input field triggered this
+  engineAction: string;  // what the engine did in lieu of judgment
+}
+
+// ============================================================================
+// WasmResult Envelope
+// ============================================================================
+
+/** Successful WASM response. */
+export interface WasmOk<T> {
+  status: 'ok';
+  data: T;
+}
+
+/** Failed WASM response. */
+export interface WasmError {
+  status: 'error';
+  errors: EngineError[];
+}
+
+export type WasmResult<T> = WasmOk<T> | WasmError;
+
+/** Single error from the engine (validation or computation failure). */
+export interface EngineError {
+  code: string;          // "VAL-001", "ERR-001", "PARSE_ERROR", etc.
+  message: string;       // user-facing message
+  field: string | null;  // camelCase field name or null if not field-specific
+  severity: 'ERROR' | 'WARNING' | 'INFO';
 }
 ```
 
 ### 5.2 `src/types/engine-input.ts`
 
 ```typescript
-import type { Peso, TaxYear, ISODate, Quarter, TaxpayerType, BusinessNature, FilingMode, VatStatus, ExpenseMethod, DepreciationMethod } from './common';
+import type {
+  TaxpayerType, FilingPeriod, RegimeElection, ReturnType,
+  OverpaymentPreferenceInput, DepreciationMethod, ISODate, TaxYear, Quarter, Peso,
+} from './common';
 
-export interface TaxpayerInput {
-  taxYear: TaxYear;
-  taxpayerType: TaxpayerType;
-  businessNature: BusinessNature;
-  filingMode: FilingMode;
-  vatStatus: VatStatus;
-  grossReceiptsAmount: Peso;         // String — NEVER number
-  hasCompensationIncome: boolean;
-  compensationIncome: Peso | null;
-  expenseMethod: ExpenseMethod | null;
-  itemizedExpenses: ItemizedExpenseInput | null;
-  nolcoEntries: NolcoEntry[] | null;
-  depreciationEntries: DepreciationEntry[] | null;
-  form2307Entries: Form2307Entry[] | null;
-  quarterlyPayments: QuarterlyPayment[] | null;
-  elected8Percent: boolean | null;
-  hasPriorYearExcessCredits: boolean;
-  priorYearExcessCredits: Peso | null;
-  filingDate: ISODate | null;
-  birRdoCode: string | null;
-  registeredAddress: string | null;
-}
-
-export interface ItemizedExpenseInput {
-  salariesAndWages: Peso;
-  rentalExpense: Peso;
-  interestExpense: Peso;
-  professionalFees: Peso;
-  officeSupplies: Peso;
-  utilities: Peso;
-  representationExpenses: Peso;
-  transportation: Peso;
-  miscellaneous: Peso;
-  charitableContributions: Peso;
-  sssGsisContributions: Peso;
-}
-
-export interface Form2307Entry {
-  withholdingAgentName: string;
-  tin: string;
-  quarter: Quarter;
-  amountOfIncomePayment: Peso;
-  taxWithheld: Peso;
-}
-
-export interface QuarterlyPayment {
-  quarter: Quarter;
-  amountPaid: Peso;
-  paymentDate: ISODate | null;
-}
+// ============================================================================
+// DepreciationEntry
+// ============================================================================
 
 export interface DepreciationEntry {
-  assetDescription: string;
-  depreciationMethod: DepreciationMethod;
-  cost: Peso;
-  salvageValue: Peso;
-  usefulLifeYears: number;
-  yearAcquired: number;
+  assetName: string;          // Non-empty string
+  assetCost: Peso;            // >= "0.00"
+  salvageValue: Peso;         // >= "0.00", <= assetCost
+  usefulLifeYears: number;    // integer 1–50
+  acquisitionDate: ISODate;   // "YYYY-MM-DD"
+  method: DepreciationMethod;
+  priorAccumulatedDepreciation: Peso; // >= "0.00"
 }
+
+// ============================================================================
+// NolcoEntry
+// ============================================================================
 
 export interface NolcoEntry {
-  yearIncurred: number;
-  amount: Peso;
-  amountAppliedPreviously: Peso;
+  lossYear: TaxYear;        // year loss was incurred
+  originalLoss: Peso;       // > "0.00"
+  remainingBalance: Peso;   // >= "0.00", <= originalLoss
+  expiryYear: TaxYear;      // = lossYear + 3
 }
 
-// Factory function for safe defaults
+// ============================================================================
+// ItemizedExpenseInput (Path A — 23 fields)
+// ============================================================================
+
+export interface ItemizedExpenseInput {
+  // Sec. 34(A): Ordinary and necessary business expenses
+  salariesAndWages: Peso;
+  sssPhilhealthPagibigEmployerShare: Peso;  // Employer mandatory share ONLY
+  rent: Peso;
+  utilities: Peso;
+  communication: Peso;
+  officeSupplies: Peso;
+  professionalFeesPaid: Peso;               // Fees paid to OTHER professionals
+  travelTransportation: Peso;
+  insurancePremiums: Peso;
+  // Sec. 34(B): Interest
+  interestExpense: Peso;
+  finalTaxedInterestIncome: Peso;           // For 33% arbitrage reduction
+  // Sec. 34(C): Taxes and licenses
+  taxesAndLicenses: Peso;                   // Excludes income tax; excludes OPT (computed by engine)
+  // Sec. 34(D): Losses
+  casualtyTheftLosses: Peso;
+  // Sec. 34(E): Bad debts
+  badDebts: Peso;
+  isAccrualBasis: boolean;
+  // Sec. 34(F): Depreciation
+  depreciationEntries: DepreciationEntry[];  // [] if none
+  // Sec. 34(H): Charitable contributions
+  charitableContributions: Peso;            // Cap: 10% of net taxable income
+  charitableAccredited: boolean;            // true = accredited donee
+  // Sec. 34(I): Research and development
+  researchDevelopment: Peso;
+  // Sec. 34(J): Entertainment, amusement, recreation (EAR)
+  entertainmentRepresentation: Peso;        // Cap: 0.5% net sales or 1% net revenue
+  // Home office deduction
+  homeOfficeExpense: Peso;
+  homeOfficeExclusiveUse: boolean;          // true = full deduction; false = proportionate
+  // NOLCO
+  nolcoEntries: NolcoEntry[];              // [] if none
+}
+
+// ============================================================================
+// Form2307Entry (CWT Certificate)
+// ============================================================================
+
+export interface Form2307Entry {
+  payorName: string;         // non-empty
+  payorTin: string;          // "XXX-XXX-XXX" or "XXX-XXX-XXX-XXXX"
+  atcCode: string;           // e.g., "WI010", "PT010" — used for classification
+  incomePayment: Peso;       // >= "0.00"
+  taxWithheld: Peso;         // >= "0.00", <= incomePayment
+  periodFrom: ISODate;       // "YYYY-MM-DD"
+  periodTo: ISODate;         // "YYYY-MM-DD", >= periodFrom
+  quarterOfCredit: Quarter | null; // 1/2/3 for quarterly filing; null for annual
+}
+
+// ============================================================================
+// QuarterlyPayment
+// ============================================================================
+
+export interface QuarterlyPayment {
+  quarter: Quarter;           // 1, 2, or 3 (Q4 filed as annual ITR, not 1701Q)
+  amountPaid: Peso;           // >= "0.00"
+  datePaid: ISODate | null;   // "YYYY-MM-DD" or null if unknown
+  form1701qPeriod: 'Q1' | 'Q2' | 'Q3'; // must match quarter
+}
+
+// ============================================================================
+// TaxpayerInput — Top-Level Input (25 fields)
+// ============================================================================
+
+export interface TaxpayerInput {
+  // --- Identity / Classification ---
+  taxpayerType: TaxpayerType;
+  taxYear: number;            // 2018–2030
+  filingPeriod: FilingPeriod; // Q1 | Q2 | Q3 | ANNUAL (NOT Q4)
+  isMixedIncome: boolean;     // true iff taxpayerType === 'MIXED_INCOME'
+
+  // --- Registration Status ---
+  isVatRegistered: boolean;        // true → Path C ineligible
+  isBmbeRegistered: boolean;       // true → income tax exempt
+  subjectToSec117128: boolean;     // true → Path C ineligible
+  isGppPartner: boolean;           // true → Path C ineligible
+
+  // --- Business Income ---
+  grossReceipts: Peso;             // >= "0.00" — NEVER grossReceiptsAmount
+  salesReturnsAllowances: Peso;    // >= "0.00", <= grossReceipts
+  nonOperatingIncome: Peso;        // passive income NOT subjected to FWT
+  fwtIncome: Peso;                 // income already subjected to final withholding tax
+  costOfGoodsSold: Peso;           // traders only; "0.00" for service providers
+
+  // --- Compensation Income ---
+  taxableCompensation: Peso;       // "0.00" for PURELY_SE
+  compensationCwt: Peso;           // CWT from Form 2316s; "0.00" for PURELY_SE
+
+  // --- Itemized Expenses ---
+  itemizedExpenses: ItemizedExpenseInput;  // always required; zero-fill if not applicable
+
+  // --- Regime Election ---
+  electedRegime: RegimeElection | null;  // null = optimizer mode
+  osdElected: boolean | null;            // null = let engine decide
+
+  // --- Prior Period Data ---
+  priorQuarterlyPayments: QuarterlyPayment[];  // [] if none; max 3 for ANNUAL
+  cwt2307Entries: Form2307Entry[];             // [] if none — NEVER form2307Entries
+  priorYearExcessCwt: Peso;                    // >= "0.00" — NEVER priorYearExcessCredits
+
+  // --- Penalty Inputs ---
+  actualFilingDate: ISODate | null;  // null = assume on-time
+  returnType: ReturnType;
+  priorPaymentForReturn: Peso;       // "0.00" for ORIGINAL
+
+  // --- Overpayment Preference ---
+  overpaymentPreference: OverpaymentPreferenceInput | null;
+  // null = engine auto-assigns (CARRY_OVER if <=₱50K, PENDING_ELECTION otherwise)
+  // NEVER pass 'PENDING_ELECTION' — that is output only, rejected as input
+}
+
+// ============================================================================
+// Default Factory — zero-filled TaxpayerInput for wizard initialization
+// ============================================================================
+
 export function createDefaultTaxpayerInput(): TaxpayerInput {
   return {
+    taxpayerType: 'PURELY_SE',
     taxYear: new Date().getFullYear(),
-    taxpayerType: 'PURELY_SELF_EMPLOYED',
-    businessNature: 'PROFESSIONAL',
-    filingMode: 'ANNUAL',
-    vatStatus: 'NON_VAT',
-    grossReceiptsAmount: '0',
-    hasCompensationIncome: false,
-    compensationIncome: null,
-    expenseMethod: null,
-    itemizedExpenses: null,
-    nolcoEntries: null,
-    depreciationEntries: null,
-    form2307Entries: null,
-    quarterlyPayments: null,
-    elected8Percent: null,
-    hasPriorYearExcessCredits: false,
-    priorYearExcessCredits: null,
-    filingDate: null,
-    birRdoCode: null,
-    registeredAddress: null,
+    filingPeriod: 'ANNUAL',
+    isMixedIncome: false,
+    isVatRegistered: false,
+    isBmbeRegistered: false,
+    subjectToSec117128: false,
+    isGppPartner: false,
+    grossReceipts: '0.00',
+    salesReturnsAllowances: '0.00',
+    nonOperatingIncome: '0.00',
+    fwtIncome: '0.00',
+    costOfGoodsSold: '0.00',
+    taxableCompensation: '0.00',
+    compensationCwt: '0.00',
+    itemizedExpenses: {
+      salariesAndWages: '0.00',
+      sssPhilhealthPagibigEmployerShare: '0.00',
+      rent: '0.00',
+      utilities: '0.00',
+      communication: '0.00',
+      officeSupplies: '0.00',
+      professionalFeesPaid: '0.00',
+      travelTransportation: '0.00',
+      insurancePremiums: '0.00',
+      interestExpense: '0.00',
+      finalTaxedInterestIncome: '0.00',
+      taxesAndLicenses: '0.00',
+      casualtyTheftLosses: '0.00',
+      badDebts: '0.00',
+      isAccrualBasis: false,
+      depreciationEntries: [],
+      charitableContributions: '0.00',
+      charitableAccredited: false,
+      researchDevelopment: '0.00',
+      entertainmentRepresentation: '0.00',
+      homeOfficeExpense: '0.00',
+      homeOfficeExclusiveUse: false,
+      nolcoEntries: [],
+    },
+    electedRegime: null,
+    osdElected: null,
+    priorQuarterlyPayments: [],
+    cwt2307Entries: [],
+    priorYearExcessCwt: '0.00',
+    actualFilingDate: null,
+    returnType: 'ORIGINAL',
+    priorPaymentForReturn: '0.00',
+    overpaymentPreference: null,
   };
 }
 ```
 
 **Critical field naming traps:**
-- `form2307Entries` — digit inside field name, NOT `form_2307_entries` or `Form2307Entries`
-- `elected8Percent` — digit inside, NOT `elected8percent` or `electedEightPercent`
-- `birRdoCode` — acronym, NOT `birRDOCode`
+- `cwt2307Entries` — NOT `form2307Entries` (the "cwt_" prefix distinguishes from BIR form name)
+- `grossReceipts` — NOT `grossReceiptsAmount` (no "Amount" suffix in engine model)
+- `priorYearExcessCwt` — NOT `priorYearExcessCredits`
+- `filingPeriod` — NOT `filingMode` (type is `FilingPeriod` = Q1/Q2/Q3/ANNUAL, not ANNUAL/QUARTERLY)
+- `cwt2307Entries[].payorName` — NOT `withholdingAgentName`
+- `cwt2307Entries[].payorTin` — NOT `tin` (generic)
+- `cwt2307Entries[].incomePayment` — NOT `amountOfIncomePayment`
+- `cwt2307Entries[].atcCode` — required for CWT classification; NEVER omit
+- `quarterOfCredit: Quarter | null` — is a NUMBER (1/2/3), not a string
 
 ### 5.3 `src/types/engine-output.ts`
 
 ```typescript
-import type { Peso, TaxRegimePath, BirFormType, BirFormVariant, OverpaymentDisposition, InstallmentEligibility, ValidationWarning, IneligibilityNotification, ManualReviewFlag } from './common';
+import type {
+  Peso, Rate, TaxYear, ISODate, Quarter,
+  TaxpayerType, TaxpayerTier, FilingPeriod, IncomeType, TaxpayerClass,
+  RegimePath, DeductionMethod, BalanceDisposition, FormType,
+  CwtClassification, OverpaymentDisposition,
+  ValidationWarning, ManualReviewFlag, WasmResult,
+} from './common';
+import type { Form2307Entry, NolcoEntry } from './engine-input';
+
+// ============================================================================
+// Input Summary (echoed in result for display)
+// ============================================================================
+
+export interface InputSummary {
+  taxYear: TaxYear;
+  filingPeriod: FilingPeriod;
+  taxpayerType: TaxpayerType;
+  taxpayerTier: TaxpayerTier;
+  grossReceipts: Peso;    // net (after returns/allowances)
+  isVatRegistered: boolean;
+  incomeType: IncomeType;
+}
+
+// ============================================================================
+// Gross Aggregates (PL-03 output)
+// ============================================================================
+
+export interface GrossAggregates {
+  netGrossReceipts: Peso;
+  grossIncome: Peso;
+  thresholdBase: Peso;
+  eightPctBase: Peso;
+  graduatedIncomeBase: Peso;
+  ptQuarterlyBase: Peso;
+  taxpayerClass: TaxpayerClass;
+}
+
+// ============================================================================
+// Deduction Breakdown (Path A itemized categories)
+// ============================================================================
+
+export interface DeductionBreakdown {
+  salaries: Peso;
+  employeeBenefits: Peso;
+  rent: Peso;
+  utilities: Peso;
+  communication: Peso;
+  officeSupplies: Peso;
+  professionalFees: Peso;
+  travelTransportation: Peso;
+  insurance: Peso;
+  interest: Peso;       // net of arbitrage reduction
+  taxesLicenses: Peso;
+  losses: Peso;
+  badDebts: Peso;
+  depreciation: Peso;
+  charitable: Peso;     // after 10% cap
+  researchDevelopment: Peso;
+  entertainmentRepresentation: Peso; // after EAR cap
+  homeOffice: Peso;
+  nolco: Peso;
+}
+
+// ============================================================================
+// Path Results
+// ============================================================================
+
+export interface PathAResult {
+  eligible: boolean;
+  ptDeductionApplied: Peso;
+  bizNti: Peso;
+  totalNti: Peso;
+  incomeTaxDue: Peso;
+  deductionMethod: 'ITEMIZED';   // always ITEMIZED
+  pathLabel: string;             // "Path A — Graduated + Itemized Deductions"
+  deductionBreakdown: DeductionBreakdown;
+  totalDeductions: Peso;
+  earCapApplied: Peso;
+  interestArbitrageReduction: Peso;
+  nolcoRemaining: NolcoEntry[];
+}
+
+export interface PathBResult {
+  eligible: boolean;
+  bizNti: Peso;
+  totalNti: Peso;
+  incomeTaxDue: Peso;
+  osdAmount: Peso;
+  deductionMethod: 'OSD';        // always OSD
+  pathLabel: string;             // "Path B — Graduated + OSD (40%)"
+  osdBase: Peso;
+}
+
+export interface PathCResult {
+  eligible: boolean;
+  ineligibleReasons: string[];   // [] if eligible; each is "IN-XX: reason"
+  exemptAmount: Peso;            // "250000.00" for PURELY_SE, "0.00" for MIXED_INCOME
+  taxableBase: Peso;
+  incomeTaxDue: Peso;
+  compensationIt: Peso;          // "0.00" for PURELY_SE
+  totalIncomeTax: Peso;
+  ptWaived: boolean;
+  deductionMethod: 'NONE';       // always NONE
+  pathLabel: string;             // "Path C — 8% Flat Rate"
+}
+
+// ============================================================================
+// Regime Comparison
+// ============================================================================
+
+export interface RegimeOption {
+  path: RegimePath;
+  incomeTaxDue: Peso;
+  percentageTaxDue: Peso;
+  totalTaxBurden: Peso;
+  label: string;
+  requiresDocumentation: boolean;
+  requiresOas: boolean;
+  effectiveRate: Rate;
+}
+
+// ============================================================================
+// Percentage Tax Result
+// ============================================================================
+
+export interface PercentageTaxResult {
+  ptApplies: boolean;
+  ptRate: Rate;             // "0.03" or "0.01" for Jul 2020 – Jun 2023
+  ptBase: Peso;             // "0.00" if ptApplies == false
+  ptDue: Peso;              // "0.00" if ptApplies == false
+  form2551qRequired: boolean;
+  filingDeadline: ISODate | null;  // null if form not required
+  reason: string;           // human-readable explanation
+}
+
+// ============================================================================
+// Penalties
+// ============================================================================
+
+export interface PenaltyStack {
+  surcharge: Peso;
+  interest: Peso;
+  compromise: Peso;
+  total: Peso;  // tax_due + surcharge + interest + compromise (includes base)
+}
+
+export interface PenaltyResult {
+  applies: boolean;
+  daysLate: number;     // integer; 0 if applies == false
+  monthsLate: number;   // integer = ceil(daysLate/30); 0 if applies == false
+  itPenalties: PenaltyStack;
+  ptPenalties: PenaltyStack;
+  totalPenalties: Peso; // sum of surcharge+interest+compromise only (NOT base tax)
+}
+
+// ============================================================================
+// FormOutputUnion — adjacently tagged discriminated union
+//
+// CRITICAL: formVariant tag uses PascalCase (Rust variant names with serde adjacently-tagged).
+// This is DIFFERENT from FormType which uses SCREAMING_SNAKE_CASE.
+//   formType: 'FORM_1701A'   (no underscore before A)
+//   formVariant: 'Form1701a' (PascalCase, serde adjacently-tagged)
+// Use formType for routing/display. Use formVariant only for TypeScript type narrowing.
+// ============================================================================
+
+export type FormOutputUnion =
+  | { formVariant: 'Form1701'; fields: Form1701Output }
+  | { formVariant: 'Form1701a'; fields: Form1701AOutput }
+  | { formVariant: 'Form1701q'; fields: Form1701QOutput };
+
+export function isForm1701(u: FormOutputUnion): u is { formVariant: 'Form1701'; fields: Form1701Output } {
+  return u.formVariant === 'Form1701';
+}
+export function isForm1701A(u: FormOutputUnion): u is { formVariant: 'Form1701a'; fields: Form1701AOutput } {
+  return u.formVariant === 'Form1701a';
+}
+export function isForm1701Q(u: FormOutputUnion): u is { formVariant: 'Form1701q'; fields: Form1701QOutput } {
+  return u.formVariant === 'Form1701q';
+}
+
+// ============================================================================
+// TaxComputationResult — Final Output
+// ============================================================================
 
 export interface TaxComputationResult {
-  pathA: PathAResult | null;
-  pathB: PathBResult | null;
-  pathC: PathCResult | null;
-  recommendedPath: TaxRegimePath;
-  percentageTax: PercentageTaxResult | null;
-  birForm: BirFormType;
-  birFormVariant: BirFormVariant;
-  formOutput: FormOutputUnion;
-  totalCwtCredits: Peso;
-  totalQuarterlyPaid: Peso;
-  balanceDue: Peso | null;
-  overpayment: Peso | null;
+  // Input Echo
+  inputSummary: InputSummary;
+
+  // Regime Comparison
+  comparison: RegimeOption[];         // always 3 entries
+  recommendedRegime: RegimePath;      // NOT recommendedPath
+  usingLockedRegime: boolean;
+  savingsVsWorst: Peso;
+  savingsVsNextBest: Peso;
+
+  // Selected Regime Details
+  selectedPath: RegimePath;
+  selectedIncomeTaxDue: Peso;
+  selectedPercentageTaxDue: Peso;
+  selectedTotalTax: Peso;
+
+  // Path Details (null if ineligible/not applicable)
+  pathADetails: PathAResult | null;   // null if COMPENSATION_ONLY
+  pathBDetails: PathBResult | null;   // null if COMPENSATION_ONLY
+  pathCDetails: PathCResult | null;   // null if all 8 ineligibility conditions
+
+  // Gross Aggregates
+  grossAggregates: GrossAggregates;
+
+  // Credits
+  totalItCredits: Peso;
+  cwtCredits: Peso;
+  quarterlyPayments: Peso;
+  priorYearExcess: Peso;
+  compensationCwt: Peso;
+
+  // Balance
+  balance: Peso;
+  disposition: BalanceDisposition;
+  overpayment: Peso;                  // "0.00" if no overpayment
   overpaymentDisposition: OverpaymentDisposition | null;
-  installmentEligible: InstallmentEligibility;
-  installmentAmount: Peso | null;
-  penalties: PenaltyResult | null;
+  installmentEligible: boolean;       // NOT InstallmentEligibility enum
+  installmentFirstDue: Peso;          // April 15 installment
+  installmentSecondDue: Peso;         // July 15 installment
+
+  // Percentage Tax
+  ptResult: PercentageTaxResult;
+
+  // Form Output
+  formType: FormType;                 // SCREAMING_SNAKE_CASE ("FORM_1701A")
+  formOutput: FormOutputUnion;        // PascalCase tag ("Form1701a")
+  ptFormOutput: Form2551QOutput | null;
+  requiredAttachments: string[];
+
+  // Penalties
+  penalties: PenaltyResult | null;    // null if on-time filing
+
+  // Flags & Warnings
   manualReviewFlags: ManualReviewFlag[];
   warnings: ValidationWarning[];
-  ineligibilityNotifications: IneligibilityNotification[];
-  taxYear: number;
-  computedAt: string;
+
+  // Metadata
+  engineVersion: string;              // e.g., "1.0.0"
+  computedAt: ISODate;                // "YYYY-MM-DD"
 }
 
-// FormOutputUnion — adjacently tagged
-export type FormOutputUnion =
-  | { formVariant: 'FORM_1701_A'; fields: Form1701AOutput }
-  | { formVariant: 'FORM_1701'; fields: Form1701Output }
-  | { formVariant: 'FORM_1701_Q'; fields: Form1701QOutput }
-  | { formVariant: 'FORM_2551_Q'; fields: Form2551QOutput };
+// Convenience aliases
+export type ComputeResult = WasmResult<TaxComputationResult>;
 
-// Type guards
-export function isForm1701A(f: FormOutputUnion): f is { formVariant: 'FORM_1701_A'; fields: Form1701AOutput } {
-  return f.formVariant === 'FORM_1701_A';
+export interface ValidationResult {
+  valid: boolean;
+  errors: import('./common').EngineError[];
 }
+export type ValidateResult = WasmResult<ValidationResult>;
+
+// ============================================================================
+// BIR Form Output Types (abbreviated — full field list in BIR form mapping docs)
+// The complete field list for Form1701AOutput, Form1701Output, Form1701QOutput,
+// Form2551QOutput is specified in analysis/typescript-types.md Section 3.
+// ============================================================================
+
+// (Form output interfaces are large — ~100+ fields each. Forward loop should
+//  implement them from analysis/typescript-types.md which has the full specification.)
 ```
+
+**Critical FormType vs formVariant distinction:**
+- `formType: 'FORM_1701A'` — SCREAMING_SNAKE_CASE, no underscore before A (routing/display)
+- `formVariant: 'Form1701a'` — PascalCase adjacently-tagged enum (type narrowing only)
+- Using `formVariant` for routing will fail — use `formType` instead
 
 ### 5.4 `src/types/org.ts`
 
@@ -1029,43 +1582,130 @@ export const TaxYearSchema = z.number().int().min(2018).max(2030);
 import { z } from 'zod';
 
 export const TaxpayerTypeSchema = z.enum(['PURELY_SE', 'MIXED_INCOME', 'COMPENSATION_ONLY']);
-export const TaxRegimePathSchema = z.enum(['PATH_A', 'PATH_B', 'PATH_C']);
-export const ExpenseMethodSchema = z.enum(['ITEMIZED', 'OSD']);
-export const FilingModeSchema = z.enum(['ANNUAL', 'QUARTERLY']);
-export const QuarterSchema = z.enum(['Q1', 'Q2', 'Q3', 'Q4']);
-export const BirFormTypeSchema = z.enum(['FORM_1701_A', 'FORM_1701', 'FORM_1701_Q', 'FORM_2551_Q']);
-// ... all 14 enums
+export const RegimePathSchema = z.enum(['PATH_A', 'PATH_B', 'PATH_C']);
+export const DeductionMethodSchema = z.enum(['ITEMIZED', 'OSD', 'NONE']);
+export const FilingPeriodSchema = z.enum(['Q1', 'Q2', 'Q3', 'ANNUAL']);  // NOT ANNUAL/QUARTERLY
+export const TaxpayerTierSchema = z.enum(['MICRO', 'SMALL', 'MEDIUM', 'LARGE']);
+export const RegimeElectionSchema = z.enum(['ELECT_EIGHT_PCT', 'ELECT_OSD', 'ELECT_ITEMIZED']);
+export const BalanceDispositionSchema = z.enum(['BALANCE_PAYABLE', 'ZERO_BALANCE', 'OVERPAYMENT']);
+export const ReturnTypeSchema = z.enum(['ORIGINAL', 'AMENDED']);
+export const FormTypeSchema = z.enum(['FORM_1701', 'FORM_1701A', 'FORM_1701Q']); // no underscore before A/Q
+export const OverpaymentDispositionSchema = z.enum(['CARRY_OVER', 'REFUND', 'TCC', 'PENDING_ELECTION']);
+export const OverpaymentPreferenceInputSchema = z.enum(['CARRY_OVER', 'REFUND', 'TCC']); // input only
+export const DepreciationMethodSchema = z.enum(['STRAIGHT_LINE', 'DECLINING_BALANCE']);
+export const TaxpayerClassSchema = z.enum(['SERVICE_PROVIDER', 'TRADER']);
+export const CwtClassificationSchema = z.enum(['INCOME_TAX_CWT', 'PERCENTAGE_TAX_CWT', 'UNKNOWN']);
+
+// Quarter is a NUMBER 1|2|3, not a string schema
+export const QuarterSchema = z.union([z.literal(1), z.literal(2), z.literal(3)]);
+// For Form2551Q which can also be Q4:
+export const QuarterOr4Schema = z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]);
 ```
 
-### 6.5 Input Schema (key excerpt)
+### 6.5 Input Schema
 
 ```typescript
 // src/schemas/input.ts
 import { z } from 'zod';
 import { PesoSchema, ISODateSchema, TaxYearSchema } from './primitives';
-import { TaxpayerTypeSchema, ExpenseMethodSchema, FilingModeSchema, VatStatusSchema, BusinessNatureSchema, QuarterSchema, DepreciationMethodSchema } from './enums';
+import {
+  TaxpayerTypeSchema, FilingPeriodSchema, RegimeElectionSchema, ReturnTypeSchema,
+  OverpaymentPreferenceInputSchema, DepreciationMethodSchema, QuarterSchema,
+} from './enums';
 
+// DepreciationEntry sub-schema
+export const DepreciationEntrySchema = z.object({
+  assetName: z.string().min(1),
+  assetCost: PesoSchema,
+  salvageValue: PesoSchema,
+  usefulLifeYears: z.number().int().min(1).max(50),
+  acquisitionDate: ISODateSchema,
+  method: DepreciationMethodSchema,
+  priorAccumulatedDepreciation: PesoSchema,
+}).strict();
+
+// NolcoEntry sub-schema
+export const NolcoEntrySchema = z.object({
+  lossYear: TaxYearSchema,
+  originalLoss: PesoSchema,
+  remainingBalance: PesoSchema,
+  expiryYear: TaxYearSchema,
+}).strict();
+
+// ItemizedExpenseInput sub-schema (23 fields — all required)
+export const ItemizedExpenseInputSchema = z.object({
+  salariesAndWages: PesoSchema,
+  sssPhilhealthPagibigEmployerShare: PesoSchema,
+  rent: PesoSchema,
+  utilities: PesoSchema,
+  communication: PesoSchema,
+  officeSupplies: PesoSchema,
+  professionalFeesPaid: PesoSchema,
+  travelTransportation: PesoSchema,
+  insurancePremiums: PesoSchema,
+  interestExpense: PesoSchema,
+  finalTaxedInterestIncome: PesoSchema,
+  taxesAndLicenses: PesoSchema,
+  casualtyTheftLosses: PesoSchema,
+  badDebts: PesoSchema,
+  isAccrualBasis: z.boolean(),
+  depreciationEntries: z.array(DepreciationEntrySchema),
+  charitableContributions: PesoSchema,
+  charitableAccredited: z.boolean(),
+  researchDevelopment: PesoSchema,
+  entertainmentRepresentation: PesoSchema,
+  homeOfficeExpense: PesoSchema,
+  homeOfficeExclusiveUse: z.boolean(),
+  nolcoEntries: z.array(NolcoEntrySchema),
+}).strict();
+
+// Form2307Entry sub-schema (CWT certificate)
+export const Form2307EntrySchema = z.object({
+  payorName: z.string().min(1),
+  payorTin: z.string().regex(/^\d{3}-\d{3}-\d{3}(-\d{4})?$/),
+  atcCode: z.string().min(1),       // e.g., "WI010" — required, drives classification
+  incomePayment: PesoSchema,
+  taxWithheld: PesoSchema,
+  periodFrom: ISODateSchema,
+  periodTo: ISODateSchema,
+  quarterOfCredit: QuarterSchema.nullable(),  // NUMBER 1/2/3, not string
+}).strict();
+
+// QuarterlyPayment sub-schema
+export const QuarterlyPaymentSchema = z.object({
+  quarter: QuarterSchema,
+  amountPaid: PesoSchema,
+  datePaid: ISODateSchema.nullable(),
+  form1701qPeriod: z.enum(['Q1', 'Q2', 'Q3']),
+}).strict();
+
+// TaxpayerInputSchema — top-level (all 25 fields)
 export const TaxpayerInputSchema = z.object({
-  taxYear: TaxYearSchema,
   taxpayerType: TaxpayerTypeSchema,
-  businessNature: BusinessNatureSchema,
-  filingMode: FilingModeSchema,
-  vatStatus: VatStatusSchema,
-  grossReceiptsAmount: PesoSchema,
-  hasCompensationIncome: z.boolean(),
-  compensationIncome: PesoSchema.nullable(),
-  expenseMethod: ExpenseMethodSchema.nullable(),
-  itemizedExpenses: ItemizedExpenseInputSchema.nullable(),
-  nolcoEntries: z.array(NolcoEntrySchema).nullable(),
-  depreciationEntries: z.array(DepreciationEntrySchema).nullable(),
-  form2307Entries: z.array(Form2307EntrySchema).nullable(),
-  quarterlyPayments: z.array(QuarterlyPaymentSchema).nullable(),
-  elected8Percent: z.boolean().nullable(),
-  hasPriorYearExcessCredits: z.boolean(),
-  priorYearExcessCredits: PesoSchema.nullable(),
-  filingDate: ISODateSchema.nullable(),
-  birRdoCode: z.string().nullable(),
-  registeredAddress: z.string().nullable(),
+  taxYear: TaxYearSchema,
+  filingPeriod: FilingPeriodSchema,     // NOT filingMode
+  isMixedIncome: z.boolean(),
+  isVatRegistered: z.boolean(),         // NOT vatStatus enum
+  isBmbeRegistered: z.boolean(),
+  subjectToSec117128: z.boolean(),
+  isGppPartner: z.boolean(),
+  grossReceipts: PesoSchema,            // NOT grossReceiptsAmount
+  salesReturnsAllowances: PesoSchema,
+  nonOperatingIncome: PesoSchema,
+  fwtIncome: PesoSchema,
+  costOfGoodsSold: PesoSchema,
+  taxableCompensation: PesoSchema,
+  compensationCwt: PesoSchema,
+  itemizedExpenses: ItemizedExpenseInputSchema,  // always required, never null
+  electedRegime: RegimeElectionSchema.nullable(),
+  osdElected: z.boolean().nullable(),
+  priorQuarterlyPayments: z.array(QuarterlyPaymentSchema),
+  cwt2307Entries: z.array(Form2307EntrySchema),  // NOT form2307Entries
+  priorYearExcessCwt: PesoSchema,               // NOT priorYearExcessCredits
+  actualFilingDate: ISODateSchema.nullable(),
+  returnType: ReturnTypeSchema,
+  priorPaymentForReturn: PesoSchema,
+  overpaymentPreference: OverpaymentPreferenceInputSchema.nullable(),
 }).strict();
 ```
 
@@ -1075,11 +1715,11 @@ For live validation in each wizard step:
 
 | Step | Schema | Key fields |
 |------|--------|-----------|
-| WS-01 | `TaxpayerProfileSchema` | `taxpayerType`, `businessNature` |
-| WS-03 | `TaxYearInfoSchema` | `taxYear`, `filingMode` |
-| WS-04 | `GrossReceiptsSchema` | `grossReceiptsAmount` |
-| WS-07C | `DepreciationEntrySchema` | `cost`, `salvageValue`, `usefulLifeYears`, `yearAcquired` |
-| WS-08 | `Form2307EntrySchema` | `tin`, `taxWithheld`, `amountOfIncomePayment` |
+| WS-01 | `TaxpayerProfileSchema` | `taxpayerType` |
+| WS-03 | `TaxYearInfoSchema` | `taxYear`, `filingPeriod` |
+| WS-04 | `GrossReceiptsSchema` | `grossReceipts` (NOT grossReceiptsAmount) |
+| WS-07C | `DepreciationEntrySchema` | `assetCost`, `salvageValue`, `usefulLifeYears`, `acquisitionDate` |
+| WS-08 | `Form2307EntrySchema` | `payorTin`, `atcCode`, `taxWithheld`, `incomePayment` |
 
 ---
 
@@ -1129,29 +1769,34 @@ export type WizardStepId =
   | 'REVIEW';
 
 export interface WizardFormData {
-  // Maps to TaxpayerInput but split across wizard steps
-  // Also includes UI-only fields not in TaxpayerInput
-  filingMode: FilingMode;
-  taxYear: TaxYear;
+  // Maps to TaxpayerInput exactly — split across wizard steps
+  // UI uses the same field names as TaxpayerInput for direct serialization
   taxpayerType: TaxpayerType;
-  businessNature: BusinessNature;
-  vatStatus: VatStatus;
-  grossReceiptsAmount: string;         // String for PesoInput, converted on compute
-  hasCompensationIncome: boolean;
-  compensationIncome: string | null;
-  expenseMethod: ExpenseMethod | null;
-  elected8Percent: boolean | null;
+  taxYear: TaxYear;
+  filingPeriod: FilingPeriod;        // NOT filingMode — 'Q1'|'Q2'|'Q3'|'ANNUAL'
+  isMixedIncome: boolean;
+  isVatRegistered: boolean;          // NOT vatStatus enum
+  isBmbeRegistered: boolean;
+  subjectToSec117128: boolean;
+  isGppPartner: boolean;
+  grossReceipts: string;             // String for PesoInput — NOT grossReceiptsAmount
+  salesReturnsAllowances: string;
+  nonOperatingIncome: string;
+  fwtIncome: string;
+  costOfGoodsSold: string;
+  taxableCompensation: string;
+  compensationCwt: string;
   itemizedExpenses: Partial<ItemizedExpenseInput>;
-  depreciationEntries: DepreciationEntry[];
-  nolcoEntries: NolcoEntry[];
-  form2307Entries: Form2307Entry[];
-  quarterlyPayments: QuarterlyPayment[];
-  hasPriorYearExcessCredits: boolean;
-  priorYearExcessCredits: string | null;
-  filingDate: string | null;
-  birRdoCode: string | null;
-  registeredAddress: string | null;
-  // UI-only
+  electedRegime: RegimeElection | null;
+  osdElected: boolean | null;
+  priorQuarterlyPayments: QuarterlyPayment[];
+  cwt2307Entries: Form2307Entry[];   // NOT form2307Entries
+  priorYearExcessCwt: string;        // NOT priorYearExcessCredits
+  actualFilingDate: string | null;
+  returnType: ReturnType;
+  priorPaymentForReturn: string;
+  overpaymentPreference: OverpaymentPreferenceInput | null;
+  // UI-only fields (not sent to engine)
   clientId: string | null;
   computationTitle: string;
 }
@@ -1164,27 +1809,35 @@ export type AutoSaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 ```typescript
 // src/components/computation/WizardPage.tsx
 
-function computeActiveSteps(input: Partial<TaxpayerInput>): WizardStepId[] {
+function computeActiveSteps(input: Partial<WizardFormData>): WizardStepId[] {
   const steps: WizardStepId[] = ['WS00', 'WS01', 'WS02', 'WS03', 'WS04'];
 
   if (input.taxpayerType === 'MIXED_INCOME') steps.push('WS05');
 
+  const grossReceiptsNum = parseFloat(input.grossReceipts ?? '0');  // NOT grossReceiptsAmount
   const eightPctEligible =
-    input.taxpayerType === 'PURELY_SELF_EMPLOYED' &&
-    parseFloat(input.grossReceiptsAmount ?? '0') <= 3_000_000;
+    input.taxpayerType === 'PURELY_SE' &&    // NOT 'PURELY_SELF_EMPLOYED'
+    !input.isVatRegistered &&                 // NOT vatStatus check
+    grossReceiptsNum <= 3_000_000;
 
   if (!eightPctEligible) {
     steps.push('WS06');
-    if (input.expenseMethod === 'ITEMIZED') {
+    // electedRegime === 'ELECT_ITEMIZED' or osdElected === false → show itemized steps
+    const showItemized =
+      input.electedRegime === 'ELECT_ITEMIZED' ||
+      (input.electedRegime == null && input.osdElected === false);
+    if (showItemized) {
       steps.push('WS07A', 'WS07B', 'WS07C');
-      if (input.hasNolco) steps.push('WS07D');
+      const hasNolco = (input.itemizedExpenses?.nolcoEntries?.length ?? 0) > 0;
+      if (hasNolco) steps.push('WS07D');
     }
   } else {
     steps.push('WS11');
   }
 
   steps.push('WS08');
-  if (input.filingMode === 'QUARTERLY') steps.push('WS09');
+  // filingPeriod is 'Q1'|'Q2'|'Q3' for quarterly — NOT 'QUARTERLY'
+  if (input.filingPeriod !== 'ANNUAL' && input.filingPeriod != null) steps.push('WS09');
   steps.push('WS10', 'WS12', 'WS13');
 
   return steps;
@@ -4453,13 +5106,13 @@ src/components/
 |-----------|-----------|
 | `WizardStep05` | `taxpayerType === 'MIXED_INCOME'` |
 | `WizardStep06` | `!eightPercentEligible` |
-| `WizardStep07A/B/C` | `expenseMethod === 'ITEMIZED'` |
-| `WizardStep07D` | `expenseMethod === 'ITEMIZED' && hasNolco` |
-| `WizardStep09` | `filingMode === 'QUARTERLY'` |
+| `WizardStep07A/B/C` | `electedRegime === 'ELECT_ITEMIZED'` or `osdElected === false` |
+| `WizardStep07D` | itemized steps showing AND `nolcoEntries.length > 0` |
+| `WizardStep09` | `filingPeriod !== 'ANNUAL'` (i.e., Q1/Q2/Q3) |
 | `WizardStep11` | `eightPercentEligible === true` |
 | `WarningsBanner` | `result.warnings.length > 0` |
-| `InstallmentSection` | `installmentEligible === 'ELIGIBLE'` |
-| `PercentageTaxSummary` | `percentageTax !== null` |
+| `InstallmentSection` | `result.installmentEligible === true` (boolean, NOT 'ELIGIBLE') |
+| `PercentageTaxSummary` | `result.ptResult.ptApplies === true` |
 | `PenaltySummary` | `penalties !== null` |
 | `ManualReviewFlags` | `manualReviewFlags.length > 0` |
 | `ShareToggle` | Inside Sheet, opened by "Share" button in ActionsBar |
@@ -4601,7 +5254,7 @@ export const TEST_COMPUTATION = {
     taxYear: '2025',
     filingPeriod: 'ANNUAL',
     grossReceipts: '700000',
-    expenseMethod: 'OSD',
+    electedRegime: 'ELECT_OSD',  // was expenseMethod: 'OSD' — use electedRegime enum
     isVatRegistered: false,
     returnType: 'ORIGINAL',
   },
@@ -5639,23 +6292,35 @@ For each field, verify the chain: **Rust type → Rust serde → JSON wire → T
 
 | Rust field | Serde → JSON | TypeScript field | Zod | Notes |
 |-----------|-------------|-----------------|-----|-------|
-| `gross_receipts_amount: Decimal` | `"grossReceiptsAmount": "1234.56"` | `grossReceiptsAmount: Peso` (string) | `PesoSchema` (string regex) | NEVER a number |
-| `taxpayer_type: TaxpayerType` | `"taxpayerType": "PURELY_SELF_EMPLOYED"` | `taxpayerType: TaxpayerType` | `TaxpayerTypeSchema` | SCREAMING_SNAKE_CASE |
-| `form_2307_entries: Vec<Form2307Entry>` | `"form2307Entries": [...]` | `form2307Entries: Form2307Entry[]` | `z.array(Form2307EntrySchema)` | Digit in name |
-| `elected_8_percent: Option<bool>` | `"elected8Percent": true\|false\|null` | `elected8Percent: boolean \| null` | `z.boolean().nullable()` | Digit in name |
+| `gross_receipts: Decimal` | `"grossReceipts": "1234.56"` | `grossReceipts: Peso` (string) | `PesoSchema` | NOT grossReceiptsAmount |
+| `cwt_2307_entries: Vec<Form2307Entry>` | `"cwt2307Entries": [...]` | `cwt2307Entries: Form2307Entry[]` | `z.array(Form2307EntrySchema)` | NOT form2307Entries |
+| `taxpayer_type: TaxpayerType` | `"taxpayerType": "PURELY_SE"` | `taxpayerType: TaxpayerType` | `TaxpayerTypeSchema` | PURELY_SE not PURELY_SELF_EMPLOYED |
+| `filing_period: FilingPeriod` | `"filingPeriod": "ANNUAL"` | `filingPeriod: FilingPeriod` | `FilingPeriodSchema` | NOT filingMode; values: Q1/Q2/Q3/ANNUAL |
+| `is_vat_registered: bool` | `"isVatRegistered": true\|false` | `isVatRegistered: boolean` | `z.boolean()` | NOT vatStatus enum |
+| `prior_year_excess_cwt: Decimal` | `"priorYearExcessCwt": "0.00"` | `priorYearExcessCwt: Peso` | `PesoSchema` | NOT priorYearExcessCredits |
+| `payor_name: String` (in Form2307Entry) | `"payorName": "..."` | `payorName: string` | `z.string().min(1)` | NOT withholdingAgentName |
+| `payor_tin: String` | `"payorTin": "..."` | `payorTin: string` | regex | NOT `tin` (generic) |
+| `atc_code: String` | `"atcCode": "WI010"` | `atcCode: string` | `z.string().min(1)` | REQUIRED — drives CWT classification |
+| `income_payment: Decimal` | `"incomePayment": "1234.56"` | `incomePayment: Peso` | `PesoSchema` | NOT amountOfIncomePayment |
+| `quarter_of_credit: Option<u8>` | `"quarterOfCredit": 1\|2\|3\|null` | `quarterOfCredit: Quarter\|null` | `QuarterSchema.nullable()` | NUMBER not string; null for annual |
 | `share_token: UUID` | — (Supabase column, not WASM) | — | — | UUID NOT TEXT |
-| `bir_form: BirFormType` | `"birForm": "FORM_1701_A"` | `birForm: BirFormType` | `BirFormTypeSchema` | Underscore+digit |
-| `form_output: FormOutputUnion` | `{"formVariant":"FORM_1701_A","fields":{...}}` | `formOutput: FormOutputUnion` | adjacently tagged | Tag is `formVariant`, content is `fields` |
+| `form_type: FormType` | `"formType": "FORM_1701A"` | `formType: FormType` | `FormTypeSchema` | No underscore before A |
+| `form_output: FormOutputUnion` | `{"formVariant":"Form1701a","fields":{...}}` | `formOutput: FormOutputUnion` | adjacently tagged | PascalCase tag (not SCREAMING_SNAKE_CASE) |
 
 ### 18.2 Enum Value Alignments (must match exactly)
 
 | TypeScript value | Rust variant | Notes |
 |-----------------|-------------|-------|
-| `'PURELY_SELF_EMPLOYED'` | `TaxpayerType::PurelySelfEmployed` | serde SCREAMING_SNAKE_CASE |
-| `'PATH_A'` | `TaxRegimePath::PathA` | |
-| `'FORM_1701_A'` | `BirFormType::Form1701A` | underscore before digit |
-| `'Q1'` | `Quarter::Q1` | |
+| `'PURELY_SE'` | `TaxpayerType::PurelySe` | NOT 'PURELY_SELF_EMPLOYED' |
+| `'PATH_A'` | `RegimePath::PathA` | |
+| `'PATH_C'` | `RegimePath::PathC` | 8% flat rate IS PATH_C (not PATH_B_8_PERCENT) |
+| `'FORM_1701A'` | `FormType::Form1701a` | no underscore before A |
+| `'Q1'` (FilingPeriod) | `FilingPeriod::Q1` | FilingPeriod string enum |
+| `1` (Quarter) | `u8` 1 | Quarter is a NUMBER (1/2/3), not 'Q1' string |
 | `'CARRY_OVER'` | `OverpaymentDisposition::CarryOver` | |
+| `'TCC'` | `OverpaymentDisposition::Tcc` | included in OverpaymentDisposition |
+| `'ELECT_EIGHT_PCT'` | `RegimeElection::ElectEightPct` | 8% election in input |
+| `'DECLINING_BALANCE'` | `DepreciationMethod::DecliningBalance` | NOT DOUBLE_DECLINING_BALANCE |
 
 ### 18.3 Supabase RPC Parameter Type Alignments
 
@@ -5684,8 +6349,8 @@ These are the failure modes from the prior inheritance app that must be avoided:
 
 ### Engine / WASM
 
-1. **Decimal as number**: `grossReceiptsAmount` must always be `string` ("1234.56"), never `number`. Floating-point arithmetic is prohibited.
-2. **SCREAMING_SNAKE_CASE**: Enum JSON values are `"PURELY_SELF_EMPLOYED"` not `"PurelySelfEmployed"` or `"purely_self_employed"`.
+1. **Decimal as string**: `grossReceipts` must always be `string` ("1234.56"), never `number`. Floating-point arithmetic is prohibited. The field is `grossReceipts` — NOT `grossReceiptsAmount`.
+2. **SCREAMING_SNAKE_CASE**: Enum JSON values are `"PURELY_SE"` not `"PURELY_SELF_EMPLOYED"`, `"PurelySelfEmployed"`, or `"purely_self_employed"`.
 3. **`deny_unknown_fields` on inputs**: Extra fields on input cause a parse error. Output types do NOT have `deny_unknown_fields`.
 4. **`panic = "abort"` in release**: Required for WASM — panics that unwind crash the browser context.
 5. **`getrandom/js` feature**: Required for any crate that uses randomness in WASM.
