@@ -1,0 +1,172 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'apps/taxklaro/**'
+
+defaults:
+  run:
+    working-directory: apps/taxklaro
+
+jobs:
+  typecheck-lint:
+    name: Type Check + Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: apps/taxklaro/frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: apps/taxklaro/frontend
+
+      - name: Type check
+        run: npx tsc --noEmit
+        working-directory: apps/taxklaro/frontend
+
+      - name: Lint
+        run: npx eslint src --max-warnings 0
+        working-directory: apps/taxklaro/frontend
+
+  build-wasm:
+    name: Build WASM
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache Rust
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            apps/taxklaro/engine/target
+          key: rust-${{ runner.os }}-${{ hashFiles('apps/taxklaro/engine/Cargo.lock') }}
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Build WASM
+        run: wasm-pack build engine --target web
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: build-wasm
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache Rust
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            apps/taxklaro/engine/target
+          key: rust-${{ runner.os }}-${{ hashFiles('apps/taxklaro/engine/Cargo.lock') }}
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Build WASM
+        run: wasm-pack build engine --target web
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: apps/taxklaro/frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: apps/taxklaro/frontend
+
+      - name: Run unit tests
+        run: npm test
+        working-directory: apps/taxklaro/frontend
+
+  production-build:
+    name: Production Build
+    runs-on: ubuntu-latest
+    needs: build-wasm
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache Rust
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            apps/taxklaro/engine/target
+          key: rust-${{ runner.os }}-${{ hashFiles('apps/taxklaro/engine/Cargo.lock') }}
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Build WASM
+        run: wasm-pack build engine --target web
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: apps/taxklaro/frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: apps/taxklaro/frontend
+
+      - name: Production build
+        run: npm run build
+        working-directory: apps/taxklaro/frontend
+        env:
+          VITE_SUPABASE_URL: https://placeholder-project.supabase.co
+          VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdWJhc2UiLCJyZWYiOiJwbGFjZWhvbGRlciIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNjAwMDAwMDAwLCJleHAiOjk5OTk5OTk5OTl9.stub
+          VITE_APP_URL: http://localhost:5173
+
+      - name: Verify outputs
+        run: |
+          WASM_SIZE=$(find apps/taxklaro/frontend/dist -name "*.wasm" | xargs wc -c | tail -1 | awk '{print $1}')
+          CSS_SIZE=$(find apps/taxklaro/frontend/dist -name "*.css" | xargs wc -c | tail -1 | awk '{print $1}')
+          echo "WASM size: $WASM_SIZE bytes"
+          echo "CSS size: $CSS_SIZE bytes"
+          if [ "$WASM_SIZE" -lt 102400 ]; then
+            echo "ERROR: WASM file is less than 100KB"
+            exit 1
+          fi
+          if [ "$CSS_SIZE" -lt 20480 ]; then
+            echo "ERROR: CSS file is less than 20KB"
+            exit 1
+          fi
+        working-directory: ${{ github.workspace }}
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: apps/taxklaro/frontend/dist
+          retention-days: 1

@@ -1,0 +1,235 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/taxklaro/**'
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: apps/taxklaro
+
+jobs:
+  verify:
+    name: Verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache Rust
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            apps/taxklaro/engine/target
+          key: rust-${{ runner.os }}-${{ hashFiles('apps/taxklaro/engine/Cargo.lock') }}
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Build WASM
+        run: wasm-pack build engine --target web
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: apps/taxklaro/frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: apps/taxklaro/frontend
+
+      - name: Type check
+        run: npx tsc --noEmit
+        working-directory: apps/taxklaro/frontend
+
+      - name: Lint
+        run: npx eslint src --max-warnings 0
+        working-directory: apps/taxklaro/frontend
+
+      - name: Unit tests
+        run: npm test
+        working-directory: apps/taxklaro/frontend
+
+      - name: Production build
+        run: npm run build
+        working-directory: apps/taxklaro/frontend
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_APP_URL: ${{ secrets.VITE_APP_URL }}
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
+          VITE_APP_VERSION: ${{ github.sha }}
+
+      - name: Verify outputs
+        run: |
+          WASM_SIZE=$(find apps/taxklaro/frontend/dist -name "*.wasm" | xargs wc -c | tail -1 | awk '{print $1}')
+          CSS_SIZE=$(find apps/taxklaro/frontend/dist -name "*.css" | xargs wc -c | tail -1 | awk '{print $1}')
+          echo "WASM size: $WASM_SIZE bytes"
+          echo "CSS size: $CSS_SIZE bytes"
+          if [ "$WASM_SIZE" -lt 102400 ]; then
+            echo "ERROR: WASM file is less than 100KB"
+            exit 1
+          fi
+          if [ "$CSS_SIZE" -lt 20480 ]; then
+            echo "ERROR: CSS file is less than 20KB"
+            exit 1
+          fi
+        working-directory: ${{ github.workspace }}
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ github.sha }}
+          path: apps/taxklaro/frontend/dist
+          retention-days: 1
+
+  migrations:
+    name: Verify Migrations
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start local Supabase
+        run: supabase start
+        working-directory: apps/taxklaro/frontend
+
+      - name: Run migrations
+        run: supabase db reset
+        working-directory: apps/taxklaro/frontend
+
+      - name: Verify RPCs exist
+        run: |
+          RPCS="get_shared_computation|create_organization|add_org_member"
+          RPCS="$RPCS|remove_org_member|get_org_members|transfer_org_ownership"
+          supabase db execute --sql \
+            "SELECT routine_name FROM information_schema.routines
+             WHERE routine_schema = 'public'
+               AND routine_type = 'FUNCTION';" \
+            | grep -E "$RPCS"
+        working-directory: apps/taxklaro/frontend
+
+      - name: Verify UUID param types
+        run: |
+          PROC_NAMES="'get_shared_computation','create_organization'"
+          PROC_NAMES="$PROC_NAMES,'add_org_member','remove_org_member'"
+          PROC_NAMES="$PROC_NAMES,'get_org_members','transfer_org_ownership'"
+          supabase db execute --sql "
+            SELECT p.proname, pt.typname
+            FROM pg_proc p
+            JOIN pg_namespace n ON p.pronamespace = n.oid
+            JOIN pg_type pt ON pt.oid = ANY(p.proargtypes)
+            WHERE n.nspname = 'public'
+              AND pt.typname NOT IN ('uuid','text','int4','bool','jsonb')
+              AND p.proname IN ($PROC_NAMES);
+          " | grep -c '.' \
+            && echo "ERROR: Non-standard param types found" && exit 1 \
+            || echo "UUID param types OK"
+        working-directory: apps/taxklaro/frontend
+
+      - name: Verify anon GRANTs for get_shared_computation
+        run: |
+          supabase db execute --sql "
+            SELECT has_function_privilege('anon', 'get_shared_computation(uuid)', 'execute') AS has_grant;
+          " | grep -i "t" || (echo "ERROR: anon does not have EXECUTE on get_shared_computation" && exit 1)
+        working-directory: apps/taxklaro/frontend
+
+      - name: Stop local Supabase
+        if: always()
+        run: supabase stop
+        working-directory: apps/taxklaro/frontend
+
+  e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: verify
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: apps/taxklaro/frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: apps/taxklaro/frontend
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+        working-directory: apps/taxklaro/frontend
+
+      - name: Download dist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-${{ github.sha }}
+          path: apps/taxklaro/frontend/dist
+
+      - name: Serve dist and run E2E tests
+        run: |
+          npx serve dist -s -l 5173 &
+          sleep 3
+          npx playwright test
+        working-directory: apps/taxklaro/frontend
+        env:
+          PLAYWRIGHT_BASE_URL: http://localhost:5173
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ github.sha }}
+          path: apps/taxklaro/frontend/playwright-report
+          retention-days: 7
+
+  deploy:
+    name: Deploy to Fly.io
+    runs-on: ubuntu-latest
+    needs:
+      - verify
+      - migrations
+      - e2e
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy to Fly.io
+        run: |
+          flyctl deploy --remote-only \
+            --build-arg VITE_SUPABASE_URL="${{ secrets.VITE_SUPABASE_URL }}" \
+            --build-arg VITE_SUPABASE_ANON_KEY="${{ secrets.VITE_SUPABASE_ANON_KEY }}" \
+            --build-arg VITE_APP_URL="${{ secrets.VITE_APP_URL }}" \
+            --build-arg VITE_SENTRY_DSN="${{ secrets.VITE_SENTRY_DSN }}" \
+            --build-arg VITE_APP_VERSION="${{ github.sha }}"
+        working-directory: apps/taxklaro/frontend
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Health check
+        run: |
+          sleep 15
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${{ secrets.VITE_APP_URL }}/health")
+          if [ "$STATUS" != "200" ]; then
+            echo "Health check failed with status $STATUS"
+            exit 1
+          fi
+          echo "Health check passed"
