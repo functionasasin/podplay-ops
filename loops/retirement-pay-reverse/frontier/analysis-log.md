@@ -42,3 +42,4 @@
 | 38 | shared-components | 5 | 2026-03-06 | analysis/shared-components.md |
 | 39 | design-system | 5 | 2026-03-06 | analysis/design-system.md |
 | 40 | auth-flow | 5 | 2026-03-06 | analysis/auth-flow.md |
+| 41 | landing-page | 5 | 2026-03-06 | analysis/landing-page.md |

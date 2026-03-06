@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 55
-- Analyzed: 40
-- Pending: 15
-- Convergence: 73%
+- Analyzed: 41
+- Pending: 14
+- Convergence: 75%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -62,7 +62,7 @@ Depends on Wave 3 + Wave 4.
 - [x] shared-components — Reusable widgets: MoneyInput (centavo precision), DateInput, EnumSelect, CsvUploader, ComparisonTable, LegalCitation
 - [x] design-system — Palette (professional/trustworthy for labor law), typography, spacing, shadcn/ui + Radix + Tailwind CSS 4
 - [x] auth-flow — Supabase PKCE: email/password + magic link, sign-in/sign-up pages, callback route, password reset, session management
-- [ ] landing-page — Unauthenticated experience: product description, the 33% underpayment hook, clear sign-in/sign-up CTA, sample computation teaser
+- [x] landing-page — Unauthenticated experience: product description, the 33% underpayment hook, clear sign-in/sign-up CTA, sample computation teaser
 - [ ] route-table — Complete TanStack Router table: /, /auth, /auth/callback, /dashboard, /compute/new, /compute/$id, /compute/$id/results, /compute/$id/nlrc, /batch/new, /batch/$id, /share/$token, /settings, /org/*
 - [ ] env-configuration — VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, .env.local.example, SetupPage pattern for missing vars
 - [ ] database-migrations — Tables (computations, organizations, members, invitations, shared_links), RLS policies, RPC functions (get_shared_computation, create_org), triggers, idempotent (IF NOT EXISTS)
@@ -95,6 +95,7 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 - [ ] spec-review — Final review: can the forward loop build the ENTIRE product from this spec alone?
 
 ## Recently Analyzed
+- landing-page (Wave 5) — 2026-03-06
 - auth-flow (Wave 5) — 2026-03-06
 - design-system (Wave 5) — 2026-03-06
 - shared-components (Wave 5) — 2026-03-06
