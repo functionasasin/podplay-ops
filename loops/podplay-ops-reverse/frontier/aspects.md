@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 57
-- Analyzed: 17
-- Pending: 40
-- Convergence: 30%
+- Analyzed: 18
+- Pending: 39
+- Convergence: 32%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -30,7 +30,7 @@
 - [x] model-replay-signs — Customer Replay Signs sheet: sign fulfillment lifecycle (Staged > Shipped > Delivered > Installed), qty calc (2x courts), outreach tracking, inventory decrement
 - [x] model-support-tiers — Three-tier support escalation model: Tier 1 (on-site), Tier 2 (config specialist), Tier 3 (engineer), per-tier examples, escalation paths
 - [x] model-device-migration — Apple Business Manager transfer workflow: release → factory reset → re-enroll → re-configure, MDM comparison (Mosyle vs Jamf)
-- [ ] model-international-deployment — Asia deployment: Philippines ISP requirements (PLDT/Globe/Converge, business plan + static IP mandatory), PAL vs NTSC, 220V/60Hz power, vendor availability, open questions
+- [x] model-international-deployment — Asia deployment: Philippines ISP requirements (PLDT/Globe/Converge, business plan + static IP mandatory), PAL vs NTSC, 220V/60Hz power, vendor availability, open questions
 - [ ] model-network-reference — VLAN architecture seed data (Default .30, REPLAY .32, SURVEILLANCE .31, ACCESS CONTROL .33), key IP addresses, port 4000 reference, bandwidth guidance
 - [ ] model-team-opex — Team member salary allocations for HER/P&L: Niko 50/50 direct/indirect, Chad 20% indirect, rent $27.6K/yr, indirect salaries $147K/yr
 - [ ] model-contacts-directory — Internal team contacts: Andy (PM), Nico (hardware/installs), Chad (ops), Stan (config), Agustin (app readiness), CS Team (booking)

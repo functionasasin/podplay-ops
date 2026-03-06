@@ -3947,3 +3947,213 @@ const migrationProgress = (items: DeviceMigrationItem[]): number => {
 | Android MDM path | If Android kiosks added, Mosyle/Jamf won't work | Requires product decision — not a current concern |
 | Jamf pricing | Unknown — Mosyle is current choice | Non-blocking |
 | Serial numbers may not be available before migration | Items can be added progressively as serials are gathered | `device_migration_items` rows added as needed; no blocking constraint |
+
+---
+
+## International Deployment
+
+**Source**: `analysis/model-international-deployment.md`
+**Covers**: Philippines (Cosmos franchise entity), Asia deployment constraints, region-specific ISP/power/video requirements
+
+### New Enums
+
+```sql
+-- Geographic deployment region
+CREATE TYPE deployment_region AS ENUM (
+  'us',          -- United States (default for all current venues)
+  'philippines'  -- Philippines (Asia deployment via Cosmos franchise entity)
+);
+
+-- Video encoding standard (impacts Mac Mini setup and camera firmware)
+CREATE TYPE video_standard AS ENUM (
+  'ntsc',  -- 60Hz (US default — all current deployments)
+  'pal'    -- 50Hz (Asia/Europe — open question for Philippines replay pipeline)
+);
+
+-- Electrical power standard
+CREATE TYPE power_standard AS ENUM (
+  '120v_60hz',  -- US standard — all current hardware designed for this
+  '220v_60hz'   -- Philippines (same frequency as US, different voltage — compatibility TBD)
+);
+```
+
+### Fields Added to `projects` Table
+
+```sql
+-- Append these columns to the projects table CREATE statement:
+deployment_region         deployment_region    NOT NULL DEFAULT 'us',
+video_standard            video_standard       NOT NULL DEFAULT 'ntsc',
+power_standard            power_standard       NOT NULL DEFAULT '120v_60hz',
+isp_provider              TEXT,
+-- e.g. 'PLDT Beyond Fiber', 'Globe GFiber Biz', 'Converge FlexiBIZ', 'Verizon Fios'
+isp_provider_backup       TEXT,
+-- Second ISP for Autonomous/24hr venues (required for Philippines autonomous)
+isp_has_static_ip         BOOLEAN              NOT NULL DEFAULT false,
+isp_has_backup_static_ip  BOOLEAN              NOT NULL DEFAULT false,
+cosmos_entity             BOOLEAN              NOT NULL DEFAULT false,
+-- true = Cosmos franchise deployment; triggers international validation warnings in wizard
+```
+
+### New Table: `deployment_regions`
+
+Reference table with region-specific configuration, ISP requirements, and open questions. Drives wizard validation warnings.
+
+```sql
+CREATE TABLE deployment_regions (
+  id              TEXT PRIMARY KEY,          -- 'us', 'philippines'
+  display_name    TEXT          NOT NULL,    -- 'United States', 'Philippines'
+  power_standard  power_standard NOT NULL,
+  video_standard  video_standard NOT NULL,
+
+  -- ISP requirements
+  requires_business_plan  BOOLEAN  NOT NULL DEFAULT false,
+  -- true = residential ISP plans (CGNAT) are incompatible
+  requires_static_ip      BOOLEAN  NOT NULL DEFAULT false,
+  requires_dual_isp       TEXT,
+  -- NULL = never required; 'autonomous' = required for autonomous/autonomous_plus tier
+  starlink_blocked        BOOLEAN  NOT NULL DEFAULT true,
+  -- Starlink uses CGNAT and blocks port 4000 in all regions
+
+  -- Supported ISPs (JSON array of {name: string, plan_name: string})
+  supported_isps          JSONB    NOT NULL DEFAULT '[]',
+
+  -- Wizard warning messages
+  isp_warning             TEXT,   -- Shown if isp_has_static_ip = false
+  power_warning           TEXT,   -- Shown until power compatibility confirmed
+  video_warning           TEXT,   -- Shown until video_standard confirmed
+
+  -- Open questions from Appendix F (Philippines-specific)
+  -- JSON array: [{id, question, category, priority, status: 'open'|'answered', resolution}]
+  open_questions          JSONB    NOT NULL DEFAULT '[]',
+
+  created_at  TIMESTAMPTZ  NOT NULL DEFAULT now(),
+  updated_at  TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+
+CREATE TRIGGER deployment_regions_updated_at
+  BEFORE UPDATE ON deployment_regions
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- RLS: read-only reference data for all authenticated users
+ALTER TABLE deployment_regions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY deployment_regions_read ON deployment_regions
+  FOR SELECT TO authenticated USING (true);
+```
+
+### Seed Data: `deployment_regions`
+
+#### United States
+
+```sql
+INSERT INTO deployment_regions (
+  id, display_name, power_standard, video_standard,
+  requires_business_plan, requires_static_ip, requires_dual_isp, starlink_blocked,
+  supported_isps, isp_warning, power_warning, video_warning, open_questions
+) VALUES (
+  'us',
+  'United States',
+  '120v_60hz',
+  'ntsc',
+  false,
+  false,
+  'autonomous',
+  true,
+  '[
+    {"name": "Verizon", "plan_name": "Fios Business"},
+    {"name": "Optimum", "plan_name": "Business Internet"},
+    {"name": "Spectrum", "plan_name": "Business Internet"},
+    {"name": "Google Fiber", "plan_name": "Fiber Business"}
+  ]',
+  'ISP must support port 4000 forwarding or provide a static IP with DMZ. Starlink is NOT compatible (CGNAT blocks port 4000).',
+  NULL,
+  NULL,
+  '[]'
+);
+```
+
+#### Philippines
+
+```sql
+INSERT INTO deployment_regions (
+  id, display_name, power_standard, video_standard,
+  requires_business_plan, requires_static_ip, requires_dual_isp, starlink_blocked,
+  supported_isps, isp_warning, power_warning, video_warning, open_questions
+) VALUES (
+  'philippines',
+  'Philippines',
+  '220v_60hz',
+  'ntsc',
+  -- video_standard set to 'ntsc' pending resolution of Appendix F Q1
+  true,
+  true,
+  'autonomous',
+  true,
+  '[
+    {"name": "PLDT", "plan_name": "PLDT Beyond Fiber (Business)"},
+    {"name": "Globe", "plan_name": "Globe GFiber Biz"},
+    {"name": "Converge", "plan_name": "Converge FlexiBIZ"}
+  ]',
+  'Philippines deployments REQUIRE a business plan with static IP. Residential plans use CGNAT which blocks port 4000. For Autonomous/24hr venues, dual ISP is required — use PLDT + Converge (different backbones). Do NOT pair PLDT + Globe (shared backbone).',
+  'WARNING: Power standard is 220V/60Hz. Verify all hardware SKUs support 220V before ordering: EmpireTech cameras, Flic buttons, Mac Mini, UDM Pro, all switches. (Appendix F, Q3 — CRITICAL, unresolved)',
+  'WARNING: PAL vs NTSC video standard for Philippines replay pipeline is unresolved (Appendix F, Q1 — CRITICAL). Camera firmware region-lock status unresolved (Q2). Deploying as NTSC until resolved with Stan/Patrick.',
+  '[
+    {"id": 1, "question": "PAL vs NTSC — does changing video standard break replay pipeline?", "category": "Video", "priority": "CRITICAL", "status": "open", "resolution": null},
+    {"id": 2, "question": "Camera firmware region-locked?", "category": "Video", "priority": "CRITICAL", "status": "open", "resolution": null},
+    {"id": 3, "question": "All hardware confirmed 220V/60Hz compatible?", "category": "Power", "priority": "CRITICAL", "status": "open", "resolution": null},
+    {"id": 5, "question": "Fallback if port 4000 blocked by ISP?", "category": "Architecture", "priority": "CRITICAL", "status": "open", "resolution": null},
+    {"id": 6, "question": "Deployment server accessible remotely from Philippines?", "category": "Deployment", "priority": "CRITICAL", "status": "open", "resolution": null},
+    {"id": 7, "question": "What does deploy.py produce? Can Cosmos run own deployment server?", "category": "Deployment", "priority": "CRITICAL", "status": "open", "resolution": null},
+    {"id": 8, "question": "Admin Dashboard — shared PodPlay instance or own Cosmos instance?", "category": "Accounts", "priority": "CRITICAL", "status": "open", "resolution": null},
+    {"id": 12, "question": "FreeDNS — same podplaydns.com domain for Asia venues?", "category": "Accounts", "priority": "CRITICAL", "status": "open", "resolution": null},
+    {"id": 15, "question": "Mac Mini chip (M1/M2/M4) and year?", "category": "Hardware", "priority": "HIGH", "status": "open", "resolution": null},
+    {"id": 16, "question": "EmpireTech cameras available in Philippines?", "category": "Sourcing", "priority": "MEDIUM", "status": "open", "resolution": null},
+    {"id": 17, "question": "Flic buttons available in Philippines?", "category": "Sourcing", "priority": "MEDIUM", "status": "open", "resolution": null},
+    {"id": 18, "question": "Kisi ships to Philippines?", "category": "Sourcing", "priority": "MEDIUM", "status": "open", "resolution": null}
+  ]'
+);
+```
+
+### Wizard Validation Rules (International)
+
+When `projects.deployment_region = 'philippines'`:
+
+1. **ISP static IP gate** (Stage 1, blocking): Block advancement past Intake until `isp_has_static_ip = true`.
+   Warning: "Philippines deployments require a business ISP plan with static IP. Residential CGNAT will block port 4000."
+
+2. **Dual ISP warning for Autonomous** (Stage 1, non-blocking): If `tier IN ('autonomous', 'autonomous_plus')` and `isp_provider_backup IS NULL`.
+   Warning: "Autonomous venues operating 24/7 require two ISPs from different providers. PLDT + Converge recommended. Do NOT use PLDT + Globe."
+
+3. **Power standard warning** (Stage 1, non-blocking): Show on project creation.
+   Warning: "220V/60Hz hardware compatibility is unconfirmed. Resolve Appendix F Q3 before ordering."
+
+4. **Video standard warning** (Stage 1, non-blocking): Show on project creation.
+   Warning: "PAL vs NTSC replay pipeline impact is unresolved (Appendix F Q1). Deploying as NTSC — verify with Stan/Patrick."
+
+5. **BOM vendor flags** (Stage 2): For Philippines projects, annotate hardware items in BOM review:
+   - EmpireTech cameras, Flic buttons, Kisi → `sourcing_status: 'unconfirmed_philippines'`
+   - UniFi, Apple devices, Samsung SSD → `sourcing_status: 'available'`
+
+### Updated Migration Order
+
+```
+-- Additions to migration order (inserts around existing items):
+1a. CREATE TYPE deployment_region      (before projects table)
+1b. CREATE TYPE video_standard         (before projects table)
+1c. CREATE TYPE power_standard         (before projects table)
+ 6. projects                           (with new deployment_region columns)
+22. device_migrations
+23. device_migration_items
+24. deployment_regions                 (reference table — no FK deps)
+25. INSERT seed data for deployment_regions
+```
+
+### Known Gaps
+
+| Gap | Impact | Resolution |
+|-----|--------|-----------|
+| PAL vs NTSC replay impact | Cannot finalize video_standard default for Philippines | Resolve Appendix F Q1 during NJ Training (March 2–10, 2026) |
+| 220V/60Hz hardware compatibility | Cannot confirm BOM for Philippines shipping | Resolve Appendix F Q3 per-SKU during NJ Training |
+| EmpireTech/Flic/Kisi Philippines availability | BOM may require alternate sourcing or import | Resolve Q16/Q17/Q18 during NJ Training |
+| deploy.py availability for Cosmos | Philippines replay service deployment may be blocked | Resolve Q6/Q7 — may need own deployment server in Manila |
+| FreeDNS domain for Asia | DDNS subdomain format may differ (podplaydns.com vs cosmos-specific) | Resolve Q12 — product decision |
+| Admin Dashboard sharing | If Cosmos needs own instance, provisioning differs from US venues | Resolve Q8 — requires PodPlay/Cosmos agreement |
