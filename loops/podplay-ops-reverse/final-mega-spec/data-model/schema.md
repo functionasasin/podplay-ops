@@ -4449,4 +4449,129 @@ Used in intake wizard Stage 1 (Step 5 — "Confirm internet speed meets requirem
 | ACCESS CONTROL VLAN gateway not explicitly documented | Same | Same |
 | Camera DHCP fixed IPs (per-court in REPLAY VLAN) | Not normalized — venue-specific | Stored as notes in deployment checklist items; not a reference table concern |
 | Fiber speed for 1–4 courts: "50–100/100" interpretation | Stored as 50 Mbps minimum; actual range is 50–100 | If any plan 50/50 is acceptable, 50 is correct minimum |
+
+---
+
+## 30–31. Team Contacts Directory
+
+**Aspect**: model-contacts-directory
+**Source**: Appendix C (Key Contacts table), Appendix D (Support Tiers), deployment guide training refs
+
+### `team_contacts`
+
+```sql
+-- team_contacts
+-- Internal PodPlay team directory — seeded once, editable in Settings > Team
+-- Source: Appendix C Key Contacts + Appendix D Support Tiers
+CREATE TABLE team_contacts (
+  id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  slug          TEXT        NOT NULL UNIQUE,          -- 'andy', 'nico', 'chad', 'stan', 'agustin', 'cs-team', 'patrick'
+  name          TEXT        NOT NULL,                 -- Full name or team name
+  role          TEXT        NOT NULL,                 -- Human-readable role description
+  department    TEXT        NOT NULL,                 -- 'pm', 'hardware', 'operations', 'config', 'app', 'cs', 'engineering'
+  phone         TEXT,                                 -- E.164 or formatted; NULL if unknown
+  email         TEXT,                                 -- NULL if unknown
+  contact_via   TEXT,                                 -- Free text: 'Via Chad', 'Slack #installs', etc. NULL if direct
+  support_tier  SMALLINT    CHECK (support_tier IN (1, 2, 3)),  -- NULL if not a support escalation contact
+  notes         TEXT,                                 -- Responsibilities, when to contact
+  is_active     BOOLEAN     NOT NULL DEFAULT true,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE team_contacts ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "authenticated users can read contacts"
+  ON team_contacts FOR SELECT
+  USING (auth.role() = 'authenticated');
+
+CREATE POLICY "authenticated users can insert contacts"
+  ON team_contacts FOR INSERT
+  WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "authenticated users can update contacts"
+  ON team_contacts FOR UPDATE
+  USING (auth.role() = 'authenticated');
+
+CREATE POLICY "authenticated users can delete contacts"
+  ON team_contacts FOR DELETE
+  USING (auth.role() = 'authenticated');
+
+CREATE TRIGGER team_contacts_updated_at
+  BEFORE UPDATE ON team_contacts
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE INDEX idx_team_contacts_slug       ON team_contacts (slug);
+CREATE INDEX idx_team_contacts_department ON team_contacts (department);
+CREATE INDEX idx_team_contacts_tier       ON team_contacts (support_tier) WHERE support_tier IS NOT NULL;
+```
+
+### Seed Data: `team_contacts` (7 rows)
+
+```sql
+INSERT INTO team_contacts (slug, name, role, department, phone, email, contact_via, support_tier, notes) VALUES
+
+  ('andy',
+   'Andy Korzeniacki',
+   'Project Manager — specs, kickoff, camera positions, site survey',
+   'pm',
+   '917-937-6896',
+   'andyk@podplay.app',
+   NULL, NULL,
+   'First contact for all new venue deployments. Schedule kickoff call at Phase 0. Provides site survey, hardware specs, camera positioning, tier determination. Author of hardware installation guide.'),
+
+  ('nico',
+   'Nico',
+   'Hardware & Installs Lead — replay service, device configuration, live monitoring',
+   'hardware',
+   NULL, NULL,
+   'Via Chad',
+   2,
+   'Contact via Chad. VLAN changes, camera re-config, Mosyle profile issues, DDNS troubleshooting, replay service restart. Monitors ~70 live locations via GCP health checks + Slack.'),
+
+  ('chad',
+   'Chad',
+   'Head of Operations — account decisions, credentials, shipping',
+   'operations',
+   NULL, NULL, NULL, NULL,
+   'Holds credentials for UniFi PingPodIT, FreeDNS, 1Password. Gateway to Nico. BOM mismatch resolution (Step 125). Account and billing decisions.'),
+
+  ('stan',
+   'Stan Wu',
+   'Config Specialist — hardware expert, camera configuration',
+   'config',
+   NULL, NULL, NULL,
+   2,
+   'Author of PodPlay Configuration Guide v1.0. Expert in camera encoding settings, VLAN setup, Mac Mini deployment. BOM mismatch resolution (Step 125). Tier 2 support.'),
+
+  ('agustin',
+   'Agustin',
+   'App Readiness — LOCATION_ID creation, app release confirmation',
+   'app',
+   NULL, NULL, NULL, NULL,
+   'Contact at Phase 1 Step 16 before hardware ships. Creates LOCATION_ID per facility for Mosyle P-List config (<key>id</key><string>CUSTOMERNAME</string>). Manages white-labeled app binaries for international VPP distribution.'),
+
+  ('cs-team',
+   'CS Team',
+   'Customer Success — booking and replay credits',
+   'cs',
+   NULL, NULL, NULL, NULL,
+   'Group contact. Booking questions and free replay credit additions. Contact when creating test reservations during deployment Step 117.'),
+
+  ('patrick',
+   'Patrick',
+   'Engineer/Developer — replay service, video encoding, port 4000 architecture',
+   'engineering',
+   NULL, NULL, NULL,
+   3,
+   'Tier 3 only. Owns replay service (V1 UDP, V2 TCP). Contact for: pixelated video (V1 known issue — upgrade to V2), stream corruption, port 4000 architecture, firmware-level camera bugs. Weekly developer call for outstanding issues.');
+```
+
+### Migration Order Update
+
+```
+-- Additions (append after item 29):
+30. team_contacts              (no FK dependencies)
+31. INSERT seed data for team_contacts    (7 rows)
+```
 | Internal LAN bandwidth limit (1 Gbps / ~20 cameras) | No enforcement in app | Informational note in Phase 4 networking step |
