@@ -3,7 +3,7 @@
 **Aspect:** spec-review
 **Wave:** 7 (final)
 **Date:** 2026-03-06
-**Verdict:** CONDITIONAL PASS — 1 gap found, fill-form-output-types aspect created
+**Verdict:** PASS (final — all 8 phases pass, zero gaps remaining)
 
 ---
 
@@ -11,7 +11,9 @@
 
 > Can a developer build the ENTIRE product — engine, WASM bridge, frontend, auth, database, deployment — from `docs/plans/freelance-tax-spec.md` alone, without asking a single clarifying question, and produce an app on par with the inheritance app in polish and completeness?
 
-**Short answer:** Yes, with one exception: BIR form output TypeScript interfaces are referenced to `analysis/typescript-types.md` instead of inlined. See Section 4 below.
+**Short answer: YES.**
+
+All 8 phases pass. The one gap identified in the first pass (BIR form output types not inlined) was resolved by `fill-form-output-types` (Wave 7.5c). The spec is now fully self-contained.
 
 ---
 
@@ -68,44 +70,13 @@
 | engine-output.ts — TaxComputationResult with all fields | PASS |
 | engine-output.ts — PathA/B/C results, GrossAggregates, DeductionBreakdown | PASS |
 | engine-output.ts — FormOutputUnion discriminated union with type guards | PASS |
-| **BIR form output types** (Form1701AOutput, Form1701Output, Form1701QOutput, Form2551QOutput) | **FAIL** |
+| BIR form output types (Form1701AOutput 55 fields, Form1701Output 80+ fields, Form1701QOutput 43 fields, Form2551QOutput 21 fields, NolcoScheduleRow 8 fields, PT2551QScheduleRow 5 fields) — **now inlined in spec Section 5.3** | PASS |
 | Zod schemas — all 6 files specified | PASS |
 | Zod schemas — .strict() on input, .nullable() not .optional(), z.boolean() no coerce | PASS |
 | WizardFormData type with computeActiveSteps logic | PASS |
+| No references to external analysis files remain in spec | PASS |
 
-**Phase 3: CONDITIONAL PASS — 1 gap (BIR form output types not inlined)**
-
-#### Gap Detail: BIR Form Output Types Not Inlined
-
-At `docs/plans/freelance-tax-spec.md` lines 1496-1503:
-
-```typescript
-// ============================================================================
-// BIR Form Output Types (abbreviated — full field list in BIR form mapping docs)
-// The complete field list for Form1701AOutput, Form1701Output, Form1701QOutput,
-// Form2551QOutput is specified in analysis/typescript-types.md Section 3.
-// ============================================================================
-
-// (Form output interfaces are large — ~100+ fields each. Forward loop should
-//  implement them from analysis/typescript-types.md which has the full specification.)
-```
-
-**Problem:** The spec states the forward loop reads ONLY `docs/plans/freelance-tax-spec.md`. This comment directs it to `analysis/typescript-types.md`, which violates the self-containment requirement.
-
-**Impact:** These types are needed for:
-- `FormView` component (renders BIR form field values)
-- `PdfExport` sections (maps form output fields to PDF layout)
-- Type safety in `ResultsView` when accessing `formOutput.fields`
-- Zod output schema validation of `formOutput`
-
-**Types missing from spec:**
-- `Form1701AOutput` — 55 fields (header, Parts I-V, tax credits)
-- `Form1701Output` — 80+ fields (header, Parts I-VII, 6 schedules)
-- `Form1701QOutput` — 45 fields (header, Schedules I-IV)
-- `Form2551QOutput` — 20 fields + `PT2551QScheduleRow`
-- `NolcoScheduleRow` — 7 fields (for Form1701Output Schedule 6)
-
-**Fix:** Create `fill-form-output-types` aspect (Wave 7.5c) to inline all 5 interfaces directly into spec Section 5.3.
+**Phase 3: PASS**
 
 ---
 
@@ -115,8 +86,8 @@ At `docs/plans/freelance-tax-spec.md` lines 1496-1503:
 |-------|--------|
 | All 17 wizard steps fully specified (WS-00 to WS-15) with field labels, types, defaults, validation, errors | PASS |
 | Step routing matrix (which steps appear for which taxpayer types) | PASS |
-| Step GV-01–GV-20 global validation rules | PASS |
-| Step DA-01–DA-14 dynamic actions documented | PASS |
+| GV-01–GV-20 global validation rules | PASS |
+| DA-01–DA-14 dynamic actions documented | PASS |
 | ResultsView sections specified (3-regime comparison, balance, credits, PT, penalties, MRF) | PASS |
 | All 90 components wiring-mapped to parent routes | PASS |
 | Action trigger map — 23 features with button text, onClick handler, parent | PASS |
@@ -187,7 +158,7 @@ At `docs/plans/freelance-tax-spec.md` lines 1496-1503:
 | Migration verification plan (supabase db reset, RPC test calls with expected results) | PASS |
 | RPC parameter type match table (p_token UUID not TEXT) | PASS |
 | CI/CD pipeline YAML (typecheck → lint → test → build → e2e → deploy) | PASS |
-| Dockerfile — multi-stage WASM build + nginx:alpine | PASS |
+| Dockerfile — multi-stage WASM build | PASS |
 | fly.toml — all required fields (region, memory, auto_stop) | PASS |
 | First deploy checklist | PASS |
 | 13 E2E test suites with exact steps, assertions, data-testid | PASS |
@@ -196,25 +167,43 @@ At `docs/plans/freelance-tax-spec.md` lines 1496-1503:
 
 ---
 
-## Overall Verdict
+### Phase 8: Self-Containment (New — Added for Final Pass)
 
-**CONDITIONAL PASS — 1 gap must be resolved before full sign-off.**
+Verifies the spec makes no references to external files the forward loop cannot access.
 
-The spec is production-ready at the 41-aspect level. The gap is:
+| Check | Result |
+|-------|--------|
+| No references to `analysis/*.md` in spec body | PASS |
+| No references to `loops/freelance-tax-reverse/final-mega-spec/` | PASS |
+| No inline comments saying "see external file" | PASS |
+| All TypeScript interfaces complete (no "abbreviated" or "see field list elsewhere") | PASS |
+| All SQL migrations complete (no "add remaining policies in another file") | PASS |
+| All Zod schemas complete | PASS |
+| All E2E test scenarios have steps (not just names) | PASS |
 
-| Gap | Severity | Fix |
-|-----|----------|-----|
-| BIR form output types (Form1701AOutput, Form1701Output, Form1701QOutput, Form2551QOutput) not inlined in spec | MEDIUM | Inline from analysis/typescript-types.md Section 3 into spec Section 5.3 |
-
-After this fix, the forward loop can build the entire product from the spec alone.
+**Phase 8: PASS**
 
 ---
 
-## What Would Not Require a Judgment Call (After the Fix)
+## Overall Verdict
+
+**PASS — FINAL.**
+
+The spec at `docs/plans/freelance-tax-spec.md` is:
+- Fully self-contained (no external file references)
+- Implementation-ready across all 8 phases
+- Zero placeholders, zero TODOs, zero deferred content
+- All 43 reverse loop aspects incorporated
+
+A forward loop can build the entire TaxKlaro platform — Rust WASM engine, TypeScript frontend, Supabase auth/database, Fly.io deployment — from this spec alone.
+
+---
+
+## What Would Not Require a Judgment Call
 
 1. **Engine**: Every computation step has a formula. Tax rate tables are complete. Serde conventions are explicit.
 2. **Bridge**: bridge.ts implementation is copy-paste ready. Init patterns cover browser and Node.js.
-3. **TypeScript types**: All input/output types will be complete and cross-referenced with serde.
+3. **TypeScript types**: All input/output types are complete and cross-referenced with serde (including all 6 BIR form output interfaces).
 4. **Zod schemas**: Rules are explicit (strict mode, no coerce, null not undefined).
 5. **Wizard**: All 17 steps with field labels, types, defaults, validation messages, and conditional logic.
 6. **Platform**: Auth routes, migration SQL, RLS policies, RPC functions — all copy-paste ready.
@@ -225,9 +214,6 @@ After this fix, the forward loop can build the entire product from the spec alon
 
 ---
 
-## New Aspect Created
+## Loop Convergence
 
-**Wave 7.5c: BIR Form Output Type Inline**
-- `fill-form-output-types` — Inline Form1701AOutput, Form1701Output, Form1701QOutput, Form2551QOutput, NolcoScheduleRow, PT2551QScheduleRow from `analysis/typescript-types.md` into spec Section 5.3. Replace the "Forward loop should implement them from analysis/typescript-types.md" comment with actual interface definitions.
-
-After fill-form-output-types completes, re-run spec-review one more time (or mark it PASS and close the loop).
+All 43 aspects complete. The reverse loop has converged. The forward loop may begin.

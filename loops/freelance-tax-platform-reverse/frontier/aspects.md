@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 43
-- Analyzed: 42
-- Pending: 1
-- Convergence: 98%
+- Analyzed: 43
+- Pending: 0
+- Convergence: 100% — CONVERGED
 
 ## Pending Aspects (ordered by dependency)
 
@@ -80,7 +80,7 @@ Depends on spec-review. Must complete before spec-review can be signed off.
 
 ### Wave 7 (continued — after Wave 7.5b complete)
 - [x] cross-layer-consistency — Field-by-field verification: Rust <-> JSON <-> TypeScript <-> Zod. Found 3 immediate fixes (PURELY_SE, TCC, PATH_C) + 14 deferred type divergences (fix-ts-input-types).
-- [ ] spec-review — Final review: can the forward loop build the ENTIRE product from this spec alone? First pass found 1 gap (BIR form output types not inlined). Blocked by fill-form-output-types (Wave 7.5c). After fill-form-output-types, re-run to confirm PASS.
+- [x] spec-review — FINAL PASS. All 8 phases pass. BIR form output types inlined (fill-form-output-types resolved the gap). Spec is fully self-contained. Forward loop may begin.
 
 ## Recently Analyzed
 | Aspect | Wave | Date | Result |

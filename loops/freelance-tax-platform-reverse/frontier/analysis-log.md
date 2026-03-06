@@ -2,6 +2,8 @@
 
 | # | Aspect | Wave | Date | Files Modified |
 |---|--------|------|------|----------------|
+| 44 | spec-review (final) | 7 | 2026-03-06 | analysis/spec-review.md (updated to FINAL PASS — all 8 phases pass, Phase 3 BIR form output gap resolved, self-containment Phase 8 added), frontier/aspects.md (spec-review marked [x], Statistics 43/43 converged), frontier/analysis-log.md. Result: PASS — reverse loop converged at 100%. Forward loop may begin from docs/plans/freelance-tax-spec.md. |
+|---|--------|------|------|----------------|
 | 43 | fill-form-output-types | 7.5c | 2026-03-06 | analysis/fill-form-output-types.md, docs/plans/freelance-tax-spec.md (Section 5.3: replaced placeholder comment with full interfaces: Form1701AOutput 55 fields, NolcoScheduleRow 8 fields, Form1701Output 80+ fields, Form1701QOutput 43 fields, PT2551QScheduleRow 5 fields, Form2551QOutput 21 fields), frontier/aspects.md, frontier/analysis-log.md. Result: COMPLETE — spec is now fully self-contained, spec-review can proceed to final PASS. |
 |---|--------|------|------|----------------|
 | 42 | spec-review | 7 | 2026-03-06 | analysis/spec-review.md, frontier/aspects.md (new Wave 7.5c aspect fill-form-output-types, spec-review blocked pending fix), frontier/analysis-log.md. Result: CONDITIONAL PASS — 7 phases pass, 1 gap: BIR form output types (Form1701AOutput/Form1701Output/Form1701QOutput/Form2551QOutput) not inlined in spec (referenced to analysis file instead). Created fill-form-output-types aspect in Wave 7.5c to resolve. |
