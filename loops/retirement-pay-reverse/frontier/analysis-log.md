@@ -22,3 +22,4 @@
 | 18 | data-model | 3 | 2026-03-06 | analysis/data-model.md |
 | 19 | nlrc-worksheet-format | 2 | 2026-03-06 | analysis/nlrc-worksheet-format.md |
 | 20 | edge-cases-catalog | 2 | 2026-03-06 | analysis/edge-cases-catalog.md |
+| 21 | computation-pipeline | 3 | 2026-03-06 | analysis/computation-pipeline.md |
