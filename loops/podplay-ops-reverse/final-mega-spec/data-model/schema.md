@@ -4157,3 +4157,296 @@ When `projects.deployment_region = 'philippines'`:
 | deploy.py availability for Cosmos | Philippines replay service deployment may be blocked | Resolve Q6/Q7 — may need own deployment server in Manila |
 | FreeDNS domain for Asia | DDNS subdomain format may differ (podplaydns.com vs cosmos-specific) | Resolve Q12 — product decision |
 | Admin Dashboard sharing | If Cosmos needs own instance, provisioning differs from US venues | Resolve Q8 — requires PodPlay/Cosmos agreement |
+
+---
+
+## Network Reference Model
+
+**Source**: `analysis/model-network-reference.md`
+**Aspect**: model-network-reference
+
+Two new reference/seed tables: `network_vlans` (4 VLANs used in every PodPlay deployment) and `isp_bandwidth_requirements` (court count → minimum ISP speeds).
+
+---
+
+## Table: network_vlans
+
+VLAN architecture reference. One row per VLAN. All PodPlay deployments use the REPLAY VLAN; SURVEILLANCE and ACCESS CONTROL are conditional by tier.
+
+**Source**: Deployment guide Phase 4 Steps 42–44, Appendix C.
+
+```sql
+CREATE TABLE network_vlans (
+  id                   TEXT        PRIMARY KEY,
+  -- 'default', 'replay', 'surveillance', 'access_control'
+
+  display_name         TEXT        NOT NULL,
+  -- 'Default (Management)', 'REPLAY', 'SURVEILLANCE', 'ACCESS CONTROL'
+
+  vlan_id              INTEGER,
+  -- VLAN tag. NULL for Default (untagged). 32=REPLAY, 31=SURVEILLANCE, 33=ACCESS_CONTROL.
+  -- UniFi "Manual" VLAN ID entry. REPLAY ID 32 is fixed; others follow the same convention.
+
+  subnet               TEXT        NOT NULL,
+  -- CIDR notation: '192.168.30.0/24', '192.168.32.0/24', '192.168.31.0/24', '192.168.33.0/24'
+
+  gateway_ip           TEXT        NOT NULL,
+  -- UDM gateway IP for this VLAN.
+  -- REPLAY: 192.168.32.254 (explicitly documented in Step 42 settings table).
+  -- Default: 192.168.30.1 (post-camera-config final state; initially 192.168.1.1).
+  -- SURVEILLANCE/ACCESS CONTROL: .254 per subnet (same convention as REPLAY; confirm with Nico).
+
+  dhcp_start           TEXT,
+  -- DHCP pool start IP. '192.168.32.1' for REPLAY. NULL = not a DHCP server.
+
+  dhcp_end             TEXT,
+  -- DHCP pool end IP. '192.168.32.254' for REPLAY. NULL = not a DHCP server.
+
+  mdns_enabled         BOOLEAN     NOT NULL DEFAULT false,
+  -- TRUE only for REPLAY VLAN. Required for Apple TV <-> iPad mDNS discovery.
+  -- Explicitly specified: Step 42 "mDNS: Yes (required for Apple TV discovery)".
+
+  allows_internet      BOOLEAN     NOT NULL DEFAULT true,
+  -- All VLANs allow internet access. Step 42: "Allow Internet Access: Yes".
+
+  required_for_tiers   TEXT[],
+  -- NULL = all tiers require this VLAN (Default and REPLAY).
+  -- ['autonomous_plus'] = SURVEILLANCE (NVR + security cameras).
+  -- ['autonomous', 'autonomous_plus'] = ACCESS CONTROL (Kisi/UniFi Access).
+
+  is_conditional       BOOLEAN     NOT NULL DEFAULT false,
+  -- FALSE = always create (Default, REPLAY).
+  -- TRUE = only create if tier requires it (SURVEILLANCE, ACCESS CONTROL).
+
+  notes                TEXT,
+  -- Deployment context and warnings for the wizard checklist.
+
+  sort_order           INTEGER     NOT NULL DEFAULT 0,
+  -- Display order: 1=Default, 2=REPLAY, 3=SURVEILLANCE, 4=ACCESS CONTROL.
+
+  created_at           TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- No RLS needed — read-only reference data for all authenticated users.
+ALTER TABLE network_vlans ENABLE ROW LEVEL SECURITY;
+CREATE POLICY network_vlans_read ON network_vlans
+  FOR SELECT TO authenticated USING (true);
+-- No INSERT/UPDATE/DELETE for non-admin users — managed via migrations.
+```
+
+**Indexes**: None beyond PK — table has 4 rows.
+
+### Seed Data: network_vlans
+
+```sql
+INSERT INTO network_vlans
+  (id, display_name, vlan_id, subnet, gateway_ip, dhcp_start, dhcp_end,
+   mdns_enabled, allows_internet, required_for_tiers, is_conditional, notes, sort_order)
+VALUES
+  (
+    'default',
+    'Default (Management)',
+    NULL,
+    '192.168.30.0/24',
+    '192.168.30.1',
+    '192.168.30.2',
+    '192.168.30.254',
+    false,
+    true,
+    NULL,
+    false,
+    'Management VLAN. NOTE: During Phase 6 camera configuration the Default network temporarily uses 192.168.1.1 (cameras factory-default to 192.168.1.108 on this subnet). After all cameras are configured and moved to REPLAY VLAN, change Default network to 192.168.30.1 subnet (Step 58). Do NOT change the Default network before all cameras are configured.',
+    1
+  ),
+  (
+    'replay',
+    'REPLAY',
+    32,
+    '192.168.32.0/24',
+    '192.168.32.254',
+    '192.168.32.1',
+    '192.168.32.254',
+    true,
+    true,
+    NULL,
+    false,
+    'Primary PodPlay operating VLAN. Carries all replay traffic: Mac Mini (fixed 192.168.32.100), replay cameras (DHCP-fixed per court), iPads, Apple TVs. mDNS REQUIRED for Apple TV discovery. Port 4000 forwarded to 192.168.32.100. All tiers use this VLAN. Create first.',
+    2
+  ),
+  (
+    'surveillance',
+    'SURVEILLANCE',
+    31,
+    '192.168.31.0/24',
+    '192.168.31.254',
+    '192.168.31.1',
+    '192.168.31.254',
+    false,
+    true,
+    ARRAY['autonomous_plus'],
+    true,
+    'Surveillance VLAN for UniFi NVR and security cameras. Autonomous+ tier only (has_nvr = true). Create only if security_camera_count > 0. Gateway .254 follows REPLAY VLAN convention (Step 43 does not specify gateway; assumed .254).',
+    3
+  ),
+  (
+    'access_control',
+    'ACCESS CONTROL',
+    33,
+    '192.168.33.0/24',
+    '192.168.33.254',
+    '192.168.33.1',
+    '192.168.33.254',
+    false,
+    true,
+    ARRAY['autonomous', 'autonomous_plus'],
+    true,
+    'Access control VLAN for Kisi Controller Pro 2 or UniFi Access hub and door readers. Autonomous and Autonomous+ tiers. Create only if door_count > 0. Gateway .254 follows REPLAY VLAN convention (Step 44 does not specify gateway; assumed .254).',
+    4
+  );
+```
+
+### Fixed IP Reference (not a table — constants used in config)
+
+| Device | IP | VLAN | Notes |
+|--------|----|------|-------|
+| Mac Mini (replay server) | 192.168.32.100 | REPLAY (32) | Always this IP. Fixed assignment in UniFi. Port 4000 forwards here. Step 71: "assign Mac Mini to REPLAY VLAN with fixed address 192.168.32.100". |
+| REPLAY VLAN gateway (UDM) | 192.168.32.254 | REPLAY (32) | UDM acts as gateway. Exact value from Step 42 settings table. |
+| Camera (factory default) | 192.168.1.108 | Default (initial) | All cameras ship with this IP. Configure ONE AT A TIME while Default is 192.168.1.x. Step 49: "Navigate to 192.168.1.108 in browser". |
+| Cameras (post-config) | 192.168.32.x (DHCP fixed) | REPLAY (32) | Assigned per-venue in UniFi after initial config. Court 1 = 192.168.32.101 by convention (not documented — confirm per-venue). |
+| Default VLAN gateway (UDM) | 192.168.30.1 | Default (30) | Final state after camera config is complete (Step 58). |
+
+These constants are stored in `settings` table:
+- `settings.mac_mini_fixed_ip = '192.168.32.100'` (already in settings seed)
+- `settings.replay_vlan_gateway = '192.168.32.254'`
+- `settings.camera_factory_default_ip = '192.168.1.108'`
+- `settings.replay_vlan_id = 32`
+- `settings.surveillance_vlan_id = 31`
+- `settings.access_control_vlan_id = 33`
+- `settings.default_vlan_subnet = '192.168.30'`
+
+**Source**: settings table already stores `vlan_id_default = 30`, `vlan_id_replay = 32`, `vlan_id_surveillance = 31`, `vlan_id_access_control = 33`, `mac_mini_fixed_ip = '192.168.32.100'`, `replay_service_port = 4000`.
+
+---
+
+## Table: isp_bandwidth_requirements
+
+Reference table for minimum ISP speeds per court count range. Drives intake wizard validation.
+
+**Source**: Deployment guide Phase 0 Step 5 (exact table), Appendix C.
+
+```sql
+CREATE TABLE isp_bandwidth_requirements (
+  id                      SERIAL      PRIMARY KEY,
+
+  court_min               INTEGER     NOT NULL,
+  -- Lower bound of court count range (inclusive): 1, 5, 12, 20, 25.
+
+  court_max               INTEGER,
+  -- Upper bound (inclusive). NULL = no upper limit (25+ courts row).
+
+  fiber_mbps              INTEGER     NOT NULL,
+  -- Minimum symmetric Mbps required for fiber ISP.
+  -- Fiber is symmetrical (equal upload and download).
+  -- Row 1 (1–4 courts): 50 = minimum (range 50–100 Mbps is acceptable; 50 is the floor).
+
+  cable_upload_mbps       INTEGER,
+  -- Minimum upload Mbps for cable ISP. NULL = "highest possible" (no fixed minimum).
+  -- Only row 1 (1–4 courts) has a specific cable requirement: 60 Mbps upload.
+  -- For cable, download speed is not the constraint — upload is.
+
+  cable_note              TEXT,
+  -- Human-readable cable note shown in wizard.
+  -- '60 Mbps upload minimum' or 'Highest possible upload'.
+
+  dedicated_mbps          INTEGER     NOT NULL,
+  -- Minimum symmetric Mbps for a dedicated ISP circuit (equal up/down).
+
+  sort_order              INTEGER     NOT NULL DEFAULT 0,
+
+  created_at              TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- No RLS needed — read-only reference data.
+ALTER TABLE isp_bandwidth_requirements ENABLE ROW LEVEL SECURITY;
+CREATE POLICY isp_bandwidth_read ON isp_bandwidth_requirements
+  FOR SELECT TO authenticated USING (true);
+```
+
+**Indexes**: None beyond PK — 5 rows, full scan is trivially fast.
+
+### Seed Data: isp_bandwidth_requirements
+
+```sql
+INSERT INTO isp_bandwidth_requirements
+  (court_min, court_max, fiber_mbps, cable_upload_mbps, cable_note, dedicated_mbps, sort_order)
+VALUES
+  (1,   4,    50,  60,   '60 Mbps upload minimum',   30,  1),
+  -- Source: "1–4 courts: Fiber 50–100/100 Mbps, Cable 60 Mbps upload, Dedicated 30/30"
+  -- Fiber: 50 Mbps symmetric minimum (range 50–100 Mbps acceptable; store minimum)
+  -- Cable: 60 Mbps upload is the only court-band with a hard cable floor
+  -- Dedicated: 30 Mbps symmetric
+
+  (5,  11,  150,  NULL, 'Highest possible upload',   50,  2),
+  -- Source: "5–11 courts: Fiber 150/150 Mbps, Cable highest possible upload, Dedicated 50/50"
+  -- Fiber: 150 Mbps symmetric
+  -- Cable: no fixed minimum — highest available upload tier
+  -- Dedicated: 50 Mbps symmetric
+
+  (12, 19,  200,  NULL, 'Highest possible upload',   50,  3),
+  -- Source: "12–19 courts: Fiber 200/200 Mbps, Cable highest possible upload, Dedicated 50/50"
+  -- Fiber: 200 Mbps symmetric
+  -- Dedicated: 50 Mbps symmetric
+
+  (20, 24,  300,  NULL, 'Highest possible upload',  100,  4),
+  -- Source: "20–24 courts: Fiber 300/300 Mbps, Cable highest possible upload, Dedicated 100/100"
+  -- Fiber: 300 Mbps symmetric
+  -- Dedicated: 100 Mbps symmetric
+
+  (25, NULL, 400, NULL, 'Highest possible upload',  150,  5);
+  -- Source: "25+ courts: Fiber 400/400 Mbps, Cable highest possible upload, Dedicated 150/150"
+  -- Fiber: 400 Mbps symmetric; court_max NULL = no upper bound
+  -- Dedicated: 150 Mbps symmetric
+```
+
+### ISP Validation Logic
+
+Used in intake wizard Stage 1 (Step 5 — "Confirm internet speed meets requirements"):
+
+```typescript
+// 1. Fetch the requirement row for this project's court count:
+//    SELECT * FROM isp_bandwidth_requirements
+//    WHERE court_min <= court_count AND (court_max IS NULL OR court_max >= court_count)
+//    LIMIT 1;
+
+// 2. Validation by ISP type:
+//    fiber:     internet_upload_mbps >= req.fiber_mbps (symmetric — upload = download)
+//    cable:     req.cable_upload_mbps IS NULL → show cable_note as advisory (no hard block)
+//               req.cable_upload_mbps IS NOT NULL → internet_upload_mbps >= req.cable_upload_mbps
+//    dedicated: internet_upload_mbps >= req.dedicated_mbps AND internet_download_mbps >= req.dedicated_mbps
+//    other:     advisory warning only — no hard minimum defined
+
+// 3. Starlink hard block (any ISP type):
+//    isp_provider ILIKE '%starlink%' → BLOCKING error:
+//    "PodPlay systems are NOT compatible with Starlink. Starlink uses CGNAT which blocks
+//     port 4000. The entire replay system will not function. Select a different ISP."
+```
+
+### Updated Migration Order
+
+```
+-- Additions (append after existing 25-item migration order):
+26. network_vlans              (no FK dependencies)
+27. INSERT seed data for network_vlans    (4 rows)
+28. isp_bandwidth_requirements (no FK dependencies)
+29. INSERT seed data for isp_bandwidth_requirements    (5 rows)
+```
+
+### Known Gaps
+
+| Gap | Impact | Resolution |
+|-----|--------|-----------|
+| SURVEILLANCE VLAN gateway not explicitly documented | Could be .1 or .254 | Assumed .254 (REPLAY convention); confirm with Nico during Phase 4 |
+| ACCESS CONTROL VLAN gateway not explicitly documented | Same | Same |
+| Camera DHCP fixed IPs (per-court in REPLAY VLAN) | Not normalized — venue-specific | Stored as notes in deployment checklist items; not a reference table concern |
+| Fiber speed for 1–4 courts: "50–100/100" interpretation | Stored as 50 Mbps minimum; actual range is 50–100 | If any plan 50/50 is acceptable, 50 is correct minimum |
+| Internal LAN bandwidth limit (1 Gbps / ~20 cameras) | No enforcement in app | Informational note in Phase 4 networking step |
