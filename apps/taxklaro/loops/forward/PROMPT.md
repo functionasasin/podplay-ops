@@ -337,8 +337,8 @@ Display engine output with all result components.
 Initialize Supabase and create all database objects.
 
 **Tasks:**
-1. Install Supabase CLI: `npm install -g supabase`
-2. Run `npx supabase init` in `apps/taxklaro/frontend/`
+1. Verify Supabase CLI is available (`supabase --version`). If not in CI, install via: `brew install supabase/tap/supabase` (macOS) or download from https://github.com/supabase/cli
+2. Run `supabase init` in `apps/taxklaro/frontend/`
 3. Create `supabase/migrations/001_initial_schema.sql` from spec §10.2 (8 tables, 5 enums, triggers)
 4. Create `supabase/migrations/002_rls_policies.sql` from spec §10.3 (32 RLS policies, `user_org_ids()` helper)
 5. Create `supabase/migrations/003_rpc_functions.sql` from spec §10.4 (6 RPCs with explicit GRANTs)
