@@ -190,8 +190,9 @@ loops:
     schedule: "*/30 * * * *"
     max_iterations: 60
     timeout_minutes: 30
-    status: active
+    status: converged
     created: 2026-03-05
+    converged_at: "2026-03-06"
   retirement-pay-reverse:
     description: "Full-stack spec for RA 7641 Retirement Pay Calculator: Rust engine, WASM bridge, React frontend, Supabase, Fly.io"
     type: reverse

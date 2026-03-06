@@ -1,0 +1,27 @@
+CONVERGED — 2026-03-06
+
+All 43 aspects complete across 7 waves (+ 3 gap-fill sub-waves):
+
+Wave 1: Input Validation (3/3) — domain/engine spec validated, stack assumptions cataloged
+Wave 2: Bridge Contract (4/4) — WASM exports, serde wire format, error contract, init patterns
+Wave 3: Frontend Data Model (3/3) — TypeScript types, Zod schemas, state management
+Wave 4: Platform Layer (8/8) — Supabase auth, migrations, routes, env, nav, org model, computations, sharing
+Wave 5: Component Wiring + UI (7/7) — wiring map, action triggers, design system, visual checklist, empty states, toasts, PDF export
+Wave 6: Testing + Deployment (7/7) — Playwright E2E, prod build verification, migration verification, Supabase gotchas, Fly.io, CI/CD, monitoring
+Wave 7: Synthesis (5/5) — unified spec, placeholder validation, completeness audit, cross-layer consistency, spec review
+
+Gap-fill waves:
+Wave 7.5: 4 spec gaps filled (wizard fields, E2E specs, empty states, toast catalog)
+Wave 7.5b: TypeScript input type divergences fixed (14 field-level mismatches)
+Wave 7.5c: BIR form output types inlined (Form1701AOutput/Form1701Output/Form1701QOutput/Form2551QOutput)
+
+Output: docs/plans/freelance-tax-spec.md
+- 20 sections covering engine through deployment
+- 18 routes, 90 components, all zero orphans
+- Full SQL migrations (4 files, 32 RLS policies, 6 RPCs)
+- Full CI/CD pipeline (GitHub Actions -> Fly.io)
+- 41 toast notifications, all 17 wizard steps fully specced
+- 13 Playwright E2E test suites
+- Cross-layer consistency table (Rust <-> JSON <-> TypeScript <-> Zod)
+
+spec-review: FINAL PASS — All 8 phases pass. Forward loop may begin.
