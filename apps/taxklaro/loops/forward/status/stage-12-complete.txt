@@ -1,0 +1,24 @@
+Stage 12 complete — 2026-03-06
+
+Results View + Compute components implemented and tested.
+
+42 tests pass in src/components/results/__tests__/results.test.ts
+
+Components implemented:
+- WarningsBanner.tsx
+- RegimeComparisonTable.tsx
+- RecommendationBanner.tsx
+- TaxBreakdownPanel.tsx
+- BalancePayableSection.tsx
+- InstallmentSection.tsx
+- PercentageTaxSummary.tsx
+- BirFormRecommendation.tsx
+- PenaltySummary.tsx
+- ManualReviewFlags.tsx
+- PathDetailAccordion.tsx
+- ResultsView.tsx (in src/components/computation/)
+
+Utilities implemented:
+- formatPeso, formatRate, visibility predicates in src/lib/format.ts
+
+Advancing to stage 13 (Supabase + Migrations).
