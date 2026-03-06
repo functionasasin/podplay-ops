@@ -23,7 +23,8 @@ export function ClientsTable({ clients, isLoading, onSelect }: ClientsTableProps
   }
 
   return (
-    <div className="rounded-xl shadow-sm overflow-hidden bg-card">
+    <div className="overflow-x-auto rounded-xl shadow-sm">
+      <div className="min-w-[480px] bg-card rounded-xl overflow-hidden">
       <table className="w-full text-[0.9375rem]">
         <thead>
           <tr className="border-b bg-muted/40">
@@ -46,6 +47,7 @@ export function ClientsTable({ clients, isLoading, onSelect }: ClientsTableProps
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

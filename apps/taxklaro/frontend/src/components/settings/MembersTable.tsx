@@ -16,7 +16,8 @@ interface MembersTableProps {
 
 export function MembersTable({ members, currentUserId, onRemove }: MembersTableProps) {
   return (
-    <div className="bg-card rounded-xl shadow-sm border border-border/50 overflow-hidden">
+    <div className="overflow-x-auto rounded-xl shadow-sm">
+      <div className="min-w-[480px] bg-card rounded-xl border border-border/50 overflow-hidden">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b bg-muted/40">
@@ -43,6 +44,7 @@ export function MembersTable({ members, currentUserId, onRemove }: MembersTableP
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

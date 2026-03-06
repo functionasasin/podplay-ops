@@ -41,7 +41,7 @@ function QuarterlyPage() {
 
   if (isLoading) {
     return (
-      <div className="max-w-4xl mx-auto p-6" data-testid="quarterly-page">
+      <div className="max-w-4xl mx-auto" data-testid="quarterly-page">
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-muted rounded w-1/3" />
           <div className="h-64 bg-muted rounded" />
@@ -52,7 +52,7 @@ function QuarterlyPage() {
 
   if (error || !computation) {
     return (
-      <div className="max-w-4xl mx-auto p-6 text-center space-y-4" data-testid="quarterly-page">
+      <div className="max-w-4xl mx-auto text-center space-y-4" data-testid="quarterly-page">
         <p className="text-muted-foreground">{error ?? 'Computation not found'}</p>
         <button
           className="text-sm text-primary underline"
@@ -76,7 +76,7 @@ function QuarterlyPage() {
           </p>
         </div>
         <button
-          className="text-sm text-primary hover:text-primary/80 font-medium transition-colors shrink-0 mt-1"
+          className="inline-flex items-center py-2.5 text-sm text-primary hover:text-primary/80 font-medium transition-colors shrink-0"
           onClick={() => navigate({ to: '/computations/$compId', params: { compId } })}
         >
           ← Back to Computation

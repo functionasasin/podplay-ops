@@ -63,7 +63,7 @@ function ComputationsPage() {
 
   if (isLoading) {
     return (
-      <div className="p-8 space-y-6">
+      <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="font-display text-3xl font-normal">Computations</h1>
         </div>
@@ -78,7 +78,7 @@ function ComputationsPage() {
 
   if (error) {
     return (
-      <div className="p-8 space-y-6">
+      <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="font-display text-3xl font-normal">Computations</h1>
           <Button onClick={() => navigate({ to: '/computations/new' })}>
@@ -94,7 +94,7 @@ function ComputationsPage() {
   }
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-3xl font-normal">Computations</h1>
         <Button onClick={() => navigate({ to: '/computations/new' })}>

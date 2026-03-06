@@ -40,7 +40,7 @@ function ComputationDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="max-w-4xl mx-auto p-6" data-testid="computation-detail-page">
+      <div className="max-w-4xl mx-auto" data-testid="computation-detail-page">
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-muted rounded w-1/3" />
           <div className="h-64 bg-muted rounded" />
@@ -51,7 +51,7 @@ function ComputationDetailPage() {
 
   if (error || !computation) {
     return (
-      <div className="max-w-4xl mx-auto p-6 text-center space-y-4" data-testid="computation-detail-page">
+      <div className="max-w-4xl mx-auto text-center space-y-4" data-testid="computation-detail-page">
         <p className="text-muted-foreground">{error ?? 'Computation not found'}</p>
         <button
           className="text-sm text-primary underline"
@@ -77,7 +77,7 @@ function ComputationDetailPage() {
           </p>
         </div>
         <button
-          className="text-sm text-primary hover:text-primary/80 underline underline-offset-2 shrink-0 transition-colors"
+          className="inline-flex items-center py-2.5 text-sm text-primary hover:text-primary/80 underline underline-offset-2 shrink-0 transition-colors"
           onClick={() => navigate({ to: '/computations' })}
         >
           ← Back
