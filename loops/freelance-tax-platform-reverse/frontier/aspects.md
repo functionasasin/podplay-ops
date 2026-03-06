@@ -2,16 +2,16 @@
 
 ## Statistics
 - Total aspects discovered: 37
-- Analyzed: 1
-- Pending: 36
-- Convergence: 3%
+- Analyzed: 2
+- Pending: 35
+- Convergence: 5%
 
 ## Pending Aspects (ordered by dependency)
 
 ### Wave 1: Input Validation
 Verify existing domain/engine spec and catalog wrong-stack assumptions.
 - [x] validate-domain-spec — Read all domain/ and engine/ files, verify completeness for Rust implementation
-- [ ] validate-engine-spec — Verify pipeline is pure computation (no I/O), types are suitable for Rust, algorithms use exact arithmetic
+- [x] validate-engine-spec — Verify pipeline is pure computation (no I/O), types are suitable for Rust, algorithms use exact arithmetic
 - [ ] audit-stack-assumptions — Catalog every Next.js/Express/Vercel/Drizzle reference in the old spec, create translation map
 
 ### Wave 2: Bridge Contract
@@ -70,3 +70,4 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 | Aspect | Wave | Date | Result |
 |--------|------|------|--------|
 | validate-domain-spec | 1 | 2026-03-06 | PASS — Domain/engine spec complete for Rust impl. 6 minor issues flagged for Bridge Contract wave. |
+| validate-engine-spec | 1 | 2026-03-06 | PASS — Pipeline is pure (no I/O), Decimal arithmetic throughout, all 20+ types concrete. 4 minor inconsistencies flagged. Action items for Bridge Contract wave documented. |
