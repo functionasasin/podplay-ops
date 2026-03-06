@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 57
-- Analyzed: 3
-- Pending: 54
-- Convergence: 5%
+- Analyzed: 4
+- Pending: 53
+- Convergence: 7%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -14,7 +14,7 @@
 - [x] source-hardware-guide — Extract all hardware specs, mounting options, cable requirements, camera angles, measurements, front desk equipment
 - [x] source-mrp-usage-guide — Extract all workflows, formula logic, Apps Script functions, pricing tiers, vendor reference [PARTIAL: PDF not in repo; derived from config-guide-v1, hardware-bom, design doc, training transcripts]
 - [ ] source-existing-data — Catalog all real customer data, inventory items, vendors, installers from the XLSX
-- [ ] source-pricing-model — Extract complete pricing formulas: cost chains, margins, tax, shipping, per-venue vs per-court
+- [x] source-pricing-model — Extract complete pricing formulas: cost chains, margins, tax, shipping, per-venue vs per-court
 
 ### Wave 2: Data Model Extraction
 - [ ] model-project — Complete project entity: all fields from Form Responses + CUSTOMER MASTER + Status tabs
