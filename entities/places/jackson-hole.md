@@ -9,4 +9,4 @@ tags: [visited]
 
 # Jackson Hole
 
-Location where a spring call with [[Ernesto]] took place regarding [[Ping Pod]] / [[Pod Play]] fundraising and pre-Series A investment opportunity.
+Location where a spring call with [[Sequoia]] took place regarding [[Ping Pod]] / [[Pod Play]] fundraising and pre-Series A investment opportunity.

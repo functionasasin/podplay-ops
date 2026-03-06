@@ -1,7 +1,7 @@
 ---
 type: meeting
 date: 2026-02-17
-attendees: [[Anthony Guevarra]]
+attendees: [[Cypress]]
 projects: []
 businesses: []
 tags: [reporting, alignment, operations]
@@ -9,7 +9,7 @@ tags: [reporting, alignment, operations]
 
 # Reporting Hub Alignment
 
-Alignment meeting with [[Anthony Guevarra]] (US-based consultant) on conforming to the reporting hub.
+Alignment meeting with [[Cypress]] (US-based consultant) on conforming to the reporting hub.
 
 ## Agenda
 
@@ -18,7 +18,7 @@ Alignment meeting with [[Anthony Guevarra]] (US-based consultant) on conforming 
 - What conformance looks like
 
 ### 2. Alignment & Next Steps
-- What Anthony needs to adjust/deliver
+- What Cypress needs to adjust/deliver
 - Timeline and deliverables
 
 ## Notes

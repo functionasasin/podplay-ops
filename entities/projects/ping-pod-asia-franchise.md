@@ -2,7 +2,7 @@
 type: project
 name: Ping Pod Asia Franchise
 status: active
-people: [[Heath]], [[Zoe]], [[Ernesto]]
+people: [[Reef]], [[Fern]], [[Sequoia]]
 places: [[Thailand]], [[Singapore]]
 related: [[Ping Pod]], [[Pod Play]], [[Central Group]], [[Pod Play SEA]]
 tags: [franchise, asia, business]
@@ -29,7 +29,7 @@ Ping Pod venues **require** [[Pod Play]] software to operate. Since the team con
 
 - [[Central Group]] (one of Thailand's largest conglomerates) interested in being master franchisor
 - A Vietnam-based group introduced Central Group to the opportunity
-- Approval is up to the team — [[Zoe]] confirmed with [[Heath]]
+- Approval is up to the team — [[Fern]] confirmed with [[Reef]]
 - If approved, franchise fee alone is significant revenue
 
 ## Urgency

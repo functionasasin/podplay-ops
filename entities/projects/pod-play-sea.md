@@ -2,7 +2,7 @@
 type: project
 name: Pod Play Southeast Asia
 status: active
-people: [[Carlos]], [[Ernesto]], [[Dominic]], [[Marco Basu]], [[Nico]]
+people: [[Cedar]], [[Sequoia]], [[Birch]], [[Basalt]], [[Ridge]]
 places: [[Philippines]], [[Singapore]], [[Thailand]]
 related: [[Pod Play]], [[Ping Pod]], [[Magpie]], [[Digital Wallet]], [[Ping Pod Asia Franchise]]
 tags: [business, franchise, asia, distribution]
@@ -21,10 +21,10 @@ Master distribution and franchise operation for [[Pod Play]] and [[Ping Pod]] ac
 
 ### Current Activity (as of 2026-02-25)
 
-- Nico training overview call completed (2026-02-25) — see [[2026-02-25 Nico PodPlay Training Overview]]
-- [[Andy]] (PodPlay project manager) to send install document and schedule kickoff call
-- [[Chad]] to decide on account setup (shared vs. separate Mosyle, UniFi, etc.)
-- Payment integration (Stripe alternative) confirmed in progress by developer team ([[Julius]])
+- Ridge training overview call completed (2026-02-25) — see [[2026-02-25 Ridge PodPlay Training Overview]]
+- [[Falcon]] (PodPlay project manager) to send install document and schedule kickoff call
+- [[Granite]] to decide on account setup (shared vs. separate Mosyle, UniFi, etc.)
+- Payment integration (Stripe alternative) confirmed in progress by developer team ([[Ember]])
 - V2 replay service in final testing — will learn both V1 and V2 during NJ trip
 - [[2026-03 NJ PodPlay Training]] booked for March 2–10; staying at Hampton Inn Newark Harrison Riverwalk
 - [[Tela Park]] facility checklist created — need someone to do site survey before NJ training
@@ -51,13 +51,13 @@ Master distribution and franchise operation for [[Pod Play]] and [[Ping Pod]] ac
 
 ## Current Status (2026-02-25)
 
-- Nico training overview call completed — full infrastructure walkthrough done
-- Andy to send detailed install document (camera positions, specs, hardware placement)
-- Andy to schedule installer kickoff call with Carlos
-- Chad deciding on credential/account setup for Asia operations
+- Ridge training overview call completed — full infrastructure walkthrough done
+- Falcon to send detailed install document (camera positions, specs, hardware placement)
+- Falcon to schedule installer kickoff call with Cedar
+- Granite deciding on credential/account setup for Asia operations
 - Payment integration nearly done — devs aware of Philippines requirements
 - NJ training trip in ~5 days (March 2-10)
-- Carlos and [[Marco]] traveling together
+- Cedar and [[Basalt]] traveling together
 
 ## Automation
 
@@ -67,9 +67,9 @@ Master distribution and franchise operation for [[Pod Play]] and [[Ping Pod]] ac
 ## Action Items
 
 - **Site survey [[Tela Park]]** — send someone or go personally to check all items on the facility checklist before NJ training
-- ~~Meeting with [[Nico]] (week of 2026-02-23)~~ — completed 2026-02-25
-- Wait for [[Andy]] to send install document and schedule kickoff call
-- Wait for [[Chad]] to decide on account setup (Mosyle, UniFi, deployment server)
+- ~~Meeting with [[Ridge]] (week of 2026-02-23)~~ — completed 2026-02-25
+- Wait for [[Falcon]] to send install document and schedule kickoff call
+- Wait for [[Granite]] to decide on account setup (Mosyle, UniFi, deployment server)
 - Complete NJ training trip and document all Asia-specific configuration differences
 - Learn V2 replay service migration during NJ trip
 - Set up Google Cloud alerting for our own locations

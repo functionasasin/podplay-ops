@@ -2,7 +2,7 @@
 type: project
 name: Digital Wallet
 status: active
-people: [[Dominic]], [[Marcelo]], [[Kim]]
+people: [[Birch]], [[Coral]], [[Jade]]
 places: [[Philippines]]
 related: [[Pod Play]], [[Magpie]], [[Pod Play SEA]]
 tags: [fintech, wallet, payment, strategy]
@@ -34,7 +34,7 @@ Digital wallet / stored-value platform built on top of [[Pod Play]]'s booking sy
 
 ## Payment Implementation (as of 2026-02-19)
 
-- [[Marcelo]] given a payment instance, currently acting as "Cosmos" (merchant/platform role) for testing
+- [[Coral]] given a payment instance, currently acting as "Cosmos" (merchant/platform role) for testing
 - Using **Stripe Payment Elements** — 3rd iteration after UI feedback, custom-built experience
 - Money flow: on a 100-peso reservation, ~10–15 pesos to Pod Play, ~85 to court owner
 - Settlement options for merchants: manual withdrawal, or auto-daily settlement to bank account
@@ -45,7 +45,7 @@ Digital wallet / stored-value platform built on top of [[Pod Play]]'s booking sy
 - Architecture supports both models — currently running credit system per venue partner request
 - Credits enable: court bookings, coaching sessions, merchandise, food & beverage, any merchant product
 - Cost advantage: wallet-to-wallet ~1.5% vs direct credit card ~3.5% per transaction
-- Open question: venue-locked vs cross-venue credits — need confirmation from [[Kim]] and padel partners
+- Open question: venue-locked vs cross-venue credits — need confirmation from [[Jade]] and padel partners
 
 ### Merchant Product Catalog (Future)
 

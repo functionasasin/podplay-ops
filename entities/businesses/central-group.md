@@ -16,6 +16,6 @@ One of the largest conglomerates in Thailand. Thai-Chinese family office, descri
 
 - A group from Vietnam connected Central Group to the [[Ping Pod]] franchise opportunity
 - Central Group is interested in being the master franchisor for [[Ping Pod]] in Thailand
-- [[Zoe]] asked [[Heath]] to confirm — approval is up to the team
+- [[Fern]] asked [[Reef]] to confirm — approval is up to the team
 - If approved, this would be a significant deal: the franchise fee alone covers a large portion of costs
 - Central Group operates Central World and other major properties

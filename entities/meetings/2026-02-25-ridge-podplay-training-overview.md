@@ -1,15 +1,15 @@
 ---
 type: meeting
 date: 2026-02-25
-attendees: [[Nico]], [[Ethan]], [[Julius]], [[Carlos]]
+attendees: [[Ridge]], [[Cobalt]], [[Ember]], [[Cedar]]
 projects: [[Pod Play SEA]], [[Ping Pod Asia Franchise]]
 businesses: [[Pod Play]], [[Ping Pod]]
 tags: [podplay, training, infrastructure, replay-service, hardware]
 ---
 
-# Nico — PodPlay Training & Infrastructure Overview
+# Ridge — PodPlay Training & Infrastructure Overview
 
-Pre-training call with [[Nico]] (PodPlay hardware/replay service lead) ahead of the [[2026-03 NJ PodPlay Training]] trip. [[Ethan]] and [[Julius]] also on the call — they previously helped set up the Mandaluyong site.
+Pre-training call with [[Ridge]] (PodPlay hardware/replay service lead) ahead of the [[2026-03 NJ PodPlay Training]] trip. [[Cobalt]] and [[Ember]] also on the call — they previously helped set up the Mandaluyong site.
 
 ## Key Topics Discussed
 
@@ -30,7 +30,7 @@ Pre-training call with [[Nico]] (PodPlay hardware/replay service lead) ahead of 
 - Currently: must screen share into deployment server, run `deploy.py` to create a package, copy to Mac Mini, deploy
 - V2: will be able to run locally from your own GitHub — much easier install
 - Configuration will move from the Google Doc into the **PodPlay dashboard** itself
-- Migration from V1 to V2 is straightforward — Nico will show how
+- Migration from V1 to V2 is straightforward — Ridge will show how
 - **Recommendation**: set up current site on V1, then migrate once V2 is ready
 
 ### 3. deploy.py Process
@@ -39,7 +39,7 @@ Pre-training call with [[Nico]] (PodPlay hardware/replay service lead) ahead of 
 - Package gets copied to the new Mac Mini and deployed there
 - Current process is tedious: VPN into lab → deployment server → enter new coefficients
 - V2 eliminates the need for this — coefficients entered via dashboard
-- Nico offered to help run `deploy.py` for initial setups before V2 is ready
+- Ridge offered to help run `deploy.py` for initial setups before V2 is ready
 
 ### 4. Camera Calibration & Coefficients
 
@@ -56,12 +56,12 @@ Pre-training call with [[Nico]] (PodPlay hardware/replay service lead) ahead of 
 - Google Cloud alerting pings the health URL every 5 minutes
 - Checks: system storage (SSD < 80%), memory/swap, CPU load, rename service status, link/SSD status
 - Alerts sent to **Slack** when errors detected (can also configure other destinations)
-- Nico has ~70 live locations monitored this way
-- **Recommendation**: set up Google Cloud alerting for our own locations — Nico will show how
+- Ridge has ~70 live locations monitored this way
+- **Recommendation**: set up Google Cloud alerting for our own locations — Ridge will show how
 
 ### 6. Hardware & Network
 
-- **UniFi** for networking — already familiar with this (Marco knows it)
+- **UniFi** for networking — already familiar with this (Basalt knows it)
 - All equipment on the **32 VLAN** (192.168.32.x) — keep it consistent
 - Mac Mini IP always **192.168.32.100**
 - Mac Minis prone to overheating if installed too close to other equipment — needs breathing room
@@ -69,7 +69,7 @@ Pre-training call with [[Nico]] (PodPlay hardware/replay service lead) ahead of 
 - **Gigabit internet** recommended, though the service can handle slower
 - 6-court site uses ~105 Gbps/week upload
 - Bandwidth isn't a major concern; **latency** could matter since servers are in New York/New Jersey
-- Nico doesn't foresee latency issues for Philippines (estimated 300-400ms should be OK)
+- Ridge doesn't foresee latency issues for Philippines (estimated 300-400ms should be OK)
 - **PDU** is the only hardware component that differs for overseas (voltage differences)
 
 ### 7. iPads & Mosyle MDM
@@ -94,21 +94,21 @@ Pre-training call with [[Nico]] (PodPlay hardware/replay service lead) ahead of 
 ### 9. Payment Integration (Philippines)
 
 - **Stripe doesn't work in the Philippines** — alternative payment integration already in progress
-- [[Julius]] confirmed the developers know about the region-specific payment requirement
+- [[Ember]] confirmed the developers know about the region-specific payment requirement
 - As long as the app detects the region and uses the correct payment provider, it should work with the same App Store build
-- Nico confirmed this is **outside his scope** but developers are handling it
-- [[Marcelo]] is the developer working on payment integration
+- Ridge confirmed this is **outside his scope** but developers are handling it
+- [[Coral]] is the developer working on payment integration
 
 ### 10. Credentials & Account Access
 
 - Need credentials for: **UniFi**, **Mosyle**, **deployment server**, **Google Cloud** (for alerting)
 - Google Cloud alerting: can set up our own account — don't need PodPlay's
 - DDNS: PodPlay uses **Free Afraid DDNS** — free to use a different provider, just needs DDNS capability
-- Account setup decisions (shared vs. separate) need to go through **Chad** (head of operations)
+- Account setup decisions (shared vs. separate) need to go through **Granite** (head of operations)
 
 ### 11. Mandaluyong Site (Existing)
 
-- [[Ethan]] and [[Julius]] handled the setup at the Mandaluyong location
+- [[Cobalt]] and [[Ember]] handled the setup at the Mandaluyong location
 - They were "securing the dynamic list setup" and "deployment at LOC"
 - Apple TV also part of the setup
 - Current PodPlay app build installed — managed through Mosyle
@@ -117,28 +117,28 @@ Pre-training call with [[Nico]] (PodPlay hardware/replay service lead) ahead of 
 
 | Person | Role |
 |--------|------|
-| [[Nico]] | Hardware, replay service, installs — works under [[Chad]] |
-| [[Andy]] | PodPlay project manager — handles specs, kickoff calls with installers, will send install document |
-| [[Chad]] | Head of operations — decisions on account setup and credentials |
-| [[Julius]] | Developer — aware of Philippines payment integration needs |
-| [[Marcelo]] | Developer — working on payment integration |
+| [[Ridge]] | Hardware, replay service, installs — works under [[Granite]] |
+| [[Falcon]] | PodPlay project manager — handles specs, kickoff calls with installers, will send install document |
+| [[Granite]] | Head of operations — decisions on account setup and credentials |
+| [[Ember]] | Developer — aware of Philippines payment integration needs |
+| [[Coral]] | Developer — working on payment integration |
 | CS team | Customer success — handles booking/credits questions, routes to right developer |
 
 ## Next Steps
 
-- [ ] Andy to send comprehensive install document with camera positions, specs, hardware placement
-- [ ] Andy to schedule kickoff call with Carlos (as installer)
-- [ ] Chad to decide on account setup (shared vs. separate for Mosyle, UniFi, etc.)
-- [ ] Nico to walk through hardware setup in person during NJ visit (Tuesday–Friday)
-- [ ] Nico to share SOPs and troubleshooting docs for common issues
-- [ ] Nico to show Google Cloud alerting setup
+- [ ] Falcon to send comprehensive install document with camera positions, specs, hardware placement
+- [ ] Falcon to schedule kickoff call with Cedar (as installer)
+- [ ] Granite to decide on account setup (shared vs. separate for Mosyle, UniFi, etc.)
+- [ ] Ridge to walk through hardware setup in person during NJ visit (Tuesday–Friday)
+- [ ] Ridge to share SOPs and troubleshooting docs for common issues
+- [ ] Ridge to show Google Cloud alerting setup
 - [ ] Set up with CS team for booking/credits questions
 - [ ] Test RTSP streams with VLC during setup
 - [ ] Confirm Philippines latency is acceptable once site is live
 
 ## Logistics
 
-- Carlos and [[Marco]] visiting NJ, staying at **Hampton Inn Newark Harrison Riverwalk**
+- Cedar and [[Basalt]] visiting NJ, staying at **Hampton Inn Newark Harrison Riverwalk**
 - In-person training Tuesday through Friday
 - PodPlay office hit by snowstorm — inventory pushed back, boxes everywhere
 - V2 replay service in final testing — timing is good for learning both versions

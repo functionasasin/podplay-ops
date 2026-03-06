@@ -1,7 +1,7 @@
 ---
 type: meeting
 date: 2026-02-19
-attendees: [[Carlos]]
+attendees: [[Cedar]]
 projects: [[Digital Wallet]], [[Pod Play SEA]]
 businesses: [[Pod Play]], [[Magpie]]
 tags: [payment, stripe, credits, settlement, strategy]
@@ -9,14 +9,14 @@ tags: [payment, stripe, credits, settlement, strategy]
 
 # Payment Instance Setup & Digital Wallet Architecture
 
-Discussion covering the payment instance given to [[Marcelo]], Stripe integration details, money flow and settlement design, and the credits vs direct booking architecture.
+Discussion covering the payment instance given to [[Coral]], Stripe integration details, money flow and settlement design, and the credits vs direct booking architecture.
 
 ## Key Topics Discussed
 
-### 1. Payment Instance for Marcelo
+### 1. Payment Instance for Coral
 
-- [[Marcelo]] was given an instance of the payment platform to start documenting
-- Marcelo is currently acting as "Cosmos" (the merchant/platform role) in the payment flow
+- [[Coral]] was given an instance of the payment platform to start documenting
+- Coral is currently acting as "Cosmos" (the merchant/platform role) in the payment flow
 - There were complaints about the initial payment UI — went through iterations
 - Currently on the **3rd iteration** of customization
 - Using **Stripe Payment Elements** (what Stripe calls "Payment Element") — not the standard checkout, a custom-built experience
@@ -30,7 +30,7 @@ Discussion covering the payment instance given to [[Marcelo]], Stripe integratio
   - **Manual withdrawal**: "Give me a bank account, we settle it"
   - **Auto-frequency**: Set up recurring settlement (e.g., daily) to merchant's bank account
 - Reconciliation must complete before funds are available
-- [[Kim]] is the key person on settlement flow design
+- [[Jade]] is the key person on settlement flow design
 
 ### 3. Credits vs Direct Booking Debate
 
@@ -66,7 +66,7 @@ This is the path to the full [[Digital Wallet]] vision — Pod Play becomes a pa
 - The team wants **cross-venue credits** (the [[Digital Wallet]] vision)
 - If credits are venue-locked, you must credit first before visiting a new venue
 - Need to confirm with venue partners how they want this to work
-- **Action**: Ask [[Kim]] and the padel partners for a definitive answer
+- **Action**: Ask [[Jade]] and the padel partners for a definitive answer
 
 ### 7. Merchant Dashboard & Branding
 
@@ -90,7 +90,7 @@ This is the path to the full [[Digital Wallet]] vision — Pod Play becomes a pa
 
 ## Action Items
 
-- [ ] Confirm with [[Kim]] and padel partners: venue-locked vs cross-venue credits
+- [ ] Confirm with [[Jade]] and padel partners: venue-locked vs cross-venue credits
 - [ ] Document all open payment/architecture questions and send before NJ trip
 - [ ] Create a small deck showing payment capabilities for investor conversations
 - [ ] Define what merchants can add as products beyond court bookings (coaching, merch, food)

@@ -3,7 +3,7 @@ type: business
 name: Pod Play
 category: sports-technology
 location: [[United States]]
-people: [[Ernesto]], [[Elia]], [[Ben]], [[Max]], [[Carlos]], [[Dominic]]
+people: [[Sequoia]], [[Condor]], [[Osprey]], [[Drift]], [[Cedar]], [[Birch]]
 related: [[Ping Pod]], [[Magpie]]
 tags: [software, platform, investment, payment]
 ---
@@ -23,7 +23,7 @@ Software/booking platform originally built for [[Ping Pod]], now a separate comp
 
 - Team holds Pod Play distribution rights for Southeast Asia
 - Initially couldn't deploy in the Philippines ("it's not working")
-- [[Ernesto]] committed to finding a solution within 2 years
+- [[Sequoia]] committed to finding a solution within 2 years
 
 ## Profit-Sharing (Upcharge Model)
 
@@ -38,7 +38,7 @@ Software/booking platform originally built for [[Ping Pod]], now a separate comp
 - Working with [[Magpie]] for Philippines payment processing
 - GCash and credit card payments functional
 - Refund challenge: electronic wallet refunds are one-way only in Philippines
-- Cross-facility credit system proposed by [[Dominic]] — credits usable at any Pod Play venue
+- Cross-facility credit system proposed by [[Birch]] — credits usable at any Pod Play venue
 - Digital wallet strategy is a major growth opportunity (see [[Digital Wallet]])
 
 ## Philippines Tax
@@ -54,7 +54,7 @@ PodPlay is a hybrid cloud + on-premises system. See [[PodPlay Asia Infrastructur
 - **Communication**: Mac Mini ↔ PodPlay backend via port 4000; DDNS via FreeDNS (podplaydns.com)
 - **Replay flow**: Cameras → RTSP streams → Mac Mini (local VLAN 192.168.32.x) → Apple TV (instant replay); clips uploaded async to Google Cloud
 - **Health monitoring**: Google Cloud alerting pings each site's health endpoint every 5 minutes; checks SSD storage (<80%), CPU, memory, rename service, link status; alerts via Slack
-- **Configuration guide**: See [[PodPlay Config Guide v1]] (written by [[Stan Wu]], dated Sept 2024)
+- **Configuration guide**: See [[PodPlay Config Guide v1]] (written by [[Glacier]], dated Sept 2024)
 
 ### V2 Replay Service (In Testing — ~1 month out as of 2026-02-25)
 
@@ -103,6 +103,6 @@ Source: https://gist.github.com/clsandoval/94a2bd5b2aa8c651b2e721e2bb74fdef
 
 | Person | Role |
 |--------|------|
-| [[Nico]] | Hardware, replay service, installs (works under [[Chad]]) |
-| [[Andy]] | Project manager — specs, camera positions, installer kickoffs |
-| [[Chad]] | Head of operations — account decisions, credentials |
+| [[Ridge]] | Hardware, replay service, installs (works under [[Granite]]) |
+| [[Falcon]] | Project manager — specs, camera positions, installer kickoffs |
+| [[Granite]] | Head of operations — account decisions, credentials |

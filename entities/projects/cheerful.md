@@ -2,7 +2,7 @@
 type: project
 name: Cheerful
 status: active
-people: [[Chris]], [[Paul]], [[Paolo]], [[Derick]], [[Josh]]
+people: [[Aspen]], [[Quartz]], [[Thorn]], [[Flint]], [[Slate]]
 businesses: [[Nuts and Bolts]]
 related: [[Mama Sitas]], [[cheerful-brand-first-strategy]]
 tags: [influencer-marketing, ai, saas, platform]
@@ -22,8 +22,8 @@ AI-powered influencer outreach and campaign management platform, built and opera
 ## Current State (2026-03)
 
 - Platform is live and serving agency clients
-- Team reduced to [[Chris]], [[Paul]], [[Paolo]], and me after [[Derick]] and [[Josh]] were fired
-- Paul and Chris handle client calls and push features directly using AI-assisted coding
+- Team reduced to [[Aspen]], [[Quartz]], [[Thorn]], and me after [[Flint]] and [[Slate]] were fired
+- Quartz and Aspen handle client calls and push features directly using AI-assisted coding
 - I'm the primary engineer — contracted/freelance, not consulted on team decisions
 
 ## Strategic Loops

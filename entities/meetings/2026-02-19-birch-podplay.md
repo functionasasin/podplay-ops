@@ -1,15 +1,15 @@
 ---
 type: meeting
 date: 2026-02-19
-attendees: [[Dominic]]
+attendees: [[Birch]]
 projects: [[Pod Play SEA]], [[Digital Wallet]]
 businesses: [[Pod Play]]
 tags: [podplay, sync]
 ---
 
-# Dominic — PodPlay Sync
+# Birch — PodPlay Sync
 
-Scheduled meeting with [[Dominic]] to discuss Pod Play status.
+Scheduled meeting with [[Birch]] to discuss Pod Play status.
 
 ## Agenda
 

@@ -1,7 +1,7 @@
 ---
 type: meeting
 date: 2026-02-13
-attendees: [[Carlos]]
+attendees: [[Cedar]]
 projects: [[Pod Play SEA]], [[Ping Pod Asia Franchise]], [[Digital Wallet]]
 businesses: [[Pod Play]], [[Ping Pod]], [[Magpie]], [[Central Group]]
 tags: [strategy, negotiation, partnership]
@@ -24,7 +24,7 @@ Strategy meeting covering Pod Play/Ping Pod operations in Southeast Asia, paymen
 - GCash and credit card payments working via Magpie integration
 - Test booking completed successfully (real money, test court)
 - **Refund challenge**: Philippines electronic wallets are one-way — can't refund back to GCash
-- **Cross-facility credits**: [[Dominic]] proposed allowing credits to be used at any Pod Play venue (unlike US model where credits are facility-locked)
+- **Cross-facility credits**: [[Birch]] proposed allowing credits to be used at any Pod Play venue (unlike US model where credits are facility-locked)
 - This cross-facility model positions Pod Play as a payment platform, not just a booking tool
 
 ### 3. Digital Wallet Strategy
@@ -35,8 +35,8 @@ Strategy meeting covering Pod Play/Ping Pod operations in Southeast Asia, paymen
 
 ### 4. Ping Pod / Pod Play History
 - Originally one company, then split
-- Team invested pre-Series A after [[Ernesto]] offered (call from [[Jackson Hole]])
-- Cofounders ([[Elia]], [[Ben]], [[Max]]) approved the investment
+- Team invested pre-Series A after [[Sequoia]] offered (call from [[Jackson Hole]])
+- Cofounders ([[Condor]], [[Osprey]], [[Drift]]) approved the investment
 - Ping Pod raised $8M Series A from a franchising/tech-focused fund
 - Team chose to be Pod Play shareholders during the split
 - Team re-invested in Ping Pod's next raise
@@ -47,7 +47,7 @@ Strategy meeting covering Pod Play/Ping Pod operations in Southeast Asia, paymen
 - **Ping Pod requires Pod Play** — every franchise deal = Pod Play deployment
 - [[Central Group]] (Thailand's richest/second-richest family) interested in Thailand master franchise
 - Vietnam group introduced Central Group to the opportunity
-- [[Zoe]] confirmed with [[Heath]] — approval is up to the team
+- [[Fern]] confirmed with [[Reef]] — approval is up to the team
 
 ### 6. Singapore HQ
 - EDB meeting: "We can definitely support you"
