@@ -33,7 +33,7 @@ The current system is a 24-sheet Google Sheets MRP with Apps Script automation. 
 ## Working Directory
 
 ```
-/home/clsandoval/cs/monorepo/apps/podplay/loops/reverse/core/
+/home/clsandoval/cs/monorepo/loops/podplay-ops-reverse/
 ```
 
 ## Output Directory Structure
