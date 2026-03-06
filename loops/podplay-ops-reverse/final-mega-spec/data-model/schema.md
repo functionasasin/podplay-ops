@@ -1378,6 +1378,487 @@ Run migrations in this order to satisfy foreign key dependencies:
 
 ---
 
+## Financial Model: Invoices, Expenses, P&L, HER, Reconciliation
+
+**Aspect**: model-financials
+**Date**: 2026-03-06
+**Sources**: analysis/source-pricing-model.md, analysis/source-mrp-usage-guide.md, final-mega-spec/data-model/schema.md (existing tables), docs/plans design doc
+
+---
+
+### Overview
+
+PodPlay's financial model has five components:
+
+1. **Invoicing** — Two invoices per project (deposit + final), each tracked signed→sent→paid
+2. **Expenses** — Per-project expenses across 12 categories, two payment methods
+3. **Per-Project P&L** — Revenue (hardware + service) minus COGS minus expenses = net profit
+4. **HER (Hardware Efficiency Ratio)** — Period-based: hardware revenue ÷ team hardware spend
+5. **Revenue Pipeline** — All projects bucketed by revenue stage for cash flow visibility
+
+All MRP source sheets mapped: **INVOICING**, **EXPENSES**, **FINANCIALS** (P&L/HER), **CUSTOMER MASTER** (revenue stage column).
+
+---
+
+### Table: invoices — Field Source Map
+
+**MRP source sheet**: "INVOICING" tab
+MRP columns (reconstructed from usage guide partial analysis and design doc):
+
+| Field | MRP Column | Notes |
+|-------|-----------|-------|
+| `project_id` | Customer name column (FK to customer master) | Link invoice to project |
+| `invoice_type` | Derived: "Deposit Invoice" vs "Final Invoice" rows | MRP likely has one section per type |
+| `invoice_number` | "Invoice #" or "Invoice Number" | External billing system number |
+| `hardware_subtotal` | "Hardware Total" | Sum of customer_price across BOM items |
+| `service_fee` | "Service Fee" | Tier venue fee + (courts × court fee) |
+| `subtotal` | Generated: hardware + service | Pre-tax total |
+| `tax_rate` | "Tax Rate" (default 10.25%) | Applied at invoice time |
+| `tax_amount` | Generated: subtotal × tax_rate | |
+| `total_amount` | Generated: subtotal × (1 + tax_rate) | Grand total on invoice |
+| `deposit_pct` | "Deposit %" (0.50 assumed) | Fraction of total billed on this invoice |
+| `status` | "Invoiced?" / "Paid?" checkboxes | MRP has boolean columns |
+| `date_sent` | "Invoice Date" or "Date Sent" | When invoice was emailed to customer |
+| `date_paid` | "Date Paid" | When payment was received |
+| `notes` | "Notes" | Free-form invoice notes |
+
+**Invoice amount calculation — concrete example (6-court Pro)**:
+```
+hardware_subtotal = sum(customer_price for all BOM items) = $18,333 (example)
+service_fee       = 5000 + (6 × 2500) = $20,000
+subtotal          = $18,333 + $20,000 = $38,333
+tax_amount        = $38,333 × 0.1025  = $3,929
+total_amount      = $38,333 + $3,929  = $42,262
+
+Deposit invoice:  total_amount × 0.50 = $21,131
+Final invoice:    total_amount × 0.50 = $21,131
+```
+
+**Two-invoice uniqueness constraint**: `UNIQUE (project_id, invoice_type)` — exactly one deposit and one final invoice per project.
+
+**Revenue stage driven by invoice lifecycle**:
+```
+project.revenue_stage transitions:
+  proposal         → SOW sent, not signed
+  signed           → signed_date set
+  deposit_invoiced → deposit invoice.status = 'sent'
+  deposit_paid     → deposit invoice.status = 'paid'
+  final_invoiced   → final invoice.status = 'sent'
+  final_paid       → final invoice.status = 'paid'
+```
+
+---
+
+### Table: expenses — Field Source Map
+
+**MRP source sheet**: "EXPENSES" tab
+MRP columns (reconstructed):
+
+| Field | MRP Column | Notes |
+|-------|-----------|-------|
+| `project_id` | "Customer" or "Project" | FK to project |
+| `expense_date` | "Date" | Date expense was incurred |
+| `category` | "Category" dropdown | 12 values (see enum) |
+| `amount` | "Amount" | USD, always positive |
+| `payment_method` | "Payment Method" | podplay_card \| ramp_reimburse |
+| `description` | "Description" or "Notes" | e.g., "Delta ATL-EWR round trip" |
+| `receipt_url` | Not in MRP (new field) | URL to receipt scan in Supabase Storage |
+| `notes` | Additional notes column | If separate from description |
+
+**Expense categories and typical amounts** (from source-pricing-model analysis):
+
+| Category | Description | Typical Amount |
+|----------|-------------|---------------|
+| `airfare` | Round-trip flights | $1,800 default |
+| `car` | Rental car | Varies |
+| `fuel` | Gas/fuel | Varies |
+| `lodging` | Hotel/lodging | $250/night default |
+| `meals` | Per diem meals | Varies |
+| `misc_hardware` | Incidental hardware not in BOM | Varies |
+| `outbound_shipping` | Shipping rack to venue | Varies |
+| `professional_services` | Installer payments (if paid separately) | Varies |
+| `taxi` | Rideshare/taxi | Varies |
+| `train` | Rail travel | Varies |
+| `parking` | Parking fees | Varies |
+| `other` | Catch-all | Varies |
+
+**Payment methods**:
+- `podplay_card` — Company Ramp card; no reimbursement needed
+- `ramp_reimburse` — Personal card; submitted to Ramp for reimbursement
+
+---
+
+### New Table: monthly_opex_snapshots
+
+Stores period-based team OpEx data for HER (Hardware Efficiency Ratio) calculation.
+One row per calendar month. Used by the Global Financials view for period-based reporting.
+
+**MRP source**: "FINANCIALS" tab (exact structure unknown — XLSX blocked); derived from frontier `model-team-opex` and design doc.
+
+```sql
+CREATE TABLE monthly_opex_snapshots (
+  id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+  period_year     INTEGER     NOT NULL CHECK (period_year >= 2020 AND period_year <= 2050),
+  -- Calendar year (e.g., 2026)
+
+  period_month    INTEGER     NOT NULL CHECK (period_month >= 1 AND period_month <= 12),
+  -- Calendar month 1–12 (e.g., 3 for March)
+
+  -- -------------------------------------------------------------------------
+  -- Team OpEx Inputs (copied from settings at month-close, allows historical accuracy)
+  -- -------------------------------------------------------------------------
+  niko_monthly_salary       NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+  -- Niko's gross salary for this month (annual ÷ 12 or actual if variable)
+
+  niko_direct_allocation    NUMERIC(6, 4)  NOT NULL DEFAULT 0.50,
+  -- Fraction of Niko's time on direct hardware work this month (default 50%)
+  -- Allows per-month override (e.g., heavy install month → 0.70)
+
+  chad_monthly_salary       NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+  -- Chad's gross salary for this month
+
+  chad_indirect_allocation  NUMERIC(6, 4)  NOT NULL DEFAULT 0.20,
+  -- Fraction of Chad's time as indirect hardware overhead this month
+
+  monthly_rent              NUMERIC(10, 2) NOT NULL DEFAULT 2300.00,
+  -- Monthly rent for NJ lab (27,600 ÷ 12 = $2,300)
+
+  monthly_indirect_salaries NUMERIC(10, 2) NOT NULL DEFAULT 12250.00,
+  -- Monthly indirect salaries (147,000 ÷ 12 = $12,250)
+
+  -- -------------------------------------------------------------------------
+  -- Computed HER Inputs (set at month close)
+  -- -------------------------------------------------------------------------
+  hardware_revenue          NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+  -- Sum of all hardware customer_price for FINAL invoices paid this month
+  -- (deposit invoices excluded — revenue recognized on final payment)
+  -- Formula: SUM(invoice.hardware_subtotal) WHERE invoice_type='final'
+  --          AND date_paid BETWEEN period start AND period end
+
+  -- -------------------------------------------------------------------------
+  -- HER Calculation (stored for fast reporting; recomputable from above fields)
+  -- -------------------------------------------------------------------------
+  team_hardware_spend       NUMERIC(10, 2) GENERATED ALWAYS AS (
+    -- Direct hardware spend:
+    --   Niko direct:  niko_monthly_salary × niko_direct_allocation
+    -- Indirect hardware overhead (allocated fraction of total indirect pool):
+    --   Niko indirect portion:  niko_monthly_salary × (1 - niko_direct_allocation) × 0.50
+    --   Chad indirect:          chad_monthly_salary × chad_indirect_allocation
+    --   Rent:                   monthly_rent (full amount — lab is hardware ops space)
+    --   Indirect salaries:      monthly_indirect_salaries × 0.20 (20% overhead allocation)
+    --
+    -- NOTE: Exact formula pending XLSX FINANCIALS sheet confirmation.
+    -- Current formula is best approximation from frontier model-team-opex:
+    (niko_monthly_salary * niko_direct_allocation)
+    + (niko_monthly_salary * (1 - niko_direct_allocation) * 0.50)
+    + (chad_monthly_salary * chad_indirect_allocation)
+    + monthly_rent
+    + (monthly_indirect_salaries * 0.20)
+  ) STORED,
+
+  her_ratio                 NUMERIC(10, 4) GENERATED ALWAYS AS (
+    CASE WHEN (
+      (niko_monthly_salary * niko_direct_allocation)
+      + (niko_monthly_salary * (1 - niko_direct_allocation) * 0.50)
+      + (chad_monthly_salary * chad_indirect_allocation)
+      + monthly_rent
+      + (monthly_indirect_salaries * 0.20)
+    ) > 0 THEN
+      hardware_revenue / (
+        (niko_monthly_salary * niko_direct_allocation)
+        + (niko_monthly_salary * (1 - niko_direct_allocation) * 0.50)
+        + (chad_monthly_salary * chad_indirect_allocation)
+        + monthly_rent
+        + (monthly_indirect_salaries * 0.20)
+      )
+    ELSE NULL END
+  ) STORED,
+  -- HER = hardware_revenue / team_hardware_spend
+  -- Target: > 1.0 (revenue exceeds team cost); healthy = 2.0+
+
+  notes           TEXT,
+  -- Month close notes (e.g., "Included 3 final payments", "Niko at 70% install month")
+
+  UNIQUE (period_year, period_month)
+);
+
+CREATE TRIGGER monthly_opex_snapshots_updated_at
+  BEFORE UPDATE ON monthly_opex_snapshots
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+CREATE INDEX idx_monthly_opex_period ON monthly_opex_snapshots (period_year DESC, period_month DESC);
+
+ALTER TABLE monthly_opex_snapshots ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "authenticated users full access monthly_opex_snapshots"
+  ON monthly_opex_snapshots FOR ALL
+  TO authenticated
+  USING (true)
+  WITH CHECK (true);
+```
+
+**Field Source Map**:
+
+| Field | MRP Source | Notes |
+|-------|-----------|-------|
+| `period_year` / `period_month` | FINANCIALS tab header rows | Monthly columns in MRP |
+| `niko_monthly_salary` | FINANCIALS tab "Niko Salary" row | Derived: annual ÷ 12 |
+| `niko_direct_allocation` | FINANCIALS tab "Direct %" | 50% default |
+| `chad_monthly_salary` | FINANCIALS tab "Chad Salary" row | Derived: annual ÷ 12 |
+| `chad_indirect_allocation` | FINANCIALS tab "Chad Indirect %" | 20% default |
+| `monthly_rent` | FINANCIALS tab "Rent" | $27,600/yr ÷ 12 = $2,300/mo |
+| `monthly_indirect_salaries` | FINANCIALS tab "Indirect Salaries" | $147,000/yr ÷ 12 |
+| `hardware_revenue` | INVOICING tab, filtered by date_paid | Sum of final invoices paid in period |
+| `team_hardware_spend` | Computed | Niko direct + indirect allocations + overhead |
+| `her_ratio` | FINANCIALS tab "HER" row | hardware_revenue / team_hardware_spend |
+
+---
+
+### Per-Project P&L — Complete Calculation Spec
+
+All P&L is computed client-side (not stored). Inputs are fetched from Supabase; computation runs in the React service layer.
+
+**Function signature**:
+```typescript
+interface ProjectPnL {
+  // Revenue
+  hardware_revenue:    number;  // Sum of bom_item.customer_price across all BOM items
+  service_fee:         number;  // Tier venue fee + (court_count × court fee)
+  total_revenue:       number;  // hardware_revenue + service_fee
+
+  // Cost of Goods Sold
+  cogs:                number;  // Sum of bom_item.est_total_cost (qty × unit_cost, no shipping markup)
+
+  // Gross Profit
+  gross_profit:        number;  // total_revenue - cogs
+  gross_margin_pct:    number;  // gross_profit / total_revenue
+
+  // Operating Expenses
+  labor_cost:          number;  // project.installer_hours × settings.labor_rate_per_hour
+  travel_expenses:     number;  // Sum of expenses WHERE category IN (airfare, car, fuel, lodging, meals, taxi, train, parking)
+  other_expenses:      number;  // Sum of expenses WHERE category NOT IN travel categories
+  total_expenses:      number;  // labor_cost + travel_expenses + other_expenses
+
+  // Net Profit
+  net_profit:          number;  // gross_profit - total_expenses
+  net_margin_pct:      number;  // net_profit / total_revenue
+}
+
+function computeProjectPnL(
+  project: Project,
+  bomItems: ProjectBomItem[],
+  expenses: Expense[],
+  settings: Settings
+): ProjectPnL
+```
+
+**Step-by-step formula**:
+```
+1. hardware_revenue
+   = Σ(bom_item.customer_price)
+   where customer_price = (qty × unit_cost × (1 + shipping_rate)) / (1 - margin)
+
+2. service_fee
+   if tier = 'pro':            settings.pro_venue_fee + court_count × settings.pro_court_fee
+   if tier = 'autonomous'
+      or 'autonomous_plus':    settings.autonomous_venue_fee + court_count × settings.autonomous_court_fee
+   if tier = 'pbk':            settings.pbk_venue_fee + court_count × settings.pbk_court_fee
+
+3. total_revenue = hardware_revenue + service_fee
+
+4. cogs = Σ(bom_item.est_total_cost)
+   where est_total_cost = qty × unit_cost  [no shipping; shipping goes to margin]
+
+5. gross_profit = total_revenue - cogs
+   gross_margin_pct = gross_profit / total_revenue
+
+6. labor_cost = project.installer_hours × settings.labor_rate_per_hour
+
+7. total_expenses = labor_cost + Σ(expense.amount for all project expenses)
+
+8. net_profit = gross_profit - total_expenses
+   net_margin_pct = net_profit / total_revenue
+```
+
+**Concrete example (6-court Pro, assumed unit costs)**:
+```
+hardware_revenue = $18,333 (from BOM customer_price sum)
+service_fee      = $5,000 + (6 × $2,500) = $20,000
+total_revenue    = $38,333
+
+cogs             = $15,000 (BOM est_total_cost sum — raw hardware cost)
+gross_profit     = $38,333 - $15,000 = $23,333
+gross_margin_pct = $23,333 / $38,333 = 60.9%
+
+installer_hours  = 40 hrs
+labor_cost       = 40 × $120 = $4,800
+travel_expenses  = $1,800 (airfare) + $1,500 (3 nights lodging) + $300 (rental car) = $3,600
+total_expenses   = $4,800 + $3,600 = $8,400
+
+net_profit       = $23,333 - $8,400 = $14,933
+net_margin_pct   = $14,933 / $38,333 = 38.9%
+```
+
+---
+
+### Revenue Pipeline — Bucketing Logic
+
+The revenue pipeline view groups all projects by `revenue_stage` for cash flow visibility.
+
+**Pipeline stages and amounts**:
+
+| Stage | Bucket Label | Amount in Pipeline |
+|-------|-------------|-------------------|
+| `proposal` | "In Proposal" | invoice total (estimated, unsigned) |
+| `signed` | "Signed / Not Invoiced" | invoice total (confirmed, deposit pending) |
+| `deposit_invoiced` | "Deposit Sent" | deposit invoice total_amount × (1 - deposit_pct) remaining |
+| `deposit_paid` | "Deposit Received" | final invoice total_amount |
+| `final_invoiced` | "Final Invoice Sent" | final invoice total_amount |
+| `final_paid` | "Closed" | $0 remaining (historical) |
+
+**Pipeline total query** (client-side):
+```typescript
+// Sum of all outstanding receivables by stage
+function pipelineSummary(projects: Project[], invoices: Invoice[]): PipelineBucket[] {
+  return REVENUE_STAGES.map(stage => ({
+    stage,
+    count: projects.filter(p => p.revenue_stage === stage).length,
+    total_amount: projects
+      .filter(p => p.revenue_stage === stage)
+      .reduce((sum, p) => sum + getOutstandingAmount(p, invoices), 0)
+  }));
+}
+```
+
+---
+
+### Aging Receivables — Calculation Logic
+
+Outstanding unpaid invoices grouped by days since `date_sent`.
+
+**Buckets**:
+- **Current (0–30 days)**: invoice.date_sent within last 30 days
+- **31–60 days**: invoice.date_sent 31–60 days ago
+- **61–90 days**: invoice.date_sent 61–90 days ago
+- **90+ days**: invoice.date_sent > 90 days ago
+
+**Query** (client-side):
+```typescript
+function agingReceivables(invoices: Invoice[]): AgingBucket[] {
+  const today = new Date();
+  const unpaid = invoices.filter(i => i.status !== 'paid' && i.date_sent !== null);
+  return [
+    { label: '0–30 days',  invoices: unpaid.filter(i => daysSince(i.date_sent!, today) <= 30) },
+    { label: '31–60 days', invoices: unpaid.filter(i => daysSince(i.date_sent!, today) <= 60 && daysSince(i.date_sent!, today) > 30) },
+    { label: '61–90 days', invoices: unpaid.filter(i => daysSince(i.date_sent!, today) <= 90 && daysSince(i.date_sent!, today) > 60) },
+    { label: '90+ days',   invoices: unpaid.filter(i => daysSince(i.date_sent!, today) > 90) },
+  ];
+}
+```
+
+---
+
+### Reconciliation — Cross-Table Verification
+
+The MRP has a reconciliation check that compares inventory vs POs vs project BOM costs.
+In the webapp, reconciliation is a read-only report computed client-side:
+
+**Check 1: Inventory vs POs received**
+```typescript
+// For each hardware item:
+// qty_on_hand should equal SUM(po_items.qty_received) - SUM(shipped to projects)
+// Discrepancy = qty_on_hand - (total_received - total_shipped)
+```
+
+**Check 2: BOM cost vs Invoice**
+```typescript
+// For each project:
+// invoice.hardware_subtotal should equal SUM(bom_item.customer_price)
+// Discrepancy = invoice.hardware_subtotal - sum(bom.customer_price)
+```
+
+**Check 3: Expense totals vs P&L**
+```typescript
+// For each project:
+// P&L total_expenses should match SUM(expense.amount) + labor_cost
+// No stored discrepancy — P&L is computed fresh from expense records
+```
+
+**Check 4: Revenue stage consistency**
+```typescript
+// projects.revenue_stage should be consistent with invoice states:
+// If deposit invoice.status = 'paid' → revenue_stage should be >= 'deposit_paid'
+// If final invoice.status = 'paid' → revenue_stage should be 'final_paid'
+```
+
+Reconciliation report query (SQL) for inventory check:
+```sql
+WITH received AS (
+  SELECT hardware_catalog_id, SUM(qty_received) AS total_received
+  FROM purchase_order_items
+  GROUP BY hardware_catalog_id
+),
+shipped AS (
+  SELECT hardware_catalog_id,
+         SUM(-qty_delta) AS total_shipped  -- movements are negative for shipments
+  FROM inventory_movements
+  WHERE movement_type IN ('project_shipped')
+  GROUP BY hardware_catalog_id
+)
+SELECT
+  hc.sku,
+  hc.name,
+  inv.qty_on_hand                       AS actual_qty,
+  COALESCE(r.total_received, 0)
+    - COALESCE(s.total_shipped, 0)      AS expected_qty,
+  inv.qty_on_hand
+    - (COALESCE(r.total_received, 0)
+       - COALESCE(s.total_shipped, 0))  AS discrepancy
+FROM inventory inv
+JOIN hardware_catalog hc ON hc.id = inv.hardware_catalog_id
+LEFT JOIN received r ON r.hardware_catalog_id = inv.hardware_catalog_id
+LEFT JOIN shipped  s ON s.hardware_catalog_id = inv.hardware_catalog_id
+WHERE inv.qty_on_hand != (COALESCE(r.total_received, 0) - COALESCE(s.total_shipped, 0))
+ORDER BY ABS(inv.qty_on_hand - (COALESCE(r.total_received, 0) - COALESCE(s.total_shipped, 0))) DESC;
+```
+
+---
+
+### Updated Migration Order
+
+Insert `monthly_opex_snapshots` after `expenses` (no foreign keys):
+
+```
+18. monthly_opex_snapshots  (no foreign keys — standalone OpEx records)
+```
+
+Updated full migration order (replacing prior list):
+
+1. Create all enums
+2. `update_updated_at()` function
+3. `installers`
+4. `settings`
+5. `hardware_catalog`
+6. `projects` (references installers)
+7. `bom_templates` (references hardware_catalog)
+8. `project_bom_items` (references projects, hardware_catalog)
+9. `inventory` (references hardware_catalog)
+10. `inventory_movements` (references hardware_catalog, projects)
+11. `purchase_orders` (references projects)
+12. `purchase_order_items` (references purchase_orders, hardware_catalog)
+13. `deployment_checklist_templates`
+14. `deployment_checklist_items` (references projects, templates)
+15. `invoices` (references projects)
+16. `expenses` (references projects)
+17. `replay_signs` (references projects)
+18. `cc_terminals` (references projects)
+19. `monthly_opex_snapshots` (no foreign keys)
+
+---
+
 ## BOM Model: Hardware Catalog, Templates & Cost Chain
 
 **Aspect**: model-bom
