@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 57
-- Analyzed: 21
-- Pending: 36
-- Convergence: 37%
+- Analyzed: 22
+- Pending: 35
+- Convergence: 39%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -34,7 +34,7 @@
 - [x] model-network-reference — VLAN architecture seed data (Default .30, REPLAY .32, SURVEILLANCE .31, ACCESS CONTROL .33), key IP addresses, port 4000 reference, bandwidth guidance
 - [x] model-team-opex — Team member salary allocations for HER/P&L: Niko 50/50 direct/indirect, Chad 20% indirect, rent $27.6K/yr, indirect salaries $147K/yr
 - [x] model-contacts-directory — Internal team contacts: Andy (PM), Nico (hardware/installs), Chad (ops), Stan (config), Agustin (app readiness), CS Team (booking)
-- [ ] model-tier-variants — PBK tier (Pickleball Kingdom custom pricing), PingPod-specific hardware (audio, speakers, Bluetooth), front desk hardware category (webcam, barcode scanner)
+- [x] model-tier-variants — PBK tier (Pickleball Kingdom custom pricing), PingPod-specific hardware (audio, speakers, Bluetooth), front desk hardware category (webcam, barcode scanner)
 
 ### Wave 3: Business Logic & Workflows
 - [ ] logic-customer-onboarding — Complete onboarding workflow: form → master → tab creation → cost analysis → SOW

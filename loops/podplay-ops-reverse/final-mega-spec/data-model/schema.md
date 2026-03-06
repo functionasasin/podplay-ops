@@ -1131,7 +1131,8 @@ CREATE TABLE deployment_checklist_templates (
 
   applicable_tiers service_tier[],
   -- Which tiers this step applies to; NULL means all tiers
-  -- Example: Kisi steps only apply to ['autonomous', 'autonomous_plus', 'pbk']
+  -- Example: Kisi steps only apply to ['autonomous', 'autonomous_plus']
+  -- Note: PBK tier has no access control; it follows Pro checklist (no Kisi steps)
   -- Example: NVR steps only apply to ['autonomous_plus']
 
   is_v2_only      BOOLEAN NOT NULL DEFAULT false,
