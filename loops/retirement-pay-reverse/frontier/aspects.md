@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 65
-- Analyzed: 57
-- Pending: 8
-- Convergence: 88%
+- Analyzed: 58
+- Pending: 7
+- Convergence: 89%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -82,7 +82,7 @@ Depends on Wave 5.
 - [x] playwright-e2e-specs — E2E scenarios: auth flow, single computation wizard, batch upload, share link, PDF export, NLRC worksheet, org management
 - [x] production-build-verification — Vite plugin inventory (exact order), production build smoke test (npm run build + npx serve dist), tree-shaking-sensitive libs, WASM loading in prod mode
 - [x] migration-verification — supabase db reset test plan, RPC call tests with real data, parameter type matching (UUID vs TEXT), RLS policy verification
-- [ ] supabase-gotchas — Anon grants for public RPCs (sharing), search_path on SECURITY DEFINER, RLS bypass patterns, storage bucket policies, auth email confirmation in dev
+- [x] supabase-gotchas — Anon grants for public RPCs (sharing), search_path on SECURITY DEFINER, RLS bypass patterns, storage bucket policies, auth email confirmation in dev
 - [ ] fly-io-deployment — Dockerfile (multi-stage: wasm-pack + node build), fly.toml (app name, region, env), build args, Supabase project setup, domain config
 - [ ] ci-cd-pipeline — GitHub Actions: typecheck -> lint -> vitest -> build -> playwright -> deploy to Fly.io
 
@@ -95,6 +95,7 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 - [ ] spec-review — Final review: can the forward loop build the ENTIRE product from this spec alone?
 
 ## Recently Analyzed
+- supabase-gotchas (Wave 6) — 2026-03-06
 - migration-verification (Wave 6) — 2026-03-06
 - production-build-verification (Wave 6) — 2026-03-06
 - playwright-e2e-specs (Wave 6) — 2026-03-06
