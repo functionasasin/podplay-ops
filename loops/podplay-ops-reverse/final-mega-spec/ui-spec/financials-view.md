@@ -1372,7 +1372,7 @@ Six editable fields pre-filled from `settings`. Ops can override for this specif
 Helper text below each field:
 - Niko direct allocation: "% of Niko's time directly attributed to hardware ops (default 50%)"
 - Chad indirect: "% of Chad's time attributed to hardware overhead (default 20%)"
-- Monthly indirect salaries: "Total indirect salary pool / 12 (ops, support, etc.)"
+- Monthly indirect salaries: "Total indirect salary pool / 12 (ops, support, admin)"
 
 Fields are in a `grid-cols-2 gap-4`.
 

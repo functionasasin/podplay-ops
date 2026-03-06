@@ -259,7 +259,7 @@ export async function createProject(): Promise<Project> {
 /**
  * Partial update of any project fields.
  * Used by all wizard stages (intake saves customer fields, deployment saves
- * deployment_status, financials saves revenue_stage, etc.)
+ * deployment_status; financials saves revenue_stage and go_live_date)
  *
  * Side effect: if ddns_subdomain changes, also updates replay_api_url:
  *   replay_api_url = `http://${ddns_subdomain}.podplaydns.com:4000`
@@ -949,7 +949,7 @@ export async function createPurchaseOrder(params: {
 
 ```ts
 /**
- * Updates PO header fields (status, tracking_number, received_date, etc.)
+ * Updates PO header fields (status, tracking_number, received_date, received_by, notes)
  */
 export async function updatePurchaseOrder(
   id: string,

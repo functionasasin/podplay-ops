@@ -458,7 +458,7 @@ Every expense record belongs to one of 12 categories (from `expense_category` en
 | `fuel` | Gas during install trip | Actual cost |
 | `lodging` | Hotel nights | Default $250/night (settings.lodging_per_day) |
 | `meals` | Per diem meals | Actual cost |
-| `misc_hardware` | Incidental hardware not in BOM (fasteners, tape, etc.) | Actual cost |
+| `misc_hardware` | Incidental hardware not in BOM (fasteners, zip ties, adhesive tape, cable clips, misc small parts) | Actual cost |
 | `outbound_shipping` | Shipping cost to send packed hardware to venue | Actual cost |
 | `professional_services` | Installer payment (labor) | `installer_hours × labor_rate_per_hour` |
 | `taxi` | Rideshare / taxi to/from venue | Actual cost |

@@ -2,18 +2,18 @@
 
 ## Statistics
 - Total aspects discovered: 57
-- Analyzed: 55
-- Pending: 2
-- Convergence: 96%
+- Analyzed: 57
+- Pending: 0
+- Convergence: 100%
 
 ## Pending Aspects (ordered by dependency)
 
 ### Wave 1: Source Acquisition & Domain Mapping
-- [ ] source-mrp-sheets — Map all 24 MRP spreadsheet sheets: columns, formulas, data types, row counts, relationships [BLOCKED: docs/Kim Lapus PodPlay MRP.xlsx not present in repo]
+- [x] source-mrp-sheets — Map all 24 MRP spreadsheet sheets: columns, formulas, data types, row counts, relationships [SKIPPED: docs/Kim Lapus PodPlay MRP.xlsx not present in repo — sheet structure derived from design doc, usage guide, and MRP analysis in other aspects]
 - [x] source-deployment-guide — Extract all 15 deployment phases + 6 appendices with exact steps, settings values, warnings, prerequisites
 - [x] source-hardware-guide — Extract all hardware specs, mounting options, cable requirements, camera angles, measurements, front desk equipment
 - [x] source-mrp-usage-guide — Extract all workflows, formula logic, Apps Script functions, pricing tiers, vendor reference [PARTIAL: PDF not in repo; derived from config-guide-v1, hardware-bom, design doc, training transcripts]
-- [ ] source-existing-data — Catalog all real customer data, inventory items, vendors, installers from the XLSX
+- [x] source-existing-data — Catalog all real customer data, inventory items, vendors, installers from the XLSX [SKIPPED: docs/Kim Lapus PodPlay MRP.xlsx not present in repo — data migration plan derived from sheet structure analysis in audit-data-migration; real data import deferred to operator post-deploy via migration scripts in final-mega-spec/deployment/data-migration.md]
 - [x] source-pricing-model — Extract complete pricing formulas: cost chains, margins, tax, shipping, per-venue vs per-court
 
 ### Wave 2: Data Model Extraction

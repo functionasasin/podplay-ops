@@ -28,7 +28,7 @@ Customer onboarding is the complete workflow from first customer contact through
 | `customer_name` | text | required, 1–200 chars, trimmed | Business/club name. e.g., "Telepark Pickleball Club" |
 | `venue_name` | text | required, 1–200 chars, trimmed | Location name. Default: same as customer_name for single-venue clients. e.g., "Telepark - Jersey City" |
 | `venue_address_line1` | text | optional | Street address |
-| `venue_address_line2` | text | optional | Suite, unit, etc. |
+| `venue_address_line2` | text | optional | Suite, unit, floor, or building designation |
 | `venue_city` | text | required | City name |
 | `venue_state` | text | required | State/province code (e.g., "NJ", "CA") |
 | `venue_zip` | text | optional | Postal code |

@@ -65,7 +65,7 @@ CREATE TYPE isp_type AS ENUM (
   'fiber',      -- Fiber (symmetrical preferred)
   'cable',      -- Cable (asymmetric — upload speed is the constraint)
   'dedicated',  -- Dedicated circuit (symmetric)
-  'other'       -- DSL, fixed wireless, etc.
+  'other'       -- DSL, fixed wireless, satellite, or any ISP type not listed above
 );
 
 -- Replay service version
@@ -4475,7 +4475,7 @@ CREATE TABLE team_contacts (
   department    TEXT        NOT NULL,                 -- 'pm', 'hardware', 'operations', 'config', 'app', 'cs', 'engineering'
   phone         TEXT,                                 -- E.164 or formatted; NULL if unknown
   email         TEXT,                                 -- NULL if unknown
-  contact_via   TEXT,                                 -- Free text: 'Via Chad', 'Slack #installs', etc. NULL if direct
+  contact_via   TEXT,                                 -- Free text: 'Via Chad', 'Slack #installs', 'Email only'. NULL if direct contact.
   support_tier  SMALLINT    CHECK (support_tier IN (1, 2, 3)),  -- NULL if not a support escalation contact
   notes         TEXT,                                 -- Responsibilities, when to contact
   is_active     BOOLEAN     NOT NULL DEFAULT true,
