@@ -13,10 +13,13 @@ logs/
 groups/*
 !groups/main/
 !groups/global/
+!groups/monorepo/
 groups/main/*
 groups/global/*
+groups/monorepo/*
 !groups/main/CLAUDE.md
 !groups/global/CLAUDE.md
+!groups/monorepo/CLAUDE.md
 
 # Secrets
 *.keys.json
