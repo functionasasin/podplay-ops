@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 37
-- Analyzed: 15
-- Pending: 22
-- Convergence: 41%
+- Analyzed: 16
+- Pending: 21
+- Convergence: 43%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -34,7 +34,7 @@ Depends on Wave 3. The biggest wave — where inheritance had the most issues.
 - [x] route-table — Complete TanStack Router route table with beforeLoad auth guards, 18+ routes
 - [x] env-configuration — All VITE_* env vars, .env.local.example, graceful missing-var handling (SetupPage pattern)
 - [x] navigation — Auth-aware sidebar (desktop) + drawer (mobile), active states, sign-out
-- [ ] org-model — Organizations, members, roles, invitations, seat limits, useOrganization() hook
+- [x] org-model — Organizations, members, roles, invitations, seat limits, useOrganization() hook
 - [ ] computation-management — CRUD for computations, auto-save, status workflow, ComputationCard grid
 - [ ] sharing — Token-based read-only sharing, get_shared_computation() RPC, /share/$token route
 

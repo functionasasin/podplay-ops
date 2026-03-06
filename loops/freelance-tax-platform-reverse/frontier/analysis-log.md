@@ -17,3 +17,4 @@
 | 13 | route-table | 4 | 2026-03-06 | analysis/route-table.md, frontier/aspects.md, frontier/analysis-log.md |
 | 14 | env-configuration | 4 | 2026-03-06 | analysis/env-configuration.md, frontier/aspects.md, frontier/analysis-log.md |
 | 15 | navigation | 4 | 2026-03-06 | analysis/navigation.md, frontier/aspects.md, frontier/analysis-log.md |
+| 16 | org-model | 4 | 2026-03-06 | analysis/org-model.md, frontier/aspects.md, frontier/analysis-log.md |
