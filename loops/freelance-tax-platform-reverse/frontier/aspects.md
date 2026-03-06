@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 37
-- Analyzed: 23
-- Pending: 14
-- Convergence: 62%
+- Analyzed: 24
+- Pending: 13
+- Convergence: 65%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -45,7 +45,7 @@ Depends on Wave 4. Every component must have a home.
 - [x] design-system-alignment — Map TaxKlaro palette to shadcn/ui + Radix + Tailwind CSS 4 theming
 - [x] visual-verification-checklist — For every major component: required shadcn wrapper (Card/Alert/Badge), key Tailwind classes, lucide icon, color variant. Prevents unstyled test-scaffolding shipping as "complete."
 - [x] empty-states-and-loading — Skeleton loaders, EmptyState components, error states for every async page
-- [ ] toast-catalog — Every user action that produces feedback, with message text and variant
+- [x] toast-catalog — Every user action that produces feedback, with message text and variant
 - [ ] pdf-export-layout — @react-pdf/renderer layout, sections, firm branding, BIR form reference
 
 ### Wave 6: Testing + Deployment
@@ -88,3 +88,4 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 | component-wiring-map | 5 | 2026-03-06 | COMPLETE — All 47 components mapped to parent routes with navigation paths, trigger actions, and props sources. Zero orphans. |
 | visual-verification-checklist | 5 | 2026-03-06 | COMPLETE — All major components specified with shadcn wrapper, key Tailwind classes, lucide icon, and status indicator colors. Anti-scaffolding rule (>=3 Tailwind classes). |
 | action-trigger-map | 5 | 2026-03-06 | COMPLETE — 23 action-triggered features with exact button text, icon, parent, handler bodies (with loading/error/toast), premium gating, and anti-orphan verification points. PDF dynamic import documented. |
+| toast-catalog | 5 | 2026-03-06 | COMPLETE — 41 toasts (13 success, 25 error, 1 info, 2 loading) across 8 categories. Sonner setup, richColors config, loading+update pattern for PDF/logo, no-toast interactions list, critical trap: do NOT install shadcn toast alongside Sonner. |
