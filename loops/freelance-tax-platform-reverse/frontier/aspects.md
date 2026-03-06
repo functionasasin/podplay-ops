@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 37
-- Analyzed: 10
-- Pending: 27
-- Convergence: 27%
+- Analyzed: 11
+- Pending: 26
+- Convergence: 30%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -29,7 +29,7 @@ Depends on Wave 2. Map Rust types to TypeScript + Zod with exact field alignment
 
 ### Wave 4: Platform Layer
 Depends on Wave 3. The biggest wave — where inheritance had the most issues.
-- [ ] supabase-auth-flow — PKCE email/password, magic link, sign-in/sign-up UI, callback route, password reset, session management
+- [x] supabase-auth-flow — PKCE email/password, magic link, sign-in/sign-up UI, callback route, password reset, session management
 - [ ] supabase-migrations — Full SQL: tables, RLS policies, RPC functions, triggers, storage buckets (idempotent)
 - [ ] route-table — Complete TanStack Router route table with beforeLoad auth guards, 18+ routes
 - [ ] env-configuration — All VITE_* env vars, .env.local.example, graceful missing-var handling (SetupPage pattern)
@@ -77,3 +77,4 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 | error-contract | 2 | 2026-03-06 | COMPLETE — All 29 ERR_* codes, 5 ineligibility errors, 8 assertion errors, 9 WARN_* codes, 5 IN-* codes, MRF_* types. Rust serde attrs, JSON wire format, TypeScript interfaces, Zod schemas, frontend handling (ValidationError vs ComputeError vs Sentry). Dynamic field name mapping table. |
 | typescript-types | 3 | 2026-03-06 | COMPLETE — 4 files (common.ts, engine-input.ts, engine-output.ts, index.ts). All 14 enums mapped with string literal unions + as-const arrays. All input/output structs mapped with exact camelCase fields. FormOutputUnion discriminated union with type guards. Default factory function. Cross-layer consistency table with critical traps for digit-in-name fields and formType vs formVariant distinction. |
 | zod-schemas | 3 | 2026-03-06 | COMPLETE — 6 files (primitives, enums, input, output, bridge, index). All input schemas use .strict(). Output schemas no .strict(). .nullable() throughout (not .optional()). z.boolean() no coerce. Per-step wizard schemas for WS-01/03/04/07C/08. WasmResultSchema factory. 8 critical traps documented. Full cross-layer consistency table. |
+| supabase-auth-flow | 4 | 2026-03-06 | COMPLETE — main.tsx bootstrap with getSession+onAuthStateChange, supabase.ts with supabaseConfigured guard, lib/auth.ts wrappers, all 5 auth routes (auth, callback, reset, reset-confirm, onboarding), SetupPage, beforeLoad guard pattern, RouterContext type, email redirect URLs, 6 critical traps documented. |
