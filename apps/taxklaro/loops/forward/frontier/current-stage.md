@@ -1,25 +1,24 @@
-# Current Stage: 14 (Auth)
+# Current Stage: 15 (Routes + Navigation)
 
 ## Status
-Stage 13 complete. supabase db reset passes, all 4 migrations created, .env.local.example created.
+Stage 14 complete. All 17 auth tests pass. src/lib/auth.ts fully implemented.
 
 ## What To Do
-Read spec §9. Implement Supabase PKCE auth with email/password and magic link.
+Read spec §11, §12. Implement TanStack Router with 18 routes and auth-aware layout.
 
 Tasks:
-- Create src/lib/supabase.ts (supabaseConfigured guard)
-- Update src/main.tsx (getSession + onAuthStateChange bootstrap)
-- Create src/lib/auth.ts (signInWithPassword, signInWithOtp, signUp, signOut, resetPassword)
-- Create src/hooks/useAuth.ts (auth state hook)
-- Create auth routes: /auth, /auth/callback, /auth/reset, /auth/reset-confirm
-- Create SetupPage.tsx (shown when VITE_SUPABASE_URL is missing)
+- Create src/router.ts (createRouter with context)
+- Create all 18 route files from spec §11.2 (route table)
+- Implement beforeLoad auth guard pattern from spec §11.3
+- Create AppLayout.tsx from spec §12.1 (sidebar desktop + drawer mobile)
+- Create SidebarContent.tsx from spec §12.2 (auth-aware nav items)
 
 Critical traps:
-- getSession() BEFORE onAuthStateChange listener (spec §9.5)
-- PKCE flow: callback route handles code exchange
-- Email redirect URLs must be whitelisted in Supabase dashboard
+- Public routes (/, /auth/*, /share/$token) must NOT have auth guard
+- Route file naming must follow TanStack Router file conventions exactly
+- RouterContext type must include `auth: { user: User | null }`
 
-Test command: `npx vitest run src/lib/auth`
+Test command: `npx vitest run src/routes/`
 
 ## Work Log
 - 2026-03-06: Stage 1 complete — cargo check passes, advancing to stage 2
@@ -35,3 +34,4 @@ Test command: `npx vitest run src/lib/auth`
 - 2026-03-06: Stage 11 complete — 128 tests pass for wizard steps WS-08 through WS-13 + REVIEW, advancing to stage 12
 - 2026-03-06: Stage 12 complete — 42 tests pass for results components + format utilities, advancing to stage 13
 - 2026-03-06: Stage 13 complete — supabase db reset passes, all 4 migrations match spec §10, .env.local.example created, advancing to stage 14
+- 2026-03-06: Stage 14 complete — 17 auth tests pass, advancing to stage 15
