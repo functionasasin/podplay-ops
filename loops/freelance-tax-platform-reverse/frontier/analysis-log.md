@@ -2,6 +2,7 @@
 
 | # | Aspect | Wave | Date | Files Modified |
 |---|--------|------|------|----------------|
+| 37 | fill-e2e-specs | 7.5 | 2026-03-06 | analysis/fill-e2e-specs.md, docs/plans/freelance-tax-spec.md (Section 15.2 expanded: full playwright.config.ts, test data fixtures, 13 test suites T-AUTH-01–T-ERROR-03 with exact steps/assertions/data-testid, orphan-scan script, 6-phase CI order, 8 critical traps), frontier/aspects.md, frontier/analysis-log.md |
 | 36 | fill-wizard-step-fields | 7.5 | 2026-03-06 | analysis/fill-wizard-step-fields.md, docs/plans/freelance-tax-spec.md (new Section 7.7: 17 wizard steps with all field specs, routing matrix, GV-01–GV-20, DA-01–DA-14), frontier/aspects.md, frontier/analysis-log.md |
 | 35 | completeness-audit | 7 | 2026-03-06 | analysis/completeness-audit.md, frontier/aspects.md (4 new gap-fill aspects in Wave 7.5), frontier/analysis-log.md. 13 PASS / 4 FAIL. Gaps: wizard step field specs, E2E detailed steps, per-page empty states, 28 missing toasts. |
 | 34 | placeholder-validation | 7 | 2026-03-06 | analysis/placeholder-validation.md, docs/plans/freelance-tax-spec.md (2 fixes: CI stub values + playwright.config.ts), frontier/aspects.md, frontier/analysis-log.md |
