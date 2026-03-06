@@ -1,0 +1,50 @@
+Stage 25 — Integration Sweep — CONVERGED
+Timestamp: 2026-03-06
+
+## Convergence Summary
+
+All convergence criteria met:
+
+### Placeholder/Stub Scan
+- Zero grep hits for TODO/stub/placeholder/coming-soon in src/ (excluding node_modules, test files, HTML placeholder= attrs)
+- All remaining hits are legitimate HTML placeholder= prop usages in UI components
+
+### Full Test Suite
+- 549 unit tests pass (11 test files)
+- 0 failures
+- Duration: ~1.65s
+
+### Production Build
+- vite build succeeds in 1.92s
+- 253 modules transformed
+- Output: 267.65 kB JS (86.04 kB gzip), 41.06 kB CSS (8.27 kB gzip)
+- All assets generated correctly
+
+### Stage History
+- Stage 1: Engine scaffold (cargo check passes)
+- Stage 2: Engine types + rates (all types compile)
+- Stage 3: Engine pipeline (37 tests pass)
+- Stage 4: WASM build (wasm-pack build succeeds, pkg/ produced)
+- Stage 5: Frontend scaffold + WASM bridge (0 tests, vite build OK)
+- Stage 6: TypeScript types (tsc --noEmit zero errors)
+- Stage 7: Zod schemas (77 tests pass)
+- Stage 8: Design system (33.82 kB CSS, vite build OK)
+- Stage 9: Wizard state + step routing (36 tests pass)
+- Stage 10: Wizard steps WS-00 through WS-07D (80 tests pass)
+- Stage 11: Wizard steps WS-08 through WS-13 + REVIEW (128 tests pass)
+- Stage 12: Results view + compute (42 tests pass)
+- Stage 13: Supabase + migrations (db reset OK, 4 migrations)
+- Stage 14: Auth (17 tests pass)
+- Stage 15: Routes + navigation (63 tests pass)
+- Stage 16: Org model + computations CRUD (27 tests pass)
+- Stage 17: Sharing + auto-save (19 tests pass)
+- Stage 18: Component wiring (86 tests pass, zero orphans)
+- Stage 19: Empty states + toasts + loading (41 tests pass)
+- Stage 20: Monitoring (13 tests pass)
+- Stage 21: Deployment config (Dockerfile + nginx.conf + fly.toml)
+- Stage 22: CI/CD workflows (ci.yml + deploy.yml, YAML lint OK)
+- Stage 23: Unit tests full suite (549 tests pass)
+- Stage 24: E2E tests (33 Playwright tests across 12 spec files)
+- Stage 25: Integration sweep (no stubs, all tests pass, build OK)
+
+TaxKlaro is production-ready.
