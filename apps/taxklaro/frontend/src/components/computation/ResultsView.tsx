@@ -18,7 +18,7 @@ interface ResultsViewProps {
 
 export function ResultsView({ result }: ResultsViewProps) {
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <WarningsBanner warnings={result.warnings} />
       <ManualReviewFlags manualReviewFlags={result.manualReviewFlags} />
 

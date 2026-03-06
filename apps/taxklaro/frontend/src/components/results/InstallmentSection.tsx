@@ -29,10 +29,10 @@ export function InstallmentSection({
   }
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-semibold">Installment Payment Schedule</CardTitle>
-        <p className="text-xs text-muted-foreground">
+    <Card className="shadow-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="font-display text-xl font-normal">Installment Payment Schedule</CardTitle>
+        <p className="text-sm text-muted-foreground">
           Balance exceeds ₱2,000 — eligible for 2-installment payment
         </p>
       </CardHeader>

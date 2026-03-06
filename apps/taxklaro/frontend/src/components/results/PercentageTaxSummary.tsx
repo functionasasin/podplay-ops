@@ -29,9 +29,9 @@ export function PercentageTaxSummary({ ptResult }: PercentageTaxSummaryProps) {
   }
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-semibold">Percentage Tax (BIR Form 2551Q)</CardTitle>
+    <Card className="shadow-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="font-display text-xl font-normal">Percentage Tax (BIR Form 2551Q)</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
         <div className="flex justify-between text-sm">

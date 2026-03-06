@@ -4,6 +4,7 @@ import { authenticatedRoute } from '../__root';
 import { authGuard } from '../../lib/auth-guard';
 import { loadComputation } from '../../lib/computations';
 import { ResultsView } from '../../components/computation/ResultsView';
+import { Badge } from '../../components/ui/badge';
 import type { ComputationRow } from '../../types/org';
 import type { TaxComputationResult } from '../../types/engine-output';
 
@@ -68,13 +69,19 @@ function ComputationDetailPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6" data-testid="computation-detail-page">
       <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1.5 min-w-0">
+        <div className="space-y-2 min-w-0">
           <h1 className="font-display text-3xl font-normal truncate">
             {computation.title || 'Untitled Computation'}
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Tax Year {computation.taxYear} &middot; <span className="capitalize">{computation.status}</span>
-          </p>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <span className="text-sm text-muted-foreground">Tax Year {computation.taxYear}</span>
+            <Badge
+              variant={computation.status === 'complete' ? 'default' : 'secondary'}
+              className={`capitalize text-xs ${computation.status === 'complete' ? 'bg-green-600 hover:bg-green-700 text-white' : ''}`}
+            >
+              {computation.status}
+            </Badge>
+          </div>
         </div>
         <button
           className="inline-flex items-center py-2.5 text-sm text-primary hover:text-primary/80 underline underline-offset-2 shrink-0 transition-colors"

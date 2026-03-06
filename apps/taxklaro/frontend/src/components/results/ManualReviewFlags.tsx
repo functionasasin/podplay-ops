@@ -11,14 +11,16 @@ export function ManualReviewFlags({ manualReviewFlags }: ManualReviewFlagsProps)
   if (manualReviewFlags.length === 0) return null;
 
   return (
-    <Card className="border-yellow-500/50">
+    <Card className="border-yellow-500/50 bg-yellow-50/30 shadow-sm dark:bg-yellow-900/10">
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-semibold text-yellow-700 dark:text-yellow-400 flex items-center gap-2">
-          <span>Manual Review Required</span>
+        <div className="flex items-center gap-2">
+          <CardTitle className="font-display text-xl font-normal text-yellow-800 dark:text-yellow-300">
+            Manual Review Required
+          </CardTitle>
           <Badge variant="outline" className="border-yellow-500 text-yellow-700 dark:text-yellow-400">
             {manualReviewFlags.length}
           </Badge>
-        </CardTitle>
+        </div>
       </CardHeader>
       <CardContent className="space-y-3">
         {manualReviewFlags.map((flag) => (

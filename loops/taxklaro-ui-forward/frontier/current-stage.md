@@ -1,26 +1,30 @@
-# Current Stage: 6 (Results + Detail)
+# Current Stage: 7 (List Pages)
 
 ## Status
-Stage 5 complete. Wizard at `/computations/new` polished:
-- WizardProgressBar: h-3, gradient fill, DM Sans step count — already done
-- Step container: shadow-md card with p-8 — already done
-- Radio cards (WS00, WS01, WS02, WS06, WS11): Card-based hover+selected state — WS11 updated to match
-- Navigation: Removed duplicate WizardNavControls from new.tsx. All steps now use
-  variant="outline" h-11 px-5 for Back, h-11 px-6 for Next/Continue.
-- WizardReview: sections as shadow-sm cards, font-display section titles — already done
-- Section headings: font-display text-2xl — already done across all steps
+Stage 6 complete. Results view at `/computations/$compId` polished:
+- RecommendationBanner: green accent card, savings in font-display text-2xl — already done
+- RegimeComparisonTable: font-display title, shadow-sm, tabular-nums, green recommended row — already done
+- TaxBreakdownPanel: font-display title, shadow-sm, right-aligned amounts — already done
+- PathDetailAccordion: shadow-sm + hover:shadow-md, rounded-xl, smooth expand — already done
+- BalancePayableSection: font-display text-2xl for big numbers, color-coded — already done
+- PenaltySummary: amber-bordered card, font-display title + total amount — already done
+- BirFormRecommendation: blue-tinted info card, primary badge — already done
+- InstallmentSection: upgraded to shadow-sm Card, font-display text-xl title
+- PercentageTaxSummary: upgraded to shadow-sm Card, font-display text-xl title
+- ManualReviewFlags: upgraded to yellow-tinted card with font-display title
+- Page header ($compId.tsx): status Badge added (green for complete, secondary otherwise)
+- ResultsView: space-y-6 for more breathing room
 - Build passes.
 
 ## What To Do
-Restyle the results view at `/computations/$compId`:
-- RecommendationBanner: prominent card with green accent, savings amount in DM Serif Display
-- RegimeComparisonTable: clean table with highlighted recommended column, tabular nums
-- TaxBreakdownPanel: card sections with clear labels, amounts right-aligned
-- PathDetailAccordion: smooth expand/collapse, indented detail rows
-- BalancePayableSection: large bottom-line number in DM Serif Display, green/red coloring
-- PenaltySummary: amber-bordered warning card
-- BirFormRecommendation: subtle info card with form type badge
-- Page header: computation title in DM Serif Display, status badge, back navigation
+Restyle list pages at `/computations`, `/clients`, `/clients/new`, `/clients/$clientId`:
+- ComputationCard: shadow-sm, hover shadow-md transition, serif title, clean metadata layout
+- Computations list: proper grid gap, tabs styled with underline variant
+- Empty states: illustration or large icon, helpful copy, clear CTA
+- ClientsTable: clean borders, hover row highlight, proper cell padding
+- Client detail: ClientInfoCard with sections, serif name heading
+- New client form: same form styling as auth (full-width inputs, proper spacing)
+- Page headers: DM Serif Display h1, action buttons right-aligned
 
 ## Work Log
 - Stage 1 (2026-03-06): Installed @fontsource-variable/dm-sans + @fontsource/dm-serif-display.
@@ -40,3 +44,7 @@ Restyle the results view at `/computations/$compId`:
   Updated all 13 wizard steps: Back buttons → variant="outline" h-11 px-5, Continue → h-11 px-6.
   WS11RegimeElection radio options refactored to Card-based pattern (matching WS00/WS01/WS06).
   Build passes.
+- Stage 6 (2026-03-06): Results view polish. InstallmentSection + PercentageTaxSummary upgraded
+  to shadow-sm cards with font-display titles. ManualReviewFlags given yellow-tinted card styling
+  and font-display title. $compId.tsx page header now shows status Badge (green for complete).
+  ResultsView spacing increased to space-y-6. Build passes.
