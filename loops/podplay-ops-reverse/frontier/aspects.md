@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 57
-- Analyzed: 30
-- Pending: 27
-- Convergence: 53%
+- Analyzed: 31
+- Pending: 26
+- Convergence: 54%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -45,7 +45,7 @@
 - [x] logic-progress-calculation — Progress % from QA checklist completion, status derivation rules
 - [x] logic-invoicing — Two-installment billing: deposit → final, signed/invoiced/paid tracking, aging receivables
 - [x] logic-expense-tracking — Expense categories, payment methods, per-project attribution, monthly totals
-- [ ] logic-financial-reporting — P&L calculation, HER formula (hardware revenue / team spend), monthly close workflow
+- [x] logic-financial-reporting — P&L calculation, HER formula (hardware revenue / team spend), monthly close workflow
 - [ ] logic-reconciliation — Cross-sheet verification: inventory vs POs vs project costs, discrepancy detection
 - [ ] logic-sign-fulfillment — Replay sign workflow: calculate qty (2x courts), track outreach (Slack/email), shipping, install confirmation, inventory decrement
 - [ ] logic-troubleshooting — Contextual troubleshooting tips linked to deployment phases: 14 known issue/solution pairs from Appendix A (Mac Mini crash, PoE issues, button pairing, DDNS, port 4000, .DS_Store, pixelation, Firebase re-sync)
