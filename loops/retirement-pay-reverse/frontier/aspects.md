@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 55
-- Analyzed: 4
-- Pending: 51
-- Convergence: 7%
+- Analyzed: 5
+- Pending: 50
+- Convergence: 9%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -14,7 +14,7 @@ Fetch and cache primary legal sources.
 - [x] fetch-ra7641-full-text — Fetch RA 7641 (Retirement Pay Law) full text from Official Gazette or LawPhil
 - [x] fetch-labor-code-art302 — Fetch Labor Code Art. 302 (renumbered from Art. 287) on retirement
 - [x] fetch-elegir-v-pal — Fetch Supreme Court ruling Elegir v. Philippine Airlines confirming 22.5 days
-- [ ] fetch-nirc-tax-exemption — Fetch NIRC Sec. 32(B)(6)(a) + Revenue Regulation 1-68 on retirement pay tax exemption
+- [x] fetch-nirc-tax-exemption — Fetch NIRC Sec. 32(B)(6)(a) + Revenue Regulation 1-68 on retirement pay tax exemption
 - [ ] fetch-separation-pay-rules — Fetch Labor Code Art. 298-299 (authorized causes for separation pay)
 - [ ] fetch-dole-final-pay — Fetch DOLE Labor Advisory 06-20 on final pay computation rules
 - [ ] fetch-bir-approved-plans — Fetch BIR requirements for approved retirement plans (RR 1-68 conditions)
@@ -99,3 +99,4 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 - fetch-ra7641-full-text (Wave 1) — 2026-03-06
 - fetch-labor-code-art302 (Wave 1) — 2026-03-06
 - fetch-elegir-v-pal (Wave 1) — 2026-03-06
+- fetch-nirc-tax-exemption (Wave 1) — 2026-03-06
