@@ -2,16 +2,16 @@
 
 ## Statistics
 - Total aspects discovered: 55
-- Analyzed: 1
-- Pending: 54
-- Convergence: 2%
+- Analyzed: 2
+- Pending: 53
+- Convergence: 4%
 
 ## Pending Aspects (ordered by dependency)
 
 ### Wave 1: Domain Source Acquisition
 Fetch and cache primary legal sources.
 - [x] cache-existing-analysis — Import deep-dive from loops/ph-compliance-moats-reverse/analysis/deepdive-retirement-pay-ra7641.md into input/sources/
-- [ ] fetch-ra7641-full-text — Fetch RA 7641 (Retirement Pay Law) full text from Official Gazette or LawPhil
+- [x] fetch-ra7641-full-text — Fetch RA 7641 (Retirement Pay Law) full text from Official Gazette or LawPhil
 - [ ] fetch-labor-code-art302 — Fetch Labor Code Art. 302 (renumbered from Art. 287) on retirement
 - [ ] fetch-elegir-v-pal — Fetch Supreme Court ruling Elegir v. Philippine Airlines confirming 22.5 days
 - [ ] fetch-nirc-tax-exemption — Fetch NIRC Sec. 32(B)(6)(a) + Revenue Regulation 1-68 on retirement pay tax exemption
@@ -96,3 +96,4 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 
 ## Recently Analyzed
 - cache-existing-analysis (Wave 1) — 2026-03-06
+- fetch-ra7641-full-text (Wave 1) — 2026-03-06
