@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 55
-- Analyzed: 24
-- Pending: 31
-- Convergence: 44%
+- Analyzed: 25
+- Pending: 30
+- Convergence: 45%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -40,7 +40,7 @@ Depends on Wave 2 rule extraction.
 - [x] algorithms — Exact arithmetic: integer centavos, rational fractions for 22.5-day decomposition, rounding rules
 - [x] batch-engine — Batch processing pipeline: CSV parse -> validate rows -> compute per-employee -> aggregate -> summary
 - [x] nlrc-worksheet-generator — NLRC worksheet output: computation breakdown, legal basis citations, exhibit formatting
-- [ ] test-vectors — 20+ test vectors: basic case, 15-day error case, rounding edge cases, tax exempt/taxable, death, batch, separation pay overlap
+- [x] test-vectors — 20+ test vectors: basic case, 15-day error case, rounding edge cases, tax exempt/taxable, death, batch, separation pay overlap
 - [ ] invariants — Rules that must hold: retirement pay >= 0, credited years >= 5 (if eligible), 22.5-day formula always used, tax exemption requires all 4 conditions
 
 ### Wave 4: Bridge Contract
@@ -95,6 +95,7 @@ Depends on ALL previous waves. **Strict internal dependency order — do NOT ski
 - [ ] spec-review — Final review: can the forward loop build the ENTIRE product from this spec alone?
 
 ## Recently Analyzed
+- test-vectors (Wave 3) — 2026-03-06
 - nlrc-worksheet-generator (Wave 3) — 2026-03-06
 - batch-engine (Wave 3) — 2026-03-06
 - algorithms (Wave 3) — 2026-03-06

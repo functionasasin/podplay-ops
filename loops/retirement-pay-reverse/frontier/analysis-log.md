@@ -26,3 +26,4 @@
 | 22 | algorithms | 3 | 2026-03-06 | analysis/algorithms.md |
 | 23 | batch-engine | 3 | 2026-03-06 | analysis/batch-engine.md |
 | 24 | nlrc-worksheet-generator | 3 | 2026-03-06 | analysis/nlrc-worksheet-generator.md |
+| 25 | test-vectors | 3 | 2026-03-06 | analysis/test-vectors.md |
