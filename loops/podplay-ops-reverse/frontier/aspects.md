@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 57
-- Analyzed: 49
-- Pending: 8
-- Convergence: 86%
+- Analyzed: 50
+- Pending: 7
+- Convergence: 88%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -68,7 +68,7 @@
 - [x] design-supabase-functions — Client-side service layer: all CRUD operations, queries, filters per table
 
 ### Wave 5: Ship & Polish
-- [ ] ship-deployment — Fly.io config, Dockerfile, nginx.conf, env vars, Supabase Cloud setup
+- [x] ship-deployment — Fly.io config, Dockerfile, nginx.conf, env vars, Supabase Cloud setup
 - [ ] ship-seed-data — Complete seed data: all ~50 hardware items, BOM templates, checklist templates, pricing defaults, VLAN reference, troubleshooting pairs, ISP speed chart, contacts
 - [ ] ship-testing — Test strategy: key test files, smoke tests, form validation tests, BOM generation tests, cost analysis tests
 
