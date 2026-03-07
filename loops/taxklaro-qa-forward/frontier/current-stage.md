@@ -3,13 +3,13 @@
 ## Statistics
 
 - **Total stages**: 33
-- **Completed**: 9
-- **Current**: 12
-- **Convergence**: 9/33
+- **Completed**: 10
+- **Current**: 13
+- **Convergence**: 10/33
 
 ## Current Stage
 
-**Stage 11** — Desktop verify: landing page
+**Stage 12** — Desktop verify: auth pages
 
 ## Stage Log
 
@@ -26,7 +26,7 @@
 | 9 | done | 2026-03-07 | Heading consistency |
 | 10 | done | 2026-03-07 | Mobile responsive audit |
 | 11 | done | 2026-03-07 | Desktop: landing — all pass criteria met |
-| 12 | pending | | Desktop: auth pages |
+| 12 | done | 2026-03-07 | Desktop: auth pages — signin/signup/reset all pass |
 | 13 | pending | | Desktop: onboarding |
 | 14 | pending | | Desktop: dashboard |
 | 15 | pending | | Desktop: computations list |
