@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 68
-- Analyzed: 58
-- Pending: 10
-- Convergence: 85%
+- Analyzed: 59
+- Pending: 9
+- Convergence: 87%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -81,7 +81,7 @@
 Forward loop QA lessons (TaxKlaro): specs that define structure but not micro-copy cause Playwright failures. This wave fills every gap a browser test would hit.
 
 - [x] qa-enum-display-labels — Create `final-mega-spec/ui-spec/enum-labels.md`: map EVERY enum value to its display label. service_tier ('autonomous_plus' → 'Autonomous+'), project_status ('financial_close' → 'Financial Close'), revenue_stage, expense_category, isp_type, movement_type, invoice_status, payment_method. No enum left unmapped. [DONE: 94 values across 21 types mapped; TypeScript record objects, badge classNames, select labels, and sort orders all specified; consolidated export module src/lib/enum-labels.ts defined]
-- [ ] qa-validation-error-messages — Create `final-mega-spec/ui-spec/validation-messages.md`: for EVERY validation rule in wizard-intake.md, wizard-procurement.md, wizard-deployment.md, wizard-financials.md, inventory-view.md, settings-view.md — write the exact error message text. Include field-level errors, form-level errors, and toast messages for API failures.
+- [x] qa-validation-error-messages — Create `final-mega-spec/ui-spec/validation-messages.md`: for EVERY validation rule in wizard-intake.md, wizard-procurement.md, wizard-deployment.md, wizard-financials.md, inventory-view.md, settings-view.md — write the exact error message text. Include field-level errors, form-level errors, and toast messages for API failures. [DONE: 140+ error messages across 6 pages. Steps 1-6 intake (21 field + 9 cross-field + 9 Step-6 blocking checks + 7 ISP cross-validation inline banners), procurement (BOM inline/guard/toast, PO form, receiving guard, CC terminal, replay signs guard/form, advance guard), deployment (6 status transition forms with guards, checklist optimistic rollback, note auto-save inline, ISP phase 5 banners), financials (contract guard, deposit/final invoice forms + guards, mark-paid form, expense dialog, go-live, project-complete guard + confirmation), inventory (adjustment dialog, PO form, reorder threshold inline), settings (pricing cross-validation, all threshold fields, hardware catalog form, SKU uniqueness, OpEx, travel, contacts). Toast durations: success=3s, error=5s, warning=4s, position=bottom-right. Disabled-button tooltip implementation pattern with wrapping span documented.]
 - [ ] qa-mobile-responsive-spec — Create `final-mega-spec/ui-spec/responsive.md`: define exact Tailwind breakpoints (sm/md/lg/xl), then for EVERY page specify: column count per breakpoint, sidebar behavior (drawer on mobile), table behavior (scroll vs hide columns), form layout (single column below md), modal behavior (full-screen below sm), pagination (collapse page numbers below sm), touch targets (min 44px).
 - [ ] qa-formatting-constants — Create `final-mega-spec/ui-spec/formatting.md`: currency formatting rules ($500 vs $500.00, threshold for decimals), date format (MM/DD/YYYY vs Jan 5, 2026), percentage format (85% vs 85.0%), name truncation rules (max chars before ellipsis), status badge color map (intake → blue, procurement → amber, deployment → purple, completed → green, cancelled → red).
 - [ ] qa-schema-field-audit — Read EVERY UI spec file and cross-reference field access patterns against schema.md column names. Fix mismatches. Known issue: routes.md uses `project.status` but schema column is `project_status`. Check ALL .from() queries, ALL field accesses, ALL filter params. Write corrections directly into the affected spec files.
