@@ -48,7 +48,7 @@ function IndexPage() {
   return (
     <div className="min-h-screen bg-background" data-testid="index-page">
       {/* Hero */}
-      <div className="flex flex-col items-center justify-center min-h-[70vh] px-6 text-center">
+      <div className="flex flex-col items-center justify-center py-16 sm:py-24 px-6 text-center">
         <div className="font-display text-2xl tracking-tight text-foreground mb-8">
           <span className="text-primary">&#8369;</span>TaxKlaro
         </div>
