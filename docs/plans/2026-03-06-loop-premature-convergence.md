@@ -14,10 +14,22 @@ Forward loops consistently "converge" at 20-30 stages while leaving significant 
 | freelance-tax-reverse | ~40 iter | Domain spec + 83 test vectors | No platform spec |
 | freelance-tax-platform-reverse | ~30 iter | Platform spec | No code |
 | taxklaro-forward | 28 stages | Engine, types, schemas, components, tests (549 passing) | Route pages still stubs, no layout wiring, bare UI |
-| taxklaro-ui-forward | 10 stages | (in progress) | TBD |
+| taxklaro-ui-forward | 10 stages | Typography, design tokens, visual polish | DB column mismatches, missing sidebar on dashboard, broken clients page |
 | Manual fix | — | Wired 15 route pages to actual components | — |
+| Manual QA | — | Connected real Supabase, fixed RLS, fixed WASM bridge | Found 8 more issues |
 
-Total effort: ~110+ iterations across 4 loops + manual work. Should have been 1 loop.
+Total effort: ~120+ iterations across 4 loops + 2 manual sessions. Should have been 1 loop.
+
+### What the UI Loop Missed (2026-03-07 QA Session)
+
+Even after the UI polish loop "converged," a live QA session with a real Supabase database revealed:
+
+1. **`clients.name` column doesn't exist** — Code queries `name` but DB schema has `full_name`. TypeScript can't catch string-based Supabase queries. The loop never connected to a real database.
+2. **Dashboard has no sidebar** — `IndexRoute` parents to `rootRoute` instead of `authenticatedRoute`. TypeScript is happy (both are valid parents), tests pass, but the page renders without the AppLayout wrapper.
+3. **New client insert uses wrong columns** — Inserts `name` and `address`, but DB has `full_name` and no `address` column.
+4. **Inconsistent heading sizes** — Some pages use `var(--text-h1)`, others use `text-3xl`, others use `text-[2rem]`. The loop defined design tokens but didn't enforce them everywhere.
+
+All 4 issues are invisible to `npx vite build`, `npx vitest run`, and `grep`. They only surface when you **open the app in a browser with a real database**.
 
 ## Root Causes
 

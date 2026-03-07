@@ -220,6 +220,13 @@ loops:
     status: converged
     created: 2026-03-06
     converged_at: "2026-03-06"
+  taxklaro-qa-forward:
+    description: "Fix all 8 QA issues + computation persistence, verify every route desktop (1280px) + mobile (375px) with Playwright, full flow QA (33 stages)"
+    type: forward
+    max_iterations: 50
+    timeout_minutes: 30
+    status: active
+    created: 2026-03-07
   podplay-ops-reverse:
     description: "Extract complete spec from PodPlay MRP docs → ops wizard webapp mega-spec (57 aspects)"
     type: reverse
