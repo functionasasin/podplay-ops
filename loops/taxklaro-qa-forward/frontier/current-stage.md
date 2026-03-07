@@ -3,13 +3,13 @@
 ## Statistics
 
 - **Total stages**: 33
-- **Completed**: 10
-- **Current**: 13
-- **Convergence**: 10/33
+- **Completed**: 11
+- **Current**: 14
+- **Convergence**: 11/33
 
 ## Current Stage
 
-**Stage 12** — Desktop verify: auth pages
+**Stage 13** — Desktop verify: onboarding
 
 ## Stage Log
 
@@ -27,7 +27,7 @@
 | 10 | done | 2026-03-07 | Mobile responsive audit |
 | 11 | done | 2026-03-07 | Desktop: landing — all pass criteria met |
 | 12 | done | 2026-03-07 | Desktop: auth pages — signin/signup/reset all pass |
-| 13 | pending | | Desktop: onboarding |
+| 13 | done | 2026-03-07 | Desktop: onboarding — auth guard redirects correctly, no errors |
 | 14 | pending | | Desktop: dashboard |
 | 15 | pending | | Desktop: computations list |
 | 16 | pending | | Desktop: wizard |
