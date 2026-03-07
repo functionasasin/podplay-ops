@@ -97,7 +97,7 @@ jobs:
         if: steps.check.outputs.skip != 'true'
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
 
-      - name: Install frontend deps (if loop needs dev server)
+      - name: Install frontend deps and configure env (if loop needs dev server)
         if: steps.check.outputs.skip != 'true'
         run: |
           LOOP_DIR="loops/${{ matrix.loop }}"
@@ -108,8 +108,22 @@ jobs:
             if [ -n "$FRONTEND_DIR" ] && [ -d "$FRONTEND_DIR" ]; then
               echo "Installing frontend deps in $FRONTEND_DIR"
               cd "$FRONTEND_DIR" && npm install
+
+              # Write .env.local for Supabase connection
+              if [ -n "$VITE_SUPABASE_URL" ]; then
+                cat > .env.local << ENVEOF
+          VITE_SUPABASE_URL=$VITE_SUPABASE_URL
+          VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
+          VITE_APP_URL=http://localhost:5175
+          VITE_SENTRY_DSN=
+          ENVEOF
+                echo "Wrote .env.local with Supabase config"
+              fi
             fi
           fi
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.TAXKLARO_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.TAXKLARO_SUPABASE_ANON_KEY }}
 
       - name: Run until convergence (6-hour window)
         if: steps.check.outputs.skip != 'true'
