@@ -4,7 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { signOut } from '../../lib/auth';
 
 const navItems = [
-  { label: 'Dashboard', to: '/', icon: LayoutDashboard },
+  { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
   { label: 'Computations', to: '/computations', icon: Calculator },
   { label: 'Clients', to: '/clients', icon: Users },
   { label: 'Deadlines', to: '/deadlines', icon: Calendar },

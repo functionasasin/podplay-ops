@@ -40,15 +40,15 @@ function SettingsTeamPage() {
     if (!orgId) return;
     const { data } = await supabase
       .from('organization_members')
-      .select('user_id, role, profiles(full_name, email)')
+      .select('user_id, role, user_profiles(full_name, email)')
       .eq('org_id', orgId);
 
     if (data) {
       setMembers(
         data.map((m: any) => ({
           id: m.user_id,
-          name: m.profiles?.full_name ?? '',
-          email: m.profiles?.email ?? '',
+          name: m.user_profiles?.full_name ?? '',
+          email: m.user_profiles?.email ?? '',
           role: m.role,
         }))
       );
@@ -58,7 +58,7 @@ function SettingsTeamPage() {
   const loadInvitations = useCallback(async () => {
     if (!orgId) return;
     const { data } = await supabase
-      .from('invitations')
+      .from('organization_invitations')
       .select('id, email, role, created_at')
       .eq('org_id', orgId)
       .eq('status', 'pending');
@@ -89,8 +89,8 @@ function SettingsTeamPage() {
   }
 
   async function handleInvite(email: string, role: string) {
-    if (!orgId) return;
-    await supabase.from('invitations').insert({ org_id: orgId, email, role });
+    if (!orgId || !user) return;
+    await supabase.from('organization_invitations').insert({ org_id: orgId, email, role, invited_by: user.id });
     await loadInvitations();
   }
 
@@ -105,7 +105,7 @@ function SettingsTeamPage() {
   }
 
   async function handleRevokeInvitation(invitationId: string) {
-    await supabase.from('invitations').delete().eq('id', invitationId);
+    await supabase.from('organization_invitations').delete().eq('id', invitationId);
     await loadInvitations();
   }
 

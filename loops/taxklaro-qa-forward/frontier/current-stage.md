@@ -3,13 +3,13 @@
 ## Statistics
 
 - **Total stages**: 33
-- **Completed**: 4
-- **Current**: 5
-- **Convergence**: 4/33
+- **Completed**: 5
+- **Current**: 6
+- **Convergence**: 5/33
 
 ## Current Stage
 
-**Stage 5** — Console errors — investigate and fix
+**Stage 6** — Client detail `address` → `notes`, add `phone` field
 
 ## Stage Log
 
@@ -19,7 +19,7 @@
 | 2 | done | 2026-03-07 | Clients column mismatch — name→full_name, address→notes, +phone |
 | 3 | done | 2026-03-07 | New client insert — full_name, +phone, address→notes |
 | 4 | done | 2026-03-07 | Computation persistence — wire createComputation + saveComputationOutput into wizard |
-| 5 | pending | | Console errors |
+| 5 | done | 2026-03-07 | Console errors — sidebar link, table names, FK joins, missing created_by |
 | 6 | pending | | Client detail fields |
 | 7 | pending | | Dashboard max-width |
 | 8 | pending | | Landing hero proportions |

@@ -9,11 +9,14 @@ export async function createComputation(
   title: string,
   inputJson: TaxpayerInput
 ): Promise<{ id: string } | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
   const { data, error } = await supabase
     .from('computations')
     .insert({
       org_id: orgId,
       client_id: clientId,
+      created_by: user.id,
       title,
       input_json: inputJson,
       tax_year: (inputJson as Record<string, unknown>).taxYear ?? new Date().getFullYear(),

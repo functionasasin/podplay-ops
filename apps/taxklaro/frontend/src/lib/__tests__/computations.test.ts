@@ -29,9 +29,11 @@ const {
   return { mockSelect, mockInsert, mockUpdate, mockDelete, mockEq, mockSingle, mockOrder, mockFrom, chainable };
 });
 
+const mockGetUser = vi.hoisted(() => vi.fn().mockResolvedValue({ data: { user: { id: 'user-1' } } }));
+
 vi.mock('../supabase', () => ({
   supabaseConfigured: true,
-  supabase: { from: mockFrom },
+  supabase: { from: mockFrom, auth: { getUser: mockGetUser } },
 }));
 
 import {
@@ -77,7 +79,7 @@ describe('createComputation', () => {
     const result = await createComputation('org-1', null, 'Annual 2024', fakeInput);
     expect(mockFrom).toHaveBeenCalledWith('computations');
     expect(mockInsert).toHaveBeenCalledWith(
-      expect.objectContaining({ org_id: 'org-1', title: 'Annual 2024' })
+      expect.objectContaining({ org_id: 'org-1', title: 'Annual 2024', created_by: 'user-1' })
     );
     expect(result).toEqual({ id: 'comp-1' });
   });
