@@ -1,4 +1,4 @@
-import { Link, useRouterState } from '@tanstack/react-router';
+import { Link, useRouterState, useNavigate } from '@tanstack/react-router';
 import { LayoutDashboard, Calculator, Users, Calendar, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { signOut } from '../../lib/auth';
@@ -19,6 +19,7 @@ export function SidebarContent({ onClose }: SidebarContentProps = {}) {
   const { user } = useAuth();
   const { location } = useRouterState();
   const pathname = location.pathname;
+  const navigate = useNavigate();
 
   return (
     <div className="flex h-full flex-col" data-testid="sidebar-content">
@@ -62,7 +63,7 @@ export function SidebarContent({ onClose }: SidebarContentProps = {}) {
         )}
         <button
           className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors duration-150 hover:bg-muted/70 hover:text-foreground"
-          onClick={() => signOut()}
+          onClick={async () => { await signOut(); navigate({ to: '/' }); }}
           data-testid="sign-out-button"
         >
           <LogOut className="h-3.5 w-3.5 shrink-0" />

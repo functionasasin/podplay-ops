@@ -3,13 +3,13 @@
 ## Statistics
 
 - **Total stages**: 33
-- **Completed**: 24
-- **Current**: 27
+- **Completed**: 25
+- **Current**: 28
 - **Convergence**: 13/33
 
 ## Current Stage
 
-**Stage 27** — Flow: auth
+**Stage 28** — Flow: computation
 
 ## Stage Log
 
@@ -41,7 +41,7 @@
 | 24 | done | 2026-03-07 | Mobile: clients — auth guard redirects to signin at 375px, overflow-x-auto on table, w-full inputs, p-4 mobile padding, build passes |
 | 25 | done | 2026-03-07 | Mobile: settings + deadlines — auth guard redirects all 3 routes at 375px, no overflow, forms usable, overflow-x-auto on tables, grid-cols-1 on deadlines, build passes |
 | 26 | done | 2026-03-07 | Mobile: sidebar drawer — hamburger md:hidden, Sheet drawer with SidebarContent, onClose wired to nav links, all 5 nav links + sign out present, build passes |
-| 27 | pending | | Flow: auth |
+| 27 | done | 2026-03-07 | Flow: auth — landing+CTA+auth page verified, all 5 nav links pass, sign out fixed (navigate to / after signOut()), build passes |
 | 28 | pending | | Flow: computation |
 | 29 | pending | | Flow: client |
 | 30 | pending | | Flow: cross-entity |
