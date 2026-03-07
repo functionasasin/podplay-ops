@@ -1,10 +1,10 @@
 # Analysis Frontier — PodPlay Ops Wizard
 
 ## Statistics
-- Total aspects discovered: 57
+- Total aspects discovered: 68
 - Analyzed: 57
-- Pending: 0
-- Convergence: 100%
+- Pending: 11
+- Convergence: 83%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -76,3 +76,18 @@
 - [x] audit-completeness — Verify every MRP sheet (all 24) has a webapp equivalent, every deployment appendix (A-F) is covered, no workflow gaps
 - [x] audit-placeholder-sweep — Scan all spec files for TODO/TBD/FIXME/[fill in] — zero tolerance
 - [x] audit-data-migration — Document how existing XLSX data maps to new database tables for initial import, including CC Form and Replay Signs data
+
+### Wave 7: QA-Readiness — UI Constants, Mobile Specs, Error Copy
+Forward loop QA lessons (TaxKlaro): specs that define structure but not micro-copy cause Playwright failures. This wave fills every gap a browser test would hit.
+
+- [ ] qa-enum-display-labels — Create `final-mega-spec/ui-spec/enum-labels.md`: map EVERY enum value to its display label. service_tier ('autonomous_plus' → 'Autonomous+'), project_status ('financial_close' → 'Financial Close'), revenue_stage, expense_category, isp_type, movement_type, invoice_status, payment_method. No enum left unmapped.
+- [ ] qa-validation-error-messages — Create `final-mega-spec/ui-spec/validation-messages.md`: for EVERY validation rule in wizard-intake.md, wizard-procurement.md, wizard-deployment.md, wizard-financials.md, inventory-view.md, settings-view.md — write the exact error message text. Include field-level errors, form-level errors, and toast messages for API failures.
+- [ ] qa-mobile-responsive-spec — Create `final-mega-spec/ui-spec/responsive.md`: define exact Tailwind breakpoints (sm/md/lg/xl), then for EVERY page specify: column count per breakpoint, sidebar behavior (drawer on mobile), table behavior (scroll vs hide columns), form layout (single column below md), modal behavior (full-screen below sm), pagination (collapse page numbers below sm), touch targets (min 44px).
+- [ ] qa-formatting-constants — Create `final-mega-spec/ui-spec/formatting.md`: currency formatting rules ($500 vs $500.00, threshold for decimals), date format (MM/DD/YYYY vs Jan 5, 2026), percentage format (85% vs 85.0%), name truncation rules (max chars before ellipsis), status badge color map (intake → blue, procurement → amber, deployment → purple, completed → green, cancelled → red).
+- [ ] qa-schema-field-audit — Read EVERY UI spec file and cross-reference field access patterns against schema.md column names. Fix mismatches. Known issue: routes.md uses `project.status` but schema column is `project_status`. Check ALL .from() queries, ALL field accesses, ALL filter params. Write corrections directly into the affected spec files.
+- [ ] qa-empty-states — For EVERY list/table/view, specify the empty state: icon, heading text, description text, CTA button text and link. Dashboard (no projects), inventory (no items), financials (no invoices), wizard steps (no BOM items yet), search results (no matches).
+- [ ] qa-loading-states — For EVERY async operation, specify: skeleton shape (table skeleton, card skeleton, form skeleton), spinner placement, pending text. Include: page load, form submit, inline edit save, filter change, pagination.
+- [ ] qa-toast-messages — For EVERY mutating operation (create/update/delete), specify: success toast text, error toast text, toast duration (3s default), toast position (bottom-right). Example: "Project created" (success), "Failed to create project" (error), "Invoice marked as paid" (success).
+- [ ] qa-keyboard-nav — For wizard forms: specify Tab order, Enter key behavior (submit step vs submit form), Escape key behavior (close modal, cancel edit). For tables: specify if rows are focusable, Enter to open.
+- [ ] qa-confirmation-dialogs — For EVERY destructive action: specify dialog title, body text, confirm button text, cancel button text. Examples: delete project, cancel PO, adjust stock downward, mark project cancelled.
+- [ ] qa-convergence-recheck — Re-run the completeness audit from Wave 6 against ALL new Wave 7 files. Verify zero TODOs, zero TBDs, every enum mapped, every error message written, every breakpoint defined. Only then write converged.txt.
