@@ -3,13 +3,13 @@
 ## Statistics
 
 - **Total stages**: 33
-- **Completed**: 3
-- **Current**: 4
-- **Convergence**: 3/33
+- **Completed**: 4
+- **Current**: 5
+- **Convergence**: 4/33
 
 ## Current Stage
 
-**Stage 4** — Wire computation persistence — save to Supabase after compute
+**Stage 5** — Console errors — investigate and fix
 
 ## Stage Log
 
@@ -18,7 +18,7 @@
 | 1 | done | 2026-03-07 | Dashboard routing split |
 | 2 | done | 2026-03-07 | Clients column mismatch — name→full_name, address→notes, +phone |
 | 3 | done | 2026-03-07 | New client insert — full_name, +phone, address→notes |
-| 4 | pending | | Computation persistence |
+| 4 | done | 2026-03-07 | Computation persistence — wire createComputation + saveComputationOutput into wizard |
 | 5 | pending | | Console errors |
 | 6 | pending | | Client detail fields |
 | 7 | pending | | Dashboard max-width |

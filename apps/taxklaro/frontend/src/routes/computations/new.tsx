@@ -29,6 +29,8 @@ import { DEFAULT_WIZARD_DATA } from '../../types/wizard';
 import { createDefaultTaxpayerInput } from '../../types/engine-input';
 import type { TaxpayerInput } from '../../types/engine-input';
 import { useCompute } from '../../hooks/useCompute';
+import { useOrganization } from '../../hooks/useOrganization';
+import { createComputation, saveComputationOutput } from '../../lib/computations';
 import { ResultsView } from '../../components/computation/ResultsView';
 
 export const ComputationsNewRoute = createRoute({
@@ -69,8 +71,11 @@ const STEP_COMPONENTS: Record<WizardStepId, React.ComponentType<StepProps>> = {
 
 function ComputationsNewPage() {
   const navigate = useNavigate();
+  const { orgId } = useOrganization();
   const [formData, setFormData] = useState<Partial<WizardFormData>>({ ...DEFAULT_WIZARD_DATA });
   const [stepIndex, setStepIndex] = useState(0);
+  const [savedCompId, setSavedCompId] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const { result, errors, isComputing, runCompute } = useCompute();
 
   const activeSteps = computeActiveSteps(formData);
@@ -92,6 +97,7 @@ function ComputationsNewPage() {
   }, []);
 
   const handleSubmit = useCallback(async () => {
+    setSaveError(null);
     const defaults = createDefaultTaxpayerInput();
     const { clientId, computationTitle, ...wizardFields } = formData as WizardFormData;
     const engineInput: TaxpayerInput = {
@@ -102,8 +108,35 @@ function ComputationsNewPage() {
         ...(wizardFields.itemizedExpenses ?? {}),
       },
     };
-    await runCompute(engineInput);
-  }, [formData, runCompute]);
+
+    // Create computation record in Supabase
+    let compId: string | null = null;
+    if (orgId) {
+      const record = await createComputation(
+        orgId,
+        clientId ?? null,
+        computationTitle || 'Untitled Computation',
+        engineInput,
+      );
+      if (record) {
+        compId = record.id;
+        setSavedCompId(compId);
+      } else {
+        setSaveError('Failed to save computation record.');
+      }
+    }
+
+    // Run WASM computation
+    const wasmResult = await runCompute(engineInput);
+
+    // Persist output if computation succeeded and we have a record
+    if (compId && wasmResult.status === 'ok') {
+      const { error } = await saveComputationOutput(compId, wasmResult.data);
+      if (error) {
+        setSaveError('Computation succeeded but failed to save results.');
+      }
+    }
+  }, [formData, runCompute, orgId]);
 
   // Show results after computation
   if (result) {
@@ -111,13 +144,28 @@ function ComputationsNewPage() {
       <div className="max-w-4xl mx-auto space-y-6" data-testid="computations-new-page">
         <div className="flex items-center justify-between">
           <h1 className="font-display text-3xl font-normal">Computation Results</h1>
-          <button
-            className="text-sm text-primary hover:underline transition-colors"
-            onClick={() => navigate({ to: '/computations' })}
-          >
-            Back to Computations
-          </button>
+          <div className="flex items-center gap-4">
+            {savedCompId && (
+              <button
+                className="text-sm text-primary hover:underline transition-colors"
+                onClick={() => navigate({ to: '/computations/$compId', params: { compId: savedCompId } })}
+              >
+                View Details
+              </button>
+            )}
+            <button
+              className="text-sm text-primary hover:underline transition-colors"
+              onClick={() => navigate({ to: '/computations' })}
+            >
+              Back to Computations
+            </button>
+          </div>
         </div>
+        {saveError && (
+          <div className="rounded-lg border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
+            {saveError}
+          </div>
+        )}
         <ResultsView result={result} />
       </div>
     );
