@@ -66,7 +66,7 @@ function SettingsPage() {
 
   return (
     <div data-testid="settings-page" className="space-y-8 max-w-2xl">
-      <h1 className="font-display text-3xl text-foreground">Settings</h1>
+      <h1 className="font-display text-foreground" style={{ fontSize: 'var(--text-h1)', lineHeight: 'var(--text-h1-lh)' }}>Settings</h1>
 
       <PersonalInfoSection
         fullName={user?.user_metadata?.full_name ?? ''}

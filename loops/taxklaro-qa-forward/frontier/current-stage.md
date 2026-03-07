@@ -3,8 +3,8 @@
 ## Statistics
 
 - **Total stages**: 33
-- **Completed**: 6
-- **Current**: 9
+- **Completed**: 7
+- **Current**: 10
 - **Convergence**: 8/33
 
 ## Current Stage
@@ -23,7 +23,7 @@
 | 6 | done | 2026-03-07 | Client detail fields — already correct from prior stages |
 | 7 | done | 2026-03-07 | Dashboard max-width constraint |
 | 8 | done | 2026-03-07 | Landing hero proportions |
-| 9 | pending | | Heading consistency |
+| 9 | done | 2026-03-07 | Heading consistency |
 | 10 | pending | | Mobile responsive audit |
 | 11 | pending | | Desktop: landing |
 | 12 | pending | | Desktop: auth pages |

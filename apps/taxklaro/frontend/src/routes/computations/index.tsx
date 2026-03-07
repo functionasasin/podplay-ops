@@ -65,7 +65,7 @@ function ComputationsPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="font-display text-3xl font-normal">Computations</h1>
+          <h1 className="font-display text-foreground" style={{ fontSize: 'var(--text-h1)', lineHeight: 'var(--text-h1-lh)' }}>Computations</h1>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -80,7 +80,7 @@ function ComputationsPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="font-display text-3xl font-normal">Computations</h1>
+          <h1 className="font-display text-foreground" style={{ fontSize: 'var(--text-h1)', lineHeight: 'var(--text-h1-lh)' }}>Computations</h1>
           <Button onClick={() => navigate({ to: '/computations/new' })}>
             <Plus className="h-4 w-4 mr-2" /> New Computation
           </Button>
@@ -96,7 +96,7 @@ function ComputationsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-y-3">
-        <h1 className="font-display text-3xl font-normal">Computations</h1>
+        <h1 className="font-display text-foreground" style={{ fontSize: 'var(--text-h1)', lineHeight: 'var(--text-h1-lh)' }}>Computations</h1>
         <Button onClick={() => navigate({ to: '/computations/new' })}>
           <Plus className="h-4 w-4 mr-2" /> New Computation
         </Button>

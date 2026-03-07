@@ -54,7 +54,7 @@ function ClientsNewPage() {
   return (
     <div className="max-w-xl mx-auto space-y-6" data-testid="clients-new-page">
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-3xl font-normal">New Client</h1>
+        <h1 className="font-display text-foreground" style={{ fontSize: 'var(--text-h1)', lineHeight: 'var(--text-h1-lh)' }}>New Client</h1>
         <button
           className="inline-flex items-center py-2.5 text-[0.8125rem] text-muted-foreground hover:text-foreground transition-colors"
           onClick={() => navigate({ to: '/clients' })}

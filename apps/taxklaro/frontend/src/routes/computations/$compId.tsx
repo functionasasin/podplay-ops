@@ -70,7 +70,7 @@ function ComputationDetailPage() {
     <div className="max-w-4xl mx-auto space-y-6" data-testid="computation-detail-page">
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-2 min-w-0">
-          <h1 className="font-display text-3xl font-normal truncate">
+          <h1 className="font-display text-foreground truncate" style={{ fontSize: 'var(--text-h1)', lineHeight: 'var(--text-h1-lh)' }}>
             {computation.title || 'Untitled Computation'}
           </h1>
           <div className="flex items-center gap-2.5 flex-wrap">

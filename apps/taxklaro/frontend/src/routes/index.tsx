@@ -53,7 +53,8 @@ function IndexPage() {
           <span className="text-primary">&#8369;</span>TaxKlaro
         </div>
         <h1
-          className="font-display text-foreground max-w-xl mb-5 text-[2rem] sm:text-[3rem] leading-[1.1]"
+          className="font-display text-foreground max-w-xl mb-5"
+          style={{ fontSize: 'var(--text-h1)', lineHeight: 'var(--text-h1-lh)' }}
         >
           Your taxes, finally clear.
         </h1>

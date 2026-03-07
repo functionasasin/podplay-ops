@@ -143,7 +143,7 @@ function ComputationsNewPage() {
     return (
       <div className="max-w-4xl mx-auto space-y-6" data-testid="computations-new-page">
         <div className="flex items-center justify-between">
-          <h1 className="font-display text-3xl font-normal">Computation Results</h1>
+          <h1 className="font-display text-foreground" style={{ fontSize: 'var(--text-h1)', lineHeight: 'var(--text-h1-lh)' }}>Computation Results</h1>
           <div className="flex items-center gap-4">
             {savedCompId && (
               <button
@@ -174,7 +174,7 @@ function ComputationsNewPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6" data-testid="computations-new-page">
       <div>
-        <h1 className="font-display text-3xl font-normal">New Computation</h1>
+        <h1 className="font-display text-foreground" style={{ fontSize: 'var(--text-h1)', lineHeight: 'var(--text-h1-lh)' }}>New Computation</h1>
         <p className="text-sm text-muted-foreground mt-1">Answer a few questions and we'll compute your tax.</p>
       </div>
 

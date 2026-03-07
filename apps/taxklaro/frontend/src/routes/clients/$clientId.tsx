@@ -92,7 +92,7 @@ function ClientDetailPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6" data-testid="client-detail-page">
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-3xl font-normal">{client.fullName}</h1>
+        <h1 className="font-display text-foreground" style={{ fontSize: 'var(--text-h1)', lineHeight: 'var(--text-h1-lh)' }}>{client.fullName}</h1>
         <button
           className="inline-flex items-center py-2.5 text-[0.8125rem] text-muted-foreground hover:text-foreground transition-colors"
           onClick={() => navigate({ to: '/clients' })}
