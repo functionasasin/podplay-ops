@@ -76,8 +76,8 @@ function ComputationDetailPage() {
           <div className="flex items-center gap-2.5 flex-wrap">
             <span className="text-sm text-muted-foreground">Tax Year {computation.taxYear}</span>
             <Badge
-              variant={computation.status === 'complete' ? 'default' : 'secondary'}
-              className={`capitalize text-xs ${computation.status === 'complete' ? 'bg-green-600 hover:bg-green-700 text-white' : ''}`}
+              variant={computation.status === 'computed' || computation.status === 'finalized' ? 'default' : 'secondary'}
+              className={`capitalize text-xs ${computation.status === 'computed' || computation.status === 'finalized' ? 'bg-green-600 hover:bg-green-700 text-white' : ''}`}
             >
               {computation.status}
             </Badge>

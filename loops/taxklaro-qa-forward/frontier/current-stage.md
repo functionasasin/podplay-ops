@@ -3,13 +3,13 @@
 ## Statistics
 
 - **Total stages**: 33
-- **Completed**: 25
-- **Current**: 28
-- **Convergence**: 13/33
+- **Completed**: 26
+- **Current**: 29
+- **Convergence**: 14/33
 
 ## Current Stage
 
-**Stage 28** — Flow: computation
+**Stage 29** — Flow: client
 
 ## Stage Log
 
@@ -42,7 +42,7 @@
 | 25 | done | 2026-03-07 | Mobile: settings + deadlines — auth guard redirects all 3 routes at 375px, no overflow, forms usable, overflow-x-auto on tables, grid-cols-1 on deadlines, build passes |
 | 26 | done | 2026-03-07 | Mobile: sidebar drawer — hamburger md:hidden, Sheet drawer with SidebarContent, onClose wired to nav links, all 5 nav links + sign out present, build passes |
 | 27 | done | 2026-03-07 | Flow: auth — landing+CTA+auth page verified, all 5 nav links pass, sign out fixed (navigate to / after signOut()), build passes |
-| 28 | pending | | Flow: computation |
+| 28 | done | 2026-03-07 | Flow: computation — auth guard redirects correctly, fixed status 'complete'→'computed'/'finalized' in $compId.tsx badge, wizard+results+computations list+detail page verified via source, build passes |
 | 29 | pending | | Flow: client |
 | 30 | pending | | Flow: cross-entity |
 | 31 | pending | | Discovery: route wiring |
