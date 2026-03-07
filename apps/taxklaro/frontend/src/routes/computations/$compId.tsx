@@ -3,7 +3,9 @@ import { createRoute, useNavigate } from '@tanstack/react-router';
 import { authenticatedRoute } from '../__root';
 import { authGuard } from '../../lib/auth-guard';
 import { loadComputation } from '../../lib/computations';
+import { enableSharing, disableSharing, rotateShareToken } from '../../lib/share';
 import { ResultsView } from '../../components/computation/ResultsView';
+import { ShareToggle } from '../../components/computation/ShareToggle';
 import { Badge } from '../../components/ui/badge';
 import type { ComputationRow } from '../../types/org';
 import type { TaxComputationResult } from '../../types/engine-output';
@@ -21,6 +23,8 @@ function ComputationDetailPage() {
   const [computation, setComputation] = useState<ComputationRow | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [shareEnabled, setShareEnabled] = useState(false);
+  const [shareToken, setShareToken] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -32,6 +36,8 @@ function ComputationDetailPage() {
         setError('Computation not found');
       } else {
         setComputation(row);
+        setShareEnabled(row.shareEnabled);
+        setShareToken(row.shareToken);
       }
       setIsLoading(false);
     }
@@ -66,6 +72,24 @@ function ComputationDetailPage() {
 
   const result = computation.outputJson as TaxComputationResult | null;
 
+  async function handleShareToggle(enabled: boolean) {
+    if (enabled) {
+      const res = await enableSharing(computation!.id);
+      if (res) {
+        setShareEnabled(true);
+        setShareToken(res.shareToken);
+      }
+    } else {
+      await disableSharing(computation!.id);
+      setShareEnabled(false);
+    }
+  }
+
+  async function handleRotate() {
+    const res = await rotateShareToken(computation!.id);
+    if (res) setShareToken(res.shareToken);
+  }
+
   return (
     <div className="max-w-4xl mx-auto space-y-6" data-testid="computation-detail-page">
       <div className="flex items-start justify-between gap-4">
@@ -99,6 +123,16 @@ function ComputationDetailPage() {
           <p className="text-sm mt-1">Input data is saved as a draft.</p>
         </div>
       )}
+
+      <div className="rounded-xl border p-5 shadow-sm" data-testid="share-section">
+        <ShareToggle
+          computationId={computation.id}
+          shareEnabled={shareEnabled}
+          shareToken={shareToken}
+          onToggle={handleShareToggle}
+          onRotate={handleRotate}
+        />
+      </div>
     </div>
   );
 }
