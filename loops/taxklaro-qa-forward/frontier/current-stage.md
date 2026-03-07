@@ -3,13 +3,13 @@
 ## Statistics
 
 - **Total stages**: 33
-- **Completed**: 16
-- **Current**: 19
+- **Completed**: 17
+- **Current**: 20
 - **Convergence**: 13/33
 
 ## Current Stage
 
-**Stage 19** — Mobile: landing
+**Stage 20** — Mobile: auth pages
 
 ## Stage Log
 
@@ -33,7 +33,7 @@
 | 16 | done | 2026-03-07 | Desktop: wizard — auth guard redirects, route in authenticatedRoute+AppLayout, WizardProgressBar+radio cards+Back/Next verified via source, build passes |
 | 17 | done | 2026-03-07 | Desktop: clients — auth guard redirects, route in authenticatedRoute+AppLayout, list has heading+empty-state+New Client btn, new form has Name/TIN/Email/Phone/Notes matching DB schema, no column mismatches, build passes |
 | 18 | done | 2026-03-07 | Desktop: settings+deadlines — auth guard redirects all 3 routes, in authenticatedRoute+AppLayout, real content verified via source (PersonalInfoSection/BirInfoSection/FirmBrandingSection/MembersTable/DeadlineCard), no placeholder text, build passes |
-| 19 | pending | | Mobile: landing |
+| 19 | done | 2026-03-07 | Mobile: landing — all content fits 375px, no overflow, CTA full-width tappable, cards stack vertically, build passes |
 | 20 | pending | | Mobile: auth pages |
 | 21 | pending | | Mobile: dashboard |
 | 22 | pending | | Mobile: computations list |
