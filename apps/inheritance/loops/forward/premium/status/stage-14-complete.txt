@@ -1,7 +1,0 @@
-Stage 14 — Case Export ZIP: COMPLETE
-Completed: 2026-03-03
-Tests: 22/22 passing
-Files:
-  - src/lib/export-zip.ts (exportCaseZip, buildZipFilename, formatNotesAsText)
-  - src/lib/__tests__/export-zip.test.ts (22 tests)
-  - jszip@3.10.1 installed

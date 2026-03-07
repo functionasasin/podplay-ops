@@ -1,70 +1,73 @@
-# monorepo
+# React + TypeScript + Vite
 
-A personal operating system disguised as a git repo. Everything I need to remember, track, plan, or automate lives here — organized into a 1,036-entity knowledge graph that keeps getting smarter on its own.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-Two systems write to it continuously:
+Currently, two official plugins are available:
 
-1. **NanoClaw** — a lightweight Claude-powered Telegram bot (Fly.io). I message it with updates, questions, raw info. It reads and writes to the monorepo.
-2. **Ralph loops** — autonomous Claude Code jobs that run on 30-minute crons. Reverse loops analyze a problem into a spec. Forward loops build the spec into code. 7 loops total, 4 active right now.
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-Both write paths converge on the same `entities/` directory. The repo is the single source of truth. There is no database.
+## React Compiler
 
-## what's in here
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-```
-entities/           1,036 typed entities (people, places, businesses, trips, meetings, projects, ideas)
-dashboards/         8 Dataview dashboards — at-a-glance views for each entity type
-loops/              7 ralph loops (3 active, 3 converged, 1 forward-building a Rust engine)
-automations/        NanoClaw bot, ingestion scripts, anime recap engine
-research/           30 deep research docs
-docs/plans/         specs produced by reverse ralph loops
-inbox/              raw dumps waiting for the ingestion loop to organize
-data/               snow data, metrics, anything tracked
-```
+## Expanding the ESLint configuration
 
-## how ralph loops work
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-A **reverse loop** takes a messy problem and progressively extracts a structured spec:
-- Each iteration picks one unchecked aspect from a frontier file
-- Analyzes it (web research, code analysis, document extraction)
-- Writes findings, updates the frontier, commits, exits
-- Repeats on a cron until all aspects converge
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
 
-A **forward loop** takes a converged spec and builds it stage by stage:
-- TDD: writes tests from the spec first, then implements until they pass
-- Each stage has its own test filter — the loop runner checks convergence automatically
-- Stage N must pass before Stage N+1 begins
+      // Remove tseslint.configs.recommended and replace with this
+      tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      tseslint.configs.stylisticTypeChecked,
 
-Example: the `inheritance-reverse` loop extracted Philippine succession law into a 2,500-line deterministic engine spec (15 testate scenarios, 15 intestate scenarios, 23 test vectors). The `inheritance-rust-forward` loop is now building it in Rust, 12 stages deep.
-
-## the knowledge graph
-
-Every entity is a markdown file with YAML frontmatter:
-
-```yaml
----
-type: person
-name: John Doe
-businesses: [[Blue Bottle Shibuya]]
-locations: [[Tokyo]]
-last_contact: 2026-01-15
-tags: [designer, friend]
----
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
 
-Cross-references use `[[wikilinks]]`. Dataview queries power the dashboards. The entity types: person, place, business, trip, meeting, project, idea, event.
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-983 of the 1,036 entities are places — most were batch-extracted from trip research. The rest are people, businesses, trips, projects, meetings, and ideas that accumulate as I dump info into the system.
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
 
-## active loops
-
-| Loop | Type | What it's doing |
-|------|------|-----------------|
-| `anime-recap-forward` | forward | Building an anime recap video engine from spec — 7 pipeline stages |
-| `linkedin-profile-reverse` | reverse | Mining work history into a LinkedIn profile spec |
-| `estate-tax-reverse` | reverse | Extracting PH estate tax rules into a computation engine spec |
-| `inheritance-rust-forward` | forward | Building the PH inheritance distribution engine in Rust — 12 TDD stages |
-
-## 281 commits and counting
-
-This repo has been running since early 2026. Loop commits are prefixed with `loop(<name>):` or `forward:`. Human commits are everything else.
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```

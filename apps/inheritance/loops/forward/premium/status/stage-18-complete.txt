@@ -1,9 +1,0 @@
-Stage 18 — Conflict Check: COMPLETE
-Completed: 2026-03-03
-Tests: All conflict check tests passing (getSimilarityColor, runConflictCheck, ConflictCheckScreen, ConflictCheckDialog)
-Files:
-  - src/components/clients/__tests__/conflict-check.test.tsx
-  - src/components/clients/ConflictCheckScreen.tsx
-  - src/components/clients/ConflictCheckDialog.tsx
-  - src/lib/conflict-check.ts
-  - supabase/migrations/007_conflict_check.sql

@@ -1,5 +1,0 @@
-COMPLETE
-Stage: 0 (Scaffold + Types + Fractions)
-Tests: 29 passed
-Iterations: 2
-Timestamp: 2026-02-24T07:39:00+08:00

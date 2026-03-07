@@ -1,6 +1,0 @@
-Stage 8 — Print Layout: COMPLETE
-Completed: 2026-03-02T14:11:15Z
-Tests: 19/19 passing (3 test files)
-- src/__tests__/print-layout.test.ts (9 tests)
-- src/hooks/__tests__/usePrintExpand.test.ts (5 tests)
-- src/components/shared/__tests__/PrintHeader.test.tsx (5 tests)

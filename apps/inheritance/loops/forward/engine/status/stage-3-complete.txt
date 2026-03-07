@@ -1,5 +1,0 @@
-COMPLETE
-Stage: 3 (Succession Type + Scenario)
-Tests: 49 passed
-Iterations: 3
-Timestamp: 2026-02-24T08:15:04+08:00

@@ -1,5 +1,0 @@
-COMPLETE
-Stage: 7 (Wizard Step 3 (Family Tree))
-Tests: 4 passed
-Iterations: 1
-Timestamp: 2026-02-26T09:06:16+08:00

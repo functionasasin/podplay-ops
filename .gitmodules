@@ -1,6 +1,0 @@
-[submodule "projects/cheerful"]
-	path = projects/cheerful
-	url = git@github.com:nuts-and-bolts-ai/cheerful.git
-[submodule "projects/decision-orchestrator"]
-	path = projects/decision-orchestrator
-	url = git@github.com:pymc-labs/decision-orchestrator.git

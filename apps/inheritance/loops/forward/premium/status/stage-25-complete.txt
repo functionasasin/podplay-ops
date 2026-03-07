@@ -1,8 +1,0 @@
-Stage 25 — Multi-Seat Firm Accounts: COMPLETE
-Completed: 2026-03-03
-Tests: 2235/2235 passing (93 test files)
-Commits:
-- premium: stage 25 - migrate RLS policies to org-scoped access
-- premium: stage 25 - write multi-seat firm account tests
-- premium: stage 25 - implement multi-seat firm account components
-- premium: stage 25 - fix pre-existing test failures to match WASM engine behavior

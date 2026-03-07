@@ -1,9 +1,0 @@
-Stage 21 complete — 2026-03-06
-
-Deployment config created:
-- frontend/Dockerfile: multi-stage (wasm-build → frontend-build → nginx:alpine), EXPOSE 8080
-- frontend/nginx.conf: SPA fallback, 1y cache for assets, application/wasm MIME type, gzip, security headers
-- frontend/fly.toml: app=taxklaro, primary_region=sin, 512mb shared VM, health check at /
-- frontend/SECRETS.md: documents all 10 required GitHub secrets
-
-fly.toml validated as valid TOML. Dockerfile syntax verified (3 stages, correct EXPOSE).

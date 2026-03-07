@@ -1,2 +1,0 @@
-[     473ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:5175/favicon.ico:0
-[   10076ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://vxyargtagollehxujurg.supabase.co/auth/v1/token?grant_type=password:0

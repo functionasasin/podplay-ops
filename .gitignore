@@ -1,28 +1,24 @@
-# Environment and secrets
-.env
-.env.*
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-.venv/
-venv/
+node_modules
+dist
+dist-ssr
+*.local
 
-# Data dumps and caches (large files, regenerable)
-data/Timeline.json
-data/Timeline.json:Zone.Identifier
-data/*.json
-
-# Anime recap engine data
-automations/anime-recap-engine/data/
-
-# Worktrees
-.worktrees/
-
-# People entities (private)
-entities/people/
-
-# OS files
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
 .DS_Store
-*.Zone.Identifier
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

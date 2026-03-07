@@ -1,5 +1,0 @@
-Stage 13 — Users & Team: COMPLETE
-Completed: 2026-03-05
-Tools: 12 (get_user_settings, list_teams, create_team, get_team, delete_team, add_team_member, remove_team_member, list_my_campaign_assignments, list_campaign_assignments, assign_campaign, unassign_campaign, get_onboarding_status)
-Tests: 66 passing
-Backend routes: 12 service routes

@@ -1,1 +1,0 @@
-../_template/loop.sh

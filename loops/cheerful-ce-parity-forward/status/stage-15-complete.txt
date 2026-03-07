@@ -1,5 +1,0 @@
-Stage 15 — Workflows: COMPLETE
-Timestamp: 2026-03-05
-Tools implemented: 8 (cheerful_list_campaign_workflows, cheerful_get_campaign_workflow, cheerful_create_campaign_workflow, cheerful_update_campaign_workflow, cheerful_delete_campaign_workflow, cheerful_list_workflow_executions, cheerful_get_thread_workflow_execution, cheerful_list_workflow_tools)
-Tests: 51 workflow-specific tests passing (60 total with cross-domain workflow matches)
-Backend routes: 8 service routes in service.py

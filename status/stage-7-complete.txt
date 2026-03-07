@@ -1,5 +1,0 @@
-Stage 7 (Distribute Estate) - COMPLETE
-All 38 step7 tests passing.
-All 301 total tests passing.
-Implemented: step7_distribute, compute_intestate_distribution (I1-I15),
-  distribute_collaterals (§7.6), determine_will_coverage (§7.5).

@@ -1,6 +1,0 @@
-{
-  "source": "social",
-  "retrieved_date": "2026-02-27",
-  "notes": "Facebook groups, Reddit, Twitter/X, YouTube, TikTok, and Waze are all inaccessible via automated web research. Facebook group content is private and not indexed. Reddit blocks automated fetching. No structured route data was extractable. See analysis/facebook-commuter-groups.md for full assessment. Scribd document by Roger Abesamis (230+ pre-2020 O-D pairs) is flagged for manual retrieval.",
-  "routes": []
-}

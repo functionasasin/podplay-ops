@@ -1,1 +1,0 @@
-Stage 4 complete: Core flows implemented and build passing after pre-existing TypeScript errors fixed.

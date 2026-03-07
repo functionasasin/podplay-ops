@@ -1,9 +1,0 @@
-Stage 12 — Case Notes: COMPLETE
-Completed: 2026-03-02T18:36:47Z
-Tests: 27/27 passing (case-notes component + CRUD lib tests)
-
-Deliverables:
-- src/components/case/CaseNotesPanel.tsx — Collapsible notes panel
-- src/components/case/NoteEditor.tsx — Write/Preview tabs with markdown
-- src/lib/case-notes.ts — CRUD: addNote, deleteNote, listNotes
-- Packages: react-markdown, remark-gfm, rehype-sanitize installed
