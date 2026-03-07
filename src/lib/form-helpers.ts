@@ -5,7 +5,7 @@ import type { $ZodType } from 'zod/v4/core';
 
 export function useZodForm<T extends FieldValues>(
   schema: $ZodType<T, T>,
-  options?: Omit<UseFormProps<T>, 'resolver'>
+  options?: Omit<UseFormProps<T>, 'resolver'>,
 ) {
   return useForm<T>({
     ...options,
