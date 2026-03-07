@@ -23,7 +23,7 @@ export function AppLayout() {
       {/* Mobile */}
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="left" className="w-64 p-0" data-testid="sidebar-mobile">
-          <SidebarContent />
+          <SidebarContent onClose={() => setOpen(false)} />
         </SheetContent>
       </Sheet>
 

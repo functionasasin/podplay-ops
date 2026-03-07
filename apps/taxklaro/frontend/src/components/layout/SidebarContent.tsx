@@ -11,7 +11,11 @@ const navItems = [
   { label: 'Settings', to: '/settings', icon: Settings },
 ] as const;
 
-export function SidebarContent() {
+interface SidebarContentProps {
+  onClose?: () => void;
+}
+
+export function SidebarContent({ onClose }: SidebarContentProps = {}) {
   const { user } = useAuth();
   const { location } = useRouterState();
   const pathname = location.pathname;
@@ -33,6 +37,7 @@ export function SidebarContent() {
             <Link
               key={to}
               to={to}
+              onClick={onClose}
               className={[
                 'flex items-center gap-3 rounded-md border-l-[3px] px-3 py-2.5 text-[0.9375rem] font-medium transition-colors duration-150',
                 isActive

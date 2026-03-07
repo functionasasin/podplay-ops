@@ -3,13 +3,13 @@
 ## Statistics
 
 - **Total stages**: 33
-- **Completed**: 23
-- **Current**: 26
+- **Completed**: 24
+- **Current**: 27
 - **Convergence**: 13/33
 
 ## Current Stage
 
-**Stage 26** — Mobile: sidebar drawer
+**Stage 27** — Flow: auth
 
 ## Stage Log
 
@@ -40,7 +40,7 @@
 | 23 | done | 2026-03-07 | Mobile: wizard — auth guard redirects to signin at 375px, max-w-2xl+p-4 fits viewport, radio cards block/full-width stack vertically, h-11 buttons ≥44px touch targets, build passes |
 | 24 | done | 2026-03-07 | Mobile: clients — auth guard redirects to signin at 375px, overflow-x-auto on table, w-full inputs, p-4 mobile padding, build passes |
 | 25 | done | 2026-03-07 | Mobile: settings + deadlines — auth guard redirects all 3 routes at 375px, no overflow, forms usable, overflow-x-auto on tables, grid-cols-1 on deadlines, build passes |
-| 26 | pending | | Mobile: sidebar drawer |
+| 26 | done | 2026-03-07 | Mobile: sidebar drawer — hamburger md:hidden, Sheet drawer with SidebarContent, onClose wired to nav links, all 5 nav links + sign out present, build passes |
 | 27 | pending | | Flow: auth |
 | 28 | pending | | Flow: computation |
 | 29 | pending | | Flow: client |
