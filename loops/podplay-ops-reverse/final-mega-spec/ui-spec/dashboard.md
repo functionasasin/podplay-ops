@@ -256,14 +256,14 @@ async function getDashboardMetrics(): Promise<DashboardMetrics> {
     .select('id', { count: 'exact', head: true })
     .eq('invoice_type', 'deposit')
     .eq('status', 'sent')
-    .lt('sent_date', thirtyDaysAgo)
+    .lt('date_sent', thirtyDaysAgo)
 
   const { count: overdue_final_count } = await supabase
     .from('invoices')
     .select('id', { count: 'exact', head: true })
     .eq('invoice_type', 'final')
     .eq('status', 'sent')
-    .lt('sent_date', thirtyDaysAgo)
+    .lt('date_sent', thirtyDaysAgo)
 
   // Completed this month
   const { count: completed_this_month } = await supabase

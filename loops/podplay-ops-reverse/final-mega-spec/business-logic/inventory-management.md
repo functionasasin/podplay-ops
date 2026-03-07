@@ -656,7 +656,7 @@ Stage 2 Entry
 │   - Enter shipment tracking number
 │   - "Confirm Shipped" button
 │   - shipProjectInventory() called → qty_on_hand decremented
-│   - project.status → 'shipped'
+│   - project.deployment_status → 'shipped'
 │
 └─ Stage 3 Entry (Deployment)
 ```

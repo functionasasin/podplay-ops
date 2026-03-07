@@ -77,7 +77,7 @@ export const PRO_PROJECT_4_COURTS = {
   security_camera_count: 0,
   has_front_desk: false,
   has_pingpod_wifi: false,
-  status: 'intake' as const,
+  project_status: 'intake' as const,
   deployment_status: 'not_started' as const,
   revenue_stage: 'proposal' as const,
 };
@@ -92,7 +92,7 @@ export const AUTONOMOUS_PLUS_PROJECT = {
   security_camera_count: 4,
   has_front_desk: true,
   has_pingpod_wifi: false,
-  status: 'procurement' as const,
+  project_status: 'procurement' as const,
   deployment_status: 'not_started' as const,
   revenue_stage: 'signed' as const,
 };
@@ -465,32 +465,32 @@ it('instantiates 121 checklist items for Pro tier from template', () => {
 
 **Purpose**: Verify stock level arithmetic and allocation logic.
 
-#### 4.1 — Available stock = on_hand − allocated
+#### 4.1 — Available stock = qty_on_hand − qty_allocated
 
 ```typescript
 it('computes available stock correctly', () => {
-  const item = { on_hand: 20, allocated: 5 };
+  const item = { qty_on_hand: 20, qty_allocated: 5 };
   expect(computeAvailableStock(item)).toBe(15);
 });
 ```
 
-#### 4.2 — Low stock flag when available ≤ reorder_point
+#### 4.2 — Low stock flag when available ≤ reorder_threshold
 
 ```typescript
-it('flags low stock when available ≤ reorder_point', () => {
-  expect(isLowStock({ on_hand: 5, allocated: 3, reorder_point: 5 })).toBe(true);
-  expect(isLowStock({ on_hand: 10, allocated: 3, reorder_point: 5 })).toBe(false);
+it('flags low stock when available ≤ reorder_threshold', () => {
+  expect(isLowStock({ qty_on_hand: 5, qty_allocated: 3, reorder_threshold: 5 })).toBe(true);
+  expect(isLowStock({ qty_on_hand: 10, qty_allocated: 3, reorder_threshold: 5 })).toBe(false);
 });
 ```
 
-#### 4.3 — Allocation deducts from available, not on_hand
+#### 4.3 — Allocation deducts from available, not qty_on_hand
 
 ```typescript
-it('increases allocated count (not on_hand) when allocating to project', () => {
-  const before = { on_hand: 20, allocated: 0 };
+it('increases qty_allocated (not qty_on_hand) when allocating to project', () => {
+  const before = { qty_on_hand: 20, qty_allocated: 0 };
   const after = applyAllocation(before, 4);
-  expect(after.on_hand).toBe(20);    // unchanged
-  expect(after.allocated).toBe(4);
+  expect(after.qty_on_hand).toBe(20);    // unchanged
+  expect(after.qty_allocated).toBe(4);
 });
 ```
 
@@ -498,29 +498,29 @@ it('increases allocated count (not on_hand) when allocating to project', () => {
 
 ```typescript
 it('throws when allocation qty exceeds available stock', () => {
-  const item = { on_hand: 10, allocated: 8 }; // available = 2
+  const item = { qty_on_hand: 10, qty_allocated: 8 }; // available = 2
   expect(() => applyAllocation(item, 5)).toThrow(/insufficient stock/i);
 });
 ```
 
-#### 4.5 — Receiving PO increases on_hand by received_qty
+#### 4.5 — Receiving PO increases qty_on_hand by received_qty
 
 ```typescript
-it('increases on_hand when PO received', () => {
-  const before = { on_hand: 5, allocated: 0 };
+it('increases qty_on_hand when PO received', () => {
+  const before = { qty_on_hand: 5, qty_allocated: 0 };
   const after = applyReceiving(before, 10);
-  expect(after.on_hand).toBe(15);
+  expect(after.qty_on_hand).toBe(15);
 });
 ```
 
-#### 4.6 — Shipping deducts from both on_hand and allocated
+#### 4.6 — Shipping deducts from both qty_on_hand and qty_allocated
 
 ```typescript
-it('deducts from on_hand and allocated when items shipped to venue', () => {
-  const before = { on_hand: 20, allocated: 4 };
+it('deducts from qty_on_hand and qty_allocated when items shipped to venue', () => {
+  const before = { qty_on_hand: 20, qty_allocated: 4 };
   const after = applyShipping(before, 4);
-  expect(after.on_hand).toBe(16);
-  expect(after.allocated).toBe(0);
+  expect(after.qty_on_hand).toBe(16);
+  expect(after.qty_allocated).toBe(0);
 });
 ```
 
@@ -929,7 +929,7 @@ Smoke tests verify the critical user path end-to-end in a browser-like environme
 
 1. Navigate to `/projects/{id}/financials`
 2. Click "Create Deposit Invoice" → verify computed amounts shown (hardware + service + tax)
-3. Confirm → verify `invoices` insert called with `installment: 'deposit'`, `status: 'draft'`
+3. Confirm → verify `invoices` insert called with `invoice_type: 'deposit'`, `status: 'not_sent'`
 4. Mark as sent → verify `projects.revenue_stage` updated to `deposit_invoiced`
 
 ### Smoke Test 5: Inventory — Stock Level Updated After Receiving PO
@@ -937,8 +937,8 @@ Smoke tests verify the critical user path end-to-end in a browser-like environme
 1. Navigate to `/inventory`
 2. Find hardware item with pending PO
 3. Click "Receive" → enter received_qty = 10
-4. Verify `inventory_items.on_hand` incremented by 10
-5. Verify low stock flag clears if available > reorder_point
+4. Verify `inventory.qty_on_hand` incremented by 10
+5. Verify low stock flag clears if available > reorder_threshold
 
 ### Smoke Test 6: Settings — Pricing Tier Update Persists
 

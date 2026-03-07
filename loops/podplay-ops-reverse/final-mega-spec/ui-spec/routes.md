@@ -62,7 +62,7 @@ src/routes/
 | `/` | `_auth/index.tsx` | Yes | Redirect | Permanent redirect to `/projects` |
 | `/projects` | `_auth/projects/index.tsx` | Yes | `DashboardPage` | Project list with search, filters, status pills |
 | `/projects/new` | `_auth/projects/new.tsx` | Yes | `NewProjectPage` | Creates project row, redirects to intake |
-| `/projects/$projectId` | `_auth/projects/$projectId/index.tsx` | Yes | Redirect | Redirects to current stage route based on `project.status` |
+| `/projects/$projectId` | `_auth/projects/$projectId/index.tsx` | Yes | Redirect | Redirects to current stage route based on `project.project_status` |
 | `/projects/$projectId/intake` | `_auth/projects/$projectId/intake/index.tsx` | Yes | `IntakeWizard` | Stage 1: 6-step intake form |
 | `/projects/$projectId/procurement` | `_auth/projects/$projectId/procurement/index.tsx` | Yes | `ProcurementWizard` | Stage 2: BOM, POs, packing |
 | `/projects/$projectId/deployment` | `_auth/projects/$projectId/deployment/index.tsx` | Yes | `DeploymentWizard` | Stage 3: 15-phase checklist |
@@ -256,14 +256,14 @@ function ProjectIndexRedirect() {
     financial_close: '/_auth/projects/$projectId/financials/',
     completed: '/_auth/projects/$projectId/financials/',
     cancelled: '/_auth/projects/$projectId/intake/',
-  }[project.status] ?? '/_auth/projects/$projectId/intake/'
+  }[project.project_status] ?? '/_auth/projects/$projectId/intake/'
 
   return <Navigate to={stageRoute} params={{ projectId: project.id }} replace />
 }
 ```
 
 **Stage-to-route mapping**:
-| `project.status` | Redirect to |
+| `project.project_status` | Redirect to |
 |-----------------|-------------|
 | `intake` | `/projects/$projectId/intake` |
 | `procurement` | `/projects/$projectId/procurement` |
@@ -316,7 +316,7 @@ export const Route = createFileRoute('/_auth/projects/$projectId')({
   - Future stage: gray circle (step number)
 - Tab is **clickable** (non-linear navigation allowed) — navigates to stage route
 - Tab is **disabled** only if stage has never been entered (no data exists yet):
-  - "2 Procurement" disabled if `project.status === 'intake'` AND no BOM rows exist
+  - "2 Procurement" disabled if `project.project_status === 'intake'` AND no BOM rows exist
   - "3 Deployment" disabled if no checklist items exist
   - "4 Financials" disabled if no invoices exist
 - Tab disabled state: `opacity-50 cursor-not-allowed pointer-events-none`
@@ -400,7 +400,7 @@ export async function createProject(): Promise<Project> {
       venue_state: '',
       tier: 'pro',          // default, overwritten in Step 1 of intake
       court_count: 1,       // default
-      status: 'intake',
+      project_status: 'intake',
     })
     .select()
     .single()
@@ -445,7 +445,7 @@ type ProjectsSearch = {
 ```ts
 type InventorySearch = {
   category?: bom_category    // filter by hardware category
-  low_stock?: boolean        // show only items below reorder_point
+  low_stock?: boolean        // show only items below reorder_threshold
   q?: string                 // text search on item name, SKU
 }
 ```
