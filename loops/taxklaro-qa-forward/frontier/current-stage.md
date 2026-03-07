@@ -3,13 +3,13 @@
 ## Statistics
 
 - **Total stages**: 33
-- **Completed**: 19
-- **Current**: 22
+- **Completed**: 20
+- **Current**: 23
 - **Convergence**: 13/33
 
 ## Current Stage
 
-**Stage 22** — Mobile: computations list
+**Stage 23** — Mobile: wizard
 
 ## Stage Log
 
@@ -36,7 +36,7 @@
 | 19 | done | 2026-03-07 | Mobile: landing — all content fits 375px, no overflow, CTA full-width tappable, cards stack vertically, build passes |
 | 20 | done | 2026-03-07 | Mobile: auth pages — form centered, inputs full-width, no overflow, button tappable, build passes |
 | 21 | done | 2026-03-07 | Mobile: dashboard — sidebar hidden md:flex, hamburger md:hidden header, Sheet drawer with SidebarContent, DashboardPage readable, build passes |
-| 22 | pending | | Mobile: computations list |
+| 22 | done | 2026-03-07 | Mobile: computations list — grid-cols-1 at 375px, New Computation btn present, cards readable, build passes |
 | 23 | pending | | Mobile: wizard |
 | 24 | pending | | Mobile: clients |
 | 25 | pending | | Mobile: settings + deadlines |
