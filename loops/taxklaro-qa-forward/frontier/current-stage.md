@@ -3,13 +3,13 @@
 ## Statistics
 
 - **Total stages**: 33
-- **Completed**: 2
-- **Current**: 3
-- **Convergence**: 2/33
+- **Completed**: 3
+- **Current**: 4
+- **Convergence**: 3/33
 
 ## Current Stage
 
-**Stage 3** — New client insert — `name`→`full_name`, remove `address`
+**Stage 4** — Wire computation persistence — save to Supabase after compute
 
 ## Stage Log
 
@@ -17,7 +17,7 @@
 |-------|--------|-----------|-------|
 | 1 | done | 2026-03-07 | Dashboard routing split |
 | 2 | done | 2026-03-07 | Clients column mismatch — name→full_name, address→notes, +phone |
-| 3 | pending | | New client insert fix |
+| 3 | done | 2026-03-07 | New client insert — full_name, +phone, address→notes |
 | 4 | pending | | Computation persistence |
 | 5 | pending | | Console errors |
 | 6 | pending | | Client detail fields |

@@ -21,7 +21,8 @@ function ClientsNewPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [tin, setTin] = useState('');
-  const [address, setAddress] = useState('');
+  const [phone, setPhone] = useState('');
+  const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,10 +35,11 @@ function ClientsNewPage() {
     try {
       const { error: insertError } = await supabase.from('clients').insert({
         org_id: orgId,
-        name: name.trim(),
+        full_name: name.trim(),
         email: email.trim() || null,
         tin: tin.trim() || null,
-        address: address.trim() || null,
+        phone: phone.trim() || null,
+        notes: notes.trim() || null,
       });
 
       if (insertError) throw insertError;
@@ -108,13 +110,26 @@ function ClientsNewPage() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="address">Address</Label>
+            <Label htmlFor="phone">Phone</Label>
             <Input
-              id="address"
-              data-testid="client-address-input"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="e.g. 123 Rizal Ave, Manila"
+              id="phone"
+              type="tel"
+              data-testid="client-phone-input"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="e.g. +63 912 345 6789"
+              className="h-11"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="notes">Notes</Label>
+            <Input
+              id="notes"
+              data-testid="client-notes-input"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="e.g. Additional client notes"
               className="h-11"
             />
           </div>
