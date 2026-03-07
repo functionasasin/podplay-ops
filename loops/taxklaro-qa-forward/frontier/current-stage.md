@@ -3,13 +3,13 @@
 ## Statistics
 
 - **Total stages**: 33
-- **Completed**: 26
-- **Current**: 29
+- **Completed**: 27
+- **Current**: 30
 - **Convergence**: 14/33
 
 ## Current Stage
 
-**Stage 29** — Flow: client
+**Stage 30** — Flow: cross-entity
 
 ## Stage Log
 
@@ -43,7 +43,7 @@
 | 26 | done | 2026-03-07 | Mobile: sidebar drawer — hamburger md:hidden, Sheet drawer with SidebarContent, onClose wired to nav links, all 5 nav links + sign out present, build passes |
 | 27 | done | 2026-03-07 | Flow: auth — landing+CTA+auth page verified, all 5 nav links pass, sign out fixed (navigate to / after signOut()), build passes |
 | 28 | done | 2026-03-07 | Flow: computation — auth guard redirects correctly, fixed status 'complete'→'computed'/'finalized' in $compId.tsx badge, wizard+results+computations list+detail page verified via source, build passes |
-| 29 | pending | | Flow: client |
+| 29 | done | 2026-03-07 | Flow: client — auth guard redirects /clients→/auth, source audit: insert/select columns match schema (full_name/email/tin/phone/notes), navigation wired correctly, build passes |
 | 30 | pending | | Flow: cross-entity |
 | 31 | pending | | Discovery: route wiring |
 | 32 | pending | | Discovery: Supabase query audit |
