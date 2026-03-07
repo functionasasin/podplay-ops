@@ -34,7 +34,7 @@ function DashboardPage() {
   useEffect(() => { load(); }, [load]);
 
   return (
-    <div className="space-y-6" data-testid="dashboard-page">
+    <div className="max-w-5xl mx-auto space-y-6" data-testid="dashboard-page">
       <div className="flex items-center justify-between flex-wrap gap-y-3">
         <h1
           className="font-display text-foreground"

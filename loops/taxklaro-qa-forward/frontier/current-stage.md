@@ -3,13 +3,13 @@
 ## Statistics
 
 - **Total stages**: 33
-- **Completed**: 5
-- **Current**: 7
-- **Convergence**: 6/33
+- **Completed**: 6
+- **Current**: 8
+- **Convergence**: 7/33
 
 ## Current Stage
 
-**Stage 7** — Dashboard max-width
+**Stage 8** — Landing hero proportions
 
 ## Stage Log
 
@@ -21,7 +21,7 @@
 | 4 | done | 2026-03-07 | Computation persistence — wire createComputation + saveComputationOutput into wizard |
 | 5 | done | 2026-03-07 | Console errors — sidebar link, table names, FK joins, missing created_by |
 | 6 | done | 2026-03-07 | Client detail fields — already correct from prior stages |
-| 7 | pending | | Dashboard max-width |
+| 7 | done | 2026-03-07 | Dashboard max-width constraint |
 | 8 | pending | | Landing hero proportions |
 | 9 | pending | | Heading consistency |
 | 10 | pending | | Mobile responsive audit |
