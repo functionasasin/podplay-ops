@@ -2,9 +2,9 @@
 
 ## Statistics
 - Total aspects discovered: 68
-- Analyzed: 57
-- Pending: 11
-- Convergence: 83%
+- Analyzed: 58
+- Pending: 10
+- Convergence: 85%
 
 ## Pending Aspects (ordered by dependency)
 
@@ -80,7 +80,7 @@
 ### Wave 7: QA-Readiness — UI Constants, Mobile Specs, Error Copy
 Forward loop QA lessons (TaxKlaro): specs that define structure but not micro-copy cause Playwright failures. This wave fills every gap a browser test would hit.
 
-- [ ] qa-enum-display-labels — Create `final-mega-spec/ui-spec/enum-labels.md`: map EVERY enum value to its display label. service_tier ('autonomous_plus' → 'Autonomous+'), project_status ('financial_close' → 'Financial Close'), revenue_stage, expense_category, isp_type, movement_type, invoice_status, payment_method. No enum left unmapped.
+- [x] qa-enum-display-labels — Create `final-mega-spec/ui-spec/enum-labels.md`: map EVERY enum value to its display label. service_tier ('autonomous_plus' → 'Autonomous+'), project_status ('financial_close' → 'Financial Close'), revenue_stage, expense_category, isp_type, movement_type, invoice_status, payment_method. No enum left unmapped. [DONE: 94 values across 21 types mapped; TypeScript record objects, badge classNames, select labels, and sort orders all specified; consolidated export module src/lib/enum-labels.ts defined]
 - [ ] qa-validation-error-messages — Create `final-mega-spec/ui-spec/validation-messages.md`: for EVERY validation rule in wizard-intake.md, wizard-procurement.md, wizard-deployment.md, wizard-financials.md, inventory-view.md, settings-view.md — write the exact error message text. Include field-level errors, form-level errors, and toast messages for API failures.
 - [ ] qa-mobile-responsive-spec — Create `final-mega-spec/ui-spec/responsive.md`: define exact Tailwind breakpoints (sm/md/lg/xl), then for EVERY page specify: column count per breakpoint, sidebar behavior (drawer on mobile), table behavior (scroll vs hide columns), form layout (single column below md), modal behavior (full-screen below sm), pagination (collapse page numbers below sm), touch targets (min 44px).
 - [ ] qa-formatting-constants — Create `final-mega-spec/ui-spec/formatting.md`: currency formatting rules ($500 vs $500.00, threshold for decimals), date format (MM/DD/YYYY vs Jan 5, 2026), percentage format (85% vs 85.0%), name truncation rules (max chars before ellipsis), status badge color map (intake → blue, procurement → amber, deployment → purple, completed → green, cancelled → red).
