@@ -2,6 +2,7 @@ import { createRouter } from '@tanstack/react-router';
 import { rootRoute, publicRootRoute, authenticatedRoute } from './routes/__root';
 
 import { IndexRoute } from './routes/index';
+import { DashboardRoute } from './routes/dashboard';
 import { AuthRoute } from './routes/auth';
 import { AuthCallbackRoute } from './routes/auth/callback';
 import { AuthResetRoute } from './routes/auth/reset';
@@ -33,6 +34,7 @@ const routeTree = rootRoute.addChildren([
     ShareTokenRoute,
   ]),
   authenticatedRoute.addChildren([
+    DashboardRoute,
     ComputationsIndexRoute,
     ComputationsNewRoute,
     ComputationsCompIdRoute,

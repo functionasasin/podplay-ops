@@ -212,9 +212,9 @@ describe('SharedComputationNotFound.tsx (§8.5.11)', () => {
 // ─── §8.5.2 Loading State Pattern — Page Verification ────────────────────────
 
 describe('Loading state pattern: async pages use isLoading state (§8.5.2)', () => {
-  it('Dashboard route (index.tsx) references isLoading pattern (if not a stub)', () => {
-    if (!routeExists('index.tsx')) return; // skip if not yet wired
-    const content = readRoute('index.tsx');
+  it('Dashboard route (dashboard.tsx) references isLoading pattern (if not a stub)', () => {
+    if (!routeExists('dashboard.tsx')) return; // skip if not yet wired
+    const content = readRoute('dashboard.tsx');
     // Skip if still a stub (< 20 lines)
     const lineCount = content.split('\n').length;
     if (lineCount < 20) return;

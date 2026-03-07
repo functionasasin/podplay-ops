@@ -34,6 +34,7 @@ import { ComputationsCompIdQuarterlyRoute } from '../computations/$compId.quarte
 import { ClientsIndexRoute } from '../clients/index';
 import { ClientsNewRoute } from '../clients/new';
 import { ClientsClientIdRoute } from '../clients/$clientId';
+import { DashboardRoute } from '../dashboard';
 import { DeadlinesRoute } from '../deadlines';
 import { SettingsIndexRoute } from '../settings/index';
 import { SettingsTeamRoute } from '../settings/team';
@@ -103,6 +104,7 @@ describe('authGuard', () => {
 
 describe('authenticated routes have beforeLoad guard', () => {
   const guardedRoutes = [
+    { name: 'DashboardRoute', route: DashboardRoute },
     { name: 'ComputationsIndexRoute', route: ComputationsIndexRoute },
     { name: 'ComputationsNewRoute', route: ComputationsNewRoute },
     { name: 'ComputationsCompIdRoute', route: ComputationsCompIdRoute },
@@ -170,6 +172,10 @@ describe('public routes have no beforeLoad guard', () => {
 describe('route paths match spec §11.2', () => {
   it('IndexRoute path is /', () => {
     expect((IndexRoute as any).options.path).toBe('/');
+  });
+
+  it('DashboardRoute path is /dashboard', () => {
+    expect((DashboardRoute as any).options.path).toBe('/dashboard');
   });
 
   it('AuthRoute path is /auth', () => {
@@ -277,8 +283,8 @@ describe('RouterContext', () => {
 
 // ─── Total route count ────────────────────────────────────────────────────────
 
-describe('all 18 routes are registered', () => {
-  it('router has 18 leaf routes', () => {
+describe('all 19 routes are registered', () => {
+  it('router has 19 leaf routes', () => {
     // Count routes that have a path (leaf routes)
     function countLeaves(node: any): number {
       if (!node) return 0;
@@ -288,7 +294,7 @@ describe('all 18 routes are registered', () => {
     }
     const routeTree = (router as any).routeTree;
     const count = countLeaves(routeTree);
-    // We have 18 named routes + __root + public sub-root
-    expect(count).toBeGreaterThanOrEqual(18);
+    // We have 19 named routes + __root + public sub-root
+    expect(count).toBeGreaterThanOrEqual(19);
   });
 });

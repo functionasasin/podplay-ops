@@ -3,19 +3,19 @@
 ## Statistics
 
 - **Total stages**: 33
-- **Completed**: 0
-- **Current**: 1
-- **Convergence**: 0/33
+- **Completed**: 1
+- **Current**: 2
+- **Convergence**: 1/33
 
 ## Current Stage
 
-**Stage 1** — Dashboard routing — split index into landing + dashboard
+**Stage 2** — Clients column mismatch — `name` -> `full_name`
 
 ## Stage Log
 
 | Stage | Status | Timestamp | Notes |
 |-------|--------|-----------|-------|
-| 1 | pending | | Dashboard routing split |
+| 1 | done | 2026-03-07 | Dashboard routing split |
 | 2 | pending | | Clients column mismatch |
 | 3 | pending | | New client insert fix |
 | 4 | pending | | Computation persistence |
