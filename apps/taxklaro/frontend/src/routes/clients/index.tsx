@@ -17,7 +17,7 @@ export const ClientsIndexRoute = createRoute({
 
 interface ClientRow {
   id: string;
-  name: string;
+  fullName: string;
   email?: string | null;
   computationCount?: number;
 }
@@ -36,15 +36,15 @@ function ClientsPage() {
     try {
       const { data, error: fetchError } = await supabase
         .from('clients')
-        .select('id, name, email')
+        .select('id, full_name, email')
         .eq('org_id', orgId)
-        .order('name');
+        .order('full_name');
 
       if (fetchError) throw fetchError;
       setClients(
         (data ?? []).map((c) => ({
           id: c.id,
-          name: c.name,
+          fullName: c.full_name,
           email: c.email,
         })),
       );

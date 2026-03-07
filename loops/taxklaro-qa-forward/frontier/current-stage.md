@@ -3,20 +3,20 @@
 ## Statistics
 
 - **Total stages**: 33
-- **Completed**: 1
-- **Current**: 2
-- **Convergence**: 1/33
+- **Completed**: 2
+- **Current**: 3
+- **Convergence**: 2/33
 
 ## Current Stage
 
-**Stage 2** — Clients column mismatch — `name` -> `full_name`
+**Stage 3** — New client insert — `name`→`full_name`, remove `address`
 
 ## Stage Log
 
 | Stage | Status | Timestamp | Notes |
 |-------|--------|-----------|-------|
 | 1 | done | 2026-03-07 | Dashboard routing split |
-| 2 | pending | | Clients column mismatch |
+| 2 | done | 2026-03-07 | Clients column mismatch — name→full_name, address→notes, +phone |
 | 3 | pending | | New client insert fix |
 | 4 | pending | | Computation persistence |
 | 5 | pending | | Console errors |

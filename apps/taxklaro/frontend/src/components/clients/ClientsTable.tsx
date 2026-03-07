@@ -2,7 +2,7 @@ import { ClientRowSkeleton } from './ClientRowSkeleton';
 
 interface Client {
   id: string;
-  name: string;
+  fullName: string;
   email?: string | null;
   computationCount?: number;
 }
@@ -44,7 +44,7 @@ export function ClientsTable({ clients, isLoading, onSelect }: ClientsTableProps
               className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer"
               onClick={() => onSelect?.(c.id)}
             >
-              <td className="px-5 py-4 font-medium">{c.name}</td>
+              <td className="px-5 py-4 font-medium">{c.fullName}</td>
               <td className="px-5 py-4 text-muted-foreground">{c.email ?? '—'}</td>
               <td className="px-5 py-4 text-right tabular-nums">{c.computationCount ?? 0}</td>
             </tr>

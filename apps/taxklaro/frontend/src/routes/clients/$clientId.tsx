@@ -14,10 +14,11 @@ export const ClientsClientIdRoute = createRoute({
 
 interface ClientDetail {
   id: string;
-  name: string;
+  fullName: string;
   email?: string | null;
+  phone?: string | null;
   tin?: string | null;
-  address?: string | null;
+  notes?: string | null;
 }
 
 function ClientDetailPage() {
@@ -34,7 +35,7 @@ function ClientDetailPage() {
       try {
         const { data, error: fetchError } = await supabase
           .from('clients')
-          .select('id, name, email, tin, address')
+          .select('id, full_name, email, phone, tin, notes')
           .eq('id', clientId)
           .single();
 
@@ -44,10 +45,11 @@ function ClientDetailPage() {
         } else {
           setClient({
             id: data.id,
-            name: data.name,
+            fullName: data.full_name,
             email: data.email,
+            phone: data.phone,
             tin: data.tin,
-            address: data.address,
+            notes: data.notes,
           });
         }
       } catch (err) {
@@ -90,7 +92,7 @@ function ClientDetailPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6" data-testid="client-detail-page">
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-3xl font-normal">{client.name}</h1>
+        <h1 className="font-display text-3xl font-normal">{client.fullName}</h1>
         <button
           className="inline-flex items-center py-2.5 text-[0.8125rem] text-muted-foreground hover:text-foreground transition-colors"
           onClick={() => navigate({ to: '/clients' })}
@@ -101,10 +103,11 @@ function ClientDetailPage() {
 
       <ClientInfoCard
         id={client.id}
-        name={client.name}
+        fullName={client.fullName}
         email={client.email}
+        phone={client.phone}
         tin={client.tin}
-        address={client.address}
+        notes={client.notes}
       />
     </div>
   );
