@@ -228,6 +228,13 @@ loops:
     status: converged
     created: 2026-03-07
     converged_at: "2026-03-07"
+  podplay-ops-forward:
+    description: "Build PodPlay Ops Wizard webapp from converged reverse loop spec (185 stages, React 19 + Vite + Supabase local)"
+    type: forward
+    max_iterations: 40
+    timeout_minutes: 30
+    status: active
+    created: "2026-03-07"
   podplay-ops-reverse:
     description: "Extract complete spec from PodPlay MRP docs → ops wizard webapp mega-spec (68 aspects, Wave 7: QA-readiness)"
     type: reverse
