@@ -3,13 +3,13 @@
 ## Statistics
 
 - **Total stages**: 33
-- **Completed**: 18
-- **Current**: 21
+- **Completed**: 19
+- **Current**: 22
 - **Convergence**: 13/33
 
 ## Current Stage
 
-**Stage 21** — Mobile: dashboard
+**Stage 22** — Mobile: computations list
 
 ## Stage Log
 
@@ -35,7 +35,7 @@
 | 18 | done | 2026-03-07 | Desktop: settings+deadlines — auth guard redirects all 3 routes, in authenticatedRoute+AppLayout, real content verified via source (PersonalInfoSection/BirInfoSection/FirmBrandingSection/MembersTable/DeadlineCard), no placeholder text, build passes |
 | 19 | done | 2026-03-07 | Mobile: landing — all content fits 375px, no overflow, CTA full-width tappable, cards stack vertically, build passes |
 | 20 | done | 2026-03-07 | Mobile: auth pages — form centered, inputs full-width, no overflow, button tappable, build passes |
-| 21 | pending | | Mobile: dashboard |
+| 21 | done | 2026-03-07 | Mobile: dashboard — sidebar hidden md:flex, hamburger md:hidden header, Sheet drawer with SidebarContent, DashboardPage readable, build passes |
 | 22 | pending | | Mobile: computations list |
 | 23 | pending | | Mobile: wizard |
 | 24 | pending | | Mobile: clients |
