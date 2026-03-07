@@ -3,13 +3,13 @@
 ## Statistics
 
 - **Total stages**: 33
-- **Completed**: 12
-- **Current**: 15
+- **Completed**: 13
+- **Current**: 16
 - **Convergence**: 12/33
 
 ## Current Stage
 
-**Stage 15** — Desktop verify: computations list
+**Stage 16** — Desktop verify: wizard
 
 ## Stage Log
 
@@ -29,7 +29,7 @@
 | 12 | done | 2026-03-07 | Desktop: auth pages — signin/signup/reset all pass |
 | 13 | done | 2026-03-07 | Desktop: onboarding — auth guard redirects correctly, no errors |
 | 14 | done | 2026-03-07 | Desktop: dashboard — auth guard works, AppLayout+sidebar wired, max-w-5xl, build passes |
-| 15 | pending | | Desktop: computations list |
+| 15 | done | 2026-03-07 | Desktop: computations list — auth guard redirects, route wired to authenticatedRoute, tabs+empty state+CTA, build passes |
 | 16 | pending | | Desktop: wizard |
 | 17 | pending | | Desktop: clients |
 | 18 | pending | | Desktop: settings + deadlines |
