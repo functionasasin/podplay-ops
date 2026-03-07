@@ -40,7 +40,7 @@ function SettingsTeamPage() {
     if (!orgId) return;
     const { data } = await supabase
       .from('organization_members')
-      .select('user_id, role, user_profiles(full_name, email)')
+      .select('user_id, role, user_profiles(full_name)')
       .eq('org_id', orgId);
 
     if (data) {
@@ -48,7 +48,7 @@ function SettingsTeamPage() {
         data.map((m: any) => ({
           id: m.user_id,
           name: m.user_profiles?.full_name ?? '',
-          email: m.user_profiles?.email ?? '',
+          email: '',
           role: m.role,
         }))
       );

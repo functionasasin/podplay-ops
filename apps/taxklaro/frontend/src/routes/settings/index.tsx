@@ -34,11 +34,11 @@ function SettingsPage() {
   }
 
   async function handleSaveBirInfo(data: { tin: string; rdoCode: string }) {
-    if (!user || !org) return;
+    if (!user) return;
     await supabase
-      .from('organizations')
-      .update({ tin: data.tin, rdo_code: data.rdoCode })
-      .eq('id', org.id);
+      .from('user_profiles')
+      .update({ tin: data.tin, bir_rdo_code: data.rdoCode })
+      .eq('id', user.id);
   }
 
   async function handleSaveFirmBranding(data: { firmName: string }) {
