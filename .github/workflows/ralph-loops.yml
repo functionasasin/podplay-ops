@@ -67,6 +67,11 @@ jobs:
           git config user.name "ralph-loop[bot]"
           git config user.email "ralph-loop[bot]@users.noreply.github.com"
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
       - name: Install Claude Code
         run: npm install -g @anthropic-ai/claude-code
 
@@ -84,9 +89,27 @@ jobs:
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Install Playwright browsers
+        if: steps.check.outputs.skip != 'true'
+        run: npx playwright install --with-deps chromium
+
       - name: Install psql (for DB-querying loops)
         if: steps.check.outputs.skip != 'true'
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Install frontend deps (if loop needs dev server)
+        if: steps.check.outputs.skip != 'true'
+        run: |
+          LOOP_DIR="loops/${{ matrix.loop }}"
+          # Check if any stage file or PROMPT references a frontend dir
+          if grep -rq "localhost\|dev server\|npx vite" "$LOOP_DIR/" 2>/dev/null; then
+            # Extract frontend path from PROMPT.md
+            FRONTEND_DIR=$(grep -oP 'Frontend.*?`\K[^`]+' "$LOOP_DIR/PROMPT.md" | head -1 | sed 's|/$||')
+            if [ -n "$FRONTEND_DIR" ] && [ -d "$FRONTEND_DIR" ]; then
+              echo "Installing frontend deps in $FRONTEND_DIR"
+              cd "$FRONTEND_DIR" && npm install
+            fi
+          fi
 
       - name: Run until convergence (6-hour window)
         if: steps.check.outputs.skip != 'true'
