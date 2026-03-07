@@ -3,13 +3,13 @@
 ## Statistics
 
 - **Total stages**: 33
-- **Completed**: 28
-- **Current**: 31
+- **Completed**: 29
+- **Current**: 32
 - **Convergence**: 14/33
 
 ## Current Stage
 
-**Stage 31** — Discovery: route wiring
+**Stage 32** — Discovery: Supabase query audit
 
 ## Stage Log
 
@@ -45,6 +45,6 @@
 | 28 | done | 2026-03-07 | Flow: computation — auth guard redirects correctly, fixed status 'complete'→'computed'/'finalized' in $compId.tsx badge, wizard+results+computations list+detail page verified via source, build passes |
 | 29 | done | 2026-03-07 | Flow: client — auth guard redirects /clients→/auth, source audit: insert/select columns match schema (full_name/email/tin/phone/notes), navigation wired correctly, build passes |
 | 30 | done | 2026-03-07 | Flow: cross-entity — wired ShareToggle into computation detail, share route renders for anon users, clientId flows wizard→DB, build passes |
-| 31 | pending | | Discovery: route wiring |
+| 31 | done | 2026-03-07 | Discovery: route wiring — fixed invite stub, noted orphaned route-unused components (spec-required by wiring test §14.1), build passes |
 | 32 | pending | | Discovery: Supabase query audit |
 | 33 | pending | | Discovery: final sweep + converge |
