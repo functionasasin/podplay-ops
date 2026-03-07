@@ -3,13 +3,13 @@
 ## Statistics
 
 - **Total stages**: 33
-- **Completed**: 20
-- **Current**: 23
+- **Completed**: 21
+- **Current**: 24
 - **Convergence**: 13/33
 
 ## Current Stage
 
-**Stage 23** — Mobile: wizard
+**Stage 24** — Mobile: clients
 
 ## Stage Log
 
@@ -37,7 +37,7 @@
 | 20 | done | 2026-03-07 | Mobile: auth pages — form centered, inputs full-width, no overflow, button tappable, build passes |
 | 21 | done | 2026-03-07 | Mobile: dashboard — sidebar hidden md:flex, hamburger md:hidden header, Sheet drawer with SidebarContent, DashboardPage readable, build passes |
 | 22 | done | 2026-03-07 | Mobile: computations list — grid-cols-1 at 375px, New Computation btn present, cards readable, build passes |
-| 23 | pending | | Mobile: wizard |
+| 23 | done | 2026-03-07 | Mobile: wizard — auth guard redirects to signin at 375px, max-w-2xl+p-4 fits viewport, radio cards block/full-width stack vertically, h-11 buttons ≥44px touch targets, build passes |
 | 24 | pending | | Mobile: clients |
 | 25 | pending | | Mobile: settings + deadlines |
 | 26 | pending | | Mobile: sidebar drawer |
