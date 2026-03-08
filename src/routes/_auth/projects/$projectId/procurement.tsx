@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { BomReviewTable } from '@/components/wizard/procurement/BomReviewTable';
 import { InventoryCheckPanel } from '@/components/wizard/procurement/InventoryCheckPanel';
+import { PoCreateForm } from '@/components/wizard/procurement/PoCreateForm';
 
 const PROCUREMENT_TABS = [
   'BOM Review',
@@ -82,8 +83,8 @@ function ProcurementPage() {
           )}
           {activeTab === 'Purchase Orders' && (
             <div>
-              <h2 className="text-base font-medium mb-2">Purchase Orders</h2>
-              <p className="text-sm text-muted-foreground">Purchase Orders panel — coming soon.</p>
+              <h2 className="text-base font-medium mb-4">Create Purchase Order</h2>
+              <PoCreateForm projectId={projectId} />
             </div>
           )}
           {activeTab === 'Packing List' && (
