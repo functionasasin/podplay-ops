@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { ExpenseTracker } from '@/components/wizard/financials/ExpenseTracker';
+import { PnlSummary } from '@/components/wizard/financials/PnlSummary';
 
 const FINANCIALS_TABS = ['Invoicing', 'Expenses', 'P&L Summary', 'Go-Live'] as const;
 
@@ -88,12 +89,7 @@ function FinancialsPage() {
             <ExpenseTracker projectId={projectId} />
           )}
           {activeTab === 'P&L Summary' && (
-            <div>
-              <h2 className="text-base font-medium mb-4">P&L Summary</h2>
-              <p className="text-sm text-muted-foreground">
-                Profit and loss summary coming soon.
-              </p>
-            </div>
+            <PnlSummary projectId={projectId} />
           )}
           {activeTab === 'Go-Live' && (
             <div>
