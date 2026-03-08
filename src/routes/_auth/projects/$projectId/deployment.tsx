@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { SmartChecklist, type ChecklistItem, type ProjectTokenFields } from '@/components/wizard/deployment/SmartChecklist';
 import { VlanReferencePanel } from '@/components/wizard/deployment/VlanReferencePanel';
 import { IspConfigMethodPanel } from '@/components/wizard/deployment/IspConfigMethodPanel';
+import { ReplayServiceVersionPanel } from '@/components/wizard/deployment/ReplayServiceVersionPanel';
 
 // Phase display ordering per spec: 0-11, then 15, then 12-14
 const PHASE_DISPLAY_ORDER = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 15, 12, 13, 14];
@@ -35,12 +36,14 @@ function phaseIcon(completed: number, total: number): string {
 }
 
 type IspConfigMethod = 'static_ip' | 'dmz' | 'port_forward';
+type ReplayServiceVersion = 'v1' | 'v2';
 
 type ProjectState = ProjectTokenFields & {
   project_name: string;
   tier: string;
   venue_country: string;
   isp_config_method: IspConfigMethod | null;
+  replay_service_version: ReplayServiceVersion | null;
 };
 
 function DeploymentPage() {
@@ -55,7 +58,7 @@ function DeploymentPage() {
       const [{ data: proj }, { data: checklist }] = await Promise.all([
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (supabase.from('projects') as any)
-          .select('project_name, customer_name, court_count, ddns_subdomain, unifi_site_name, mac_mini_username, location_id, tier, venue_country, isp_config_method')
+          .select('project_name, customer_name, court_count, ddns_subdomain, unifi_site_name, mac_mini_username, location_id, tier, venue_country, isp_config_method, replay_service_version')
           .eq('id', projectId)
           .single(),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -87,6 +90,11 @@ function DeploymentPage() {
   function handleIspMethodChange(method: IspConfigMethod) {
     if (!project) return;
     setProject({ ...project, isp_config_method: method });
+  }
+
+  function handleReplayVersionChange(version: ReplayServiceVersion) {
+    if (!project) return;
+    setProject({ ...project, replay_service_version: version });
   }
 
   async function toggleItem(item: ChecklistItem) {
@@ -196,6 +204,15 @@ function DeploymentPage() {
                   method={project.isp_config_method}
                   venueCountry={project.venue_country}
                   onMethodChange={handleIspMethodChange}
+                />
+              )}
+
+              {/* Phase 9: Replay Service Version */}
+              {selectedPhase === 9 && project && (
+                <ReplayServiceVersionPanel
+                  projectId={projectId}
+                  version={project.replay_service_version}
+                  onVersionChange={handleReplayVersionChange}
                 />
               )}
 
