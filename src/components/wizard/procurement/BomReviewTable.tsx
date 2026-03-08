@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { calculateCostChain } from '@/lib/cost-chain';
 
 interface CatalogItem {
   id: string;
@@ -105,9 +106,15 @@ export function BomReviewTable({ projectId }: BomReviewTableProps) {
     );
   }
 
+  const DEFAULT_SHIPPING_RATE = 0.10;
+  const DEFAULT_MARGIN = 0.10;
+
   if (loading) return <p className="text-sm text-muted-foreground">Loading BOM...</p>;
   if (rows.length === 0)
     return <p className="text-sm text-muted-foreground">No BOM items found.</p>;
+
+  let subtotal = 0;
+  let grandTotal = 0;
 
   return (
     <div className="overflow-x-auto">
@@ -120,12 +127,32 @@ export function BomReviewTable({ projectId }: BomReviewTableProps) {
             <th className="py-2 pr-4 font-medium w-24">Qty</th>
             <th className="py-2 pr-4 font-medium w-32">Unit Cost</th>
             <th className="py-2 pr-4 font-medium w-28">Total</th>
+            <th className="py-2 pr-4 font-medium w-28">Landed Cost</th>
+            <th className="py-2 pr-4 font-medium w-28">Customer Price</th>
             <th className="py-2 font-medium">Swap SKU</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((row) => {
-            const total = row.unit_cost != null ? row.qty * row.unit_cost : null;
+            let lineTotal: number | null = null;
+            let landedCost: number | null = null;
+            let customerPrice: number | null = null;
+
+            if (row.unit_cost != null) {
+              const chain = calculateCostChain(
+                row.unit_cost,
+                row.qty,
+                0,
+                DEFAULT_SHIPPING_RATE,
+                DEFAULT_MARGIN,
+              );
+              lineTotal = chain.total;
+              landedCost = chain.landedCost;
+              customerPrice = chain.customerPrice;
+              subtotal += lineTotal;
+              grandTotal += customerPrice;
+            }
+
             return (
               <tr key={row.id} className="border-b hover:bg-muted/30">
                 <td className="py-2 pr-4 font-mono text-xs text-muted-foreground">{row.sku}</td>
@@ -171,7 +198,13 @@ export function BomReviewTable({ projectId }: BomReviewTableProps) {
                   />
                 </td>
                 <td className="py-2 pr-4">
-                  {total != null ? `$${total.toFixed(2)}` : '—'}
+                  {lineTotal != null ? `$${lineTotal.toFixed(2)}` : '—'}
+                </td>
+                <td className="py-2 pr-4">
+                  {landedCost != null ? `$${landedCost.toFixed(2)}` : '—'}
+                </td>
+                <td className="py-2 pr-4">
+                  {customerPrice != null ? `$${customerPrice.toFixed(2)}` : '—'}
                 </td>
                 <td className="py-2">
                   <select
@@ -191,6 +224,16 @@ export function BomReviewTable({ projectId }: BomReviewTableProps) {
           })}
         </tbody>
       </table>
+      <div className="mt-4 flex justify-end gap-8 text-sm border-t pt-3">
+        <div className="text-muted-foreground">
+          Subtotal (est. cost):{' '}
+          <span className="font-medium text-foreground">${subtotal.toFixed(2)}</span>
+        </div>
+        <div className="text-muted-foreground">
+          Grand Total (customer price):{' '}
+          <span className="font-semibold text-foreground">${grandTotal.toFixed(2)}</span>
+        </div>
+      </div>
     </div>
   );
 }
