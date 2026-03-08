@@ -13,9 +13,15 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
+import { Route as AuthSettingsRouteImport } from './routes/_auth/settings'
+import { Route as AuthSettingsIndexRouteImport } from './routes/_auth/settings/index'
 import { Route as AuthProjectsIndexRouteImport } from './routes/_auth/projects/index'
 import { Route as AuthInventoryIndexRouteImport } from './routes/_auth/inventory/index'
 import { Route as AuthFinancialsIndexRouteImport } from './routes/_auth/financials/index'
+import { Route as AuthSettingsTravelRouteImport } from './routes/_auth/settings/travel'
+import { Route as AuthSettingsTeamRouteImport } from './routes/_auth/settings/team'
+import { Route as AuthSettingsPricingRouteImport } from './routes/_auth/settings/pricing'
+import { Route as AuthSettingsCatalogRouteImport } from './routes/_auth/settings/catalog'
 import { Route as AuthProjectsNewRouteImport } from './routes/_auth/projects/new'
 import { Route as AuthProjectsProjectIdProcurementRouteImport } from './routes/_auth/projects/$projectId/procurement'
 import { Route as AuthProjectsProjectIdIntakeRouteImport } from './routes/_auth/projects/$projectId/intake'
@@ -41,6 +47,16 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthSettingsRoute = AuthSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthSettingsIndexRoute = AuthSettingsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthSettingsRoute,
+} as any)
 const AuthProjectsIndexRoute = AuthProjectsIndexRouteImport.update({
   id: '/projects/',
   path: '/projects/',
@@ -55,6 +71,26 @@ const AuthFinancialsIndexRoute = AuthFinancialsIndexRouteImport.update({
   id: '/financials/',
   path: '/financials/',
   getParentRoute: () => AuthRoute,
+} as any)
+const AuthSettingsTravelRoute = AuthSettingsTravelRouteImport.update({
+  id: '/travel',
+  path: '/travel',
+  getParentRoute: () => AuthSettingsRoute,
+} as any)
+const AuthSettingsTeamRoute = AuthSettingsTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => AuthSettingsRoute,
+} as any)
+const AuthSettingsPricingRoute = AuthSettingsPricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => AuthSettingsRoute,
+} as any)
+const AuthSettingsCatalogRoute = AuthSettingsCatalogRouteImport.update({
+  id: '/catalog',
+  path: '/catalog',
+  getParentRoute: () => AuthSettingsRoute,
 } as any)
 const AuthProjectsNewRoute = AuthProjectsNewRouteImport.update({
   id: '/projects/new',
@@ -89,11 +125,17 @@ const AuthProjectsProjectIdDeploymentRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/settings': typeof AuthSettingsRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/projects/new': typeof AuthProjectsNewRoute
+  '/settings/catalog': typeof AuthSettingsCatalogRoute
+  '/settings/pricing': typeof AuthSettingsPricingRoute
+  '/settings/team': typeof AuthSettingsTeamRoute
+  '/settings/travel': typeof AuthSettingsTravelRoute
   '/financials/': typeof AuthFinancialsIndexRoute
   '/inventory/': typeof AuthInventoryIndexRoute
   '/projects/': typeof AuthProjectsIndexRoute
+  '/settings/': typeof AuthSettingsIndexRoute
   '/projects/$projectId/deployment': typeof AuthProjectsProjectIdDeploymentRoute
   '/projects/$projectId/financials': typeof AuthProjectsProjectIdFinancialsRoute
   '/projects/$projectId/intake': typeof AuthProjectsProjectIdIntakeRoute
@@ -104,9 +146,14 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/projects/new': typeof AuthProjectsNewRoute
+  '/settings/catalog': typeof AuthSettingsCatalogRoute
+  '/settings/pricing': typeof AuthSettingsPricingRoute
+  '/settings/team': typeof AuthSettingsTeamRoute
+  '/settings/travel': typeof AuthSettingsTravelRoute
   '/financials': typeof AuthFinancialsIndexRoute
   '/inventory': typeof AuthInventoryIndexRoute
   '/projects': typeof AuthProjectsIndexRoute
+  '/settings': typeof AuthSettingsIndexRoute
   '/projects/$projectId/deployment': typeof AuthProjectsProjectIdDeploymentRoute
   '/projects/$projectId/financials': typeof AuthProjectsProjectIdFinancialsRoute
   '/projects/$projectId/intake': typeof AuthProjectsProjectIdIntakeRoute
@@ -117,11 +164,17 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_auth': typeof AuthRouteWithChildren
   '/login': typeof LoginRoute
+  '/_auth/settings': typeof AuthSettingsRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/_auth/projects/new': typeof AuthProjectsNewRoute
+  '/_auth/settings/catalog': typeof AuthSettingsCatalogRoute
+  '/_auth/settings/pricing': typeof AuthSettingsPricingRoute
+  '/_auth/settings/team': typeof AuthSettingsTeamRoute
+  '/_auth/settings/travel': typeof AuthSettingsTravelRoute
   '/_auth/financials/': typeof AuthFinancialsIndexRoute
   '/_auth/inventory/': typeof AuthInventoryIndexRoute
   '/_auth/projects/': typeof AuthProjectsIndexRoute
+  '/_auth/settings/': typeof AuthSettingsIndexRoute
   '/_auth/projects/$projectId/deployment': typeof AuthProjectsProjectIdDeploymentRoute
   '/_auth/projects/$projectId/financials': typeof AuthProjectsProjectIdFinancialsRoute
   '/_auth/projects/$projectId/intake': typeof AuthProjectsProjectIdIntakeRoute
@@ -132,11 +185,17 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/settings'
     | '/auth/callback'
     | '/projects/new'
+    | '/settings/catalog'
+    | '/settings/pricing'
+    | '/settings/team'
+    | '/settings/travel'
     | '/financials/'
     | '/inventory/'
     | '/projects/'
+    | '/settings/'
     | '/projects/$projectId/deployment'
     | '/projects/$projectId/financials'
     | '/projects/$projectId/intake'
@@ -147,9 +206,14 @@ export interface FileRouteTypes {
     | '/login'
     | '/auth/callback'
     | '/projects/new'
+    | '/settings/catalog'
+    | '/settings/pricing'
+    | '/settings/team'
+    | '/settings/travel'
     | '/financials'
     | '/inventory'
     | '/projects'
+    | '/settings'
     | '/projects/$projectId/deployment'
     | '/projects/$projectId/financials'
     | '/projects/$projectId/intake'
@@ -159,11 +223,17 @@ export interface FileRouteTypes {
     | '/'
     | '/_auth'
     | '/login'
+    | '/_auth/settings'
     | '/auth/callback'
     | '/_auth/projects/new'
+    | '/_auth/settings/catalog'
+    | '/_auth/settings/pricing'
+    | '/_auth/settings/team'
+    | '/_auth/settings/travel'
     | '/_auth/financials/'
     | '/_auth/inventory/'
     | '/_auth/projects/'
+    | '/_auth/settings/'
     | '/_auth/projects/$projectId/deployment'
     | '/_auth/projects/$projectId/financials'
     | '/_auth/projects/$projectId/intake'
@@ -207,6 +277,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_auth/settings': {
+      id: '/_auth/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthSettingsRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/settings/': {
+      id: '/_auth/settings/'
+      path: '/'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof AuthSettingsIndexRouteImport
+      parentRoute: typeof AuthSettingsRoute
+    }
     '/_auth/projects/': {
       id: '/_auth/projects/'
       path: '/projects'
@@ -227,6 +311,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/financials/'
       preLoaderRoute: typeof AuthFinancialsIndexRouteImport
       parentRoute: typeof AuthRoute
+    }
+    '/_auth/settings/travel': {
+      id: '/_auth/settings/travel'
+      path: '/travel'
+      fullPath: '/settings/travel'
+      preLoaderRoute: typeof AuthSettingsTravelRouteImport
+      parentRoute: typeof AuthSettingsRoute
+    }
+    '/_auth/settings/team': {
+      id: '/_auth/settings/team'
+      path: '/team'
+      fullPath: '/settings/team'
+      preLoaderRoute: typeof AuthSettingsTeamRouteImport
+      parentRoute: typeof AuthSettingsRoute
+    }
+    '/_auth/settings/pricing': {
+      id: '/_auth/settings/pricing'
+      path: '/pricing'
+      fullPath: '/settings/pricing'
+      preLoaderRoute: typeof AuthSettingsPricingRouteImport
+      parentRoute: typeof AuthSettingsRoute
+    }
+    '/_auth/settings/catalog': {
+      id: '/_auth/settings/catalog'
+      path: '/catalog'
+      fullPath: '/settings/catalog'
+      preLoaderRoute: typeof AuthSettingsCatalogRouteImport
+      parentRoute: typeof AuthSettingsRoute
     }
     '/_auth/projects/new': {
       id: '/_auth/projects/new'
@@ -266,7 +378,28 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthSettingsRouteChildren {
+  AuthSettingsCatalogRoute: typeof AuthSettingsCatalogRoute
+  AuthSettingsPricingRoute: typeof AuthSettingsPricingRoute
+  AuthSettingsTeamRoute: typeof AuthSettingsTeamRoute
+  AuthSettingsTravelRoute: typeof AuthSettingsTravelRoute
+  AuthSettingsIndexRoute: typeof AuthSettingsIndexRoute
+}
+
+const AuthSettingsRouteChildren: AuthSettingsRouteChildren = {
+  AuthSettingsCatalogRoute: AuthSettingsCatalogRoute,
+  AuthSettingsPricingRoute: AuthSettingsPricingRoute,
+  AuthSettingsTeamRoute: AuthSettingsTeamRoute,
+  AuthSettingsTravelRoute: AuthSettingsTravelRoute,
+  AuthSettingsIndexRoute: AuthSettingsIndexRoute,
+}
+
+const AuthSettingsRouteWithChildren = AuthSettingsRoute._addFileChildren(
+  AuthSettingsRouteChildren,
+)
+
 interface AuthRouteChildren {
+  AuthSettingsRoute: typeof AuthSettingsRouteWithChildren
   AuthProjectsNewRoute: typeof AuthProjectsNewRoute
   AuthFinancialsIndexRoute: typeof AuthFinancialsIndexRoute
   AuthInventoryIndexRoute: typeof AuthInventoryIndexRoute
@@ -278,6 +411,7 @@ interface AuthRouteChildren {
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
+  AuthSettingsRoute: AuthSettingsRouteWithChildren,
   AuthProjectsNewRoute: AuthProjectsNewRoute,
   AuthFinancialsIndexRoute: AuthFinancialsIndexRoute,
   AuthInventoryIndexRoute: AuthInventoryIndexRoute,
