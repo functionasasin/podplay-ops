@@ -11,6 +11,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
+import { SkipLink } from '@/components/layout/SkipLink';
 
 interface NavLink {
   to: string;
@@ -58,12 +59,13 @@ export function AppLayout() {
 
   return (
     <div className="flex h-svh overflow-hidden">
+      <SkipLink />
       {/* Sidebar */}
-      <aside className="hidden md:flex w-60 shrink-0 border-r bg-background flex-col">
+      <aside className="hidden md:flex w-60 shrink-0 border-r bg-background flex-col" aria-label="Main navigation">
         <div className="flex h-14 items-center border-b px-4 shrink-0">
           <span className="text-base font-semibold tracking-tight">PodPlay Ops</span>
         </div>
-        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5" aria-label="Site navigation">
           {navSections.map(({ section, links }) => (
             <div key={section}>
               <p className="px-2 mb-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -80,6 +82,7 @@ export function AppLayout() {
                     )}
                     activeProps={{
                       className: 'bg-accent text-accent-foreground font-medium',
+                      'aria-current': 'page',
                     }}
                   >
                     <Icon className="h-4 w-4 shrink-0" />
@@ -95,7 +98,7 @@ export function AppLayout() {
       {/* Main area */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Header */}
-        <header className="flex h-14 items-center justify-between border-b px-4 shrink-0 bg-background">
+        <header className="flex h-14 items-center justify-between border-b px-4 shrink-0 bg-background" aria-label="App header">
           <span className="font-semibold md:hidden">PodPlay Ops</span>
           <div className="hidden md:block" />
           <div className="flex items-center gap-3">
@@ -118,7 +121,7 @@ export function AppLayout() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto">
+        <main id="main-content" tabIndex={-1} className="flex-1 overflow-y-auto outline-none">
           <Outlet />
         </main>
       </div>
