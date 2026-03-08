@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
 import { WizardStepper } from '@/components/wizard/WizardStepper';
 import { CustomerInfoStep, type CustomerInfoValues } from '@/components/wizard/intake/CustomerInfoStep';
+import { VenueConfigStep, type VenueConfigValues } from '@/components/wizard/intake/VenueConfigStep';
 
 const INTAKE_STEPS = [
   'Customer Info',
@@ -15,12 +16,20 @@ const INTAKE_STEPS = [
 
 function IntakePage() {
   const [currentStep, setCurrentStep] = useState(0);
-  const [wizardData, setWizardData] = useState<{ customerInfo?: CustomerInfoValues }>({});
+  const [wizardData, setWizardData] = useState<{
+    customerInfo?: CustomerInfoValues;
+    venueConfig?: VenueConfigValues;
+  }>({});
   const { projectId } = Route.useParams();
 
   function handleCustomerInfoNext(data: CustomerInfoValues) {
     setWizardData((prev) => ({ ...prev, customerInfo: data }));
     setCurrentStep(1);
+  }
+
+  function handleVenueConfigNext(data: VenueConfigValues) {
+    setWizardData((prev) => ({ ...prev, venueConfig: data }));
+    setCurrentStep(2);
   }
 
   return (
@@ -48,7 +57,13 @@ function IntakePage() {
             onNext={handleCustomerInfoNext}
           />
         )}
-        {currentStep !== 0 && (
+        {currentStep === 1 && (
+          <VenueConfigStep
+            defaultValues={wizardData.venueConfig}
+            onNext={handleVenueConfigNext}
+          />
+        )}
+        {currentStep > 1 && (
           <p className="text-sm text-muted-foreground">
             This step will be implemented in a future stage.
           </p>
