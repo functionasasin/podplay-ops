@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
 import { WizardStepper } from '@/components/wizard/WizardStepper';
+import { CustomerInfoStep, type CustomerInfoValues } from '@/components/wizard/intake/CustomerInfoStep';
 
 const INTAKE_STEPS = [
   'Customer Info',
@@ -14,7 +15,13 @@ const INTAKE_STEPS = [
 
 function IntakePage() {
   const [currentStep, setCurrentStep] = useState(0);
+  const [wizardData, setWizardData] = useState<{ customerInfo?: CustomerInfoValues }>({});
   const { projectId } = Route.useParams();
+
+  function handleCustomerInfoNext(data: CustomerInfoValues) {
+    setWizardData((prev) => ({ ...prev, customerInfo: data }));
+    setCurrentStep(1);
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -35,9 +42,17 @@ function IntakePage() {
         <h2 className="text-base font-medium mb-4">
           Step {currentStep + 1}: {INTAKE_STEPS[currentStep]}
         </h2>
-        <p className="text-sm text-muted-foreground">
-          This step will be implemented in a future stage.
-        </p>
+        {currentStep === 0 && (
+          <CustomerInfoStep
+            defaultValues={wizardData.customerInfo}
+            onNext={handleCustomerInfoNext}
+          />
+        )}
+        {currentStep !== 0 && (
+          <p className="text-sm text-muted-foreground">
+            This step will be implemented in a future stage.
+          </p>
+        )}
       </div>
     </div>
   );
