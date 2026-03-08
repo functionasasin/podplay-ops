@@ -1,13 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router';
-
-function TravelSettingsPage() {
-  return (
-    <div className="space-y-4">
-      <p className="text-muted-foreground text-sm">Travel settings — coming soon.</p>
-    </div>
-  );
-}
+import { getSettings } from '@/services/settingsService';
+import { TravelSettings } from '@/components/settings/TravelSettings';
 
 export const Route = createFileRoute('/_auth/settings/travel')({
-  component: TravelSettingsPage,
+  loader: async () => getSettings(),
+  component: () => {
+    const settings = Route.useLoaderData();
+    return <TravelSettings settings={settings} />;
+  },
 });
