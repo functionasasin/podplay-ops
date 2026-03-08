@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { ExpenseTracker } from '@/components/wizard/financials/ExpenseTracker';
 import { PnlSummary } from '@/components/wizard/financials/PnlSummary';
+import { GoLive } from '@/components/wizard/financials/GoLive';
 
 const FINANCIALS_TABS = ['Invoicing', 'Expenses', 'P&L Summary', 'Go-Live'] as const;
 
@@ -92,12 +93,7 @@ function FinancialsPage() {
             <PnlSummary projectId={projectId} />
           )}
           {activeTab === 'Go-Live' && (
-            <div>
-              <h2 className="text-base font-medium mb-4">Go-Live</h2>
-              <p className="text-sm text-muted-foreground">
-                Go-live confirmation and project handoff coming soon.
-              </p>
-            </div>
+            <GoLive projectId={projectId} />
           )}
         </div>
       </div>
