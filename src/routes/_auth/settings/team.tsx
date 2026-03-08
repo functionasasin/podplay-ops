@@ -1,13 +1,18 @@
 import { createFileRoute } from '@tanstack/react-router';
-
-function TeamSettingsPage() {
-  return (
-    <div className="space-y-4">
-      <p className="text-muted-foreground text-sm">Team settings — coming soon.</p>
-    </div>
-  );
-}
+import { getSettings } from '@/services/settingsService';
+import { getTeamContacts } from '@/services/teamContactsService';
+import { TeamSettings } from '@/components/settings/TeamSettings';
 
 export const Route = createFileRoute('/_auth/settings/team')({
-  component: TeamSettingsPage,
+  loader: async () => {
+    const [settings, contacts] = await Promise.all([
+      getSettings(),
+      getTeamContacts({ includeInactive: false }),
+    ]);
+    return { settings, contacts };
+  },
+  component: () => {
+    const { settings, contacts } = Route.useLoaderData();
+    return <TeamSettings settings={settings} contacts={contacts} />;
+  },
 });
