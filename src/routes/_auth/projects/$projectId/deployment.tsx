@@ -1,18 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-
-type ChecklistItem = {
-  id: string;
-  phase: number;
-  step_number: number;
-  sort_order: number;
-  title: string;
-  description: string;
-  warnings: string[] | null;
-  is_completed: boolean;
-  notes: string | null;
-};
+import { SmartChecklist, type ChecklistItem, type ProjectTokenFields } from '@/components/wizard/deployment/SmartChecklist';
 
 // Phase display ordering per spec: 0-11, then 15, then 12-14
 const PHASE_DISPLAY_ORDER = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 15, 12, 13, 14];
@@ -43,9 +32,11 @@ function phaseIcon(completed: number, total: number): string {
   return '○';
 }
 
+type ProjectState = ProjectTokenFields & { project_name: string };
+
 function DeploymentPage() {
   const { projectId } = Route.useParams();
-  const [project, setProject] = useState<{ project_name: string; customer_name: string } | null>(null);
+  const [project, setProject] = useState<ProjectState | null>(null);
   const [items, setItems] = useState<ChecklistItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPhase, setSelectedPhase] = useState<number>(0);
@@ -55,7 +46,7 @@ function DeploymentPage() {
       const [{ data: proj }, { data: checklist }] = await Promise.all([
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (supabase.from('projects') as any)
-          .select('project_name, customer_name')
+          .select('project_name, customer_name, court_count, ddns_subdomain, unifi_site_name, mac_mini_username, location_id')
           .eq('id', projectId)
           .single(),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -179,47 +170,11 @@ function DeploymentPage() {
                 Phase {selectedPhase}: {PHASE_NAMES[selectedPhase]}
               </h2>
 
-              {selectedItems.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No checklist items for this phase.</p>
-              ) : (
-                <div className="space-y-3">
-                  {selectedItems.map((item) => (
-                    <div
-                      key={item.id}
-                      className={[
-                        'border rounded-lg p-4 space-y-1',
-                        item.is_completed ? 'bg-muted/30' : 'bg-background',
-                      ].join(' ')}
-                    >
-                      <label className="flex items-start gap-3 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={item.is_completed}
-                          onChange={() => toggleItem(item)}
-                          className="mt-0.5 h-4 w-4 rounded border-gray-300"
-                        />
-                        <div className="flex-1">
-                          <p className={['text-sm font-medium', item.is_completed ? 'line-through text-muted-foreground' : ''].join(' ')}>
-                            Step {item.step_number}: {item.title}
-                          </p>
-                          {item.description && (
-                            <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
-                          )}
-                          {item.warnings && item.warnings.length > 0 && (
-                            <div className="mt-1 space-y-0.5">
-                              {item.warnings.map((w, i) => (
-                                <p key={i} className="text-xs text-yellow-700 bg-yellow-50 rounded px-2 py-1">
-                                  ⚠ {w}
-                                </p>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <SmartChecklist
+                items={selectedItems}
+                project={project ?? { customer_name: '', court_count: 0 }}
+                onToggle={toggleItem}
+              />
             </>
           )}
         </div>
