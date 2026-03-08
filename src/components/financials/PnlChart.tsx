@@ -2,6 +2,8 @@
  * PnlChart — monthly P&L table + SVG bar chart
  * Columns: Revenue, COGS, Expenses, Margin (grouped bars)
  */
+import { EmptyState } from '@/components/ui/EmptyState';
+import { EMPTY_STATES } from '@/lib/empty-state-configs';
 
 interface MonthRow {
   label: string;
@@ -28,11 +30,8 @@ const BAR_GAP = 2;
 
 export function PnlChart({ months }: PnlChartProps) {
   if (months.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground py-4 text-center">
-        No monthly data to display.
-      </p>
-    );
+    const cfg = EMPTY_STATES.pnlNoData;
+    return <EmptyState icon={cfg.icon} heading={cfg.heading} description={cfg.description} cta={{ label: cfg.cta.label }} />;
   }
 
   const allValues = months.flatMap((m) => [m.revenue, m.cogs, m.expenses, Math.abs(m.margin)]);

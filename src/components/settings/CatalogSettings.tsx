@@ -4,6 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { EMPTY_STATES } from '@/lib/empty-state-configs';
 import type { HardwareCatalogItem } from '@/services/catalogService';
 import {
   createCatalogItem,
@@ -462,8 +464,18 @@ export function CatalogSettings({ items: initialItems }: CatalogSettingsProps) {
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} className="text-center py-8 text-muted-foreground">
-                  No items found.
+                <td colSpan={6}>
+                  {(() => {
+                    const cfg = EMPTY_STATES.catalogEmpty;
+                    return (
+                      <EmptyState
+                        icon={cfg.icon}
+                        heading={cfg.heading}
+                        description={cfg.description}
+                        cta={{ label: cfg.cta.label, onClick: () => setSheetItem(null) }}
+                      />
+                    );
+                  })()}
                 </td>
               </tr>
             ) : (

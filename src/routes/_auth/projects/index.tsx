@@ -113,7 +113,15 @@ export function ProjectsPage() {
         </span>
       </div>
 
-      <ProjectList projects={filteredProjects} />
+      <ProjectList
+        projects={filteredProjects}
+        hasFilters={statusFilter !== 'all' || tierFilter !== 'all' || searchQuery !== ''}
+        onClearFilters={() => {
+          setStatusFilter('all');
+          setTierFilter('all');
+          setSearchQuery('');
+        }}
+      />
     </div>
   );
 }

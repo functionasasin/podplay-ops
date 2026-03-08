@@ -2,6 +2,8 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { EMPTY_STATES } from '@/lib/empty-state-configs';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -132,7 +134,10 @@ function RevenueFunnel({ projects }: { projects: PipelineProject[] }) {
       </div>
 
       {projects.length === 0 ? (
-        <p className="text-sm text-muted-foreground py-4">No active projects in pipeline.</p>
+        (() => {
+          const cfg = EMPTY_STATES.pipelineEmpty;
+          return <EmptyState icon={cfg.icon} heading={cfg.heading} description={cfg.description} cta={{ label: cfg.cta.label, href: cfg.cta.href }} />;
+        })()
       ) : (
         <div className="border rounded-lg overflow-hidden">
           <table className="w-full text-sm">

@@ -2,6 +2,8 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { EMPTY_STATES } from '@/lib/empty-state-configs';
 
 interface InventoryItem {
   id: string;
@@ -115,12 +117,10 @@ function InventoryPage() {
   }
 
   if (items.length === 0) {
+    const cfg = EMPTY_STATES.inventoryEmpty;
     return (
-      <div className="flex h-full flex-col items-center justify-center p-8 text-center">
-        <p className="font-medium">Inventory not set up yet</p>
-        <p className="text-muted-foreground text-sm mt-1">
-          Run the seed data migration to populate the hardware catalog.
-        </p>
+      <div className="p-6">
+        <EmptyState icon={cfg.icon} heading={cfg.heading} description={cfg.description} />
       </div>
     );
   }

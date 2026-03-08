@@ -2,6 +2,8 @@
  * HerChart — monthly HER bar chart
  * Bars colored by HER status threshold: loss/break_even/healthy/strong
  */
+import { EmptyState } from '@/components/ui/EmptyState';
+import { EMPTY_STATES } from '@/lib/empty-state-configs';
 
 interface HerMonthRow {
   label: string;
@@ -66,11 +68,8 @@ const REFERENCE_LINES = [
 
 export function HerChart({ months }: HerChartProps) {
   if (months.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground py-4 text-center">
-        No HER data to display.
-      </p>
-    );
+    const cfg = EMPTY_STATES.herNoData;
+    return <EmptyState icon={cfg.icon} heading={cfg.heading} description={cfg.description} cta={{ label: cfg.cta.label }} />;
   }
 
   const LABEL_WIDTH = 28;

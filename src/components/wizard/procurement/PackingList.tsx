@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { EMPTY_STATES } from '@/lib/empty-state-configs';
 
 interface PackingItem {
   id: string;
@@ -74,8 +76,10 @@ export function PackingList({ projectId }: PackingListProps) {
   }, [projectId]);
 
   if (loading) return <p className="text-sm text-muted-foreground">Loading packing list...</p>;
-  if (items.length === 0)
-    return <p className="text-sm text-muted-foreground">No BOM items found.</p>;
+  if (items.length === 0) {
+    const cfg = EMPTY_STATES.packingEmpty;
+    return <EmptyState icon={cfg.icon} heading={cfg.heading} description={cfg.description} cta={{ label: cfg.cta.label }} />;
+  }
 
   // Group items by category in spec-defined order
   const grouped = new Map<string, PackingItem[]>();

@@ -6,6 +6,8 @@ import { VlanReferencePanel } from '@/components/wizard/deployment/VlanReference
 import { IspConfigMethodPanel } from '@/components/wizard/deployment/IspConfigMethodPanel';
 import { ReplayServiceVersionPanel } from '@/components/wizard/deployment/ReplayServiceVersionPanel';
 import { AppLockWarningBanner } from '@/components/wizard/deployment/AppLockWarningBanner';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { EMPTY_STATES } from '@/lib/empty-state-configs';
 
 // Phase display ordering per spec: 0-11, then 15, then 12-14
 const PHASE_DISPLAY_ORDER = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 15, 12, 13, 14];
@@ -187,6 +189,11 @@ function DeploymentPage() {
         <div className="flex-1 p-6 overflow-y-auto">
           {loading ? (
             <p className="text-sm text-muted-foreground">Loading checklist...</p>
+          ) : !loading && items.length === 0 ? (
+            (() => {
+              const cfg = EMPTY_STATES.deploymentChecklistEmpty;
+              return <EmptyState icon={cfg.icon} heading={cfg.heading} description={cfg.description} />;
+            })()
           ) : (
             <>
               <h2 className="text-base font-semibold mb-4">

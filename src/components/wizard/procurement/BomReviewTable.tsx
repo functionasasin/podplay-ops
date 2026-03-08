@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { calculateCostChain } from '@/lib/cost-chain';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { EMPTY_STATES } from '@/lib/empty-state-configs';
 
 interface CatalogItem {
   id: string;
@@ -110,8 +112,10 @@ export function BomReviewTable({ projectId }: BomReviewTableProps) {
   const DEFAULT_MARGIN = 0.10;
 
   if (loading) return <p className="text-sm text-muted-foreground">Loading BOM...</p>;
-  if (rows.length === 0)
-    return <p className="text-sm text-muted-foreground">No BOM items found.</p>;
+  if (rows.length === 0) {
+    const cfg = EMPTY_STATES.bomReviewEmpty;
+    return <EmptyState icon={cfg.icon} heading={cfg.heading} description={cfg.description} cta={{ label: cfg.cta.label }} />;
+  }
 
   let subtotal = 0;
   let grandTotal = 0;

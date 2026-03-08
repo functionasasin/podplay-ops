@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { EMPTY_STATES } from '@/lib/empty-state-configs';
 
 interface InventoryRow {
   name: string;
@@ -67,8 +69,10 @@ export function InventoryCheckPanel({ projectId }: InventoryCheckPanelProps) {
   }, [projectId]);
 
   if (loading) return <p className="text-sm text-muted-foreground">Loading inventory...</p>;
-  if (rows.length === 0)
-    return <p className="text-sm text-muted-foreground">No BOM items found.</p>;
+  if (rows.length === 0) {
+    const cfg = EMPTY_STATES.inventoryCheckEmpty;
+    return <EmptyState icon={cfg.icon} heading={cfg.heading} description={cfg.description} cta={{ label: cfg.cta.label }} />;
+  }
 
   return (
     <div className="overflow-x-auto">

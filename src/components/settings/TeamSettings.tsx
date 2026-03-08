@@ -4,6 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { EMPTY_STATES } from '@/lib/empty-state-configs';
 import { cn } from '@/lib/utils';
 import type { Settings } from '@/services/settingsService';
 import { updateSettings } from '@/services/settingsService';
@@ -485,8 +487,18 @@ export function TeamSettings({ settings, contacts: initialContacts }: TeamSettin
             <tbody>
               {displayed.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-8 text-muted-foreground">
-                    No contacts found.
+                  <td colSpan={8}>
+                    {(() => {
+                      const cfg = EMPTY_STATES.teamContactsEmpty;
+                      return (
+                        <EmptyState
+                          icon={cfg.icon}
+                          heading={cfg.heading}
+                          description={cfg.description}
+                          cta={{ label: cfg.cta.label, onClick: () => setSheetContact(null) }}
+                        />
+                      );
+                    })()}
                   </td>
                 </tr>
               ) : (

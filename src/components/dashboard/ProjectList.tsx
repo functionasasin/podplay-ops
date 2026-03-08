@@ -8,6 +8,8 @@ import {
 } from '@/components/ui/table';
 import { getEnumLabel, getEnumBadgeClass } from '@/lib/enum-labels';
 import { formatDate, formatPct } from '@/lib/formatters';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { EMPTY_STATES } from '@/lib/empty-state-configs';
 
 export interface Project {
   id: string;
@@ -19,21 +21,35 @@ export interface Project {
   deployment_progress_pct?: number;
 }
 
-export function ProjectList({ projects }: { projects: Project[] }) {
+export function ProjectList({
+  projects,
+  hasFilters,
+  onClearFilters,
+}: {
+  projects: Project[];
+  hasFilters?: boolean;
+  onClearFilters?: () => void;
+}) {
   if (projects.length === 0) {
+    if (hasFilters) {
+      const cfg = EMPTY_STATES.dashboardNoResults;
+      return (
+        <EmptyState
+          icon={cfg.icon}
+          heading={cfg.heading}
+          description={cfg.description}
+          cta={{ label: cfg.cta.label, onClick: onClearFilters }}
+        />
+      );
+    }
+    const cfg = EMPTY_STATES.dashboardNoProjects;
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <p className="text-lg font-medium mb-2">No projects yet</p>
-        <p className="text-sm text-muted-foreground mb-4">
-          Start by creating your first installation project.
-        </p>
-        <a
-          href="/projects/new"
-          className="inline-flex items-center px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
-        >
-          + New Project
-        </a>
-      </div>
+      <EmptyState
+        icon={cfg.icon}
+        heading={cfg.heading}
+        description={cfg.description}
+        cta={{ label: cfg.cta.label, href: cfg.cta.href }}
+      />
     );
   }
 
