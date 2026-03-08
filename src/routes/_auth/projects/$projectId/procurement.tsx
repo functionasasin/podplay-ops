@@ -7,6 +7,7 @@ import { PoCreateForm } from '@/components/wizard/procurement/PoCreateForm';
 import { PoReceiving } from '@/components/wizard/procurement/PoReceiving';
 import { PackingList } from '@/components/wizard/procurement/PackingList';
 import { CcTerminalOrder } from '@/components/wizard/procurement/CcTerminalOrder';
+import { ReplaySignFulfillment } from '@/components/wizard/procurement/ReplaySignFulfillment';
 
 const PROCUREMENT_TABS = [
   'BOM Review',
@@ -110,8 +111,8 @@ function ProcurementPage() {
           )}
           {activeTab === 'Replay Signs' && (
             <div>
-              <h2 className="text-base font-medium mb-2">Replay Signs</h2>
-              <p className="text-sm text-muted-foreground">Replay Signs panel — coming soon.</p>
+              <h2 className="text-base font-medium mb-4">Replay Signs</h2>
+              <ReplaySignFulfillment projectId={projectId} />
             </div>
           )}
         </div>
