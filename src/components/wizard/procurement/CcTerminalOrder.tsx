@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { VALIDATION } from '@/lib/validation-messages';
 
 type CcTerminalStatus = 'ordered' | 'received' | 'configured' | 'deployed' | 'returned';
 
@@ -68,11 +69,11 @@ export function CcTerminalOrder({ projectId }: CcTerminalOrderProps) {
     const trimmedModel = model.trim();
 
     if (!trimmedSerial) {
-      setError('Serial number is required.');
+      setError(VALIDATION.procurement.cc_terminal.serial_number.required);
       return;
     }
     if (!trimmedModel) {
-      setError('Model is required.');
+      setError(VALIDATION.procurement.cc_terminal.model.required);
       return;
     }
 

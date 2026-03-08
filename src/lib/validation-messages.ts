@@ -218,6 +218,8 @@ export const VALIDATION = {
       int: 'Quantity received must be a whole number',
     },
     cc_terminal: {
+      serial_number: { required: 'Serial number is required' },
+      model: { required: 'Model is required' },
       qty: {
         min: 'Quantity must be at least 1',
         max: 'Quantity must be 10 or less',
