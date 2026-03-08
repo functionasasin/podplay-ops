@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { BomReviewTable } from '@/components/wizard/procurement/BomReviewTable';
 import { InventoryCheckPanel } from '@/components/wizard/procurement/InventoryCheckPanel';
 import { PoCreateForm } from '@/components/wizard/procurement/PoCreateForm';
+import { PoReceiving } from '@/components/wizard/procurement/PoReceiving';
 
 const PROCUREMENT_TABS = [
   'BOM Review',
@@ -82,9 +83,15 @@ function ProcurementPage() {
             </div>
           )}
           {activeTab === 'Purchase Orders' && (
-            <div>
-              <h2 className="text-base font-medium mb-4">Create Purchase Order</h2>
-              <PoCreateForm projectId={projectId} />
+            <div className="space-y-8">
+              <div>
+                <h2 className="text-base font-medium mb-4">Create Purchase Order</h2>
+                <PoCreateForm projectId={projectId} />
+              </div>
+              <div>
+                <h2 className="text-base font-medium mb-4">Receive Purchase Order</h2>
+                <PoReceiving projectId={projectId} />
+              </div>
             </div>
           )}
           {activeTab === 'Packing List' && (
