@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as AuthProjectsIndexRouteImport } from './routes/_auth/projects/index'
+import { Route as AuthInventoryIndexRouteImport } from './routes/_auth/inventory/index'
 import { Route as AuthProjectsNewRouteImport } from './routes/_auth/projects/new'
 import { Route as AuthProjectsProjectIdProcurementRouteImport } from './routes/_auth/projects/$projectId/procurement'
 import { Route as AuthProjectsProjectIdIntakeRouteImport } from './routes/_auth/projects/$projectId/intake'
@@ -42,6 +43,11 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
 const AuthProjectsIndexRoute = AuthProjectsIndexRouteImport.update({
   id: '/projects/',
   path: '/projects/',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthInventoryIndexRoute = AuthInventoryIndexRouteImport.update({
+  id: '/inventory/',
+  path: '/inventory/',
   getParentRoute: () => AuthRoute,
 } as any)
 const AuthProjectsNewRoute = AuthProjectsNewRouteImport.update({
@@ -79,6 +85,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/projects/new': typeof AuthProjectsNewRoute
+  '/inventory/': typeof AuthInventoryIndexRoute
   '/projects/': typeof AuthProjectsIndexRoute
   '/projects/$projectId/deployment': typeof AuthProjectsProjectIdDeploymentRoute
   '/projects/$projectId/financials': typeof AuthProjectsProjectIdFinancialsRoute
@@ -90,6 +97,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/projects/new': typeof AuthProjectsNewRoute
+  '/inventory': typeof AuthInventoryIndexRoute
   '/projects': typeof AuthProjectsIndexRoute
   '/projects/$projectId/deployment': typeof AuthProjectsProjectIdDeploymentRoute
   '/projects/$projectId/financials': typeof AuthProjectsProjectIdFinancialsRoute
@@ -103,6 +111,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/_auth/projects/new': typeof AuthProjectsNewRoute
+  '/_auth/inventory/': typeof AuthInventoryIndexRoute
   '/_auth/projects/': typeof AuthProjectsIndexRoute
   '/_auth/projects/$projectId/deployment': typeof AuthProjectsProjectIdDeploymentRoute
   '/_auth/projects/$projectId/financials': typeof AuthProjectsProjectIdFinancialsRoute
@@ -116,6 +125,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/auth/callback'
     | '/projects/new'
+    | '/inventory/'
     | '/projects/'
     | '/projects/$projectId/deployment'
     | '/projects/$projectId/financials'
@@ -127,6 +137,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/auth/callback'
     | '/projects/new'
+    | '/inventory'
     | '/projects'
     | '/projects/$projectId/deployment'
     | '/projects/$projectId/financials'
@@ -139,6 +150,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/auth/callback'
     | '/_auth/projects/new'
+    | '/_auth/inventory/'
     | '/_auth/projects/'
     | '/_auth/projects/$projectId/deployment'
     | '/_auth/projects/$projectId/financials'
@@ -190,6 +202,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthProjectsIndexRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/inventory/': {
+      id: '/_auth/inventory/'
+      path: '/inventory'
+      fullPath: '/inventory/'
+      preLoaderRoute: typeof AuthInventoryIndexRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_auth/projects/new': {
       id: '/_auth/projects/new'
       path: '/projects/new'
@@ -230,6 +249,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthRouteChildren {
   AuthProjectsNewRoute: typeof AuthProjectsNewRoute
+  AuthInventoryIndexRoute: typeof AuthInventoryIndexRoute
   AuthProjectsIndexRoute: typeof AuthProjectsIndexRoute
   AuthProjectsProjectIdDeploymentRoute: typeof AuthProjectsProjectIdDeploymentRoute
   AuthProjectsProjectIdFinancialsRoute: typeof AuthProjectsProjectIdFinancialsRoute
@@ -239,6 +259,7 @@ interface AuthRouteChildren {
 
 const AuthRouteChildren: AuthRouteChildren = {
   AuthProjectsNewRoute: AuthProjectsNewRoute,
+  AuthInventoryIndexRoute: AuthInventoryIndexRoute,
   AuthProjectsIndexRoute: AuthProjectsIndexRoute,
   AuthProjectsProjectIdDeploymentRoute: AuthProjectsProjectIdDeploymentRoute,
   AuthProjectsProjectIdFinancialsRoute: AuthProjectsProjectIdFinancialsRoute,
