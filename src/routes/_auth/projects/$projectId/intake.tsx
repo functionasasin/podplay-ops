@@ -7,6 +7,7 @@ import { TierSelectionStep, type TierSelectionValues } from '@/components/wizard
 import { IspInfoStep, type IspInfoValues } from '@/components/wizard/intake/IspInfoStep';
 import { InstallerSelectionStep, type InstallerSelectionValues } from '@/components/wizard/intake/InstallerSelectionStep';
 import { FinancialSetupStep, type FinancialSetupValues } from '@/components/wizard/intake/FinancialSetupStep';
+import { ReviewStep } from '@/components/wizard/intake/ReviewStep';
 
 const INTAKE_STEPS = [
   'Customer Info',
@@ -116,10 +117,19 @@ function IntakePage() {
             onNext={handleFinancialSetupNext}
           />
         )}
-        {currentStep > 5 && (
-          <p className="text-sm text-muted-foreground">
-            This step will be implemented in a future stage.
-          </p>
+        {currentStep === 6 && (
+          <ReviewStep
+            customerInfo={wizardData.customerInfo}
+            venueConfig={wizardData.venueConfig}
+            tierSelection={wizardData.tierSelection}
+            ispInfo={wizardData.ispInfo}
+            installerSelection={wizardData.installerSelection}
+            financialSetup={wizardData.financialSetup}
+            onEdit={setCurrentStep}
+            onSubmit={() => {
+              // Submit flow wired in stage 061
+            }}
+          />
         )}
       </div>
     </div>
