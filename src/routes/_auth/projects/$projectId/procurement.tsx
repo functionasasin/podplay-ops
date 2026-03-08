@@ -5,6 +5,7 @@ import { BomReviewTable } from '@/components/wizard/procurement/BomReviewTable';
 import { InventoryCheckPanel } from '@/components/wizard/procurement/InventoryCheckPanel';
 import { PoCreateForm } from '@/components/wizard/procurement/PoCreateForm';
 import { PoReceiving } from '@/components/wizard/procurement/PoReceiving';
+import { PackingList } from '@/components/wizard/procurement/PackingList';
 
 const PROCUREMENT_TABS = [
   'BOM Review',
@@ -96,8 +97,8 @@ function ProcurementPage() {
           )}
           {activeTab === 'Packing List' && (
             <div>
-              <h2 className="text-base font-medium mb-2">Packing List</h2>
-              <p className="text-sm text-muted-foreground">Packing List panel — coming soon.</p>
+              <h2 className="text-base font-medium mb-4">Packing List</h2>
+              <PackingList projectId={projectId} />
             </div>
           )}
           {activeTab === 'CC Terminals' && (
