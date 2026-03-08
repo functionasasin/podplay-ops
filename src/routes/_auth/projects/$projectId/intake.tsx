@@ -6,6 +6,7 @@ import { VenueConfigStep, type VenueConfigValues } from '@/components/wizard/int
 import { TierSelectionStep, type TierSelectionValues } from '@/components/wizard/intake/TierSelectionStep';
 import { IspInfoStep, type IspInfoValues } from '@/components/wizard/intake/IspInfoStep';
 import { InstallerSelectionStep, type InstallerSelectionValues } from '@/components/wizard/intake/InstallerSelectionStep';
+import { FinancialSetupStep, type FinancialSetupValues } from '@/components/wizard/intake/FinancialSetupStep';
 
 const INTAKE_STEPS = [
   'Customer Info',
@@ -25,6 +26,7 @@ function IntakePage() {
     tierSelection?: TierSelectionValues;
     ispInfo?: IspInfoValues;
     installerSelection?: InstallerSelectionValues;
+    financialSetup?: FinancialSetupValues;
   }>({});
   const { projectId } = Route.useParams();
 
@@ -51,6 +53,11 @@ function IntakePage() {
   function handleInstallerSelectionNext(data: InstallerSelectionValues) {
     setWizardData((prev) => ({ ...prev, installerSelection: data }));
     setCurrentStep(5);
+  }
+
+  function handleFinancialSetupNext(data: FinancialSetupValues) {
+    setWizardData((prev) => ({ ...prev, financialSetup: data }));
+    setCurrentStep(6);
   }
 
   return (
@@ -103,7 +110,13 @@ function IntakePage() {
             onNext={handleInstallerSelectionNext}
           />
         )}
-        {currentStep > 4 && (
+        {currentStep === 5 && (
+          <FinancialSetupStep
+            defaultValues={wizardData.financialSetup}
+            onNext={handleFinancialSetupNext}
+          />
+        )}
+        {currentStep > 5 && (
           <p className="text-sm text-muted-foreground">
             This step will be implemented in a future stage.
           </p>
