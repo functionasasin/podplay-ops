@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as AuthProjectsIndexRouteImport } from './routes/_auth/projects/index'
 import { Route as AuthProjectsNewRouteImport } from './routes/_auth/projects/new'
+import { Route as AuthProjectsProjectIdProcurementRouteImport } from './routes/_auth/projects/$projectId/procurement'
 import { Route as AuthProjectsProjectIdIntakeRouteImport } from './routes/_auth/projects/$projectId/intake'
 
 const LoginRoute = LoginRouteImport.update({
@@ -46,6 +47,12 @@ const AuthProjectsNewRoute = AuthProjectsNewRouteImport.update({
   path: '/projects/new',
   getParentRoute: () => AuthRoute,
 } as any)
+const AuthProjectsProjectIdProcurementRoute =
+  AuthProjectsProjectIdProcurementRouteImport.update({
+    id: '/projects/$projectId/procurement',
+    path: '/projects/$projectId/procurement',
+    getParentRoute: () => AuthRoute,
+  } as any)
 const AuthProjectsProjectIdIntakeRoute =
   AuthProjectsProjectIdIntakeRouteImport.update({
     id: '/projects/$projectId/intake',
@@ -60,6 +67,7 @@ export interface FileRoutesByFullPath {
   '/projects/new': typeof AuthProjectsNewRoute
   '/projects/': typeof AuthProjectsIndexRoute
   '/projects/$projectId/intake': typeof AuthProjectsProjectIdIntakeRoute
+  '/projects/$projectId/procurement': typeof AuthProjectsProjectIdProcurementRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -68,6 +76,7 @@ export interface FileRoutesByTo {
   '/projects/new': typeof AuthProjectsNewRoute
   '/projects': typeof AuthProjectsIndexRoute
   '/projects/$projectId/intake': typeof AuthProjectsProjectIdIntakeRoute
+  '/projects/$projectId/procurement': typeof AuthProjectsProjectIdProcurementRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -78,6 +87,7 @@ export interface FileRoutesById {
   '/_auth/projects/new': typeof AuthProjectsNewRoute
   '/_auth/projects/': typeof AuthProjectsIndexRoute
   '/_auth/projects/$projectId/intake': typeof AuthProjectsProjectIdIntakeRoute
+  '/_auth/projects/$projectId/procurement': typeof AuthProjectsProjectIdProcurementRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -88,6 +98,7 @@ export interface FileRouteTypes {
     | '/projects/new'
     | '/projects/'
     | '/projects/$projectId/intake'
+    | '/projects/$projectId/procurement'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -96,6 +107,7 @@ export interface FileRouteTypes {
     | '/projects/new'
     | '/projects'
     | '/projects/$projectId/intake'
+    | '/projects/$projectId/procurement'
   id:
     | '__root__'
     | '/'
@@ -105,6 +117,7 @@ export interface FileRouteTypes {
     | '/_auth/projects/new'
     | '/_auth/projects/'
     | '/_auth/projects/$projectId/intake'
+    | '/_auth/projects/$projectId/procurement'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -158,6 +171,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthProjectsNewRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/projects/$projectId/procurement': {
+      id: '/_auth/projects/$projectId/procurement'
+      path: '/projects/$projectId/procurement'
+      fullPath: '/projects/$projectId/procurement'
+      preLoaderRoute: typeof AuthProjectsProjectIdProcurementRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_auth/projects/$projectId/intake': {
       id: '/_auth/projects/$projectId/intake'
       path: '/projects/$projectId/intake'
@@ -172,12 +192,14 @@ interface AuthRouteChildren {
   AuthProjectsNewRoute: typeof AuthProjectsNewRoute
   AuthProjectsIndexRoute: typeof AuthProjectsIndexRoute
   AuthProjectsProjectIdIntakeRoute: typeof AuthProjectsProjectIdIntakeRoute
+  AuthProjectsProjectIdProcurementRoute: typeof AuthProjectsProjectIdProcurementRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
   AuthProjectsNewRoute: AuthProjectsNewRoute,
   AuthProjectsIndexRoute: AuthProjectsIndexRoute,
   AuthProjectsProjectIdIntakeRoute: AuthProjectsProjectIdIntakeRoute,
+  AuthProjectsProjectIdProcurementRoute: AuthProjectsProjectIdProcurementRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
