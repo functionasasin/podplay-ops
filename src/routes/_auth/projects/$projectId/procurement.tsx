@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { BomReviewTable } from '@/components/wizard/procurement/BomReviewTable';
 
 const PROCUREMENT_TABS = [
   'BOM Review',
@@ -68,8 +69,8 @@ function ProcurementPage() {
         <div className="p-6 min-h-64">
           {activeTab === 'BOM Review' && (
             <div>
-              <h2 className="text-base font-medium mb-2">BOM Review</h2>
-              <p className="text-sm text-muted-foreground">BOM Review panel — coming soon.</p>
+              <h2 className="text-base font-medium mb-4">BOM Review</h2>
+              <BomReviewTable projectId={projectId} />
             </div>
           )}
           {activeTab === 'Inventory Check' && (
