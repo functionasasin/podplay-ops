@@ -4,6 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { deactivateContactDialog } from '@/lib/confirmation-dialogs';
 import { VALIDATION } from '@/lib/validation-messages';
 
 const VT = VALIDATION.settings.contact;
@@ -407,6 +409,7 @@ export function TeamSettings({ settings, contacts: initialContacts }: TeamSettin
   const [showInactive, setShowInactive] = useState(false);
   const [sheetContact, setSheetContact] = useState<TeamContact | null | undefined>(undefined);
   const [openKebab, setOpenKebab] = useState<string | null>(null);
+  const [deactivateContact, setDeactivateContact] = useState<TeamContact | null>(null);
 
   const displayed = showInactive ? contacts : contacts.filter((c) => c.is_active);
 
@@ -422,17 +425,19 @@ export function TeamSettings({ settings, contacts: initialContacts }: TeamSettin
     });
   };
 
-  const handleDeactivate = async (contact: TeamContact) => {
-    try {
-      await deactivateTeamContact(contact.id);
-      setContacts((prev) =>
-        prev.map((c) => (c.id === contact.id ? { ...c, is_active: false } : c)),
-      );
-      toast.success('Contact deactivated');
-    } catch (err: unknown) {
-      toast.error('Failed: ' + (err instanceof Error ? err.message : String(err)));
-    }
+  const handleDeactivate = (contact: TeamContact) => {
+    setDeactivateContact(contact);
     setOpenKebab(null);
+  };
+
+  const confirmDeactivate = async () => {
+    if (!deactivateContact) return;
+    await deactivateTeamContact(deactivateContact.id);
+    setContacts((prev) =>
+      prev.map((c) => (c.id === deactivateContact.id ? { ...c, is_active: false } : c)),
+    );
+    toast.success('Contact deactivated');
+    setDeactivateContact(null);
   };
 
   const handleReactivate = async (contact: TeamContact) => {
@@ -629,6 +634,23 @@ export function TeamSettings({ settings, contacts: initialContacts }: TeamSettin
           onSaved={handleSaved}
         />
       )}
+
+      {/* Deactivate contact dialog */}
+      {deactivateContact && (() => {
+        const cfg = deactivateContactDialog(deactivateContact.name, deactivateContact.role);
+        return (
+          <ConfirmDialog
+            open={true}
+            onOpenChange={(open) => { if (!open) setDeactivateContact(null); }}
+            title={cfg.title}
+            body={cfg.body}
+            confirmLabel={cfg.confirmLabel}
+            cancelLabel={cfg.cancelLabel}
+            destructive={cfg.destructive}
+            onConfirm={confirmDeactivate}
+          />
+        );
+      })()}
     </div>
   );
 }

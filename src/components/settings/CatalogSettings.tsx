@@ -5,7 +5,9 @@ import { z } from 'zod';
 import { Loader2, MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { EMPTY_STATES } from '@/lib/empty-state-configs';
+import { deactivateCatalogItemDialog } from '@/lib/confirmation-dialogs';
 import { VALIDATION } from '@/lib/validation-messages';
 
 const VC = VALIDATION.settings.catalog;
@@ -296,59 +298,6 @@ function ItemSheet({ item, onClose, onSaved }: ItemSheetProps) {
   );
 }
 
-// ─── Deactivate dialog ───────────────────────────────────────────────────────
-
-interface DeactivateDialogProps {
-  item: HardwareCatalogItem;
-  onClose: () => void;
-  onDeactivated: (id: string) => void;
-}
-
-function DeactivateDialog({ item, onClose, onDeactivated }: DeactivateDialogProps) {
-  const [loading, setLoading] = useState(false);
-
-  const confirm = async () => {
-    setLoading(true);
-    try {
-      await deactivateCatalogItem(item.id);
-      toast.success('Item deactivated');
-      onDeactivated(item.id);
-      onClose();
-    } catch (err: unknown) {
-      toast.error('Failed: ' + (err instanceof Error ? err.message : String(err)));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative bg-background rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
-        <h3 className="font-semibold text-lg mb-2">Deactivate {item.name}?</h3>
-        <p className="text-sm text-muted-foreground mb-6">
-          It will no longer appear in BOM selections but will remain in existing BOMs.
-        </p>
-        <div className="flex justify-end gap-2">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm rounded border border-border hover:bg-muted"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={confirm}
-            disabled={loading}
-            className="px-4 py-2 text-sm rounded bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 flex items-center gap-2"
-          >
-            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            Deactivate
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ─── Main component ──────────────────────────────────────────────────────────
 
@@ -589,13 +538,26 @@ export function CatalogSettings({ items: initialItems }: CatalogSettingsProps) {
       )}
 
       {/* Deactivate dialog */}
-      {deactivateItem && (
-        <DeactivateDialog
-          item={deactivateItem}
-          onClose={() => setDeactivateItem(null)}
-          onDeactivated={handleDeactivated}
-        />
-      )}
+      {deactivateItem && (() => {
+        const cfg = deactivateCatalogItemDialog(deactivateItem.name, deactivateItem.sku);
+        return (
+          <ConfirmDialog
+            open={true}
+            onOpenChange={(open) => { if (!open) setDeactivateItem(null); }}
+            title={cfg.title}
+            body={cfg.body}
+            confirmLabel={cfg.confirmLabel}
+            cancelLabel={cfg.cancelLabel}
+            destructive={cfg.destructive}
+            onConfirm={async () => {
+              await deactivateCatalogItem(deactivateItem.id);
+              toast.success('Item deactivated');
+              handleDeactivated(deactivateItem.id);
+              setDeactivateItem(null);
+            }}
+          />
+        );
+      })()}
     </div>
   );
 }

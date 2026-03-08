@@ -2,10 +2,14 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { expenseCategoryLabels } from '@/lib/enum-labels';
+import { deleteExpenseDialog } from '@/lib/confirmation-dialogs';
+import { formatCurrencyPrecise, formatDate } from '@/lib/formatters';
 import type { ExpenseCategory, PaymentMethod } from '@/lib/types';
 import { VALIDATION } from '@/lib/validation-messages';
 
@@ -56,7 +60,7 @@ export function ExpenseTracker({ projectId }: ExpenseTrackerProps) {
   const [categoryFilter, setCategoryFilter] = useState<ExpenseCategory | ''>('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deleteExpense, setDeleteExpense] = useState<ExpenseRow | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -173,11 +177,16 @@ export function ExpenseTracker({ projectId }: ExpenseTrackerProps) {
     setSubmitting(false);
   }
 
-  async function confirmDelete(id: string) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase.from('expenses') as any).delete().eq('id', id);
-    setExpenses((prev) => prev.filter((e) => e.id !== id));
-    setDeleteConfirmId(null);
+  async function confirmDelete() {
+    if (!deleteExpense) return;
+    const { error } = await (supabase.from('expenses') as any).delete().eq('id', deleteExpense.id);
+    if (error) {
+      toast.error('Failed to delete expense');
+      return;
+    }
+    setExpenses((prev) => prev.filter((e) => e.id !== deleteExpense.id));
+    toast.success('Expense deleted');
+    setDeleteExpense(null);
   }
 
   const filtered = categoryFilter
@@ -439,30 +448,6 @@ export function ExpenseTracker({ projectId }: ExpenseTrackerProps) {
                       </form>
                     </td>
                   </tr>
-                ) : deleteConfirmId === expense.id ? (
-                  <tr key={expense.id} className="border-b bg-red-50">
-                    <td colSpan={5} className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm text-destructive font-medium">
-                          Delete this expense? This cannot be undone.
-                        </span>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => confirmDelete(expense.id)}
-                        >
-                          Delete
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setDeleteConfirmId(null)}
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
                 ) : (
                   <tr key={expense.id} className="border-b last:border-0 hover:bg-muted/30">
                     <td className="px-4 py-2 text-muted-foreground">{expense.expense_date}</td>
@@ -485,7 +470,7 @@ export function ExpenseTracker({ projectId }: ExpenseTrackerProps) {
                         <button
                           type="button"
                           className="text-xs text-destructive hover:underline"
-                          onClick={() => setDeleteConfirmId(expense.id)}
+                          onClick={() => setDeleteExpense(expense)}
                         >
                           Delete
                         </button>
@@ -511,6 +496,26 @@ export function ExpenseTracker({ projectId }: ExpenseTrackerProps) {
           </table>
         </div>
       )}
+
+      {deleteExpense && (() => {
+        const cfg = deleteExpenseDialog(
+          formatCurrencyPrecise(deleteExpense.amount),
+          expenseCategoryLabels[deleteExpense.category],
+          formatDate(deleteExpense.expense_date),
+        );
+        return (
+          <ConfirmDialog
+            open={true}
+            onOpenChange={(open) => { if (!open) setDeleteExpense(null); }}
+            title={cfg.title}
+            body={cfg.body}
+            confirmLabel={cfg.confirmLabel}
+            cancelLabel={cfg.cancelLabel}
+            destructive={cfg.destructive}
+            onConfirm={confirmDelete}
+          />
+        );
+      })()}
     </div>
   );
 }
