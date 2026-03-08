@@ -1,6 +1,7 @@
-import { Outlet, Navigate } from '@tanstack/react-router';
+import { Navigate } from '@tanstack/react-router';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
+import { AppLayout } from '@/components/layout/AppLayout';
 
 export function ProtectedRoute() {
   const { user, loading } = useAuth();
@@ -17,5 +18,5 @@ export function ProtectedRoute() {
     return <Navigate to="/login" />;
   }
 
-  return <Outlet />;
+  return <AppLayout />;
 }
