@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { BomReviewTable } from '@/components/wizard/procurement/BomReviewTable';
+import { InventoryCheckPanel } from '@/components/wizard/procurement/InventoryCheckPanel';
 
 const PROCUREMENT_TABS = [
   'BOM Review',
@@ -75,8 +76,8 @@ function ProcurementPage() {
           )}
           {activeTab === 'Inventory Check' && (
             <div>
-              <h2 className="text-base font-medium mb-2">Inventory Check</h2>
-              <p className="text-sm text-muted-foreground">Inventory Check panel — coming soon.</p>
+              <h2 className="text-base font-medium mb-4">Inventory Check</h2>
+              <InventoryCheckPanel projectId={projectId} />
             </div>
           )}
           {activeTab === 'Purchase Orders' && (
