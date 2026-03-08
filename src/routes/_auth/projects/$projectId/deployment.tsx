@@ -5,6 +5,7 @@ import { SmartChecklist, type ChecklistItem, type ProjectTokenFields } from '@/c
 import { VlanReferencePanel } from '@/components/wizard/deployment/VlanReferencePanel';
 import { IspConfigMethodPanel } from '@/components/wizard/deployment/IspConfigMethodPanel';
 import { ReplayServiceVersionPanel } from '@/components/wizard/deployment/ReplayServiceVersionPanel';
+import { AppLockWarningBanner } from '@/components/wizard/deployment/AppLockWarningBanner';
 
 // Phase display ordering per spec: 0-11, then 15, then 12-14
 const PHASE_DISPLAY_ORDER = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 15, 12, 13, 14];
@@ -215,6 +216,9 @@ function DeploymentPage() {
                   onVersionChange={handleReplayVersionChange}
                 />
               )}
+
+              {/* Phase 12: App Lock Warning Banner (above Step 108 / Flic button pairing) */}
+              {selectedPhase === 12 && <AppLockWarningBanner />}
 
               <SmartChecklist
                 items={selectedItems}
