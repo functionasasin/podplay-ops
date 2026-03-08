@@ -1,6 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { DepositInvoice } from '@/components/wizard/financials/DepositInvoice';
+import { FinalInvoice } from '@/components/wizard/financials/FinalInvoice';
 import { ExpenseTracker } from '@/components/wizard/financials/ExpenseTracker';
 import { PnlSummary } from '@/components/wizard/financials/PnlSummary';
 import { GoLive } from '@/components/wizard/financials/GoLive';
@@ -9,38 +11,22 @@ const FINANCIALS_TABS = ['Invoicing', 'Expenses', 'P&L Summary', 'Go-Live'] as c
 
 type FinancialsTab = (typeof FINANCIALS_TABS)[number];
 
-interface Invoice {
-  id: string;
-  invoice_type: string;
-  amount: number;
-  status: string;
-}
-
-
 function FinancialsPage() {
   const { projectId } = Route.useParams();
   const [activeTab, setActiveTab] = useState<FinancialsTab>('Invoicing');
   const [project, setProject] = useState<{ project_name: string; customer_name: string } | null>(
     null,
   );
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadFinancialData() {
-      const [projectRes, invoicesRes] = await Promise.all([
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (supabase.from('projects') as any)
-          .select('project_name, customer_name')
-          .eq('id', projectId)
-          .single(),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (supabase.from('invoices') as any)
-          .select('id, invoice_type, amount, status')
-          .eq('project_id', projectId),
-      ]);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const projectRes = await (supabase.from('projects') as any)
+        .select('project_name, customer_name')
+        .eq('id', projectId)
+        .single();
       setProject(projectRes.data);
-      setInvoices(invoicesRes.data ?? []);
       setLoading(false);
     }
     loadFinancialData();
@@ -79,11 +65,9 @@ function FinancialsPage() {
 
         <div className="p-6 min-h-64">
           {activeTab === 'Invoicing' && (
-            <div>
-              <h2 className="text-base font-medium mb-4">Invoicing</h2>
-              <p className="text-sm text-muted-foreground">
-                {invoices.length} invoice(s) — invoice management coming soon.
-              </p>
+            <div className="space-y-8">
+              <DepositInvoice projectId={projectId} />
+              <FinalInvoice projectId={projectId} />
             </div>
           )}
           {activeTab === 'Expenses' && (

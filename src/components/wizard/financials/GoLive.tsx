@@ -17,7 +17,7 @@ interface ProjectData {
 
 interface InvoiceRow {
   id: string;
-  invoice_type: string;
+  type: string;
   status: string;
 }
 
@@ -61,7 +61,7 @@ export function GoLive({ projectId }: GoLiveProps) {
           .single(),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (supabase.from('invoices') as any)
-          .select('id, invoice_type, status')
+          .select('id, type, status')
           .eq('project_id', projectId),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (supabase.from('deployment_checklist') as any)
@@ -88,8 +88,8 @@ export function GoLive({ projectId }: GoLiveProps) {
   }, [projectId]);
 
   // --- Derived state ---
-  const depositInvoice = invoices.find((inv) => inv.invoice_type === 'deposit');
-  const finalInvoice = invoices.find((inv) => inv.invoice_type === 'final');
+  const depositInvoice = invoices.find((inv) => inv.type ==='deposit');
+  const finalInvoice = invoices.find((inv) => inv.type ==='final');
   const depositPaid = depositInvoice?.status === 'paid';
   const finalSent = finalInvoice?.status === 'sent' || finalInvoice?.status === 'paid';
   const allPhasesComplete =
