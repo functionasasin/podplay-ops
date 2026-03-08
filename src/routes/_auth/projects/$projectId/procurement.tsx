@@ -6,6 +6,7 @@ import { InventoryCheckPanel } from '@/components/wizard/procurement/InventoryCh
 import { PoCreateForm } from '@/components/wizard/procurement/PoCreateForm';
 import { PoReceiving } from '@/components/wizard/procurement/PoReceiving';
 import { PackingList } from '@/components/wizard/procurement/PackingList';
+import { CcTerminalOrder } from '@/components/wizard/procurement/CcTerminalOrder';
 
 const PROCUREMENT_TABS = [
   'BOM Review',
@@ -103,8 +104,8 @@ function ProcurementPage() {
           )}
           {activeTab === 'CC Terminals' && (
             <div>
-              <h2 className="text-base font-medium mb-2">CC Terminals</h2>
-              <p className="text-sm text-muted-foreground">CC Terminals panel — coming soon.</p>
+              <h2 className="text-base font-medium mb-4">CC Terminals</h2>
+              <CcTerminalOrder projectId={projectId} />
             </div>
           )}
           {activeTab === 'Replay Signs' && (
