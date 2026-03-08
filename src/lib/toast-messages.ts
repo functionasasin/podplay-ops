@@ -27,10 +27,20 @@ export const TOAST_SIGN_OUT_ERROR: ToastConfig = {
 }
 
 // 2. Dashboard / Project Creation
+export const TOAST_CREATE_PROJECT_SUCCESS: ToastConfig = {
+  message: 'Project created. Checklist seeded.',
+  duration: SUCCESS_DURATION,
+  type: 'success',
+}
 export const TOAST_CREATE_PROJECT_ERROR: ToastConfig = {
   message: 'Failed to create project',
   duration: ERROR_DURATION,
   type: 'error',
+}
+export const TOAST_CHECKLIST_SEED_WARNING: ToastConfig = {
+  message: 'Project created. Checklist seeding failed — retry from project settings.',
+  duration: WARNING_DURATION,
+  type: 'warning',
 }
 export const TOAST_CANCEL_PROJECT_SUCCESS: ToastConfig = {
   message: 'Project cancelled',
@@ -583,7 +593,9 @@ export const TOAST_GUARD_FINANCIALS: ToastConfig = {
 export const TOAST_OPERATIONS: Record<string, ToastConfig> = {
   SIGN_OUT_SUCCESS: TOAST_SIGN_OUT_SUCCESS,
   SIGN_OUT_ERROR: TOAST_SIGN_OUT_ERROR,
+  CREATE_PROJECT_SUCCESS: TOAST_CREATE_PROJECT_SUCCESS,
   CREATE_PROJECT_ERROR: TOAST_CREATE_PROJECT_ERROR,
+  CHECKLIST_SEED_WARNING: TOAST_CHECKLIST_SEED_WARNING,
   CANCEL_PROJECT_SUCCESS: TOAST_CANCEL_PROJECT_SUCCESS,
   CANCEL_PROJECT_ERROR: TOAST_CANCEL_PROJECT_ERROR,
   INTAKE_COMPLETE_SUCCESS: TOAST_INTAKE_COMPLETE_SUCCESS,
