@@ -273,6 +273,7 @@ export function PoReceiving({ projectId, onSuccess }: PoReceivingProps) {
         <div>
           <p className="text-sm font-medium mb-2">Items</p>
           <div className="border rounded-md overflow-hidden">
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/30 text-left text-muted-foreground">
@@ -329,6 +330,7 @@ export function PoReceiving({ projectId, onSuccess }: PoReceivingProps) {
                 })}
               </tbody>
             </table>
+            </div>
           </div>
         </div>
       )}

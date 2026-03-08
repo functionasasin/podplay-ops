@@ -402,6 +402,7 @@ export function CatalogSettings({ items: initialItems }: CatalogSettingsProps) {
 
       {/* Table */}
       <div className="border border-border rounded-lg overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-muted text-muted-foreground">
             <tr>
@@ -521,6 +522,7 @@ export function CatalogSettings({ items: initialItems }: CatalogSettingsProps) {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Item count */}

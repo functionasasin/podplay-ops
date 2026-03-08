@@ -340,6 +340,7 @@ export function ExpenseTracker({ projectId }: ExpenseTrackerProps) {
         <p className="text-sm text-muted-foreground">No expenses recorded yet.</p>
       ) : (
         <div className="border rounded-lg overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/50">
@@ -494,6 +495,7 @@ export function ExpenseTracker({ projectId }: ExpenseTrackerProps) {
               </tr>
             </tfoot>
           </table>
+          </div>
         </div>
       )}
 

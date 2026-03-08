@@ -117,47 +117,57 @@ export function BomReviewTable({ projectId }: BomReviewTableProps) {
     return <EmptyState icon={cfg.icon} heading={cfg.heading} description={cfg.description} cta={{ label: cfg.cta.label }} />;
   }
 
-  let subtotal = 0;
-  let grandTotal = 0;
+  // Precompute cost chain for each row
+  const rowsWithCosts = rows.map((row) => {
+    if (row.unit_cost != null) {
+      const chain = calculateCostChain(
+        row.unit_cost,
+        row.qty,
+        0,
+        DEFAULT_SHIPPING_RATE,
+        DEFAULT_MARGIN,
+      );
+      return { ...row, lineTotal: chain.total, landedCost: chain.landedCost, customerPrice: chain.customerPrice };
+    }
+    return { ...row, lineTotal: null as number | null, landedCost: null as number | null, customerPrice: null as number | null };
+  });
+
+  const subtotal = rowsWithCosts.reduce((s, r) => s + (r.lineTotal ?? 0), 0);
+  const grandTotal = rowsWithCosts.reduce((s, r) => s + (r.customerPrice ?? 0), 0);
+
+  const totalsFooter = (
+    <div className="mt-4 flex justify-end gap-8 text-sm border-t pt-3">
+      <div className="text-muted-foreground">
+        Subtotal (est. cost):{' '}
+        <span className="font-medium text-foreground">${subtotal.toFixed(2)}</span>
+      </div>
+      <div className="text-muted-foreground">
+        Grand Total (customer price):{' '}
+        <span className="font-semibold text-foreground">${grandTotal.toFixed(2)}</span>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm border-collapse">
-        <thead>
-          <tr className="border-b text-left text-muted-foreground">
-            <th className="py-2 pr-4 font-medium">SKU</th>
-            <th className="py-2 pr-4 font-medium">Item Name</th>
-            <th className="py-2 pr-4 font-medium">Vendor</th>
-            <th className="py-2 pr-4 font-medium w-24">Qty</th>
-            <th className="py-2 pr-4 font-medium w-32">Unit Cost</th>
-            <th className="py-2 pr-4 font-medium w-28">Total</th>
-            <th className="py-2 pr-4 font-medium w-28">Landed Cost</th>
-            <th className="py-2 pr-4 font-medium w-28">Customer Price</th>
-            <th className="py-2 font-medium">Swap SKU</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => {
-            let lineTotal: number | null = null;
-            let landedCost: number | null = null;
-            let customerPrice: number | null = null;
-
-            if (row.unit_cost != null) {
-              const chain = calculateCostChain(
-                row.unit_cost,
-                row.qty,
-                0,
-                DEFAULT_SHIPPING_RATE,
-                DEFAULT_MARGIN,
-              );
-              lineTotal = chain.total;
-              landedCost = chain.landedCost;
-              customerPrice = chain.customerPrice;
-              subtotal += lineTotal;
-              grandTotal += customerPrice;
-            }
-
-            return (
+    <div>
+      {/* Table view — sm and above */}
+      <div className="overflow-x-auto hidden sm:block">
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr className="border-b text-left text-muted-foreground">
+              <th className="py-2 pr-4 font-medium">SKU</th>
+              <th className="py-2 pr-4 font-medium">Item Name</th>
+              <th className="py-2 pr-4 font-medium">Vendor</th>
+              <th className="py-2 pr-4 font-medium w-24">Qty</th>
+              <th className="py-2 pr-4 font-medium w-32">Unit Cost</th>
+              <th className="py-2 pr-4 font-medium w-28">Total</th>
+              <th className="py-2 pr-4 font-medium w-28">Landed Cost</th>
+              <th className="py-2 pr-4 font-medium w-28">Customer Price</th>
+              <th className="py-2 font-medium">Swap SKU</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rowsWithCosts.map((row) => (
               <tr key={row.id} className="border-b hover:bg-muted/30">
                 <td className="py-2 pr-4 font-mono text-xs text-muted-foreground">{row.sku}</td>
                 <td className="py-2 pr-4">
@@ -202,13 +212,13 @@ export function BomReviewTable({ projectId }: BomReviewTableProps) {
                   />
                 </td>
                 <td className="py-2 pr-4">
-                  {lineTotal != null ? `$${lineTotal.toFixed(2)}` : '—'}
+                  {row.lineTotal != null ? `$${row.lineTotal.toFixed(2)}` : '—'}
                 </td>
                 <td className="py-2 pr-4">
-                  {landedCost != null ? `$${landedCost.toFixed(2)}` : '—'}
+                  {row.landedCost != null ? `$${row.landedCost.toFixed(2)}` : '—'}
                 </td>
                 <td className="py-2 pr-4">
-                  {customerPrice != null ? `$${customerPrice.toFixed(2)}` : '—'}
+                  {row.customerPrice != null ? `$${row.customerPrice.toFixed(2)}` : '—'}
                 </td>
                 <td className="py-2">
                   <select
@@ -224,19 +234,95 @@ export function BomReviewTable({ projectId }: BomReviewTableProps) {
                   </select>
                 </td>
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
-      <div className="mt-4 flex justify-end gap-8 text-sm border-t pt-3">
-        <div className="text-muted-foreground">
-          Subtotal (est. cost):{' '}
-          <span className="font-medium text-foreground">${subtotal.toFixed(2)}</span>
-        </div>
-        <div className="text-muted-foreground">
-          Grand Total (customer price):{' '}
-          <span className="font-semibold text-foreground">${grandTotal.toFixed(2)}</span>
-        </div>
+            ))}
+          </tbody>
+        </table>
+        {totalsFooter}
+      </div>
+
+      {/* Card view — below sm */}
+      <div className="sm:hidden space-y-3">
+        {rowsWithCosts.map((row) => (
+          <div key={row.id} className="border rounded-lg p-3 space-y-2 text-sm">
+            <div className="font-medium">
+              {row.vendor_url ? (
+                <a
+                  href={row.vendor_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  {row.name}
+                </a>
+              ) : (
+                row.name
+              )}
+            </div>
+            <div className="font-mono text-xs text-muted-foreground">{row.sku}</div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+              <div className="text-muted-foreground">
+                <span className="font-medium text-foreground">Vendor:</span> {row.vendor}
+              </div>
+              <div className="text-muted-foreground">
+                <span className="font-medium text-foreground">Total:</span>{' '}
+                {row.lineTotal != null ? `$${row.lineTotal.toFixed(2)}` : '—'}
+              </div>
+              <div className="text-muted-foreground">
+                <span className="font-medium text-foreground">Landed:</span>{' '}
+                {row.landedCost != null ? `$${row.landedCost.toFixed(2)}` : '—'}
+              </div>
+              <div className="text-muted-foreground">
+                <span className="font-medium text-foreground">Customer Price:</span>{' '}
+                {row.customerPrice != null ? `$${row.customerPrice.toFixed(2)}` : '—'}
+              </div>
+            </div>
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-muted-foreground">Qty:</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={999}
+                  value={row.qty}
+                  onChange={(e) => updateQty(row.id, Number(e.target.value))}
+                  className="w-16 border rounded px-2 py-1 text-xs"
+                />
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-muted-foreground">Cost:</span>
+                <input
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  value={row.unit_cost ?? ''}
+                  placeholder="—"
+                  onChange={(e) =>
+                    updateUnitCost(
+                      row.id,
+                      e.target.value === '' ? null : Number(e.target.value),
+                    )
+                  }
+                  className="w-20 border rounded px-2 py-1 text-xs"
+                />
+              </div>
+            </div>
+            <div>
+              <span className="text-xs text-muted-foreground">Swap SKU: </span>
+              <select
+                value={row.hardware_catalog_id}
+                onChange={(e) => swapSku(row.id, e.target.value)}
+                className="border rounded px-2 py-1 text-xs w-full mt-1"
+              >
+                {catalog.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.sku} — {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        ))}
+        {totalsFooter}
       </div>
     </div>
   );

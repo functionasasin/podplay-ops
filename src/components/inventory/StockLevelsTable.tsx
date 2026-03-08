@@ -47,73 +47,134 @@ export function StockLevelsTable({ items }: StockLevelsTableProps) {
   }
 
   return (
-    <div className="rounded-md border overflow-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b bg-muted/50">
-            <th className="px-4 py-3 text-left font-medium">Item</th>
-            <th className="px-4 py-3 text-left font-medium">SKU</th>
-            <th className="px-4 py-3 text-left font-medium">Category</th>
-            <th className="px-4 py-3 text-center font-medium w-[90px]">On Hand</th>
-            <th className="px-4 py-3 text-center font-medium w-[90px]">Allocated</th>
-            <th className="px-4 py-3 text-center font-medium w-[90px]">Available</th>
-            <th className="px-4 py-3 text-center font-medium w-[100px]">Reorder At</th>
-          </tr>
-        </thead>
-        <tbody>
-          {categories.map((category) => (
-            <React.Fragment key={category}>
-              {/* Category group header row */}
-              <tr className="bg-muted/30 border-b">
-                <td
-                  colSpan={7}
-                  className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide"
-                >
-                  {CATEGORY_LABELS[category] ?? category}
-                </td>
-              </tr>
-              {grouped[category].map((item) => {
-                const available = item.qty_on_hand - item.qty_allocated;
-                const isLowStock =
-                  item.reorder_threshold > 0 && available <= item.reorder_threshold;
-                return (
-                  <tr
-                    key={item.id}
-                    className={`border-b last:border-0 hover:bg-muted/30 ${isLowStock ? 'bg-destructive/5' : ''}`}
+    <div className="rounded-md border">
+      {/* Table view — sm and above */}
+      <div className="overflow-x-auto hidden sm:block">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b bg-muted/50">
+              <th className="px-4 py-3 text-left font-medium">Item</th>
+              <th className="px-4 py-3 text-left font-medium">SKU</th>
+              <th className="px-4 py-3 text-left font-medium">Category</th>
+              <th className="px-4 py-3 text-center font-medium w-[90px]">On Hand</th>
+              <th className="px-4 py-3 text-center font-medium w-[90px]">Allocated</th>
+              <th className="px-4 py-3 text-center font-medium w-[90px]">Available</th>
+              <th className="px-4 py-3 text-center font-medium w-[100px]">Reorder At</th>
+            </tr>
+          </thead>
+          <tbody>
+            {categories.map((category) => (
+              <React.Fragment key={category}>
+                {/* Category group header row */}
+                <tr className="bg-muted/30 border-b">
+                  <td
+                    colSpan={7}
+                    className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide"
                   >
-                    <td className="px-4 py-3">
-                      <span className="font-medium">{item.name}</span>
-                      {isLowStock && (
-                        <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive font-medium">
-                          LOW
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground font-mono text-xs">
-                      {item.sku}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {CATEGORY_LABELS[item.category] ?? item.category}
-                    </td>
-                    <td className="px-4 py-3 text-center">{item.qty_on_hand}</td>
-                    <td className="px-4 py-3 text-center">
-                      {item.qty_allocated === 0 ? '—' : item.qty_allocated}
-                    </td>
-                    <td
-                      className={`px-4 py-3 text-center font-medium ${isLowStock ? 'text-destructive font-bold' : ''}`}
+                    {CATEGORY_LABELS[category] ?? category}
+                  </td>
+                </tr>
+                {grouped[category].map((item) => {
+                  const available = item.qty_on_hand - item.qty_allocated;
+                  const isLowStock =
+                    item.reorder_threshold > 0 && available <= item.reorder_threshold;
+                  return (
+                    <tr
+                      key={item.id}
+                      className={`border-b last:border-0 hover:bg-muted/30 ${isLowStock ? 'bg-destructive/5' : ''}`}
                     >
-                      {available}
-                    </td>
-                    <td className="px-4 py-3 text-center text-muted-foreground">
-                      {item.reorder_threshold === 0 ? '—' : item.reorder_threshold}
-                    </td>
-                  </tr>
-                );
-              })}
-            </React.Fragment>
-          ))}
-        </tbody>
-      </table>
+                      <td className="px-4 py-3">
+                        <span className="font-medium">{item.name}</span>
+                        {isLowStock && (
+                          <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive font-medium">
+                            LOW
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground font-mono text-xs">
+                        {item.sku}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {CATEGORY_LABELS[item.category] ?? item.category}
+                      </td>
+                      <td className="px-4 py-3 text-center">{item.qty_on_hand}</td>
+                      <td className="px-4 py-3 text-center">
+                        {item.qty_allocated === 0 ? '—' : item.qty_allocated}
+                      </td>
+                      <td
+                        className={`px-4 py-3 text-center font-medium ${isLowStock ? 'text-destructive font-bold' : ''}`}
+                      >
+                        {available}
+                      </td>
+                      <td className="px-4 py-3 text-center text-muted-foreground">
+                        {item.reorder_threshold === 0 ? '—' : item.reorder_threshold}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </React.Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Card view — below sm */}
+      <div className="sm:hidden divide-y">
+        {categories.map((category) => (
+          <div key={category}>
+            <div className="px-4 py-2 bg-muted/30 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              {CATEGORY_LABELS[category] ?? category}
+            </div>
+            {grouped[category].map((item) => {
+              const available = item.qty_on_hand - item.qty_allocated;
+              const isLowStock =
+                item.reorder_threshold > 0 && available <= item.reorder_threshold;
+              return (
+                <div
+                  key={item.id}
+                  className={`px-4 py-3 border-t space-y-1 ${isLowStock ? 'bg-destructive/5' : ''}`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-sm">{item.name}</span>
+                    {isLowStock && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive font-medium">
+                        LOW
+                      </span>
+                    )}
+                  </div>
+                  <div className="font-mono text-xs text-muted-foreground">{item.sku}</div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-xs mt-1">
+                    <div>
+                      <span className="text-muted-foreground">On Hand:</span>{' '}
+                      <span className="font-medium">{item.qty_on_hand}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Allocated:</span>{' '}
+                      <span className="font-medium">
+                        {item.qty_allocated === 0 ? '—' : item.qty_allocated}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Available:</span>{' '}
+                      <span
+                        className={`font-medium ${isLowStock ? 'text-destructive font-bold' : ''}`}
+                      >
+                        {available}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Reorder At:</span>{' '}
+                      <span className="font-medium">
+                        {item.reorder_threshold === 0 ? '—' : item.reorder_threshold}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

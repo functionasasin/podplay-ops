@@ -480,6 +480,7 @@ export function TeamSettings({ settings, contacts: initialContacts }: TeamSettin
         </label>
 
         <div className="border border-border rounded-lg overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted text-muted-foreground">
               <tr>
@@ -619,6 +620,7 @@ export function TeamSettings({ settings, contacts: initialContacts }: TeamSettin
               )}
             </tbody>
           </table>
+          </div>
         </div>
 
         <p className="text-xs text-muted-foreground">
