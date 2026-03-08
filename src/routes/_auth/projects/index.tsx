@@ -4,7 +4,7 @@ import { Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { ProjectList } from '@/components/dashboard/ProjectList';
 
-function ProjectsPage() {
+export function ProjectsPage() {
   const [projects, setProjects] = useState<unknown[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
