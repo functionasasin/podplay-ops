@@ -195,13 +195,13 @@ function selectSsdSku(courtCount: number): string {
   return 'REPLAY-SSD-4TB';
 }
 
-function selectSwitchConfig(courtCount: number): { sku: string; qty: number } {
+export function selectSwitchConfig(courtCount: number): { sku: string; qty: number } {
   if (courtCount <= 8) return { sku: 'NET-USW-PRO-24-POE', qty: 1 };
   if (courtCount <= 16) return { sku: 'NET-USW-PRO-48-POE', qty: 1 };
   return { sku: 'NET-USW-PRO-48-POE', qty: 2 };
 }
 
-function selectSwitchConfigAutonomous(
+export function selectSwitchConfigAutonomous(
   courtCount: number,
   securityCameraCount: number
 ): { sku: string; qty: number } {
