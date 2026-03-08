@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { ExpenseTracker } from '@/components/wizard/financials/ExpenseTracker';
 
 const FINANCIALS_TABS = ['Invoicing', 'Expenses', 'P&L Summary', 'Go-Live'] as const;
 
@@ -13,12 +14,6 @@ interface Invoice {
   status: string;
 }
 
-interface Expense {
-  id: string;
-  description: string;
-  amount: number;
-  category: string;
-}
 
 function FinancialsPage() {
   const { projectId } = Route.useParams();
@@ -27,12 +22,11 @@ function FinancialsPage() {
     null,
   );
   const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadFinancialData() {
-      const [projectRes, invoicesRes, expensesRes] = await Promise.all([
+      const [projectRes, invoicesRes] = await Promise.all([
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (supabase.from('projects') as any)
           .select('project_name, customer_name')
@@ -42,14 +36,9 @@ function FinancialsPage() {
         (supabase.from('invoices') as any)
           .select('id, invoice_type, amount, status')
           .eq('project_id', projectId),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (supabase.from('expenses') as any)
-          .select('id, description, amount, category')
-          .eq('project_id', projectId),
       ]);
       setProject(projectRes.data);
       setInvoices(invoicesRes.data ?? []);
-      setExpenses(expensesRes.data ?? []);
       setLoading(false);
     }
     loadFinancialData();
@@ -96,12 +85,7 @@ function FinancialsPage() {
             </div>
           )}
           {activeTab === 'Expenses' && (
-            <div>
-              <h2 className="text-base font-medium mb-4">Expenses</h2>
-              <p className="text-sm text-muted-foreground">
-                {expenses.length} expense(s) — expense tracking coming soon.
-              </p>
-            </div>
+            <ExpenseTracker projectId={projectId} />
           )}
           {activeTab === 'P&L Summary' && (
             <div>
