@@ -9,10 +9,16 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 
+const AuthRoute = AuthRouteImport.update({
+  id: '/_auth',
+  path: '/_auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -30,30 +36,34 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/_auth': typeof AuthRoute
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/auth/callback': typeof AuthCallbackRoute
 }
 export interface FileRoutesByTo {
+  '/_auth': typeof AuthRoute
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/auth/callback': typeof AuthCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/_auth': typeof AuthRoute
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/auth/callback': typeof AuthCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/auth/callback'
+  fullPaths: '/_auth' | '/' | '/login' | '/auth/callback'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/auth/callback'
-  id: '__root__' | '/' | '/login' | '/auth/callback'
+  to: '/_auth' | '/' | '/login' | '/auth/callback'
+  id: '__root__' | '/_auth' | '/' | '/login' | '/auth/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  AuthRoute: typeof AuthRoute
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
@@ -61,6 +71,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/_auth': {
+      id: '/_auth'
+      path: '/_auth'
+      fullPath: '/_auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -86,6 +103,7 @@ declare module '@tanstack/react-router' {
 }
 
 const rootRouteChildren: RootRouteChildren = {
+  AuthRoute: AuthRoute,
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
   AuthCallbackRoute: AuthCallbackRoute,
