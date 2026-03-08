@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 interface Installer {
   id: string;
   name: string;
-  location: string | null;
+  regions: string[] | null;
 }
 
 export interface InstallerSelectionValues {
@@ -27,7 +27,7 @@ export function InstallerSelectionStep({ defaultValues, onNext }: InstallerSelec
     setLoading(true);
     supabase
       .from('installers')
-      .select('id, name, location')
+      .select('id, name, regions')
       .then(({ data }) => {
         if (!cancelled) {
           setInstallers((data as Installer[]) ?? []);
@@ -68,7 +68,7 @@ export function InstallerSelectionStep({ defaultValues, onNext }: InstallerSelec
             {installers.map((installer) => (
               <option key={installer.id} value={installer.id}>
                 {installer.name}
-                {installer.location ? ` — ${installer.location}` : ''}
+                {installer.regions?.length ? ` — ${installer.regions.join(', ')}` : ''}
               </option>
             ))}
           </select>

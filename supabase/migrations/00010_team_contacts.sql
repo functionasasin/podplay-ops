@@ -36,7 +36,7 @@ CREATE POLICY "authenticated users can delete contacts"
 
 CREATE TRIGGER team_contacts_updated_at
   BEFORE UPDATE ON team_contacts
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 CREATE INDEX idx_team_contacts_slug       ON team_contacts (slug);
 CREATE INDEX idx_team_contacts_department ON team_contacts (department);
