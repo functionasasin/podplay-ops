@@ -4,10 +4,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
+import { VALIDATION } from '@/lib/validation-messages';
 
 const loginSchema = z.object({
-  email: z.string().email('Enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  email: z.string().email(VALIDATION.auth.email.format),
+  password: z.string().min(6, VALIDATION.auth.password.min),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;

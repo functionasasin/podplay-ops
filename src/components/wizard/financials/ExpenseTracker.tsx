@@ -7,6 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { expenseCategoryLabels } from '@/lib/enum-labels';
 import type { ExpenseCategory, PaymentMethod } from '@/lib/types';
+import { VALIDATION } from '@/lib/validation-messages';
+
+const VE = VALIDATION.financials.expense;
 
 const EXPENSE_CATEGORIES: ExpenseCategory[] = [
   'airfare', 'car', 'fuel', 'lodging', 'meals', 'misc_hardware',
@@ -20,9 +23,9 @@ const expenseFormSchema = z.object({
   ),
   amount: z
     .number()
-    .positive('Amount must be greater than $0'),
+    .positive(VE.amount.positive),
   payment_method: z.enum(['podplay_card', 'ramp_reimburse'] as const),
-  expense_date: z.string().min(1, 'Date is required'),
+  expense_date: z.string().min(1, VE.date.required),
   notes: z.string().optional(),
 });
 

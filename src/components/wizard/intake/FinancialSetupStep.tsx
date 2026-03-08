@@ -3,6 +3,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { VALIDATION } from '@/lib/validation-messages';
+
+const V = VALIDATION.intake;
 
 const today = () => {
   const d = new Date();
@@ -13,17 +16,17 @@ const today = () => {
 const financialSetupSchema = z.object({
   target_go_live_date: z
     .string()
-    .min(1, 'Go-live date is required')
+    .min(1, V.target_go_live_date.required)
     .refine(
       (val) => {
         const date = new Date(val);
         return !isNaN(date.getTime()) && date > today();
       },
-      { message: 'Go-live date must be in the future' },
+      { message: V.target_go_live_date.future },
     ),
   deposit_amount: z
     .number()
-    .gt(0, 'Deposit amount must be greater than $0'),
+    .gt(0, V.deposit_amount.positive),
 });
 
 export type FinancialSetupValues = z.infer<typeof financialSetupSchema>;

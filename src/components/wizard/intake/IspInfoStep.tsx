@@ -3,6 +3,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { VALIDATION } from '@/lib/validation-messages';
+
+const V = VALIDATION.intake;
 
 interface IspSpeedRequirement {
   courtRange: string;
@@ -32,11 +35,11 @@ function getIspSpeedRequirement(courtCount: number): IspSpeedRequirement {
 const ispInfoSchema = z.object({
   isp_provider: z
     .string()
-    .min(1, 'ISP provider name is required')
-    .max(200, 'ISP provider name must be 200 characters or less'),
+    .min(1, V.isp_provider.required)
+    .max(200, V.isp_provider.max),
   has_static_ip: z.boolean(),
-  upload_speed_mbps: z.number().min(0, 'Upload speed must be 0 or more').nullable(),
-  download_speed_mbps: z.number().min(0, 'Download speed must be 0 or more').nullable(),
+  upload_speed_mbps: z.number().min(0, V.internet_upload_mbps.min).nullable(),
+  download_speed_mbps: z.number().min(0, V.internet_download_mbps.min).nullable(),
 });
 
 export type IspInfoValues = z.infer<typeof ispInfoSchema>;
@@ -73,7 +76,7 @@ export function IspInfoStep({ defaultValues, courtCount, onNext }: IspInfoStepPr
 
   const uploadWarning =
     !isStarlink && uploadSpeed !== null && uploadSpeed !== undefined && uploadSpeed < req.fiberMinUp
-      ? `Upload speed may be insufficient. Recommended: ${req.fiberMinUp} Mbps for ${courtCount} courts on fiber.`
+      ? VALIDATION.intake.isp.upload_fiber(req.fiberMinUp, courtCount)
       : null;
 
   const downloadWarning =
@@ -94,8 +97,7 @@ export function IspInfoStep({ defaultValues, courtCount, onNext }: IspInfoStepPr
       {isStarlink && (
         <div className="rounded-md border border-destructive bg-destructive/10 p-4">
           <p className="text-sm font-medium text-destructive">
-            Starlink is not compatible with PodPlay Replay. A different ISP is required for replay
-            to work.
+            {VALIDATION.intake.isp.starlink_block}
           </p>
         </div>
       )}

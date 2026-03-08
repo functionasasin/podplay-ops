@@ -3,14 +3,17 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import { VALIDATION } from '@/lib/validation-messages';
+
+const VTr = VALIDATION.settings.travel;
 import { toast } from 'sonner';
 import { updateSettings } from '@/services/settingsService';
 import type { Settings } from '@/services/settingsService';
 
 const travelFormSchema = z.object({
-  lodging_per_day: z.number().min(0),
-  airfare_default: z.number().min(0),
-  hours_per_day: z.number().int().min(1).max(24),
+  lodging_per_day: z.number().min(0, VTr.lodging_per_day.min),
+  airfare_default: z.number().min(0, VTr.airfare_default.min),
+  hours_per_day: z.number().int().min(1, VTr.hours_per_day.min).max(24, VTr.hours_per_day.max),
 });
 
 export type TravelFormValues = z.infer<typeof travelFormSchema>;

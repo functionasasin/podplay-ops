@@ -6,6 +6,9 @@ import { Loader2, MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { EMPTY_STATES } from '@/lib/empty-state-configs';
+import { VALIDATION } from '@/lib/validation-messages';
+
+const VC = VALIDATION.settings.catalog;
 import type { HardwareCatalogItem } from '@/services/catalogService';
 import {
   createCatalogItem,
@@ -44,16 +47,16 @@ const categoryLabel = (cat: string) => {
 const catalogItemSchema = z.object({
   sku: z
     .string()
-    .min(1, 'Required')
-    .max(50)
-    .regex(/^[A-Z0-9\-]+$/, 'Uppercase letters, numbers, hyphens only'),
-  name: z.string().min(1, 'Required').max(200),
-  model: z.string().max(100).optional().or(z.literal('')),
-  category: z.string().min(1, 'Required'),
-  vendor: z.string().min(1, 'Required').max(100),
-  vendor_url: z.string().url('Must be a valid URL').optional().or(z.literal('')),
-  unit_cost: z.number().min(0).nullable().optional(),
-  notes: z.string().max(500).optional().or(z.literal('')),
+    .min(1, VC.sku.required)
+    .max(50, VC.sku.max)
+    .regex(/^[A-Z0-9\-]+$/, VC.sku.regex),
+  name: z.string().min(1, VC.name.required).max(200, VC.name.max),
+  model: z.string().max(100, VC.model.max).optional().or(z.literal('')),
+  category: z.string().min(1, VC.category.required),
+  vendor: z.string().min(1, VC.vendor.required).max(100, VC.vendor.max),
+  vendor_url: z.string().url(VC.vendor_url.format).optional().or(z.literal('')),
+  unit_cost: z.number().min(0, VC.unit_cost.min).nullable().optional(),
+  notes: z.string().max(500, VC.notes.max).optional().or(z.literal('')),
 });
 
 type CatalogItemFormValues = z.infer<typeof catalogItemSchema>;
@@ -117,7 +120,7 @@ function ItemSheet({ item, onClose, onSaved }: ItemSheetProps) {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       if (msg.includes('unique') || msg.includes('duplicate')) {
-        setError('sku', { message: 'This SKU already exists.' });
+        setError('sku', { message: VC.sku.unique });
       } else {
         toast.error('Failed to save: ' + msg);
       }
@@ -164,7 +167,7 @@ function ItemSheet({ item, onClose, onSaved }: ItemSheetProps) {
               <>
                 <p className="font-mono text-sm px-3 py-2 bg-muted rounded">{item?.sku}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  SKU cannot be changed after creation — it is referenced by BOM templates and inventory.
+                  {VC.sku.help}
                 </p>
               </>
             )}

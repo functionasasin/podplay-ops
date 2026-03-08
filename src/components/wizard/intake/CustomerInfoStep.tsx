@@ -3,19 +3,22 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { VALIDATION } from '@/lib/validation-messages';
+
+const V = VALIDATION.intake;
 
 const customerInfoSchema = z.object({
   customer_name: z
     .string()
-    .min(1, 'Customer name is required')
-    .max(200, 'Customer name must be 200 characters or less'),
+    .min(1, V.customer_name.required)
+    .max(200, V.customer_name.max),
   contact_email: z
     .string()
-    .min(1, 'Enter a valid email address')
-    .email('Enter a valid email address'),
+    .min(1, V.contact_email.required)
+    .email(V.contact_email.format),
   contact_phone: z
     .string()
-    .max(50, 'Phone number must be 50 characters or less'),
+    .max(50, V.contact_phone.max),
 });
 
 export type CustomerInfoValues = z.infer<typeof customerInfoSchema>;

@@ -3,25 +3,28 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { VALIDATION } from '@/lib/validation-messages';
+
+const V = VALIDATION.intake;
 
 const venueConfigSchema = z.object({
   venue_address: z
     .string()
-    .min(1, 'Venue address is required')
-    .max(200, 'Address must be 200 characters or less'),
+    .min(1, V.venue_address.required)
+    .max(200, V.venue_address.max),
   court_count: z
     .number()
-    .int('Court count must be a whole number')
-    .min(1, 'At least 1 court required')
-    .max(50, 'Maximum 50 courts'),
+    .int(V.court_count.int)
+    .min(1, V.court_count.min)
+    .max(50, V.court_count.max),
   door_count: z
     .number()
-    .int('Door count must be 0 or more')
-    .min(0, 'Door count must be 0 or more'),
+    .int(V.door_count.int)
+    .min(0, V.door_count.min),
   camera_count: z
     .number()
-    .int('Camera count must be 0 or more')
-    .min(0, 'Camera count must be 0 or more'),
+    .int(V.camera_count.int)
+    .min(0, V.camera_count.min),
   has_front_desk: z.boolean(),
   has_pingpod_wifi: z.boolean(),
 });

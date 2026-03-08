@@ -5,12 +5,15 @@ import { z } from 'zod';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { VALIDATION } from '@/lib/validation-messages';
+
+const V = VALIDATION.financials.deposit_invoice;
 
 const depositInvoiceSchema = z.object({
   amount: z
     .number()
-    .gt(0, 'Amount must be greater than $0'),
-  invoice_date: z.string().min(1, 'Invoice date is required'),
+    .gt(0, V.amount.positive),
+  invoice_date: z.string().min(1, V.date.required),
   payment_method: z.enum(['podplay_card', 'ramp_reimburse']).optional(),
   notes: z.string().optional(),
 });

@@ -6,57 +6,63 @@ import { AlertTriangle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { updateSettings } from '@/services/settingsService';
 import type { Settings } from '@/services/settingsService';
+import { VALIDATION } from '@/lib/validation-messages';
+
+const VP = VALIDATION.settings.pricing;
+const VH = VALIDATION.settings.hardware_threshold;
+const VI = VALIDATION.settings.isp_speed;
+const VS = VALIDATION.settings.system;
 
 const pricingFormSchema = z
   .object({
     // Service tier fees
-    pro_venue_fee: z.number().min(0),
-    pro_court_fee: z.number().min(0),
-    autonomous_venue_fee: z.number().min(0),
-    autonomous_court_fee: z.number().min(0),
-    autonomous_plus_venue_fee: z.number().min(0),
-    autonomous_plus_court_fee: z.number().min(0),
-    pbk_venue_fee: z.number().min(0),
-    pbk_court_fee: z.number().min(0),
+    pro_venue_fee: z.number().min(0, VP.fee_min),
+    pro_court_fee: z.number().min(0, VP.fee_min),
+    autonomous_venue_fee: z.number().min(0, VP.fee_min),
+    autonomous_court_fee: z.number().min(0, VP.fee_min),
+    autonomous_plus_venue_fee: z.number().min(0, VP.fee_min),
+    autonomous_plus_court_fee: z.number().min(0, VP.fee_min),
+    pbk_venue_fee: z.number().min(0, VP.fee_min),
+    pbk_court_fee: z.number().min(0, VP.fee_min),
     // Cost chain rates (stored as decimals)
-    shipping_rate: z.number().min(0).max(1),
-    target_margin: z.number().min(0).max(0.9999),
-    sales_tax_rate: z.number().min(0).max(1),
-    deposit_pct: z.number().min(0.01).max(0.99),
+    shipping_rate: z.number().min(0, VP.shipping_rate.min).max(1, VP.shipping_rate.max),
+    target_margin: z.number().min(0, VP.target_margin.min).max(0.9999, VP.target_margin.max),
+    sales_tax_rate: z.number().min(0, VP.sales_tax_rate.min).max(1, VP.sales_tax_rate.max),
+    deposit_pct: z.number().min(0.01, VP.deposit_pct.min).max(0.99, VP.deposit_pct.max),
     // Labor
-    labor_rate_per_hour: z.number().min(0),
-    hours_per_day: z.number().int().min(1).max(24),
+    labor_rate_per_hour: z.number().min(0, VP.labor_rate.min),
+    hours_per_day: z.number().int().min(1, VP.hours_per_day.min).max(24, VP.hours_per_day.max),
     // BOM thresholds
-    switch_24_max_courts: z.number().int().min(1),
-    switch_48_max_courts: z.number().int().min(1),
-    ssd_1tb_max_courts: z.number().int().min(1),
-    ssd_2tb_max_courts: z.number().int().min(1),
-    nvr_4bay_max_cameras: z.number().int().min(1),
+    switch_24_max_courts: z.number().int().min(1, VH.min),
+    switch_48_max_courts: z.number().int().min(1, VH.min),
+    ssd_1tb_max_courts: z.number().int().min(1, VH.min),
+    ssd_2tb_max_courts: z.number().int().min(1, VH.min),
+    nvr_4bay_max_cameras: z.number().int().min(1, VH.min),
     // ISP thresholds
-    isp_fiber_mbps_per_court: z.number().int().min(1),
-    isp_cable_upload_min_mbps: z.number().int().min(1),
+    isp_fiber_mbps_per_court: z.number().int().min(1, VI.fiber),
+    isp_cable_upload_min_mbps: z.number().int().min(1, VI.cable),
     // Operational defaults
     default_replay_service_version: z.enum(['v1', 'v2']),
-    po_number_prefix: z.string().min(1).max(10),
-    cc_terminal_pin: z.string().min(1).max(10),
+    po_number_prefix: z.string().min(1, VS.po_number_prefix.required).max(10, VS.po_number_prefix.max),
+    cc_terminal_pin: z.string().min(1, VS.cc_terminal_pin.required).max(10, VS.cc_terminal_pin.max),
     mac_mini_local_ip: z
       .string()
-      .regex(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/, 'Must be a valid IPv4 address'),
-    replay_port: z.number().int().min(1).max(65535),
-    ddns_domain: z.string().min(1),
-    label_sets_per_court: z.number().int().min(1),
-    replay_sign_multiplier: z.number().int().min(1),
-    default_vlan_id: z.number().int().min(1).max(4094),
-    replay_vlan_id: z.number().int().min(1).max(4094),
-    surveillance_vlan_id: z.number().int().min(1).max(4094),
-    access_control_vlan_id: z.number().int().min(1).max(4094),
+      .regex(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/, VS.mac_mini_local_ip.format),
+    replay_port: z.number().int().min(1, VS.replay_port.min).max(65535, VS.replay_port.max),
+    ddns_domain: z.string().min(1, VS.ddns_domain.required),
+    label_sets_per_court: z.number().int().min(1, VS.label_sets_per_court.min),
+    replay_sign_multiplier: z.number().int().min(1, VS.replay_sign_multiplier.min),
+    default_vlan_id: z.number().int().min(1, VS.vlan_id.min).max(4094, VS.vlan_id.max),
+    replay_vlan_id: z.number().int().min(1, VS.vlan_id.min).max(4094, VS.vlan_id.max),
+    surveillance_vlan_id: z.number().int().min(1, VS.vlan_id.min).max(4094, VS.vlan_id.max),
+    access_control_vlan_id: z.number().int().min(1, VS.vlan_id.min).max(4094, VS.vlan_id.max),
   })
   .refine((d) => d.switch_24_max_courts < d.switch_48_max_courts, {
-    message: 'Must be less than the 48-port threshold',
+    message: VH.switch_24,
     path: ['switch_24_max_courts'],
   })
   .refine((d) => d.ssd_1tb_max_courts < d.ssd_2tb_max_courts, {
-    message: 'Must be less than the 2TB threshold',
+    message: VH.ssd_1tb,
     path: ['ssd_1tb_max_courts'],
   });
 

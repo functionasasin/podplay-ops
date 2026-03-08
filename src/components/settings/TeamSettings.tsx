@@ -4,6 +4,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
+import { VALIDATION } from '@/lib/validation-messages';
+
+const VT = VALIDATION.settings.contact;
+const VO = VALIDATION.settings.opex;
 import { EmptyState } from '@/components/ui/EmptyState';
 import { EMPTY_STATES } from '@/lib/empty-state-configs';
 import { cn } from '@/lib/utils';
@@ -54,8 +58,8 @@ function SupportTierPill({ tier }: { tier: number | null | undefined }) {
 // ─── OpEx form ────────────────────────────────────────────────────────────────
 
 const opexFormSchema = z.object({
-  rent_per_year:              z.number().min(0),
-  indirect_salaries_per_year: z.number().min(0),
+  rent_per_year:              z.number().min(0, VO.rent_per_year.min),
+  indirect_salaries_per_year: z.number().min(0, VO.indirect_salaries_per_year.min),
 });
 
 type OpexFormValues = z.infer<typeof opexFormSchema>;
@@ -154,14 +158,14 @@ function OpexSection({ settings }: { settings: Settings }) {
 // ─── Contact form schema ──────────────────────────────────────────────────────
 
 const contactSchema = z.object({
-  name:         z.string().min(1, 'Required').max(100),
-  role:         z.string().min(1, 'Required').max(200),
+  name:         z.string().min(1, VT.name.required).max(100, VT.name.max),
+  role:         z.string().min(1, VT.role.required).max(200, VT.role.max),
   department:   z.enum(['pm', 'hardware', 'operations', 'config', 'app', 'cs', 'engineering']),
-  phone:        z.string().max(30).optional().nullable(),
-  email:        z.string().email('Invalid email').optional().nullable().or(z.literal('')),
-  contact_via:  z.string().max(100).optional().nullable(),
-  support_tier: z.number().int().min(1).max(3).nullable(),
-  notes:        z.string().max(1000).optional().nullable(),
+  phone:        z.string().max(30, VT.phone.max).optional().nullable(),
+  email:        z.string().email(VT.email.format).optional().nullable().or(z.literal('')),
+  contact_via:  z.string().max(100, VT.contact_via.max).optional().nullable(),
+  support_tier: z.number().int().min(1, VT.support_tier.range).max(3, VT.support_tier.range).nullable(),
+  notes:        z.string().max(1000, VT.notes.max).optional().nullable(),
   slug:         z.string().min(1).max(100),
 });
 

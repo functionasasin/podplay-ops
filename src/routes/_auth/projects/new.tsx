@@ -3,13 +3,14 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { supabase } from '@/lib/supabase';
+import { VALIDATION } from '@/lib/validation-messages';
 import { showToast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 const newProjectSchema = z.object({
-  project_name: z.string().min(2, 'Project name must be at least 2 characters'),
-  customer_name: z.string().min(2, 'Customer name must be at least 2 characters'),
+  project_name: z.string().min(2, VALIDATION.newProject.project_name.min),
+  customer_name: z.string().min(2, VALIDATION.newProject.customer_name.min),
   venue_name: z.string().optional(),
 });
 
