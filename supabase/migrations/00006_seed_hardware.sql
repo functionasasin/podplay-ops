@@ -1,0 +1,408 @@
+-- Migration 00006: Hardware Catalog Seed Data (47 items across 8 categories)
+-- Note: spec seed-data.md includes 'model' and 'notes' columns not present in schema;
+--       'notes' mapped to 'description', 'model' omitted.
+
+INSERT INTO hardware_catalog (sku, name, vendor, category, unit_cost, description, is_active)
+VALUES
+
+  -- =========================================================================
+  -- NETWORK RACK (12 items)
+  -- =========================================================================
+  ('NET-UDM-SE',
+   'UniFi UDM-SE Gateway',
+   'UniFi',
+   'network_rack',
+   379.00,
+   'Firewall/gateway with built-in PoE switch. Default for most venues. Built-in PoE eliminates need for separate injector on UDM ports.',
+   true),
+
+  ('NET-UDM-PRO',
+   'UniFi UDM-Pro Gateway',
+   'UniFi',
+   'network_rack',
+   379.00,
+   'Firewall/gateway, no built-in PoE. Alternative to UDM-SE for venues where PoE on gateway ports is not needed.',
+   true),
+
+  ('NET-UDM-PRO-MAX',
+   'UniFi UDM-Pro-Max Gateway',
+   'UniFi',
+   'network_rack',
+   599.00,
+   'High-performance gateway with 2.5G ports. For large venues (12+ courts) with high throughput needs.',
+   true),
+
+  ('NET-USW-PRO-24-POE',
+   'UniFi USW-Pro-24-POE Switch',
+   'UniFi',
+   'network_rack',
+   249.00,
+   '24-port PoE+ switch. Default for venues up to 8 courts (24 ports accommodate 3 drops/court + uplink + Mac Mini + spares). SFP+ uplink to UDM.',
+   true),
+
+  ('NET-USW-24-POE',
+   'UniFi USW-24-POE Switch',
+   'UniFi',
+   'network_rack',
+   189.00,
+   '24-port PoE switch, lower power budget than Pro-24-POE. Alternative for cost-sensitive smaller venues.',
+   true),
+
+  ('NET-USW-PRO-48-POE',
+   'UniFi USW-Pro-48-POE Switch',
+   'UniFi',
+   'network_rack',
+   519.00,
+   '48-port PoE+ switch. For venues 9+ courts where 24-port is insufficient. Large clubs may require two switches.',
+   true),
+
+  ('NET-SFP-DAC',
+   'UniFi SFP+ DAC Cable 0.5m',
+   'UniFi',
+   'network_rack',
+   12.00,
+   'SFP+ Direct Attach Copper cable. Connects UDM ↔ switch (and switch ↔ NVR on Autonomous+). 0.5m length fits within rack.',
+   true),
+
+  ('NET-PATCH-1FT',
+   'Monoprice Cat6 1ft Patch Cable',
+   'Amazon',
+   'network_rack',
+   3.00,
+   'Short patch cable for switch port-to-patch-panel connections within rack. Ordered in bulk; 3 per court for display/kiosk/camera drops.',
+   true),
+
+  ('NET-PATCH-3FT',
+   'Monoprice Cat6 3ft Patch Cable',
+   'Amazon',
+   'network_rack',
+   5.00,
+   'Standard patch cable for UDM, Mac Mini, and inter-rack connections. ~6 per venue for rack equipment.',
+   true),
+
+  ('NET-PATCH-10FT',
+   'Monoprice Cat6 10ft Patch Cable',
+   'Amazon',
+   'network_rack',
+   8.00,
+   'Longer patch cable for Kisi Controller connection (ACCESS CONTROL VLAN port on switch to Kisi Controller). Autonomous/Autonomous+ only.',
+   true),
+
+  ('NET-PDU',
+   'TrippLite 12-Outlet Rack PDU',
+   'Ingram',
+   'network_rack',
+   45.00,
+   '12-outlet 1U rack PDU. Mounts on back of rack to conserve front rack units. All rack devices → PDU → UPS → dedicated 20A circuit.',
+   true),
+
+  ('NET-PATCH-PANEL-24',
+   'iwillink 24-Port Patch Panel with Couplers',
+   'Amazon',
+   'network_rack',
+   30.00,
+   '24-port patch panel with pre-installed inline coupler keystones. Default for field terminations. Punch-down keystones preferred if capable.',
+   true),
+
+  -- =========================================================================
+  -- INFRASTRUCTURE (3 items)
+  -- =========================================================================
+  ('INFRA-UPS',
+   'APC 1500VA Rack-Mount UPS',
+   'Various',
+   'infrastructure',
+   250.00,
+   '2U rack-mount UPS. Always at bottom of rack. Connect internal UPS battery BEFORE installing any equipment above. Drop-shipped to venue.',
+   true),
+
+  ('INFRA-RACK',
+   '12U Network Rack Enclosure',
+   'Various',
+   'infrastructure',
+   180.00,
+   'Open or closed rack enclosure, 7–12U depending on court count and tier. Drop-shipped to venue. Exact model selected by ops based on venue IT room.',
+   true),
+
+  ('INFRA-RACK-SHELF',
+   'Pyle 19-Inch 1U Vented Rack Shelf',
+   'Amazon',
+   'infrastructure',
+   20.00,
+   '1U vented rack shelf for Mac Mini at top of rack. Provides 2U space with breathing room above. Mac Mini overheating is a known failure mode.',
+   true),
+
+  -- =========================================================================
+  -- REPLAY SYSTEM (11 items)
+  -- =========================================================================
+  ('REPLAY-MACMINI',
+   'Mac Mini 16GB 256GB',
+   'Apple Business',
+   'replay_system',
+   700.00,
+   'Replay server. Mac Mini (M4 or current chip at time of order). Assigned fixed IP 192.168.32.100 on REPLAY VLAN 32. Labeled with venue name.',
+   true),
+
+  ('REPLAY-SSD-1TB',
+   'Samsung T7 1TB External SSD',
+   'Amazon',
+   'replay_system',
+   90.00,
+   'External SSD for replay video storage. Use for venues with 1–4 courts. Connected to Mac Mini via USB-C.',
+   true),
+
+  ('REPLAY-SSD-2TB',
+   'Samsung T7 2TB External SSD',
+   'Amazon',
+   'replay_system',
+   160.00,
+   'External SSD for replay video storage. Use for venues with 5–8 courts. Connected to Mac Mini via USB-C.',
+   true),
+
+  ('REPLAY-SSD-4TB',
+   'Samsung T7 4TB External SSD',
+   'Amazon',
+   'replay_system',
+   310.00,
+   'External SSD for replay video storage. Use for venues with 9+ courts. Connected to Mac Mini via USB-C.',
+   true),
+
+  ('REPLAY-CAMERA-WHITE',
+   'EmpireTech Replay Camera White',
+   'EmpireTech',
+   'replay_system',
+   120.00,
+   '4MP varifocal turret IP camera (Dahua OEM). White housing for light-colored courts. Default for pickleball clubs. 1 per court, mounted behind baseline.',
+   true),
+
+  ('REPLAY-CAMERA-BLACK',
+   'EmpireTech Replay Camera Black',
+   'EmpireTech',
+   'replay_system',
+   120.00,
+   '4MP varifocal turret IP camera (Dahua OEM). Black housing for darker court environments. Alternative to white; same model, different color.',
+   true),
+
+  ('REPLAY-CAMERA-JB-WHITE',
+   'EmpireTech Replay Camera Junction Box White',
+   'EmpireTech',
+   'replay_system',
+   15.00,
+   'Junction box for EmpireTech IPC-T54IR-ZE replay camera. White. Use when mounting on column, ceiling, or pole (provides 3/4" threaded conduit opening).',
+   true),
+
+  ('REPLAY-CAMERA-JB-BLACK',
+   'EmpireTech Replay Camera Junction Box Black',
+   'EmpireTech',
+   'replay_system',
+   15.00,
+   'Junction box for EmpireTech IPC-T54IR-ZE replay camera. Black. For darker environments. Same specs as white junction box.',
+   true),
+
+  ('REPLAY-FLIC',
+   'Flic Button',
+   'Flic',
+   'replay_system',
+   35.00,
+   'Bluetooth scoring and replay button. 2 per court (left + right baseline positions). Mounted on acrylic sign on fence/wall. Battery: CR2032 coin cell. Single press=score, double=undo, long=replay.',
+   true),
+
+  ('REPLAY-SIGN',
+   'Aluminum Printed Sign 6x8',
+   'Fast Signs',
+   'replay_system',
+   25.00,
+   'Printed 6"×8" aluminum sign for Flic button mounting. 1 per court. Affixed to fence/wall behind baseline. Labeled "Court X Left/Right".',
+   true),
+
+  ('REPLAY-HW-KIT',
+   'Sign Mounting Hardware Kit',
+   'RC Fasteners',
+   'replay_system',
+   15.00,
+   'Bolts, nuts, screws, and zip ties for aluminum sign and junction box mounting. 1 kit per venue covers all courts.',
+   true),
+
+  -- =========================================================================
+  -- DISPLAYS (8 items)
+  -- =========================================================================
+  ('DISPLAY-TV-65',
+   '65" TV Display',
+   'Various',
+   'displays',
+   500.00,
+   '65" LED/QLED TV for court display. VESA 400×300 compatible. Drop-shipped to venue. Mounted at 8''9" AFF, center court, net-side. HDMI 1 used for Apple TV.',
+   true),
+
+  ('DISPLAY-TV-MOUNT',
+   'VESA 400x300 TV Tilt Wall Mount',
+   'Various',
+   'displays',
+   30.00,
+   'VESA 400×300 tilt wall mount for 65" TV. Included with TV order; drop-shipped. Surface options: drywall (lag/toggle bolts), concrete (Tapcon), column (Unistrut), ceiling (beam clamps).',
+   true),
+
+  ('DISPLAY-APPLETV',
+   'Apple TV 4K with Ethernet',
+   'Apple Business',
+   'displays',
+   130.00,
+   'Apple TV 4K with built-in Ethernet port. Enrolled in Mosyle MDM under client Apple TV group. Connects to TV HDMI 1 via 3ft HDMI cable.',
+   true),
+
+  ('DISPLAY-HDMI-3FT',
+   'Amazon Basics 3ft HDMI Cable',
+   'Amazon',
+   'displays',
+   7.00,
+   '3ft HDMI cable connecting Apple TV output to TV HDMI 1 port. 1 per court.',
+   true),
+
+  ('DISPLAY-ATV-MOUNT',
+   'HIDEit Apple TV Wall Mount',
+   'HIDEit',
+   'displays',
+   25.00,
+   'Wall/column mount for Apple TV. Mount behind TV on wall. NOT on column with double-sided adhesive — heat from TV causes adhesive failure and Apple TV falls.',
+   true),
+
+  ('DISPLAY-IPAD',
+   'iPad 64GB WiFi+Cellular',
+   'Apple Business',
+   'displays',
+   600.00,
+   'iPad kiosk. 10th gen (A2696) or current model at time of order. Enrolled in Mosyle MDM. PoE-powered. App Lock enabled. Powered on in strict court-number order for correct MDM enrollment.',
+   true),
+
+  ('DISPLAY-IPAD-POE',
+   'iPad PoE Adapter',
+   'PoE Texas',
+   'displays',
+   40.00,
+   'PoE-to-USB-C adapter powering iPad from Cat6 drop. Ethernet in, USB-C out to iPad. Hidden behind drywall wall or behind TV for concrete/masonry venues.',
+   true),
+
+  ('DISPLAY-IPAD-CASE',
+   'iPad Kiosk Case with Lock',
+   'CTA Digital',
+   'displays',
+   80.00,
+   'Lockable kiosk enclosure for iPad. Mounted at 4''8" AFF, center court. Mounting surface options: fence (VESA bracket), drywall, concrete, column, floor kiosk. Hand keys to customer at go-live.',
+   true),
+
+  -- =========================================================================
+  -- ACCESS CONTROL (2 items)
+  -- =========================================================================
+  ('AC-KISI-CONTROLLER',
+   'Kisi Controller Pro 2',
+   'Kisi',
+   'access_control',
+   299.00,
+   '1 per venue. Manages all Kisi door readers at the venue. Mounted in secure location with power and Ethernet to ACCESS CONTROL VLAN (192.168.33.x).',
+   true),
+
+  ('AC-KISI-READER',
+   'Kisi Reader Pro 2',
+   'Kisi',
+   'access_control',
+   179.00,
+   '1 per access-controlled door. Connects back to Kisi Controller. Door lock types: mag lock for glass doors (fail-safe), electric strike for panic bar doors (fail-secure).',
+   true),
+
+  -- =========================================================================
+  -- SURVEILLANCE (7 items)
+  -- =========================================================================
+  ('SURV-UNVR',
+   'UniFi UNVR 4-Bay NVR',
+   'UniFi',
+   'surveillance',
+   279.00,
+   '4-bay NVR for local surveillance recording. Default for Autonomous+. Rack-mounted below switch. Connects to UDM via SFP DAC cable. Supports up to 4 WD Purple 8TB drives.',
+   true),
+
+  ('SURV-UNVR-PRO',
+   'UniFi UNVR-Pro 7-Bay NVR',
+   'UniFi',
+   'surveillance',
+   499.00,
+   '7-bay NVR for larger surveillance deployments. Use instead of UNVR when venue has 5+ security cameras. Supports up to 7 WD Purple 8TB drives.',
+   true),
+
+  ('SURV-HDD',
+   'WD Purple 8TB Surveillance Hard Drive',
+   'Amazon',
+   'surveillance',
+   140.00,
+   'Surveillance-grade HDD rated for 24/7 operation. 4 drives fill UNVR (4-bay); 7 drives fill UNVR-Pro (7-bay). Pre-installed in NVR before shipping.',
+   true),
+
+  ('SURV-CAMERA-WHITE',
+   'UniFi G5 Turret Ultra Security Camera White',
+   'UniFi',
+   'surveillance',
+   109.00,
+   'UniFi G5 Turret Ultra 4K security camera. White housing. Default for pickleball clubs. PoE-powered. Connects to SURVEILLANCE VLAN (VLAN 31) on Autonomous+.',
+   true),
+
+  ('SURV-CAMERA-BLACK',
+   'UniFi G5 Turret Ultra Security Camera Black',
+   'UniFi',
+   'surveillance',
+   109.00,
+   'UniFi G5 Turret Ultra 4K security camera. Black housing. For PingPod venues with dark court environments. Same model as white variant.',
+   true),
+
+  ('SURV-CAMERA-JB-WHITE',
+   'UniFi Security Camera Junction Box White',
+   'UniFi',
+   'surveillance',
+   12.00,
+   'White junction box for UniFi G5 security cameras. For pickleball club deployments. 1 per camera.',
+   true),
+
+  ('SURV-CAMERA-JB-BLACK',
+   'UniFi Security Camera Junction Box Black',
+   'UniFi',
+   'surveillance',
+   12.00,
+   'Black junction box for UniFi G5 security cameras. For PingPod deployments. 1 per camera.',
+   true),
+
+  -- =========================================================================
+  -- FRONT DESK (3 items)
+  -- =========================================================================
+  ('FD-CC-TERMINAL',
+   'BBPOS WisePOS E Credit Card Terminal',
+   'Stripe',
+   'front_desk',
+   249.00,
+   'Stripe-integrated credit card terminal. Admin PIN: 07139. Ordered separately via CC Form workflow (not standard BOM). 1 per venue when has_front_desk = true.',
+   true),
+
+  ('FD-QR-SCANNER',
+   '2D QR Code Barcode Scanner',
+   'Amazon',
+   'front_desk',
+   40.00,
+   'USB QR code scanner for member check-in at front desk. 1 per venue when has_front_desk = true.',
+   true),
+
+  ('FD-WEBCAM',
+   'Anker PowerConf C200 2K Webcam',
+   'Amazon',
+   'front_desk',
+   46.00,
+   '2K USB webcam for front desk check-in photo capture. 1 per venue when has_front_desk = true.',
+   true),
+
+  -- =========================================================================
+  -- PINGPOD SPECIFIC (1 item)
+  -- =========================================================================
+  ('PP-WIFI-AP',
+   'UniFi U6-Plus WiFi Access Point',
+   'UniFi',
+   'pingpod_specific',
+   99.00,
+   'WiFi AP for PingPod venues requiring wireless connectivity. Not used for standard pickleball clubs. 1 per venue when has_pingpod_wifi = true.',
+   true)
+
+ON CONFLICT (sku) DO NOTHING;
