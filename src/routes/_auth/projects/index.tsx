@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { ProjectList, type Project } from '@/components/dashboard/ProjectList';
+import { MetricsBar } from '@/components/dashboard/MetricsBar';
 import { Input } from '@/components/ui/input';
 import { Select, SelectItem } from '@/components/ui/select';
 import { projectStatusLabels, serviceTierLabels } from '@/lib/enum-labels';
@@ -71,6 +72,8 @@ export function ProjectsPage() {
 
   return (
     <div className="p-6 space-y-4">
+      <MetricsBar projects={projects} />
+
       <div className="flex flex-wrap items-center gap-3">
         <Select
           value={statusFilter}
