@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as AuthProjectsIndexRouteImport } from './routes/_auth/projects/index'
+import { Route as AuthProjectsNewRouteImport } from './routes/_auth/projects/new'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -39,17 +40,24 @@ const AuthProjectsIndexRoute = AuthProjectsIndexRouteImport.update({
   path: '/projects/',
   getParentRoute: () => AuthRoute,
 } as any)
+const AuthProjectsNewRoute = AuthProjectsNewRouteImport.update({
+  id: '/projects/new',
+  path: '/projects/new',
+  getParentRoute: () => AuthRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/projects/new': typeof AuthProjectsNewRoute
   '/projects/': typeof AuthProjectsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/projects/new': typeof AuthProjectsNewRoute
   '/projects': typeof AuthProjectsIndexRoute
 }
 export interface FileRoutesById {
@@ -58,19 +66,21 @@ export interface FileRoutesById {
   '/_auth': typeof AuthRouteWithChildren
   '/login': typeof LoginRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/_auth/projects/new': typeof AuthProjectsNewRoute
   '/_auth/projects/': typeof AuthProjectsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/auth/callback' | '/projects/'
+  fullPaths: '/' | '/login' | '/auth/callback' | '/projects/new' | '/projects/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/auth/callback' | '/projects'
+  to: '/' | '/login' | '/auth/callback' | '/projects/new' | '/projects'
   id:
     | '__root__'
     | '/'
     | '/_auth'
     | '/login'
     | '/auth/callback'
+    | '/_auth/projects/new'
     | '/_auth/projects/'
   fileRoutesById: FileRoutesById
 }
@@ -118,14 +128,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthProjectsIndexRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/projects/new': {
+      id: '/_auth/projects/new'
+      path: '/projects/new'
+      fullPath: '/projects/new'
+      preLoaderRoute: typeof AuthProjectsNewRouteImport
+      parentRoute: typeof AuthRoute
+    }
   }
 }
 
 interface AuthRouteChildren {
+  AuthProjectsNewRoute: typeof AuthProjectsNewRoute
   AuthProjectsIndexRoute: typeof AuthProjectsIndexRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
+  AuthProjectsNewRoute: AuthProjectsNewRoute,
   AuthProjectsIndexRoute: AuthProjectsIndexRoute,
 }
 
