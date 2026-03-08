@@ -7,12 +7,10 @@ import { EMPTY_STATES } from '@/lib/empty-state-configs';
 
 interface InventoryItem {
   id: string;
-  hardware_catalog_id: string;
-  qty_on_hand: number;
-  qty_allocated: number;
-  qty_available: number;
-  reorder_threshold: number;
-  notes: string | null;
+  item_id: string;
+  quantity_on_hand: number;
+  quantity_allocated: number;
+  reorder_point: number;
   hardware_catalog: {
     sku: string;
     name: string;
@@ -37,13 +35,11 @@ function InventoryPage() {
         .select(
           `
           id,
-          hardware_catalog_id,
-          qty_on_hand,
-          qty_allocated,
-          qty_available,
-          reorder_threshold,
-          notes,
-          hardware_catalog (
+          item_id,
+          quantity_on_hand,
+          quantity_allocated,
+          reorder_point,
+          hardware_catalog!item_id (
             sku,
             name,
             vendor,
@@ -52,7 +48,7 @@ function InventoryPage() {
           )
         `,
         )
-        .order('hardware_catalog(name)', { ascending: true });
+        .order('item_id', { ascending: true });
 
       if (err) {
         setError(err.message);
@@ -89,13 +85,11 @@ function InventoryPage() {
               .select(
                 `
                 id,
-                hardware_catalog_id,
-                qty_on_hand,
-                qty_allocated,
-                qty_available,
-                reorder_threshold,
-                notes,
-                hardware_catalog (
+                item_id,
+                quantity_on_hand,
+                quantity_allocated,
+                reorder_point,
+                hardware_catalog!item_id (
                   sku,
                   name,
                   vendor,
@@ -104,7 +98,7 @@ function InventoryPage() {
                 )
               `,
               )
-              .order('hardware_catalog(name)', { ascending: true });
+              .order('item_id', { ascending: true });
             if (err) setError(err.message);
             else setItems(data ?? []);
             setLoading(false);
@@ -146,8 +140,9 @@ function InventoryPage() {
           <tbody>
             {items.map((item) => {
               const cat = item.hardware_catalog;
+              const qtyAvailable = item.quantity_on_hand - item.quantity_allocated;
               const isLowStock =
-                item.reorder_threshold > 0 && item.qty_available <= item.reorder_threshold;
+                item.reorder_point > 0 && qtyAvailable <= item.reorder_point;
               return (
                 <tr key={item.id} className="border-b last:border-0 hover:bg-muted/30">
                   <td className="px-4 py-3">
@@ -165,17 +160,17 @@ function InventoryPage() {
                       </span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-center">{item.qty_on_hand}</td>
+                  <td className="px-4 py-3 text-center">{item.quantity_on_hand}</td>
                   <td className="px-4 py-3 text-center">
-                    {item.qty_allocated === 0 ? '—' : item.qty_allocated}
+                    {item.quantity_allocated === 0 ? '—' : item.quantity_allocated}
                   </td>
                   <td
                     className={`px-4 py-3 text-center font-medium ${isLowStock ? 'text-destructive font-bold' : ''}`}
                   >
-                    {item.qty_available}
+                    {qtyAvailable}
                   </td>
                   <td className="px-4 py-3 text-center text-muted-foreground">
-                    {item.reorder_threshold === 0 ? '—' : item.reorder_threshold}
+                    {item.reorder_point === 0 ? '—' : item.reorder_point}
                   </td>
                 </tr>
               );
