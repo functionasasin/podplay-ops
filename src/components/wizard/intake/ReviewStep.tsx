@@ -17,6 +17,7 @@ interface ReviewStepProps {
   installerName?: string;
   onEdit: (step: number) => void;
   onSubmit: () => void;
+  isSubmitting?: boolean;
 }
 
 interface SectionHeaderProps {
@@ -75,6 +76,7 @@ export function ReviewStep({
   installerName,
   onEdit,
   onSubmit,
+  isSubmitting = false,
 }: ReviewStepProps) {
   return (
     <div className="space-y-6">
@@ -147,8 +149,8 @@ export function ReviewStep({
 
       {/* Submit */}
       <div className="pt-2">
-        <Button type="button" onClick={onSubmit}>
-          Submit
+        <Button type="button" onClick={onSubmit} disabled={isSubmitting}>
+          {isSubmitting ? 'Submitting…' : 'Create Project'}
         </Button>
       </div>
     </div>
