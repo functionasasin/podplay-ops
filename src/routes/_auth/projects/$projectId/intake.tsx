@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { WizardStepper } from '@/components/wizard/WizardStepper';
 import { CustomerInfoStep, type CustomerInfoValues } from '@/components/wizard/intake/CustomerInfoStep';
 import { VenueConfigStep, type VenueConfigValues } from '@/components/wizard/intake/VenueConfigStep';
+import { TierSelectionStep, type TierSelectionValues } from '@/components/wizard/intake/TierSelectionStep';
 
 const INTAKE_STEPS = [
   'Customer Info',
@@ -19,6 +20,7 @@ function IntakePage() {
   const [wizardData, setWizardData] = useState<{
     customerInfo?: CustomerInfoValues;
     venueConfig?: VenueConfigValues;
+    tierSelection?: TierSelectionValues;
   }>({});
   const { projectId } = Route.useParams();
 
@@ -30,6 +32,11 @@ function IntakePage() {
   function handleVenueConfigNext(data: VenueConfigValues) {
     setWizardData((prev) => ({ ...prev, venueConfig: data }));
     setCurrentStep(2);
+  }
+
+  function handleTierSelectionNext(data: TierSelectionValues) {
+    setWizardData((prev) => ({ ...prev, tierSelection: data }));
+    setCurrentStep(3);
   }
 
   return (
@@ -63,7 +70,13 @@ function IntakePage() {
             onNext={handleVenueConfigNext}
           />
         )}
-        {currentStep > 1 && (
+        {currentStep === 2 && (
+          <TierSelectionStep
+            defaultValues={wizardData.tierSelection}
+            onNext={handleTierSelectionNext}
+          />
+        )}
+        {currentStep > 2 && (
           <p className="text-sm text-muted-foreground">
             This step will be implemented in a future stage.
           </p>
