@@ -172,7 +172,7 @@ export function DepositInvoice({ projectId, depositAmount }: DepositInvoiceProps
                 min={0.01}
                 step={0.01}
                 placeholder="0.00"
-                className="pl-7"
+                className="pl-7 h-11"
                 {...register('amount', {
                   setValueAs: (v: string) =>
                     v === '' ? NaN : parseFloat(parseFloat(v).toFixed(2)),
@@ -188,7 +188,7 @@ export function DepositInvoice({ projectId, depositAmount }: DepositInvoiceProps
             <label htmlFor="invoice_date" className="text-sm font-medium">
               Invoice Date
             </label>
-            <Input id="invoice_date" type="date" {...register('invoice_date')} />
+            <Input id="invoice_date" type="date" className="h-11" {...register('invoice_date')} />
             {errors.invoice_date && (
               <p className="text-sm text-destructive">{errors.invoice_date.message}</p>
             )}
@@ -200,7 +200,7 @@ export function DepositInvoice({ projectId, depositAmount }: DepositInvoiceProps
             </label>
             <select
               id="payment_method"
-              className="w-full border border-input bg-background px-3 py-2 text-sm rounded-md"
+              className="w-full h-11 border border-input bg-background px-3 py-2 text-sm rounded-md"
               {...register('payment_method')}
             >
               <option value="">Select payment method</option>

@@ -69,7 +69,7 @@ export function TravelSettings({ settings }: Props) {
               type="number"
               step="0.01"
               min="0"
-              className="w-full rounded-md border border-input bg-background pl-6 pr-3 py-2 text-sm"
+              className="w-full h-11 rounded-md border border-input bg-background pl-6 pr-3 py-2 text-sm"
               {...register('lodging_per_day', { valueAsNumber: true })}
             />
           </div>
@@ -86,7 +86,7 @@ export function TravelSettings({ settings }: Props) {
               type="number"
               step="0.01"
               min="0"
-              className="w-full rounded-md border border-input bg-background pl-6 pr-3 py-2 text-sm"
+              className="w-full h-11 rounded-md border border-input bg-background pl-6 pr-3 py-2 text-sm"
               {...register('airfare_default', { valueAsNumber: true })}
             />
           </div>
@@ -102,7 +102,7 @@ export function TravelSettings({ settings }: Props) {
             step="1"
             min="1"
             max="24"
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className="w-full h-11 rounded-md border border-input bg-background px-3 py-2 text-sm"
             {...register('hours_per_day', { valueAsNumber: true })}
           />
           {errors.hours_per_day && (

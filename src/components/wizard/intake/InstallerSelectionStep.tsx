@@ -46,7 +46,7 @@ export function InstallerSelectionStep({ defaultValues, onNext }: InstallerSelec
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4 p-4">
       <div className="space-y-1">
         <label htmlFor="installer_id" className="text-sm font-medium">
           Installer
@@ -62,7 +62,7 @@ export function InstallerSelectionStep({ defaultValues, onNext }: InstallerSelec
             id="installer_id"
             value={selectedId}
             onChange={(e) => setSelectedId(e.target.value)}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+            className="w-full h-11 rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
           >
             <option value="">Select an installer…</option>
             {installers.map((installer) => (

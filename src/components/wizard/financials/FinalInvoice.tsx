@@ -154,7 +154,7 @@ export function FinalInvoice({
       {/* Balance summary */}
       {balance !== undefined && (
         <div className="border rounded-lg p-4 bg-muted/30">
-          <div className="grid grid-cols-3 gap-4 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
             <div>
               <p className="text-muted-foreground">Total Price</p>
               <p className="font-medium">${(totalPrice ?? 0).toFixed(2)}</p>
@@ -220,7 +220,7 @@ export function FinalInvoice({
                 min={0.01}
                 step={0.01}
                 placeholder="0.00"
-                className="pl-7"
+                className="pl-7 h-11"
                 disabled={!isGoLive}
                 {...register('amount', {
                   setValueAs: (v: string) =>
@@ -240,6 +240,7 @@ export function FinalInvoice({
             <Input
               id="final-invoice_date"
               type="date"
+              className="h-11"
               disabled={!isGoLive}
               {...register('invoice_date')}
             />
@@ -255,7 +256,7 @@ export function FinalInvoice({
             <select
               id="final-payment_method"
               disabled={!isGoLive}
-              className="w-full border border-input bg-background px-3 py-2 text-sm rounded-md"
+              className="w-full h-11 border border-input bg-background px-3 py-2 text-sm rounded-md"
               {...register('payment_method')}
             >
               <option value="">Select payment method</option>

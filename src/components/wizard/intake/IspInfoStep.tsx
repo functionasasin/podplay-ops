@@ -93,7 +93,7 @@ export function IspInfoStep({ defaultValues, courtCount, onNext }: IspInfoStepPr
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4 p-4">
       {isStarlink && (
         <div className="rounded-md border border-destructive bg-destructive/10 p-4">
           <p className="text-sm font-medium text-destructive">
@@ -109,6 +109,7 @@ export function IspInfoStep({ defaultValues, courtCount, onNext }: IspInfoStepPr
         <Input
           id="isp_provider"
           placeholder="e.g. Verizon Fios, Spectrum, AT&T Fiber"
+          className="h-11"
           {...register('isp_provider')}
         />
         {errors.isp_provider && (
@@ -138,6 +139,7 @@ export function IspInfoStep({ defaultValues, courtCount, onNext }: IspInfoStepPr
           type="number"
           min={0}
           placeholder="e.g. 100"
+          className="h-11"
           {...register('upload_speed_mbps', {
             setValueAs: (v: string) => (v === '' ? null : parseFloat(v)),
           })}
@@ -158,6 +160,7 @@ export function IspInfoStep({ defaultValues, courtCount, onNext }: IspInfoStepPr
           type="number"
           min={0}
           placeholder="e.g. 200"
+          className="h-11"
           {...register('download_speed_mbps', {
             setValueAs: (v: string) => (v === '' ? null : parseFloat(v)),
           })}

@@ -54,12 +54,12 @@ export function FinancialSetupStep({ defaultValues, onNext }: FinancialSetupStep
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4 p-4">
       <div className="space-y-1">
         <label htmlFor="target_go_live_date" className="text-sm font-medium">
           Target Go-Live Date
         </label>
-        <Input id="target_go_live_date" type="date" {...register('target_go_live_date')} />
+        <Input id="target_go_live_date" type="date" className="h-11" {...register('target_go_live_date')} />
         {errors.target_go_live_date && (
           <p className="text-sm text-destructive">{errors.target_go_live_date.message}</p>
         )}
@@ -79,7 +79,7 @@ export function FinancialSetupStep({ defaultValues, onNext }: FinancialSetupStep
             min={0.01}
             step={0.01}
             placeholder="0.00"
-            className="pl-7"
+            className="pl-7 h-11"
             {...register('deposit_amount', {
               setValueAs: (v: string) => (v === '' ? NaN : parseFloat(parseFloat(v).toFixed(2))),
             })}

@@ -43,7 +43,7 @@ export function CustomerInfoStep({ defaultValues, onNext }: CustomerInfoStepProp
   });
 
   return (
-    <form onSubmit={handleSubmit(onNext)} noValidate className="space-y-4">
+    <form onSubmit={handleSubmit(onNext)} noValidate className="space-y-4 p-4">
       <div className="space-y-1">
         <label htmlFor="customer_name" className="text-sm font-medium">
           Customer Name
@@ -51,6 +51,7 @@ export function CustomerInfoStep({ defaultValues, onNext }: CustomerInfoStepProp
         <Input
           id="customer_name"
           placeholder="Enter customer name"
+          className="h-11"
           {...register('customer_name')}
         />
         {errors.customer_name && (
@@ -66,6 +67,7 @@ export function CustomerInfoStep({ defaultValues, onNext }: CustomerInfoStepProp
           id="contact_email"
           type="email"
           placeholder="Enter contact email"
+          className="h-11"
           {...register('contact_email')}
         />
         {errors.contact_email && (
@@ -81,6 +83,7 @@ export function CustomerInfoStep({ defaultValues, onNext }: CustomerInfoStepProp
           id="contact_phone"
           type="tel"
           placeholder="Enter contact phone"
+          className="h-11"
           {...register('contact_phone')}
         />
         {errors.contact_phone && (

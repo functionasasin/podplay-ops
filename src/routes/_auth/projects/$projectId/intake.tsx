@@ -134,7 +134,7 @@ function IntakePage() {
         />
       </div>
 
-      <div className="border rounded-lg p-6 min-h-64">
+      <div className="border rounded-lg p-4 sm:p-6 min-h-64">
         <h2 className="text-base font-medium mb-4">
           Step {currentStep + 1}: {INTAKE_STEPS[currentStep]}
         </h2>

@@ -143,7 +143,7 @@ export function PricingSettings({ settings }: Props) {
       <section className="rounded-lg border border-border p-4 space-y-4">
         <h2 className="text-base font-semibold">Service Tier Fees</h2>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FieldGroup label="Pro — Venue Fee">
             <CurrencyInput name="pro_venue_fee" register={register} error={errors.pro_venue_fee?.message} />
           </FieldGroup>
@@ -188,7 +188,7 @@ export function PricingSettings({ settings }: Props) {
       {/* Section 2: Cost Chain Rates */}
       <section className="rounded-lg border border-border p-4 space-y-4">
         <h2 className="text-base font-semibold">Cost Chain Rates</h2>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FieldGroup label="Shipping Rate" helpText="Applied to BOM cost → landed cost.">
             <PercentInput name="shipping_rate" control={control} error={errors.shipping_rate?.message} />
           </FieldGroup>
@@ -207,7 +207,7 @@ export function PricingSettings({ settings }: Props) {
       {/* Section 3: Labor & Invoicing */}
       <section className="rounded-lg border border-border p-4 space-y-4">
         <h2 className="text-base font-semibold">Labor &amp; Invoicing</h2>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FieldGroup label="Labor Rate (per hour)">
             <CurrencyInput name="labor_rate_per_hour" register={register} error={errors.labor_rate_per_hour?.message} />
           </FieldGroup>
@@ -217,7 +217,7 @@ export function PricingSettings({ settings }: Props) {
               step="1"
               min="1"
               max="24"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="w-full h-11 rounded-md border border-input bg-background px-3 py-2 text-sm"
               {...register('hours_per_day', { valueAsNumber: true })}
             />
             {errors.hours_per_day && <p className="text-xs text-destructive mt-1">{errors.hours_per_day.message}</p>}
@@ -232,13 +232,13 @@ export function PricingSettings({ settings }: Props) {
             BOM Sizing Thresholds <span className="text-xs text-muted-foreground font-normal ml-1">(Advanced)</span>
           </summary>
           <div className="mt-4 space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FieldGroup label="Switch 24-port: max courts" helpText="Use USW-Pro-24-POE for court_count ≤ this">
                 <input
                   type="number"
                   step="1"
                   min="1"
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  className="w-full h-11 rounded-md border border-input bg-background px-3 py-2 text-sm"
                   {...register('switch_24_max_courts', { valueAsNumber: true })}
                 />
                 {errors.switch_24_max_courts && <p className="text-xs text-destructive mt-1">{errors.switch_24_max_courts.message}</p>}
@@ -248,7 +248,7 @@ export function PricingSettings({ settings }: Props) {
                   type="number"
                   step="1"
                   min="1"
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  className="w-full h-11 rounded-md border border-input bg-background px-3 py-2 text-sm"
                   {...register('switch_48_max_courts', { valueAsNumber: true })}
                 />
                 {errors.switch_48_max_courts && <p className="text-xs text-destructive mt-1">{errors.switch_48_max_courts.message}</p>}
@@ -259,7 +259,7 @@ export function PricingSettings({ settings }: Props) {
                   type="number"
                   step="1"
                   min="1"
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  className="w-full h-11 rounded-md border border-input bg-background px-3 py-2 text-sm"
                   {...register('ssd_1tb_max_courts', { valueAsNumber: true })}
                 />
                 {errors.ssd_1tb_max_courts && <p className="text-xs text-destructive mt-1">{errors.ssd_1tb_max_courts.message}</p>}
@@ -269,7 +269,7 @@ export function PricingSettings({ settings }: Props) {
                   type="number"
                   step="1"
                   min="1"
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  className="w-full h-11 rounded-md border border-input bg-background px-3 py-2 text-sm"
                   {...register('ssd_2tb_max_courts', { valueAsNumber: true })}
                 />
                 {errors.ssd_2tb_max_courts && <p className="text-xs text-destructive mt-1">{errors.ssd_2tb_max_courts.message}</p>}
@@ -280,20 +280,20 @@ export function PricingSettings({ settings }: Props) {
                   type="number"
                   step="1"
                   min="1"
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  className="w-full h-11 rounded-md border border-input bg-background px-3 py-2 text-sm"
                   {...register('nvr_4bay_max_cameras', { valueAsNumber: true })}
                 />
                 {errors.nvr_4bay_max_cameras && <p className="text-xs text-destructive mt-1">{errors.nvr_4bay_max_cameras.message}</p>}
               </FieldGroup>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-border">
               <FieldGroup label="ISP fiber Mbps per court">
                 <input
                   type="number"
                   step="1"
                   min="1"
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  className="w-full h-11 rounded-md border border-input bg-background px-3 py-2 text-sm"
                   {...register('isp_fiber_mbps_per_court', { valueAsNumber: true })}
                 />
                 {errors.isp_fiber_mbps_per_court && <p className="text-xs text-destructive mt-1">{errors.isp_fiber_mbps_per_court.message}</p>}
@@ -303,7 +303,7 @@ export function PricingSettings({ settings }: Props) {
                   type="number"
                   step="1"
                   min="1"
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  className="w-full h-11 rounded-md border border-input bg-background px-3 py-2 text-sm"
                   {...register('isp_cable_upload_min_mbps', { valueAsNumber: true })}
                 />
                 {errors.isp_cable_upload_min_mbps && <p className="text-xs text-destructive mt-1">{errors.isp_cable_upload_min_mbps.message}</p>}
@@ -316,10 +316,10 @@ export function PricingSettings({ settings }: Props) {
       {/* Section 5: Operational Defaults */}
       <section className="rounded-lg border border-border p-4 space-y-4">
         <h2 className="text-base font-semibold">Operational Defaults</h2>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FieldGroup label="Replay Service Version">
             <select
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="w-full h-11 rounded-md border border-input bg-background px-3 py-2 text-sm"
               {...register('default_replay_service_version')}
             >
               <option value="v1">v1</option>
@@ -333,7 +333,7 @@ export function PricingSettings({ settings }: Props) {
           <FieldGroup label="PO Number Prefix">
             <input
               type="text"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="w-full h-11 rounded-md border border-input bg-background px-3 py-2 text-sm"
               {...register('po_number_prefix')}
             />
             {errors.po_number_prefix && <p className="text-xs text-destructive mt-1">{errors.po_number_prefix.message}</p>}
@@ -342,7 +342,7 @@ export function PricingSettings({ settings }: Props) {
           <FieldGroup label="CC Terminal PIN">
             <input
               type="text"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="w-full h-11 rounded-md border border-input bg-background px-3 py-2 text-sm"
               {...register('cc_terminal_pin')}
             />
             {errors.cc_terminal_pin && <p className="text-xs text-destructive mt-1">{errors.cc_terminal_pin.message}</p>}
@@ -351,7 +351,7 @@ export function PricingSettings({ settings }: Props) {
           <FieldGroup label="Mac Mini Local IP">
             <input
               type="text"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="w-full h-11 rounded-md border border-input bg-background px-3 py-2 text-sm"
               {...register('mac_mini_local_ip')}
             />
             {errors.mac_mini_local_ip && <p className="text-xs text-destructive mt-1">{errors.mac_mini_local_ip.message}</p>}
@@ -363,7 +363,7 @@ export function PricingSettings({ settings }: Props) {
               step="1"
               min="1"
               max="65535"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="w-full h-11 rounded-md border border-input bg-background px-3 py-2 text-sm"
               {...register('replay_port', { valueAsNumber: true })}
             />
             {errors.replay_port && <p className="text-xs text-destructive mt-1">{errors.replay_port.message}</p>}
@@ -372,7 +372,7 @@ export function PricingSettings({ settings }: Props) {
           <FieldGroup label="DDNS Domain">
             <input
               type="text"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="w-full h-11 rounded-md border border-input bg-background px-3 py-2 text-sm"
               {...register('ddns_domain')}
             />
             {errors.ddns_domain && <p className="text-xs text-destructive mt-1">{errors.ddns_domain.message}</p>}
@@ -383,7 +383,7 @@ export function PricingSettings({ settings }: Props) {
               type="number"
               step="1"
               min="1"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="w-full h-11 rounded-md border border-input bg-background px-3 py-2 text-sm"
               {...register('label_sets_per_court', { valueAsNumber: true })}
             />
             {errors.label_sets_per_court && <p className="text-xs text-destructive mt-1">{errors.label_sets_per_court.message}</p>}
@@ -394,21 +394,21 @@ export function PricingSettings({ settings }: Props) {
               type="number"
               step="1"
               min="1"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="w-full h-11 rounded-md border border-input bg-background px-3 py-2 text-sm"
               {...register('replay_sign_multiplier', { valueAsNumber: true })}
             />
             {errors.replay_sign_multiplier && <p className="text-xs text-destructive mt-1">{errors.replay_sign_multiplier.message}</p>}
           </FieldGroup>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-border">
           <FieldGroup label="Default VLAN ID">
             <input
               type="number"
               step="1"
               min="1"
               max="4094"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="w-full h-11 rounded-md border border-input bg-background px-3 py-2 text-sm"
               {...register('default_vlan_id', { valueAsNumber: true })}
             />
             {errors.default_vlan_id && <p className="text-xs text-destructive mt-1">{errors.default_vlan_id.message}</p>}
@@ -419,7 +419,7 @@ export function PricingSettings({ settings }: Props) {
               step="1"
               min="1"
               max="4094"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="w-full h-11 rounded-md border border-input bg-background px-3 py-2 text-sm"
               {...register('replay_vlan_id', { valueAsNumber: true })}
             />
             {errors.replay_vlan_id && <p className="text-xs text-destructive mt-1">{errors.replay_vlan_id.message}</p>}
@@ -430,7 +430,7 @@ export function PricingSettings({ settings }: Props) {
               step="1"
               min="1"
               max="4094"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="w-full h-11 rounded-md border border-input bg-background px-3 py-2 text-sm"
               {...register('surveillance_vlan_id', { valueAsNumber: true })}
             />
             {errors.surveillance_vlan_id && <p className="text-xs text-destructive mt-1">{errors.surveillance_vlan_id.message}</p>}
@@ -441,7 +441,7 @@ export function PricingSettings({ settings }: Props) {
               step="1"
               min="1"
               max="4094"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="w-full h-11 rounded-md border border-input bg-background px-3 py-2 text-sm"
               {...register('access_control_vlan_id', { valueAsNumber: true })}
             />
             {errors.access_control_vlan_id && <p className="text-xs text-destructive mt-1">{errors.access_control_vlan_id.message}</p>}
@@ -501,7 +501,7 @@ function CurrencyInput({
           type="number"
           step="0.01"
           min="0"
-          className="w-full rounded-md border border-input bg-background pl-6 pr-3 py-2 text-sm"
+          className="w-full h-11 rounded-md border border-input bg-background pl-6 pr-3 py-2 text-sm"
           {...(register as (name: string, opts?: object) => object)(name, { valueAsNumber: true })}
         />
       </div>
@@ -531,7 +531,7 @@ function PercentInput({
               step="0.01"
               min="0"
               max="100"
-              className="w-full rounded-md border border-input bg-background px-3 pr-8 py-2 text-sm"
+              className="w-full h-11 rounded-md border border-input bg-background px-3 pr-8 py-2 text-sm"
               value={typeof field.value === 'number' ? field.value * 100 : ''}
               onChange={(e) => field.onChange(parseFloat(e.target.value) / 100)}
             />

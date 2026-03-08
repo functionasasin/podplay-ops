@@ -95,7 +95,7 @@ function OpexSection({ settings }: { settings: Settings }) {
         These values feed into the Hardware Efficiency Ratio calculation.
       </p>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Annual Rent */}
           <div>
             <label className="block text-sm font-medium mb-1">Annual Rent</label>
@@ -104,7 +104,7 @@ function OpexSection({ settings }: { settings: Settings }) {
               type="number"
               min="0"
               step="0.01"
-              className="w-full border border-border rounded px-3 py-2 text-sm"
+              className="w-full h-11 border border-border rounded px-3 py-2 text-sm"
             />
             {errors.rent_per_year && (
               <p className="text-destructive text-xs mt-1">{errors.rent_per_year.message}</p>
@@ -124,7 +124,7 @@ function OpexSection({ settings }: { settings: Settings }) {
               type="number"
               min="0"
               step="0.01"
-              className="w-full border border-border rounded px-3 py-2 text-sm"
+              className="w-full h-11 border border-border rounded px-3 py-2 text-sm"
             />
             {errors.indirect_salaries_per_year && (
               <p className="text-destructive text-xs mt-1">
@@ -258,7 +258,7 @@ function ContactSheet({ contact, onClose, onSaved }: ContactSheetProps) {
             </label>
             <input
               {...register('slug')}
-              className="w-full border border-border rounded px-3 py-2 text-sm font-mono"
+              className="w-full h-11 border border-border rounded px-3 py-2 text-sm font-mono"
               placeholder="andy"
             />
             {errors.slug && (
@@ -273,7 +273,7 @@ function ContactSheet({ contact, onClose, onSaved }: ContactSheetProps) {
             </label>
             <input
               {...register('name')}
-              className="w-full border border-border rounded px-3 py-2 text-sm"
+              className="w-full h-11 border border-border rounded px-3 py-2 text-sm"
             />
             {errors.name && (
               <p className="text-destructive text-xs mt-1">{errors.name.message}</p>
@@ -287,7 +287,7 @@ function ContactSheet({ contact, onClose, onSaved }: ContactSheetProps) {
             </label>
             <input
               {...register('role')}
-              className="w-full border border-border rounded px-3 py-2 text-sm"
+              className="w-full h-11 border border-border rounded px-3 py-2 text-sm"
             />
             {errors.role && (
               <p className="text-destructive text-xs mt-1">{errors.role.message}</p>
@@ -301,7 +301,7 @@ function ContactSheet({ contact, onClose, onSaved }: ContactSheetProps) {
             </label>
             <select
               {...register('department')}
-              className="w-full border border-border rounded px-3 py-2 text-sm bg-background"
+              className="w-full h-11 border border-border rounded px-3 py-2 text-sm bg-background"
             >
               {DEPARTMENTS.map((d) => (
                 <option key={d.value} value={d.value}>
@@ -319,7 +319,7 @@ function ContactSheet({ contact, onClose, onSaved }: ContactSheetProps) {
             <label className="block text-sm font-medium mb-1">Phone</label>
             <input
               {...register('phone')}
-              className="w-full border border-border rounded px-3 py-2 text-sm"
+              className="w-full h-11 border border-border rounded px-3 py-2 text-sm"
               placeholder="917-555-1234"
             />
           </div>
@@ -330,7 +330,7 @@ function ContactSheet({ contact, onClose, onSaved }: ContactSheetProps) {
             <input
               {...register('email')}
               type="email"
-              className="w-full border border-border rounded px-3 py-2 text-sm"
+              className="w-full h-11 border border-border rounded px-3 py-2 text-sm"
             />
             {errors.email && (
               <p className="text-destructive text-xs mt-1">{errors.email.message}</p>
@@ -342,7 +342,7 @@ function ContactSheet({ contact, onClose, onSaved }: ContactSheetProps) {
             <label className="block text-sm font-medium mb-1">Contact Via</label>
             <input
               {...register('contact_via')}
-              className="w-full border border-border rounded px-3 py-2 text-sm"
+              className="w-full h-11 border border-border rounded px-3 py-2 text-sm"
               placeholder="Via Chad, Slack #installs"
             />
           </div>
@@ -354,7 +354,7 @@ function ContactSheet({ contact, onClose, onSaved }: ContactSheetProps) {
               {...register('support_tier', {
                 setValueAs: (v) => (v === '' || v === 'null' ? null : Number(v)),
               })}
-              className="w-full border border-border rounded px-3 py-2 text-sm bg-background"
+              className="w-full h-11 border border-border rounded px-3 py-2 text-sm bg-background"
             >
               <option value="null">None</option>
               <option value="1">Tier 1</option>
@@ -369,7 +369,7 @@ function ContactSheet({ contact, onClose, onSaved }: ContactSheetProps) {
             <textarea
               {...register('notes')}
               rows={4}
-              className="w-full border border-border rounded px-3 py-2 text-sm"
+              className="w-full h-11 border border-border rounded px-3 py-2 text-sm"
             />
           </div>
         </form>

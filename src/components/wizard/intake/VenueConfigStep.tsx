@@ -54,7 +54,7 @@ export function VenueConfigStep({ defaultValues, onNext }: VenueConfigStepProps)
   });
 
   return (
-    <form onSubmit={handleSubmit(onNext)} noValidate className="space-y-4">
+    <form onSubmit={handleSubmit(onNext)} noValidate className="space-y-4 p-4">
       <div className="space-y-1">
         <label htmlFor="venue_address" className="text-sm font-medium">
           Venue Address
@@ -62,6 +62,7 @@ export function VenueConfigStep({ defaultValues, onNext }: VenueConfigStepProps)
         <Input
           id="venue_address"
           placeholder="Enter venue address"
+          className="h-11"
           {...register('venue_address')}
         />
         {errors.venue_address && (
@@ -78,6 +79,7 @@ export function VenueConfigStep({ defaultValues, onNext }: VenueConfigStepProps)
           type="number"
           min={1}
           max={50}
+          className="h-11"
           {...register('court_count', { valueAsNumber: true })}
         />
         {errors.court_count && (
@@ -93,6 +95,7 @@ export function VenueConfigStep({ defaultValues, onNext }: VenueConfigStepProps)
           id="door_count"
           type="number"
           min={0}
+          className="h-11"
           {...register('door_count', { valueAsNumber: true })}
         />
         {errors.door_count && (
@@ -108,6 +111,7 @@ export function VenueConfigStep({ defaultValues, onNext }: VenueConfigStepProps)
           id="camera_count"
           type="number"
           min={0}
+          className="h-11"
           {...register('camera_count', { valueAsNumber: true })}
         />
         {errors.camera_count && (

@@ -110,7 +110,7 @@ export function NewProjectPage() {
   }
 
   return (
-    <div className="p-6 max-w-lg">
+    <div className="p-4 sm:p-6 max-w-lg">
       <h1 className="text-xl font-semibold mb-6">New Project</h1>
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
@@ -121,6 +121,7 @@ export function NewProjectPage() {
           <Input
             id="project_name"
             placeholder="Enter project name"
+            className="h-11"
             {...register('project_name')}
           />
           {errors.project_name && (
@@ -135,6 +136,7 @@ export function NewProjectPage() {
           <Input
             id="customer_name"
             placeholder="Enter customer name"
+            className="h-11"
             {...register('customer_name')}
           />
           {errors.customer_name && (
@@ -149,6 +151,7 @@ export function NewProjectPage() {
           <Input
             id="venue_name"
             placeholder="Enter venue name"
+            className="h-11"
             {...register('venue_name')}
           />
         </div>
