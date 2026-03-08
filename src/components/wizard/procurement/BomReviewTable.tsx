@@ -9,17 +9,15 @@ interface CatalogItem {
   sku: string;
   name: string;
   vendor: string;
-  vendor_url: string | null;
   unit_cost: number | null;
 }
 
 interface RowState {
   id: string;
-  hardware_catalog_id: string;
+  catalog_item_id: string;
   sku: string;
   name: string;
   vendor: string;
-  vendor_url: string | null;
   qty: number;
   unit_cost: number | null;
 }
@@ -39,10 +37,10 @@ export function BomReviewTable({ projectId }: BomReviewTableProps) {
       const { data } = await (supabase.from('project_bom_items') as any)
         .select(
           `id,
-           hardware_catalog_id,
-           qty,
-           unit_cost,
-           hardware_catalog!inner(sku, name, vendor, vendor_url)`,
+           catalog_item_id,
+           quantity,
+           unit_cost_override,
+           hardware_catalog!catalog_item_id(sku, name, vendor)`,
         )
         .eq('project_id', projectId)
         .order('created_at');
@@ -53,13 +51,12 @@ export function BomReviewTable({ projectId }: BomReviewTableProps) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           data.map((item: any) => ({
             id: item.id,
-            hardware_catalog_id: item.hardware_catalog_id,
-            qty: item.qty,
-            unit_cost: item.unit_cost,
+            catalog_item_id: item.catalog_item_id,
+            qty: item.quantity,
+            unit_cost: item.unit_cost_override,
             sku: item.hardware_catalog.sku,
             name: item.hardware_catalog.name,
             vendor: item.hardware_catalog.vendor,
-            vendor_url: item.hardware_catalog.vendor_url,
           })),
         );
       }
@@ -69,7 +66,7 @@ export function BomReviewTable({ projectId }: BomReviewTableProps) {
     async function loadCatalog() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data } = await (supabase.from('hardware_catalog') as any)
-        .select('id, sku, name, vendor, vendor_url, unit_cost')
+        .select('id, sku, name, vendor, unit_cost')
         .eq('is_active', true)
         .order('sku');
 
@@ -96,11 +93,10 @@ export function BomReviewTable({ projectId }: BomReviewTableProps) {
         r.id === id
           ? {
               ...r,
-              hardware_catalog_id: item.id,
+              catalog_item_id: item.id,
               sku: item.sku,
               name: item.name,
               vendor: item.vendor,
-              vendor_url: item.vendor_url,
               unit_cost: item.unit_cost,
             }
           : r,
@@ -171,18 +167,7 @@ export function BomReviewTable({ projectId }: BomReviewTableProps) {
               <tr key={row.id} className="border-b hover:bg-muted/30">
                 <td className="py-2 pr-4 font-mono text-xs text-muted-foreground">{row.sku}</td>
                 <td className="py-2 pr-4">
-                  {row.vendor_url ? (
-                    <a
-                      href={row.vendor_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-primary hover:underline"
-                    >
-                      {row.name}
-                    </a>
-                  ) : (
-                    row.name
-                  )}
+                  {row.name}
                 </td>
                 <td className="py-2 pr-4 text-muted-foreground">{row.vendor}</td>
                 <td className="py-2 pr-4">
@@ -222,7 +207,7 @@ export function BomReviewTable({ projectId }: BomReviewTableProps) {
                 </td>
                 <td className="py-2">
                   <select
-                    value={row.hardware_catalog_id}
+                    value={row.catalog_item_id}
                     onChange={(e) => swapSku(row.id, e.target.value)}
                     className="border rounded px-2 py-1 text-sm max-w-48"
                   >
@@ -245,18 +230,7 @@ export function BomReviewTable({ projectId }: BomReviewTableProps) {
         {rowsWithCosts.map((row) => (
           <div key={row.id} className="border rounded-lg p-3 space-y-2 text-sm">
             <div className="font-medium">
-              {row.vendor_url ? (
-                <a
-                  href={row.vendor_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  {row.name}
-                </a>
-              ) : (
-                row.name
-              )}
+              {row.name}
             </div>
             <div className="font-mono text-xs text-muted-foreground">{row.sku}</div>
             <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
@@ -309,7 +283,7 @@ export function BomReviewTable({ projectId }: BomReviewTableProps) {
             <div>
               <span className="text-xs text-muted-foreground">Swap SKU: </span>
               <select
-                value={row.hardware_catalog_id}
+                value={row.catalog_item_id}
                 onChange={(e) => swapSku(row.id, e.target.value)}
                 className="border rounded px-2 py-1 text-xs w-full mt-1"
               >
