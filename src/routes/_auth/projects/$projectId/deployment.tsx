@@ -2,6 +2,8 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { SmartChecklist, type ChecklistItem, type ProjectTokenFields } from '@/components/wizard/deployment/SmartChecklist';
+import { VlanReferencePanel } from '@/components/wizard/deployment/VlanReferencePanel';
+import { IspConfigMethodPanel } from '@/components/wizard/deployment/IspConfigMethodPanel';
 
 // Phase display ordering per spec: 0-11, then 15, then 12-14
 const PHASE_DISPLAY_ORDER = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 15, 12, 13, 14];
@@ -32,7 +34,14 @@ function phaseIcon(completed: number, total: number): string {
   return '○';
 }
 
-type ProjectState = ProjectTokenFields & { project_name: string };
+type IspConfigMethod = 'static_ip' | 'dmz' | 'port_forward';
+
+type ProjectState = ProjectTokenFields & {
+  project_name: string;
+  tier: string;
+  venue_country: string;
+  isp_config_method: IspConfigMethod | null;
+};
 
 function DeploymentPage() {
   const { projectId } = Route.useParams();
@@ -46,7 +55,7 @@ function DeploymentPage() {
       const [{ data: proj }, { data: checklist }] = await Promise.all([
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (supabase.from('projects') as any)
-          .select('project_name, customer_name, court_count, ddns_subdomain, unifi_site_name, mac_mini_username, location_id')
+          .select('project_name, customer_name, court_count, ddns_subdomain, unifi_site_name, mac_mini_username, location_id, tier, venue_country, isp_config_method')
           .eq('id', projectId)
           .single(),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -74,6 +83,11 @@ function DeploymentPage() {
   const progressPct = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0;
 
   const selectedItems = byPhase[selectedPhase] ?? [];
+
+  function handleIspMethodChange(method: IspConfigMethod) {
+    if (!project) return;
+    setProject({ ...project, isp_config_method: method });
+  }
 
   async function toggleItem(item: ChecklistItem) {
     const newCompleted = !item.is_completed;
@@ -169,6 +183,21 @@ function DeploymentPage() {
               <h2 className="text-base font-semibold mb-4">
                 Phase {selectedPhase}: {PHASE_NAMES[selectedPhase]}
               </h2>
+
+              {/* Phase 4: VLAN Architecture Reference */}
+              {selectedPhase === 4 && project && (
+                <VlanReferencePanel tier={project.tier} />
+              )}
+
+              {/* Phase 5: ISP Router Configuration Method */}
+              {selectedPhase === 5 && project && (
+                <IspConfigMethodPanel
+                  projectId={projectId}
+                  method={project.isp_config_method}
+                  venueCountry={project.venue_country}
+                  onMethodChange={handleIspMethodChange}
+                />
+              )}
 
               <SmartChecklist
                 items={selectedItems}
