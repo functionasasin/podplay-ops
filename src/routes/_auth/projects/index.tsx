@@ -2,10 +2,10 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { ProjectList } from '@/components/dashboard/ProjectList';
+import { ProjectList, type Project } from '@/components/dashboard/ProjectList';
 
 export function ProjectsPage() {
-  const [projects, setProjects] = useState<unknown[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
