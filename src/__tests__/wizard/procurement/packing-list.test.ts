@@ -9,17 +9,17 @@ const { mockFrom } = vi.hoisted(() => {
   const BOM_ITEMS = [
     {
       id: 'item-1',
-      qty: 2,
+      quantity: 2,
       hardware_catalog: { sku: 'NW-SW-01', name: 'Network Switch 8-port', category: 'network_rack' },
     },
     {
       id: 'item-2',
-      qty: 1,
+      quantity: 1,
       hardware_catalog: { sku: 'NW-FW-01', name: 'Firewall Appliance', category: 'network_rack' },
     },
     {
       id: 'item-3',
-      qty: 4,
+      quantity: 4,
       hardware_catalog: { sku: 'DS-TV-55', name: '55in Display TV', category: 'displays' },
     },
   ];

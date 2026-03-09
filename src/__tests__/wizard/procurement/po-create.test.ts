@@ -8,7 +8,7 @@ const { mockFrom, mockPoInsert, mockPoItemsInsert, mockMovementsInsert } = vi.ho
   // BOM: 2 vendors — "Ingram" (1 item, has shortfall) and "UniFi" (1 item, no shortfall)
   const BOM_ITEMS = [
     {
-      qty: 3,
+      quantity: 3,
       hardware_catalog: {
         id: 'cat-ingram',
         sku: 'SSD-4TB',
@@ -18,7 +18,7 @@ const { mockFrom, mockPoInsert, mockPoItemsInsert, mockMovementsInsert } = vi.ho
       },
     },
     {
-      qty: 2,
+      quantity: 2,
       hardware_catalog: {
         id: 'cat-unifi',
         sku: 'UAP-PRO',

@@ -6,6 +6,7 @@ import { Loader2, MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { cn } from '@/lib/utils';
+import { VALIDATION } from '@/lib/validation-messages';
 import type { Vendor } from '@/services/vendorsService';
 import {
   createVendor,
@@ -16,10 +17,12 @@ import {
 
 // ─── Form schema ──────────────────────────────────────────────────────────────
 
+const VV = VALIDATION.settings.vendor;
+
 const vendorSchema = z.object({
-  name:           z.string().min(1, 'Name is required').max(200, 'Name too long'),
+  name:           z.string().min(1, VV.name.required).max(200, VV.name.max),
   contact_name:   z.string().max(200, 'Contact name too long').optional().nullable(),
-  email:          z.string().email('Invalid email').optional().nullable().or(z.literal('')),
+  email:          z.string().email(VV.email.format).optional().nullable().or(z.literal('')),
   phone:          z.string().max(30, 'Phone too long').optional().nullable(),
   website:        z.string().max(500, 'Website too long').optional().nullable(),
   lead_time_days: z.number().int('Must be a whole number').min(0, 'Must be 0 or more').optional().nullable(),

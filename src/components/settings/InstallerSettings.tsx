@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { cn } from '@/lib/utils';
 import { installerTypeLabels } from '@/lib/enum-labels';
+import { VALIDATION } from '@/lib/validation-messages';
 import type { Installer } from '@/services/installersService';
 import {
   createInstaller,
@@ -17,14 +18,16 @@ import {
 
 // ─── Form schema ──────────────────────────────────────────────────────────────
 
+const VI = VALIDATION.settings.installer;
+
 const installerSchema = z.object({
-  name:           z.string().min(1, 'Name is required').max(200, 'Name too long'),
+  name:           z.string().min(1, VI.name.required).max(200, VI.name.max),
   company:        z.string().max(200, 'Company name too long').optional().nullable(),
-  email:          z.string().email('Invalid email').optional().nullable().or(z.literal('')),
+  email:          z.string().email(VI.email.format).optional().nullable().or(z.literal('')),
   phone:          z.string().max(30, 'Phone too long').optional().nullable(),
   installer_type: z.enum(['podplay_vetted', 'client_own']),
   regions:        z.string().optional().nullable(), // comma-separated; parsed on save
-  hourly_rate:    z.number().min(0, 'Rate must be 0 or more').optional().nullable(),
+  hourly_rate:    z.number().min(0, VI.hourly_rate.min).optional().nullable(),
   notes:          z.string().max(1000, 'Notes too long').optional().nullable(),
 });
 

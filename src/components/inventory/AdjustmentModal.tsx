@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
+import { VALIDATION } from '@/lib/validation-messages';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -49,11 +50,11 @@ export function AdjustmentModal({
     const qty = typeof quantity === 'number' ? quantity : 0;
 
     if (!qty || qty < 1) {
-      setError('Quantity must be at least 1.');
+      setError(VALIDATION.inventory.qty.min);
       return;
     }
     if (!reason.trim()) {
-      setError('Reason is required.');
+      setError(VALIDATION.inventory.reason.required);
       return;
     }
     if (direction === 'decrease' && qty > currentQty) {

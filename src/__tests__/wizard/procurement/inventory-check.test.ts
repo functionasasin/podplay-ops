@@ -7,9 +7,9 @@ import React from 'react';
 // --- Hoist Supabase mock (must define data inside hoisted to avoid TDZ) ---
 const { mockFrom } = vi.hoisted(() => {
   const BOM_ITEMS = [
-    { qty: 4, hardware_catalog: { id: 'cat-1', sku: 'NW-SW-01', name: 'Network Switch 8-port' } },
-    { qty: 2, hardware_catalog: { id: 'cat-2', sku: 'SSD-01', name: 'SSD 1TB' } },
-    { qty: 3, hardware_catalog: { id: 'cat-3', sku: 'CAM-01', name: 'IP Camera' } },
+    { quantity: 4, hardware_catalog: { id: 'cat-1', sku: 'NW-SW-01', name: 'Network Switch 8-port' } },
+    { quantity: 2, hardware_catalog: { id: 'cat-2', sku: 'SSD-01', name: 'SSD 1TB' } },
+    { quantity: 3, hardware_catalog: { id: 'cat-3', sku: 'CAM-01', name: 'IP Camera' } },
   ];
 
   // Inventory: cat-1 has plenty (surplus), cat-2 is low-stock, cat-3 is exact

@@ -78,7 +78,7 @@ describe('AdjustmentModal', () => {
     const form = document.querySelector('form')!;
     fireEvent.submit(form);
     await waitFor(() =>
-      expect(screen.getByText('Quantity must be at least 1.')).toBeInTheDocument(),
+      expect(screen.getByText('Quantity must be at least 1')).toBeInTheDocument(),
     );
   });
 
@@ -89,7 +89,7 @@ describe('AdjustmentModal', () => {
     const form = document.querySelector('form')!;
     fireEvent.submit(form);
     await waitFor(() =>
-      expect(screen.getByText('Reason is required.')).toBeInTheDocument(),
+      expect(screen.getByText('Reason is required')).toBeInTheDocument(),
     );
   });
 

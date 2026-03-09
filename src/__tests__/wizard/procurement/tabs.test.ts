@@ -42,6 +42,7 @@ vi.mock('@tanstack/react-router', () => ({
     ...config,
     useParams: vi.fn(() => ({ projectId: PROJECT_ID })),
   }),
+  useNavigate: vi.fn(() => vi.fn()),
 }));
 
 import { Route } from '@/routes/_auth/projects/$projectId/procurement';

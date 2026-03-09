@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { VALIDATION } from '@/lib/validation-messages';
 
 const FEE_FREQUENCIES = ['monthly', 'quarterly', 'annually'] as const;
 type FeeFrequency = (typeof FEE_FREQUENCIES)[number];
@@ -17,14 +18,16 @@ const frequencyLabel: Record<FeeFrequency, string> = {
   annually: 'Annually',
 };
 
+const VR = VALIDATION.financials.recurring_fee;
+
 const feeFormSchema = z.object({
-  label: z.string().min(1, 'Label is required'),
+  label: z.string().min(1, VR.label.required),
   description: z.string().optional(),
   amount: z
     .number()
-    .min(0, 'Amount must be 0 or more'),
+    .min(0, VR.amount.min),
   frequency: z.enum(FEE_FREQUENCIES),
-  start_date: z.string().min(1, 'Start date is required'),
+  start_date: z.string().min(1, VR.start_date.required),
   end_date: z.string().optional(),
   vendor: z.string().optional(),
   notes: z.string().optional(),

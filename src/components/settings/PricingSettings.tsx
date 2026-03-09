@@ -22,6 +22,8 @@ const pricingFormSchema = z
     autonomous_court_fee: z.number().min(0, VP.fee_min),
     autonomous_plus_venue_fee: z.number().min(0, VP.fee_min),
     autonomous_plus_court_fee: z.number().min(0, VP.fee_min),
+    pbk_venue_fee: z.number().min(0, VP.fee_min),
+    pbk_court_fee: z.number().min(0, VP.fee_min),
     // Cost chain rates (stored as decimals)
     shipping_rate: z.number().min(0, VP.shipping_rate.min).max(1, VP.shipping_rate.max),
     target_margin: z.number().min(0, VP.target_margin.min).max(0.9999, VP.target_margin.max),
@@ -86,6 +88,8 @@ export function PricingSettings({ settings }: Props) {
       autonomous_court_fee: settings.autonomous_court_fee ?? 2500,
       autonomous_plus_venue_fee: settings.autonomous_plus_venue_fee ?? 7500,
       autonomous_plus_court_fee: settings.autonomous_plus_court_fee ?? 2500,
+      pbk_venue_fee: settings.pbk_venue_fee ?? 1000,
+      pbk_court_fee: settings.pbk_court_fee ?? 500,
       shipping_rate: settings.shipping_rate ?? 0.1,
       target_margin: settings.target_margin ?? 0.1,
       sales_tax_rate: settings.sales_tax_rate ?? 0.1025,
@@ -152,6 +156,13 @@ export function PricingSettings({ settings }: Props) {
           </FieldGroup>
           <FieldGroup label="Autonomous+ — Per-Court Fee">
             <CurrencyInput name="autonomous_plus_court_fee" register={register} error={errors.autonomous_plus_court_fee?.message} />
+          </FieldGroup>
+
+          <FieldGroup label="PBK — Venue Fee">
+            <CurrencyInput name="pbk_venue_fee" register={register} error={errors.pbk_venue_fee?.message} />
+          </FieldGroup>
+          <FieldGroup label="PBK — Per-Court Fee">
+            <CurrencyInput name="pbk_court_fee" register={register} error={errors.pbk_court_fee?.message} />
           </FieldGroup>
 
         </div>

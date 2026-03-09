@@ -373,6 +373,12 @@ export const VALIDATION = {
       delete_body: 'Delete this expense? This cannot be undone.',
     },
     go_live_date: { required: 'Go-live date is required' },
+    recurring_fee: {
+      label: { required: 'Label is required' },
+      amount: { min: 'Amount must be 0 or more' },
+      start_date: { required: 'Start date is required' },
+    },
+
     close: {
       guard: 'Both invoices must be paid to close the project',
       checklist: {
@@ -537,6 +543,19 @@ export const VALIDATION = {
         min: 'Must be at least 1 hour',
         max: 'Must be 24 hours or less',
       },
+    },
+
+    // 6.3 Installer Form
+    installer: {
+      name: { required: 'Name is required', max: 'Name too long' },
+      email: { format: 'Invalid email' },
+      hourly_rate: { min: 'Rate must be 0 or more' },
+    },
+
+    // 6.4 Vendor Form
+    vendor: {
+      name: { required: 'Name is required', max: 'Name too long' },
+      email: { format: 'Invalid email' },
     },
 
     // 6.9 Team Contacts
