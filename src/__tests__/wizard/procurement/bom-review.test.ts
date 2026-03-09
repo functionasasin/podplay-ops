@@ -5,6 +5,10 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
 
+beforeAll(() => {
+  window.HTMLElement.prototype.scrollIntoView = vi.fn();
+});
+
 // --- Hoist Supabase mock (must define data inside hoisted to avoid TDZ) ---
 const { mockFrom } = vi.hoisted(() => {
   const CATALOG = [
@@ -144,8 +148,10 @@ test('swapping SKU updates item name, vendor, and unit cost', async () => {
 
   // row-1 currently shows 'Network Switch 8-port' (cat-1)
   // Swap to cat-3 (SSD-01, Samsung, $89.99), qty stays 2 => total = 2 * 89.99 = 179.98
-  const swapSelects = screen.getAllByRole('combobox');
-  fireEvent.change(swapSelects[0], { target: { value: 'cat-3' } });
+  // Open the first SearchableSelect (row-1 in table view) and select the SSD option
+  const swapInputs = screen.getAllByRole('textbox');
+  fireEvent.focus(swapInputs[0]);
+  fireEvent.mouseDown(screen.getByText('SSD-01 — SSD 1TB'));
 
   // row-1 name should now be 'SSD 1TB'
   const ssdItems = screen.getAllByText('SSD 1TB');

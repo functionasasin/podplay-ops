@@ -1,4 +1,4 @@
-// Tests: InstallerSelectionStep — Supabase fetch, dropdown options, loading/empty states,
+// Tests: InstallerSelectionStep — Supabase fetch, SearchableSelect options, loading/empty states,
 // installer_id form state, disabled Next until selected.
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
@@ -25,10 +25,14 @@ vi.mock('@/lib/supabase', () => ({
 
 import { InstallerSelectionStep } from '@/components/wizard/intake/InstallerSelectionStep';
 
+beforeAll(() => {
+  window.HTMLElement.prototype.scrollIntoView = vi.fn();
+});
+
 const INSTALLERS = [
-  { id: 'inst-1', name: 'Alpha Install Co', regions: ['Denver, CO'] },
-  { id: 'inst-2', name: 'Beta Networks', regions: ['Austin, TX'] },
-  { id: 'inst-3', name: 'Gamma Pro AV', regions: null },
+  { id: 'inst-1', name: 'Alpha Install Co', company: 'Alpha Corp', regions: ['Denver, CO'] },
+  { id: 'inst-2', name: 'Beta Networks', company: null, regions: ['Austin, TX'] },
+  { id: 'inst-3', name: 'Gamma Pro AV', company: null, regions: null },
 ];
 
 function resolveLatest(data: unknown[] | null) {
@@ -58,27 +62,31 @@ test('shows loading message while fetching installers', () => {
   resolveLatest([]);
 });
 
-// 2. Dropdown renders all 3 installer names after data loads
+// 2. SearchableSelect renders all 3 installer names after data loads
 test('renders all 3 installer names in the dropdown', async () => {
   renderStep();
   resolveLatest(INSTALLERS);
   await waitFor(() => {
-    expect(screen.getByRole('combobox')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Select an installer/i)).toBeInTheDocument();
   });
+  const input = screen.getByPlaceholderText(/Select an installer/i);
+  fireEvent.focus(input);
   expect(screen.getByRole('option', { name: /Alpha Install Co/ })).toBeInTheDocument();
   expect(screen.getByRole('option', { name: /Beta Networks/ })).toBeInTheDocument();
   expect(screen.getByRole('option', { name: /Gamma Pro AV/ })).toBeInTheDocument();
 });
 
-// 3. Installer names with location include the location in option text
-test('installer with location shows name and location in option', async () => {
+// 3. Installer with company shows company name in option label
+test('installer with company shows name and company in option', async () => {
   renderStep();
   resolveLatest(INSTALLERS);
   await waitFor(() => {
-    expect(screen.getByRole('combobox')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Select an installer/i)).toBeInTheDocument();
   });
-  expect(screen.getByRole('option', { name: 'Alpha Install Co — Denver, CO' })).toBeInTheDocument();
-  expect(screen.getByRole('option', { name: 'Beta Networks — Austin, TX' })).toBeInTheDocument();
+  const input = screen.getByPlaceholderText(/Select an installer/i);
+  fireEvent.focus(input);
+  expect(screen.getByRole('option', { name: 'Alpha Install Co (Alpha Corp)' })).toBeInTheDocument();
+  expect(screen.getByRole('option', { name: 'Beta Networks' })).toBeInTheDocument();
 });
 
 // 4. Selecting an installer stores the correct installer_id and calls onNext
@@ -87,9 +95,11 @@ test('selecting an installer and submitting calls onNext with correct installer_
   renderStep(onNext);
   resolveLatest(INSTALLERS);
   await waitFor(() => {
-    expect(screen.getByRole('combobox')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Select an installer/i)).toBeInTheDocument();
   });
-  fireEvent.change(screen.getByRole('combobox'), { target: { value: 'inst-2' } });
+  const input = screen.getByPlaceholderText(/Select an installer/i);
+  fireEvent.focus(input);
+  fireEvent.mouseDown(screen.getByRole('option', { name: 'Beta Networks' }));
   fireEvent.click(screen.getByRole('button', { name: /continue/i }));
   await waitFor(() => {
     expect(onNext).toHaveBeenCalledWith({ installer_id: 'inst-2' });
@@ -101,7 +111,7 @@ test('Continue button is disabled when no installer selected', async () => {
   renderStep();
   resolveLatest(INSTALLERS);
   await waitFor(() => {
-    expect(screen.getByRole('combobox')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Select an installer/i)).toBeInTheDocument();
   });
   const button = screen.getByRole('button', { name: /continue/i }) as HTMLButtonElement;
   expect(button.disabled).toBe(true);
@@ -112,9 +122,11 @@ test('Continue button is enabled after selecting an installer', async () => {
   renderStep();
   resolveLatest(INSTALLERS);
   await waitFor(() => {
-    expect(screen.getByRole('combobox')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Select an installer/i)).toBeInTheDocument();
   });
-  fireEvent.change(screen.getByRole('combobox'), { target: { value: 'inst-1' } });
+  const input = screen.getByPlaceholderText(/Select an installer/i);
+  fireEvent.focus(input);
+  fireEvent.mouseDown(screen.getByRole('option', { name: 'Alpha Install Co (Alpha Corp)' }));
   const button = screen.getByRole('button', { name: /continue/i }) as HTMLButtonElement;
   expect(button.disabled).toBe(false);
 });
@@ -126,5 +138,5 @@ test('shows "No installers found" when query returns empty array', async () => {
   await waitFor(() => {
     expect(screen.getByText(/No installers found/i)).toBeInTheDocument();
   });
-  expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+  expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
 });
