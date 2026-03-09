@@ -1,9 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { EMPTY_STATES } from '@/lib/empty-state-configs';
+import { AdjustmentModal } from '@/components/inventory/AdjustmentModal';
 
 interface InventoryItem {
   id: string;
@@ -20,46 +21,53 @@ interface InventoryItem {
   } | null;
 }
 
+interface AdjustingItem {
+  id: string;
+  name: string;
+  qty: number;
+}
+
 function InventoryPage() {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [adjustingItem, setAdjustingItem] = useState<AdjustingItem | null>(null);
+
+  const loadInventory = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error: err } = await (supabase as any)
+      .from('inventory')
+      .select(
+        `
+        id,
+        item_id,
+        quantity_on_hand,
+        quantity_allocated,
+        reorder_point,
+        hardware_catalog!item_id (
+          sku,
+          name,
+          vendor,
+          category,
+          is_active
+        )
+      `,
+      )
+      .order('item_id', { ascending: true });
+
+    if (err) {
+      setError(err.message);
+    } else {
+      setItems(data ?? []);
+    }
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
-    async function loadInventory() {
-      setLoading(true);
-      setError(null);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error: err } = await (supabase as any)
-        .from('inventory')
-        .select(
-          `
-          id,
-          item_id,
-          quantity_on_hand,
-          quantity_allocated,
-          reorder_point,
-          hardware_catalog!item_id (
-            sku,
-            name,
-            vendor,
-            category,
-            is_active
-          )
-        `,
-        )
-        .order('item_id', { ascending: true });
-
-      if (err) {
-        setError(err.message);
-      } else {
-        setItems(data ?? []);
-      }
-      setLoading(false);
-    }
-
     void loadInventory();
-  }, []);
+  }, [loadInventory]);
 
   if (loading) {
     return (
@@ -76,33 +84,7 @@ function InventoryPage() {
         <p className="text-muted-foreground text-sm mt-1">{error}</p>
         <button
           className="mt-4 rounded-md border px-4 py-2 text-sm hover:bg-muted transition-colors"
-          onClick={() => void (async () => {
-            setLoading(true);
-            setError(null);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { data, error: err } = await (supabase as any)
-              .from('inventory')
-              .select(
-                `
-                id,
-                item_id,
-                quantity_on_hand,
-                quantity_allocated,
-                reorder_point,
-                hardware_catalog!item_id (
-                  sku,
-                  name,
-                  vendor,
-                  category,
-                  is_active
-                )
-              `,
-              )
-              .order('item_id', { ascending: true });
-            if (err) setError(err.message);
-            else setItems(data ?? []);
-            setLoading(false);
-          })()}
+          onClick={() => void loadInventory()}
         >
           Retry
         </button>
@@ -135,6 +117,7 @@ function InventoryPage() {
               <th className="px-4 py-3 text-center font-medium w-[90px]">Allocated</th>
               <th className="px-4 py-3 text-center font-medium w-[90px]">Available</th>
               <th className="px-4 py-3 text-center font-medium w-[100px]">Reorder At</th>
+              <th className="px-4 py-3 w-[80px]" />
             </tr>
           </thead>
           <tbody>
@@ -172,12 +155,37 @@ function InventoryPage() {
                   <td className="px-4 py-3 text-center text-muted-foreground">
                     {item.reorder_point === 0 ? '—' : item.reorder_point}
                   </td>
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      className="text-xs px-2 py-1 rounded border hover:bg-muted transition-colors"
+                      onClick={() =>
+                        setAdjustingItem({
+                          id: item.item_id,
+                          name: cat?.name ?? '—',
+                          qty: item.quantity_on_hand,
+                        })
+                      }
+                    >
+                      Adjust
+                    </button>
+                  </td>
                 </tr>
               );
             })}
           </tbody>
         </table>
       </div>
+
+      {adjustingItem && (
+        <AdjustmentModal
+          itemId={adjustingItem.id}
+          itemName={adjustingItem.name}
+          currentQty={adjustingItem.qty}
+          isOpen={true}
+          onClose={() => setAdjustingItem(null)}
+          onSuccess={() => void loadInventory()}
+        />
+      )}
     </div>
   );
 }
