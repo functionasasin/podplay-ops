@@ -1,5 +1,4 @@
-// Auto-generated from Supabase schema — will be replaced in a later stage
-// Placeholder to satisfy TypeScript imports in src/lib/supabase.ts
+// Minimal Database type — satisfies TypeScript imports in src/lib/supabase.ts
 
 export type Database = {
   public: {

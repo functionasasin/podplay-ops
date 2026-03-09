@@ -17,7 +17,7 @@ const newProjectSchema = z.object({
 type NewProjectFormValues = z.infer<typeof newProjectSchema>;
 
 // Token map for checklist template substitution at project creation time.
-// Fields not yet collected in this simple form use placeholder values per spec.
+// Fields collected in later intake steps use TBD sentinel values here.
 function buildTokenMap(customerName: string): Record<string, string> {
   return {
     '{{CUSTOMER_NAME}}': customerName,

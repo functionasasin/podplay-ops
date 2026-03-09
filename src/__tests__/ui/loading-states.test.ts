@@ -1,5 +1,5 @@
 // Stage 146 — Tests: Loading States
-// 10 skeleton variants: assert placeholder element counts matching page layout.
+// 10 skeleton variants: assert element counts matching page layout.
 // 5 form-submit loaders: assert spinner appears, button text changes, button disabled,
 // and restores original state after completion.
 
@@ -47,7 +47,7 @@ function renderButtonLoader(
 
 // ── Skeleton Variants ─────────────────────────────────────────────────────────
 
-describe('Skeleton variants — placeholder element counts', () => {
+describe('Skeleton variants — element counts', () => {
   it('1. DashboardSkeleton: 82 skeletons (header 2 + cards 12 + filter 3 + table 1+64)', () => {
     const { container } = render(React.createElement(DashboardSkeleton))
     // header(2) + 4 metric cards×3(12) + filter bar(3) + table header(1) + 8 rows×8(64)

@@ -22,7 +22,7 @@ export function DeploymentWizardSkeleton() {
           <Skeleton className="h-4 w-96" />
         </div>
 
-        {/* Warning banner placeholder */}
+        {/* Warning banner skeleton */}
         <Skeleton className="h-12 w-full rounded" />
 
         {/* Checklist steps: 8 items */}

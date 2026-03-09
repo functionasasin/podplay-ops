@@ -129,7 +129,7 @@ test('add form contains required fields: sku input, name input, category select,
   expect(container.querySelector('select[name="category"]')).toBeInTheDocument();
   expect(container.querySelector('input[name="vendor"]')).toBeInTheDocument();
 
-  // Category select has all 10 category options plus the placeholder
+  // Category select has all 10 category options plus the empty default option
   const categorySelect = container.querySelector('select[name="category"]') as HTMLSelectElement;
   expect(categorySelect.options.length).toBe(11); // "" + 10 categories
 

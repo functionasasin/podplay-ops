@@ -73,18 +73,19 @@ test('renders loading spinner while query is pending', () => {
   resolveLatest({ data: [], error: null });
 });
 
-// 3. After query resolves, project data is rendered
+// 3. After query resolves, project data is rendered (ProjectList renders a table)
 test('renders project rows after query resolves', async () => {
   renderPage();
   const rows = [
-    { id: 'proj-1', name: 'Alpha Site', status: 'active' },
-    { id: 'proj-2', name: 'Beta Site', status: 'planning' },
+    { id: 'proj-1', customer_name: 'Alpha Site', project_status: 'active', tier: 'pro', go_live_date: null },
+    { id: 'proj-2', customer_name: 'Beta Site', project_status: 'planning', tier: 'lite', go_live_date: null },
   ];
   resolveLatest({ data: rows, error: null });
   await waitFor(() => {
     expect(document.querySelector('.animate-spin')).toBeNull();
   });
-  expect(screen.getByText('ProjectList placeholder')).toBeInTheDocument();
+  expect(screen.getByText('Alpha Site')).toBeInTheDocument();
+  expect(screen.getByText('Beta Site')).toBeInTheDocument();
 });
 
 // 4. When query errors, error message is displayed
