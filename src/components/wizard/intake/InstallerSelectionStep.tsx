@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
+import { SearchableSelect } from '@/components/ui/SearchableSelect';
 
 interface Installer {
   id: string;
   name: string;
+  company: string | null;
   regions: string[] | null;
 }
 
@@ -27,7 +29,7 @@ export function InstallerSelectionStep({ defaultValues, onNext }: InstallerSelec
     setLoading(true);
     supabase
       .from('installers')
-      .select('id, name, regions')
+      .select('id, name, company, regions')
       .then(({ data }) => {
         if (!cancelled) {
           setInstallers((data as Installer[]) ?? []);
@@ -58,20 +60,15 @@ export function InstallerSelectionStep({ defaultValues, onNext }: InstallerSelec
         ) : installers.length === 0 ? (
           <p className="text-sm text-muted-foreground">No installers found.</p>
         ) : (
-          <select
-            id="installer_id"
+          <SearchableSelect
+            options={installers.map((installer) => ({
+              value: installer.id,
+              label: `${installer.name}${installer.company ? ` (${installer.company})` : ''}`,
+            }))}
             value={selectedId}
-            onChange={(e) => setSelectedId(e.target.value)}
-            className="w-full h-11 rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-          >
-            <option value="">Select an installer…</option>
-            {installers.map((installer) => (
-              <option key={installer.id} value={installer.id}>
-                {installer.name}
-                {installer.regions?.length ? ` — ${installer.regions.join(', ')}` : ''}
-              </option>
-            ))}
-          </select>
+            onChange={(value) => setSelectedId(value)}
+            placeholder="Select an installer…"
+          />
         )}
       </div>
 
