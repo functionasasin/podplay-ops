@@ -8,14 +8,29 @@ import React from 'react';
 const PROJECT_ID = 'test-project-id';
 
 // --- Hoist mock helpers ---
-const { mockSingle, mockEq, mockSelect, mockFrom } = vi.hoisted(() => {
+const { mockSingle, mockFrom } = vi.hoisted(() => {
   const mockSingle = vi.fn().mockResolvedValue({
     data: { project_name: 'Test Project', customer_name: 'Test Customer' },
   });
-  const mockEq = vi.fn(() => ({ single: mockSingle }));
-  const mockSelect = vi.fn(() => ({ eq: mockEq }));
-  const mockFrom = vi.fn(() => ({ select: mockSelect }));
-  return { mockSingle, mockEq, mockSelect, mockFrom };
+  const emptyResult = { data: [], error: null };
+  const terminal = {
+    single: mockSingle,
+    maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+    then: undefined as unknown,
+  };
+  // chainable: returns an object with all known chain methods + terminal resolvers
+  const chain: Record<string, unknown> = {};
+  const chainFn = vi.fn(() => chain);
+  chain['select'] = chainFn;
+  chain['eq'] = chainFn;
+  chain['in'] = chainFn;
+  chain['insert'] = chainFn;
+  chain['update'] = chainFn;
+  chain['order'] = vi.fn().mockResolvedValue(emptyResult);
+  chain['single'] = terminal.single;
+  chain['maybeSingle'] = terminal.maybeSingle;
+  const mockFrom = vi.fn(() => chain);
+  return { mockSingle, mockFrom };
 });
 
 vi.mock('@/lib/supabase', () => ({

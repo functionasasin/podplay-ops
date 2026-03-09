@@ -5,7 +5,9 @@ import {
   Package,
   DollarSign,
   Tag,
-  FileText,
+  BookOpen,
+  Users,
+  Plane,
   LogOut,
   Menu,
 } from 'lucide-react';
@@ -51,7 +53,9 @@ const navSections: NavSection[] = [
     section: 'Settings',
     links: [
       { to: '/settings/pricing', label: 'Pricing', icon: Tag },
-      { to: '/settings/templates', label: 'Templates', icon: FileText },
+      { to: '/settings/catalog', label: 'Catalog', icon: BookOpen },
+      { to: '/settings/team', label: 'Team', icon: Users },
+      { to: '/settings/travel', label: 'Travel', icon: Plane },
     ],
   },
 ];
