@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
 import { WizardStepper } from '@/components/wizard/WizardStepper';
 import { CustomerInfoStep, type CustomerInfoValues } from '@/components/wizard/intake/CustomerInfoStep';
@@ -34,6 +34,7 @@ function IntakePage() {
     financialSetup?: FinancialSetupValues;
   }>({});
   const { projectId } = Route.useParams();
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function fetchWizardStep() {
@@ -42,12 +43,23 @@ function IntakePage() {
         .select('wizard_step, project_status')
         .eq('id', projectId)
         .single();
+      if (project?.project_status && project.project_status !== 'intake') {
+        const status = project.project_status as string;
+        if (status === 'procurement') {
+          void navigate({ to: '/projects/$projectId/procurement', params: { projectId } });
+        } else if (status === 'deployment') {
+          void navigate({ to: '/projects/$projectId/deployment', params: { projectId } });
+        } else {
+          void navigate({ to: '/projects/$projectId/financials', params: { projectId } });
+        }
+        return;
+      }
       if (project?.wizard_step != null) {
         setCurrentStep(project.wizard_step);
       }
     }
     void fetchWizardStep();
-  }, [projectId]);
+  }, [projectId, navigate]);
 
   async function advanceStep(nextStep: number) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
