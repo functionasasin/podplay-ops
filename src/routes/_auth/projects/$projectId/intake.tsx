@@ -78,7 +78,7 @@ function IntakePage() {
           customer_name: customerInfo?.customer_name ?? null,
           contact_email: customerInfo?.contact_email ?? null,
           contact_phone: customerInfo?.contact_phone || null,
-          venue_address: venueConfig?.venue_address ?? null,
+          venue_address_line1: venueConfig?.venue_address ?? null,
           court_count: venueConfig?.court_count ?? null,
           door_count: venueConfig?.door_count ?? 0,
           security_camera_count: venueConfig?.camera_count ?? 0,
@@ -90,12 +90,29 @@ function IntakePage() {
           internet_upload_mbps: ispInfo?.upload_speed_mbps ?? null,
           internet_download_mbps: ispInfo?.download_speed_mbps ?? null,
           installer_id: installerSelection?.installer_id || null,
-          target_go_live_date: financialSetup?.target_go_live_date ?? null,
-          deposit_amount: financialSetup?.deposit_amount ?? null,
+          go_live_date: financialSetup?.target_go_live_date ?? null,
         })
         .eq('id', projectId);
 
       if (updateError) throw new Error(updateError.message);
+
+      // Step 1b: Create deposit invoice if deposit_amount provided
+      if (financialSetup?.deposit_amount) {
+        const depositAmount = Number(financialSetup.deposit_amount);
+        const today = new Date().toISOString().split('T')[0];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: invoiceError } = await (supabase.from('invoices') as any).insert({
+          project_id: projectId,
+          invoice_number: `DEP-${projectId.slice(0, 8).toUpperCase()}`,
+          type: 'deposit',
+          amount: depositAmount,
+          total_amount: depositAmount,
+          status: 'not_sent',
+          issued_date: today,
+          due_date: financialSetup.target_go_live_date ?? today,
+        });
+        if (invoiceError) console.warn('Deposit invoice creation failed:', invoiceError.message);
+      }
 
       // Step 2: Generate BOM
       const { error: bomError } = await generateBom(projectId);
@@ -110,7 +127,7 @@ function IntakePage() {
       if (statusError) throw new Error(statusError.message);
 
       showToast('INTAKE_COMPLETE_SUCCESS');
-      window.location.href = `/projects/${projectId}`;
+      window.location.href = `/projects/${projectId}/procurement`;
     } catch (err) {
       console.error('Intake submit failed:', err);
       showToast('INTAKE_COMPLETE_ERROR');

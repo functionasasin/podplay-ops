@@ -5,11 +5,9 @@ import { supabase } from '@/lib/supabase';
 
 interface BomItemInsert {
   project_id: string;
-  hardware_catalog_id: string;
-  qty: number;
-  unit_cost: number | null;
-  shipping_rate: number;
-  margin: number;
+  catalog_item_id: string;
+  quantity: number;
+  unit_cost_override: number | null;
   notes: string | null;
 }
 
@@ -18,8 +16,7 @@ interface BomItemInsert {
  *
  * Called once per project immediately after project row is inserted/updated.
  * Reads bom_templates for the project's tier, applies sizing substitutions,
- * adds conditional items, attaches cost chain from settings, and batch-inserts
- * all rows into project_bom_items.
+ * adds conditional items, and batch-inserts all rows into project_bom_items.
  *
  * @param projectId - UUID of the project
  * @returns count of BOM items inserted, or error string
@@ -36,24 +33,27 @@ export async function generateBom(projectId: string): Promise<{ count: number; e
     return { count: 0, error: projectErr?.message ?? 'Project not found' };
   }
 
-  // Load settings
+  // Load settings (single row, named columns)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: settingsRows } = await (supabase.from('settings') as any)
-    .select('key, value');
-  const settings = buildSettingsMap(settingsRows ?? []);
+  const { data: settingsRow } = await (supabase.from('settings') as any)
+    .select('shipping_rate, target_margin')
+    .eq('id', 'default')
+    .single();
+  const shippingRate = parseFloat(settingsRow?.shipping_rate ?? '0.10');
+  const targetMargin = parseFloat(settingsRow?.target_margin ?? '0.10');
+  void shippingRate; void targetMargin; // Available for cost chain if needed
 
   // Load BOM template rows for this tier
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: templateRows, error: templateErr } = await (supabase.from('bom_templates') as any)
     .select(`
-      qty_per_venue, qty_per_court, qty_per_door, qty_per_camera,
-      sort_order,
+      default_quantity,
+      quantity_rule,
       hardware_catalog!inner (
         id, sku, name, unit_cost, category
       )
     `)
-    .eq('tier', project.tier)
-    .order('sort_order', { ascending: true });
+    .eq('tier', project.tier);
   if (templateErr) return { count: 0, error: templateErr.message };
 
   // Load full hardware catalog for substitutions and conditional items
@@ -68,7 +68,7 @@ export async function generateBom(projectId: string): Promise<{ count: number; e
 
   const items: BomItemInsert[] = [];
 
-  // Step 2 + 3: Apply qty formula + sizing substitutions per template row
+  // Apply qty formula + sizing substitutions per template row
   for (const row of templateRows ?? []) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const cat = row.hardware_catalog as any;
@@ -76,17 +76,15 @@ export async function generateBom(projectId: string): Promise<{ count: number; e
     let catalogId: string = cat.id;
     let unitCost: number | null = cat.unit_cost;
 
-    const rawQty =
-      row.qty_per_venue +
-      row.qty_per_court * project.court_count +
-      row.qty_per_door * (project.door_count ?? 0) +
-      row.qty_per_camera * (project.security_camera_count ?? 0);
+    // Calculate quantity from default_quantity and quantity_rule
+    const scaleFactor = resolveScaleFactor(row.quantity_rule, project);
+    const rawQty = row.default_quantity * scaleFactor;
 
     if (rawQty === 0) continue; // Skip zero-qty items
 
     let qty = rawQty;
 
-    // 3A: SSD substitution
+    // SSD substitution
     if (sku === 'REPLAY-SSD-1TB') {
       const targetSku = selectSsdSku(project.court_count);
       if (targetSku !== sku) {
@@ -95,7 +93,7 @@ export async function generateBom(projectId: string): Promise<{ count: number; e
       }
     }
 
-    // 3B: Switch substitution
+    // Switch substitution
     if (sku === 'NET-USW-PRO-24-POE') {
       const switchCfg =
         project.tier === 'autonomous' || project.tier === 'autonomous_plus'
@@ -108,7 +106,7 @@ export async function generateBom(projectId: string): Promise<{ count: number; e
       qty = switchCfg.qty;
     }
 
-    // 3C: NVR substitution (autonomous_plus only)
+    // NVR substitution (autonomous_plus only)
     if (sku === 'SURV-NVR-4BAY') {
       const targetSku = selectNvrSku(project.security_camera_count ?? 0);
       if (targetSku !== sku) {
@@ -119,48 +117,44 @@ export async function generateBom(projectId: string): Promise<{ count: number; e
 
     items.push({
       project_id: projectId,
-      hardware_catalog_id: catalogId,
-      qty,
-      unit_cost: unitCost,
-      shipping_rate: settings.shipping_rate,
-      margin: settings.target_margin,
+      catalog_item_id: catalogId,
+      quantity: qty,
+      unit_cost_override: unitCost,
       notes: null,
     });
   }
 
-  // Step 4A: Front desk items
+  // Front desk items
   if (project.has_front_desk) {
     for (const frontDeskSku of ['DESK-CC-TERMINAL', 'DESK-QR-SCANNER', 'DESK-WEBCAM']) {
       const item = catalogBySku[frontDeskSku];
       if (item) {
         items.push({
           project_id: projectId,
-          hardware_catalog_id: item.id,
-          qty: 1,
-          unit_cost: item.unit_cost,
-          shipping_rate: settings.shipping_rate,
-          margin: settings.target_margin,
+          catalog_item_id: item.id,
+          quantity: 1,
+          unit_cost_override: item.unit_cost,
           notes: null,
         });
       }
     }
   }
 
-  // Step 4B: PingPod WiFi AP
+  // PingPod WiFi AP
   if (project.has_pingpod_wifi) {
     const item = catalogBySku['PP-WIFI-AP'];
     if (item) {
       items.push({
         project_id: projectId,
-        hardware_catalog_id: item.id,
-        qty: 1,
-        unit_cost: item.unit_cost,
-        shipping_rate: settings.shipping_rate,
-        margin: settings.target_margin,
+        catalog_item_id: item.id,
+        quantity: 1,
+        unit_cost_override: item.unit_cost,
         notes: null,
       });
     }
   }
+
+  if (items.length === 0) return { count: 0, error: null };
 
   // Batch insert all BOM items
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -189,6 +183,21 @@ export async function regenerateBom(projectId: string): Promise<{ count: number;
 // Sizing helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
+function resolveScaleFactor(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  quantityRule: any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  project: any
+): number {
+  if (!quantityRule || !quantityRule.scale_by) return 1;
+  switch (quantityRule.scale_by) {
+    case 'court_count': return project.court_count ?? 1;
+    case 'door_count': return project.door_count ?? 0;
+    case 'security_camera_count': return project.security_camera_count ?? 0;
+    default: return 1;
+  }
+}
+
 function selectSsdSku(courtCount: number): string {
   if (courtCount <= 4) return 'REPLAY-SSD-1TB';
   if (courtCount <= 8) return 'REPLAY-SSD-2TB';
@@ -213,15 +222,4 @@ export function selectSwitchConfigAutonomous(
 
 function selectNvrSku(securityCameraCount: number): string {
   return securityCameraCount <= 4 ? 'SURV-NVR-4BAY' : 'SURV-NVR-7BAY';
-}
-
-function buildSettingsMap(rows: { key: string; value: string }[]): {
-  shipping_rate: number;
-  target_margin: number;
-} {
-  const map = Object.fromEntries(rows.map((r) => [r.key, r.value]));
-  return {
-    shipping_rate: parseFloat(map['shipping_rate'] ?? '0.10'),
-    target_margin: parseFloat(map['target_margin'] ?? '0.10'),
-  };
 }
