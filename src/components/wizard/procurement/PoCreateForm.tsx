@@ -56,14 +56,14 @@ export function PoCreateForm({ projectId, onSuccess }: PoCreateFormProps) {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: invItems } = await (supabase.from('inventory') as any)
-        .select('hardware_catalog_id, qty_on_hand')
-        .in('hardware_catalog_id', catalogIds);
+        .select('item_id, quantity_on_hand')
+        .in('item_id', catalogIds);
 
       const invMap: Record<string, number> = {};
       if (invItems) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         for (const inv of invItems as any[]) {
-          invMap[inv.hardware_catalog_id] = (invMap[inv.hardware_catalog_id] ?? 0) + inv.qty_on_hand;
+          invMap[inv.item_id] = (invMap[inv.item_id] ?? 0) + inv.quantity_on_hand;
         }
       }
 

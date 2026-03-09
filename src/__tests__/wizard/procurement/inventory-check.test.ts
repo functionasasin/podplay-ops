@@ -14,9 +14,9 @@ const { mockFrom } = vi.hoisted(() => {
 
   // Inventory: cat-1 has plenty (surplus), cat-2 is low-stock, cat-3 is exact
   const INVENTORY = [
-    { hardware_catalog_id: 'cat-1', quantity_on_hand: 10 }, // surplus: 10 - 4 = +6
-    { hardware_catalog_id: 'cat-2', quantity_on_hand: 1 },  // low-stock: 1 - 2 = -1
-    { hardware_catalog_id: 'cat-3', quantity_on_hand: 3 },  // exact: 3 - 3 = 0
+    { item_id: 'cat-1', quantity_on_hand: 10 }, // surplus: 10 - 4 = +6
+    { item_id: 'cat-2', quantity_on_hand: 1 },  // low-stock: 1 - 2 = -1
+    { item_id: 'cat-3', quantity_on_hand: 3 },  // exact: 3 - 3 = 0
   ];
 
   // BOM query chain: .from('project_bom_items').select(...).eq(...)

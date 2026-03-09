@@ -39,13 +39,13 @@ export function InventoryCheckPanel({ projectId }: InventoryCheckPanelProps) {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: invItems } = await (supabase.from('inventory') as any)
-        .select('hardware_catalog_id, quantity_on_hand')
-        .in('hardware_catalog_id', catalogIds);
+        .select('item_id, quantity_on_hand')
+        .in('item_id', catalogIds);
 
       const invMap: Record<string, number> = {};
       if (invItems) {
         for (const inv of invItems as any[]) {
-          invMap[inv.hardware_catalog_id] = (invMap[inv.hardware_catalog_id] ?? 0) + inv.quantity_on_hand;
+          invMap[inv.item_id] = (invMap[inv.item_id] ?? 0) + inv.quantity_on_hand;
         }
       }
 

@@ -31,8 +31,8 @@ const { mockFrom, mockPoInsert, mockPoItemsInsert, mockMovementsInsert } = vi.ho
 
   // Inventory: Ingram item has 1 on_hand (shortfall=2), UniFi item has 5 on_hand (surplus)
   const INVENTORY = [
-    { hardware_catalog_id: 'cat-ingram', qty_on_hand: 1 },
-    { hardware_catalog_id: 'cat-unifi', qty_on_hand: 5 },
+    { item_id: 'cat-ingram', quantity_on_hand: 1 },
+    { item_id: 'cat-unifi', quantity_on_hand: 5 },
   ];
 
   // BOM query: .from('project_bom_items').select(...).eq(...)

@@ -137,9 +137,9 @@ describe('inventory_movements table', () => {
     const { data: movement, error } = await admin
       .from('inventory_movements')
       .insert({
-        item_id: catalogItem!.id,
+        hardware_catalog_id: catalogItem!.id,
         movement_type: 'purchase_order_received',
-        quantity: 10,
+        qty_delta: 10,
         notes: 'Initial stock received',
       })
       .select()
@@ -149,9 +149,9 @@ describe('inventory_movements table', () => {
     expect(movement).not.toBeNull();
     movementIds.push(movement!.id);
 
-    expect(movement!.item_id).toBe(catalogItem!.id);
+    expect(movement!.hardware_catalog_id).toBe(catalogItem!.id);
     expect(movement!.movement_type).toBe('purchase_order_received');
-    expect(movement!.quantity).toBe(10);
+    expect(movement!.qty_delta).toBe(10);
     expect(movement!.notes).toBe('Initial stock received');
     expect(movement!.id).toBeTruthy();
     expect(movement!.created_at).toBeTruthy();
@@ -180,9 +180,9 @@ describe('inventory_movements table', () => {
       const { data: movement, error } = await admin
         .from('inventory_movements')
         .insert({
-          item_id: catalogItem!.id,
+          hardware_catalog_id: catalogItem!.id,
           movement_type: movementType,
-          quantity: 1,
+          qty_delta: 1,
         })
         .select()
         .single();
@@ -194,7 +194,7 @@ describe('inventory_movements table', () => {
     }
   });
 
-  it('reference_type and reference_id are nullable: insert with and without reference', async () => {
+  it('reference and project_id are nullable: insert with and without reference', async () => {
     const { data: catalogItem, error: catalogError } = await admin
       .from('hardware_catalog')
       .insert({ sku: 'MOV-REF-001', name: 'Reference Test Item', unit_cost: 45.0 })
@@ -208,35 +208,32 @@ describe('inventory_movements table', () => {
     const { data: noRef, error: noRefError } = await admin
       .from('inventory_movements')
       .insert({
-        item_id: catalogItem!.id,
+        hardware_catalog_id: catalogItem!.id,
         movement_type: 'adjustment_increase',
-        quantity: 2,
+        qty_delta: 2,
       })
       .select()
       .single();
 
     expect(noRefError).toBeNull();
     movementIds.push(noRef!.id);
-    expect(noRef!.reference_type).toBeNull();
-    expect(noRef!.reference_id).toBeNull();
+    expect(noRef!.reference).toBeNull();
+    expect(noRef!.project_id).toBeNull();
 
     // Insert with reference
-    const refId = '00000000-0000-0000-0000-000000000002';
     const { data: withRef, error: withRefError } = await admin
       .from('inventory_movements')
       .insert({
-        item_id: catalogItem!.id,
+        hardware_catalog_id: catalogItem!.id,
         movement_type: 'project_allocated',
-        quantity: 3,
-        reference_type: 'project',
-        reference_id: refId,
+        qty_delta: 3,
+        reference: 'PO-2026-001',
       })
       .select()
       .single();
 
     expect(withRefError).toBeNull();
     movementIds.push(withRef!.id);
-    expect(withRef!.reference_type).toBe('project');
-    expect(withRef!.reference_id).toBe(refId);
+    expect(withRef!.reference).toBe('PO-2026-001');
   });
 });
