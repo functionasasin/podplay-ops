@@ -1,7 +1,7 @@
 // Phase 4, Step 10/11: VLAN Architecture Reference Panel (Autonomous tiers)
 // Spec: ui-spec/wizard-deployment.md § Phase 4, Step 10/11: VLAN Panel
 
-type Tier = 'pro' | 'pbk' | 'autonomous' | 'autonomous_plus';
+type Tier = 'pro' | 'autonomous' | 'autonomous_plus';
 
 type VlanReferencePanelProps = {
   tier: Tier | string;

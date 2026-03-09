@@ -29,7 +29,7 @@ const MOCK_PROJECTS = [
   { id: '2', customer_name: 'Beta Corp', venue_name: 'Beta Venue', project_status: 'deployment', tier: 'pro', go_live_date: null },
   { id: '3', customer_name: 'Gamma Corp', venue_name: 'Gamma Spot', project_status: 'deployment', tier: 'autonomous', go_live_date: null },
   { id: '4', customer_name: 'Delta LLC', venue_name: 'Delta Place', project_status: 'completed', tier: 'autonomous', go_live_date: null },
-  { id: '5', customer_name: 'Echo Inc', venue_name: 'Echo Bar', project_status: 'cancelled', tier: 'pbk', go_live_date: null },
+  { id: '5', customer_name: 'Echo Inc', venue_name: 'Echo Bar', project_status: 'cancelled', tier: 'autonomous_plus', go_live_date: null },
 ];
 
 beforeEach(() => {
@@ -147,7 +147,7 @@ describe('resetting filters', () => {
     const { container } = await renderLoaded();
     const tierSelect = container.querySelectorAll('select')[1];
 
-    fireEvent.change(tierSelect, { target: { value: 'pbk' } });
+    fireEvent.change(tierSelect, { target: { value: 'autonomous_plus' } });
     expect(screen.queryByText('Alpha Venue')).toBeNull();
 
     // Reset to all

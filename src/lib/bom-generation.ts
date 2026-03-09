@@ -227,40 +227,6 @@ const TEMPLATES: Record<ServiceTier, TemplateRow[]> = {
     { sku: 'SURV-HDD',             qtyPerVenue: 0, qtyPerCourt: 0, qtyPerDoor: 0, qtyPerCamera: 1, sortOrder: 630 },
   ],
 
-  // ===========================================================================
-  // PBK — 24 rows (identical hardware to Pro; custom pricing via settings)
-  // ===========================================================================
-  pbk: [
-    // Network Rack
-    { sku: 'NET-UDM-SE',           qtyPerVenue: 1, qtyPerCourt: 0, qtyPerDoor: 0, qtyPerCamera: 0, sortOrder: 100 },
-    { sku: 'NET-USW-PRO-24-POE',   qtyPerVenue: 1, qtyPerCourt: 0, qtyPerDoor: 0, qtyPerCamera: 0, sortOrder: 110 },
-    { sku: 'NET-SFP-DAC',          qtyPerVenue: 1, qtyPerCourt: 0, qtyPerDoor: 0, qtyPerCamera: 0, sortOrder: 120 },
-    { sku: 'NET-PDU',              qtyPerVenue: 1, qtyPerCourt: 0, qtyPerDoor: 0, qtyPerCamera: 0, sortOrder: 130 },
-    { sku: 'NET-PATCH-PANEL-24',   qtyPerVenue: 1, qtyPerCourt: 0, qtyPerDoor: 0, qtyPerCamera: 0, sortOrder: 140 },
-    { sku: 'NET-PATCH-1FT',        qtyPerVenue: 0, qtyPerCourt: 3, qtyPerDoor: 0, qtyPerCamera: 0, sortOrder: 150 },
-    { sku: 'NET-PATCH-3FT',        qtyPerVenue: 6, qtyPerCourt: 0, qtyPerDoor: 0, qtyPerCamera: 0, sortOrder: 160 },
-    // Infrastructure
-    { sku: 'INFRA-UPS',            qtyPerVenue: 1, qtyPerCourt: 0, qtyPerDoor: 0, qtyPerCamera: 0, sortOrder: 200 },
-    { sku: 'INFRA-RACK',           qtyPerVenue: 1, qtyPerCourt: 0, qtyPerDoor: 0, qtyPerCamera: 0, sortOrder: 210 },
-    { sku: 'INFRA-RACK-SHELF',     qtyPerVenue: 1, qtyPerCourt: 0, qtyPerDoor: 0, qtyPerCamera: 0, sortOrder: 220 },
-    // Replay System
-    { sku: 'REPLAY-MACMINI',       qtyPerVenue: 1, qtyPerCourt: 0, qtyPerDoor: 0, qtyPerCamera: 0, sortOrder: 300 },
-    { sku: 'REPLAY-SSD-1TB',       qtyPerVenue: 1, qtyPerCourt: 0, qtyPerDoor: 0, qtyPerCamera: 0, sortOrder: 310 },
-    { sku: 'REPLAY-CAMERA-WHITE',  qtyPerVenue: 0, qtyPerCourt: 1, qtyPerDoor: 0, qtyPerCamera: 0, sortOrder: 320 },
-    { sku: 'REPLAY-CAMERA-JB-WHITE', qtyPerVenue: 0, qtyPerCourt: 1, qtyPerDoor: 0, qtyPerCamera: 0, sortOrder: 330 },
-    { sku: 'REPLAY-FLIC',          qtyPerVenue: 0, qtyPerCourt: 2, qtyPerDoor: 0, qtyPerCamera: 0, sortOrder: 340 },
-    { sku: 'REPLAY-SIGN',          qtyPerVenue: 0, qtyPerCourt: 1, qtyPerDoor: 0, qtyPerCamera: 0, sortOrder: 350 },
-    { sku: 'REPLAY-HW-KIT',        qtyPerVenue: 1, qtyPerCourt: 0, qtyPerDoor: 0, qtyPerCamera: 0, sortOrder: 360 },
-    // Displays
-    { sku: 'DISPLAY-TV-65',        qtyPerVenue: 0, qtyPerCourt: 1, qtyPerDoor: 0, qtyPerCamera: 0, sortOrder: 400 },
-    { sku: 'DISPLAY-TV-MOUNT',     qtyPerVenue: 0, qtyPerCourt: 1, qtyPerDoor: 0, qtyPerCamera: 0, sortOrder: 410 },
-    { sku: 'DISPLAY-APPLETV',      qtyPerVenue: 0, qtyPerCourt: 1, qtyPerDoor: 0, qtyPerCamera: 0, sortOrder: 420 },
-    { sku: 'DISPLAY-HDMI-3FT',     qtyPerVenue: 0, qtyPerCourt: 1, qtyPerDoor: 0, qtyPerCamera: 0, sortOrder: 430 },
-    { sku: 'DISPLAY-ATV-MOUNT',    qtyPerVenue: 0, qtyPerCourt: 1, qtyPerDoor: 0, qtyPerCamera: 0, sortOrder: 440 },
-    { sku: 'DISPLAY-IPAD',         qtyPerVenue: 0, qtyPerCourt: 1, qtyPerDoor: 0, qtyPerCamera: 0, sortOrder: 450 },
-    { sku: 'DISPLAY-IPAD-POE',     qtyPerVenue: 0, qtyPerCourt: 1, qtyPerDoor: 0, qtyPerCamera: 0, sortOrder: 460 },
-    { sku: 'DISPLAY-IPAD-CASE',    qtyPerVenue: 0, qtyPerCourt: 1, qtyPerDoor: 0, qtyPerCamera: 0, sortOrder: 470 },
-  ],
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

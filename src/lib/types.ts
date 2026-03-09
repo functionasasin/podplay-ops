@@ -1,6 +1,6 @@
 // PodPlay Ops Wizard — TypeScript union types matching SQL enums (00001_enums.sql)
 
-export type ServiceTier = 'pro' | 'autonomous' | 'autonomous_plus' | 'pbk';
+export type ServiceTier = 'pro' | 'autonomous' | 'autonomous_plus';
 
 export type ProjectStatus =
   | 'intake'

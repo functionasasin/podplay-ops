@@ -31,21 +31,18 @@ export const serviceTierLabels: Record<ServiceTier, string> = {
   pro:             'PRO',
   autonomous:      'AUTO',
   autonomous_plus: 'A+',
-  pbk:             'PBK',
 };
 
 export const serviceTierBadgeClass: Record<ServiceTier, string> = {
   pro:             'bg-blue-100 text-blue-700 border-blue-200',
   autonomous:      'bg-purple-100 text-purple-700 border-purple-200',
   autonomous_plus: 'bg-indigo-100 text-indigo-700 border-indigo-200',
-  pbk:             'bg-orange-100 text-orange-700 border-orange-200',
 };
 
 export const serviceTierSortOrder: Record<ServiceTier, number> = {
   pro:             1,
   autonomous:      2,
   autonomous_plus: 3,
-  pbk:             4,
 };
 
 // ─── project_status ───────────────────────────────────────────────────────────

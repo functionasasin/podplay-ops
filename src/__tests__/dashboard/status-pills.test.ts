@@ -85,12 +85,6 @@ describe('tier badges', () => {
     expect(badge).not.toBeNull();
   });
 
-  it('tier "pbk" renders label "PBK" with orange styling', () => {
-    const { container } = renderProjectList(makeProject({ tier: 'pbk' }));
-    expect(screen.getAllByText('PBK')[0]).toBeInTheDocument();
-    const badge = container.querySelector('span.bg-orange-100');
-    expect(badge).not.toBeNull();
-  });
 });
 
 // ─── go-live date formatting ──────────────────────────────────────────────────

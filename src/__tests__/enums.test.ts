@@ -35,8 +35,8 @@ function expectExact<T extends string>(values: T[], expected: T[]) {
 
 describe('ServiceTier', () => {
   it('has exact values from spec', () => {
-    const values: ServiceTier[] = ['pro', 'autonomous', 'autonomous_plus', 'pbk'];
-    expectExact(values, ['pro', 'autonomous', 'autonomous_plus', 'pbk']);
+    const values: ServiceTier[] = ['pro', 'autonomous', 'autonomous_plus'];
+    expectExact(values, ['pro', 'autonomous', 'autonomous_plus']);
   });
 });
 

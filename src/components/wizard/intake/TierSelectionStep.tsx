@@ -5,7 +5,7 @@ import { serviceTierLabels, serviceTierBadgeClass } from '@/lib/enum-labels';
 import type { ServiceTier } from '@/lib/types';
 
 const tierSelectionSchema = z.object({
-  service_tier: z.enum(['pro', 'autonomous', 'autonomous_plus', 'pbk']),
+  service_tier: z.enum(['pro', 'autonomous', 'autonomous_plus']),
 });
 
 export type TierSelectionValues = z.infer<typeof tierSelectionSchema>;
@@ -44,19 +44,9 @@ const TIER_CONFIG: Record<
       'Enhanced surveillance',
     ],
   },
-  pbk: {
-    fullLabel: 'Pickleball Kingdom',
-    description: 'Pickleball Kingdom (Pro hardware, custom price)',
-    features: [
-      'Pro hardware configuration',
-      'Pickleball-specific setup',
-      'Custom pricing structure',
-      'PBK branding support',
-    ],
-  },
 };
 
-const TIER_ORDER: ServiceTier[] = ['pro', 'autonomous', 'autonomous_plus', 'pbk'];
+const TIER_ORDER: ServiceTier[] = ['pro', 'autonomous', 'autonomous_plus'];
 
 interface TierSelectionStepProps {
   defaultValues?: Partial<TierSelectionValues>;

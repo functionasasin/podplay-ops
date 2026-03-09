@@ -2,7 +2,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useState } from 'react';
-import { AlertTriangle, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { updateSettings } from '@/services/settingsService';
 import type { Settings } from '@/services/settingsService';
@@ -22,8 +22,6 @@ const pricingFormSchema = z
     autonomous_court_fee: z.number().min(0, VP.fee_min),
     autonomous_plus_venue_fee: z.number().min(0, VP.fee_min),
     autonomous_plus_court_fee: z.number().min(0, VP.fee_min),
-    pbk_venue_fee: z.number().min(0, VP.fee_min),
-    pbk_court_fee: z.number().min(0, VP.fee_min),
     // Cost chain rates (stored as decimals)
     shipping_rate: z.number().min(0, VP.shipping_rate.min).max(1, VP.shipping_rate.max),
     target_margin: z.number().min(0, VP.target_margin.min).max(0.9999, VP.target_margin.max),
@@ -44,7 +42,6 @@ const pricingFormSchema = z
     // Operational defaults
     default_replay_service_version: z.enum(['v1', 'v2']),
     po_number_prefix: z.string().min(1, VS.po_number_prefix.required).max(10, VS.po_number_prefix.max),
-    cc_terminal_pin: z.string().min(1, VS.cc_terminal_pin.required).max(10, VS.cc_terminal_pin.max),
     mac_mini_local_ip: z
       .string()
       .regex(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/, VS.mac_mini_local_ip.format),
@@ -79,7 +76,6 @@ export function PricingSettings({ settings }: Props) {
     register,
     control,
     handleSubmit,
-    watch,
     formState: { errors },
   } = useForm<PricingFormValues>({
     resolver: zodResolver(pricingFormSchema),
@@ -90,8 +86,6 @@ export function PricingSettings({ settings }: Props) {
       autonomous_court_fee: settings.autonomous_court_fee ?? 2500,
       autonomous_plus_venue_fee: settings.autonomous_plus_venue_fee ?? 7500,
       autonomous_plus_court_fee: settings.autonomous_plus_court_fee ?? 2500,
-      pbk_venue_fee: settings.pbk_venue_fee ?? 0,
-      pbk_court_fee: settings.pbk_court_fee ?? 0,
       shipping_rate: settings.shipping_rate ?? 0.1,
       target_margin: settings.target_margin ?? 0.1,
       sales_tax_rate: settings.sales_tax_rate ?? 0.1025,
@@ -107,7 +101,6 @@ export function PricingSettings({ settings }: Props) {
       isp_cable_upload_min_mbps: settings.isp_cable_upload_min_mbps ?? 60,
       default_replay_service_version: settings.default_replay_service_version ?? 'v1',
       po_number_prefix: settings.po_number_prefix ?? 'PO',
-      cc_terminal_pin: settings.cc_terminal_pin ?? '07139',
       mac_mini_local_ip: settings.mac_mini_local_ip ?? '192.168.32.100',
       replay_port: settings.replay_port ?? 4000,
       ddns_domain: settings.ddns_domain ?? 'podplaydns.com',
@@ -119,10 +112,6 @@ export function PricingSettings({ settings }: Props) {
       access_control_vlan_id: settings.access_control_vlan_id ?? 33,
     },
   });
-
-  const pbkVenueFee = watch('pbk_venue_fee');
-  const pbkCourtFee = watch('pbk_court_fee');
-  const showPbkWarning = pbkVenueFee === 0 && pbkCourtFee === 0;
 
   const onSubmit = async (values: PricingFormValues) => {
     setSaving(true);
@@ -165,24 +154,7 @@ export function PricingSettings({ settings }: Props) {
             <CurrencyInput name="autonomous_plus_court_fee" register={register} error={errors.autonomous_plus_court_fee?.message} />
           </FieldGroup>
 
-          <FieldGroup label="PBK — Venue Fee">
-            <CurrencyInput name="pbk_venue_fee" register={register} error={errors.pbk_venue_fee?.message} />
-          </FieldGroup>
-          <FieldGroup label="PBK — Per-Court Fee">
-            <CurrencyInput name="pbk_court_fee" register={register} error={errors.pbk_court_fee?.message} />
-          </FieldGroup>
         </div>
-
-        {showPbkWarning && (
-          <div className="flex items-center gap-2 rounded-md bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">
-            <AlertTriangle className="h-4 w-4 shrink-0" />
-            <span>
-              PBK pricing is not configured. PBK projects will show $0 service fees until these
-              values are set. Enter the Pickleball Kingdom venue fee and per-court fee from the PBK
-              contract.
-            </span>
-          </div>
-        )}
       </section>
 
       {/* Section 2: Cost Chain Rates */}
@@ -337,15 +309,6 @@ export function PricingSettings({ settings }: Props) {
               {...register('po_number_prefix')}
             />
             {errors.po_number_prefix && <p className="text-xs text-destructive mt-1">{errors.po_number_prefix.message}</p>}
-          </FieldGroup>
-
-          <FieldGroup label="CC Terminal PIN">
-            <input
-              type="text"
-              className="w-full h-11 rounded-md border border-input bg-background px-3 py-2 text-sm"
-              {...register('cc_terminal_pin')}
-            />
-            {errors.cc_terminal_pin && <p className="text-xs text-destructive mt-1">{errors.cc_terminal_pin.message}</p>}
           </FieldGroup>
 
           <FieldGroup label="Mac Mini Local IP">

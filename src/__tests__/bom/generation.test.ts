@@ -182,22 +182,6 @@ describe('generateBOM — autonomous_plus tier', () => {
 // PBK tier
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('generateBOM — pbk tier', () => {
-  const bom = generateBOM('pbk', STD.courts, STD.doors, STD.cameras, STD.hasFrontDesk, STD.hasPingpodWifi);
-
-  it('has identical hardware list to pro (same 24 template rows)', () => {
-    const proBom = generateBOM('pro', STD.courts, STD.doors, STD.cameras, STD.hasFrontDesk, STD.hasPingpodWifi);
-    // Same SKUs and quantities as pro
-    const skuQtyPbk = Object.fromEntries(bom.map((i) => [i.sku, i.quantity]));
-    const skuQtyPro = Object.fromEntries(proBom.map((i) => [i.sku, i.quantity]));
-    expect(skuQtyPbk).toEqual(skuQtyPro);
-  });
-
-  it('has correct item count (25 template + 4 conditional)', () => {
-    expect(bom).toHaveLength(29);
-  });
-});
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Conditional item tests
 // ─────────────────────────────────────────────────────────────────────────────

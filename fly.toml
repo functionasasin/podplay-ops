@@ -1,0 +1,21 @@
+app = 'podplay-ops'
+primary_region = 'ewr'
+
+[build]
+  dockerfile = 'Dockerfile'
+
+  [build.args]
+    VITE_SUPABASE_URL = 'https://gljsnqdnzyhjzpoxcxdq.supabase.co'
+    VITE_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdsanNucWRuenloanpwb3hjeGRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwNjI5MzEsImV4cCI6MjA4ODYzODkzMX0.w10VuUQhFSI6OFJxdugu75UUF2znCtYIhRmWGIZJpMI'
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  memory = '256mb'
+  cpu_kind = 'shared'
+  cpus = 1

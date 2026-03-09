@@ -24,7 +24,7 @@ export function InventoryCheckPanel({ projectId }: InventoryCheckPanelProps) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: bomItems } = await (supabase.from('project_bom_items') as any)
         .select(
-          `qty,
+          `quantity,
            hardware_catalog!inner(id, sku, name)`,
         )
         .eq('project_id', projectId);
@@ -50,7 +50,7 @@ export function InventoryCheckPanel({ projectId }: InventoryCheckPanelProps) {
       }
 
       const result: InventoryRow[] = bomItems.map((b: any) => {
-        const needed = b.qty as number;
+        const needed = b.quantity as number;
         const on_hand = invMap[b.hardware_catalog.id] ?? 0;
         return {
           name: b.hardware_catalog.name as string,

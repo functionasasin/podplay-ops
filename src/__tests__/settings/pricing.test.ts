@@ -149,22 +149,3 @@ test('renders Service Tier Fees section heading', () => {
   expect(screen.getByText('Service Tier Fees')).toBeInTheDocument();
 });
 
-// 9. PBK warning banner shown when pbk fees are both 0
-test('shows PBK warning when pbk fees are 0', () => {
-  renderComponent({
-    ...baseSettings,
-    pbk_venue_fee: 0,
-    pbk_court_fee: 0,
-  });
-  expect(
-    screen.getByText(/PBK pricing is not configured/i),
-  ).toBeInTheDocument();
-});
-
-// 10. PBK warning not shown when pbk fees are nonzero
-test('hides PBK warning when pbk fees are set', () => {
-  renderComponent();
-  expect(
-    screen.queryByText(/PBK pricing is not configured/i),
-  ).not.toBeInTheDocument();
-});

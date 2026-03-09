@@ -117,16 +117,16 @@ function checkSortOrder(sortOrder: Record<string, number>, labels: Record<string
 // ─── service_tier ─────────────────────────────────────────────────────────────
 
 describe('service_tier', () => {
-  const values = ['pro', 'autonomous', 'autonomous_plus', 'pbk'] as const;
+  const values = ['pro', 'autonomous', 'autonomous_plus'] as const;
 
-  it('has labels for all 4 values', () => {
-    expect(Object.keys(serviceTierLabels)).toHaveLength(4);
+  it('has labels for all 3 values', () => {
+    expect(Object.keys(serviceTierLabels)).toHaveLength(3);
     for (const v of values) expect(serviceTierLabels[v]).toBeDefined();
     checkNoUndefined(serviceTierLabels, 'serviceTierLabels');
   });
 
-  it('has badge classes for all 4 values', () => {
-    expect(Object.keys(serviceTierBadgeClass)).toHaveLength(4);
+  it('has badge classes for all 3 values', () => {
+    expect(Object.keys(serviceTierBadgeClass)).toHaveLength(3);
     checkNoUndefined(serviceTierBadgeClass, 'serviceTierBadgeClass');
   });
 
@@ -553,10 +553,6 @@ describe('spec spot-checks', () => {
 describe('getEnumLabel', () => {
   it('returns the correct label for project_status.intake', () => {
     expect(getEnumLabel('project_status', 'intake')).toBe('Intake');
-  });
-
-  it('returns the correct label for service_tier.pbk', () => {
-    expect(getEnumLabel('service_tier', 'pbk')).toBe('PBK');
   });
 
   it('returns the correct label for bom_category.pingpod_specific', () => {

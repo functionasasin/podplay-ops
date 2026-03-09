@@ -9,19 +9,18 @@ function renderStep(onNext = vi.fn()) {
   return render(React.createElement(TierSelectionStep, { onNext }));
 }
 
-// 1. Exactly 4 tier cards render with full labels from enum-labels spec
-test('renders exactly 4 tier cards', () => {
+// 1. Exactly 3 tier cards render with full labels from enum-labels spec
+test('renders exactly 3 tier cards', () => {
   renderStep();
   const radios = screen.getAllByRole('radio');
-  expect(radios).toHaveLength(4);
+  expect(radios).toHaveLength(3);
 });
 
-test('tier card labels match spec: Pro, Autonomous, Autonomous+, Pickleball Kingdom', () => {
+test('tier card labels match spec: Pro, Autonomous, Autonomous+', () => {
   renderStep();
   expect(screen.getByRole('radio', { name: 'Pro' })).toBeInTheDocument();
   expect(screen.getByRole('radio', { name: 'Autonomous' })).toBeInTheDocument();
   expect(screen.getByRole('radio', { name: 'Autonomous+' })).toBeInTheDocument();
-  expect(screen.getByRole('radio', { name: 'Pickleball Kingdom' })).toBeInTheDocument();
 });
 
 // 2. Selecting a tier updates form state with correct service_tier value
@@ -52,16 +51,6 @@ test('selecting Autonomous+ calls onNext with service_tier "autonomous_plus"', a
   fireEvent.click(screen.getByRole('button', { name: /continue/i }));
   await waitFor(() => {
     expect(onNext).toHaveBeenCalledWith({ service_tier: 'autonomous_plus' });
-  });
-});
-
-test('selecting Pickleball Kingdom calls onNext with service_tier "pbk"', async () => {
-  const onNext = vi.fn();
-  renderStep(onNext);
-  fireEvent.click(screen.getByRole('radio', { name: 'Pickleball Kingdom' }));
-  fireEvent.click(screen.getByRole('button', { name: /continue/i }));
-  await waitFor(() => {
-    expect(onNext).toHaveBeenCalledWith({ service_tier: 'pbk' });
   });
 });
 

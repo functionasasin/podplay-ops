@@ -43,7 +43,7 @@ export function PoCreateForm({ projectId, onSuccess }: PoCreateFormProps) {
       // Load BOM items with hardware catalog info
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: bomItems } = await (supabase.from('project_bom_items') as any)
-        .select(`qty, hardware_catalog!inner(id, sku, name, vendor, unit_cost)`)
+        .select(`quantity, hardware_catalog!inner(id, sku, name, vendor, unit_cost)`)
         .eq('project_id', projectId);
 
       if (!bomItems || bomItems.length === 0) {
@@ -69,7 +69,7 @@ export function PoCreateForm({ projectId, onSuccess }: PoCreateFormProps) {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const items: ShortageItem[] = bomItems.map((b: any) => {
-        const needed = b.qty as number;
+        const needed = b.quantity as number;
         const on_hand = invMap[b.hardware_catalog.id] ?? 0;
         const shortfall = Math.max(0, needed - on_hand);
         return {

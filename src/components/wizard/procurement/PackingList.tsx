@@ -51,7 +51,7 @@ export function PackingList({ projectId }: PackingListProps) {
       const { data } = await (supabase.from('project_bom_items') as any)
         .select(
           `id,
-           qty,
+           quantity,
            hardware_catalog!inner(sku, name, category)`,
         )
         .eq('project_id', projectId)
@@ -62,7 +62,7 @@ export function PackingList({ projectId }: PackingListProps) {
         setItems(
           data.map((item: any) => ({
             id: item.id,
-            qty: item.qty,
+            qty: item.quantity,
             sku: item.hardware_catalog.sku,
             name: item.hardware_catalog.name,
             category: item.hardware_catalog.category,
