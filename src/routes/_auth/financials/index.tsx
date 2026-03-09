@@ -7,6 +7,15 @@ import { EMPTY_STATES } from '@/lib/empty-state-configs';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
+type FeeFrequency = 'monthly' | 'quarterly' | 'annually';
+
+interface RecurringFeeRow {
+  id: string;
+  amount: number;
+  frequency: FeeFrequency;
+  projects: { project_name: string } | null;
+}
+
 interface PipelineProject {
   id: string;
   customer_name: string;
@@ -31,6 +40,14 @@ interface HerSnapshot {
   hardware_revenue: number;
   team_hardware_spend: number | null;
   her_ratio: number | null;
+}
+
+// ── Recurring Fees Helpers ─────────────────────────────────────────────────
+
+function toMonthly(amount: number, frequency: FeeFrequency): number {
+  if (frequency === 'monthly') return amount;
+  if (frequency === 'quarterly') return amount / 3;
+  return amount / 12; // annually
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -342,6 +359,69 @@ function HerChart({ snapshots }: { snapshots: HerSnapshot[] }) {
   );
 }
 
+// ── Recurring Fees Summary Section ────────────────────────────────────────
+
+function RecurringFeesSummary({ fees }: { fees: RecurringFeeRow[] }) {
+  // Group by project name
+  const byProject: Record<string, { count: number; total: number }> = {};
+  for (const fee of fees) {
+    const name = fee.projects?.project_name ?? '(No Project)';
+    if (!byProject[name]) byProject[name] = { count: 0, total: 0 };
+    byProject[name].count += 1;
+    byProject[name].total += toMonthly(Number(fee.amount), fee.frequency);
+  }
+
+  const totalMonthly = fees.reduce(
+    (s, f) => s + toMonthly(Number(f.amount), f.frequency),
+    0
+  );
+
+  const rows = Object.entries(byProject).sort((a, b) => b[1].total - a[1].total);
+
+  return (
+    <section className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Recurring Fees</h2>
+        <span className="text-sm text-muted-foreground">
+          {fees.length} active fee{fees.length !== 1 ? 's' : ''} · {formatCurrency(totalMonthly)}/mo
+        </span>
+      </div>
+
+      {fees.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No recurring fees</p>
+      ) : (
+        <div className="border rounded-lg overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/50">
+                <th className="text-left px-4 py-3 font-medium">Project</th>
+                <th className="text-center px-4 py-3 font-medium w-28"># Active Fees</th>
+                <th className="text-right px-4 py-3 font-medium">Total Monthly</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map(([projectName, { count, total }]) => (
+                <tr key={projectName} className="border-b last:border-0 hover:bg-muted/30">
+                  <td className="px-4 py-3">{projectName}</td>
+                  <td className="px-4 py-3 text-center font-semibold">{count}</td>
+                  <td className="px-4 py-3 text-right font-medium">{formatCurrency(total)}</td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr className="border-t bg-muted/50">
+                <td className="px-4 py-3 text-sm font-semibold">Total</td>
+                <td className="px-4 py-3 text-center text-sm font-semibold">{fees.length}</td>
+                <td className="px-4 py-3 text-right text-sm font-semibold">{formatCurrency(totalMonthly)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      )}
+    </section>
+  );
+}
+
 // ── Main Page ──────────────────────────────────────────────────────────────
 
 function FinancialsDashboardPage() {
@@ -354,6 +434,7 @@ function FinancialsDashboardPage() {
     grossMarginPct: 0,
   });
   const [herSnapshots, setHerSnapshots] = useState<HerSnapshot[]>([]);
+  const [recurringFees, setRecurringFees] = useState<RecurringFeeRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -363,7 +444,7 @@ function FinancialsDashboardPage() {
       setError(null);
       try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const [projRes, invRes, expRes, bomRes, herRes] = await Promise.all([
+        const [projRes, invRes, expRes, bomRes, herRes, feesRes] = await Promise.all([
           // Projects with revenue_stage for funnel
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (supabase as any)
@@ -397,6 +478,13 @@ function FinancialsDashboardPage() {
             .order('period_year', { ascending: false })
             .order('period_month', { ascending: false })
             .limit(12),
+
+          // Recurring fees with project name
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (supabase as any)
+            .from('recurring_fees')
+            .select('id, amount, frequency, projects!project_id(project_name)')
+            .eq('is_active', true),
         ]);
 
         if (projRes.error) throw new Error(projRes.error.message);
@@ -427,6 +515,7 @@ function FinancialsDashboardPage() {
 
         setPnl({ totalRevenue, totalCogs, totalExpenses, grossProfit, grossMarginPct });
         setHerSnapshots(herRes.error ? [] : (herRes.data ?? []));
+        setRecurringFees(feesRes.error ? [] : (feesRes.data ?? []));
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
@@ -464,6 +553,7 @@ function FinancialsDashboardPage() {
       <RevenueFunnel projects={projects} />
       <PnlOverview pnl={pnl} />
       <HerChart snapshots={herSnapshots} />
+      <RecurringFeesSummary fees={recurringFees} />
     </div>
   );
 }
