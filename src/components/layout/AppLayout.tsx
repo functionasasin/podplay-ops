@@ -10,6 +10,8 @@ import {
   Plane,
   LogOut,
   Menu,
+  Wrench,
+  Store,
 } from 'lucide-react';
 import * as React from 'react';
 import { cn } from '@/lib/utils';
@@ -55,6 +57,8 @@ const navSections: NavSection[] = [
       { to: '/settings/pricing', label: 'Pricing', icon: Tag },
       { to: '/settings/catalog', label: 'Catalog', icon: BookOpen },
       { to: '/settings/team', label: 'Team', icon: Users },
+      { to: '/settings/installers', label: 'Installers', icon: Wrench },
+      { to: '/settings/vendors', label: 'Vendors', icon: Store },
       { to: '/settings/travel', label: 'Travel', icon: Plane },
     ],
   },
