@@ -147,10 +147,10 @@ function DeploymentPage() {
         </div>
       </div>
 
-      <div className="flex gap-0 border rounded-lg overflow-hidden min-h-[600px]">
+      <div className="flex flex-col md:flex-row gap-0 border rounded-lg overflow-hidden min-h-[400px] md:min-h-[600px]">
         {/* Left sidebar: phase list */}
-        <div className="w-60 flex-shrink-0 border-r bg-muted/20 flex flex-col">
-          <div className="flex-1 overflow-y-auto">
+        <div className="md:w-60 flex-shrink-0 border-b md:border-b-0 md:border-r bg-muted/20 flex flex-col">
+          <div className="h-48 md:h-auto md:flex-1 overflow-y-auto">
             {PHASE_DISPLAY_ORDER.map((phaseNum) => {
               const phaseItems = byPhase[phaseNum] ?? [];
               const phaseCompleted = phaseItems.filter((i) => i.is_completed).length;

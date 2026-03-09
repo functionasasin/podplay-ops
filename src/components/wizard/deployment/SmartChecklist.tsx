@@ -162,12 +162,12 @@ export function SmartChecklist({
             )}
 
             {/* Checkbox + title */}
-            <label className="flex items-start gap-3 cursor-pointer">
+            <label className="flex items-start gap-3 cursor-pointer min-h-[44px]">
               <input
                 type="checkbox"
                 checked={item.is_completed}
                 onChange={() => onToggle(item)}
-                className="mt-0.5 h-4 w-4 rounded border-gray-300"
+                className="mt-0.5 h-5 w-5 rounded border-gray-300"
               />
               <div className="flex-1">
                 <p
