@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { calculateCostChain } from '@/lib/cost-chain';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { EMPTY_STATES } from '@/lib/empty-state-configs';
+import { SearchableSelect } from '@/components/ui/SearchableSelect';
 
 interface CatalogItem {
   id: string;
@@ -205,18 +206,12 @@ export function BomReviewTable({ projectId }: BomReviewTableProps) {
                 <td className="py-2 pr-4">
                   {row.customerPrice != null ? `$${row.customerPrice.toFixed(2)}` : '—'}
                 </td>
-                <td className="py-2">
-                  <select
+                <td className="py-2 min-w-48">
+                  <SearchableSelect
                     value={row.catalog_item_id}
-                    onChange={(e) => swapSku(row.id, e.target.value)}
-                    className="border rounded px-2 py-1 text-sm max-w-48"
-                  >
-                    {catalog.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.sku} — {c.name}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(val) => swapSku(row.id, val)}
+                    options={catalog.map((c) => ({ value: c.id, label: `${c.sku} — ${c.name}` }))}
+                  />
                 </td>
               </tr>
             ))}
@@ -282,17 +277,13 @@ export function BomReviewTable({ projectId }: BomReviewTableProps) {
             </div>
             <div>
               <span className="text-xs text-muted-foreground">Swap SKU: </span>
-              <select
-                value={row.catalog_item_id}
-                onChange={(e) => swapSku(row.id, e.target.value)}
-                className="border rounded px-2 py-1 text-xs w-full mt-1"
-              >
-                {catalog.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.sku} — {c.name}
-                  </option>
-                ))}
-              </select>
+              <div className="mt-1">
+                <SearchableSelect
+                  value={row.catalog_item_id}
+                  onChange={(val) => swapSku(row.id, val)}
+                  options={catalog.map((c) => ({ value: c.id, label: `${c.sku} — ${c.name}` }))}
+                />
+              </div>
             </div>
           </div>
         ))}
