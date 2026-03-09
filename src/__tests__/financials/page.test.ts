@@ -18,6 +18,7 @@ function makeChain(tableName: string) {
   const getResult = () => ({ data: tableDataMap[tableName] ?? [], error: null });
   chain.select = () => chain;
   chain.neq = () => chain;
+  chain.eq = () => chain;
   chain.order = () => chain;
   chain.limit = () => chain;
   // Thenable — makes `await chain` resolve to the data
@@ -35,6 +36,7 @@ function makePendingChain() {
   const chain: any = {};
   chain.select = () => chain;
   chain.neq = () => chain;
+  chain.eq = () => chain;
   chain.order = () => chain;
   chain.limit = () => chain;
   chain.then = (
@@ -109,6 +111,21 @@ const MOCK_EXPENSES = [{ amount: 1200 }, { amount: 800 }];
 
 const MOCK_BOM_ITEMS = [{ quantity: 1, unit_cost_override: 6000 }, { quantity: 1, unit_cost_override: 2000 }];
 
+const MOCK_RECURRING_FEES = [
+  {
+    id: 'rf-1',
+    amount: 300,
+    frequency: 'monthly',
+    projects: { project_name: 'Ace Arena' },
+  },
+  {
+    id: 'rf-2',
+    amount: 600,
+    frequency: 'quarterly',
+    projects: { project_name: 'Blue Venue' },
+  },
+];
+
 const MOCK_SNAPSHOTS = [
   {
     period_year: 2026,
@@ -132,6 +149,7 @@ function seedDefaults() {
   tableDataMap['expenses'] = MOCK_EXPENSES;
   tableDataMap['project_bom_items'] = MOCK_BOM_ITEMS;
   tableDataMap['monthly_opex_snapshots'] = MOCK_SNAPSHOTS;
+  tableDataMap['recurring_fees'] = MOCK_RECURRING_FEES;
 }
 
 beforeEach(() => {
@@ -218,4 +236,47 @@ test('HER status badge renders inside summary card', async () => {
   await renderLoaded();
   const badge = document.querySelector('[data-testid="her-status-badge"]');
   expect(badge).not.toBeNull();
+});
+
+// 11. Recurring Fees section heading renders
+test('renders Recurring Fees section heading', async () => {
+  await renderLoaded();
+  expect(screen.getByText('Recurring Fees')).toBeInTheDocument();
+});
+
+// 12. Recurring Fees section shows active fee count in header
+test('Recurring Fees header shows fee count and /mo total', async () => {
+  await renderLoaded();
+  // 2 active fees · $X/mo
+  expect(screen.getByText(/2 active fees/)).toBeInTheDocument();
+});
+
+// 13. Recurring Fees shows project breakdown rows
+test('Recurring Fees shows project name breakdown', async () => {
+  await renderLoaded();
+  expect(screen.getByText('Ace Arena')).toBeInTheDocument();
+  expect(screen.getByText('Blue Venue')).toBeInTheDocument();
+});
+
+// 14. Recurring Fees monthly total: 300/mo + 600/3/mo = 300 + 200 = 500/mo
+test('Recurring Fees total monthly is sum of normalized fees', async () => {
+  await renderLoaded();
+  // Ace Arena: 300 monthly = $300.00/mo
+  // Blue Venue: 600 quarterly = 600/3 = $200.00/mo
+  // Total = $500.00/mo
+  const tables = document.querySelectorAll('table');
+  // Find the recurring fees table (last table on page)
+  const lastTable = tables[tables.length - 1];
+  expect(lastTable?.textContent).toContain('$500.00');
+});
+
+// 15. Recurring Fees renders empty state when no fees
+test('Recurring Fees shows empty state when no active fees', async () => {
+  tableDataMap['recurring_fees'] = [];
+  mockFrom.mockReset();
+  mockFrom.mockImplementation((table: string) => makeChain(table));
+  const Page = getPage();
+  render(React.createElement(Page));
+  await waitFor(() => expect(document.querySelector('.animate-spin')).toBeNull());
+  expect(screen.getByText('No recurring fees')).toBeInTheDocument();
 });
