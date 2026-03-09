@@ -21,6 +21,13 @@ export interface Project {
   deployment_progress_pct?: number;
 }
 
+function getProjectHref(id: string, status: string): string {
+  if (status === 'procurement') return `/projects/${id}/procurement`;
+  if (status === 'deployment') return `/projects/${id}/deployment`;
+  if (status === 'financial_close' || status === 'completed' || status === 'cancelled') return `/projects/${id}/financials`;
+  return `/projects/${id}/intake`;
+}
+
 export function ProjectList({
   projects,
   hasFilters,
@@ -80,7 +87,7 @@ export function ProjectList({
                   <TableRow key={project.id} className="hover:bg-muted/30 transition-colors">
                     <TableCell>
                       <a
-                        href={`/projects/${project.id}/intake`}
+                        href={getProjectHref(project.id, project.project_status)}
                         className="font-medium text-sm hover:underline"
                       >
                         {project.venue_name ?? project.customer_name}
@@ -134,7 +141,7 @@ export function ProjectList({
             <div key={project.id} className="border rounded-lg p-3 space-y-2">
               <div className="flex items-start justify-between gap-2">
                 <a
-                  href={`/projects/${project.id}/intake`}
+                  href={getProjectHref(project.id, project.project_status)}
                   className="font-medium text-sm hover:underline"
                 >
                   {project.venue_name ?? project.customer_name}
