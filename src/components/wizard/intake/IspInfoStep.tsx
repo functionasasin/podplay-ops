@@ -1,9 +1,21 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { SearchableSelect } from '@/components/ui/SearchableSelect';
 import { VALIDATION } from '@/lib/validation-messages';
+
+const PH_ISP_OPTIONS = [
+  { value: 'PLDT Fiber', label: 'PLDT Fiber' },
+  { value: 'Globe Fiber', label: 'Globe Fiber' },
+  { value: 'Converge Fiber', label: 'Converge Fiber' },
+  { value: 'Sky Broadband', label: 'Sky Broadband' },
+  { value: 'Globe LTE', label: 'Globe LTE' },
+  { value: 'Smart LTE', label: 'Smart LTE' },
+  { value: 'Other', label: 'Other' },
+];
 
 const V = VALIDATION.intake;
 
@@ -51,10 +63,19 @@ interface IspInfoStepProps {
 }
 
 export function IspInfoStep({ defaultValues, courtCount, onNext }: IspInfoStepProps) {
+  const defaultIspInOptions = PH_ISP_OPTIONS.some(o => o.value === defaultValues?.isp_provider);
+  const initialDropdown = defaultIspInOptions
+    ? (defaultValues?.isp_provider ?? '')
+    : defaultValues?.isp_provider
+      ? 'Other'
+      : '';
+  const [ispDropdown, setIspDropdown] = useState(initialDropdown);
+
   const {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<IspInfoValues>({
     resolver: zodResolver(ispInfoSchema),
@@ -65,6 +86,15 @@ export function IspInfoStep({ defaultValues, courtCount, onNext }: IspInfoStepPr
       download_speed_mbps: defaultValues?.download_speed_mbps ?? null,
     },
   });
+
+  function handleIspDropdownChange(val: string) {
+    setIspDropdown(val);
+    if (val !== 'Other') {
+      setValue('isp_provider', val, { shouldValidate: true });
+    } else {
+      setValue('isp_provider', '', { shouldValidate: false });
+    }
+  }
 
   const ispProvider = watch('isp_provider');
   const uploadSpeed = watch('upload_speed_mbps');
@@ -103,15 +133,21 @@ export function IspInfoStep({ defaultValues, courtCount, onNext }: IspInfoStepPr
       )}
 
       <div className="space-y-1">
-        <label htmlFor="isp_provider" className="text-sm font-medium">
-          ISP Provider
-        </label>
-        <Input
-          id="isp_provider"
-          placeholder="e.g. Verizon Fios, Spectrum, AT&T Fiber"
-          className="h-11"
-          {...register('isp_provider')}
+        <label className="text-sm font-medium">ISP Provider</label>
+        <SearchableSelect
+          options={PH_ISP_OPTIONS}
+          value={ispDropdown}
+          onChange={handleIspDropdownChange}
+          placeholder="Select ISP provider..."
         />
+        {ispDropdown === 'Other' && (
+          <Input
+            id="isp_provider"
+            placeholder="Enter custom ISP name"
+            className="h-11 mt-2"
+            {...register('isp_provider')}
+          />
+        )}
         {errors.isp_provider && (
           <p className="text-sm text-destructive">{errors.isp_provider.message}</p>
         )}
