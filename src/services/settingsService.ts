@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase';
 
 export type Settings = {
-  id: number;
+  id: string;
   // Service tier fees
   pro_venue_fee: number;
   pro_court_fee: number;
@@ -55,7 +55,7 @@ const settingsTable = () => supabase.from('settings') as any;
 export async function getSettings(): Promise<Settings> {
   const { data, error } = await settingsTable()
     .select('*')
-    .eq('id', 1)
+    .eq('id', 'default')
     .single();
   if (error) throw error;
   return data as Settings;
@@ -64,7 +64,7 @@ export async function getSettings(): Promise<Settings> {
 export async function updateSettings(patch: Partial<Settings>): Promise<Settings> {
   const { data, error } = await settingsTable()
     .update({ ...patch, updated_at: new Date().toISOString() })
-    .eq('id', 1)
+    .eq('id', 'default')
     .select()
     .single();
   if (error) throw error;
