@@ -390,8 +390,13 @@ function FinancialsDashboardPage() {
             .from('project_bom_items')
             .select('quantity, unit_cost_override'),
 
-          // HER snapshots — table may not exist yet, handled below
-          Promise.resolve({ data: [], error: null }),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (supabase as any)
+            .from('monthly_opex_snapshots')
+            .select('period_year, period_month, hardware_revenue, team_hardware_spend, her_ratio')
+            .order('period_year', { ascending: false })
+            .order('period_month', { ascending: false })
+            .limit(12),
         ]);
 
         if (projRes.error) throw new Error(projRes.error.message);

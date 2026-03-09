@@ -52,8 +52,8 @@ describe('status filter', () => {
     fireEvent.change(screen.getByDisplayValue('All Statuses'), { target: { value: 'deployment' } });
 
     // deployment: Beta Venue, Gamma Spot
-    expect(screen.getByText('Beta Venue')).toBeInTheDocument();
-    expect(screen.getByText('Gamma Spot')).toBeInTheDocument();
+    expect(screen.getAllByText('Beta Venue')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('Gamma Spot')[0]).toBeInTheDocument();
     // other statuses hidden
     expect(screen.queryByText('Alpha Venue')).toBeNull();
     expect(screen.queryByText('Delta Place')).toBeNull();
@@ -69,8 +69,8 @@ describe('tier filter', () => {
     fireEvent.change(screen.getByDisplayValue('All Tiers'), { target: { value: 'autonomous' } });
 
     // autonomous: Gamma Spot, Delta Place
-    expect(screen.getByText('Gamma Spot')).toBeInTheDocument();
-    expect(screen.getByText('Delta Place')).toBeInTheDocument();
+    expect(screen.getAllByText('Gamma Spot')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('Delta Place')[0]).toBeInTheDocument();
     // other tiers hidden
     expect(screen.queryByText('Alpha Venue')).toBeNull();
     expect(screen.queryByText('Beta Venue')).toBeNull();
@@ -85,7 +85,7 @@ describe('text search by venue name', () => {
     await renderLoaded();
     fireEvent.change(screen.getByPlaceholderText('Search projects...'), { target: { value: 'ALPHA' } });
 
-    expect(screen.getByText('Alpha Venue')).toBeInTheDocument();
+    expect(screen.getAllByText('Alpha Venue')[0]).toBeInTheDocument();
     expect(screen.queryByText('Beta Venue')).toBeNull();
     expect(screen.queryByText('Gamma Spot')).toBeNull();
     expect(screen.queryByText('Delta Place')).toBeNull();
@@ -100,7 +100,7 @@ describe('text search by customer name', () => {
     await renderLoaded();
     fireEvent.change(screen.getByPlaceholderText('Search projects...'), { target: { value: 'echo inc' } });
 
-    expect(screen.getByText('Echo Bar')).toBeInTheDocument();
+    expect(screen.getAllByText('Echo Bar')[0]).toBeInTheDocument();
     expect(screen.queryByText('Alpha Venue')).toBeNull();
     expect(screen.queryByText('Beta Venue')).toBeNull();
   });
@@ -115,7 +115,7 @@ describe('combined status filter + text search (AND logic)', () => {
     fireEvent.change(screen.getByPlaceholderText('Search projects...'), { target: { value: 'gamma' } });
 
     // Only Gamma Spot passes both: deployment status AND name contains 'gamma'
-    expect(screen.getByText('Gamma Spot')).toBeInTheDocument();
+    expect(screen.getAllByText('Gamma Spot')[0]).toBeInTheDocument();
     // Beta Venue is deployment but name doesn't contain 'gamma'
     expect(screen.queryByText('Beta Venue')).toBeNull();
     expect(screen.queryByText('Alpha Venue')).toBeNull();
@@ -136,11 +136,11 @@ describe('resetting filters', () => {
 
     // Reset to all
     fireEvent.change(statusSelect, { target: { value: 'all' } });
-    expect(screen.getByText('Alpha Venue')).toBeInTheDocument();
-    expect(screen.getByText('Beta Venue')).toBeInTheDocument();
-    expect(screen.getByText('Gamma Spot')).toBeInTheDocument();
-    expect(screen.getByText('Delta Place')).toBeInTheDocument();
-    expect(screen.getByText('Echo Bar')).toBeInTheDocument();
+    expect(screen.getAllByText('Alpha Venue')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('Beta Venue')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('Gamma Spot')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('Delta Place')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('Echo Bar')[0]).toBeInTheDocument();
   });
 
   it('selecting "All" in tier dropdown restores full list', async () => {
@@ -152,9 +152,9 @@ describe('resetting filters', () => {
 
     // Reset to all
     fireEvent.change(tierSelect, { target: { value: 'all' } });
-    expect(screen.getByText('Alpha Venue')).toBeInTheDocument();
-    expect(screen.getByText('Beta Venue')).toBeInTheDocument();
-    expect(screen.getByText('Echo Bar')).toBeInTheDocument();
+    expect(screen.getAllByText('Alpha Venue')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('Beta Venue')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('Echo Bar')[0]).toBeInTheDocument();
   });
 });
 

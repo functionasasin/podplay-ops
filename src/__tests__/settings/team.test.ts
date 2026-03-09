@@ -158,7 +158,7 @@ test('add form shows Required errors when submitted empty', async () => {
   });
 
   await waitFor(() => {
-    expect(screen.getAllByText('Required').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/is required/i).length).toBeGreaterThanOrEqual(1);
   });
 });
 
@@ -305,6 +305,11 @@ test('deactivate removes contact from active list', async () => {
 
   await act(async () => {
     fireEvent.click(screen.getByRole('button', { name: /deactivate/i }));
+  });
+
+  // Click confirm in the dialog
+  await act(async () => {
+    fireEvent.click(screen.getByRole('button', { name: /^deactivate$/i }));
   });
 
   await waitFor(() => {

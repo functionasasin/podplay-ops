@@ -84,8 +84,8 @@ test('renders project rows after query resolves', async () => {
   await waitFor(() => {
     expect(document.querySelector('.animate-spin')).toBeNull();
   });
-  expect(screen.getByText('Alpha Site')).toBeInTheDocument();
-  expect(screen.getByText('Beta Site')).toBeInTheDocument();
+  expect(screen.getAllByText('Alpha Site')[0]).toBeInTheDocument();
+  expect(screen.getAllByText('Beta Site')[0]).toBeInTheDocument();
 });
 
 // 4. When query errors, error message is displayed

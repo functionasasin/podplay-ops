@@ -14,20 +14,22 @@ const FUTURE_DATE = (() => {
 })();
 
 // --- Hoist mock helpers ---
-const { mockEq, mockUpdate, mockInstallersSelect, mockFrom, mockGenerateBom, mockShowToast } =
+const { mockEq, mockUpdate, mockInsert, mockInstallersSelect, mockFrom, mockGenerateBom, mockShowToast } =
   vi.hoisted(() => {
     const mockEq = vi.fn().mockResolvedValue({ error: null });
     const mockUpdate = vi.fn(() => ({ eq: mockEq }));
+    const mockInsert = vi.fn().mockResolvedValue({ error: null });
     const mockInstallersSelect = vi.fn().mockResolvedValue({
-      data: [{ id: 'inst-1', name: 'Test Installer', location: 'Denver, CO' }],
+      data: [{ id: 'inst-1', name: 'Test Installer', regions: ['Denver, CO'] }],
     });
     const mockFrom = vi.fn((table: string) => {
       if (table === 'installers') return { select: mockInstallersSelect };
+      if (table === 'invoices') return { insert: mockInsert };
       return { update: mockUpdate };
     });
     const mockGenerateBom = vi.fn().mockResolvedValue({ count: 5, error: null });
     const mockShowToast = vi.fn();
-    return { mockEq, mockUpdate, mockInstallersSelect, mockFrom, mockGenerateBom, mockShowToast };
+    return { mockEq, mockUpdate, mockInsert, mockInstallersSelect, mockFrom, mockGenerateBom, mockShowToast };
   });
 
 vi.mock('@/lib/supabase', () => ({
@@ -107,6 +109,7 @@ async function renderAndNavigateToReview() {
 beforeEach(() => {
   mockEq.mockClear();
   mockUpdate.mockClear();
+  mockInsert.mockClear();
   mockInstallersSelect.mockClear();
   mockFrom.mockClear();
   mockGenerateBom.mockClear();
@@ -129,7 +132,7 @@ test('project row is updated with all wizard form fields on submit', async () =>
     customer_name: 'Acme Corp',
     contact_email: 'acme@test.com',
     contact_phone: null,
-    venue_address: '123 Main St',
+    venue_address_line1: '123 Main St',
     court_count: 4,
     door_count: 0,
     security_camera_count: 0,
@@ -141,8 +144,7 @@ test('project row is updated with all wizard form fields on submit', async () =>
     internet_upload_mbps: 100,
     internet_download_mbps: 500,
     installer_id: 'inst-1',
-    target_go_live_date: FUTURE_DATE,
-    deposit_amount: 1000,
+    go_live_date: FUTURE_DATE,
   });
 });
 

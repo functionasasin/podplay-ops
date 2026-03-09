@@ -26,9 +26,9 @@ vi.mock('@/lib/supabase', () => ({
 import { InstallerSelectionStep } from '@/components/wizard/intake/InstallerSelectionStep';
 
 const INSTALLERS = [
-  { id: 'inst-1', name: 'Alpha Install Co', location: 'Denver, CO' },
-  { id: 'inst-2', name: 'Beta Networks', location: 'Austin, TX' },
-  { id: 'inst-3', name: 'Gamma Pro AV', location: null },
+  { id: 'inst-1', name: 'Alpha Install Co', regions: ['Denver, CO'] },
+  { id: 'inst-2', name: 'Beta Networks', regions: ['Austin, TX'] },
+  { id: 'inst-3', name: 'Gamma Pro AV', regions: null },
 ];
 
 function resolveLatest(data: unknown[] | null) {

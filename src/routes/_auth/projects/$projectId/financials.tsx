@@ -66,6 +66,7 @@ function FinancialsPage() {
         <div className="p-6 min-h-64">
           {activeTab === 'Invoicing' && (
             <div className="space-y-8">
+              <h2 className="text-base font-medium">Invoicing</h2>
               <DepositInvoice projectId={projectId} />
               <FinalInvoice projectId={projectId} />
             </div>
@@ -77,7 +78,10 @@ function FinancialsPage() {
             <PnlSummary projectId={projectId} />
           )}
           {activeTab === 'Go-Live' && (
-            <GoLive projectId={projectId} />
+            <div>
+              <h2 className="text-base font-medium mb-4">Go-Live</h2>
+              <GoLive projectId={projectId} />
+            </div>
           )}
         </div>
       </div>

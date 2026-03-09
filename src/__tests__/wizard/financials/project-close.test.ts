@@ -15,7 +15,7 @@ const { mockFrom, buildMockFrom } = vi.hoisted(() => {
     notes: string | null;
     completed_at: string | null;
   };
-  type InvoiceRow = { id: string; invoice_type: string; status: string };
+  type InvoiceRow = { id: string; type: string; status: string };
   type ChecklistItem = { id: string; is_completed: boolean };
 
   function buildMockFrom(opts: {
@@ -68,8 +68,8 @@ const { mockFrom, buildMockFrom } = vi.hoisted(() => {
     completed_at: null,
   };
   const DEFAULT_INVOICES: InvoiceRow[] = [
-    { id: 'inv-1', invoice_type: 'deposit', status: 'paid' },
-    { id: 'inv-2', invoice_type: 'final', status: 'sent' },
+    { id: 'inv-1', type: 'deposit', status: 'paid' },
+    { id: 'inv-2', type: 'final', status: 'sent' },
   ];
   const DEFAULT_CHECKLIST: ChecklistItem[] = [
     { id: 'c1', is_completed: true },
@@ -103,8 +103,8 @@ const DEFAULT_PROJECT = {
   completed_at: null as string | null,
 };
 const DEFAULT_INVOICES = [
-  { id: 'inv-1', invoice_type: 'deposit', status: 'paid' },
-  { id: 'inv-2', invoice_type: 'final', status: 'sent' },
+  { id: 'inv-1', type: 'deposit', status: 'paid' },
+  { id: 'inv-2', type: 'final', status: 'sent' },
 ];
 const DEFAULT_CHECKLIST = [
   { id: 'c1', is_completed: true },
@@ -173,8 +173,8 @@ test('close project button is disabled when deployment phases are incomplete', a
 test('close project button is disabled when deposit invoice is not paid', async () => {
   setMock({
     invoices: [
-      { id: 'inv-1', invoice_type: 'deposit', status: 'sent' },
-      { id: 'inv-2', invoice_type: 'final', status: 'sent' },
+      { id: 'inv-1', type: 'deposit', status: 'sent' },
+      { id: 'inv-2', type: 'final', status: 'sent' },
     ],
   });
   renderGoLive();
@@ -186,8 +186,8 @@ test('close project button is disabled when deposit invoice is not paid', async 
 test('close project button is disabled when final invoice is not sent', async () => {
   setMock({
     invoices: [
-      { id: 'inv-1', invoice_type: 'deposit', status: 'paid' },
-      { id: 'inv-2', invoice_type: 'final', status: 'draft' },
+      { id: 'inv-1', type: 'deposit', status: 'paid' },
+      { id: 'inv-2', type: 'final', status: 'draft' },
     ],
   });
   renderGoLive();

@@ -26,15 +26,15 @@ const { mockFrom } = vi.hoisted(() => {
     {
       id: 'row-1',
       hardware_catalog_id: 'cat-1',
-      qty: 2,
-      unit_cost: 100,
+      quantity: 2,
+      unit_cost_override: 100,
       hardware_catalog: { sku: 'NW-SW-01', name: 'Network Switch', vendor: 'Netgear', vendor_url: null },
     },
     {
       id: 'row-2',
       hardware_catalog_id: 'cat-2',
-      qty: 3,
-      unit_cost: 50,
+      quantity: 3,
+      unit_cost_override: 50,
       hardware_catalog: { sku: 'SSD-01', name: 'SSD 1TB', vendor: 'Samsung', vendor_url: null },
     },
   ];
@@ -68,7 +68,7 @@ function renderTable() {
 
 // Helper to wait for table to load
 async function waitForTable() {
-  await waitFor(() => expect(screen.getByText('Network Switch')).toBeInTheDocument());
+  await waitFor(() => expect(screen.getAllByText('Network Switch')[0]).toBeInTheDocument());
 }
 
 // 1. Changing qty from 2 to 5 updates the row total to new qty x unit cost
@@ -77,14 +77,14 @@ test('changing qty from 2 to 5 updates total to 5 x unit_cost', async () => {
   await waitForTable();
 
   // Initial total for row-1: 2 * 100 = 200.00
-  expect(screen.getByText('$200.00')).toBeInTheDocument();
+  expect(screen.getAllByText('$200.00')[0]).toBeInTheDocument();
 
   // spinbuttons: [row1-qty, row1-cost, row2-qty, row2-cost]
   const inputs = screen.getAllByRole('spinbutton');
   fireEvent.change(inputs[0], { target: { value: '5' } });
 
   // New total: 5 * 100 = 500.00
-  expect(screen.getByText('$500.00')).toBeInTheDocument();
+  expect(screen.getAllByText('$500.00')[0]).toBeInTheDocument();
   expect(screen.queryByText('$200.00')).not.toBeInTheDocument();
 });
 
@@ -94,13 +94,13 @@ test('landed cost recalculates after qty change', async () => {
   await waitForTable();
 
   // Initial landed cost row-1: 200 * 1.10 = 220.00
-  expect(screen.getByText('$220.00')).toBeInTheDocument();
+  expect(screen.getAllByText('$220.00')[0]).toBeInTheDocument();
 
   const inputs = screen.getAllByRole('spinbutton');
   fireEvent.change(inputs[0], { target: { value: '5' } });
 
   // New landed cost: 500 * 1.10 = 550.00
-  expect(screen.getByText('$550.00')).toBeInTheDocument();
+  expect(screen.getAllByText('$550.00')[0]).toBeInTheDocument();
   expect(screen.queryByText('$220.00')).not.toBeInTheDocument();
 });
 
@@ -110,13 +110,13 @@ test('customer price updates after qty change', async () => {
   await waitForTable();
 
   // Initial customer price row-1: 220 * 1.10 = 242.00
-  expect(screen.getByText('$242.00')).toBeInTheDocument();
+  expect(screen.getAllByText('$242.00')[0]).toBeInTheDocument();
 
   const inputs = screen.getAllByRole('spinbutton');
   fireEvent.change(inputs[0], { target: { value: '5' } });
 
   // New customer price: 550 * 1.10 = 605.00
-  expect(screen.getByText('$605.00')).toBeInTheDocument();
+  expect(screen.getAllByText('$605.00')[0]).toBeInTheDocument();
   expect(screen.queryByText('$242.00')).not.toBeInTheDocument();
 });
 
@@ -126,13 +126,13 @@ test('subtotal updates when qty changes', async () => {
   await waitForTable();
 
   // Initial subtotal: row-1 total (200) + row-2 total (150) = 350.00
-  expect(screen.getByText('$350.00')).toBeInTheDocument();
+  expect(screen.getAllByText('$350.00')[0]).toBeInTheDocument();
 
   const inputs = screen.getAllByRole('spinbutton');
   fireEvent.change(inputs[0], { target: { value: '5' } });
 
   // New subtotal: 500 + 150 = 650.00
-  expect(screen.getByText('$650.00')).toBeInTheDocument();
+  expect(screen.getAllByText('$650.00')[0]).toBeInTheDocument();
   expect(screen.queryByText('$350.00')).not.toBeInTheDocument();
 });
 
@@ -142,13 +142,13 @@ test('grand total updates when qty changes', async () => {
   await waitForTable();
 
   // Initial grand total: row-1 customerPrice (242) + row-2 customerPrice (181.50) = 423.50
-  expect(screen.getByText('$423.50')).toBeInTheDocument();
+  expect(screen.getAllByText('$423.50')[0]).toBeInTheDocument();
 
   const inputs = screen.getAllByRole('spinbutton');
   fireEvent.change(inputs[0], { target: { value: '5' } });
 
   // New grand total: 605 + 181.50 = 786.50
-  expect(screen.getByText('$786.50')).toBeInTheDocument();
+  expect(screen.getAllByText('$786.50')[0]).toBeInTheDocument();
   expect(screen.queryByText('$423.50')).not.toBeInTheDocument();
 });
 
@@ -158,14 +158,14 @@ test('changing unit cost recalculates landed cost and customer price', async () 
   await waitForTable();
 
   // row-2: qty=3, unit_cost=50 => total=150, landedCost=165, customerPrice=181.50
-  expect(screen.getByText('$165.00')).toBeInTheDocument();
-  expect(screen.getByText('$181.50')).toBeInTheDocument();
+  expect(screen.getAllByText('$165.00')[0]).toBeInTheDocument();
+  expect(screen.getAllByText('$181.50')[0]).toBeInTheDocument();
 
   // Change row-2 unit cost to 80: total=240, landedCost=264, customerPrice=290.40
   const inputs = screen.getAllByRole('spinbutton');
   fireEvent.change(inputs[3], { target: { value: '80' } });
 
-  expect(screen.getByText('$264.00')).toBeInTheDocument();
-  expect(screen.getByText('$290.40')).toBeInTheDocument();
+  expect(screen.getAllByText('$264.00')[0]).toBeInTheDocument();
+  expect(screen.getAllByText('$290.40')[0]).toBeInTheDocument();
   expect(screen.queryByText('$165.00')).not.toBeInTheDocument();
 });

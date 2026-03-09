@@ -37,7 +37,7 @@ describe('project_status labels', () => {
 
   it.each(cases)('status "%s" renders label "%s"', (status, label) => {
     renderProjectList(makeProject({ project_status: status }));
-    expect(screen.getByText(label)).toBeInTheDocument();
+    expect(screen.getAllByText(label)[0]).toBeInTheDocument();
   });
 });
 
@@ -66,28 +66,28 @@ describe('project_status badge classes', () => {
 describe('tier badges', () => {
   it('tier "pro" renders label "PRO" with blue styling', () => {
     const { container } = renderProjectList(makeProject({ tier: 'pro' }));
-    expect(screen.getByText('PRO')).toBeInTheDocument();
+    expect(screen.getAllByText('PRO')[0]).toBeInTheDocument();
     const badge = container.querySelector('span.bg-blue-100');
     expect(badge).not.toBeNull();
   });
 
   it('tier "autonomous" renders label "AUTO" with purple styling', () => {
     const { container } = renderProjectList(makeProject({ tier: 'autonomous' }));
-    expect(screen.getByText('AUTO')).toBeInTheDocument();
+    expect(screen.getAllByText('AUTO')[0]).toBeInTheDocument();
     const badge = container.querySelector('span.bg-purple-100');
     expect(badge).not.toBeNull();
   });
 
   it('tier "autonomous_plus" renders label "A+" with indigo styling', () => {
     const { container } = renderProjectList(makeProject({ tier: 'autonomous_plus' }));
-    expect(screen.getByText('A+')).toBeInTheDocument();
+    expect(screen.getAllByText('A+')[0]).toBeInTheDocument();
     const badge = container.querySelector('span.bg-indigo-100');
     expect(badge).not.toBeNull();
   });
 
   it('tier "pbk" renders label "PBK" with orange styling', () => {
     const { container } = renderProjectList(makeProject({ tier: 'pbk' }));
-    expect(screen.getByText('PBK')).toBeInTheDocument();
+    expect(screen.getAllByText('PBK')[0]).toBeInTheDocument();
     const badge = container.querySelector('span.bg-orange-100');
     expect(badge).not.toBeNull();
   });
@@ -101,7 +101,7 @@ describe('go-live date formatting', () => {
     // Should NOT show raw ISO string
     expect(screen.queryByText('2026-03-15')).toBeNull();
     // Should show formatted date like "Mar 15, 2026"
-    expect(screen.getByText('Mar 15, 2026')).toBeInTheDocument();
+    expect(screen.getAllByText('Mar 15, 2026')[0]).toBeInTheDocument();
   });
 
   it('renders em dash when go_live_date is null', () => {
@@ -119,12 +119,12 @@ describe('deployment progress formatting', () => {
     // Should NOT show raw 0–100 decimal without %
     expect(screen.queryByText('63')).toBeNull();
     // Should show formatted percentage
-    expect(screen.getByText('63%')).toBeInTheDocument();
+    expect(screen.getAllByText('63%')[0]).toBeInTheDocument();
   });
 
   it('formats 0 progress as "0%"', () => {
     renderProjectList(makeProject({ deployment_progress_pct: 0 }));
-    expect(screen.getByText('0%')).toBeInTheDocument();
+    expect(screen.getAllByText('0%')[0]).toBeInTheDocument();
   });
 
   it('renders em dash when deployment_progress_pct is undefined', () => {

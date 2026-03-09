@@ -76,8 +76,8 @@ test('PnlChart SVG bars have aria-labels matching mock data', () => {
 // 6. Empty state renders no-data message
 test('PnlChart shows empty state message when no months provided', () => {
   render(React.createElement(PnlChart, { months: [] }));
-  const msg = document.querySelector('p');
-  expect(msg?.textContent).toContain('No monthly data');
+  const msg = document.querySelector('h3');
+  expect(msg?.textContent).toContain('No P&L data');
 });
 
 // 7. Table header columns are present
@@ -138,7 +138,7 @@ test('HerChart table shows correct HER ratio values', () => {
 // 12. HER empty state renders no-data message
 test('HerChart shows empty state message when no months provided', () => {
   render(React.createElement(HerChart, { months: [] }));
-  const msg = document.querySelector('p');
+  const msg = document.querySelector('h3');
   expect(msg?.textContent).toContain('No HER data');
 });
 

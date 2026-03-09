@@ -87,12 +87,13 @@ function ProcurementPage() {
           )}
           {activeTab === 'Purchase Orders' && (
             <div className="space-y-8">
+              <h2 className="text-base font-medium mb-4">Purchase Orders</h2>
               <div>
-                <h2 className="text-base font-medium mb-4">Create Purchase Order</h2>
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">Create Purchase Order</h3>
                 <PoCreateForm projectId={projectId} />
               </div>
               <div>
-                <h2 className="text-base font-medium mb-4">Receive Purchase Order</h2>
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">Receive Purchase Order</h3>
                 <PoReceiving projectId={projectId} />
               </div>
             </div>

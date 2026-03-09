@@ -107,7 +107,7 @@ const MOCK_INVOICES = [
 
 const MOCK_EXPENSES = [{ amount: 1200 }, { amount: 800 }];
 
-const MOCK_BOM_ITEMS = [{ est_total_cost: 6000 }, { est_total_cost: 2000 }];
+const MOCK_BOM_ITEMS = [{ quantity: 1, unit_cost_override: 6000 }, { quantity: 1, unit_cost_override: 2000 }];
 
 const MOCK_SNAPSHOTS = [
   {

@@ -107,7 +107,7 @@ test('add form shows Required errors when submitted empty', async () => {
 
   // At least one Required error should appear (sku, name, category, or vendor)
   await waitFor(() => {
-    expect(screen.getAllByText('Required').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/is required/i).length).toBeGreaterThanOrEqual(1);
   });
 });
 
@@ -204,7 +204,8 @@ test('archive removes item from active list', async () => {
   fireEvent.click(screen.getByRole('button', { name: /deactivate/i }));
 
   // Confirm dialog appears
-  expect(screen.getByText(/Deactivate UniFi Dream Machine SE/)).toBeInTheDocument();
+  expect(screen.getByText(/Deactivate item/i)).toBeInTheDocument();
+  expect(screen.getAllByText(/UniFi Dream Machine SE/)[0]).toBeInTheDocument();
 
   // Confirm deactivation
   const confirmButton = screen.getByRole('button', { name: /^deactivate$/i });

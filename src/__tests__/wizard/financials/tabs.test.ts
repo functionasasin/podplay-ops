@@ -12,7 +12,14 @@ const { mockSingle, mockEq, mockSelect, mockFrom } = vi.hoisted(() => {
   const mockSingle = vi.fn().mockResolvedValue({
     data: { project_name: 'Test Project', customer_name: 'Test Customer' },
   });
-  const mockEq = vi.fn(() => ({ single: mockSingle, data: [] }));
+  const mockEqInner = vi.fn().mockResolvedValue({ data: [], error: null });
+  const mockOrder = vi.fn().mockResolvedValue({ data: [], error: null });
+  const mockEq = vi.fn(() => ({
+    single: mockSingle,
+    data: [],
+    eq: mockEqInner,
+    order: mockOrder,
+  }));
   const mockSelect = vi.fn(() => ({ eq: mockEq }));
   const mockFrom = vi.fn(() => ({ select: mockSelect }));
   return { mockSingle, mockEq, mockSelect, mockFrom };
@@ -62,10 +69,10 @@ test('clicking Expenses tab shows Expenses content', () => {
 });
 
 // 4. Clicking "P&L Summary" shows its content panel
-test('clicking P&L Summary tab shows P&L Summary content', () => {
+test('clicking P&L Summary tab shows P&L Summary content', async () => {
   renderPage();
   fireEvent.click(screen.getByRole('button', { name: 'P&L Summary' }));
-  expect(screen.getByRole('heading', { name: 'P&L Summary' })).toBeInTheDocument();
+  await waitFor(() => expect(screen.getByRole('heading', { name: 'P&L Summary' })).toBeInTheDocument());
 });
 
 // 5. Clicking "Go-Live" shows its content panel
