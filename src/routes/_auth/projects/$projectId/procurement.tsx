@@ -55,7 +55,7 @@ function ProcurementPage() {
       </div>
 
       <div className="border rounded-lg overflow-hidden">
-        <div className="flex border-b bg-muted/30">
+        <div className="flex overflow-x-auto border-b bg-muted/30">
           {PROCUREMENT_TABS.map((tab) => (
             <button
               key={tab}
