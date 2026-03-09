@@ -18,6 +18,7 @@ import { Route as AuthSettingsIndexRouteImport } from './routes/_auth/settings/i
 import { Route as AuthProjectsIndexRouteImport } from './routes/_auth/projects/index'
 import { Route as AuthInventoryIndexRouteImport } from './routes/_auth/inventory/index'
 import { Route as AuthFinancialsIndexRouteImport } from './routes/_auth/financials/index'
+import { Route as AuthSettingsVendorsRouteImport } from './routes/_auth/settings/vendors'
 import { Route as AuthSettingsTravelRouteImport } from './routes/_auth/settings/travel'
 import { Route as AuthSettingsTeamRouteImport } from './routes/_auth/settings/team'
 import { Route as AuthSettingsPricingRouteImport } from './routes/_auth/settings/pricing'
@@ -72,6 +73,11 @@ const AuthFinancialsIndexRoute = AuthFinancialsIndexRouteImport.update({
   id: '/financials/',
   path: '/financials/',
   getParentRoute: () => AuthRoute,
+} as any)
+const AuthSettingsVendorsRoute = AuthSettingsVendorsRouteImport.update({
+  id: '/vendors',
+  path: '/vendors',
+  getParentRoute: () => AuthSettingsRoute,
 } as any)
 const AuthSettingsTravelRoute = AuthSettingsTravelRouteImport.update({
   id: '/travel',
@@ -139,6 +145,7 @@ export interface FileRoutesByFullPath {
   '/settings/pricing': typeof AuthSettingsPricingRoute
   '/settings/team': typeof AuthSettingsTeamRoute
   '/settings/travel': typeof AuthSettingsTravelRoute
+  '/settings/vendors': typeof AuthSettingsVendorsRoute
   '/financials/': typeof AuthFinancialsIndexRoute
   '/inventory/': typeof AuthInventoryIndexRoute
   '/projects/': typeof AuthProjectsIndexRoute
@@ -158,6 +165,7 @@ export interface FileRoutesByTo {
   '/settings/pricing': typeof AuthSettingsPricingRoute
   '/settings/team': typeof AuthSettingsTeamRoute
   '/settings/travel': typeof AuthSettingsTravelRoute
+  '/settings/vendors': typeof AuthSettingsVendorsRoute
   '/financials': typeof AuthFinancialsIndexRoute
   '/inventory': typeof AuthInventoryIndexRoute
   '/projects': typeof AuthProjectsIndexRoute
@@ -180,6 +188,7 @@ export interface FileRoutesById {
   '/_auth/settings/pricing': typeof AuthSettingsPricingRoute
   '/_auth/settings/team': typeof AuthSettingsTeamRoute
   '/_auth/settings/travel': typeof AuthSettingsTravelRoute
+  '/_auth/settings/vendors': typeof AuthSettingsVendorsRoute
   '/_auth/financials/': typeof AuthFinancialsIndexRoute
   '/_auth/inventory/': typeof AuthInventoryIndexRoute
   '/_auth/projects/': typeof AuthProjectsIndexRoute
@@ -202,6 +211,7 @@ export interface FileRouteTypes {
     | '/settings/pricing'
     | '/settings/team'
     | '/settings/travel'
+    | '/settings/vendors'
     | '/financials/'
     | '/inventory/'
     | '/projects/'
@@ -221,6 +231,7 @@ export interface FileRouteTypes {
     | '/settings/pricing'
     | '/settings/team'
     | '/settings/travel'
+    | '/settings/vendors'
     | '/financials'
     | '/inventory'
     | '/projects'
@@ -242,6 +253,7 @@ export interface FileRouteTypes {
     | '/_auth/settings/pricing'
     | '/_auth/settings/team'
     | '/_auth/settings/travel'
+    | '/_auth/settings/vendors'
     | '/_auth/financials/'
     | '/_auth/inventory/'
     | '/_auth/projects/'
@@ -324,6 +336,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthFinancialsIndexRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/settings/vendors': {
+      id: '/_auth/settings/vendors'
+      path: '/vendors'
+      fullPath: '/settings/vendors'
+      preLoaderRoute: typeof AuthSettingsVendorsRouteImport
+      parentRoute: typeof AuthSettingsRoute
+    }
     '/_auth/settings/travel': {
       id: '/_auth/settings/travel'
       path: '/travel'
@@ -403,6 +422,7 @@ interface AuthSettingsRouteChildren {
   AuthSettingsPricingRoute: typeof AuthSettingsPricingRoute
   AuthSettingsTeamRoute: typeof AuthSettingsTeamRoute
   AuthSettingsTravelRoute: typeof AuthSettingsTravelRoute
+  AuthSettingsVendorsRoute: typeof AuthSettingsVendorsRoute
   AuthSettingsIndexRoute: typeof AuthSettingsIndexRoute
 }
 
@@ -412,6 +432,7 @@ const AuthSettingsRouteChildren: AuthSettingsRouteChildren = {
   AuthSettingsPricingRoute: AuthSettingsPricingRoute,
   AuthSettingsTeamRoute: AuthSettingsTeamRoute,
   AuthSettingsTravelRoute: AuthSettingsTravelRoute,
+  AuthSettingsVendorsRoute: AuthSettingsVendorsRoute,
   AuthSettingsIndexRoute: AuthSettingsIndexRoute,
 }
 
