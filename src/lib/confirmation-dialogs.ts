@@ -121,6 +121,17 @@ export function advanceToDeploymentDialog(venueName: string, tier: string): Dial
   };
 }
 
+// D-09b: Advance to Financial Close
+export function advanceToFinancialCloseDialog(venueName: string): DialogConfig {
+  return {
+    title: 'Advance to Financial Close?',
+    body: `This will move ${venueName} to Stage 4: Financial Close. The deployment stage will become read-only. You can still view checklists but items can no longer be toggled.`,
+    confirmLabel: 'Advance to Financial Close',
+    cancelLabel: 'Cancel',
+    destructive: false,
+  };
+}
+
 // D-10: Cancel Project
 export function cancelProjectDialog(venueName: string): DialogConfig {
   return {

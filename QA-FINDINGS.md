@@ -92,6 +92,20 @@
 - **Actual**: Vendor is just a text field on catalog items. No dedicated vendor management.
 - **Notes**: Could be a standalone entity with name, contact info, lead times, URLs — then referenced by catalog items via FK. Similar pattern to Team Contacts / Installers settings pages.
 
+### F12 — Recurring fees tracking
+- **Category**: MISSING
+- **Location**: Project Financials, Global Financials
+- **Expected**: Support for arbitrary recurring fees per project (e.g., monthly Replay license, Starlink, cloud hosting, support retainer). Some fees are standard templates, some are ad-hoc per project. Each fee needs: label, amount, frequency (monthly/quarterly/annual), start date, optional end date. Payment status should be tracked per billing period (paid/unpaid). UI should live in both (a) a new "Recurring Fees" tab in project Financials, and (b) a global overview across all active projects showing outstanding fees.
+- **Actual**: No recurring fee concept exists. Financial model is one-time only (deposit + final invoice + expenses).
+- **Notes**: Schema: `recurring_fees` table (project_id, label, amount, frequency, start_date, end_date, is_active) + `recurring_fee_payments` table (fee_id, period_start, period_end, status, paid_date, payment_method). The P&L summary and HER calculation should incorporate recurring revenue once implemented.
+
+### F13 — No "Advance to Financial Close" button in deployment
+- **Category**: MISSING
+- **Location**: Deployment page (`routes/_auth/projects/$projectId/deployment.tsx`)
+- **Expected**: An "Advance to Financial Close" button at the bottom of the deployment page.
+- **Actual**: Button was missing. No way to move project from deployment to financial close stage.
+- **Status**: FIXED — added button with confirmation dialog and navigation to financials page.
+
 ---
 
 ## Patterns to Watch in Future Loops

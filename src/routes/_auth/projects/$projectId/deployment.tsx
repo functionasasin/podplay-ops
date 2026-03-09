@@ -1,5 +1,6 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { SmartChecklist, type ChecklistItem, type ProjectTokenFields } from '@/components/wizard/deployment/SmartChecklist';
 import { VlanReferencePanel } from '@/components/wizard/deployment/VlanReferencePanel';
@@ -8,6 +9,8 @@ import { ReplayServiceVersionPanel } from '@/components/wizard/deployment/Replay
 import { AppLockWarningBanner } from '@/components/wizard/deployment/AppLockWarningBanner';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { EMPTY_STATES } from '@/lib/empty-state-configs';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { advanceToFinancialCloseDialog } from '@/lib/confirmation-dialogs';
 
 // Phase display ordering per spec: 0-11, then 15, then 12-14
 const PHASE_DISPLAY_ORDER = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 15, 12, 13, 14];
@@ -51,10 +54,13 @@ type ProjectState = ProjectTokenFields & {
 
 function DeploymentPage() {
   const { projectId } = Route.useParams();
+  const navigate = useNavigate();
   const [project, setProject] = useState<ProjectState | null>(null);
   const [items, setItems] = useState<ChecklistItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPhase, setSelectedPhase] = useState<number>(0);
+  const [showAdvanceDialog, setShowAdvanceDialog] = useState(false);
+  const [advancing, setAdvancing] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -236,6 +242,49 @@ function DeploymentPage() {
           )}
         </div>
       </div>
+      {/* Advance to Financial Close */}
+      <div className="flex justify-end">
+        <button
+          onClick={() => setShowAdvanceDialog(true)}
+          disabled={advancing}
+          className="px-4 py-2 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+        >
+          Advance to Financial Close →
+        </button>
+      </div>
+
+      {showAdvanceDialog && (() => {
+        const cfg = advanceToFinancialCloseDialog(
+          project?.project_name ?? projectId,
+        );
+        return (
+          <ConfirmDialog
+            open={true}
+            onOpenChange={(open) => { if (!open) setShowAdvanceDialog(false); }}
+            title={cfg.title}
+            body={cfg.body}
+            confirmLabel={cfg.confirmLabel}
+            cancelLabel={cfg.cancelLabel}
+            destructive={cfg.destructive}
+            onConfirm={async () => {
+              setAdvancing(true);
+              try {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                await (supabase.from('projects') as any)
+                  .update({ project_status: 'financial_close' })
+                  .eq('id', projectId);
+                toast.success('Project advanced to Financial Close');
+                setShowAdvanceDialog(false);
+                navigate({ to: '/projects/$projectId/financials', params: { projectId } });
+              } catch (err) {
+                toast.error('Failed: ' + (err instanceof Error ? err.message : String(err)));
+              } finally {
+                setAdvancing(false);
+              }
+            }}
+          />
+        );
+      })()}
     </div>
   );
 }
