@@ -1,14 +1,22 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { EMPTY_STATES } from '@/lib/empty-state-configs';
+import { AdjustmentModal } from '@/components/inventory/AdjustmentModal';
 
 interface InventoryRow {
+  item_id: string;
   name: string;
   sku: string;
   needed: number;
   on_hand: number;
   delta: number;
+}
+
+interface AdjustingItem {
+  id: string;
+  name: string;
+  qty: number;
 }
 
 interface InventoryCheckPanelProps {
@@ -18,55 +26,58 @@ interface InventoryCheckPanelProps {
 export function InventoryCheckPanel({ projectId }: InventoryCheckPanelProps) {
   const [rows, setRows] = useState<InventoryRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [adjustingItem, setAdjustingItem] = useState<AdjustingItem | null>(null);
 
-  useEffect(() => {
-    async function load() {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: bomItems } = await (supabase.from('project_bom_items') as any)
-        .select(
-          `quantity,
-           hardware_catalog!inner(id, sku, name)`,
-        )
-        .eq('project_id', projectId);
+  const load = useCallback(async () => {
+    setLoading(true);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: bomItems } = await (supabase.from('project_bom_items') as any)
+      .select(
+        `quantity,
+         hardware_catalog!inner(id, sku, name)`,
+      )
+      .eq('project_id', projectId);
 
-      if (!bomItems || bomItems.length === 0) {
-        setLoading(false);
-        return;
-      }
-
-      // Build a map of catalog_id -> { sku, name, needed }
-      const catalogIds = bomItems.map((b: any) => b.hardware_catalog.id);
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: invItems } = await (supabase.from('inventory') as any)
-        .select('item_id, quantity_on_hand')
-        .in('item_id', catalogIds);
-
-      const invMap: Record<string, number> = {};
-      if (invItems) {
-        for (const inv of invItems as any[]) {
-          invMap[inv.item_id] = (invMap[inv.item_id] ?? 0) + inv.quantity_on_hand;
-        }
-      }
-
-      const result: InventoryRow[] = bomItems.map((b: any) => {
-        const needed = b.quantity as number;
-        const on_hand = invMap[b.hardware_catalog.id] ?? 0;
-        return {
-          name: b.hardware_catalog.name as string,
-          sku: b.hardware_catalog.sku as string,
-          needed,
-          on_hand,
-          delta: on_hand - needed,
-        };
-      });
-
-      setRows(result);
+    if (!bomItems || bomItems.length === 0) {
       setLoading(false);
+      return;
     }
 
-    load();
+    // Build a map of catalog_id -> { sku, name, needed }
+    const catalogIds = bomItems.map((b: any) => b.hardware_catalog.id);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: invItems } = await (supabase.from('inventory') as any)
+      .select('item_id, quantity_on_hand')
+      .in('item_id', catalogIds);
+
+    const invMap: Record<string, number> = {};
+    if (invItems) {
+      for (const inv of invItems as any[]) {
+        invMap[inv.item_id] = (invMap[inv.item_id] ?? 0) + inv.quantity_on_hand;
+      }
+    }
+
+    const result: InventoryRow[] = bomItems.map((b: any) => {
+      const needed = b.quantity as number;
+      const on_hand = invMap[b.hardware_catalog.id] ?? 0;
+      return {
+        item_id: b.hardware_catalog.id as string,
+        name: b.hardware_catalog.name as string,
+        sku: b.hardware_catalog.sku as string,
+        needed,
+        on_hand,
+        delta: on_hand - needed,
+      };
+    });
+
+    setRows(result);
+    setLoading(false);
   }, [projectId]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   if (loading) return <p className="text-sm text-muted-foreground">Loading inventory...</p>;
   if (rows.length === 0) {
@@ -75,48 +86,76 @@ export function InventoryCheckPanel({ projectId }: InventoryCheckPanelProps) {
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm border-collapse">
-        <thead>
-          <tr className="border-b text-left text-muted-foreground">
-            <th className="py-2 pr-4 font-medium">SKU</th>
-            <th className="py-2 pr-4 font-medium">Item Name</th>
-            <th className="py-2 pr-4 font-medium w-28 text-right">Needed</th>
-            <th className="py-2 pr-4 font-medium w-28 text-right">On Hand</th>
-            <th className="py-2 font-medium w-28 text-right">Delta</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => {
-            const isLow = row.delta < 0;
-            const isSurplus = row.delta > 0;
-            return (
-              <tr key={row.sku} className="border-b hover:bg-muted/30">
-                <td className="py-2 pr-4 font-mono text-xs text-muted-foreground">{row.sku}</td>
-                <td className="py-2 pr-4">{row.name}</td>
-                <td className="py-2 pr-4 text-right">{row.needed}</td>
-                <td className="py-2 pr-4 text-right">{row.on_hand}</td>
-                <td className="py-2 text-right">
-                  {isLow && (
-                    <span className="inline-flex items-center gap-1 text-red-600 font-medium">
-                      <span aria-label="low stock">⚠</span>
-                      {row.delta}
-                    </span>
-                  )}
-                  {isSurplus && (
-                    <span className="inline-flex items-center gap-1 text-green-600 font-medium">
-                      <span aria-label="surplus">✓</span>+{row.delta}
-                    </span>
-                  )}
-                  {!isLow && !isSurplus && (
-                    <span className="text-muted-foreground">0</span>
-                  )}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+    <>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr className="border-b text-left text-muted-foreground">
+              <th className="py-2 pr-4 font-medium">SKU</th>
+              <th className="py-2 pr-4 font-medium">Item Name</th>
+              <th className="py-2 pr-4 font-medium w-28 text-right">Needed</th>
+              <th className="py-2 pr-4 font-medium w-28 text-right">On Hand</th>
+              <th className="py-2 pr-4 font-medium w-28 text-right">Delta</th>
+              <th className="py-2 font-medium w-20" />
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => {
+              const isLow = row.delta < 0;
+              const isSurplus = row.delta > 0;
+              return (
+                <tr key={row.sku} className="border-b hover:bg-muted/30">
+                  <td className="py-2 pr-4 font-mono text-xs text-muted-foreground">{row.sku}</td>
+                  <td className="py-2 pr-4">{row.name}</td>
+                  <td className="py-2 pr-4 text-right">{row.needed}</td>
+                  <td className="py-2 pr-4 text-right">{row.on_hand}</td>
+                  <td className="py-2 pr-4 text-right">
+                    {isLow && (
+                      <span className="inline-flex items-center gap-1 text-red-600 font-medium">
+                        <span aria-label="low stock">⚠</span>
+                        {row.delta}
+                      </span>
+                    )}
+                    {isSurplus && (
+                      <span className="inline-flex items-center gap-1 text-green-600 font-medium">
+                        <span aria-label="surplus">✓</span>+{row.delta}
+                      </span>
+                    )}
+                    {!isLow && !isSurplus && (
+                      <span className="text-muted-foreground">0</span>
+                    )}
+                  </td>
+                  <td className="py-2 text-right">
+                    <button
+                      className="text-xs px-2 py-1 rounded border hover:bg-muted transition-colors"
+                      onClick={() =>
+                        setAdjustingItem({
+                          id: row.item_id,
+                          name: row.name,
+                          qty: row.on_hand,
+                        })
+                      }
+                    >
+                      Adjust
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {adjustingItem && (
+        <AdjustmentModal
+          itemId={adjustingItem.id}
+          itemName={adjustingItem.name}
+          currentQty={adjustingItem.qty}
+          isOpen={true}
+          onClose={() => setAdjustingItem(null)}
+          onSuccess={() => void load()}
+        />
+      )}
+    </>
   );
 }
