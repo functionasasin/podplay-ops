@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { WizardStepper } from '@/components/wizard/WizardStepper';
 import { CustomerInfoStep, type CustomerInfoValues } from '@/components/wizard/intake/CustomerInfoStep';
 import { VenueConfigStep, type VenueConfigValues } from '@/components/wizard/intake/VenueConfigStep';
@@ -35,34 +35,54 @@ function IntakePage() {
   }>({});
   const { projectId } = Route.useParams();
 
+  useEffect(() => {
+    async function fetchWizardStep() {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: project } = await (supabase.from('projects') as any)
+        .select('wizard_step, project_status')
+        .eq('id', projectId)
+        .single();
+      if (project?.wizard_step != null) {
+        setCurrentStep(project.wizard_step);
+      }
+    }
+    void fetchWizardStep();
+  }, [projectId]);
+
+  async function advanceStep(nextStep: number) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase.from('projects') as any).update({ wizard_step: nextStep }).eq('id', projectId);
+    setCurrentStep(nextStep);
+  }
+
   function handleCustomerInfoNext(data: CustomerInfoValues) {
     setWizardData((prev) => ({ ...prev, customerInfo: data }));
-    setCurrentStep(1);
+    void advanceStep(1);
   }
 
   function handleVenueConfigNext(data: VenueConfigValues) {
     setWizardData((prev) => ({ ...prev, venueConfig: data }));
-    setCurrentStep(2);
+    void advanceStep(2);
   }
 
   function handleTierSelectionNext(data: TierSelectionValues) {
     setWizardData((prev) => ({ ...prev, tierSelection: data }));
-    setCurrentStep(3);
+    void advanceStep(3);
   }
 
   function handleIspInfoNext(data: IspInfoValues) {
     setWizardData((prev) => ({ ...prev, ispInfo: data }));
-    setCurrentStep(4);
+    void advanceStep(4);
   }
 
   function handleInstallerSelectionNext(data: InstallerSelectionValues) {
     setWizardData((prev) => ({ ...prev, installerSelection: data }));
-    setCurrentStep(5);
+    void advanceStep(5);
   }
 
   function handleFinancialSetupNext(data: FinancialSetupValues) {
     setWizardData((prev) => ({ ...prev, financialSetup: data }));
-    setCurrentStep(6);
+    void advanceStep(6);
   }
 
   async function handleIntakeSubmit() {
@@ -200,7 +220,7 @@ function IntakePage() {
             ispInfo={wizardData.ispInfo}
             installerSelection={wizardData.installerSelection}
             financialSetup={wizardData.financialSetup}
-            onEdit={setCurrentStep}
+            onEdit={advanceStep}
             onSubmit={handleIntakeSubmit}
             isSubmitting={isSubmitting}
           />
