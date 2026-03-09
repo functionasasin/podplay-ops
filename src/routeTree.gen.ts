@@ -21,6 +21,7 @@ import { Route as AuthFinancialsIndexRouteImport } from './routes/_auth/financia
 import { Route as AuthSettingsTravelRouteImport } from './routes/_auth/settings/travel'
 import { Route as AuthSettingsTeamRouteImport } from './routes/_auth/settings/team'
 import { Route as AuthSettingsPricingRouteImport } from './routes/_auth/settings/pricing'
+import { Route as AuthSettingsInstallersRouteImport } from './routes/_auth/settings/installers'
 import { Route as AuthSettingsCatalogRouteImport } from './routes/_auth/settings/catalog'
 import { Route as AuthProjectsNewRouteImport } from './routes/_auth/projects/new'
 import { Route as AuthProjectsProjectIdProcurementRouteImport } from './routes/_auth/projects/$projectId/procurement'
@@ -87,6 +88,11 @@ const AuthSettingsPricingRoute = AuthSettingsPricingRouteImport.update({
   path: '/pricing',
   getParentRoute: () => AuthSettingsRoute,
 } as any)
+const AuthSettingsInstallersRoute = AuthSettingsInstallersRouteImport.update({
+  id: '/installers',
+  path: '/installers',
+  getParentRoute: () => AuthSettingsRoute,
+} as any)
 const AuthSettingsCatalogRoute = AuthSettingsCatalogRouteImport.update({
   id: '/catalog',
   path: '/catalog',
@@ -129,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/projects/new': typeof AuthProjectsNewRoute
   '/settings/catalog': typeof AuthSettingsCatalogRoute
+  '/settings/installers': typeof AuthSettingsInstallersRoute
   '/settings/pricing': typeof AuthSettingsPricingRoute
   '/settings/team': typeof AuthSettingsTeamRoute
   '/settings/travel': typeof AuthSettingsTravelRoute
@@ -147,6 +154,7 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/projects/new': typeof AuthProjectsNewRoute
   '/settings/catalog': typeof AuthSettingsCatalogRoute
+  '/settings/installers': typeof AuthSettingsInstallersRoute
   '/settings/pricing': typeof AuthSettingsPricingRoute
   '/settings/team': typeof AuthSettingsTeamRoute
   '/settings/travel': typeof AuthSettingsTravelRoute
@@ -168,6 +176,7 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/_auth/projects/new': typeof AuthProjectsNewRoute
   '/_auth/settings/catalog': typeof AuthSettingsCatalogRoute
+  '/_auth/settings/installers': typeof AuthSettingsInstallersRoute
   '/_auth/settings/pricing': typeof AuthSettingsPricingRoute
   '/_auth/settings/team': typeof AuthSettingsTeamRoute
   '/_auth/settings/travel': typeof AuthSettingsTravelRoute
@@ -189,6 +198,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/projects/new'
     | '/settings/catalog'
+    | '/settings/installers'
     | '/settings/pricing'
     | '/settings/team'
     | '/settings/travel'
@@ -207,6 +217,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/projects/new'
     | '/settings/catalog'
+    | '/settings/installers'
     | '/settings/pricing'
     | '/settings/team'
     | '/settings/travel'
@@ -227,6 +238,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/_auth/projects/new'
     | '/_auth/settings/catalog'
+    | '/_auth/settings/installers'
     | '/_auth/settings/pricing'
     | '/_auth/settings/team'
     | '/_auth/settings/travel'
@@ -333,6 +345,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSettingsPricingRouteImport
       parentRoute: typeof AuthSettingsRoute
     }
+    '/_auth/settings/installers': {
+      id: '/_auth/settings/installers'
+      path: '/installers'
+      fullPath: '/settings/installers'
+      preLoaderRoute: typeof AuthSettingsInstallersRouteImport
+      parentRoute: typeof AuthSettingsRoute
+    }
     '/_auth/settings/catalog': {
       id: '/_auth/settings/catalog'
       path: '/catalog'
@@ -380,6 +399,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthSettingsRouteChildren {
   AuthSettingsCatalogRoute: typeof AuthSettingsCatalogRoute
+  AuthSettingsInstallersRoute: typeof AuthSettingsInstallersRoute
   AuthSettingsPricingRoute: typeof AuthSettingsPricingRoute
   AuthSettingsTeamRoute: typeof AuthSettingsTeamRoute
   AuthSettingsTravelRoute: typeof AuthSettingsTravelRoute
@@ -388,6 +408,7 @@ interface AuthSettingsRouteChildren {
 
 const AuthSettingsRouteChildren: AuthSettingsRouteChildren = {
   AuthSettingsCatalogRoute: AuthSettingsCatalogRoute,
+  AuthSettingsInstallersRoute: AuthSettingsInstallersRoute,
   AuthSettingsPricingRoute: AuthSettingsPricingRoute,
   AuthSettingsTeamRoute: AuthSettingsTeamRoute,
   AuthSettingsTravelRoute: AuthSettingsTravelRoute,

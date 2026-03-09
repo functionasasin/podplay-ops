@@ -4,6 +4,7 @@ const SETTINGS_TABS = [
   { label: 'Pricing', to: '/settings/pricing' },
   { label: 'Catalog', to: '/settings/catalog' },
   { label: 'Team', to: '/settings/team' },
+  { label: 'Installers', to: '/settings/installers' },
   { label: 'Travel', to: '/settings/travel' },
 ] as const;
 
