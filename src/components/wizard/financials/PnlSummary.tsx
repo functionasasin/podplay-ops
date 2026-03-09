@@ -235,8 +235,8 @@ export function PnlSummary({ projectId }: PnlSummaryProps) {
       {monthRows.length > 0 && (
         <div>
           <h4 className="text-sm font-semibold mb-3">Monthly Breakdown</h4>
-          <div className="border rounded-lg overflow-hidden">
-            <table className="w-full text-sm">
+          <div className="border rounded-lg overflow-x-auto">
+            <table className="w-full text-sm min-w-[500px]">
               <thead>
                 <tr className="border-b bg-muted/50">
                   <th className="text-left px-4 py-2 font-medium">Month</th>

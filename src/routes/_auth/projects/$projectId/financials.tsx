@@ -46,7 +46,7 @@ function FinancialsPage() {
       </div>
 
       <div className="border rounded-lg overflow-hidden">
-        <div className="flex border-b bg-muted/30">
+        <div className="flex border-b bg-muted/30 overflow-x-auto">
           {FINANCIALS_TABS.map((tab) => (
             <button
               key={tab}
