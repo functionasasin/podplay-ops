@@ -6,8 +6,9 @@ import { FinalInvoice } from '@/components/wizard/financials/FinalInvoice';
 import { ExpenseTracker } from '@/components/wizard/financials/ExpenseTracker';
 import { PnlSummary } from '@/components/wizard/financials/PnlSummary';
 import { GoLive } from '@/components/wizard/financials/GoLive';
+import { RecurringFeesTab } from '@/components/wizard/financials/RecurringFeesTab';
 
-const FINANCIALS_TABS = ['Invoicing', 'Expenses', 'P&L Summary', 'Go-Live'] as const;
+const FINANCIALS_TABS = ['Invoicing', 'Expenses', 'P&L Summary', 'Go-Live', 'Recurring Fees'] as const;
 
 type FinancialsTab = (typeof FINANCIALS_TABS)[number];
 
@@ -83,6 +84,7 @@ function FinancialsPage() {
               <GoLive projectId={projectId} />
             </div>
           )}
+          {activeTab === 'Recurring Fees' && <RecurringFeesTab projectId={projectId} />}
         </div>
       </div>
     </div>
