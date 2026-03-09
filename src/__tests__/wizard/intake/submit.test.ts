@@ -22,9 +22,14 @@ const { mockEq, mockUpdate, mockInsert, mockInstallersSelect, mockFrom, mockGene
     const mockInstallersSelect = vi.fn().mockResolvedValue({
       data: [{ id: 'inst-1', name: 'Test Installer', regions: ['Denver, CO'] }],
     });
+    // projects select chain: .select(...).eq(...).single()
+    const mockProjectsSingle = vi.fn().mockResolvedValue({ data: { wizard_step: 0, project_status: 'intake' }, error: null });
+    const mockProjectsEq = vi.fn(() => ({ single: mockProjectsSingle }));
+    const mockProjectsSelect = vi.fn(() => ({ eq: mockProjectsEq }));
     const mockFrom = vi.fn((table: string) => {
       if (table === 'installers') return { select: mockInstallersSelect };
       if (table === 'invoices') return { insert: mockInsert };
+      if (table === 'projects') return { select: mockProjectsSelect, update: mockUpdate };
       return { update: mockUpdate };
     });
     const mockGenerateBom = vi.fn().mockResolvedValue({ count: 5, error: null });
@@ -44,11 +49,14 @@ vi.mock('@/lib/toast', () => ({
   showToast: mockShowToast,
 }));
 
+const mockNavigateFn = vi.hoisted(() => vi.fn());
+
 vi.mock('@tanstack/react-router', () => ({
   createFileRoute: () => (config: { component: React.ComponentType }) => ({
     ...config,
     useParams: vi.fn(() => ({ projectId: PROJECT_ID })),
   }),
+  useNavigate: () => mockNavigateFn,
 }));
 
 import { Route } from '@/routes/_auth/projects/$projectId/intake';
@@ -80,16 +88,22 @@ async function renderAndNavigateToReview() {
   fireEvent.click(screen.getByRole('radio', { name: 'Pro' }));
   fireEvent.click(screen.getByRole('button', { name: /continue/i }));
 
-  // Step 3: ISP Info
-  await waitFor(() => expect(screen.getByLabelText(/isp provider/i)).toBeInTheDocument());
-  fireEvent.change(screen.getByLabelText(/isp provider/i), { target: { value: 'Xfinity' } });
+  // Step 3: ISP Info — SearchableSelect + custom input for "Other"
+  await waitFor(() => expect(screen.getByPlaceholderText(/select isp provider/i)).toBeInTheDocument());
+  fireEvent.focus(screen.getByPlaceholderText(/select isp provider/i));
+  await waitFor(() => expect(screen.getByRole('option', { name: 'Other' })).toBeInTheDocument());
+  fireEvent.mouseDown(screen.getByRole('option', { name: 'Other' }));
+  await waitFor(() => expect(screen.getByPlaceholderText(/enter custom isp name/i)).toBeInTheDocument());
+  fireEvent.change(screen.getByPlaceholderText(/enter custom isp name/i), { target: { value: 'Xfinity' } });
   fireEvent.change(screen.getByLabelText(/upload speed/i), { target: { value: '100' } });
   fireEvent.change(screen.getByLabelText(/download speed/i), { target: { value: '500' } });
   fireEvent.click(screen.getByRole('button', { name: /continue/i }));
 
-  // Step 4: Installer Selection (waits for Supabase data)
-  await waitFor(() => expect(screen.getByRole('combobox')).toBeInTheDocument());
-  fireEvent.change(screen.getByRole('combobox'), { target: { value: 'inst-1' } });
+  // Step 4: Installer Selection — SearchableSelect
+  await waitFor(() => expect(screen.getByPlaceholderText(/select an installer/i)).toBeInTheDocument());
+  fireEvent.focus(screen.getByPlaceholderText(/select an installer/i));
+  await waitFor(() => expect(screen.getByRole('option', { name: /test installer/i })).toBeInTheDocument());
+  fireEvent.mouseDown(screen.getByRole('option', { name: /test installer/i }));
   fireEvent.click(screen.getByRole('button', { name: /continue/i }));
 
   // Step 5: Financial Setup
@@ -125,9 +139,10 @@ test('project row is updated with all wizard form fields on submit', async () =>
   await renderAndNavigateToReview();
   fireEvent.click(screen.getByRole('button', { name: /create project/i }));
 
-  await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(2));
+  // 6 advanceStep calls (steps 1–6) + 2 submit calls = 8 total
+  await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(8));
 
-  const firstUpdateArg = mockUpdate.mock.calls[0][0];
+  const firstUpdateArg = mockUpdate.mock.calls[6][0];
   expect(firstUpdateArg).toMatchObject({
     customer_name: 'Acme Corp',
     contact_email: 'acme@test.com',
@@ -161,9 +176,9 @@ test('project status is updated to procurement', async () => {
   await renderAndNavigateToReview();
   fireEvent.click(screen.getByRole('button', { name: /create project/i }));
 
-  await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(2));
+  await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(8));
 
-  const secondUpdateArg = mockUpdate.mock.calls[1][0];
+  const secondUpdateArg = mockUpdate.mock.calls[7][0];
   expect(secondUpdateArg).toEqual({ project_status: 'procurement' });
 });
 
@@ -179,9 +194,9 @@ test('INTAKE_COMPLETE_SUCCESS toast is shown on successful submit', async () => 
 
 // 5. Error toast is fired when the Supabase project update fails
 test('INTAKE_COMPLETE_ERROR toast is shown when Supabase update fails', async () => {
-  mockEq.mockResolvedValueOnce({ error: { message: 'DB write failed' } });
-
   await renderAndNavigateToReview();
+  // Set error after navigation so it fires on the submit call, not an advanceStep call
+  mockEq.mockResolvedValueOnce({ error: { message: 'DB write failed' } });
   fireEvent.click(screen.getByRole('button', { name: /create project/i }));
 
   await waitFor(() =>
