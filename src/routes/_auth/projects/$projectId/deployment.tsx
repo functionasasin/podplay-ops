@@ -94,6 +94,7 @@ function DeploymentPage() {
   const totalSteps = items.length;
   const completedSteps = items.filter((i) => i.is_completed).length;
   const progressPct = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0;
+  const allItemsChecked = totalSteps === 0 || completedSteps === totalSteps;
 
   const selectedItems = byPhase[selectedPhase] ?? [];
 
@@ -255,7 +256,8 @@ function DeploymentPage() {
       <div className="flex justify-end">
         <button
           onClick={() => setShowAdvanceDialog(true)}
-          disabled={advancing}
+          disabled={!allItemsChecked || advancing}
+          title={!allItemsChecked ? 'Complete all deployment checklist items before advancing' : undefined}
           className="px-4 py-2 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
         >
           Advance to Financial Close →

@@ -54,10 +54,12 @@ export function DepositInvoice({ projectId, depositAmount }: DepositInvoiceProps
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [minimumDeposit, setMinimumDeposit] = useState<number>(500);
 
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<DepositInvoiceFormValues>({
     resolver: zodResolver(depositInvoiceSchema),
@@ -70,19 +72,32 @@ export function DepositInvoice({ projectId, depositAmount }: DepositInvoiceProps
   });
 
   useEffect(() => {
-    async function loadInvoices() {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data } = await (supabase.from('invoices') as any)
-        .select('id, type, amount, status, issued_date, payment_method, notes')
-        .eq('project_id', projectId)
-        .eq('type', 'deposit');
-      setInvoices(data ?? []);
+    async function loadData() {
+      const [invoicesRes, settingsRes] = await Promise.all([
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (supabase.from('invoices') as any)
+          .select('id, type, amount, status, issued_date, payment_method, notes')
+          .eq('project_id', projectId)
+          .eq('type', 'deposit'),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (supabase.from('settings') as any)
+          .select('minimum_deposit')
+          .single(),
+      ]);
+      setInvoices(invoicesRes.data ?? []);
+      if (settingsRes.data?.minimum_deposit != null) {
+        setMinimumDeposit(Number(settingsRes.data.minimum_deposit));
+      }
       setLoading(false);
     }
-    loadInvoices();
+    loadData();
   }, [projectId]);
 
   async function onSubmit(data: DepositInvoiceFormValues) {
+    if (data.amount < minimumDeposit) {
+      setError('amount', { message: `Minimum deposit is $${minimumDeposit.toFixed(2)}` });
+      return;
+    }
     setSubmitting(true);
     setSubmitError(null);
 
