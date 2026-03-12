@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
+import { Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { SmartChecklist, type ChecklistItem, type ProjectTokenFields } from '@/components/wizard/deployment/SmartChecklist';
@@ -157,12 +158,14 @@ function DeploymentPage() {
         {/* Left sidebar: phase list */}
         <div className="md:w-60 flex-shrink-0 border-b md:border-b-0 md:border-r bg-muted/20 flex flex-col">
           <div className="h-48 md:h-auto md:flex-1 overflow-y-auto">
-            {PHASE_DISPLAY_ORDER.map((phaseNum) => {
+            {PHASE_DISPLAY_ORDER.map((phaseNum, displayIdx) => {
               const phaseItems = byPhase[phaseNum] ?? [];
               const phaseCompleted = phaseItems.filter((i) => i.is_completed).length;
               const phaseTotal = phaseItems.length;
-              const icon = phaseIcon(phaseCompleted, phaseTotal);
               const isActive = selectedPhase === phaseNum;
+              const selectedDisplayIdx = PHASE_DISPLAY_ORDER.indexOf(selectedPhase);
+              const isCompletedPhase = displayIdx < selectedDisplayIdx;
+              const isLocked = displayIdx > selectedDisplayIdx;
 
               return (
                 <button
@@ -172,11 +175,17 @@ function DeploymentPage() {
                     'w-full text-left px-3 py-2.5 text-sm flex items-center gap-2 transition-colors',
                     isActive
                       ? 'bg-background border-l-2 border-primary text-foreground font-medium'
+                      : isCompletedPhase
+                      ? 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                      : isLocked
+                      ? 'opacity-50 cursor-not-allowed text-muted-foreground'
                       : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
                   ].join(' ')}
                   aria-current={isActive ? 'true' : undefined}
                 >
-                  <span className="flex-shrink-0 w-4 text-center">{icon}</span>
+                  <span className="flex-shrink-0 w-4 text-center">
+                    {isCompletedPhase ? <Check className="h-3 w-3 inline" /> : phaseIcon(phaseCompleted, phaseTotal)}
+                  </span>
                   <span className="flex-1 truncate">
                     Phase {phaseNum}: {PHASE_NAMES[phaseNum]}
                   </span>

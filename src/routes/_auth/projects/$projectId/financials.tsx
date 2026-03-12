@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
+import { Check } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { DepositInvoice } from '@/components/wizard/financials/DepositInvoice';
 import { FinalInvoice } from '@/components/wizard/financials/FinalInvoice';
@@ -48,20 +49,29 @@ function FinancialsPage() {
 
       <div className="border rounded-lg overflow-hidden">
         <div className="flex border-b bg-muted/30 overflow-x-auto">
-          {FINANCIALS_TABS.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={[
-                'px-4 py-2.5 text-sm font-medium transition-colors',
-                activeTab === tab
-                  ? 'bg-background border-b-2 border-primary text-foreground'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
-              ].join(' ')}
-            >
-              {tab}
-            </button>
-          ))}
+          {FINANCIALS_TABS.map((tab, tabIdx) => {
+            const activeIdx = FINANCIALS_TABS.indexOf(activeTab);
+            const isCompleted = tabIdx < activeIdx;
+            const isCurrent = tabIdx === activeIdx;
+            const isLocked = tabIdx > activeIdx;
+            return (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={[
+                  'flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors',
+                  isCurrent
+                    ? 'bg-background border-b-2 border-primary text-foreground'
+                    : isCompleted
+                    ? 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                    : 'opacity-50 cursor-not-allowed text-muted-foreground',
+                ].join(' ')}
+              >
+                {isCompleted && <Check className="h-3.5 w-3.5 shrink-0" />}
+                {tab}
+              </button>
+            );
+          })}
         </div>
 
         <div className="p-6 min-h-64">

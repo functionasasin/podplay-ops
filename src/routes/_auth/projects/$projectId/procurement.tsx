@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
+import { Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -58,20 +59,29 @@ function ProcurementPage() {
 
       <div className="border rounded-lg overflow-hidden">
         <div className="flex overflow-x-auto border-b bg-muted/30">
-          {PROCUREMENT_TABS.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={[
-                'px-4 py-2.5 text-sm font-medium transition-colors',
-                activeTab === tab
-                  ? 'bg-background border-b-2 border-primary text-foreground'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
-              ].join(' ')}
-            >
-              {tab}
-            </button>
-          ))}
+          {PROCUREMENT_TABS.map((tab, tabIdx) => {
+            const activeIdx = PROCUREMENT_TABS.indexOf(activeTab);
+            const isCompleted = tabIdx < activeIdx;
+            const isCurrent = tabIdx === activeIdx;
+            const isLocked = tabIdx > activeIdx;
+            return (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={[
+                  'flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors',
+                  isCurrent
+                    ? 'bg-background border-b-2 border-primary text-foreground'
+                    : isCompleted
+                    ? 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                    : 'opacity-50 cursor-not-allowed text-muted-foreground',
+                ].join(' ')}
+              >
+                {isCompleted && <Check className="h-3.5 w-3.5 shrink-0" />}
+                {tab}
+              </button>
+            );
+          })}
         </div>
 
         <div className="p-6 min-h-64">
