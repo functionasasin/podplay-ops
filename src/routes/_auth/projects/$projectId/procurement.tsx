@@ -9,13 +9,11 @@ import { InventoryCheckPanel } from '@/components/wizard/procurement/InventoryCh
 import { PoCreateForm } from '@/components/wizard/procurement/PoCreateForm';
 import { PoReceiving } from '@/components/wizard/procurement/PoReceiving';
 import { PackingList } from '@/components/wizard/procurement/PackingList';
-import { ReplaySignFulfillment } from '@/components/wizard/procurement/ReplaySignFulfillment';
 const PROCUREMENT_TABS = [
   'BOM Review',
   'Inventory Check',
   'Purchase Orders',
   'Packing List',
-  'Replay Signs',
 ] as const;
 
 type ProcurementTab = (typeof PROCUREMENT_TABS)[number];
@@ -107,12 +105,7 @@ function ProcurementPage() {
               <PackingList projectId={projectId} />
             </div>
           )}
-          {activeTab === 'Replay Signs' && (
-            <div>
-              <h2 className="text-base font-medium mb-4">Replay Signs</h2>
-              <ReplaySignFulfillment projectId={projectId} />
-            </div>
-          )}
+
         </div>
       </div>
       {/* Advance to Deployment */}
