@@ -29,6 +29,7 @@ const pricingFormSchema = z
     target_margin: z.number().min(0, VP.target_margin.min).max(0.9999, VP.target_margin.max),
     sales_tax_rate: z.number().min(0, VP.sales_tax_rate.min).max(1, VP.sales_tax_rate.max),
     deposit_pct: z.number().min(0.01, VP.deposit_pct.min).max(0.99, VP.deposit_pct.max),
+    minimum_deposit: z.number().min(0),
     // Labor
     labor_rate_per_hour: z.number().min(0, VP.labor_rate.min),
     hours_per_day: z.number().int().min(1, VP.hours_per_day.min).max(24, VP.hours_per_day.max),
@@ -93,6 +94,7 @@ export function PricingSettings({ settings }: Props) {
       target_margin: settings.target_margin ?? 0.1,
       sales_tax_rate: settings.sales_tax_rate ?? 0.1025,
       deposit_pct: settings.deposit_pct ?? 0.5,
+      minimum_deposit: settings.minimum_deposit ?? 500,
       labor_rate_per_hour: settings.labor_rate_per_hour ?? 120,
       hours_per_day: settings.hours_per_day ?? 10,
       switch_24_max_courts: settings.switch_24_max_courts ?? 10,
@@ -181,6 +183,9 @@ export function PricingSettings({ settings }: Props) {
           </FieldGroup>
           <FieldGroup label="Deposit Percentage" helpText="First installment as % of invoice total.">
             <PercentInput name="deposit_pct" control={control} error={errors.deposit_pct?.message} />
+          </FieldGroup>
+          <FieldGroup label="Minimum Deposit" helpText="The minimum deposit amount required when creating a project invoice">
+            <CurrencyInput name="minimum_deposit" register={register} error={errors.minimum_deposit?.message} />
           </FieldGroup>
         </div>
       </section>

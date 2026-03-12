@@ -16,6 +16,7 @@ export type Settings = {
   target_margin: number;
   sales_tax_rate: number;
   deposit_pct: number;
+  minimum_deposit: number;
   // Labor
   labor_rate_per_hour: number;
   hours_per_day: number;
