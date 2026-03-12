@@ -259,9 +259,171 @@ export function OperationsGuide() {
         </ol>
       </section>
 
-      <section id="procurement" className="space-y-3 scroll-mt-6">
+      {/* Section: Procurement & Hardware Ordering */}
+      <section id="procurement" className="space-y-4 scroll-mt-6">
         <h2 className="text-2xl font-semibold border-b pb-2">Procurement &amp; Hardware Ordering</h2>
-        <p className="text-muted-foreground italic">Content coming in stage 041.</p>
+        <p>
+          Once intake is submitted, the project enters <strong>Procurement</strong>. This phase
+          covers everything from reviewing the auto-generated Bill of Materials to receiving hardware
+          into inventory and advancing the project to deployment.
+        </p>
+
+        <h3 className="text-lg font-semibold mt-4">Procurement Overview</h3>
+        <p className="text-sm text-muted-foreground">
+          Procurement is driven by the project's service tier and venue configuration. The system
+          auto-generates a Bill of Materials (BOM) when intake completes. Your job is to verify the
+          BOM, raise purchase orders against it, receive the goods, and confirm stock levels before
+          the project can advance to deployment.
+        </p>
+
+        <h3 className="text-lg font-semibold mt-6">BOM Review</h3>
+        <p className="text-sm text-muted-foreground">
+          Open the project and navigate to <strong>Procurement → BOM</strong>. The BOM lists every
+          hardware SKU required for the deployment, the quantity needed, and the current inventory
+          allocation.
+        </p>
+        <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 mt-2">
+          <li>
+            <strong>Swap SKUs</strong> — click the SKU name to open the item picker. Choose a
+            substitute from the hardware catalog. The unit cost updates automatically.
+          </li>
+          <li>
+            <strong>Adjust quantities</strong> — edit the quantity field directly. Changes are
+            saved immediately and reflected in the cost summary at the bottom of the BOM.
+          </li>
+          <li>
+            <strong>Cost summary</strong> — total hardware cost is computed from BOM quantities ×
+            unit costs and feeds into the Financial Close invoices.
+          </li>
+        </ul>
+        <div className="rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/40 p-4 mt-3">
+          <p className="text-sm font-semibold text-blue-800 dark:text-blue-200 mb-1">Tip</p>
+          <p className="text-sm text-blue-700 dark:text-blue-300">
+            Use <strong>Export PDF</strong> on the BOM tab to generate a vendor-ready hardware list.
+            Send the PDF directly to your supplier to get a quote before raising a formal PO.
+          </p>
+        </div>
+
+        <h3 className="text-lg font-semibold mt-6">Creating Purchase Orders</h3>
+        <p className="text-sm text-muted-foreground">
+          Navigate to <strong>Procurement → Purchase Orders</strong> and click{' '}
+          <strong>New PO</strong>. A PO is linked to a vendor and contains one or more line items
+          drawn from the BOM.
+        </p>
+        <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 mt-2">
+          <li>Select the vendor from the dropdown (add vendors in Settings → Vendors).</li>
+          <li>Add line items: SKU, description, quantity, and unit cost.</li>
+          <li>
+            The PO total is calculated automatically. Review before saving — the PO is sent to the
+            vendor in PDF format.
+          </li>
+          <li>
+            After saving, the system increments <em>qty_on_order</em> in inventory for each SKU on
+            the PO and sets the order status to <em>Ordered</em>.
+          </li>
+        </ul>
+        <div className="rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/40 p-4 mt-3">
+          <p className="text-sm font-semibold text-blue-800 dark:text-blue-200 mb-1">Tip</p>
+          <p className="text-sm text-blue-700 dark:text-blue-300">
+            Click <strong>Export PDF</strong> on any saved PO to download a formatted purchase order
+            document. Share this PDF with the vendor to confirm the order.
+          </p>
+        </div>
+
+        <h3 className="text-lg font-semibold mt-6">Receiving Inventory</h3>
+        <p className="text-sm text-muted-foreground">
+          When goods arrive, go to <strong>Procurement → Purchase Orders</strong>, open the
+          relevant PO, and click <strong>Receive</strong>.
+        </p>
+        <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 mt-2">
+          <li>
+            Enter the quantity received for each line item. You can receive a partial shipment —
+            leave the remaining quantity for a future receiving event.
+          </li>
+          <li>
+            <strong>Full receive</strong> — all quantities match the PO; order status moves to{' '}
+            <em>Received</em>.
+          </li>
+          <li>
+            <strong>Partial receive</strong> — some items still outstanding; order status moves to{' '}
+            <em>Partial</em>. Receive the remainder when the follow-up shipment arrives.
+          </li>
+          <li>
+            Received quantities are added to <em>qty_on_hand</em> in Inventory and deducted from{' '}
+            <em>qty_on_order</em> automatically.
+          </li>
+        </ul>
+        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/40 p-3 mt-3">
+          <p className="text-sm text-amber-800 dark:text-amber-200">
+            <strong>Note:</strong> Never skip the receiving step. Inventory counts are used to
+            validate stock before deployment advances, and inaccurate on-hand quantities will block
+            the advance gate.
+          </p>
+        </div>
+
+        <h3 className="text-lg font-semibold mt-6">Packing List</h3>
+        <p className="text-sm text-muted-foreground">
+          Navigate to <strong>Procurement → Packing List</strong>. The packing list shows every
+          item that will ship to the project site, derived from the BOM.
+        </p>
+        <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 mt-2">
+          <li>
+            Review the list to confirm quantities and SKUs match what is physically on hand before
+            staging the shipment.
+          </li>
+          <li>
+            Click <strong>Export PDF</strong> to generate a printable packing slip to include in the
+            shipment box for the on-site installer.
+          </li>
+        </ul>
+        <div className="rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/40 p-4 mt-3">
+          <p className="text-sm font-semibold text-blue-800 dark:text-blue-200 mb-1">Tip</p>
+          <p className="text-sm text-blue-700 dark:text-blue-300">
+            Print the packing list PDF and tape a copy to the outside of the shipping carton. This
+            lets the installer verify contents without opening every box.
+          </p>
+        </div>
+
+        <h3 className="text-lg font-semibold mt-6">Inventory Check</h3>
+        <p className="text-sm text-muted-foreground">
+          Before advancing to deployment, confirm that all required SKUs are in stock. Navigate to{' '}
+          <strong>Inventory</strong> from the main navigation.
+        </p>
+        <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 mt-2">
+          <li>
+            The <strong>Available</strong> column shows projected stock: on-hand − allocated +
+            on-order.
+          </li>
+          <li>
+            The <strong>Status</strong> badge (Not Ordered / Ordered / Partial / Received) reflects
+            the current order state for each SKU.
+          </li>
+          <li>
+            If a SKU shows insufficient available quantity, raise a new PO or use{' '}
+            <strong>Set On-Order</strong> to manually record an expected incoming shipment.
+          </li>
+        </ul>
+
+        <h3 className="text-lg font-semibold mt-6">Advancing to Deployment</h3>
+        <p className="text-sm text-muted-foreground">
+          When all BOM items are accounted for and inventory is confirmed, navigate to{' '}
+          <strong>Procurement → BOM</strong> (or the last procurement tab) and click{' '}
+          <strong>Advance to Deployment</strong>.
+        </p>
+        <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 mt-2">
+          <li>A confirmation dialog shows the project name and service tier — verify before confirming.</li>
+          <li>
+            After advancing, the project status moves to <em>deployment</em> and the Deployment
+            wizard unlocks.
+          </li>
+          <li>Procurement becomes read-only once the project has been advanced.</li>
+        </ul>
+        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/40 p-3 mt-3">
+          <p className="text-sm text-amber-800 dark:text-amber-200">
+            <strong>Note:</strong> Advancing to deployment is a one-way action. Ensure all POs are
+            received and inventory is correct before clicking Advance.
+          </p>
+        </div>
       </section>
 
       <section id="deployment" className="space-y-3 scroll-mt-6">
