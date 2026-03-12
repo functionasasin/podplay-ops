@@ -55,14 +55,13 @@ function renderPage() {
   return render(React.createElement(getProcurementPage()));
 }
 
-// 1. All 6 tab labels render
-test('renders all 6 tab labels', () => {
+// 1. All 5 tab labels render
+test('renders all 5 tab labels', () => {
   renderPage();
   expect(screen.getByRole('button', { name: 'BOM Review' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Inventory Check' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Purchase Orders' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Packing List' })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'CC Terminals' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Replay Signs' })).toBeInTheDocument();
 });
 
@@ -93,14 +92,7 @@ test('clicking Packing List tab shows Packing List content', () => {
   expect(screen.getByRole('heading', { name: 'Packing List' })).toBeInTheDocument();
 });
 
-// 6. Clicking "CC Terminals" shows its content panel
-test('clicking CC Terminals tab shows CC Terminals content', () => {
-  renderPage();
-  fireEvent.click(screen.getByRole('button', { name: 'CC Terminals' }));
-  expect(screen.getByRole('heading', { name: 'CC Terminals' })).toBeInTheDocument();
-});
-
-// 7. Clicking "Replay Signs" shows its content panel
+// 6. Clicking "Replay Signs" shows its content panel
 test('clicking Replay Signs tab shows Replay Signs content', () => {
   renderPage();
   fireEvent.click(screen.getByRole('button', { name: 'Replay Signs' }));
