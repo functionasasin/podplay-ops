@@ -127,3 +127,79 @@
     @apply font-sans;
   }
 }
+
+@media print {
+  /* Hide navigation sidebar, header, and mobile nav */
+  aside[aria-label="Main navigation"],
+  header[aria-label="App header"],
+  [data-state="open"] [data-radix-sheet-content] {
+    display: none !important;
+  }
+
+  /* Remove layout overflow constraints for printing */
+  html,
+  body {
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* The outer flex container — let it flow */
+  .flex.h-svh.overflow-hidden {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* The main content column */
+  .flex.flex-1.flex-col.overflow-hidden {
+    display: block !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* The inner scroll area */
+  .flex-1.overflow-y-auto {
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* Print margins */
+  @page {
+    margin: 1.5cm 2cm;
+    size: A4;
+  }
+
+  /* Section page breaks */
+  section {
+    page-break-before: auto;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Major sections start on new page */
+  section + section {
+    page-break-before: always;
+    break-before: page;
+  }
+
+  /* Keep headings with their following content */
+  h2,
+  h3 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  /* Tables and code blocks stay together */
+  table,
+  pre,
+  code,
+  figure {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Hide print button itself */
+  .guide-print-button {
+    display: none !important;
+  }
+}

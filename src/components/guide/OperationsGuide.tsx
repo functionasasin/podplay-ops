@@ -1,10 +1,24 @@
+import { Button } from '@/components/ui/button';
+import { Printer } from 'lucide-react';
+
 export function OperationsGuide() {
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-10 print:p-0 print:max-w-none">
       {/* Page header */}
-      <div className="space-y-1">
-        <h1 className="text-3xl font-bold">PodPlay Operations Guide</h1>
-        <p className="text-muted-foreground text-lg">Complete deployment operations manual</p>
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold">PodPlay Operations Guide</h1>
+          <p className="text-muted-foreground text-lg">Complete deployment operations manual</p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="guide-print-button shrink-0 gap-2"
+          onClick={() => window.print()}
+        >
+          <Printer className="h-4 w-4" />
+          Print Guide
+        </Button>
       </div>
 
       {/* Table of contents */}
