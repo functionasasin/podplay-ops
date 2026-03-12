@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { advanceToDeploymentDialog } from '@/lib/confirmation-dialogs';
+import { serviceTierLabels } from '@/lib/enum-labels';
 import { BomReviewTable } from '@/components/wizard/procurement/BomReviewTable';
 import { InventoryCheckPanel } from '@/components/wizard/procurement/InventoryCheckPanel';
 import { PoCreateForm } from '@/components/wizard/procurement/PoCreateForm';
@@ -22,7 +23,7 @@ function ProcurementPage() {
   const { projectId } = Route.useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<ProcurementTab>('BOM Review');
-  const [project, setProject] = useState<{ project_name: string; customer_name: string; service_tier: string } | null>(
+  const [project, setProject] = useState<{ project_name: string; customer_name: string; tier: string } | null>(
     null,
   );
   const [loading, setLoading] = useState(true);
@@ -33,7 +34,7 @@ function ProcurementPage() {
     async function loadProject() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data } = await (supabase.from('projects') as any)
-        .select('project_name, customer_name, service_tier')
+        .select('project_name, customer_name, tier')
         .eq('id', projectId)
         .single();
       setProject(data);
@@ -122,7 +123,7 @@ function ProcurementPage() {
       {showAdvanceDialog && (() => {
         const cfg = advanceToDeploymentDialog(
           project?.project_name ?? projectId,
-          project?.service_tier ?? '',
+          project?.tier ? (serviceTierLabels[project.tier as keyof typeof serviceTierLabels] ?? project.tier) : '',
         );
         return (
           <ConfirmDialog
