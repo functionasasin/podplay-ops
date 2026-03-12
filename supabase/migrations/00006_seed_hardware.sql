@@ -266,10 +266,10 @@ VALUES
    true),
 
   ('DISPLAY-IPAD',
-   'iPad 64GB WiFi+Cellular',
+   'iPad 128GB WiFi+Cellular',
    'Apple Business',
    'displays',
-   600.00,
+   729.00,
    'iPad kiosk. 10th gen (A2696) or current model at time of order. Enrolled in Mosyle MDM. PoE-powered. App Lock enabled. Powered on in strict court-number order for correct MDM enrollment.',
    true),
 
