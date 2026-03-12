@@ -199,6 +199,24 @@ export function PoCreateForm({ projectId, onSuccess }: PoCreateFormProps) {
 
       if (itemsError) throw new Error(itemsError.message);
 
+      // Update inventory: increment qty_on_order, set order_status to 'ordered'
+      for (const l of selectedLines) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: inv } = await (supabase.from('inventory') as any)
+          .select('qty_on_order')
+          .eq('item_id', l.hardware_catalog_id)
+          .single();
+
+        const currentQtyOnOrder = ((inv as { qty_on_order: number } | null)?.qty_on_order ?? 0);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase.from('inventory') as any)
+          .update({
+            qty_on_order: currentQtyOnOrder + l.qty_ordered,
+            order_status: 'ordered',
+          })
+          .eq('item_id', l.hardware_catalog_id);
+      }
+
       // Create inventory movements (type: ordered → pending ordered stock)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase.from('inventory_movements') as any).insert(
