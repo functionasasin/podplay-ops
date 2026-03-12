@@ -283,12 +283,12 @@ describe('confirmation-dialogs', () => {
   });
 
   it('D-11: Delete Project', async () => {
-    const config = deleteProjectDialog('Telepark Jersey City', 'Acme Sports');
+    const config = deleteProjectDialog('Telepark Jersey City');
     const { onConfirm, onCancel } = renderDialog(config);
 
-    expect(screen.getByText('Delete Project?')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Delete Project' })).toBeTruthy();
     expect(
-      screen.getByText(/Permanently delete "Telepark Jersey City" \(Acme Sports\)\?/),
+      screen.getByText(/Are you sure you want to delete Telepark Jersey City\?/),
     ).toBeTruthy();
     const confirmBtn = screen.getByTestId('dialog-action');
     expect(confirmBtn.textContent).toBe('Delete Project');

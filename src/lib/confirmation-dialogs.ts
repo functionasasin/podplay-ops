@@ -144,10 +144,10 @@ export function cancelProjectDialog(venueName: string): DialogConfig {
 }
 
 // D-11: Delete Project (Hard Delete)
-export function deleteProjectDialog(venueName: string, customerName: string): DialogConfig {
+export function deleteProjectDialog(projectName: string): DialogConfig {
   return {
-    title: 'Delete Project?',
-    body: `Permanently delete "${venueName}" (${customerName})? All BOM items, the deployment checklist, invoices, and expenses associated with this project will be deleted. This cannot be undone.`,
+    title: 'Delete Project',
+    body: `Are you sure you want to delete ${projectName}? This action cannot be undone. All project data including intake, procurement, deployment, and financial records will be permanently deleted.`,
     confirmLabel: 'Delete Project',
     cancelLabel: 'Cancel',
     destructive: true,
