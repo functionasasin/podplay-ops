@@ -130,7 +130,7 @@ function IntakePage() {
           has_static_ip: ispInfo?.has_static_ip ?? false,
           internet_upload_mbps: ispInfo?.upload_speed_mbps ?? null,
           internet_download_mbps: ispInfo?.download_speed_mbps ?? null,
-          installer_id: installerSelection?.installer_ids?.[0] || null,
+          installer_ids: installerSelection?.installer_ids ?? [],
           go_live_date: financialSetup?.target_go_live_date ?? null,
         })
         .eq('id', projectId);

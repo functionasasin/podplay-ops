@@ -157,7 +157,7 @@ test('project row is updated with all wizard form fields on submit', async () =>
     has_static_ip: false,
     internet_upload_mbps: 100,
     internet_download_mbps: 500,
-    installer_id: 'inst-1',
+    installer_ids: ['inst-1'],
     go_live_date: FUTURE_DATE,
   });
 });
