@@ -44,10 +44,6 @@ export const LOADER_PROCUREMENT_MARK_RECEIVED = loader('Mark Received', 'Saving.
 export const LOADER_PROCUREMENT_CONFIRM_PACKING = loader('Confirm Packing', 'Confirming...')
 export const LOADER_PROCUREMENT_MARK_READY = loader('Mark Ready for Deployment', 'Advancing...')
 
-// ─── Procurement — Replay Signs (1) ─────────────────────────────────────────
-
-export const LOADER_PROCUREMENT_UPDATE_SIGN_STATUS = loader('Save', 'Saving...')
-
 // ─── Deployment — Status Transitions (6) ────────────────────────────────────
 
 export const LOADER_DEPLOYMENT_START_CONFIG = loader('Start Configuration', 'Updating...')
@@ -91,7 +87,7 @@ export const LOADER_SETTINGS_CATALOG_EDIT_ITEM = loader('Save Changes', 'Saving.
 export const LOADER_SETTINGS_CATALOG_DELETE_ITEM = loader('Delete', 'Deleting...')
 export const LOADER_SETTINGS_SAVE_TEAM = loader('Save Changes', 'Saving...')
 
-// ─── Lookup map (all 35 configs) ─────────────────────────────────────────────
+// ─── Lookup map (all 34 configs) ─────────────────────────────────────────────
 
 export const LOADERS = {
   // Login
@@ -111,8 +107,6 @@ export const LOADERS = {
   // Procurement — Packing & Advance
   procurementConfirmPacking: LOADER_PROCUREMENT_CONFIRM_PACKING,
   procurementMarkReady: LOADER_PROCUREMENT_MARK_READY,
-  // Procurement — Replay Signs
-  procurementUpdateSignStatus: LOADER_PROCUREMENT_UPDATE_SIGN_STATUS,
   // Deployment
   deploymentStartConfig: LOADER_DEPLOYMENT_START_CONFIG,
   deploymentMarkReadyToShip: LOADER_DEPLOYMENT_MARK_READY_TO_SHIP,
