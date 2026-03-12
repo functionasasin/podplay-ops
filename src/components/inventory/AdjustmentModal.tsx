@@ -67,15 +67,15 @@ export function AdjustmentModal({
       const movementType =
         direction === 'increase' ? 'adjustment_increase' : 'adjustment_decrease';
 
+      const delta = direction === 'increase' ? qty : -qty;
       const { error: insertError } = await (supabase.from('inventory_movements') as any).insert({
-        item_id: itemId,
+        hardware_catalog_id: itemId,
         movement_type: movementType,
-        quantity: qty,
+        qty_delta: delta,
         notes: reason.trim(),
       });
       if (insertError) throw insertError;
 
-      const delta = direction === 'increase' ? qty : -qty;
       const newQty = currentQty + delta;
       const { error: updateError } = await (supabase.from('inventory') as any)
         .update({ quantity_on_hand: newQty })
