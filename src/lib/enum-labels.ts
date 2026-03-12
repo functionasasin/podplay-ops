@@ -511,6 +511,22 @@ export const powerStandardSortOrder: Record<PowerStandard, number> = {
   '220v_60hz': 2,
 };
 
+// ─── order_status ─────────────────────────────────────────────────────────────
+
+export const orderStatusLabels: Record<string, string> = {
+  not_ordered: 'Not Ordered',
+  ordered:     'Ordered',
+  partial:     'Partial',
+  received:    'Received',
+};
+
+export const orderStatusBadgeClass: Record<string, string> = {
+  not_ordered: 'bg-slate-100 text-slate-600 border-slate-200',
+  ordered:     'bg-blue-100 text-blue-700 border-blue-200',
+  partial:     'bg-yellow-100 text-yellow-700 border-yellow-200',
+  received:    'bg-green-100 text-green-700 border-green-200',
+};
+
 // ─── Generic Lookup Helpers ───────────────────────────────────────────────────
 
 const labelMaps: Record<string, Record<string, string>> = {
@@ -534,6 +550,7 @@ const labelMaps: Record<string, Record<string, string>> = {
   deployment_region:        deploymentRegionLabels,
   video_standard:           videoStandardLabels,
   power_standard:           powerStandardLabels,
+  order_status:             orderStatusLabels,
 };
 
 const badgeClassMaps: Record<string, Record<string, string>> = {
@@ -557,6 +574,7 @@ const badgeClassMaps: Record<string, Record<string, string>> = {
   deployment_region:        deploymentRegionBadgeClass,
   video_standard:           videoStandardBadgeClass,
   power_standard:           powerStandardBadgeClass,
+  order_status:             orderStatusBadgeClass,
 };
 
 export function getEnumLabel(enumType: string, value: string): string {

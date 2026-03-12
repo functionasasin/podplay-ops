@@ -6,6 +6,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { EMPTY_STATES } from '@/lib/empty-state-configs';
 import { AdjustmentModal } from '@/components/inventory/AdjustmentModal';
 import { SetOnOrderModal } from '@/components/inventory/SetOnOrderModal';
+import { orderStatusLabels, orderStatusBadgeClass } from '@/lib/enum-labels';
 
 interface InventoryItem {
   id: string;
@@ -130,13 +131,14 @@ function InventoryPage() {
               <th className="px-4 py-3 text-center font-medium w-[90px]">Available</th>
               <th className="px-4 py-3 text-center font-medium w-[100px]">Reorder At</th>
               <th className="px-4 py-3 text-center font-medium w-[90px]">On Order</th>
+              <th className="px-4 py-3 text-center font-medium w-[110px]">Status</th>
               <th className="px-4 py-3 w-[140px]" />
             </tr>
           </thead>
           <tbody>
             {items.map((item) => {
               const cat = item.hardware_catalog;
-              const qtyAvailable = item.quantity_on_hand - item.quantity_allocated;
+              const qtyAvailable = item.quantity_on_hand - item.quantity_allocated + item.qty_on_order;
               const isLowStock =
                 item.reorder_point > 0 && qtyAvailable <= item.reorder_point;
               return (
@@ -170,6 +172,13 @@ function InventoryPage() {
                   </td>
                   <td className="px-4 py-3 text-center">
                     {item.qty_on_order === 0 ? '—' : item.qty_on_order}
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <span
+                      className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${orderStatusBadgeClass[item.order_status] ?? ''}`}
+                    >
+                      {orderStatusLabels[item.order_status] ?? item.order_status}
+                    </span>
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-1">
