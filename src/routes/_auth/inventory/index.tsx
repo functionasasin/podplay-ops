@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { EMPTY_STATES } from '@/lib/empty-state-configs';
 import { AdjustmentModal } from '@/components/inventory/AdjustmentModal';
+import { SetOnOrderModal } from '@/components/inventory/SetOnOrderModal';
 
 interface InventoryItem {
   id: string;
@@ -12,6 +13,8 @@ interface InventoryItem {
   quantity_on_hand: number;
   quantity_allocated: number;
   reorder_point: number;
+  qty_on_order: number;
+  order_status: string;
   hardware_catalog: {
     sku: string;
     name: string;
@@ -27,11 +30,18 @@ interface AdjustingItem {
   qty: number;
 }
 
+interface OnOrderItem {
+  id: string;
+  name: string;
+  currentOnOrder: number;
+}
+
 function InventoryPage() {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [adjustingItem, setAdjustingItem] = useState<AdjustingItem | null>(null);
+  const [onOrderItem, setOnOrderItem] = useState<OnOrderItem | null>(null);
 
   const loadInventory = useCallback(async () => {
     setLoading(true);
@@ -46,6 +56,8 @@ function InventoryPage() {
         quantity_on_hand,
         quantity_allocated,
         reorder_point,
+        qty_on_order,
+        order_status,
         hardware_catalog!item_id (
           sku,
           name,
@@ -117,7 +129,8 @@ function InventoryPage() {
               <th className="px-4 py-3 text-center font-medium w-[90px]">Allocated</th>
               <th className="px-4 py-3 text-center font-medium w-[90px]">Available</th>
               <th className="px-4 py-3 text-center font-medium w-[100px]">Reorder At</th>
-              <th className="px-4 py-3 w-[80px]" />
+              <th className="px-4 py-3 text-center font-medium w-[90px]">On Order</th>
+              <th className="px-4 py-3 w-[140px]" />
             </tr>
           </thead>
           <tbody>
@@ -155,19 +168,36 @@ function InventoryPage() {
                   <td className="px-4 py-3 text-center text-muted-foreground">
                     {item.reorder_point === 0 ? '—' : item.reorder_point}
                   </td>
+                  <td className="px-4 py-3 text-center">
+                    {item.qty_on_order === 0 ? '—' : item.qty_on_order}
+                  </td>
                   <td className="px-4 py-3 text-right">
-                    <button
-                      className="text-xs px-2 py-1 rounded border hover:bg-muted transition-colors"
-                      onClick={() =>
-                        setAdjustingItem({
-                          id: item.item_id,
-                          name: cat?.name ?? '—',
-                          qty: item.quantity_on_hand,
-                        })
-                      }
-                    >
-                      Adjust
-                    </button>
+                    <div className="flex items-center justify-end gap-1">
+                      <button
+                        className="text-xs px-2 py-1 rounded border hover:bg-muted transition-colors"
+                        onClick={() =>
+                          setAdjustingItem({
+                            id: item.item_id,
+                            name: cat?.name ?? '—',
+                            qty: item.quantity_on_hand,
+                          })
+                        }
+                      >
+                        Adjust
+                      </button>
+                      <button
+                        className="text-xs px-2 py-1 rounded border hover:bg-muted transition-colors"
+                        onClick={() =>
+                          setOnOrderItem({
+                            id: item.item_id,
+                            name: cat?.name ?? '—',
+                            currentOnOrder: item.qty_on_order,
+                          })
+                        }
+                      >
+                        Set On-Order
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );
@@ -183,6 +213,17 @@ function InventoryPage() {
           currentQty={adjustingItem.qty}
           isOpen={true}
           onClose={() => setAdjustingItem(null)}
+          onSuccess={() => void loadInventory()}
+        />
+      )}
+
+      {onOrderItem && (
+        <SetOnOrderModal
+          itemId={onOrderItem.id}
+          itemName={onOrderItem.name}
+          currentOnOrder={onOrderItem.currentOnOrder}
+          isOpen={true}
+          onClose={() => setOnOrderItem(null)}
           onSuccess={() => void loadInventory()}
         />
       )}
