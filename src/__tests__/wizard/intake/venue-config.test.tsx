@@ -120,15 +120,6 @@ test('has_front_desk checkbox defaults to unchecked (false)', () => {
   expect(checkbox.checked).toBe(false);
 });
 
-// 5b. has_pingpod_wifi defaults to false
-test('has_pingpod_wifi checkbox defaults to unchecked (false)', () => {
-  renderStep();
-  const checkbox = screen.getByRole('checkbox', {
-    name: /has pingpod wifi/i,
-  }) as HTMLInputElement;
-  expect(checkbox.checked).toBe(false);
-});
-
 // 5c. has_front_desk can be toggled on
 test('has_front_desk can be toggled on', async () => {
   const onNext = vi.fn();
@@ -150,24 +141,3 @@ test('has_front_desk can be toggled on', async () => {
   expect(onNext.mock.calls[0][0]).toMatchObject({ has_front_desk: true });
 });
 
-// 5d. has_pingpod_wifi can be toggled on
-test('has_pingpod_wifi can be toggled on', async () => {
-  const onNext = vi.fn();
-  renderStep(onNext);
-  const checkbox = screen.getByRole('checkbox', {
-    name: /has pingpod wifi/i,
-  }) as HTMLInputElement;
-  fireEvent.click(checkbox);
-  expect(checkbox.checked).toBe(true);
-  fireEvent.change(screen.getByLabelText(/venue address/i), {
-    target: { value: '10 Court Rd' },
-  });
-  fireEvent.change(screen.getByLabelText(/court count/i), {
-    target: { value: '1' },
-  });
-  fireEvent.click(screen.getByRole('button', { name: /continue/i }));
-  await waitFor(() => {
-    expect(onNext).toHaveBeenCalled();
-  });
-  expect(onNext.mock.calls[0][0]).toMatchObject({ has_pingpod_wifi: true });
-});

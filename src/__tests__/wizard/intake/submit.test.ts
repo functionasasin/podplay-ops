@@ -152,7 +152,6 @@ test('project row is updated with all wizard form fields on submit', async () =>
     door_count: 0,
     security_camera_count: 0,
     has_front_desk: false,
-    has_pingpod_wifi: false,
     tier: 'pro',
     isp_provider: 'Xfinity',
     has_static_ip: false,

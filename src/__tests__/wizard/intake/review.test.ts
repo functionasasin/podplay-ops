@@ -16,7 +16,6 @@ const mockVenueConfig = {
   door_count: 2,
   camera_count: 6,
   has_front_desk: true,
-  has_pingpod_wifi: false,
 };
 
 const mockTierSelection = {
@@ -102,12 +101,6 @@ test('renders has_front_desk as Yes (multiple Yes values present)', () => {
   renderReview();
   const yesItems = screen.getAllByText('Yes');
   expect(yesItems.length).toBeGreaterThanOrEqual(2);
-});
-
-// 9. has_pingpod_wifi renders as "No"
-test('renders has_pingpod_wifi as No', () => {
-  renderReview();
-  expect(screen.getByText('No')).toBeInTheDocument();
 });
 
 // 10. Service tier renders as label "AUTO"

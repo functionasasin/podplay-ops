@@ -115,7 +115,6 @@ function IntakePage() {
           door_count: venueConfig?.door_count ?? 0,
           security_camera_count: venueConfig?.camera_count ?? 0,
           has_front_desk: venueConfig?.has_front_desk ?? false,
-          has_pingpod_wifi: venueConfig?.has_pingpod_wifi ?? false,
           tier: tierSelection?.service_tier ?? null,
           isp_provider: ispInfo?.isp_provider ?? null,
           has_static_ip: ispInfo?.has_static_ip ?? false,

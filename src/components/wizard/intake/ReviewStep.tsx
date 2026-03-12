@@ -96,7 +96,6 @@ export function ReviewStep({
         <Row label="Door Count" value={venueConfig?.door_count} />
         <Row label="Camera Count" value={venueConfig?.camera_count} />
         <Row label="Has Front Desk" value={venueConfig?.has_front_desk} />
-        <Row label="Has PingPod WiFi" value={venueConfig?.has_pingpod_wifi} />
       </div>
 
       {/* Service Tier */}

@@ -26,7 +26,6 @@ const venueConfigSchema = z.object({
     .int(V.camera_count.int)
     .min(0, V.camera_count.min),
   has_front_desk: z.boolean(),
-  has_pingpod_wifi: z.boolean(),
 });
 
 export type VenueConfigValues = z.infer<typeof venueConfigSchema>;
@@ -49,7 +48,6 @@ export function VenueConfigStep({ defaultValues, onNext }: VenueConfigStepProps)
       door_count: defaultValues?.door_count ?? 0,
       camera_count: defaultValues?.camera_count ?? 0,
       has_front_desk: defaultValues?.has_front_desk ?? false,
-      has_pingpod_wifi: defaultValues?.has_pingpod_wifi ?? false,
     },
   });
 
@@ -128,18 +126,6 @@ export function VenueConfigStep({ defaultValues, onNext }: VenueConfigStepProps)
         />
         <label htmlFor="has_front_desk" className="text-sm font-medium">
           Has Front Desk
-        </label>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <input
-          id="has_pingpod_wifi"
-          type="checkbox"
-          className="h-4 w-4 rounded border-input"
-          {...register('has_pingpod_wifi')}
-        />
-        <label htmlFor="has_pingpod_wifi" className="text-sm font-medium">
-          Has PingPod WiFi
         </label>
       </div>
 
