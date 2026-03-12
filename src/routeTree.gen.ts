@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as AuthSettingsRouteImport } from './routes/_auth/settings'
+import { Route as AuthGuideRouteImport } from './routes/_auth/guide'
 import { Route as AuthSettingsIndexRouteImport } from './routes/_auth/settings/index'
 import { Route as AuthProjectsIndexRouteImport } from './routes/_auth/projects/index'
 import { Route as AuthInventoryIndexRouteImport } from './routes/_auth/inventory/index'
@@ -28,7 +29,6 @@ import { Route as AuthProjectsProjectIdProcurementRouteImport } from './routes/_
 import { Route as AuthProjectsProjectIdIntakeRouteImport } from './routes/_auth/projects/$projectId/intake'
 import { Route as AuthProjectsProjectIdFinancialsRouteImport } from './routes/_auth/projects/$projectId/financials'
 import { Route as AuthProjectsProjectIdDeploymentRouteImport } from './routes/_auth/projects/$projectId/deployment'
-import { Route as AuthGuideRouteImport } from './routes/_auth/guide'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -52,6 +52,11 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
 const AuthSettingsRoute = AuthSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthGuideRoute = AuthGuideRouteImport.update({
+  id: '/guide',
+  path: '/guide',
   getParentRoute: () => AuthRoute,
 } as any)
 const AuthSettingsIndexRoute = AuthSettingsIndexRouteImport.update({
@@ -128,15 +133,11 @@ const AuthProjectsProjectIdDeploymentRoute =
     path: '/projects/$projectId/deployment',
     getParentRoute: () => AuthRoute,
   } as any)
-const AuthGuideRoute = AuthGuideRouteImport.update({
-  id: '/guide',
-  path: '/guide',
-  getParentRoute: () => AuthRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/guide': typeof AuthGuideRoute
   '/settings': typeof AuthSettingsRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/projects/new': typeof AuthProjectsNewRoute
@@ -149,7 +150,6 @@ export interface FileRoutesByFullPath {
   '/inventory/': typeof AuthInventoryIndexRoute
   '/projects/': typeof AuthProjectsIndexRoute
   '/settings/': typeof AuthSettingsIndexRoute
-  '/guide': typeof AuthGuideRoute
   '/projects/$projectId/deployment': typeof AuthProjectsProjectIdDeploymentRoute
   '/projects/$projectId/financials': typeof AuthProjectsProjectIdFinancialsRoute
   '/projects/$projectId/intake': typeof AuthProjectsProjectIdIntakeRoute
@@ -158,6 +158,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/guide': typeof AuthGuideRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/projects/new': typeof AuthProjectsNewRoute
   '/settings/catalog': typeof AuthSettingsCatalogRoute
@@ -169,7 +170,6 @@ export interface FileRoutesByTo {
   '/inventory': typeof AuthInventoryIndexRoute
   '/projects': typeof AuthProjectsIndexRoute
   '/settings': typeof AuthSettingsIndexRoute
-  '/guide': typeof AuthGuideRoute
   '/projects/$projectId/deployment': typeof AuthProjectsProjectIdDeploymentRoute
   '/projects/$projectId/financials': typeof AuthProjectsProjectIdFinancialsRoute
   '/projects/$projectId/intake': typeof AuthProjectsProjectIdIntakeRoute
@@ -180,9 +180,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_auth': typeof AuthRouteWithChildren
   '/login': typeof LoginRoute
+  '/_auth/guide': typeof AuthGuideRoute
   '/_auth/settings': typeof AuthSettingsRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
-  '/_auth/guide': typeof AuthGuideRoute
   '/_auth/projects/new': typeof AuthProjectsNewRoute
   '/_auth/settings/catalog': typeof AuthSettingsCatalogRoute
   '/_auth/settings/installers': typeof AuthSettingsInstallersRoute
@@ -203,6 +203,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/guide'
     | '/settings'
     | '/auth/callback'
     | '/projects/new'
@@ -215,7 +216,6 @@ export interface FileRouteTypes {
     | '/inventory/'
     | '/projects/'
     | '/settings/'
-    | '/guide'
     | '/projects/$projectId/deployment'
     | '/projects/$projectId/financials'
     | '/projects/$projectId/intake'
@@ -224,6 +224,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/guide'
     | '/auth/callback'
     | '/projects/new'
     | '/settings/catalog'
@@ -235,7 +236,6 @@ export interface FileRouteTypes {
     | '/inventory'
     | '/projects'
     | '/settings'
-    | '/guide'
     | '/projects/$projectId/deployment'
     | '/projects/$projectId/financials'
     | '/projects/$projectId/intake'
@@ -245,9 +245,9 @@ export interface FileRouteTypes {
     | '/'
     | '/_auth'
     | '/login'
+    | '/_auth/guide'
     | '/_auth/settings'
     | '/auth/callback'
-    | '/_auth/guide'
     | '/_auth/projects/new'
     | '/_auth/settings/catalog'
     | '/_auth/settings/installers'
@@ -308,6 +308,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSettingsRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/guide': {
+      id: '/_auth/guide'
+      path: '/guide'
+      fullPath: '/guide'
+      preLoaderRoute: typeof AuthGuideRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_auth/settings/': {
       id: '/_auth/settings/'
       path: '/'
@@ -327,13 +334,6 @@ declare module '@tanstack/react-router' {
       path: '/inventory'
       fullPath: '/inventory/'
       preLoaderRoute: typeof AuthInventoryIndexRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/_auth/guide': {
-      id: '/_auth/guide'
-      path: '/guide'
-      fullPath: '/guide'
-      preLoaderRoute: typeof AuthGuideRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_auth/financials/': {
@@ -439,10 +439,10 @@ const AuthSettingsRouteWithChildren = AuthSettingsRoute._addFileChildren(
 )
 
 interface AuthRouteChildren {
+  AuthGuideRoute: typeof AuthGuideRoute
   AuthSettingsRoute: typeof AuthSettingsRouteWithChildren
   AuthProjectsNewRoute: typeof AuthProjectsNewRoute
   AuthFinancialsIndexRoute: typeof AuthFinancialsIndexRoute
-  AuthGuideRoute: typeof AuthGuideRoute
   AuthInventoryIndexRoute: typeof AuthInventoryIndexRoute
   AuthProjectsIndexRoute: typeof AuthProjectsIndexRoute
   AuthProjectsProjectIdDeploymentRoute: typeof AuthProjectsProjectIdDeploymentRoute
@@ -452,10 +452,10 @@ interface AuthRouteChildren {
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
+  AuthGuideRoute: AuthGuideRoute,
   AuthSettingsRoute: AuthSettingsRouteWithChildren,
   AuthProjectsNewRoute: AuthProjectsNewRoute,
   AuthFinancialsIndexRoute: AuthFinancialsIndexRoute,
-  AuthGuideRoute: AuthGuideRoute,
   AuthInventoryIndexRoute: AuthInventoryIndexRoute,
   AuthProjectsIndexRoute: AuthProjectsIndexRoute,
   AuthProjectsProjectIdDeploymentRoute: AuthProjectsProjectIdDeploymentRoute,
