@@ -11,6 +11,7 @@ import { ReviewStep } from '@/components/wizard/intake/ReviewStep';
 import { supabase } from '@/lib/supabase';
 import { showToast } from '@/lib/toast';
 import { generateBom } from '@/services/bom';
+import { isStepAccessible, getStepStates } from '@/lib/wizard-steps';
 
 const INTAKE_STEPS = [
   'Customer Info',
@@ -188,7 +189,10 @@ function IntakePage() {
         <WizardStepper
           steps={INTAKE_STEPS}
           currentStep={currentStep}
-          onStepClick={setCurrentStep}
+          onStepClick={(index) => {
+            const states = getStepStates('intake', currentStep);
+            if (isStepAccessible(states[index])) setCurrentStep(index);
+          }}
         />
       </div>
 

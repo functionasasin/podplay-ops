@@ -13,17 +13,19 @@ export function WizardStepper({ steps, currentStep, onStepClick }: WizardStepper
       {steps.map((label, index) => {
         const isCompleted = index < currentStep;
         const isCurrent = index === currentStep;
+        const isLocked = index > currentStep;
 
         return (
           <div key={label} className="flex items-center">
             <button
               type="button"
-              onClick={() => onStepClick(index)}
+              onClick={isLocked ? undefined : () => onStepClick(index)}
+              disabled={isLocked}
               className={cn(
                 'flex items-center gap-1.5 px-3 py-2 text-sm rounded-md transition-colors whitespace-nowrap',
                 isCurrent && 'font-semibold text-primary',
                 isCompleted && 'text-muted-foreground hover:text-foreground',
-                !isCurrent && !isCompleted && 'text-muted-foreground hover:text-foreground',
+                isLocked && 'opacity-50 cursor-not-allowed text-muted-foreground',
               )}
               aria-current={isCurrent ? 'step' : undefined}
             >
@@ -32,7 +34,7 @@ export function WizardStepper({ steps, currentStep, onStepClick }: WizardStepper
                   'flex h-5 w-5 items-center justify-center rounded-full text-xs font-medium shrink-0',
                   isCurrent && 'bg-primary text-primary-foreground',
                   isCompleted && 'bg-primary/20 text-primary',
-                  !isCurrent && !isCompleted && 'bg-muted text-muted-foreground',
+                  isLocked && 'bg-muted text-muted-foreground',
                 )}
               >
                 {isCompleted ? <Check className="h-3 w-3" /> : index + 1}
