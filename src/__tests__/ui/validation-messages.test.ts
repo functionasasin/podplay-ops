@@ -104,11 +104,10 @@ describe('VALIDATION constants — structure', () => {
     expect(V.review.section_label).toBeDefined();
   });
 
-  it('procurement section has BOM, PO, CC terminal, and replay signs', () => {
+  it('procurement section has BOM, PO, and replay signs', () => {
     const P = VALIDATION.procurement;
     expect(P.bom.qty.min).toBeDefined();
     expect(P.po.vendor.required).toBeDefined();
-    expect(P.cc_terminal.date_format).toBeDefined();
     expect(P.replay_signs.staged_tooltip).toBeDefined();
     expect(P.advance.body).toBeDefined();
   });
@@ -202,13 +201,6 @@ describe('VALIDATION constants — 20 spot-checks vs spec', () => {
   it('11. procurement.po.items_form_error', () => {
     expect(VALIDATION.procurement.po.items_form_error).toBe(
       'Add at least one line item before creating the purchase order.',
-    );
-  });
-
-  // §2.6 Procurement CC Terminal
-  it('12. procurement.cc_terminal.date_format', () => {
-    expect(VALIDATION.procurement.cc_terminal.date_format).toBe(
-      'Date must be a valid date (YYYY-MM-DD)',
     );
   });
 

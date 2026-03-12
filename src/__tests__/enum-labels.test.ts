@@ -55,10 +55,6 @@ import {
   signStatusLabels,
   signStatusBadgeClass,
   signStatusSortOrder,
-  // cc_terminal_status
-  ccTerminalStatusLabels,
-  ccTerminalStatusBadgeClass,
-  ccTerminalStatusSortOrder,
   // mdm_provider
   mdmProviderLabels,
   mdmProviderBadgeClass,
@@ -357,24 +353,6 @@ describe('sign_status', () => {
 
   it('has sort order covering all values', () => {
     checkSortOrder(signStatusSortOrder, signStatusLabels, 'signStatusSortOrder');
-  });
-});
-
-// ─── cc_terminal_status ───────────────────────────────────────────────────────
-
-describe('cc_terminal_status', () => {
-  it('has labels for all 4 values', () => {
-    expect(Object.keys(ccTerminalStatusLabels)).toHaveLength(4);
-    checkNoUndefined(ccTerminalStatusLabels, 'ccTerminalStatusLabels');
-  });
-
-  it('has badge classes for all 4 values', () => {
-    expect(Object.keys(ccTerminalStatusBadgeClass)).toHaveLength(4);
-    checkNoUndefined(ccTerminalStatusBadgeClass, 'ccTerminalStatusBadgeClass');
-  });
-
-  it('has sort order covering all values', () => {
-    checkSortOrder(ccTerminalStatusSortOrder, ccTerminalStatusLabels, 'ccTerminalStatusSortOrder');
   });
 });
 

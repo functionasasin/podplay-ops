@@ -217,21 +217,6 @@ export const VALIDATION = {
       negative: 'Quantity received must be 0 or more',
       int: 'Quantity received must be a whole number',
     },
-    cc_terminal: {
-      serial_number: { required: 'Serial number is required' },
-      model: { required: 'Model is required' },
-      qty: {
-        min: 'Quantity must be at least 1',
-        max: 'Quantity must be 10 or less',
-      },
-      cost_per_unit: {
-        min: 'Cost must be 0 or more',
-        max: 'Cost must be $10,000 or less',
-      },
-      stripe_order_id: { max: 'Order ID must be 100 characters or less' },
-      notes: { max: 'Notes must be 1000 characters or less' },
-      date_format: 'Date must be a valid date (YYYY-MM-DD)',
-    },
     replay_signs: {
       staged_tooltip: 'Set outreach date before marking as shipped',
       shipped_tooltip: 'Shipped date must be set before marking as delivered',
@@ -251,7 +236,6 @@ export const VALIDATION = {
         bom: 'BOM must be reviewed and quantities confirmed',
         po: 'All PO items must be received or on order',
         packing: 'Packing list must be confirmed',
-        cc_terminal: 'CC terminal must be ordered (if applicable)',
         replay_signs: 'Replay signs outreach must be initiated',
       },
     },
@@ -484,10 +468,6 @@ export const VALIDATION = {
       po_number_prefix: {
         required: 'PO prefix is required',
         max: 'PO prefix must be 10 characters or less',
-      },
-      cc_terminal_pin: {
-        required: 'CC terminal PIN is required',
-        max: 'PIN must be 10 characters or less',
       },
       mac_mini_local_ip: { format: 'Must be a valid IPv4 address' },
       replay_port: {

@@ -1,4 +1,4 @@
-// Integration tests: financial tables (invoices, expenses, cc_terminals, replay_signs)
+// Integration tests: financial tables (invoices, expenses, replay_signs)
 // Requires local Supabase running: npx supabase start
 // Run: cd apps/podplay && npx vitest run src/__tests__/db/
 
@@ -270,61 +270,6 @@ describe('expenses table', () => {
   });
 });
 
-// ─── cc_terminals ──────────────────────────────────────────────────────────────
-
-describe('cc_terminals table', () => {
-  const projectIds: string[] = [];
-  const terminalIds: string[] = [];
-
-  afterEach(async () => {
-    if (terminalIds.length > 0) {
-      await admin.from('cc_terminals').delete().in('id', terminalIds);
-      terminalIds.length = 0;
-    }
-    if (projectIds.length > 0) {
-      await admin.from('projects').delete().in('id', projectIds);
-      projectIds.length = 0;
-    }
-  });
-
-  it('creates a cc_terminal row and updates status from ordered to deployed', async () => {
-    const project = await createTestProject('CC-STATUS');
-    projectIds.push(project.id);
-
-    const { data: terminal, error: insertError } = await admin
-      .from('cc_terminals')
-      .insert({
-        project_id: project.id,
-        serial_number: 'SN-BBPOS-001',
-        model: 'BBPOS WisePOS E',
-        status: 'ordered',
-      })
-      .select()
-      .single();
-
-    expect(insertError).toBeNull();
-    expect(terminal).not.toBeNull();
-    terminalIds.push(terminal!.id);
-
-    expect(terminal!.project_id).toBe(project.id);
-    expect(terminal!.serial_number).toBe('SN-BBPOS-001');
-    expect(terminal!.model).toBe('BBPOS WisePOS E');
-    expect(terminal!.status).toBe('ordered');
-
-    // Update to deployed
-    const { data: deployed, error: deployError } = await admin
-      .from('cc_terminals')
-      .update({ status: 'deployed', deployed_date: '2026-03-10' })
-      .eq('id', terminal!.id)
-      .select()
-      .single();
-
-    expect(deployError).toBeNull();
-    expect(deployed!.status).toBe('deployed');
-    expect(deployed!.deployed_date).toBe('2026-03-10');
-  });
-});
-
 // ─── replay_signs ──────────────────────────────────────────────────────────────
 
 describe('replay_signs table', () => {
@@ -385,7 +330,7 @@ describe('replay_signs table', () => {
 
 // ─── FK cascade ────────────────────────────────────────────────────────────────
 
-describe('FK cascade: delete project removes invoices, expenses, cc_terminals, replay_signs', () => {
+describe('FK cascade: delete project removes invoices, expenses, replay_signs', () => {
   it('deletes all child rows when project is deleted', async () => {
     // Create project
     const project = await createTestProject('FK-CASCADE');
@@ -424,19 +369,6 @@ describe('FK cascade: delete project removes invoices, expenses, cc_terminals, r
       .single();
     expect(expError).toBeNull();
 
-    // Create a cc_terminal
-    const { data: terminal, error: termError } = await admin
-      .from('cc_terminals')
-      .insert({
-        project_id: project.id,
-        serial_number: 'SN-CASCADE-001',
-        model: 'BBPOS WisePOS E',
-        status: 'ordered',
-      })
-      .select()
-      .single();
-    expect(termError).toBeNull();
-
     // Create a replay_sign
     const { data: sign, error: signError } = await admin
       .from('replay_signs')
@@ -471,13 +403,6 @@ describe('FK cascade: delete project removes invoices, expenses, cc_terminals, r
       .eq('id', expense!.id)
       .maybeSingle();
     expect(foundExpense).toBeNull();
-
-    const { data: foundTerminal } = await admin
-      .from('cc_terminals')
-      .select()
-      .eq('id', terminal!.id)
-      .maybeSingle();
-    expect(foundTerminal).toBeNull();
 
     const { data: foundSign } = await admin
       .from('replay_signs')

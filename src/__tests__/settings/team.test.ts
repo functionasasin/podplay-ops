@@ -103,7 +103,6 @@ const baseSettings: Settings = {
   isp_cable_upload_min_mbps: 20,
   default_replay_service_version: 'v2',
   po_number_prefix: 'PO',
-  cc_terminal_pin: '1234',
   mac_mini_local_ip: '10.0.1.10',
   replay_port: 8080,
   ddns_domain: 'example.dyndns.org',

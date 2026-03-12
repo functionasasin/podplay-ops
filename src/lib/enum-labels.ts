@@ -15,7 +15,6 @@ import type {
   BomCategory,
   InventoryMovementType,
   SignStatus,
-  CcTerminalStatus,
   MdmProvider,
   DeviceMigrationStatus,
   MigrationDeviceType,
@@ -369,29 +368,6 @@ export const signStatusSortOrder: Record<SignStatus, number> = {
   installed: 4,
 };
 
-// ─── cc_terminal_status ───────────────────────────────────────────────────────
-
-export const ccTerminalStatusLabels: Record<CcTerminalStatus, string> = {
-  not_ordered: 'Not Ordered',
-  ordered:     'Ordered',
-  delivered:   'Delivered',
-  installed:   'Installed',
-};
-
-export const ccTerminalStatusBadgeClass: Record<CcTerminalStatus, string> = {
-  not_ordered: 'bg-slate-100 text-slate-600 border-slate-200',
-  ordered:     'bg-yellow-100 text-yellow-700 border-yellow-200',
-  delivered:   'bg-blue-100 text-blue-700 border-blue-200',
-  installed:   'bg-green-100 text-green-700 border-green-200',
-};
-
-export const ccTerminalStatusSortOrder: Record<CcTerminalStatus, number> = {
-  not_ordered: 1,
-  ordered:     2,
-  delivered:   3,
-  installed:   4,
-};
-
 // ─── mdm_provider ─────────────────────────────────────────────────────────────
 
 export const mdmProviderLabels: Record<MdmProvider, string> = {
@@ -551,7 +527,6 @@ const labelMaps: Record<string, Record<string, string>> = {
   bom_category:             bomCategoryLabels,
   inventory_movement_type:  inventoryMovementTypeLabels,
   sign_status:              signStatusLabels,
-  cc_terminal_status:       ccTerminalStatusLabels,
   mdm_provider:             mdmProviderLabels,
   device_migration_status:  deviceMigrationStatusLabels,
   migration_device_type:    migrationDeviceTypeLabels,
@@ -575,7 +550,6 @@ const badgeClassMaps: Record<string, Record<string, string>> = {
   bom_category:             bomCategoryBadgeClass,
   inventory_movement_type:  inventoryMovementTypeBadgeClass,
   sign_status:              signStatusBadgeClass,
-  cc_terminal_status:       ccTerminalStatusBadgeClass,
   mdm_provider:             mdmProviderBadgeClass,
   device_migration_status:  deviceMigrationStatusBadgeClass,
   migration_device_type:    migrationDeviceTypeBadgeClass,

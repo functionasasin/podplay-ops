@@ -31,7 +31,6 @@ export type Settings = {
   // Operational defaults
   default_replay_service_version: 'v1' | 'v2';
   po_number_prefix: string;
-  cc_terminal_pin: string;
   mac_mini_local_ip: string;
   replay_port: number;
   ddns_domain: string;

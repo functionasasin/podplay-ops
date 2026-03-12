@@ -178,38 +178,6 @@ export const TOAST_MARK_ALL_SHIPPED_ERROR: ToastConfig = {
   type: 'error',
 }
 
-// 4.5 Procurement: CC Terminal Tab
-export const TOAST_CC_TERMINAL_SAVE_SUCCESS: ToastConfig = {
-  message: 'CC terminal saved',
-  duration: SUCCESS_DURATION,
-  type: 'success',
-}
-export const TOAST_CC_TERMINAL_SAVE_ERROR: ToastConfig = {
-  message: 'Failed to save CC terminal',
-  duration: ERROR_DURATION,
-  type: 'error',
-}
-export const TOAST_CC_TERMINAL_ORDERED_SUCCESS: ToastConfig = {
-  message: 'CC terminal marked as ordered',
-  duration: SUCCESS_DURATION,
-  type: 'success',
-}
-export const TOAST_CC_TERMINAL_DELIVERED_SUCCESS: ToastConfig = {
-  message: 'CC terminal marked as delivered',
-  duration: SUCCESS_DURATION,
-  type: 'success',
-}
-export const TOAST_CC_TERMINAL_INSTALLED_SUCCESS: ToastConfig = {
-  message: 'CC terminal marked as installed',
-  duration: SUCCESS_DURATION,
-  type: 'success',
-}
-export const TOAST_CC_TERMINAL_STATUS_ERROR: ToastConfig = {
-  message: 'Failed to update terminal status',
-  duration: ERROR_DURATION,
-  type: 'error',
-}
-
 // 4.6 Procurement: Replay Signs Tab
 export const TOAST_REPLAY_SIGNS_SAVE_SUCCESS: ToastConfig = {
   message: 'Replay signs saved',
@@ -621,12 +589,6 @@ export const TOAST_OPERATIONS: Record<string, ToastConfig> = {
   MARK_ITEM_SHIPPED_ERROR: TOAST_MARK_ITEM_SHIPPED_ERROR,
   REVERT_SHIPMENT_ERROR: TOAST_REVERT_SHIPMENT_ERROR,
   MARK_ALL_SHIPPED_ERROR: TOAST_MARK_ALL_SHIPPED_ERROR,
-  CC_TERMINAL_SAVE_SUCCESS: TOAST_CC_TERMINAL_SAVE_SUCCESS,
-  CC_TERMINAL_SAVE_ERROR: TOAST_CC_TERMINAL_SAVE_ERROR,
-  CC_TERMINAL_ORDERED_SUCCESS: TOAST_CC_TERMINAL_ORDERED_SUCCESS,
-  CC_TERMINAL_DELIVERED_SUCCESS: TOAST_CC_TERMINAL_DELIVERED_SUCCESS,
-  CC_TERMINAL_INSTALLED_SUCCESS: TOAST_CC_TERMINAL_INSTALLED_SUCCESS,
-  CC_TERMINAL_STATUS_ERROR: TOAST_CC_TERMINAL_STATUS_ERROR,
   REPLAY_SIGNS_SAVE_SUCCESS: TOAST_REPLAY_SIGNS_SAVE_SUCCESS,
   REPLAY_SIGNS_SAVE_ERROR: TOAST_REPLAY_SIGNS_SAVE_ERROR,
   REPLAY_SIGNS_SHIPPED_SUCCESS: TOAST_REPLAY_SIGNS_SHIPPED_SUCCESS,

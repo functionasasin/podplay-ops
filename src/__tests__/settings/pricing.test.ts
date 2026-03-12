@@ -54,7 +54,6 @@ const baseSettings: Settings = {
   isp_cable_upload_min_mbps: 60,
   default_replay_service_version: 'v1',
   po_number_prefix: 'PO',
-  cc_terminal_pin: '07139',
   mac_mini_local_ip: '192.168.32.100',
   replay_port: 4000,
   ddns_domain: 'podplaydns.com',

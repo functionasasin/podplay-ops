@@ -44,11 +44,6 @@ export const LOADER_PROCUREMENT_MARK_RECEIVED = loader('Mark Received', 'Saving.
 export const LOADER_PROCUREMENT_CONFIRM_PACKING = loader('Confirm Packing', 'Confirming...')
 export const LOADER_PROCUREMENT_MARK_READY = loader('Mark Ready for Deployment', 'Advancing...')
 
-// ─── Procurement — CC Terminals (2) ─────────────────────────────────────────
-
-export const LOADER_PROCUREMENT_ORDER_CC_TERMINAL = loader('Place Order', 'Ordering...')
-export const LOADER_PROCUREMENT_UPDATE_CC_TERMINAL = loader('Save', 'Saving...')
-
 // ─── Procurement — Replay Signs (1) ─────────────────────────────────────────
 
 export const LOADER_PROCUREMENT_UPDATE_SIGN_STATUS = loader('Save', 'Saving...')
@@ -117,9 +112,6 @@ export const LOADERS = {
   // Procurement — Packing & Advance
   procurementConfirmPacking: LOADER_PROCUREMENT_CONFIRM_PACKING,
   procurementMarkReady: LOADER_PROCUREMENT_MARK_READY,
-  // Procurement — CC Terminals
-  procurementOrderCcTerminal: LOADER_PROCUREMENT_ORDER_CC_TERMINAL,
-  procurementUpdateCcTerminal: LOADER_PROCUREMENT_UPDATE_CC_TERMINAL,
   // Procurement — Replay Signs
   procurementUpdateSignStatus: LOADER_PROCUREMENT_UPDATE_SIGN_STATUS,
   // Deployment

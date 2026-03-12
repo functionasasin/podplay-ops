@@ -73,7 +73,6 @@ export type InventoryMovementType =
 
 export type SignStatus = 'staged' | 'shipped' | 'delivered' | 'installed';
 
-export type CcTerminalStatus = 'not_ordered' | 'ordered' | 'delivered' | 'installed';
 
 export type MdmProvider = 'mosyle' | 'jamf' | 'other';
 

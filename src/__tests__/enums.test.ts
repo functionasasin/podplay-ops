@@ -15,7 +15,6 @@ import {
   BomCategory,
   InventoryMovementType,
   SignStatus,
-  CcTerminalStatus,
   MdmProvider,
   DeviceMigrationStatus,
   MigrationDeviceType,
@@ -237,13 +236,6 @@ describe('SignStatus', () => {
   it('has exact values from spec', () => {
     const values: SignStatus[] = ['staged', 'shipped', 'delivered', 'installed'];
     expectExact(values, ['staged', 'shipped', 'delivered', 'installed']);
-  });
-});
-
-describe('CcTerminalStatus', () => {
-  it('has exact values from spec', () => {
-    const values: CcTerminalStatus[] = ['not_ordered', 'ordered', 'delivered', 'installed'];
-    expectExact(values, ['not_ordered', 'ordered', 'delivered', 'installed']);
   });
 });
 
