@@ -426,9 +426,389 @@ export function OperationsGuide() {
         </div>
       </section>
 
-      <section id="deployment" className="space-y-3 scroll-mt-6">
+      {/* Section: Deployment */}
+      <section id="deployment" className="space-y-4 scroll-mt-6">
         <h2 className="text-2xl font-semibold border-b pb-2">Deployment</h2>
-        <p className="text-muted-foreground italic">Content coming in stage 042.</p>
+        <p>
+          Once procurement is advanced, the project enters <strong>Deployment</strong>. This is the
+          most hands-on phase — technicians work through a 16-phase checklist that covers
+          office pre-configuration, hardware setup, on-site physical installation, and
+          final verification before advancing to financial close.
+        </p>
+
+        <h3 className="text-lg font-semibold mt-4">Deployment Overview</h3>
+        <p className="text-sm text-muted-foreground">
+          The deployment checklist is auto-generated for each project based on service tier and
+          venue configuration. Every phase contains numbered steps; each step must be checked off
+          before the overall progress bar advances. The <strong>Advance to Financial Close</strong>{' '}
+          button is locked until all checklist items across all phases are complete.
+        </p>
+        <div className="rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/40 p-4 mt-2">
+          <p className="text-sm font-semibold text-blue-800 dark:text-blue-200 mb-1">Tip</p>
+          <p className="text-sm text-blue-700 dark:text-blue-300">
+            Use the phase navigator at the top of the Deployment page to jump between phases. The
+            overall progress bar at the top shows completed steps across all phases.
+          </p>
+        </div>
+
+        {/* Group 1 */}
+        <h3 className="text-lg font-semibold mt-6">Phases 1–3: Infrastructure Preparation</h3>
+        <p className="text-sm text-muted-foreground">
+          These phases happen at the office before anything ships to the customer site.
+        </p>
+
+        <div className="space-y-4 mt-2">
+          <div className="space-y-1">
+            <p className="font-semibold text-sm">Phase 1 — Pre-Purchase &amp; Planning</p>
+            <p className="text-sm text-muted-foreground">
+              Confirm the project scope: verify court count, ISP, and tier match the signed
+              agreement. Cross-check the BOM against what is physically staged in the warehouse.
+              Identify any substitute SKUs required and update the BOM before proceeding.
+            </p>
+            <ul className="text-sm text-muted-foreground list-disc list-inside space-y-0.5 mt-1">
+              <li>Verify BOM quantities against purchase order receipts</li>
+              <li>Confirm installer assignment and on-site availability</li>
+              <li>Record DDNS subdomain, UniFi site name, and Mac Mini username</li>
+            </ul>
+          </div>
+
+          <div className="space-y-1">
+            <p className="font-semibold text-sm">Phase 2 — Pre-Configuration (Office)</p>
+            <p className="text-sm text-muted-foreground">
+              All devices are configured at the office before shipping. This reduces on-site work
+              and troubleshooting time.
+            </p>
+            <ul className="text-sm text-muted-foreground list-disc list-inside space-y-0.5 mt-1">
+              <li>Flash firmware on switches and access points to required versions</li>
+              <li>Stage UniFi controller with the correct site name</li>
+              <li>Pre-load Replay software on the Mac Mini</li>
+              <li>Configure ISP router with agreed method (Static IP / DMZ / Port Forward)</li>
+            </ul>
+            <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/40 p-3 mt-2">
+              <p className="text-sm text-amber-800 dark:text-amber-200">
+                <strong>Note:</strong> The ISP configuration method (Static IP, DMZ, or Port
+                Forward) must be set in the deployment wizard before Phase 6 steps are visible. Set
+                it during Phase 2 planning so checklist steps populate correctly.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <p className="font-semibold text-sm">Phase 3 — Unboxing &amp; Labeling</p>
+            <p className="text-sm text-muted-foreground">
+              All hardware is unboxed, inspected, and labeled before it is packed for shipping.
+            </p>
+            <ul className="text-sm text-muted-foreground list-disc list-inside space-y-0.5 mt-1">
+              <li>Verify serial numbers against the BOM</li>
+              <li>Label every device with project name and court number</li>
+              <li>Document any damaged or missing items — raise a new PO if needed</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Group 2 */}
+        <h3 className="text-lg font-semibold mt-6">Phases 4–6: Network &amp; Hardware Installation</h3>
+        <p className="text-sm text-muted-foreground">
+          Core networking infrastructure is assembled and connected. These phases are done in the
+          office rack before the equipment ships.
+        </p>
+
+        <div className="space-y-4 mt-2">
+          <div className="space-y-1">
+            <p className="font-semibold text-sm">Phase 4 — Network Rack Assembly</p>
+            <p className="text-sm text-muted-foreground">
+              Mount all rack-mounted equipment: switch, patch panel, UPS, and cable management.
+              Label every port. Run and dress all copper patch cables.
+            </p>
+            <ul className="text-sm text-muted-foreground list-disc list-inside space-y-0.5 mt-1">
+              <li>Follow rack elevation diagram for unit placement</li>
+              <li>Test continuity on every run before closing the rack</li>
+            </ul>
+          </div>
+
+          <div className="space-y-1">
+            <p className="font-semibold text-sm">Phase 5 — Networking Setup (UniFi)</p>
+            <p className="text-sm text-muted-foreground">
+              Adopt all UniFi devices into the site. Configure VLANs per the architecture diagram
+              shown in the wizard (visible in Phase 5 on the Deployment page). The VLAN reference
+              panel adjusts per tier (Pro vs Autonomous).
+            </p>
+            <ul className="text-sm text-muted-foreground list-disc list-inside space-y-0.5 mt-1">
+              <li>VLAN 10: Management</li>
+              <li>VLAN 20: PodPlay services (Mac Mini, iPads, Apple TVs)</li>
+              <li>VLAN 30: Guest / customer Wi-Fi</li>
+              <li>VLAN 40: Cameras (isolated)</li>
+              <li>Verify inter-VLAN routing rules match tier spec</li>
+            </ul>
+            <div className="rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/40 p-3 mt-2">
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                <strong>Tip:</strong> The VLAN reference panel in the wizard is read-only. Use it as
+                a quick reference while configuring the UniFi controller — no need to switch tabs.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <p className="font-semibold text-sm">Phase 6 — ISP Router Configuration</p>
+            <p className="text-sm text-muted-foreground">
+              Configure the ISP-provided router using the method selected during planning. The
+              deployment wizard shows only the steps relevant to the chosen method.
+            </p>
+            <ul className="text-sm text-muted-foreground list-disc list-inside space-y-0.5 mt-1">
+              <li>
+                <strong>Static IP</strong> — assign a fixed public IP to the WAN port of the UniFi
+                gateway
+              </li>
+              <li>
+                <strong>DMZ</strong> — place the UniFi gateway IP in the router's DMZ zone
+              </li>
+              <li>
+                <strong>Port Forward</strong> — forward required ports (443, 8080, RTMP) to the
+                gateway
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Group 3 */}
+        <h3 className="text-lg font-semibold mt-6">Phases 7–9: Software Configuration &amp; Testing</h3>
+        <p className="text-sm text-muted-foreground">
+          Software-layer setup: cameras, dynamic DNS, and the core Mac Mini server.
+        </p>
+
+        <div className="space-y-4 mt-2">
+          <div className="space-y-1">
+            <p className="font-semibold text-sm">Phase 7 — Camera Configuration</p>
+            <p className="text-sm text-muted-foreground">
+              Adopt cameras into UniFi Protect or the standalone NVR. Assign each camera to its
+              court and label it in the system.
+            </p>
+            <ul className="text-sm text-muted-foreground list-disc list-inside space-y-0.5 mt-1">
+              <li>Place cameras on VLAN 40 (isolated camera network)</li>
+              <li>Verify recording is active and streams are accessible</li>
+              <li>Test motion detection settings per court</li>
+            </ul>
+          </div>
+
+          <div className="space-y-1">
+            <p className="font-semibold text-sm">Phase 8 — DDNS Setup (FreeDNS)</p>
+            <p className="text-sm text-muted-foreground">
+              Register the project's DDNS subdomain on FreeDNS and configure the UniFi gateway to
+              auto-update the record. The subdomain is set during intake and is shown in the
+              checklist steps.
+            </p>
+            <ul className="text-sm text-muted-foreground list-disc list-inside space-y-0.5 mt-1">
+              <li>Verify the subdomain resolves to the current public IP</li>
+              <li>Confirm the dynamic update client is running and persists through reboots</li>
+            </ul>
+          </div>
+
+          <div className="space-y-1">
+            <p className="font-semibold text-sm">Phase 9 — Mac Mini Setup</p>
+            <p className="text-sm text-muted-foreground">
+              The Mac Mini runs the Replay service. Configure macOS, network settings, and the
+              Replay daemon.
+            </p>
+            <ul className="text-sm text-muted-foreground list-disc list-inside space-y-0.5 mt-1">
+              <li>Set static IP on VLAN 20</li>
+              <li>Enable SSH and configure the Mac Mini username recorded during intake</li>
+              <li>Install and activate the Replay service (version selected in Phase 10)</li>
+              <li>Verify Replay can reach camera streams via the NVR</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Group 4 */}
+        <h3 className="text-lg font-semibold mt-6">Phases 10–12: Quality Assurance &amp; Training</h3>
+        <p className="text-sm text-muted-foreground">
+          End-user devices are configured and tested. Replay service is validated end-to-end.
+        </p>
+
+        <div className="space-y-4 mt-2">
+          <div className="space-y-1">
+            <p className="font-semibold text-sm">Phase 10 — Replay Service Deployment</p>
+            <p className="text-sm text-muted-foreground">
+              Select the Replay service version (V1 or V2) in the deployment wizard — the checklist
+              steps update to match. Deploy the selected version to the Mac Mini and run the
+              built-in self-test.
+            </p>
+            <ul className="text-sm text-muted-foreground list-disc list-inside space-y-0.5 mt-1">
+              <li>Confirm clip generation is working for each court</li>
+              <li>Verify clips are accessible from the customer-facing URL</li>
+            </ul>
+            <div className="rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/40 p-3 mt-2">
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                <strong>Tip:</strong> Set the Replay service version before starting Phase 10
+                checklist items. Switching versions after items are checked will not reset
+                completed steps.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <p className="font-semibold text-sm">Phase 11 — iPad Setup</p>
+            <p className="text-sm text-muted-foreground">
+              Set up iPads with the PodPlay booking app. One iPad per court is standard.
+            </p>
+            <ul className="text-sm text-muted-foreground list-disc list-inside space-y-0.5 mt-1">
+              <li>Connect each iPad to VLAN 20</li>
+              <li>Install and configure the PodPlay booking app</li>
+              <li>Test court booking and clip playback end-to-end</li>
+            </ul>
+          </div>
+
+          <div className="space-y-1">
+            <p className="font-semibold text-sm">Phase 12 — Apple TV Setup</p>
+            <p className="text-sm text-muted-foreground">
+              Mount Apple TVs at each court and configure them for replay display.
+            </p>
+            <ul className="text-sm text-muted-foreground list-disc list-inside space-y-0.5 mt-1">
+              <li>Connect each Apple TV to VLAN 20</li>
+              <li>Install and pair the PodPlay display app</li>
+              <li>Test clip playback from court iPad to Apple TV display</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Group 5 */}
+        <h3 className="text-lg font-semibold mt-6">Phases 13–16: Packaging, Installation &amp; Sign-off</h3>
+        <p className="text-sm text-muted-foreground">
+          Equipment is packed for shipping, installed on site, and the customer accepts the system.
+        </p>
+
+        <div className="space-y-4 mt-2">
+          <div className="space-y-1">
+            <p className="font-semibold text-sm">Phase 13 — Packaging &amp; Shipping</p>
+            <p className="text-sm text-muted-foreground">
+              Pack all hardware using the packing list generated in Procurement. Label cartons and
+              arrange logistics with the installer.
+            </p>
+            <ul className="text-sm text-muted-foreground list-disc list-inside space-y-0.5 mt-1">
+              <li>Cross-check physical items against the Packing List PDF</li>
+              <li>Include printed packing list inside and taped to the outside of each carton</li>
+              <li>Confirm delivery date with the installer and customer</li>
+            </ul>
+          </div>
+
+          <div className="space-y-1">
+            <p className="font-semibold text-sm">Phase 14 — Physical Installation (On-site)</p>
+            <p className="text-sm text-muted-foreground">
+              On-site installation of all hardware by the assigned installer team.
+            </p>
+            <ul className="text-sm text-muted-foreground list-disc list-inside space-y-0.5 mt-1">
+              <li>Mount and cable rack, cameras, access points, and displays per site plan</li>
+              <li>Power up all devices and verify adoption in UniFi and Replay</li>
+              <li>
+                <strong>App Lock:</strong> A warning banner appears in Phase 14 — the Flic button
+                pairing step requires temporarily disabling Guided Access on iPads. Re-enable after
+                pairing.
+              </li>
+            </ul>
+            <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/40 p-3 mt-2">
+              <p className="text-sm text-amber-800 dark:text-amber-200">
+                <strong>Note:</strong> Re-enable Guided Access (App Lock) on all iPads after the
+                Flic button is paired. This is a common step that gets missed during physical
+                installation.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <p className="font-semibold text-sm">Phase 15 — Testing &amp; Verification (On-site)</p>
+            <p className="text-sm text-muted-foreground">
+              Full end-to-end system test with the customer present.
+            </p>
+            <ul className="text-sm text-muted-foreground list-disc list-inside space-y-0.5 mt-1">
+              <li>Book a test session on each court using the iPad</li>
+              <li>Verify clip appears on the Apple TV within the expected time</li>
+              <li>Test door locks, access control, and camera recording for every court</li>
+              <li>Walk the customer through the booking flow</li>
+            </ul>
+          </div>
+
+          <div className="space-y-1">
+            <p className="font-semibold text-sm">Phase 16 — Health Monitoring Setup</p>
+            <p className="text-sm text-muted-foreground">
+              Configure remote monitoring so the operations team can detect issues proactively.
+            </p>
+            <ul className="text-sm text-muted-foreground list-disc list-inside space-y-0.5 mt-1">
+              <li>Enable UniFi remote monitoring and confirm the site appears in the controller</li>
+              <li>Set up uptime alerts for the Mac Mini and camera NVR</li>
+              <li>Verify DDNS auto-update is still resolving correctly after on-site config</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Troubleshooting */}
+        <h3 className="text-lg font-semibold mt-6">Troubleshooting Common Deployment Issues</h3>
+        <div className="space-y-3 mt-2">
+          <div className="rounded-lg border p-3 space-y-1">
+            <p className="text-sm font-semibold">Checklist steps not populating</p>
+            <p className="text-sm text-muted-foreground">
+              Deployment checklist items are seeded when the project advances from procurement. If
+              a phase shows an empty checklist, the database seed may have failed during the status
+              transition. Contact the technical team to re-trigger the seed migration for the
+              project.
+            </p>
+          </div>
+          <div className="rounded-lg border p-3 space-y-1">
+            <p className="text-sm font-semibold">ISP configuration method not set — Phase 6 steps missing</p>
+            <p className="text-sm text-muted-foreground">
+              Navigate to Phase 6 in the deployment wizard and select the ISP configuration method
+              (Static IP, DMZ, or Port Forward) using the method picker panel. The relevant
+              checklist steps will appear immediately after selection.
+            </p>
+          </div>
+          <div className="rounded-lg border p-3 space-y-1">
+            <p className="text-sm font-semibold">Advance to Financial Close button is disabled</p>
+            <p className="text-sm text-muted-foreground">
+              The button remains disabled until every checklist item across all deployment phases
+              is checked. Review each phase for unchecked items using the phase navigator. The
+              progress bar shows the overall completion percentage.
+            </p>
+          </div>
+          <div className="rounded-lg border p-3 space-y-1">
+            <p className="text-sm font-semibold">DDNS subdomain not resolving</p>
+            <p className="text-sm text-muted-foreground">
+              Confirm the dynamic update client is running on the UniFi gateway. DNS propagation
+              can take up to 5 minutes after the public IP changes. If the subdomain still does not
+              resolve, log in to FreeDNS and manually verify the A record matches the current
+              public IP.
+            </p>
+          </div>
+          <div className="rounded-lg border p-3 space-y-1">
+            <p className="text-sm font-semibold">Replay clips not appearing on Apple TV</p>
+            <p className="text-sm text-muted-foreground">
+              Verify the Mac Mini and Apple TV are on the same VLAN (VLAN 20). Confirm the Replay
+              service is running on the Mac Mini using SSH. Check that the court number assigned in
+              the Replay config matches the iPad configuration for that court.
+            </p>
+          </div>
+        </div>
+
+        {/* Advancing to Financial Close */}
+        <h3 className="text-lg font-semibold mt-6">Advancing to Financial Close</h3>
+        <p className="text-sm text-muted-foreground">
+          When all 16 deployment phases are complete and every checklist item is checked, navigate
+          to the last phase and click <strong>Advance to Financial Close</strong>.
+        </p>
+        <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 mt-2">
+          <li>
+            A confirmation dialog shows the project name — verify you are advancing the correct
+            project before confirming.
+          </li>
+          <li>
+            After advancing, the project status changes to <em>Financial Close</em> and you are
+            redirected to the Financials page.
+          </li>
+          <li>The Deployment wizard becomes read-only after advancement.</li>
+        </ul>
+        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/40 p-3 mt-3">
+          <p className="text-sm text-amber-800 dark:text-amber-200">
+            <strong>Note:</strong> Advancing to Financial Close is irreversible. Ensure on-site
+            testing is complete and the customer has accepted the system before clicking Advance.
+          </p>
+        </div>
       </section>
 
       <section id="financial-close" className="space-y-3 scroll-mt-6">
