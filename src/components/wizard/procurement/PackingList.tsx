@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { EMPTY_STATES } from '@/lib/empty-state-configs';
+import { PdfExportButton } from '@/components/ui/PdfExportButton';
 
 interface PackingItem {
   id: string;
@@ -127,12 +128,7 @@ export function PackingList({ projectId }: PackingListProps) {
           <p className="text-sm text-muted-foreground">
             {totalItems} line items · {totalQty} total units
           </p>
-          <button
-            onClick={() => window.print()}
-            className="px-3 py-1.5 text-sm border rounded hover:bg-muted/50 transition-colors"
-          >
-            Print / Save PDF
-          </button>
+          <PdfExportButton label="Export Packing List as PDF" />
         </div>
 
         <div className="overflow-x-auto">

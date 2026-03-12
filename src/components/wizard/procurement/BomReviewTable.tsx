@@ -4,6 +4,7 @@ import { calculateCostChain } from '@/lib/cost-chain';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { EMPTY_STATES } from '@/lib/empty-state-configs';
 import { SearchableSelect } from '@/components/ui/SearchableSelect';
+import { PdfExportButton } from '@/components/ui/PdfExportButton';
 
 interface CatalogItem {
   id: string;
@@ -147,6 +148,10 @@ export function BomReviewTable({ projectId }: BomReviewTableProps) {
 
   return (
     <div>
+      <div className="flex items-center justify-between mb-3">
+        <div />
+        <PdfExportButton label="Export BOM as PDF" />
+      </div>
       {/* Table view — sm and above */}
       <div className="overflow-x-auto hidden sm:block">
         <table className="w-full text-sm border-collapse">

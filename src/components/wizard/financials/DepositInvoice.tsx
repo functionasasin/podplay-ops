@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { VALIDATION } from '@/lib/validation-messages';
+import { PdfExportButton } from '@/components/ui/PdfExportButton';
 
 const V = VALIDATION.financials.deposit_invoice;
 
@@ -131,11 +132,14 @@ export function DepositInvoice({ projectId, depositAmount }: DepositInvoiceProps
 
   return (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-base font-semibold mb-1">Deposit Invoice</h3>
-        <p className="text-sm text-muted-foreground">
-          Create and track the deposit invoice for this project.
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h3 className="text-base font-semibold mb-1">Deposit Invoice</h3>
+          <p className="text-sm text-muted-foreground">
+            Create and track the deposit invoice for this project.
+          </p>
+        </div>
+        <PdfExportButton label="Export Invoice as PDF" />
       </div>
 
       {/* Status Tracking */}
