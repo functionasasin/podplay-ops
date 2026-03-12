@@ -63,9 +63,6 @@ describe('projects table', () => {
       venue_country: 'US',
     });
 
-    // replay_sign_count is GENERATED ALWAYS AS (court_count * 2)
-    expect(data!.replay_sign_count).toBe(8);
-
     // id, created_at, updated_at are auto-generated
     expect(data!.id).toBeTruthy();
     expect(data!.created_at).toBeTruthy();

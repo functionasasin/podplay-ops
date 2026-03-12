@@ -50,7 +50,6 @@ const pricingFormSchema = z
     replay_port: z.number().int().min(1, VS.replay_port.min).max(65535, VS.replay_port.max),
     ddns_domain: z.string().min(1, VS.ddns_domain.required),
     label_sets_per_court: z.number().int().min(1, VS.label_sets_per_court.min),
-    replay_sign_multiplier: z.number().int().min(1, VS.replay_sign_multiplier.min),
     default_vlan_id: z.number().int().min(1, VS.vlan_id.min).max(4094, VS.vlan_id.max),
     replay_vlan_id: z.number().int().min(1, VS.vlan_id.min).max(4094, VS.vlan_id.max),
     surveillance_vlan_id: z.number().int().min(1, VS.vlan_id.min).max(4094, VS.vlan_id.max),
@@ -109,7 +108,6 @@ export function PricingSettings({ settings }: Props) {
       replay_port: settings.replay_port ?? 4000,
       ddns_domain: settings.ddns_domain ?? 'podplaydns.com',
       label_sets_per_court: settings.label_sets_per_court ?? 5,
-      replay_sign_multiplier: settings.replay_sign_multiplier ?? 2,
       default_vlan_id: settings.default_vlan_id ?? 30,
       replay_vlan_id: settings.replay_vlan_id ?? 32,
       surveillance_vlan_id: settings.surveillance_vlan_id ?? 31,
@@ -363,16 +361,6 @@ export function PricingSettings({ settings }: Props) {
             {errors.label_sets_per_court && <p className="text-xs text-destructive mt-1">{errors.label_sets_per_court.message}</p>}
           </FieldGroup>
 
-          <FieldGroup label="Replay Sign Multiplier">
-            <input
-              type="number"
-              step="1"
-              min="1"
-              className="w-full h-11 rounded-md border border-input bg-background px-3 py-2 text-sm"
-              {...register('replay_sign_multiplier', { valueAsNumber: true })}
-            />
-            {errors.replay_sign_multiplier && <p className="text-xs text-destructive mt-1">{errors.replay_sign_multiplier.message}</p>}
-          </FieldGroup>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-border">

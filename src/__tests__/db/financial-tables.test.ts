@@ -1,4 +1,4 @@
-// Integration tests: financial tables (invoices, expenses, replay_signs)
+// Integration tests: financial tables (invoices, expenses)
 // Requires local Supabase running: npx supabase start
 // Run: cd apps/podplay && npx vitest run src/__tests__/db/
 
@@ -270,67 +270,9 @@ describe('expenses table', () => {
   });
 });
 
-// ─── replay_signs ──────────────────────────────────────────────────────────────
-
-describe('replay_signs table', () => {
-  const projectIds: string[] = [];
-  const signIds: string[] = [];
-
-  afterEach(async () => {
-    if (signIds.length > 0) {
-      await admin.from('replay_signs').delete().in('id', signIds);
-      signIds.length = 0;
-    }
-    if (projectIds.length > 0) {
-      await admin.from('projects').delete().in('id', projectIds);
-      projectIds.length = 0;
-    }
-  });
-
-  it('creates a replay_sign row and verifies quantity and status tracking', async () => {
-    const project = await createTestProject('SIGN-QTY');
-    projectIds.push(project.id);
-
-    // court_count = 4, qty = 4 × 2 = 8
-    const { data: sign, error } = await admin
-      .from('replay_signs')
-      .insert({
-        project_id: project.id,
-        quantity: 8,
-        status: 'ordered',
-        order_date: '2026-03-01',
-      })
-      .select()
-      .single();
-
-    expect(error).toBeNull();
-    expect(sign).not.toBeNull();
-    signIds.push(sign!.id);
-
-    expect(sign!.project_id).toBe(project.id);
-    expect(sign!.quantity).toBe(8);
-    expect(sign!.status).toBe('ordered');
-    expect(sign!.order_date).toBe('2026-03-01');
-    expect(sign!.ship_date).toBeNull();
-    expect(sign!.install_date).toBeNull();
-
-    // Advance status to installed
-    const { data: installed, error: updateError } = await admin
-      .from('replay_signs')
-      .update({ status: 'installed', install_date: '2026-03-15' })
-      .eq('id', sign!.id)
-      .select()
-      .single();
-
-    expect(updateError).toBeNull();
-    expect(installed!.status).toBe('installed');
-    expect(installed!.install_date).toBe('2026-03-15');
-  });
-});
-
 // ─── FK cascade ────────────────────────────────────────────────────────────────
 
-describe('FK cascade: delete project removes invoices, expenses, replay_signs', () => {
+describe('FK cascade: delete project removes invoices and expenses', () => {
   it('deletes all child rows when project is deleted', async () => {
     // Create project
     const project = await createTestProject('FK-CASCADE');
@@ -369,19 +311,6 @@ describe('FK cascade: delete project removes invoices, expenses, replay_signs', 
       .single();
     expect(expError).toBeNull();
 
-    // Create a replay_sign
-    const { data: sign, error: signError } = await admin
-      .from('replay_signs')
-      .insert({
-        project_id: project.id,
-        quantity: 8,
-        status: 'ordered',
-        order_date: '2026-03-01',
-      })
-      .select()
-      .single();
-    expect(signError).toBeNull();
-
     // Delete the project — should cascade
     const { error: deleteError } = await admin
       .from('projects')
@@ -403,12 +332,5 @@ describe('FK cascade: delete project removes invoices, expenses, replay_signs', 
       .eq('id', expense!.id)
       .maybeSingle();
     expect(foundExpense).toBeNull();
-
-    const { data: foundSign } = await admin
-      .from('replay_signs')
-      .select()
-      .eq('id', sign!.id)
-      .maybeSingle();
-    expect(foundSign).toBeNull();
   });
 });

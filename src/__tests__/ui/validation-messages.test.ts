@@ -104,11 +104,10 @@ describe('VALIDATION constants — structure', () => {
     expect(V.review.section_label).toBeDefined();
   });
 
-  it('procurement section has BOM, PO, and replay signs', () => {
+  it('procurement section has BOM and PO', () => {
     const P = VALIDATION.procurement;
     expect(P.bom.qty.min).toBeDefined();
     expect(P.po.vendor.required).toBeDefined();
-    expect(P.replay_signs.staged_tooltip).toBeDefined();
     expect(P.advance.body).toBeDefined();
   });
 
@@ -201,13 +200,6 @@ describe('VALIDATION constants — 20 spot-checks vs spec', () => {
   it('11. procurement.po.items_form_error', () => {
     expect(VALIDATION.procurement.po.items_form_error).toBe(
       'Add at least one line item before creating the purchase order.',
-    );
-  });
-
-  // §2.7 Procurement Replay Signs status guards
-  it('13. procurement.replay_signs.staged_tooltip', () => {
-    expect(VALIDATION.procurement.replay_signs.staged_tooltip).toBe(
-      'Set outreach date before marking as shipped',
     );
   });
 

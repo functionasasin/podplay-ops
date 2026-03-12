@@ -55,14 +55,13 @@ function renderPage() {
   return render(React.createElement(getProcurementPage()));
 }
 
-// 1. All 5 tab labels render
-test('renders all 5 tab labels', () => {
+// 1. All 4 tab labels render
+test('renders all 4 tab labels', () => {
   renderPage();
   expect(screen.getByRole('button', { name: 'BOM Review' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Inventory Check' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Purchase Orders' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Packing List' })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Replay Signs' })).toBeInTheDocument();
 });
 
 // 2. First tab (BOM Review) is selected by default — its content heading is visible
@@ -90,13 +89,6 @@ test('clicking Packing List tab shows Packing List content', () => {
   renderPage();
   fireEvent.click(screen.getByRole('button', { name: 'Packing List' }));
   expect(screen.getByRole('heading', { name: 'Packing List' })).toBeInTheDocument();
-});
-
-// 6. Clicking "Replay Signs" shows its content panel
-test('clicking Replay Signs tab shows Replay Signs content', () => {
-  renderPage();
-  fireEvent.click(screen.getByRole('button', { name: 'Replay Signs' }));
-  expect(screen.getByRole('heading', { name: 'Replay Signs' })).toBeInTheDocument();
 });
 
 // 8. Project name appears after Supabase resolves

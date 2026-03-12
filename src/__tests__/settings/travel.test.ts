@@ -54,7 +54,6 @@ const baseSettings: Settings = {
   replay_port: 8080,
   ddns_domain: 'example.dyndns.org',
   label_sets_per_court: 2,
-  replay_sign_multiplier: 2,
   default_vlan_id: 10,
   replay_vlan_id: 20,
   surveillance_vlan_id: 30,

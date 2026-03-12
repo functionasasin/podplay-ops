@@ -58,7 +58,6 @@ const baseSettings: Settings = {
   replay_port: 4000,
   ddns_domain: 'podplaydns.com',
   label_sets_per_court: 5,
-  replay_sign_multiplier: 2,
   default_vlan_id: 30,
   replay_vlan_id: 32,
   surveillance_vlan_id: 31,

@@ -35,7 +35,6 @@ export type Settings = {
   replay_port: number;
   ddns_domain: string;
   label_sets_per_court: number;
-  replay_sign_multiplier: number;
   default_vlan_id: number;
   replay_vlan_id: number;
   surveillance_vlan_id: number;
