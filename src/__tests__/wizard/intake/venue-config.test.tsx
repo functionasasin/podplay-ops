@@ -34,6 +34,12 @@ test('court_count value 4 passes validation', async () => {
   fireEvent.change(screen.getByLabelText(/court count/i), {
     target: { value: '4' },
   });
+  fireEvent.change(screen.getByLabelText(/door count/i), {
+    target: { value: '1' },
+  });
+  fireEvent.change(screen.getByLabelText(/camera count/i), {
+    target: { value: '1' },
+  });
   fireEvent.click(screen.getByRole('button', { name: /continue/i }));
   await waitFor(() => {
     expect(onNext).toHaveBeenCalled();
@@ -65,6 +71,9 @@ test('door_count accepts valid number 3', async () => {
   });
   fireEvent.change(screen.getByLabelText(/door count/i), {
     target: { value: '3' },
+  });
+  fireEvent.change(screen.getByLabelText(/camera count/i), {
+    target: { value: '1' },
   });
   fireEvent.click(screen.getByRole('button', { name: /continue/i }));
   await waitFor(() => {
@@ -103,6 +112,9 @@ test('camera_count accepts valid number 5', async () => {
   fireEvent.change(screen.getByLabelText(/court count/i), {
     target: { value: '2' },
   });
+  fireEvent.change(screen.getByLabelText(/door count/i), {
+    target: { value: '1' },
+  });
   fireEvent.change(screen.getByLabelText(/camera count/i), {
     target: { value: '5' },
   });
@@ -118,6 +130,69 @@ test('has_front_desk checkbox defaults to unchecked (false)', () => {
   renderStep();
   const checkbox = screen.getByRole('checkbox', { name: /has front desk/i }) as HTMLInputElement;
   expect(checkbox.checked).toBe(false);
+});
+
+// 5b. door_count = 0 with no front desk shows required error
+test('door_count = 0 with no front desk shows required error', async () => {
+  renderStep();
+  fireEvent.change(screen.getByLabelText(/venue address/i), {
+    target: { value: '123 Main St' },
+  });
+  fireEvent.change(screen.getByLabelText(/court count/i), {
+    target: { value: '2' },
+  });
+  // camera_count > 0 so only door error fires
+  fireEvent.change(screen.getByLabelText(/camera count/i), {
+    target: { value: '1' },
+  });
+  // door_count stays 0, has_front_desk stays unchecked
+  fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+  await waitFor(() => {
+    expect(
+      screen.getByText('Door count is required when there is no front desk'),
+    ).toBeInTheDocument();
+  });
+});
+
+// 5bb. camera_count = 0 with no front desk shows required error
+test('camera_count = 0 with no front desk shows required error', async () => {
+  renderStep();
+  fireEvent.change(screen.getByLabelText(/venue address/i), {
+    target: { value: '123 Main St' },
+  });
+  fireEvent.change(screen.getByLabelText(/court count/i), {
+    target: { value: '2' },
+  });
+  // door_count > 0 so only camera error fires
+  fireEvent.change(screen.getByLabelText(/door count/i), {
+    target: { value: '1' },
+  });
+  // camera_count stays 0, has_front_desk stays unchecked
+  fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+  await waitFor(() => {
+    expect(
+      screen.getByText('Camera count is required when there is no front desk'),
+    ).toBeInTheDocument();
+  });
+});
+
+// 5bbb. door_count = 0 and camera_count = 0 pass when has_front_desk is checked
+test('door_count and camera_count = 0 pass when has_front_desk is true', async () => {
+  const onNext = vi.fn();
+  renderStep(onNext);
+  fireEvent.change(screen.getByLabelText(/venue address/i), {
+    target: { value: '123 Main St' },
+  });
+  fireEvent.change(screen.getByLabelText(/court count/i), {
+    target: { value: '2' },
+  });
+  const checkbox = screen.getByRole('checkbox', { name: /has front desk/i });
+  fireEvent.click(checkbox);
+  fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+  await waitFor(() => {
+    expect(onNext).toHaveBeenCalled();
+  });
+  expect(onNext.mock.calls[0][0]).toMatchObject({ has_front_desk: true, door_count: 0, camera_count: 0 });
 });
 
 // 5c. has_front_desk can be toggled on

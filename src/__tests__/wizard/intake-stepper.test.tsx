@@ -58,14 +58,16 @@ test('clicking step 0 fires onStepClick with index 0', () => {
 
 test('clicking step 3 fires onStepClick with index 3', () => {
   const onStepClick = vi.fn();
-  renderStepper(0, onStepClick);
+  // Step 3 is completed (accessible) when currentStep > 3
+  renderStepper(4, onStepClick);
   fireEvent.click(screen.getByText('ISP Info'));
   expect(onStepClick).toHaveBeenCalledWith(3);
 });
 
 test('clicking step 6 fires onStepClick with index 6', () => {
   const onStepClick = vi.fn();
-  renderStepper(0, onStepClick);
+  // Step 6 is the current step when currentStep = 6
+  renderStepper(6, onStepClick);
   fireEvent.click(screen.getByText('Review & Submit'));
   expect(onStepClick).toHaveBeenCalledWith(6);
 });

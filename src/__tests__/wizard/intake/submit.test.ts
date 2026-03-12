@@ -81,6 +81,8 @@ async function renderAndNavigateToReview() {
   await waitFor(() => expect(screen.getByLabelText(/venue address/i)).toBeInTheDocument());
   fireEvent.change(screen.getByLabelText(/venue address/i), { target: { value: '123 Main St' } });
   fireEvent.change(screen.getByLabelText(/court count/i), { target: { value: '4' } });
+  fireEvent.change(screen.getByLabelText(/door count/i), { target: { value: '2' } });
+  fireEvent.change(screen.getByLabelText(/camera count/i), { target: { value: '2' } });
   fireEvent.click(screen.getByRole('button', { name: /continue/i }));
 
   // Step 2: Tier Selection
@@ -149,8 +151,8 @@ test('project row is updated with all wizard form fields on submit', async () =>
     contact_phone: null,
     venue_address_line1: '123 Main St',
     court_count: 4,
-    door_count: 0,
-    security_camera_count: 0,
+    door_count: 2,
+    security_camera_count: 2,
     has_front_desk: false,
     tier: 'pro',
     isp_provider: 'Xfinity',

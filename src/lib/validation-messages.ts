@@ -65,6 +65,7 @@ export const VALIDATION = {
       int: 'Door count must be 0 or more',
       min: 'Door count must be 0 or more',
       autonomous: 'Autonomous tier requires at least 1 access-controlled door',
+      no_front_desk_required: 'Door count is required when there is no front desk',
     },
     security_camera_count: {
       int: 'Camera count must be 0 or more',
@@ -74,6 +75,7 @@ export const VALIDATION = {
     camera_count: {
       int: 'Camera count must be 0 or more',
       min: 'Camera count must be 0 or more',
+      no_front_desk_required: 'Camera count is required when there is no front desk',
     },
 
     // Step 3: Network & ISP
