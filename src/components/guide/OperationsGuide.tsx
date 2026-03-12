@@ -38,6 +38,16 @@ export function OperationsGuide() {
               Financial Close
             </a>
           </li>
+          <li>
+            <a href="#inventory" className="text-primary hover:underline">
+              Inventory Management
+            </a>
+          </li>
+          <li>
+            <a href="#settings" className="text-primary hover:underline">
+              Settings
+            </a>
+          </li>
         </ol>
       </nav>
 
@@ -811,9 +821,431 @@ export function OperationsGuide() {
         </div>
       </section>
 
-      <section id="financial-close" className="space-y-3 scroll-mt-6">
+      {/* Section: Financial Close */}
+      <section id="financial-close" className="space-y-4 scroll-mt-6">
         <h2 className="text-2xl font-semibold border-b pb-2">Financial Close</h2>
-        <p className="text-muted-foreground italic">Content coming in stage 043.</p>
+        <p>
+          After all deployment phases are complete, the project enters <strong>Financial Close</strong>.
+          This phase covers deposit invoicing, expense reconciliation, final invoicing, and formally
+          closing the project's books.
+        </p>
+
+        <h3 className="text-lg font-semibold mt-4">Financial Close Overview</h3>
+        <p className="text-sm text-muted-foreground">
+          The Financials wizard has four tabs: <strong>Deposit</strong>, <strong>Expenses</strong>,{' '}
+          <strong>Invoice</strong>, and <strong>Summary</strong>. Work through them in order —
+          the deposit must be recorded before expenses are entered, and the final invoice is
+          generated from the combined totals.
+        </p>
+
+        <h3 className="text-lg font-semibold mt-6">Deposit Invoice</h3>
+        <p className="text-sm text-muted-foreground">
+          Navigate to <strong>Financials → Deposit</strong>. The deposit amount and payment terms
+          were set during intake. Review them and issue the deposit invoice.
+        </p>
+        <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 mt-2">
+          <li>
+            The deposit amount must meet or exceed the minimum deposit configured in Settings
+            (default ₱500). If the entered amount is below the minimum, the form will display a
+            validation error: <em>"Minimum deposit is ₱[amount]"</em>.
+          </li>
+          <li>
+            Click <strong>Issue Deposit Invoice</strong> to record the deposit. The invoice date,
+            amount, and customer details are captured at this point.
+          </li>
+          <li>
+            Click <strong>Export PDF</strong> to download the formatted deposit invoice to send
+            to the customer.
+          </li>
+        </ul>
+        <div className="rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/40 p-4 mt-3">
+          <p className="text-sm font-semibold text-blue-800 dark:text-blue-200 mb-1">Tip</p>
+          <p className="text-sm text-blue-700 dark:text-blue-300">
+            Issue the deposit invoice as early as possible in the financial close phase. Customers
+            often need the PDF invoice to initiate payment from their accounts department.
+          </p>
+        </div>
+
+        <h3 className="text-lg font-semibold mt-6">Expense Tracking</h3>
+        <p className="text-sm text-muted-foreground">
+          Navigate to <strong>Financials → Expenses</strong>. Record all project costs beyond the
+          hardware BOM — labour, travel, consumables, and any additional charges.
+        </p>
+        <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 mt-2">
+          <li>Click <strong>Add Expense</strong> to open the expense form.</li>
+          <li>
+            Enter the expense category, description, amount, and date. Common categories include
+            Installer Labour, Transport, Consumables, and Miscellaneous.
+          </li>
+          <li>
+            The running total updates immediately. All expenses feed into the P&amp;L summary on the
+            Summary tab.
+          </li>
+          <li>
+            To edit or delete an expense, click the row to open the edit form or use the delete
+            (trash) icon.
+          </li>
+        </ul>
+        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/40 p-3 mt-3">
+          <p className="text-sm text-amber-800 dark:text-amber-200">
+            <strong>Note:</strong> Hardware costs are pulled automatically from the BOM — do not
+            re-enter them as manual expenses. Only add expenses that are not already captured in
+            procurement.
+          </p>
+        </div>
+
+        <h3 className="text-lg font-semibold mt-6">Final Invoicing</h3>
+        <p className="text-sm text-muted-foreground">
+          Navigate to <strong>Financials → Invoice</strong>. The final invoice is calculated from
+          the total hardware cost (BOM) plus any additional expenses, minus the deposit already paid.
+        </p>
+        <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 mt-2">
+          <li>
+            Review the invoice line items: hardware total, additional expenses, deposit credit, and
+            balance due.
+          </li>
+          <li>
+            Adjust the payment due date if needed (defaults to the payment terms set during intake).
+          </li>
+          <li>
+            Click <strong>Issue Final Invoice</strong> to lock the invoice and record it.
+          </li>
+          <li>
+            Click <strong>Export PDF</strong> to download the formatted final invoice.
+          </li>
+        </ul>
+        <div className="rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/40 p-4 mt-3">
+          <p className="text-sm font-semibold text-blue-800 dark:text-blue-200 mb-1">Tip</p>
+          <p className="text-sm text-blue-700 dark:text-blue-300">
+            Double-check the deposit credit line before issuing the final invoice. The system
+            carries forward the deposit amount automatically, but verify it matches the deposit
+            invoice that was sent earlier.
+          </p>
+        </div>
+
+        <h3 className="text-lg font-semibold mt-6">P&amp;L Summary</h3>
+        <p className="text-sm text-muted-foreground">
+          Navigate to <strong>Financials → Summary</strong>. The summary view shows a complete
+          profit and loss breakdown for the project.
+        </p>
+        <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 mt-2">
+          <li>
+            <strong>Revenue</strong> — the final invoice amount (hardware + expenses charged to
+            customer).
+          </li>
+          <li>
+            <strong>Cost of Goods</strong> — hardware BOM total at unit cost.
+          </li>
+          <li>
+            <strong>Operating Expenses</strong> — labour, transport, and other costs entered in the
+            Expenses tab.
+          </li>
+          <li>
+            <strong>Gross Margin</strong> — revenue minus cost of goods.
+          </li>
+          <li>
+            <strong>Net Profit</strong> — gross margin minus operating expenses.
+          </li>
+        </ul>
+
+        <h3 className="text-lg font-semibold mt-6">Recurring Fees</h3>
+        <p className="text-sm text-muted-foreground">
+          After financial close, the project may generate recurring monthly fees (e.g., SaaS
+          subscription, support plan). These are tracked separately from the one-time project P&amp;L.
+        </p>
+        <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 mt-2">
+          <li>Recurring fee amounts are tied to the service tier selected during intake.</li>
+          <li>
+            The Summary tab displays the monthly recurring amount for reference when communicating
+            with the customer about ongoing charges.
+          </li>
+        </ul>
+
+        <h3 className="text-lg font-semibold mt-6">Project Close</h3>
+        <p className="text-sm text-muted-foreground">
+          Once the final invoice is issued and the P&amp;L is reviewed, mark the project as closed
+          by clicking <strong>Close Project</strong> at the bottom of the Summary tab.
+        </p>
+        <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 mt-2">
+          <li>A confirmation dialog shows the project name and final totals — verify before confirming.</li>
+          <li>
+            Closed projects move to <em>Completed</em> status on the dashboard and are no longer
+            editable.
+          </li>
+          <li>All invoices, expenses, and the P&amp;L summary remain accessible in read-only mode.</li>
+        </ul>
+        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/40 p-3 mt-3">
+          <p className="text-sm text-amber-800 dark:text-amber-200">
+            <strong>Note:</strong> Closing a project is irreversible. Confirm all invoices have been
+            sent and all expenses have been recorded before closing.
+          </p>
+        </div>
+      </section>
+
+      {/* Section: Inventory Management */}
+      <section id="inventory" className="space-y-4 scroll-mt-6">
+        <h2 className="text-2xl font-semibold border-b pb-2">Inventory Management</h2>
+        <p>
+          The <strong>Inventory</strong> page (accessible from the main navigation) gives a
+          real-time view of all hardware stock — how much is on hand, how much is on order, and
+          how much is available to allocate to new projects.
+        </p>
+
+        <h3 className="text-lg font-semibold mt-4">Stock Tracking</h3>
+        <p className="text-sm text-muted-foreground">
+          The inventory table shows one row per hardware SKU. Key columns:
+        </p>
+        <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 mt-2">
+          <li>
+            <strong>SKU / Name</strong> — the hardware catalog item name and identifier.
+          </li>
+          <li>
+            <strong>On Hand</strong> — physical quantity currently in the warehouse, updated
+            automatically when POs are received.
+          </li>
+          <li>
+            <strong>Allocated</strong> — quantity reserved for active projects in procurement or
+            deployment phases.
+          </li>
+          <li>
+            <strong>On Order</strong> — quantity ordered from vendors but not yet received.
+          </li>
+          <li>
+            <strong>Available</strong> — projected available stock: <em>on_hand − allocated + on_order</em>.
+            This is the number you can count on having for a new project.
+          </li>
+          <li>
+            <strong>Status</strong> — badge showing the current order state: Not Ordered, Ordered,
+            Partial (partially received), or Received.
+          </li>
+        </ul>
+        <div className="rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/40 p-4 mt-3">
+          <p className="text-sm font-semibold text-blue-800 dark:text-blue-200 mb-1">Tip</p>
+          <p className="text-sm text-blue-700 dark:text-blue-300">
+            Check the <strong>Available</strong> column (not just On Hand) before committing to a
+            new project. Available accounts for stock already reserved by other active projects and
+            incoming orders.
+          </p>
+        </div>
+
+        <h3 className="text-lg font-semibold mt-6">On-Order Quantities</h3>
+        <p className="text-sm text-muted-foreground">
+          On-order tracking is automatic when purchase orders are raised and received through the
+          Procurement workflow:
+        </p>
+        <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 mt-2">
+          <li>
+            When a PO is created, <em>qty_on_order</em> increments for each SKU on the PO and the
+            order status moves to <em>Ordered</em>.
+          </li>
+          <li>
+            When items are fully received, <em>qty_on_order</em> decrements to zero and status moves
+            to <em>Received</em>.
+          </li>
+          <li>
+            When items are partially received, <em>qty_on_order</em> decrements by the received
+            quantity and status moves to <em>Partial</em>.
+          </li>
+        </ul>
+
+        <h3 className="text-lg font-semibold mt-6">Manual On-Order Adjustments</h3>
+        <p className="text-sm text-muted-foreground">
+          For orders placed outside the app (e.g., a direct phone order to a vendor), you can
+          manually set the on-order quantity using the <strong>Set On-Order</strong> button on each
+          inventory row.
+        </p>
+        <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 mt-2">
+          <li>
+            Click <strong>Set On-Order</strong> on the row for the relevant SKU. A modal opens
+            showing the current on-order quantity.
+          </li>
+          <li>
+            Enter the new quantity and an optional note (e.g., "Verbal order to Vendor X, 2026-03-12").
+          </li>
+          <li>
+            Setting the quantity to 0 resets the order status to <em>Not Ordered</em>. Any value
+            above 0 sets status to <em>Ordered</em>.
+          </li>
+        </ul>
+        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/40 p-3 mt-3">
+          <p className="text-sm text-amber-800 dark:text-amber-200">
+            <strong>Note:</strong> Manual on-order entries do not create a purchase order record.
+            When the goods arrive, receive them through a PO in Procurement so that{' '}
+            <em>qty_on_hand</em> is updated correctly. Alternatively, use Set On-Order to set the
+            quantity back to 0 after receiving.
+          </p>
+        </div>
+
+        <h3 className="text-lg font-semibold mt-6">Movement History</h3>
+        <p className="text-sm text-muted-foreground">
+          Every change to inventory quantities is recorded as a movement event. To view the history
+          for a SKU, click the SKU name to open the detail panel.
+        </p>
+        <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 mt-2">
+          <li>
+            Movement events include: PO received (quantity in), project allocated (quantity
+            reserved), manual adjustment, and order placed.
+          </li>
+          <li>
+            Each event shows the date, quantity delta, resulting balance, and the user who made the
+            change.
+          </li>
+          <li>
+            Use the movement history to investigate discrepancies between the system quantity and
+            a physical count.
+          </li>
+        </ul>
+
+        <h3 className="text-lg font-semibold mt-6">Common Inventory Workflows</h3>
+        <div className="space-y-3 mt-2">
+          <div className="rounded-lg border p-3 space-y-1">
+            <p className="text-sm font-semibold">Checking stock before accepting a new project</p>
+            <p className="text-sm text-muted-foreground">
+              Open Inventory and filter by the hardware SKUs in the expected BOM for the tier. Check
+              the <strong>Available</strong> column. If any SKU shows 0 or negative, raise a PO
+              before committing to a project start date.
+            </p>
+          </div>
+          <div className="rounded-lg border p-3 space-y-1">
+            <p className="text-sm font-semibold">Correcting a stock discrepancy after a physical count</p>
+            <p className="text-sm text-muted-foreground">
+              Use <strong>Set On-Order</strong> to zero out phantom on-order quantities, then contact
+              the technical team to adjust the on-hand balance via a corrective migration if the
+              physical count differs from <em>qty_on_hand</em> in the system.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Section: Settings */}
+      <section id="settings" className="space-y-4 scroll-mt-6">
+        <h2 className="text-2xl font-semibold border-b pb-2">Settings</h2>
+        <p>
+          Settings (accessible from the main navigation) is where you configure the master data
+          that drives all project workflows: team contacts, installers, vendors, pricing, and the
+          hardware catalog.
+        </p>
+
+        <h3 className="text-lg font-semibold mt-4">Team Contacts</h3>
+        <p className="text-sm text-muted-foreground">
+          Navigate to <strong>Settings → Team</strong>. Team contacts are internal staff members
+          whose details appear in generated documents (invoices, packing lists).
+        </p>
+        <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 mt-2">
+          <li>Click <strong>Add Contact</strong> to create a new team member record.</li>
+          <li>
+            Fields: full name, role, email address, and phone number.
+          </li>
+          <li>
+            The primary contact appears in the <em>From</em> field on all outgoing PDF documents.
+          </li>
+          <li>
+            To edit or remove a contact, use the edit (pencil) or delete (trash) icons on the row.
+          </li>
+        </ul>
+
+        <h3 className="text-lg font-semibold mt-6">Installers</h3>
+        <p className="text-sm text-muted-foreground">
+          Navigate to <strong>Settings → Installers</strong>. Installers are the technicians
+          available for assignment during the Intake Wizard.
+        </p>
+        <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 mt-2">
+          <li>Click <strong>Add Installer</strong> to create a new installer record.</li>
+          <li>Fields: full name, contact number, and region/area of operation.</li>
+          <li>
+            Installers added here appear in the multi-select dropdown on the Installer Assignment
+            step of the Intake Wizard.
+          </li>
+          <li>
+            Deactivating an installer (rather than deleting) preserves their name on historical
+            project records.
+          </li>
+        </ul>
+        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/40 p-3 mt-3">
+          <p className="text-sm text-amber-800 dark:text-amber-200">
+            <strong>Note:</strong> At least one active installer must exist before an intake can be
+            submitted. Add installers here before starting new projects.
+          </p>
+        </div>
+
+        <h3 className="text-lg font-semibold mt-6">Vendors</h3>
+        <p className="text-sm text-muted-foreground">
+          Navigate to <strong>Settings → Vendors</strong>. Vendors are the suppliers from whom
+          hardware is purchased. They appear in the vendor dropdown when creating a Purchase Order.
+        </p>
+        <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 mt-2">
+          <li>Click <strong>Add Vendor</strong> to create a new vendor record.</li>
+          <li>
+            Fields: vendor name, contact person, email, phone, and address (used on PDF purchase
+            orders).
+          </li>
+          <li>
+            To edit vendor details, click the row or the edit icon. Changes are reflected
+            immediately on new POs — existing POs retain the vendor details captured at the time
+            of creation.
+          </li>
+        </ul>
+
+        <h3 className="text-lg font-semibold mt-6">Pricing Tiers &amp; Minimum Deposit</h3>
+        <p className="text-sm text-muted-foreground">
+          Navigate to <strong>Settings → Pricing</strong>. Pricing settings control the service
+          tier rates and the deposit floor enforced in the Financials wizard.
+        </p>
+        <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 mt-2">
+          <li>
+            <strong>Tier Rates</strong> — configure the monthly recurring fee for each service tier
+            (Pro, Autonomous, Autonomous+). These rates feed into the Financials Summary tab.
+          </li>
+          <li>
+            <strong>Minimum Deposit</strong> — the floor amount for the deposit invoice. If an
+            operator enters a deposit amount below this value in the Financials wizard, the form
+            will reject it with a validation error. Default is ₱500.
+          </li>
+          <li>
+            <strong>Cost Chain Rates</strong> — additional multipliers that affect the overall
+            project pricing calculation (e.g., margin, labour rate).
+          </li>
+        </ul>
+        <div className="rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/40 p-4 mt-3">
+          <p className="text-sm font-semibold text-blue-800 dark:text-blue-200 mb-1">Tip</p>
+          <p className="text-sm text-blue-700 dark:text-blue-300">
+            Update the <strong>Minimum Deposit</strong> here before starting new projects if the
+            company's deposit policy changes. The new minimum takes effect immediately on all
+            projects that have not yet issued a deposit invoice.
+          </p>
+        </div>
+
+        <h3 className="text-lg font-semibold mt-6">Hardware Catalog</h3>
+        <p className="text-sm text-muted-foreground">
+          Navigate to <strong>Settings → Catalog</strong>. The hardware catalog is the master list
+          of all hardware SKUs available for BOM generation and purchase orders.
+        </p>
+        <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 mt-2">
+          <li>
+            Click <strong>Add Item</strong> to add a new hardware SKU. Fields: SKU code, name,
+            category, unit cost, and whether the item is active.
+          </li>
+          <li>
+            To update a unit cost (e.g., price increase from supplier), click the edit icon on the
+            row and update the <em>Unit Cost</em> field. New BOM calculations will use the updated
+            price. Existing saved BOMs are not retroactively changed.
+          </li>
+          <li>
+            Deactivating a catalog item prevents it from appearing in new BOM generations while
+            preserving historical records.
+          </li>
+          <li>
+            The catalog item name and unit cost are used in the BOM tab, purchase orders, packing
+            lists, and financial summaries.
+          </li>
+        </ul>
+        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/40 p-3 mt-3">
+          <p className="text-sm text-amber-800 dark:text-amber-200">
+            <strong>Note:</strong> Do not delete catalog items that are referenced by existing
+            projects — deactivate them instead. Deletion will cause missing SKU references in
+            historical BOMs and purchase orders.
+          </p>
+        </div>
       </section>
     </div>
   );
