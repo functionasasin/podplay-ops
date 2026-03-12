@@ -26,6 +26,7 @@ const INTAKE_STEPS = [
 function IntakePage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [projectName, setProjectName] = useState<string | null>(null);
   const [wizardData, setWizardData] = useState<{
     customerInfo?: CustomerInfoValues;
     venueConfig?: VenueConfigValues;
@@ -41,7 +42,7 @@ function IntakePage() {
     async function fetchWizardStep() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: project } = await (supabase.from('projects') as any)
-        .select('wizard_step, project_status, customer_name, contact_email, contact_phone')
+        .select('wizard_step, project_status, project_name, customer_name, contact_email, contact_phone')
         .eq('id', projectId)
         .single();
       if (project?.project_status && project.project_status !== 'intake') {
@@ -57,6 +58,9 @@ function IntakePage() {
       }
       if (project?.wizard_step != null) {
         setCurrentStep(project.wizard_step);
+      }
+      if (project?.project_name) {
+        setProjectName(project.project_name);
       }
       if (project?.customer_name || project?.contact_email || project?.contact_phone) {
         setWizardData((prev) => ({
@@ -181,8 +185,9 @@ function IntakePage() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-xl font-semibold">Intake Wizard</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Project {projectId}</p>
+        <h1 className="text-xl font-semibold">
+          {projectName ? `Intake — ${projectName}` : 'Intake Wizard'}
+        </h1>
       </div>
 
       <div className="border rounded-lg p-4 bg-background">

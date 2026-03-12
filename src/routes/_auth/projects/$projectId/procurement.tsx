@@ -47,13 +47,11 @@ function ProcurementPage() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-xl font-semibold">Procurement</h1>
-        {loading ? (
-          <p className="text-sm text-muted-foreground mt-0.5">Loading...</p>
-        ) : (
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {project?.project_name ?? projectId} — {project?.customer_name ?? ''}
-          </p>
+        <h1 className="text-xl font-semibold">
+          {loading ? 'Procurement' : `Procurement — ${project?.project_name ?? projectId}`}
+        </h1>
+        {!loading && project?.customer_name && (
+          <p className="text-sm text-muted-foreground mt-0.5">{project.customer_name}</p>
         )}
       </div>
 
