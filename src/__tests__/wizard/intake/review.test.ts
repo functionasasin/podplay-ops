@@ -30,7 +30,7 @@ const mockIspInfo = {
 };
 
 const mockInstallerSelection = {
-  installer_id: 'installer-uuid-001',
+  installer_ids: ['installer-uuid-001'],
 };
 
 const mockFinancialSetup = {

@@ -124,10 +124,10 @@ export function ReviewStep({
       <div className="rounded-lg border p-4 space-y-2">
         <SectionHeader title="Installer" step={4} onEdit={onEdit} />
         <Row
-          label="Installer"
+          label="Installer(s)"
           value={
             installerName ??
-            (installerSelection?.installer_id ? installerSelection.installer_id : undefined)
+            (installerSelection?.installer_ids?.length ? installerSelection.installer_ids.join(', ') : undefined)
           }
         />
       </div>

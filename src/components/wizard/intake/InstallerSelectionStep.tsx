@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
-import { SearchableSelect } from '@/components/ui/SearchableSelect';
+import { MultiSelect } from '@/components/ui/MultiSelect';
 
 interface Installer {
   id: string;
@@ -11,7 +11,7 @@ interface Installer {
 }
 
 export interface InstallerSelectionValues {
-  installer_id: string;
+  installer_ids: string[];
 }
 
 interface InstallerSelectionStepProps {
@@ -22,7 +22,7 @@ interface InstallerSelectionStepProps {
 export function InstallerSelectionStep({ defaultValues, onNext }: InstallerSelectionStepProps) {
   const [installers, setInstallers] = useState<Installer[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedId, setSelectedId] = useState<string>(defaultValues?.installer_id ?? '');
+  const [selectedIds, setSelectedIds] = useState<string[]>(defaultValues?.installer_ids ?? []);
 
   useEffect(() => {
     let cancelled = false;
@@ -43,15 +43,15 @@ export function InstallerSelectionStep({ defaultValues, onNext }: InstallerSelec
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!selectedId) return;
-    onNext({ installer_id: selectedId });
+    if (selectedIds.length === 0) return;
+    onNext({ installer_ids: selectedIds });
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 p-4">
       <div className="space-y-1">
-        <label htmlFor="installer_id" className="text-sm font-medium">
-          Installer
+        <label className="text-sm font-medium">
+          Installer(s)
         </label>
         {loading ? (
           <p className="text-sm text-muted-foreground" aria-label="loading">
@@ -60,20 +60,20 @@ export function InstallerSelectionStep({ defaultValues, onNext }: InstallerSelec
         ) : installers.length === 0 ? (
           <p className="text-sm text-muted-foreground">No installers found.</p>
         ) : (
-          <SearchableSelect
+          <MultiSelect
             options={installers.map((installer) => ({
               value: installer.id,
               label: `${installer.name}${installer.company ? ` (${installer.company})` : ''}`,
             }))}
-            value={selectedId}
-            onChange={(value) => setSelectedId(value)}
+            values={selectedIds}
+            onChange={setSelectedIds}
             placeholder="Select an installer…"
           />
         )}
       </div>
 
       <div className="pt-2">
-        <Button type="submit" disabled={!selectedId}>
+        <Button type="submit" disabled={selectedIds.length === 0}>
           Continue
         </Button>
       </div>

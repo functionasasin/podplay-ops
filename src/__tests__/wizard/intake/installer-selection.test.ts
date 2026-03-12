@@ -89,8 +89,8 @@ test('installer with company shows name and company in option', async () => {
   expect(screen.getByRole('option', { name: 'Beta Networks' })).toBeInTheDocument();
 });
 
-// 4. Selecting an installer stores the correct installer_id and calls onNext
-test('selecting an installer and submitting calls onNext with correct installer_id', async () => {
+// 4. Selecting an installer stores the correct installer_ids and calls onNext
+test('selecting an installer and submitting calls onNext with correct installer_ids', async () => {
   const onNext = vi.fn();
   renderStep(onNext);
   resolveLatest(INSTALLERS);
@@ -102,7 +102,7 @@ test('selecting an installer and submitting calls onNext with correct installer_
   fireEvent.mouseDown(screen.getByRole('option', { name: 'Beta Networks' }));
   fireEvent.click(screen.getByRole('button', { name: /continue/i }));
   await waitFor(() => {
-    expect(onNext).toHaveBeenCalledWith({ installer_id: 'inst-2' });
+    expect(onNext).toHaveBeenCalledWith({ installer_ids: ['inst-2'] });
   });
 });
 
