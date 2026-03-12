@@ -217,18 +217,6 @@ export const VALIDATION = {
       negative: 'Quantity received must be 0 or more',
       int: 'Quantity received must be a whole number',
     },
-    replay_signs: {
-      staged_tooltip: 'Set outreach date before marking as shipped',
-      shipped_tooltip: 'Shipped date must be set before marking as delivered',
-      delivered_tooltip: 'Delivered date must be set before marking as installed',
-      qty: {
-        min: 'Quantity must be at least 1',
-        max: 'Quantity must be 200 or less',
-      },
-      vendor_order_id: { max: 'Order ID must be 100 characters or less' },
-      tracking_number: { max: 'Tracking number must be 100 characters or less' },
-      notes: { max: 'Notes must be 1000 characters or less' },
-    },
     advance: {
       body: 'Advance this project to Stage 3: Deployment? The deployment checklist will be seeded from the template. This cannot be reversed.',
       guard: 'Complete all procurement steps before advancing to deployment.',
@@ -236,7 +224,6 @@ export const VALIDATION = {
         bom: 'BOM must be reviewed and quantities confirmed',
         po: 'All PO items must be received or on order',
         packing: 'Packing list must be confirmed',
-        replay_signs: 'Replay signs outreach must be initiated',
       },
     },
   },
@@ -250,8 +237,6 @@ export const VALIDATION = {
     po_create_error: (msg: string) => `Failed to create purchase order: ${msg}`,
     receive_success: 'Items received and added to inventory',
     receive_error: (msg: string) => `Failed to record receipt: ${msg}`,
-    replay_save_success: 'Replay signs record saved',
-    replay_save_error: (msg: string) => `Failed to save replay signs: ${msg}`,
     advance_error: (msg: string) => `Failed to advance to deployment: ${msg}`,
   },
 
@@ -474,7 +459,6 @@ export const VALIDATION = {
       },
       ddns_domain: { required: 'DDNS domain is required' },
       label_sets_per_court: { min: 'Must be at least 1' },
-      replay_sign_multiplier: { min: 'Must be at least 1' },
       vlan_id: {
         min: 'VLAN ID must be at least 1',
         max: 'VLAN ID must be 4094 or less',

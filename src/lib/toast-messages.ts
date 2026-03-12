@@ -178,43 +178,6 @@ export const TOAST_MARK_ALL_SHIPPED_ERROR: ToastConfig = {
   type: 'error',
 }
 
-// 4.6 Procurement: Replay Signs Tab
-export const TOAST_REPLAY_SIGNS_SAVE_SUCCESS: ToastConfig = {
-  message: 'Replay signs saved',
-  duration: SUCCESS_DURATION,
-  type: 'success',
-}
-export const TOAST_REPLAY_SIGNS_SAVE_ERROR: ToastConfig = {
-  message: 'Failed to save replay signs',
-  duration: ERROR_DURATION,
-  type: 'error',
-}
-export const TOAST_REPLAY_SIGNS_SHIPPED_SUCCESS: ToastConfig = {
-  message: 'Replay signs marked as shipped',
-  duration: SUCCESS_DURATION,
-  type: 'success',
-}
-export const TOAST_REPLAY_SIGNS_DELIVERED_SUCCESS: ToastConfig = {
-  message: 'Replay signs marked as delivered',
-  duration: SUCCESS_DURATION,
-  type: 'success',
-}
-export const TOAST_REPLAY_SIGNS_INSTALLED_SUCCESS: ToastConfig = {
-  message: 'Replay signs installed — inventory updated',
-  duration: SUCCESS_DURATION,
-  type: 'success',
-}
-export const TOAST_REPLAY_SIGNS_STATUS_ERROR: ToastConfig = {
-  message: 'Failed to update signs status',
-  duration: ERROR_DURATION,
-  type: 'error',
-}
-export const TOAST_REPLAY_SIGNS_INSTALLED_ERROR: ToastConfig = {
-  message: 'Failed to mark signs as installed',
-  duration: ERROR_DURATION,
-  type: 'error',
-}
-
 // 4.7 Procurement: Stage Advancement
 export const TOAST_ADVANCE_DEPLOYMENT_ERROR: ToastConfig = {
   message: 'Failed to advance to deployment',
@@ -589,13 +552,6 @@ export const TOAST_OPERATIONS: Record<string, ToastConfig> = {
   MARK_ITEM_SHIPPED_ERROR: TOAST_MARK_ITEM_SHIPPED_ERROR,
   REVERT_SHIPMENT_ERROR: TOAST_REVERT_SHIPMENT_ERROR,
   MARK_ALL_SHIPPED_ERROR: TOAST_MARK_ALL_SHIPPED_ERROR,
-  REPLAY_SIGNS_SAVE_SUCCESS: TOAST_REPLAY_SIGNS_SAVE_SUCCESS,
-  REPLAY_SIGNS_SAVE_ERROR: TOAST_REPLAY_SIGNS_SAVE_ERROR,
-  REPLAY_SIGNS_SHIPPED_SUCCESS: TOAST_REPLAY_SIGNS_SHIPPED_SUCCESS,
-  REPLAY_SIGNS_DELIVERED_SUCCESS: TOAST_REPLAY_SIGNS_DELIVERED_SUCCESS,
-  REPLAY_SIGNS_INSTALLED_SUCCESS: TOAST_REPLAY_SIGNS_INSTALLED_SUCCESS,
-  REPLAY_SIGNS_STATUS_ERROR: TOAST_REPLAY_SIGNS_STATUS_ERROR,
-  REPLAY_SIGNS_INSTALLED_ERROR: TOAST_REPLAY_SIGNS_INSTALLED_ERROR,
   ADVANCE_DEPLOYMENT_ERROR: TOAST_ADVANCE_DEPLOYMENT_ERROR,
   CHECKLIST_TOGGLE_ERROR: TOAST_CHECKLIST_TOGGLE_ERROR,
   TOKEN_FIELD_ERROR: TOAST_TOKEN_FIELD_ERROR,
