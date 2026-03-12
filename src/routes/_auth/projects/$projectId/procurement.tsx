@@ -1,29 +1,22 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
-import { Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { advanceToDeploymentDialog } from '@/lib/confirmation-dialogs';
 import { serviceTierLabels } from '@/lib/enum-labels';
+import { WizardNavigation } from '@/components/wizard/WizardNavigation';
+import { isStepAccessible, getStepStates, WIZARD_STEPS } from '@/lib/wizard-steps';
 import { BomReviewTable } from '@/components/wizard/procurement/BomReviewTable';
 import { InventoryCheckPanel } from '@/components/wizard/procurement/InventoryCheckPanel';
 import { PoCreateForm } from '@/components/wizard/procurement/PoCreateForm';
 import { PoReceiving } from '@/components/wizard/procurement/PoReceiving';
 import { PackingList } from '@/components/wizard/procurement/PackingList';
-const PROCUREMENT_TABS = [
-  'BOM Review',
-  'Inventory Check',
-  'Purchase Orders',
-  'Packing List',
-] as const;
-
-type ProcurementTab = (typeof PROCUREMENT_TABS)[number];
 
 function ProcurementPage() {
   const { projectId } = Route.useParams();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<ProcurementTab>('BOM Review');
+  const [activeTabIdx, setActiveTabIdx] = useState(0);
   const [project, setProject] = useState<{ project_name: string; customer_name: string; tier: string } | null>(
     null,
   );
@@ -44,6 +37,31 @@ function ProcurementPage() {
     loadProject();
   }, [projectId]);
 
+  const stepStates = getStepStates('procurement', activeTabIdx);
+  const navigationSteps = WIZARD_STEPS.procurement.map((step, index) => ({
+    id: String(index),
+    label: step.label,
+    status: stepStates[index],
+  }));
+  const isLastStep = activeTabIdx === WIZARD_STEPS.procurement.length - 1;
+
+  function handleNavigationNext() {
+    if (isLastStep) {
+      setShowAdvanceDialog(true);
+    } else {
+      setActiveTabIdx((i) => Math.min(WIZARD_STEPS.procurement.length - 1, i + 1));
+    }
+  }
+
+  function handleNavigationPrevious() {
+    setActiveTabIdx((i) => Math.max(0, i - 1));
+  }
+
+  function handleStepClick(stepId: string) {
+    const index = Number(stepId);
+    if (isStepAccessible(stepStates[index])) setActiveTabIdx(index);
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div>
@@ -55,77 +73,50 @@ function ProcurementPage() {
         )}
       </div>
 
-      <div className="border rounded-lg overflow-hidden">
-        <div className="flex overflow-x-auto border-b bg-muted/30">
-          {PROCUREMENT_TABS.map((tab, tabIdx) => {
-            const activeIdx = PROCUREMENT_TABS.indexOf(activeTab);
-            const isCompleted = tabIdx < activeIdx;
-            const isCurrent = tabIdx === activeIdx;
-            const isLocked = tabIdx > activeIdx;
-            return (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={[
-                  'flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors',
-                  isCurrent
-                    ? 'bg-background border-b-2 border-primary text-foreground'
-                    : isCompleted
-                    ? 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                    : 'opacity-50 cursor-not-allowed text-muted-foreground',
-                ].join(' ')}
-              >
-                {isCompleted && <Check className="h-3.5 w-3.5 shrink-0" />}
-                {tab}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="p-6 min-h-64">
-          {activeTab === 'BOM Review' && (
-            <div>
-              <h2 className="text-base font-medium mb-4">BOM Review</h2>
-              <BomReviewTable projectId={projectId} />
-            </div>
-          )}
-          {activeTab === 'Inventory Check' && (
-            <div>
-              <h2 className="text-base font-medium mb-4">Inventory Check</h2>
-              <InventoryCheckPanel projectId={projectId} />
-            </div>
-          )}
-          {activeTab === 'Purchase Orders' && (
-            <div className="space-y-8">
-              <h2 className="text-base font-medium mb-4">Purchase Orders</h2>
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-3">Create Purchase Order</h3>
-                <PoCreateForm projectId={projectId} />
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-3">Receive Purchase Order</h3>
-                <PoReceiving projectId={projectId} />
-              </div>
-            </div>
-          )}
-          {activeTab === 'Packing List' && (
-            <div>
-              <h2 className="text-base font-medium mb-4">Packing List</h2>
-              <PackingList projectId={projectId} />
-            </div>
-          )}
-
-        </div>
+      <div className="border rounded-lg p-4 bg-background">
+        <WizardNavigation
+          steps={navigationSteps}
+          onStepClick={handleStepClick}
+          onPrevious={handleNavigationPrevious}
+          onNext={handleNavigationNext}
+          isFirstStep={activeTabIdx === 0}
+          isLastStep={isLastStep}
+          nextLabel={isLastStep ? 'Advance to Deployment' : undefined}
+        />
       </div>
-      {/* Advance to Deployment */}
-      <div className="flex justify-end">
-        <button
-          onClick={() => setShowAdvanceDialog(true)}
-          disabled={advancing}
-          className="px-4 py-2 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-        >
-          Advance to Deployment →
-        </button>
+
+      <div className="border rounded-lg p-6 min-h-64">
+        {activeTabIdx === 0 && (
+          <div>
+            <h2 className="text-base font-medium mb-4">BOM Review</h2>
+            <BomReviewTable projectId={projectId} />
+          </div>
+        )}
+        {activeTabIdx === 1 && (
+          <div>
+            <h2 className="text-base font-medium mb-4">Inventory Check</h2>
+            <InventoryCheckPanel projectId={projectId} />
+          </div>
+        )}
+        {activeTabIdx === 2 && (
+          <div className="space-y-8">
+            <h2 className="text-base font-medium mb-4">Purchase Orders</h2>
+            <div>
+              <h3 className="text-sm font-medium text-muted-foreground mb-3">Create Purchase Order</h3>
+              <PoCreateForm projectId={projectId} />
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-muted-foreground mb-3">Receive Purchase Order</h3>
+              <PoReceiving projectId={projectId} />
+            </div>
+          </div>
+        )}
+        {activeTabIdx === 3 && (
+          <div>
+            <h2 className="text-base font-medium mb-4">Packing List</h2>
+            <PackingList projectId={projectId} />
+          </div>
+        )}
       </div>
 
       {showAdvanceDialog && (() => {
