@@ -1,13 +1,16 @@
 // Tests: Dashboard route query behaviour
 // Mocks Supabase client and TanStack Router so no real network calls are made
 
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import React from 'react';
 
 // --- Hoist mock helpers so vi.mock factory can reference them ---
-const { mockFrom, mockSelect, resolvers } = vi.hoisted(() => {
+const { mockFrom, mockSelect, mockDelete, mockEq, resolvers, deleteResolvers } = vi.hoisted(() => {
   const resolvers: Array<
     (result: { data: unknown[] | null; error: { message: string } | null }) => void
+  > = [];
+  const deleteResolvers: Array<
+    (result: { data: null; error: { message: string } | null }) => void
   > = [];
 
   const mockSelect = vi.fn(
@@ -16,9 +19,16 @@ const { mockFrom, mockSelect, resolvers } = vi.hoisted(() => {
         resolvers.push(resolve);
       }),
   );
-  const mockFrom = vi.fn(() => ({ select: mockSelect }));
+  const mockEq = vi.fn(
+    () =>
+      new Promise<{ data: null; error: { message: string } | null }>((resolve) => {
+        deleteResolvers.push(resolve);
+      }),
+  );
+  const mockDelete = vi.fn(() => ({ eq: mockEq }));
+  const mockFrom = vi.fn(() => ({ select: mockSelect, delete: mockDelete }));
 
-  return { mockFrom, mockSelect, resolvers };
+  return { mockFrom, mockSelect, mockDelete, mockEq, resolvers, deleteResolvers };
 });
 
 vi.mock('@/lib/supabase', () => ({
@@ -39,6 +49,11 @@ function resolveLatest(result: { data: unknown[] | null; error: { message: strin
   if (resolve) resolve(result);
 }
 
+function resolveLatestDelete(result: { data: null; error: { message: string } | null }) {
+  const resolve = deleteResolvers.pop();
+  if (resolve) resolve(result);
+}
+
 function renderPage() {
   return render(React.createElement(ProjectsPage));
 }
@@ -46,7 +61,10 @@ function renderPage() {
 beforeEach(() => {
   mockFrom.mockClear();
   mockSelect.mockClear();
+  mockDelete.mockClear();
+  mockEq.mockClear();
   resolvers.length = 0;
+  deleteResolvers.length = 0;
   // Each call to mockSelect returns a fresh promise whose resolver is pushed to `resolvers`
   mockSelect.mockImplementation(
     () =>
@@ -54,6 +72,14 @@ beforeEach(() => {
         resolvers.push(resolve);
       }),
   );
+  mockEq.mockImplementation(
+    () =>
+      new Promise<{ data: null; error: { message: string } | null }>((resolve) => {
+        deleteResolvers.push(resolve);
+      }),
+  );
+  mockDelete.mockImplementation(() => ({ eq: mockEq }));
+  mockFrom.mockImplementation(() => ({ select: mockSelect, delete: mockDelete }));
 });
 
 // 1. Calls supabase.from('projects') on mount
@@ -96,4 +122,72 @@ test('renders error message when query rejects', async () => {
     expect(screen.getByText(/failed to load projects/i)).toBeInTheDocument();
   });
   expect(screen.getByText('Connection refused')).toBeInTheDocument();
+});
+
+const sampleRows = [
+  { id: 'proj-1', customer_name: 'Alpha Site', project_status: 'active', tier: 'pro', go_live_date: null },
+];
+
+// 5. Delete button renders on project cards/rows
+test('renders delete button for each project', async () => {
+  renderPage();
+  resolveLatest({ data: sampleRows, error: null });
+  await waitFor(() => expect(document.querySelector('.animate-spin')).toBeNull());
+  const deleteButtons = screen.getAllByRole('button', { name: /delete project/i });
+  expect(deleteButtons.length).toBeGreaterThan(0);
+});
+
+// 6. Clicking delete shows confirmation dialog
+test('clicking delete button opens confirmation dialog', async () => {
+  renderPage();
+  resolveLatest({ data: sampleRows, error: null });
+  await waitFor(() => expect(document.querySelector('.animate-spin')).toBeNull());
+  const [firstDeleteBtn] = screen.getAllByRole('button', { name: /delete project/i });
+  fireEvent.click(firstDeleteBtn);
+  await waitFor(() => {
+    expect(screen.getByRole('heading', { name: 'Delete Project' })).toBeInTheDocument();
+  });
+});
+
+// 7. Confirming delete calls supabase delete with correct id
+test('confirming delete calls supabase.from("projects").delete().eq("id", id)', async () => {
+  renderPage();
+  resolveLatest({ data: sampleRows, error: null });
+  await waitFor(() => expect(document.querySelector('.animate-spin')).toBeNull());
+
+  const [firstDeleteBtn] = screen.getAllByRole('button', { name: /delete project/i });
+  fireEvent.click(firstDeleteBtn);
+  await waitFor(() => screen.getByRole('heading', { name: 'Delete Project' }));
+
+  const confirmBtn = screen.getByRole('button', { name: 'Delete Project' });
+  fireEvent.click(confirmBtn);
+
+  // Resolve the delete
+  resolveLatestDelete({ data: null, error: null });
+  // Resolve the refetch that follows
+  resolveLatest({ data: [], error: null });
+
+  await waitFor(() => {
+    expect(mockDelete).toHaveBeenCalled();
+    expect(mockEq).toHaveBeenCalledWith('id', 'proj-1');
+  });
+});
+
+// 8. Canceling dialog does not call supabase delete
+test('canceling delete dialog does not call supabase delete', async () => {
+  renderPage();
+  resolveLatest({ data: sampleRows, error: null });
+  await waitFor(() => expect(document.querySelector('.animate-spin')).toBeNull());
+
+  const [firstDeleteBtn] = screen.getAllByRole('button', { name: /delete project/i });
+  fireEvent.click(firstDeleteBtn);
+  await waitFor(() => screen.getByRole('heading', { name: 'Delete Project' }));
+
+  const cancelBtn = screen.getByRole('button', { name: 'Cancel' });
+  fireEvent.click(cancelBtn);
+
+  await waitFor(() =>
+    expect(screen.queryByRole('heading', { name: 'Delete Project' })).toBeNull(),
+  );
+  expect(mockDelete).not.toHaveBeenCalled();
 });
