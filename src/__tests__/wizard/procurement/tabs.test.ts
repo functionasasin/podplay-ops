@@ -58,10 +58,10 @@ function renderPage() {
 // 1. All 4 tab labels render
 test('renders all 4 tab labels', () => {
   renderPage();
-  expect(screen.getByRole('button', { name: 'BOM Review' })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Inventory Check' })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Purchase Orders' })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Packing List' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /BOM Review/ })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /Inventory Check/ })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /Purchase Orders/ })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /Packing List/ })).toBeInTheDocument();
 });
 
 // 2. First tab (BOM Review) is selected by default — its content heading is visible
@@ -73,21 +73,21 @@ test('BOM Review content is visible by default (first tab selected)', () => {
 // 3. Clicking "Inventory Check" shows its content panel
 test('clicking Inventory Check tab shows Inventory Check content', () => {
   renderPage();
-  fireEvent.click(screen.getByRole('button', { name: 'Inventory Check' }));
+  fireEvent.click(screen.getByRole('button', { name: /Inventory Check/ }));
   expect(screen.getByRole('heading', { name: 'Inventory Check' })).toBeInTheDocument();
 });
 
 // 4. Clicking "Purchase Orders" shows its content panel
 test('clicking Purchase Orders tab shows Purchase Orders content', () => {
   renderPage();
-  fireEvent.click(screen.getByRole('button', { name: 'Purchase Orders' }));
+  fireEvent.click(screen.getByRole('button', { name: /Purchase Orders/ }));
   expect(screen.getByRole('heading', { name: 'Purchase Orders' })).toBeInTheDocument();
 });
 
 // 5. Clicking "Packing List" shows its content panel
 test('clicking Packing List tab shows Packing List content', () => {
   renderPage();
-  fireEvent.click(screen.getByRole('button', { name: 'Packing List' }));
+  fireEvent.click(screen.getByRole('button', { name: /Packing List/ }));
   expect(screen.getByRole('heading', { name: 'Packing List' })).toBeInTheDocument();
 });
 

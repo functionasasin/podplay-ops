@@ -39,9 +39,13 @@ const { mockFrom, mockPoInsert, mockPoItemsInsert, mockMovementsInsert } = vi.ho
   const mockBomEq = vi.fn().mockResolvedValue({ data: BOM_ITEMS });
   const mockBomSelect = vi.fn(() => ({ eq: mockBomEq }));
 
-  // Inventory query: .from('inventory').select(...).in(...)
+  // Inventory query: initial load uses .in(), on-order update uses .eq()
   const mockInvIn = vi.fn().mockResolvedValue({ data: INVENTORY });
-  const mockInvSelect = vi.fn(() => ({ in: mockInvIn }));
+  const mockInvEq = vi.fn(() => ({
+    single: vi.fn().mockResolvedValue({ data: { qty_on_order: 0 }, error: null }),
+  }));
+  const mockInvUpdate = vi.fn(() => ({ eq: vi.fn().mockResolvedValue({ error: null }) }));
+  const mockInvSelect = vi.fn(() => ({ in: mockInvIn, eq: mockInvEq }));
 
   // PO count query: .from('purchase_orders').select('id', {...}).ilike(...)
   const mockPoIlike = vi.fn().mockResolvedValue({ count: 0 });
@@ -63,7 +67,7 @@ const { mockFrom, mockPoInsert, mockPoItemsInsert, mockMovementsInsert } = vi.ho
 
   const mockFrom = vi.fn((table: string) => {
     if (table === 'project_bom_items') return { select: mockBomSelect };
-    if (table === 'inventory') return { select: mockInvSelect };
+    if (table === 'inventory') return { select: mockInvSelect, update: mockInvUpdate };
     if (table === 'purchase_orders')
       return { select: mockPoCountSelect, insert: mockPoInsert };
     if (table === 'purchase_order_items') return { insert: mockPoItemsInsert };

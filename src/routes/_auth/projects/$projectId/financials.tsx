@@ -8,7 +8,7 @@ import { PnlSummary } from '@/components/wizard/financials/PnlSummary';
 import { GoLive } from '@/components/wizard/financials/GoLive';
 import { RecurringFeesTab } from '@/components/wizard/financials/RecurringFeesTab';
 import { WizardNavigation } from '@/components/wizard/WizardNavigation';
-import { isStepAccessible, getStepStates, WIZARD_STEPS } from '@/lib/wizard-steps';
+import { WIZARD_STEPS } from '@/lib/wizard-steps';
 
 function FinancialsPage() {
   const { projectId } = Route.useParams();
@@ -31,11 +31,10 @@ function FinancialsPage() {
     loadFinancialData();
   }, [projectId]);
 
-  const stepStates = getStepStates('financials', activeTabIdx);
   const navigationSteps = WIZARD_STEPS.financials.map((step, index) => ({
     id: String(index),
     label: step.label,
-    status: stepStates[index],
+    status: (index === activeTabIdx ? 'current' : 'completed') as 'current' | 'completed',
   }));
   const isLastStep = activeTabIdx === WIZARD_STEPS.financials.length - 1;
 
@@ -48,8 +47,7 @@ function FinancialsPage() {
   }
 
   function handleStepClick(stepId: string) {
-    const index = Number(stepId);
-    if (isStepAccessible(stepStates[index])) setActiveTabIdx(index);
+    setActiveTabIdx(Number(stepId));
   }
 
   return (

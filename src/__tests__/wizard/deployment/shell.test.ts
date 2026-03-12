@@ -1,6 +1,6 @@
 // Tests: Deployment Shell — phase list, progress bar, checklist panel
 
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, within } from '@testing-library/react';
 import React from 'react';
 
 // --- Hoist Supabase mock ---
@@ -103,9 +103,11 @@ test('renders 16 phase buttons in sidebar', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
   await waitFor(() => {
-    // Each phase renders as a button with "Phase N:" label
-    const buttons = screen.getAllByRole('button', { name: /Phase \d+:/i });
-    expect(buttons).toHaveLength(16);
+    // WizardNavigation renders step buttons inside nav[aria-label="Wizard steps"]
+    const nav = screen.getByRole('navigation', { name: /Wizard steps/i });
+    // Each step is a button; count only buttons inside the nav (excludes Prev/Next)
+    const stepButtons = within(nav).getAllByRole('button');
+    expect(stepButtons).toHaveLength(16);
   });
 });
 
@@ -135,8 +137,9 @@ test('Phase 0 is selected by default', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
   await waitFor(() => {
-    const phase0 = screen.getByRole('button', { name: /Phase 0:/i });
-    expect(phase0).toHaveAttribute('aria-current', 'true');
+    // WizardNavigation uses aria-current="step" for the active step
+    const phase0Button = screen.getByRole('button', { name: /Pre-Purchase/i });
+    expect(phase0Button).toHaveAttribute('aria-current', 'step');
   });
 });
 
@@ -151,31 +154,32 @@ test('checklist items for Phase 0 appear in detail panel', async () => {
   });
 });
 
-// 7. Clicking a phase button selects it (shows its checklist)
+// 7. Clicking Next button advances to phase 1 and shows its checklist
 test('clicking Phase 1 shows Phase 1 checklist items', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
-  await waitFor(() => screen.getAllByRole('button', { name: /Phase \d+:/i }));
+  // Wait for data to load (progressbar appears)
+  await waitFor(() => screen.getByRole('progressbar'));
 
-  const phase1Button = screen.getByRole('button', { name: /Phase 1:/i });
-  fireEvent.click(phase1Button);
+  // Navigate to phase 1 by clicking Next once
+  fireEvent.click(screen.getByRole('button', { name: /Next/ }));
 
   await waitFor(() => {
     expect(screen.getByText(/Step 1: Flash firmware/i)).toBeInTheDocument();
   });
 });
 
-// 8. Phase 1 button gets aria-current after clicking
+// 8. Phase 1 button gets aria-current=step after clicking Next
 test('Phase 1 gets aria-current=true after clicking', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
-  await waitFor(() => screen.getAllByRole('button', { name: /Phase \d+:/i }));
+  await waitFor(() => screen.getByRole('progressbar'));
 
-  const phase1Button = screen.getByRole('button', { name: /Phase 1:/i });
-  fireEvent.click(phase1Button);
+  fireEvent.click(screen.getByRole('button', { name: /Next/ }));
 
   await waitFor(() => {
-    expect(phase1Button).toHaveAttribute('aria-current', 'true');
+    const phase1Button = screen.getByRole('button', { name: /Pre-Configuration/i });
+    expect(phase1Button).toHaveAttribute('aria-current', 'step');
   });
 });
 
@@ -188,11 +192,11 @@ test('shows overall progress text', async () => {
   });
 });
 
-// 10. Phase 15 appears in the sidebar (packaging & shipping)
+// 10. Phase 15 Packaging & Shipping appears in phase list
 test('Phase 15 Packaging & Shipping appears in phase list', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
   await waitFor(() => {
-    expect(screen.getByRole('button', { name: /Phase 15:/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Packaging/i })).toBeInTheDocument();
   });
 });

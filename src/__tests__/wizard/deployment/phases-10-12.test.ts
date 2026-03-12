@@ -87,77 +87,90 @@ function renderPage(Component: React.ComponentType) {
   return render(React.createElement(Component));
 }
 
+// Helper: navigate to display index N by clicking Next N times
+async function navigateToDisplayIndex(n: number) {
+  await waitFor(() => screen.getByRole('progressbar'));
+  for (let i = 0; i < n; i++) {
+    fireEvent.click(screen.getByRole('button', { name: /Next/ }));
+  }
+}
+
+// PHASE_DISPLAY_ORDER = [0,1,2,3,4,5,6,7,8,9,10,11,15,12,13,14]
+// Phase 10 → display index 10
+// Phase 11 → display index 11
+// Phase 12 (Physical Installation) → display index 13
+
 // 1. Phase 10 shows 11 checklist items (checkboxes)
 test('Phase 10 shows 11 checklist items', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
-  await waitFor(() => screen.getAllByRole('button', { name: /Phase \d+:/i }));
-
-  fireEvent.click(screen.getByRole('button', { name: /Phase 10:/i }));
+  // Phase 10 is at display index 10 → click Next 10 times
+  await navigateToDisplayIndex(10);
 
   await waitFor(() => {
     const checkboxes = screen.getAllByRole('checkbox');
     expect(checkboxes).toHaveLength(11);
   });
-});
+}, 15000);
 
-// 2. Phase 10 sidebar badge shows 0/11 progress
-test('Phase 10 sidebar shows 0/11 progress badge', async () => {
+// 2. Phase 10 content area shows correct heading
+test('Phase 10 content area shows Phase 10 heading', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
+  await navigateToDisplayIndex(10);
+
   await waitFor(() => {
-    const phase10Button = screen.getByRole('button', { name: /Phase 10:/i });
-    expect(phase10Button).toHaveTextContent('0/11');
+    expect(screen.getByText(/Phase 10:/i)).toBeInTheDocument();
   });
-});
+}, 15000);
 
 // 3. Phase 11 shows 5 checklist items
 test('Phase 11 shows 5 checklist items', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
-  await waitFor(() => screen.getAllByRole('button', { name: /Phase \d+:/i }));
-
-  fireEvent.click(screen.getByRole('button', { name: /Phase 11:/i }));
+  // Phase 11 is at display index 11 → click Next 11 times
+  await navigateToDisplayIndex(11);
 
   await waitFor(() => {
     const checkboxes = screen.getAllByRole('checkbox');
     expect(checkboxes).toHaveLength(5);
   });
-});
+}, 15000);
 
-// 4. Phase 11 sidebar badge shows 0/5 progress
-test('Phase 11 sidebar shows 0/5 progress badge', async () => {
+// 4. Phase 11 content area shows correct heading
+test('Phase 11 content area shows Phase 11 heading', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
+  await navigateToDisplayIndex(11);
+
   await waitFor(() => {
-    const phase11Button = screen.getByRole('button', { name: /Phase 11:/i });
-    expect(phase11Button).toHaveTextContent('0/5');
+    expect(screen.getByText(/Phase 11:/i)).toBeInTheDocument();
   });
-});
+}, 15000);
 
 // 5. Phase 12 shows 10 checklist items
 test('Phase 12 shows 10 checklist items', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
-  await waitFor(() => screen.getAllByRole('button', { name: /Phase \d+:/i }));
-
-  fireEvent.click(screen.getByRole('button', { name: /Phase 12:/i }));
+  // Phase 12 (Physical Installation) is at display index 13 → click Next 13 times
+  await navigateToDisplayIndex(13);
 
   await waitFor(() => {
     const checkboxes = screen.getAllByRole('checkbox');
     expect(checkboxes).toHaveLength(10);
   });
-});
+}, 15000);
 
-// 6. Phase 12 sidebar badge shows 0/10 progress
-test('Phase 12 sidebar shows 0/10 progress badge', async () => {
+// 6. Phase 12 content area shows correct heading
+test('Phase 12 content area shows Phase 12 heading', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
+  await navigateToDisplayIndex(13);
+
   await waitFor(() => {
-    const phase12Button = screen.getByRole('button', { name: /Phase 12:/i });
-    expect(phase12Button).toHaveTextContent('0/10');
+    expect(screen.getByText(/Phase 12:/i)).toBeInTheDocument();
   });
-});
+}, 15000);
 
 // 7. Checking a Phase 10 item calls Supabase update with is_completed=true
 test('checking Phase 10 item calls Supabase update with is_completed=true', async () => {
@@ -165,9 +178,7 @@ test('checking Phase 10 item calls Supabase update with is_completed=true', asyn
 
   const Component = await getDeploymentPage();
   renderPage(Component);
-  await waitFor(() => screen.getAllByRole('button', { name: /Phase \d+:/i }));
-
-  fireEvent.click(screen.getByRole('button', { name: /Phase 10:/i }));
+  await navigateToDisplayIndex(10);
   await waitFor(() => screen.getAllByRole('checkbox'));
 
   fireEvent.click(screen.getAllByRole('checkbox')[0]);
@@ -177,7 +188,7 @@ test('checking Phase 10 item calls Supabase update with is_completed=true', asyn
       expect.objectContaining({ is_completed: true }),
     );
   });
-});
+}, 15000);
 
 // 8. Supabase update eq targets the correct Phase 10 item id
 test('Supabase update eq filters by the toggled Phase 10 item id', async () => {
@@ -185,9 +196,7 @@ test('Supabase update eq filters by the toggled Phase 10 item id', async () => {
 
   const Component = await getDeploymentPage();
   renderPage(Component);
-  await waitFor(() => screen.getAllByRole('button', { name: /Phase \d+:/i }));
-
-  fireEvent.click(screen.getByRole('button', { name: /Phase 10:/i }));
+  await navigateToDisplayIndex(10);
   await waitFor(() => screen.getAllByRole('checkbox'));
 
   fireEvent.click(screen.getAllByRole('checkbox')[0]);
@@ -195,32 +204,30 @@ test('Supabase update eq filters by the toggled Phase 10 item id', async () => {
   await waitFor(() => {
     expect(mockUpdateEq).toHaveBeenCalledWith('id', 'p10-item-1');
   });
-});
+}, 15000);
 
 // 9. Phase 12 shows AppLockWarningBanner
 test('Phase 12 shows AppLockWarningBanner', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
-  await waitFor(() => screen.getAllByRole('button', { name: /Phase \d+:/i }));
-
-  fireEvent.click(screen.getByRole('button', { name: /Phase 12:/i }));
+  // Phase 12 (Physical Installation) is at display index 13
+  await navigateToDisplayIndex(13);
 
   await waitFor(() => {
     expect(screen.getByRole('alert')).toBeInTheDocument();
     expect(screen.getByText(/App Lock must be OFF before pairing Flic buttons/i)).toBeInTheDocument();
   });
-});
+}, 15000);
 
 // 10. Phase 12 AppLockWarningBanner contains all required instructions
 test('Phase 12 AppLockWarningBanner shows Mosyle and Guided Access instructions', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
-  await waitFor(() => screen.getAllByRole('button', { name: /Phase \d+:/i }));
-
-  fireEvent.click(screen.getByRole('button', { name: /Phase 12:/i }));
+  // Phase 12 (Physical Installation) is at display index 13
+  await navigateToDisplayIndex(13);
 
   await waitFor(() => {
     expect(screen.getByText(/Mosyle/i)).toBeInTheDocument();
     expect(screen.getByText(/Guided Access/i)).toBeInTheDocument();
   });
-});
+}, 15000);

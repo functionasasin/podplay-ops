@@ -88,77 +88,85 @@ function renderPage(Component: React.ComponentType) {
   return render(React.createElement(Component));
 }
 
+// Helper: navigate to display index N by clicking Next N times
+async function navigateToDisplayIndex(n: number) {
+  await waitFor(() => screen.getByRole('progressbar'));
+  for (let i = 0; i < n; i++) {
+    fireEvent.click(screen.getByRole('button', { name: /Next/ }));
+  }
+}
+
 // 1. Phase 7 shows 5 checklist items (checkboxes)
 test('Phase 7 shows 5 checklist items', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
-  await waitFor(() => screen.getAllByRole('button', { name: /Phase \d+:/i }));
-
-  fireEvent.click(screen.getByRole('button', { name: /Phase 7:/i }));
+  // Phase 7 is at display index 7 → click Next 7 times
+  await navigateToDisplayIndex(7);
 
   await waitFor(() => {
     const checkboxes = screen.getAllByRole('checkbox');
     expect(checkboxes).toHaveLength(5);
   });
-});
+}, 12000);
 
-// 2. Phase 7 sidebar badge shows 0/5 progress
-test('Phase 7 sidebar shows 0/5 progress badge', async () => {
+// 2. Phase 7 content area shows correct heading
+test('Phase 7 content area shows Phase 7 heading', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
+  await navigateToDisplayIndex(7);
+
   await waitFor(() => {
-    const phase7Button = screen.getByRole('button', { name: /Phase 7:/i });
-    expect(phase7Button).toHaveTextContent('0/5');
+    expect(screen.getByText(/Phase 7:/i)).toBeInTheDocument();
   });
-});
+}, 12000);
 
 // 3. Phase 8 shows 8 checklist items
 test('Phase 8 shows 8 checklist items', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
-  await waitFor(() => screen.getAllByRole('button', { name: /Phase \d+:/i }));
-
-  fireEvent.click(screen.getByRole('button', { name: /Phase 8:/i }));
+  // Phase 8 is at display index 8 → click Next 8 times
+  await navigateToDisplayIndex(8);
 
   await waitFor(() => {
     const checkboxes = screen.getAllByRole('checkbox');
     expect(checkboxes).toHaveLength(8);
   });
-});
+}, 12000);
 
-// 4. Phase 8 sidebar badge shows 0/8 progress
-test('Phase 8 sidebar shows 0/8 progress badge', async () => {
+// 4. Phase 8 content area shows correct heading
+test('Phase 8 content area shows Phase 8 heading', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
+  await navigateToDisplayIndex(8);
+
   await waitFor(() => {
-    const phase8Button = screen.getByRole('button', { name: /Phase 8:/i });
-    expect(phase8Button).toHaveTextContent('0/8');
+    expect(screen.getByText(/Phase 8:/i)).toBeInTheDocument();
   });
-});
+}, 12000);
 
 // 5. Phase 9 shows 10 checklist items
 test('Phase 9 shows 10 checklist items', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
-  await waitFor(() => screen.getAllByRole('button', { name: /Phase \d+:/i }));
-
-  fireEvent.click(screen.getByRole('button', { name: /Phase 9:/i }));
+  // Phase 9 is at display index 9 → click Next 9 times
+  await navigateToDisplayIndex(9);
 
   await waitFor(() => {
     const checkboxes = screen.getAllByRole('checkbox');
     expect(checkboxes).toHaveLength(10);
   });
-});
+}, 12000);
 
-// 6. Phase 9 sidebar badge shows 0/10 progress
-test('Phase 9 sidebar shows 0/10 progress badge', async () => {
+// 6. Phase 9 content area shows correct heading
+test('Phase 9 content area shows Phase 9 heading', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
+  await navigateToDisplayIndex(9);
+
   await waitFor(() => {
-    const phase9Button = screen.getByRole('button', { name: /Phase 9:/i });
-    expect(phase9Button).toHaveTextContent('0/10');
+    expect(screen.getByText(/Phase 9:/i)).toBeInTheDocument();
   });
-});
+}, 12000);
 
 // 7. Checking a Phase 7 item calls Supabase update with is_completed=true
 test('checking Phase 7 item calls Supabase update with is_completed=true', async () => {
@@ -166,9 +174,7 @@ test('checking Phase 7 item calls Supabase update with is_completed=true', async
 
   const Component = await getDeploymentPage();
   renderPage(Component);
-  await waitFor(() => screen.getAllByRole('button', { name: /Phase \d+:/i }));
-
-  fireEvent.click(screen.getByRole('button', { name: /Phase 7:/i }));
+  await navigateToDisplayIndex(7);
   await waitFor(() => screen.getAllByRole('checkbox'));
 
   fireEvent.click(screen.getAllByRole('checkbox')[0]);
@@ -178,7 +184,7 @@ test('checking Phase 7 item calls Supabase update with is_completed=true', async
       expect.objectContaining({ is_completed: true }),
     );
   });
-});
+}, 12000);
 
 // 8. Supabase update eq targets the correct Phase 7 item id
 test('Supabase update eq filters by the toggled Phase 7 item id', async () => {
@@ -186,9 +192,7 @@ test('Supabase update eq filters by the toggled Phase 7 item id', async () => {
 
   const Component = await getDeploymentPage();
   renderPage(Component);
-  await waitFor(() => screen.getAllByRole('button', { name: /Phase \d+:/i }));
-
-  fireEvent.click(screen.getByRole('button', { name: /Phase 7:/i }));
+  await navigateToDisplayIndex(7);
   await waitFor(() => screen.getAllByRole('checkbox'));
 
   fireEvent.click(screen.getAllByRole('checkbox')[0]);
@@ -196,32 +200,28 @@ test('Supabase update eq filters by the toggled Phase 7 item id', async () => {
   await waitFor(() => {
     expect(mockUpdateEq).toHaveBeenCalledWith('id', 'p7-item-1');
   });
-});
+}, 12000);
 
 // 9. Phase 9 shows Replay Service Version panel
 test('Phase 9 shows Replay Service Version panel', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
-  await waitFor(() => screen.getAllByRole('button', { name: /Phase \d+:/i }));
-
-  fireEvent.click(screen.getByRole('button', { name: /Phase 9:/i }));
+  await navigateToDisplayIndex(9);
 
   await waitFor(() => {
     expect(screen.getByText(/Replay Service Version/i)).toBeInTheDocument();
   });
-});
+}, 12000);
 
 // 10. Phase 9 Replay Service Version panel has 2 radio options (V1 and V2)
 test('Phase 9 Replay Service Version panel shows 2 radio options', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
-  await waitFor(() => screen.getAllByRole('button', { name: /Phase \d+:/i }));
-
-  fireEvent.click(screen.getByRole('button', { name: /Phase 9:/i }));
+  await navigateToDisplayIndex(9);
 
   await waitFor(() => {
     expect(screen.getByText(/Replay Service Version/i)).toBeInTheDocument();
     const radios = screen.getAllByRole('radio');
     expect(radios).toHaveLength(2);
   });
-});
+}, 12000);

@@ -44,7 +44,7 @@ const { mockFrom, buildMockFrom } = vi.hoisted(() => {
           })),
         };
       }
-      if (table === 'deployment_checklist') {
+      if (table === 'deployment_checklist_items') {
         return {
           select: vi.fn(() => ({
             eq: vi.fn().mockResolvedValue({ data: opts.checklist, error: null }),
@@ -251,7 +251,7 @@ test('successful close updates project with status=completed and completed_at', 
         })),
       };
     }
-    if (table === 'deployment_checklist') {
+    if (table === 'deployment_checklist_items') {
       return {
         select: vi.fn(() => ({
           eq: vi.fn().mockResolvedValue({ data: DEFAULT_CHECKLIST, error: null }),

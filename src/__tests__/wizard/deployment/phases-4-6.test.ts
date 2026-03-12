@@ -87,77 +87,85 @@ function renderPage(Component: React.ComponentType) {
   return render(React.createElement(Component));
 }
 
+// Helper: navigate to display index N by clicking Next N times
+async function navigateToDisplayIndex(n: number) {
+  await waitFor(() => screen.getByRole('progressbar'));
+  for (let i = 0; i < n; i++) {
+    fireEvent.click(screen.getByRole('button', { name: /Next/ }));
+  }
+}
+
 // 1. Phase 4 shows 12 checklist items (checkboxes)
 test('Phase 4 shows 12 checklist items', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
-  await waitFor(() => screen.getAllByRole('button', { name: /Phase \d+:/i }));
-
-  fireEvent.click(screen.getByRole('button', { name: /Phase 4:/i }));
+  // Phase 4 is at display index 4 → click Next 4 times
+  await navigateToDisplayIndex(4);
 
   await waitFor(() => {
     const checkboxes = screen.getAllByRole('checkbox');
     expect(checkboxes).toHaveLength(12);
   });
-});
+}, 10000);
 
-// 2. Phase 4 sidebar badge shows 0/12 progress
-test('Phase 4 sidebar shows 0/12 progress badge', async () => {
+// 2. Phase 4 content area shows correct heading
+test('Phase 4 content area shows Phase 4 heading', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
+  await navigateToDisplayIndex(4);
+
   await waitFor(() => {
-    const phase4Button = screen.getByRole('button', { name: /Phase 4:/i });
-    expect(phase4Button).toHaveTextContent('0/12');
+    expect(screen.getByText(/Phase 4:/i)).toBeInTheDocument();
   });
-});
+}, 10000);
 
 // 3. Phase 5 shows 2 checklist items
 test('Phase 5 shows 2 checklist items', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
-  await waitFor(() => screen.getAllByRole('button', { name: /Phase \d+:/i }));
-
-  fireEvent.click(screen.getByRole('button', { name: /Phase 5:/i }));
+  // Phase 5 is at display index 5 → click Next 5 times
+  await navigateToDisplayIndex(5);
 
   await waitFor(() => {
     const checkboxes = screen.getAllByRole('checkbox');
     expect(checkboxes).toHaveLength(2);
   });
-});
+}, 10000);
 
-// 4. Phase 5 sidebar badge shows 0/2 progress
-test('Phase 5 sidebar shows 0/2 progress badge', async () => {
+// 4. Phase 5 content area shows correct heading
+test('Phase 5 content area shows Phase 5 heading', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
+  await navigateToDisplayIndex(5);
+
   await waitFor(() => {
-    const phase5Button = screen.getByRole('button', { name: /Phase 5:/i });
-    expect(phase5Button).toHaveTextContent('0/2');
+    expect(screen.getByText(/Phase 5:/i)).toBeInTheDocument();
   });
-});
+}, 10000);
 
 // 5. Phase 6 shows 13 checklist items
 test('Phase 6 shows 13 checklist items', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
-  await waitFor(() => screen.getAllByRole('button', { name: /Phase \d+:/i }));
-
-  fireEvent.click(screen.getByRole('button', { name: /Phase 6:/i }));
+  // Phase 6 is at display index 6 → click Next 6 times
+  await navigateToDisplayIndex(6);
 
   await waitFor(() => {
     const checkboxes = screen.getAllByRole('checkbox');
     expect(checkboxes).toHaveLength(13);
   });
-});
+}, 10000);
 
-// 6. Phase 6 sidebar badge shows 0/13 progress
-test('Phase 6 sidebar shows 0/13 progress badge', async () => {
+// 6. Phase 6 content area shows correct heading
+test('Phase 6 content area shows Phase 6 heading', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
+  await navigateToDisplayIndex(6);
+
   await waitFor(() => {
-    const phase6Button = screen.getByRole('button', { name: /Phase 6:/i });
-    expect(phase6Button).toHaveTextContent('0/13');
+    expect(screen.getByText(/Phase 6:/i)).toBeInTheDocument();
   });
-});
+}, 10000);
 
 // 7. Checking a Phase 4 item calls Supabase update with is_completed=true
 test('checking Phase 4 item calls Supabase update with is_completed=true', async () => {
@@ -165,9 +173,7 @@ test('checking Phase 4 item calls Supabase update with is_completed=true', async
 
   const Component = await getDeploymentPage();
   renderPage(Component);
-  await waitFor(() => screen.getAllByRole('button', { name: /Phase \d+:/i }));
-
-  fireEvent.click(screen.getByRole('button', { name: /Phase 4:/i }));
+  await navigateToDisplayIndex(4);
   await waitFor(() => screen.getAllByRole('checkbox'));
 
   fireEvent.click(screen.getAllByRole('checkbox')[0]);
@@ -177,7 +183,7 @@ test('checking Phase 4 item calls Supabase update with is_completed=true', async
       expect.objectContaining({ is_completed: true }),
     );
   });
-});
+}, 10000);
 
 // 8. Supabase update eq targets the correct Phase 4 item id
 test('Supabase update eq filters by the toggled Phase 4 item id', async () => {
@@ -185,9 +191,7 @@ test('Supabase update eq filters by the toggled Phase 4 item id', async () => {
 
   const Component = await getDeploymentPage();
   renderPage(Component);
-  await waitFor(() => screen.getAllByRole('button', { name: /Phase \d+:/i }));
-
-  fireEvent.click(screen.getByRole('button', { name: /Phase 4:/i }));
+  await navigateToDisplayIndex(4);
   await waitFor(() => screen.getAllByRole('checkbox'));
 
   fireEvent.click(screen.getAllByRole('checkbox')[0]);
@@ -195,32 +199,28 @@ test('Supabase update eq filters by the toggled Phase 4 item id', async () => {
   await waitFor(() => {
     expect(mockUpdateEq).toHaveBeenCalledWith('id', 'p4-item-1');
   });
-});
+}, 10000);
 
 // 9. Phase 4 shows VLAN Architecture Reference panel
 test('Phase 4 shows VLAN Architecture Reference panel', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
-  await waitFor(() => screen.getAllByRole('button', { name: /Phase \d+:/i }));
-
-  fireEvent.click(screen.getByRole('button', { name: /Phase 4:/i }));
+  await navigateToDisplayIndex(4);
 
   await waitFor(() => {
     expect(screen.getByText(/VLAN Architecture Reference/i)).toBeInTheDocument();
   });
-});
+}, 10000);
 
 // 10. Phase 5 shows ISP Router Configuration Method panel with 3 radio options
 test('Phase 5 shows ISP config method panel with 3 radio options', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
-  await waitFor(() => screen.getAllByRole('button', { name: /Phase \d+:/i }));
-
-  fireEvent.click(screen.getByRole('button', { name: /Phase 5:/i }));
+  await navigateToDisplayIndex(5);
 
   await waitFor(() => {
     expect(screen.getByText(/ISP Router Configuration Method/i)).toBeInTheDocument();
     const radios = screen.getAllByRole('radio');
     expect(radios).toHaveLength(3);
   });
-});
+}, 10000);

@@ -130,6 +130,6 @@ test('shows line item count summary', async () => {
 test('renders print button', async () => {
   renderPackingList();
   await waitFor(() => {
-    expect(screen.getByText(/print \/ save pdf/i)).toBeInTheDocument();
+    expect(screen.getByText(/export packing list as pdf/i)).toBeInTheDocument();
   });
 });

@@ -96,6 +96,19 @@ const {
       return { insert: mockMovementsInsert };
     }
 
+    if (table === 'inventory') {
+      return {
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            single: vi.fn().mockResolvedValue({ data: { qty_on_order: 0 }, error: null }),
+          })),
+        })),
+        update: vi.fn(() => ({
+          eq: vi.fn().mockResolvedValue({ error: null }),
+        })),
+      };
+    }
+
     return {};
   });
 

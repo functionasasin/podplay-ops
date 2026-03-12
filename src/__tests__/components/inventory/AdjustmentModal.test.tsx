@@ -114,9 +114,9 @@ describe('AdjustmentModal', () => {
     await waitFor(() => {
       expect(mockFrom).toHaveBeenCalledWith('inventory_movements');
       expect(mockInsert).toHaveBeenCalledWith({
-        item_id: props.itemId,
+        hardware_catalog_id: props.itemId,
         movement_type: 'adjustment_increase',
-        quantity: 5,
+        qty_delta: 5,
         notes: 'Received shipment',
       });
     });
@@ -137,7 +137,7 @@ describe('AdjustmentModal', () => {
 
     await waitFor(() => {
       expect(mockInsert).toHaveBeenCalledWith(
-        expect.objectContaining({ movement_type: 'adjustment_decrease', quantity: 3 }),
+        expect.objectContaining({ movement_type: 'adjustment_decrease', qty_delta: -3 }),
       );
       expect(mockUpdate).toHaveBeenCalledWith({ quantity_on_hand: 17 });
     });

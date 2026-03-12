@@ -6,7 +6,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { advanceToDeploymentDialog } from '@/lib/confirmation-dialogs';
 import { serviceTierLabels } from '@/lib/enum-labels';
 import { WizardNavigation } from '@/components/wizard/WizardNavigation';
-import { isStepAccessible, getStepStates, WIZARD_STEPS } from '@/lib/wizard-steps';
+import { WIZARD_STEPS } from '@/lib/wizard-steps';
 import { BomReviewTable } from '@/components/wizard/procurement/BomReviewTable';
 import { InventoryCheckPanel } from '@/components/wizard/procurement/InventoryCheckPanel';
 import { PoCreateForm } from '@/components/wizard/procurement/PoCreateForm';
@@ -22,7 +22,6 @@ function ProcurementPage() {
   );
   const [loading, setLoading] = useState(true);
   const [showAdvanceDialog, setShowAdvanceDialog] = useState(false);
-  const [advancing, setAdvancing] = useState(false);
 
   useEffect(() => {
     async function loadProject() {
@@ -37,11 +36,10 @@ function ProcurementPage() {
     loadProject();
   }, [projectId]);
 
-  const stepStates = getStepStates('procurement', activeTabIdx);
   const navigationSteps = WIZARD_STEPS.procurement.map((step, index) => ({
     id: String(index),
     label: step.label,
-    status: stepStates[index],
+    status: (index === activeTabIdx ? 'current' : 'completed') as 'current' | 'completed',
   }));
   const isLastStep = activeTabIdx === WIZARD_STEPS.procurement.length - 1;
 
@@ -58,8 +56,7 @@ function ProcurementPage() {
   }
 
   function handleStepClick(stepId: string) {
-    const index = Number(stepId);
-    if (isStepAccessible(stepStates[index])) setActiveTabIdx(index);
+    setActiveTabIdx(Number(stepId));
   }
 
   return (
@@ -134,7 +131,6 @@ function ProcurementPage() {
             cancelLabel={cfg.cancelLabel}
             destructive={cfg.destructive}
             onConfirm={async () => {
-              setAdvancing(true);
               try {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 await (supabase.from('projects') as any)
@@ -145,8 +141,6 @@ function ProcurementPage() {
                 navigate({ to: '/projects/$projectId/deployment', params: { projectId } });
               } catch (err) {
                 toast.error('Failed: ' + (err instanceof Error ? err.message : String(err)));
-              } finally {
-                setAdvancing(false);
               }
             }}
           />

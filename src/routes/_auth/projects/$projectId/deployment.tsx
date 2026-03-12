@@ -55,7 +55,6 @@ function DeploymentPage() {
   const [loading, setLoading] = useState(true);
   const [selectedPhase, setSelectedPhase] = useState<number>(PHASE_DISPLAY_ORDER[0]);
   const [showAdvanceDialog, setShowAdvanceDialog] = useState(false);
-  const [advancing, setAdvancing] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -257,7 +256,6 @@ function DeploymentPage() {
             cancelLabel={cfg.cancelLabel}
             destructive={cfg.destructive}
             onConfirm={async () => {
-              setAdvancing(true);
               try {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 await (supabase.from('projects') as any)
@@ -268,8 +266,6 @@ function DeploymentPage() {
                 navigate({ to: '/projects/$projectId/financials', params: { projectId } });
               } catch (err) {
                 toast.error('Failed: ' + (err instanceof Error ? err.message : String(err)));
-              } finally {
-                setAdvancing(false);
               }
             }}
           />

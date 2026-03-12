@@ -50,10 +50,14 @@ const { mockFrom, mockInsert, mockSelectEq } = vi.hoisted(() => {
   const mockInsertSelect = vi.fn(() => ({ single: mockSingle }));
   const mockInsert = vi.fn(() => ({ select: mockInsertSelect }));
 
-  const mockFrom = vi.fn(() => ({
-    select: mockSelect,
-    insert: mockInsert,
-  }));
+  const mockSettingsSingle = vi.fn().mockResolvedValue({ data: { minimum_deposit: 500 }, error: null });
+  const mockFrom = vi.fn((table: string) => {
+    if (table === 'settings') return { select: vi.fn(() => ({ single: mockSettingsSingle })) };
+    return {
+      select: mockSelect,
+      insert: mockInsert,
+    };
+  });
 
   return { mockFrom, mockInsert, mockSelectEq };
 });

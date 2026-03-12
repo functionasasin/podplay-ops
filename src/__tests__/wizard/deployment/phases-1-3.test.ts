@@ -81,13 +81,20 @@ function renderPage(Component: React.ComponentType) {
   return render(React.createElement(Component));
 }
 
+// Helper: navigate to display index N by clicking Next N times
+async function navigateToDisplayIndex(n: number) {
+  await waitFor(() => screen.getByRole('progressbar'));
+  for (let i = 0; i < n; i++) {
+    fireEvent.click(screen.getByRole('button', { name: /Next/ }));
+  }
+}
+
 // 1. Phase 1 shows 7 checklist items (checkboxes)
 test('Phase 1 shows 7 checklist items', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
-  await waitFor(() => screen.getAllByRole('button', { name: /Phase \d+:/i }));
-
-  fireEvent.click(screen.getByRole('button', { name: /Phase 1:/i }));
+  // Phase 1 is at display index 1 → click Next once
+  await navigateToDisplayIndex(1);
 
   await waitFor(() => {
     const checkboxes = screen.getAllByRole('checkbox');
@@ -95,13 +102,14 @@ test('Phase 1 shows 7 checklist items', async () => {
   });
 });
 
-// 2. Phase 1 sidebar badge shows 0/7 progress
-test('Phase 1 sidebar shows 0/7 progress badge', async () => {
+// 2. Phase 1 content area shows correct heading
+test('Phase 1 content area shows Phase 1 heading', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
+  await navigateToDisplayIndex(1);
+
   await waitFor(() => {
-    const phase1Button = screen.getByRole('button', { name: /Phase 1:/i });
-    expect(phase1Button).toHaveTextContent('0/7');
+    expect(screen.getByText(/Phase 1:/i)).toBeInTheDocument();
   });
 });
 
@@ -109,9 +117,8 @@ test('Phase 1 sidebar shows 0/7 progress badge', async () => {
 test('Phase 2 shows 7 checklist items', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
-  await waitFor(() => screen.getAllByRole('button', { name: /Phase \d+:/i }));
-
-  fireEvent.click(screen.getByRole('button', { name: /Phase 2:/i }));
+  // Phase 2 is at display index 2 → click Next twice
+  await navigateToDisplayIndex(2);
 
   await waitFor(() => {
     const checkboxes = screen.getAllByRole('checkbox');
@@ -119,13 +126,14 @@ test('Phase 2 shows 7 checklist items', async () => {
   });
 });
 
-// 4. Phase 2 sidebar badge shows 0/7 progress
-test('Phase 2 sidebar shows 0/7 progress badge', async () => {
+// 4. Phase 2 content area shows correct heading
+test('Phase 2 content area shows Phase 2 heading', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
+  await navigateToDisplayIndex(2);
+
   await waitFor(() => {
-    const phase2Button = screen.getByRole('button', { name: /Phase 2:/i });
-    expect(phase2Button).toHaveTextContent('0/7');
+    expect(screen.getByText(/Phase 2:/i)).toBeInTheDocument();
   });
 });
 
@@ -133,9 +141,8 @@ test('Phase 2 sidebar shows 0/7 progress badge', async () => {
 test('Phase 3 shows 6 checklist items', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
-  await waitFor(() => screen.getAllByRole('button', { name: /Phase \d+:/i }));
-
-  fireEvent.click(screen.getByRole('button', { name: /Phase 3:/i }));
+  // Phase 3 is at display index 3 → click Next 3 times
+  await navigateToDisplayIndex(3);
 
   await waitFor(() => {
     const checkboxes = screen.getAllByRole('checkbox');
@@ -143,13 +150,14 @@ test('Phase 3 shows 6 checklist items', async () => {
   });
 });
 
-// 6. Phase 3 sidebar badge shows 0/6 progress
-test('Phase 3 sidebar shows 0/6 progress badge', async () => {
+// 6. Phase 3 content area shows correct heading
+test('Phase 3 content area shows Phase 3 heading', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
+  await navigateToDisplayIndex(3);
+
   await waitFor(() => {
-    const phase3Button = screen.getByRole('button', { name: /Phase 3:/i });
-    expect(phase3Button).toHaveTextContent('0/6');
+    expect(screen.getByText(/Phase 3:/i)).toBeInTheDocument();
   });
 });
 
@@ -159,9 +167,7 @@ test('checking Phase 1 item calls Supabase update with is_completed=true', async
 
   const Component = await getDeploymentPage();
   renderPage(Component);
-  await waitFor(() => screen.getAllByRole('button', { name: /Phase \d+:/i }));
-
-  fireEvent.click(screen.getByRole('button', { name: /Phase 1:/i }));
+  await navigateToDisplayIndex(1);
   await waitFor(() => screen.getAllByRole('checkbox'));
 
   fireEvent.click(screen.getAllByRole('checkbox')[0]);
@@ -179,9 +185,7 @@ test('checking an item sends non-null completed_at in Supabase update', async ()
 
   const Component = await getDeploymentPage();
   renderPage(Component);
-  await waitFor(() => screen.getAllByRole('button', { name: /Phase \d+:/i }));
-
-  fireEvent.click(screen.getByRole('button', { name: /Phase 1:/i }));
+  await navigateToDisplayIndex(1);
   await waitFor(() => screen.getAllByRole('checkbox'));
 
   fireEvent.click(screen.getAllByRole('checkbox')[0]);
@@ -200,9 +204,7 @@ test('Supabase update eq filters by the toggled item id', async () => {
 
   const Component = await getDeploymentPage();
   renderPage(Component);
-  await waitFor(() => screen.getAllByRole('button', { name: /Phase \d+:/i }));
-
-  fireEvent.click(screen.getByRole('button', { name: /Phase 1:/i }));
+  await navigateToDisplayIndex(1);
   await waitFor(() => screen.getAllByRole('checkbox'));
 
   fireEvent.click(screen.getAllByRole('checkbox')[0]);
@@ -212,12 +214,14 @@ test('Supabase update eq filters by the toggled item id', async () => {
   });
 });
 
-// 10. Phase 1 icon is ○ (empty circle) before any items are checked
-test('Phase 1 sidebar icon is ○ when no items are completed', async () => {
+// 10. Phase 1 step button has aria-current=step after navigating to it
+test('Phase 1 step button is active after navigating', async () => {
   const Component = await getDeploymentPage();
   renderPage(Component);
+  await navigateToDisplayIndex(1);
+
   await waitFor(() => {
-    const phase1Button = screen.getByRole('button', { name: /Phase 1:/i });
-    expect(phase1Button.textContent).toContain('○');
+    const phase1Button = screen.getByRole('button', { name: /Pre-Configuration/i });
+    expect(phase1Button).toHaveAttribute('aria-current', 'step');
   });
 });

@@ -35,7 +35,7 @@ const venueConfigSchema = z
         ctx.addIssue({
           code: z.ZodIssueCode.too_small,
           minimum: 1,
-          type: 'number',
+          origin: 'number',
           inclusive: true,
           path: ['door_count'],
           message: V.door_count.no_front_desk_required,
@@ -45,7 +45,7 @@ const venueConfigSchema = z
         ctx.addIssue({
           code: z.ZodIssueCode.too_small,
           minimum: 1,
-          type: 'number',
+          origin: 'number',
           inclusive: true,
           path: ['camera_count'],
           message: V.camera_count.no_front_desk_required,

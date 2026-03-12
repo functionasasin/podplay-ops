@@ -20,8 +20,12 @@ const { mockSingle, mockEq, mockSelect, mockFrom } = vi.hoisted(() => {
     eq: mockEqInner,
     order: mockOrder,
   }));
-  const mockSelect = vi.fn(() => ({ eq: mockEq }));
-  const mockFrom = vi.fn(() => ({ select: mockSelect }));
+  const mockSettingsSingle = vi.fn().mockResolvedValue({ data: { minimum_deposit: 500 }, error: null });
+  const mockSelect = vi.fn(() => ({ eq: mockEq, single: mockSettingsSingle }));
+  const mockFrom = vi.fn((table: string) => {
+    if (table === 'settings') return { select: vi.fn(() => ({ single: mockSettingsSingle })) };
+    return { select: mockSelect };
+  });
   return { mockSingle, mockEq, mockSelect, mockFrom };
 });
 
@@ -49,10 +53,10 @@ function renderPage() {
 // 1. All 4 tab labels render
 test('renders all 4 tab labels', () => {
   renderPage();
-  expect(screen.getByRole('button', { name: 'Invoicing' })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Expenses' })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'P&L Summary' })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Go-Live' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /Invoicing/ })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /Expenses/ })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /P&L Summary/ })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /Go-Live/ })).toBeInTheDocument();
 });
 
 // 2. Invoicing content is visible by default (first tab selected)
@@ -64,21 +68,21 @@ test('Invoicing content is visible by default (first tab selected)', () => {
 // 3. Clicking "Expenses" shows its content panel
 test('clicking Expenses tab shows Expenses content', () => {
   renderPage();
-  fireEvent.click(screen.getByRole('button', { name: 'Expenses' }));
+  fireEvent.click(screen.getByRole('button', { name: /Expenses/ }));
   expect(screen.getByRole('heading', { name: 'Expenses' })).toBeInTheDocument();
 });
 
 // 4. Clicking "P&L Summary" shows its content panel
 test('clicking P&L Summary tab shows P&L Summary content', async () => {
   renderPage();
-  fireEvent.click(screen.getByRole('button', { name: 'P&L Summary' }));
+  fireEvent.click(screen.getByRole('button', { name: /P&L Summary/ }));
   await waitFor(() => expect(screen.getByRole('heading', { name: 'P&L Summary' })).toBeInTheDocument());
 });
 
 // 5. Clicking "Go-Live" shows its content panel
 test('clicking Go-Live tab shows Go-Live content', () => {
   renderPage();
-  fireEvent.click(screen.getByRole('button', { name: 'Go-Live' }));
+  fireEvent.click(screen.getByRole('button', { name: /Go-Live/ }));
   expect(screen.getByRole('heading', { name: 'Go-Live' })).toBeInTheDocument();
 });
 
