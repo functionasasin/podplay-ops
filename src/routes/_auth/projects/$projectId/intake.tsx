@@ -40,7 +40,7 @@ function IntakePage() {
     async function fetchWizardStep() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: project } = await (supabase.from('projects') as any)
-        .select('wizard_step, project_status')
+        .select('wizard_step, project_status, customer_name, contact_email, contact_phone')
         .eq('id', projectId)
         .single();
       if (project?.project_status && project.project_status !== 'intake') {
@@ -56,6 +56,16 @@ function IntakePage() {
       }
       if (project?.wizard_step != null) {
         setCurrentStep(project.wizard_step);
+      }
+      if (project?.customer_name || project?.contact_email || project?.contact_phone) {
+        setWizardData((prev) => ({
+          ...prev,
+          customerInfo: {
+            customer_name: project.customer_name ?? '',
+            contact_email: project.contact_email ?? '',
+            contact_phone: project.contact_phone ?? '',
+          },
+        }));
       }
     }
     void fetchWizardStep();
