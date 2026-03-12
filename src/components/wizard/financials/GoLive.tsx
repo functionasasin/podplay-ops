@@ -64,7 +64,7 @@ export function GoLive({ projectId }: GoLiveProps) {
           .select('id, type, status')
           .eq('project_id', projectId),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (supabase.from('deployment_checklist') as any)
+        (supabase.from('deployment_checklist_items') as any)
           .select('id, is_completed')
           .eq('project_id', projectId),
       ]);
