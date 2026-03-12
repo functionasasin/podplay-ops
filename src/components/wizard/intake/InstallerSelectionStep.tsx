@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type RefObject } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { MultiSelect } from '@/components/ui/MultiSelect';
@@ -17,9 +17,10 @@ export interface InstallerSelectionValues {
 interface InstallerSelectionStepProps {
   defaultValues?: Partial<InstallerSelectionValues>;
   onNext: (data: InstallerSelectionValues) => void;
+  formRef?: RefObject<HTMLFormElement | null>;
 }
 
-export function InstallerSelectionStep({ defaultValues, onNext }: InstallerSelectionStepProps) {
+export function InstallerSelectionStep({ defaultValues, onNext, formRef }: InstallerSelectionStepProps) {
   const [installers, setInstallers] = useState<Installer[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<string[]>(defaultValues?.installer_ids ?? []);
@@ -48,7 +49,7 @@ export function InstallerSelectionStep({ defaultValues, onNext }: InstallerSelec
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 p-4">
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-4 p-4">
       <div className="space-y-1">
         <label className="text-sm font-medium">
           Installer(s)

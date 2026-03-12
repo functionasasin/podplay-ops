@@ -1,3 +1,4 @@
+import { type RefObject } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -26,9 +27,10 @@ export type CustomerInfoValues = z.infer<typeof customerInfoSchema>;
 interface CustomerInfoStepProps {
   defaultValues?: Partial<CustomerInfoValues>;
   onNext: (data: CustomerInfoValues) => void;
+  formRef?: RefObject<HTMLFormElement | null>;
 }
 
-export function CustomerInfoStep({ defaultValues, onNext }: CustomerInfoStepProps) {
+export function CustomerInfoStep({ defaultValues, onNext, formRef }: CustomerInfoStepProps) {
   const {
     register,
     handleSubmit,
@@ -43,7 +45,7 @@ export function CustomerInfoStep({ defaultValues, onNext }: CustomerInfoStepProp
   });
 
   return (
-    <form onSubmit={handleSubmit(onNext)} noValidate className="space-y-4 p-4">
+    <form ref={formRef} onSubmit={handleSubmit(onNext)} noValidate className="space-y-4 p-4">
       <div className="space-y-1">
         <label htmlFor="customer_name" className="text-sm font-medium">
           Customer Name

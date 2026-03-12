@@ -1,3 +1,4 @@
+import { type RefObject } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -34,9 +35,10 @@ export type FinancialSetupValues = z.infer<typeof financialSetupSchema>;
 interface FinancialSetupStepProps {
   defaultValues?: Partial<FinancialSetupValues>;
   onNext: (data: FinancialSetupValues) => void;
+  formRef?: RefObject<HTMLFormElement | null>;
 }
 
-export function FinancialSetupStep({ defaultValues, onNext }: FinancialSetupStepProps) {
+export function FinancialSetupStep({ defaultValues, onNext, formRef }: FinancialSetupStepProps) {
   const {
     register,
     handleSubmit,
@@ -54,7 +56,7 @@ export function FinancialSetupStep({ defaultValues, onNext }: FinancialSetupStep
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4 p-4">
+    <form ref={formRef} onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4 p-4">
       <div className="space-y-1">
         <label htmlFor="target_go_live_date" className="text-sm font-medium">
           Target Go-Live Date

@@ -1,3 +1,4 @@
+import { type RefObject } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -58,9 +59,10 @@ export type VenueConfigValues = z.infer<typeof venueConfigSchema>;
 interface VenueConfigStepProps {
   defaultValues?: Partial<VenueConfigValues>;
   onNext: (data: VenueConfigValues) => void;
+  formRef?: RefObject<HTMLFormElement | null>;
 }
 
-export function VenueConfigStep({ defaultValues, onNext }: VenueConfigStepProps) {
+export function VenueConfigStep({ defaultValues, onNext, formRef }: VenueConfigStepProps) {
   const {
     register,
     handleSubmit,
@@ -80,7 +82,7 @@ export function VenueConfigStep({ defaultValues, onNext }: VenueConfigStepProps)
   const hasFrontDesk = watch('has_front_desk');
 
   return (
-    <form onSubmit={handleSubmit(onNext)} noValidate className="space-y-4 p-4">
+    <form ref={formRef} onSubmit={handleSubmit(onNext)} noValidate className="space-y-4 p-4">
       <div className="space-y-1">
         <label htmlFor="venue_address" className="text-sm font-medium">
           Venue Address

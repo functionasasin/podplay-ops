@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type RefObject } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -60,9 +60,10 @@ interface IspInfoStepProps {
   defaultValues?: Partial<IspInfoValues>;
   courtCount: number;
   onNext: (data: IspInfoValues) => void;
+  formRef?: RefObject<HTMLFormElement | null>;
 }
 
-export function IspInfoStep({ defaultValues, courtCount, onNext }: IspInfoStepProps) {
+export function IspInfoStep({ defaultValues, courtCount, onNext, formRef }: IspInfoStepProps) {
   const defaultIspInOptions = PH_ISP_OPTIONS.some(o => o.value === defaultValues?.isp_provider);
   const initialDropdown = defaultIspInOptions
     ? (defaultValues?.isp_provider ?? '')
@@ -123,7 +124,7 @@ export function IspInfoStep({ defaultValues, courtCount, onNext }: IspInfoStepPr
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4 p-4">
+    <form ref={formRef} onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4 p-4">
       {isStarlink && (
         <div className="rounded-md border border-destructive bg-destructive/10 p-4">
           <p className="text-sm font-medium text-destructive">

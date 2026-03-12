@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type RefObject } from 'react';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { serviceTierLabels, serviceTierBadgeClass } from '@/lib/enum-labels';
@@ -51,9 +51,10 @@ const TIER_ORDER: ServiceTier[] = ['pro', 'autonomous', 'autonomous_plus'];
 interface TierSelectionStepProps {
   defaultValues?: Partial<TierSelectionValues>;
   onNext: (data: TierSelectionValues) => void;
+  formRef?: RefObject<HTMLFormElement | null>;
 }
 
-export function TierSelectionStep({ defaultValues, onNext }: TierSelectionStepProps) {
+export function TierSelectionStep({ defaultValues, onNext, formRef }: TierSelectionStepProps) {
   const [selected, setSelected] = useState<ServiceTier | null>(
     defaultValues?.service_tier ?? null
   );
@@ -65,7 +66,7 @@ export function TierSelectionStep({ defaultValues, onNext }: TierSelectionStepPr
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-6">
+    <form ref={formRef} onSubmit={handleSubmit} noValidate className="space-y-6">
       <div
         className="grid grid-cols-1 sm:grid-cols-2 gap-4"
         role="radiogroup"
