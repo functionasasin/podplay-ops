@@ -497,17 +497,6 @@ export const TOAST_CONTACT_REACTIVATED_ERROR: ToastConfig = {
   duration: ERROR_DURATION,
   type: 'error',
 }
-export const TOAST_TRAVEL_DEFAULTS_SUCCESS: ToastConfig = {
-  message: 'Travel defaults saved',
-  duration: SUCCESS_DURATION,
-  type: 'success',
-}
-export const TOAST_TRAVEL_DEFAULTS_ERROR: ToastConfig = {
-  message: 'Failed to save travel defaults',
-  duration: ERROR_DURATION,
-  type: 'error',
-}
-
 // 9. Guard / Navigation Toasts
 export const TOAST_GUARD_DEPLOYMENT: ToastConfig = {
   message: 'Complete procurement before accessing deployment.',
@@ -612,8 +601,6 @@ export const TOAST_OPERATIONS: Record<string, ToastConfig> = {
   CONTACT_DEACTIVATED_ERROR: TOAST_CONTACT_DEACTIVATED_ERROR,
   CONTACT_REACTIVATED_SUCCESS: TOAST_CONTACT_REACTIVATED_SUCCESS,
   CONTACT_REACTIVATED_ERROR: TOAST_CONTACT_REACTIVATED_ERROR,
-  TRAVEL_DEFAULTS_SUCCESS: TOAST_TRAVEL_DEFAULTS_SUCCESS,
-  TRAVEL_DEFAULTS_ERROR: TOAST_TRAVEL_DEFAULTS_ERROR,
   GUARD_DEPLOYMENT: TOAST_GUARD_DEPLOYMENT,
   GUARD_FINANCIALS: TOAST_GUARD_FINANCIALS,
 }

@@ -90,7 +90,6 @@ export const LOADER_SETTINGS_CATALOG_ADD_ITEM = loader('Add Item', 'Adding...')
 export const LOADER_SETTINGS_CATALOG_EDIT_ITEM = loader('Save Changes', 'Saving...')
 export const LOADER_SETTINGS_CATALOG_DELETE_ITEM = loader('Delete', 'Deleting...')
 export const LOADER_SETTINGS_SAVE_TEAM = loader('Save Changes', 'Saving...')
-export const LOADER_SETTINGS_SAVE_TRAVEL = loader('Save Changes', 'Saving...')
 
 // ─── Lookup map (all 35 configs) ─────────────────────────────────────────────
 
@@ -143,7 +142,6 @@ export const LOADERS = {
   settingsCatalogEditItem: LOADER_SETTINGS_CATALOG_EDIT_ITEM,
   settingsCatalogDeleteItem: LOADER_SETTINGS_CATALOG_DELETE_ITEM,
   settingsSaveTeam: LOADER_SETTINGS_SAVE_TEAM,
-  settingsSaveTravel: LOADER_SETTINGS_SAVE_TRAVEL,
 } as const
 
 export type LoaderKey = keyof typeof LOADERS

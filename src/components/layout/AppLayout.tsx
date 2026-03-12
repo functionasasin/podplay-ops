@@ -7,7 +7,6 @@ import {
   Tag,
   BookOpen,
   Users,
-  Plane,
   LogOut,
   Menu,
   Wrench,
@@ -59,7 +58,6 @@ const navSections: NavSection[] = [
       { to: '/settings/team', label: 'Team', icon: Users },
       { to: '/settings/installers', label: 'Installers', icon: Wrench },
       { to: '/settings/vendors', label: 'Vendors', icon: Store },
-      { to: '/settings/travel', label: 'Travel', icon: Plane },
     ],
   },
 ];

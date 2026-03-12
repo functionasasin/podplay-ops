@@ -19,7 +19,6 @@ import { Route as AuthProjectsIndexRouteImport } from './routes/_auth/projects/i
 import { Route as AuthInventoryIndexRouteImport } from './routes/_auth/inventory/index'
 import { Route as AuthFinancialsIndexRouteImport } from './routes/_auth/financials/index'
 import { Route as AuthSettingsVendorsRouteImport } from './routes/_auth/settings/vendors'
-import { Route as AuthSettingsTravelRouteImport } from './routes/_auth/settings/travel'
 import { Route as AuthSettingsTeamRouteImport } from './routes/_auth/settings/team'
 import { Route as AuthSettingsPricingRouteImport } from './routes/_auth/settings/pricing'
 import { Route as AuthSettingsInstallersRouteImport } from './routes/_auth/settings/installers'
@@ -77,11 +76,6 @@ const AuthFinancialsIndexRoute = AuthFinancialsIndexRouteImport.update({
 const AuthSettingsVendorsRoute = AuthSettingsVendorsRouteImport.update({
   id: '/vendors',
   path: '/vendors',
-  getParentRoute: () => AuthSettingsRoute,
-} as any)
-const AuthSettingsTravelRoute = AuthSettingsTravelRouteImport.update({
-  id: '/travel',
-  path: '/travel',
   getParentRoute: () => AuthSettingsRoute,
 } as any)
 const AuthSettingsTeamRoute = AuthSettingsTeamRouteImport.update({
@@ -144,7 +138,6 @@ export interface FileRoutesByFullPath {
   '/settings/installers': typeof AuthSettingsInstallersRoute
   '/settings/pricing': typeof AuthSettingsPricingRoute
   '/settings/team': typeof AuthSettingsTeamRoute
-  '/settings/travel': typeof AuthSettingsTravelRoute
   '/settings/vendors': typeof AuthSettingsVendorsRoute
   '/financials/': typeof AuthFinancialsIndexRoute
   '/inventory/': typeof AuthInventoryIndexRoute
@@ -164,7 +157,6 @@ export interface FileRoutesByTo {
   '/settings/installers': typeof AuthSettingsInstallersRoute
   '/settings/pricing': typeof AuthSettingsPricingRoute
   '/settings/team': typeof AuthSettingsTeamRoute
-  '/settings/travel': typeof AuthSettingsTravelRoute
   '/settings/vendors': typeof AuthSettingsVendorsRoute
   '/financials': typeof AuthFinancialsIndexRoute
   '/inventory': typeof AuthInventoryIndexRoute
@@ -187,7 +179,6 @@ export interface FileRoutesById {
   '/_auth/settings/installers': typeof AuthSettingsInstallersRoute
   '/_auth/settings/pricing': typeof AuthSettingsPricingRoute
   '/_auth/settings/team': typeof AuthSettingsTeamRoute
-  '/_auth/settings/travel': typeof AuthSettingsTravelRoute
   '/_auth/settings/vendors': typeof AuthSettingsVendorsRoute
   '/_auth/financials/': typeof AuthFinancialsIndexRoute
   '/_auth/inventory/': typeof AuthInventoryIndexRoute
@@ -210,7 +201,6 @@ export interface FileRouteTypes {
     | '/settings/installers'
     | '/settings/pricing'
     | '/settings/team'
-    | '/settings/travel'
     | '/settings/vendors'
     | '/financials/'
     | '/inventory/'
@@ -230,7 +220,6 @@ export interface FileRouteTypes {
     | '/settings/installers'
     | '/settings/pricing'
     | '/settings/team'
-    | '/settings/travel'
     | '/settings/vendors'
     | '/financials'
     | '/inventory'
@@ -252,7 +241,6 @@ export interface FileRouteTypes {
     | '/_auth/settings/installers'
     | '/_auth/settings/pricing'
     | '/_auth/settings/team'
-    | '/_auth/settings/travel'
     | '/_auth/settings/vendors'
     | '/_auth/financials/'
     | '/_auth/inventory/'
@@ -343,13 +331,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSettingsVendorsRouteImport
       parentRoute: typeof AuthSettingsRoute
     }
-    '/_auth/settings/travel': {
-      id: '/_auth/settings/travel'
-      path: '/travel'
-      fullPath: '/settings/travel'
-      preLoaderRoute: typeof AuthSettingsTravelRouteImport
-      parentRoute: typeof AuthSettingsRoute
-    }
     '/_auth/settings/team': {
       id: '/_auth/settings/team'
       path: '/team'
@@ -421,7 +402,6 @@ interface AuthSettingsRouteChildren {
   AuthSettingsInstallersRoute: typeof AuthSettingsInstallersRoute
   AuthSettingsPricingRoute: typeof AuthSettingsPricingRoute
   AuthSettingsTeamRoute: typeof AuthSettingsTeamRoute
-  AuthSettingsTravelRoute: typeof AuthSettingsTravelRoute
   AuthSettingsVendorsRoute: typeof AuthSettingsVendorsRoute
   AuthSettingsIndexRoute: typeof AuthSettingsIndexRoute
 }
@@ -431,7 +411,6 @@ const AuthSettingsRouteChildren: AuthSettingsRouteChildren = {
   AuthSettingsInstallersRoute: AuthSettingsInstallersRoute,
   AuthSettingsPricingRoute: AuthSettingsPricingRoute,
   AuthSettingsTeamRoute: AuthSettingsTeamRoute,
-  AuthSettingsTravelRoute: AuthSettingsTravelRoute,
   AuthSettingsVendorsRoute: AuthSettingsVendorsRoute,
   AuthSettingsIndexRoute: AuthSettingsIndexRoute,
 }

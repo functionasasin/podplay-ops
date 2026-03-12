@@ -1,5 +1,5 @@
 // Stage 134 — Tests: Settings Nav
-// Asserts all 4 tabs render (Pricing, Catalog, Team, Travel)
+// Asserts all 5 tabs render (Pricing, Catalog, Team, Installers, Vendors)
 // and each tab links to the correct route.
 
 import { render, screen } from '@testing-library/react';
@@ -36,13 +36,14 @@ function renderLayout() {
 
 // ── Tests ────────────────────────────────────────────────────────────────────
 
-// 1. All 4 tab labels render
-test('renders all 4 tab labels', () => {
+// 1. All 5 tab labels render
+test('renders all 5 tab labels', () => {
   renderLayout();
   expect(screen.getByText('Pricing')).toBeInTheDocument();
   expect(screen.getByText('Catalog')).toBeInTheDocument();
   expect(screen.getByText('Team')).toBeInTheDocument();
-  expect(screen.getByText('Travel')).toBeInTheDocument();
+  expect(screen.getByText('Installers')).toBeInTheDocument();
+  expect(screen.getByText('Vendors')).toBeInTheDocument();
 });
 
 // 2. Pricing tab links to /settings/pricing
@@ -69,10 +70,10 @@ test('Team tab links to /settings/team', () => {
   expect(link!.getAttribute('href')).toBe('/settings/team');
 });
 
-// 5. Travel tab links to /settings/travel
-test('Travel tab links to /settings/travel', () => {
+// 5. Vendors tab links to /settings/vendors
+test('Vendors tab links to /settings/vendors', () => {
   renderLayout();
-  const link = screen.getByText('Travel').closest('a');
+  const link = screen.getByText('Vendors').closest('a');
   expect(link).not.toBeNull();
-  expect(link!.getAttribute('href')).toBe('/settings/travel');
+  expect(link!.getAttribute('href')).toBe('/settings/vendors');
 });

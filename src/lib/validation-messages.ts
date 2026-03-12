@@ -497,16 +497,6 @@ export const VALIDATION = {
       indirect_salaries_per_year: { min: 'Indirect salaries must be 0 or more' },
     },
 
-    // 6.8 Travel Defaults
-    travel: {
-      lodging_per_day: { min: 'Lodging rate must be 0 or more' },
-      airfare_default: { min: 'Airfare must be 0 or more' },
-      hours_per_day: {
-        min: 'Must be at least 1 hour',
-        max: 'Must be 24 hours or less',
-      },
-    },
-
     // 6.3 Installer Form
     installer: {
       name: { required: 'Name is required', max: 'Name too long' },
