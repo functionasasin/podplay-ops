@@ -11,6 +11,7 @@ import {
   Menu,
   Wrench,
   Store,
+  BookMarked,
 } from 'lucide-react';
 import * as React from 'react';
 import { cn } from '@/lib/utils';
@@ -48,6 +49,12 @@ const navSections: NavSection[] = [
     section: 'Financials',
     links: [
       { to: '/financials', label: 'Financials', icon: DollarSign },
+    ],
+  },
+  {
+    section: 'Resources',
+    links: [
+      { to: '/guide', label: 'Guide', icon: BookMarked },
     ],
   },
   {

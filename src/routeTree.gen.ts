@@ -28,6 +28,7 @@ import { Route as AuthProjectsProjectIdProcurementRouteImport } from './routes/_
 import { Route as AuthProjectsProjectIdIntakeRouteImport } from './routes/_auth/projects/$projectId/intake'
 import { Route as AuthProjectsProjectIdFinancialsRouteImport } from './routes/_auth/projects/$projectId/financials'
 import { Route as AuthProjectsProjectIdDeploymentRouteImport } from './routes/_auth/projects/$projectId/deployment'
+import { Route as AuthGuideRouteImport } from './routes/_auth/guide'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -127,6 +128,11 @@ const AuthProjectsProjectIdDeploymentRoute =
     path: '/projects/$projectId/deployment',
     getParentRoute: () => AuthRoute,
   } as any)
+const AuthGuideRoute = AuthGuideRouteImport.update({
+  id: '/guide',
+  path: '/guide',
+  getParentRoute: () => AuthRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -143,6 +149,7 @@ export interface FileRoutesByFullPath {
   '/inventory/': typeof AuthInventoryIndexRoute
   '/projects/': typeof AuthProjectsIndexRoute
   '/settings/': typeof AuthSettingsIndexRoute
+  '/guide': typeof AuthGuideRoute
   '/projects/$projectId/deployment': typeof AuthProjectsProjectIdDeploymentRoute
   '/projects/$projectId/financials': typeof AuthProjectsProjectIdFinancialsRoute
   '/projects/$projectId/intake': typeof AuthProjectsProjectIdIntakeRoute
@@ -162,6 +169,7 @@ export interface FileRoutesByTo {
   '/inventory': typeof AuthInventoryIndexRoute
   '/projects': typeof AuthProjectsIndexRoute
   '/settings': typeof AuthSettingsIndexRoute
+  '/guide': typeof AuthGuideRoute
   '/projects/$projectId/deployment': typeof AuthProjectsProjectIdDeploymentRoute
   '/projects/$projectId/financials': typeof AuthProjectsProjectIdFinancialsRoute
   '/projects/$projectId/intake': typeof AuthProjectsProjectIdIntakeRoute
@@ -174,6 +182,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_auth/settings': typeof AuthSettingsRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
+  '/_auth/guide': typeof AuthGuideRoute
   '/_auth/projects/new': typeof AuthProjectsNewRoute
   '/_auth/settings/catalog': typeof AuthSettingsCatalogRoute
   '/_auth/settings/installers': typeof AuthSettingsInstallersRoute
@@ -206,6 +215,7 @@ export interface FileRouteTypes {
     | '/inventory/'
     | '/projects/'
     | '/settings/'
+    | '/guide'
     | '/projects/$projectId/deployment'
     | '/projects/$projectId/financials'
     | '/projects/$projectId/intake'
@@ -225,6 +235,7 @@ export interface FileRouteTypes {
     | '/inventory'
     | '/projects'
     | '/settings'
+    | '/guide'
     | '/projects/$projectId/deployment'
     | '/projects/$projectId/financials'
     | '/projects/$projectId/intake'
@@ -236,6 +247,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/_auth/settings'
     | '/auth/callback'
+    | '/_auth/guide'
     | '/_auth/projects/new'
     | '/_auth/settings/catalog'
     | '/_auth/settings/installers'
@@ -315,6 +327,13 @@ declare module '@tanstack/react-router' {
       path: '/inventory'
       fullPath: '/inventory/'
       preLoaderRoute: typeof AuthInventoryIndexRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/guide': {
+      id: '/_auth/guide'
+      path: '/guide'
+      fullPath: '/guide'
+      preLoaderRoute: typeof AuthGuideRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_auth/financials/': {
@@ -423,6 +442,7 @@ interface AuthRouteChildren {
   AuthSettingsRoute: typeof AuthSettingsRouteWithChildren
   AuthProjectsNewRoute: typeof AuthProjectsNewRoute
   AuthFinancialsIndexRoute: typeof AuthFinancialsIndexRoute
+  AuthGuideRoute: typeof AuthGuideRoute
   AuthInventoryIndexRoute: typeof AuthInventoryIndexRoute
   AuthProjectsIndexRoute: typeof AuthProjectsIndexRoute
   AuthProjectsProjectIdDeploymentRoute: typeof AuthProjectsProjectIdDeploymentRoute
@@ -435,6 +455,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthSettingsRoute: AuthSettingsRouteWithChildren,
   AuthProjectsNewRoute: AuthProjectsNewRoute,
   AuthFinancialsIndexRoute: AuthFinancialsIndexRoute,
+  AuthGuideRoute: AuthGuideRoute,
   AuthInventoryIndexRoute: AuthInventoryIndexRoute,
   AuthProjectsIndexRoute: AuthProjectsIndexRoute,
   AuthProjectsProjectIdDeploymentRoute: AuthProjectsProjectIdDeploymentRoute,
