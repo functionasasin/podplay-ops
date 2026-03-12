@@ -250,8 +250,6 @@ export const VALIDATION = {
     po_create_error: (msg: string) => `Failed to create purchase order: ${msg}`,
     receive_success: 'Items received and added to inventory',
     receive_error: (msg: string) => `Failed to record receipt: ${msg}`,
-    cc_save_success: 'CC terminal record saved',
-    cc_save_error: (msg: string) => `Failed to save CC terminal: ${msg}`,
     replay_save_success: 'Replay signs record saved',
     replay_save_error: (msg: string) => `Failed to save replay signs: ${msg}`,
     advance_error: (msg: string) => `Failed to advance to deployment: ${msg}`,
