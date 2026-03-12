@@ -7,6 +7,9 @@ import { MetricsBar } from '@/components/dashboard/MetricsBar';
 import { Input } from '@/components/ui/input';
 import { Select, SelectItem } from '@/components/ui/select';
 import { projectStatusLabels, serviceTierLabels } from '@/lib/enum-labels';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { deleteProjectDialog } from '@/lib/confirmation-dialogs';
+import { showToast } from '@/lib/toast';
 
 export function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -16,6 +19,9 @@ export function ProjectsPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [tierFilter, setTierFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
 
   const fetchProjects = async () => {
     setLoading(true);
@@ -32,6 +38,25 @@ export function ProjectsPage() {
   useEffect(() => {
     void fetchProjects();
   }, []);
+
+  function handleDeleteClick(project: Project) {
+    setProjectToDelete(project);
+    setDeleteDialogOpen(true);
+  }
+
+  async function handleDeleteConfirm() {
+    if (!projectToDelete) return;
+    const { error: err } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', projectToDelete.id);
+    if (err) {
+      showToast('DELETE_PROJECT_ERROR');
+      throw err;
+    }
+    showToast('DELETE_PROJECT_SUCCESS');
+    void fetchProjects();
+  }
 
   const filteredProjects = useMemo(() => {
     const query = searchQuery.toLowerCase();
@@ -121,7 +146,17 @@ export function ProjectsPage() {
           setTierFilter('all');
           setSearchQuery('');
         }}
+        onDelete={handleDeleteClick}
       />
+
+      {projectToDelete && (
+        <ConfirmDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          {...deleteProjectDialog(projectToDelete.venue_name ?? projectToDelete.customer_name)}
+          onConfirm={handleDeleteConfirm}
+        />
+      )}
     </div>
   );
 }

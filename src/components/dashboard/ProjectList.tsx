@@ -1,3 +1,4 @@
+import { Trash2 } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -32,10 +33,12 @@ export function ProjectList({
   projects,
   hasFilters,
   onClearFilters,
+  onDelete,
 }: {
   projects: Project[];
   hasFilters?: boolean;
   onClearFilters?: () => void;
+  onDelete?: (project: Project) => void;
 }) {
   if (projects.length === 0) {
     if (hasFilters) {
@@ -74,6 +77,7 @@ export function ProjectList({
                 <TableHead className="w-28">Tier</TableHead>
                 <TableHead className="w-28">Go-Live</TableHead>
                 <TableHead className="w-24 text-right">Progress</TableHead>
+                <TableHead className="w-12" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -122,6 +126,17 @@ export function ProjectList({
                         : <span className="text-muted-foreground">—</span>
                       }
                     </TableCell>
+                    <TableCell className="text-right">
+                      {onDelete && (
+                        <button
+                          aria-label="Delete project"
+                          className="p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                          onClick={(e) => { e.preventDefault(); onDelete(project); }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                    </TableCell>
                   </TableRow>
                 );
               })}
@@ -146,11 +161,22 @@ export function ProjectList({
                 >
                   {project.venue_name ?? project.customer_name}
                 </a>
-                <span
-                  className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold border flex-shrink-0 ${tierBadgeClass}`}
-                >
-                  {tierLabel}
-                </span>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold border ${tierBadgeClass}`}
+                  >
+                    {tierLabel}
+                  </span>
+                  {onDelete && (
+                    <button
+                      aria-label="Delete project"
+                      className="p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                      onClick={() => onDelete(project)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className={`h-2 w-2 rounded-full flex-shrink-0 ${statusDotClass}`} />
