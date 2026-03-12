@@ -1,6 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
-import { Check } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { DepositInvoice } from '@/components/wizard/financials/DepositInvoice';
 import { FinalInvoice } from '@/components/wizard/financials/FinalInvoice';
@@ -8,14 +7,12 @@ import { ExpenseTracker } from '@/components/wizard/financials/ExpenseTracker';
 import { PnlSummary } from '@/components/wizard/financials/PnlSummary';
 import { GoLive } from '@/components/wizard/financials/GoLive';
 import { RecurringFeesTab } from '@/components/wizard/financials/RecurringFeesTab';
-
-const FINANCIALS_TABS = ['Invoicing', 'Expenses', 'P&L Summary', 'Go-Live', 'Recurring Fees'] as const;
-
-type FinancialsTab = (typeof FINANCIALS_TABS)[number];
+import { WizardNavigation } from '@/components/wizard/WizardNavigation';
+import { isStepAccessible, getStepStates, WIZARD_STEPS } from '@/lib/wizard-steps';
 
 function FinancialsPage() {
   const { projectId } = Route.useParams();
-  const [activeTab, setActiveTab] = useState<FinancialsTab>('Invoicing');
+  const [activeTabIdx, setActiveTabIdx] = useState(0);
   const [project, setProject] = useState<{ project_name: string; customer_name: string } | null>(
     null,
   );
@@ -34,68 +31,70 @@ function FinancialsPage() {
     loadFinancialData();
   }, [projectId]);
 
+  const stepStates = getStepStates('financials', activeTabIdx);
+  const navigationSteps = WIZARD_STEPS.financials.map((step, index) => ({
+    id: String(index),
+    label: step.label,
+    status: stepStates[index],
+  }));
+  const isLastStep = activeTabIdx === WIZARD_STEPS.financials.length - 1;
+
+  function handleNavigationNext() {
+    setActiveTabIdx((i) => Math.min(WIZARD_STEPS.financials.length - 1, i + 1));
+  }
+
+  function handleNavigationPrevious() {
+    setActiveTabIdx((i) => Math.max(0, i - 1));
+  }
+
+  function handleStepClick(stepId: string) {
+    const index = Number(stepId);
+    if (isStepAccessible(stepStates[index])) setActiveTabIdx(index);
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-xl font-semibold">Financials</h1>
-        {loading ? (
-          <p className="text-sm text-muted-foreground mt-0.5">Loading...</p>
-        ) : (
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {project?.project_name ?? projectId} — {project?.customer_name ?? ''}
-          </p>
+        <h1 className="text-xl font-semibold">
+          {loading ? 'Financials' : `Financials — ${project?.project_name ?? projectId}`}
+        </h1>
+        {!loading && project?.customer_name && (
+          <p className="text-sm text-muted-foreground mt-0.5">{project.customer_name}</p>
         )}
       </div>
 
-      <div className="border rounded-lg overflow-hidden">
-        <div className="flex border-b bg-muted/30 overflow-x-auto">
-          {FINANCIALS_TABS.map((tab, tabIdx) => {
-            const activeIdx = FINANCIALS_TABS.indexOf(activeTab);
-            const isCompleted = tabIdx < activeIdx;
-            const isCurrent = tabIdx === activeIdx;
-            const isLocked = tabIdx > activeIdx;
-            return (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={[
-                  'flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors',
-                  isCurrent
-                    ? 'bg-background border-b-2 border-primary text-foreground'
-                    : isCompleted
-                    ? 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                    : 'opacity-50 cursor-not-allowed text-muted-foreground',
-                ].join(' ')}
-              >
-                {isCompleted && <Check className="h-3.5 w-3.5 shrink-0" />}
-                {tab}
-              </button>
-            );
-          })}
-        </div>
+      <div className="border rounded-lg p-4 bg-background">
+        <WizardNavigation
+          steps={navigationSteps}
+          onStepClick={handleStepClick}
+          onPrevious={handleNavigationPrevious}
+          onNext={handleNavigationNext}
+          isFirstStep={activeTabIdx === 0}
+          isLastStep={isLastStep}
+        />
+      </div>
 
-        <div className="p-6 min-h-64">
-          {activeTab === 'Invoicing' && (
-            <div className="space-y-8">
-              <h2 className="text-base font-medium">Invoicing</h2>
-              <DepositInvoice projectId={projectId} />
-              <FinalInvoice projectId={projectId} />
-            </div>
-          )}
-          {activeTab === 'Expenses' && (
-            <ExpenseTracker projectId={projectId} />
-          )}
-          {activeTab === 'P&L Summary' && (
-            <PnlSummary projectId={projectId} />
-          )}
-          {activeTab === 'Go-Live' && (
-            <div>
-              <h2 className="text-base font-medium mb-4">Go-Live</h2>
-              <GoLive projectId={projectId} />
-            </div>
-          )}
-          {activeTab === 'Recurring Fees' && <RecurringFeesTab projectId={projectId} />}
-        </div>
+      <div className="border rounded-lg p-6 min-h-64">
+        {activeTabIdx === 0 && (
+          <div className="space-y-8">
+            <h2 className="text-base font-medium">Invoicing</h2>
+            <DepositInvoice projectId={projectId} />
+            <FinalInvoice projectId={projectId} />
+          </div>
+        )}
+        {activeTabIdx === 1 && (
+          <ExpenseTracker projectId={projectId} />
+        )}
+        {activeTabIdx === 2 && (
+          <PnlSummary projectId={projectId} />
+        )}
+        {activeTabIdx === 3 && (
+          <div>
+            <h2 className="text-base font-medium mb-4">Go-Live</h2>
+            <GoLive projectId={projectId} />
+          </div>
+        )}
+        {activeTabIdx === 4 && <RecurringFeesTab projectId={projectId} />}
       </div>
     </div>
   );

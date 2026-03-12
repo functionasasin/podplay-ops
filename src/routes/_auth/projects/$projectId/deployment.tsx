@@ -1,6 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
-import { Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { SmartChecklist, type ChecklistItem, type ProjectTokenFields } from '@/components/wizard/deployment/SmartChecklist';
@@ -12,6 +11,8 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { EMPTY_STATES } from '@/lib/empty-state-configs';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { advanceToFinancialCloseDialog } from '@/lib/confirmation-dialogs';
+import { WizardNavigation } from '@/components/wizard/WizardNavigation';
+import { isStepAccessible, getStepStates, WIZARD_STEPS } from '@/lib/wizard-steps';
 
 // Phase display ordering per spec: 0-11, then 15, then 12-14
 const PHASE_DISPLAY_ORDER = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 15, 12, 13, 14];
@@ -35,13 +36,6 @@ const PHASE_NAMES: Record<number, string> = {
   15: 'Packaging & Shipping',
 };
 
-function phaseIcon(completed: number, total: number): string {
-  if (total === 0) return '○';
-  if (completed === total) return '●';
-  if (completed > 0) return '◑';
-  return '○';
-}
-
 type IspConfigMethod = 'static_ip' | 'dmz' | 'port_forward';
 type ReplayServiceVersion = 'v1' | 'v2';
 
@@ -59,7 +53,7 @@ function DeploymentPage() {
   const [project, setProject] = useState<ProjectState | null>(null);
   const [items, setItems] = useState<ChecklistItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPhase, setSelectedPhase] = useState<number>(0);
+  const [selectedPhase, setSelectedPhase] = useState<number>(PHASE_DISPLAY_ORDER[0]);
   const [showAdvanceDialog, setShowAdvanceDialog] = useState(false);
   const [advancing, setAdvancing] = useState(false);
 
@@ -96,6 +90,40 @@ function DeploymentPage() {
   const progressPct = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0;
   const allItemsChecked = totalSteps === 0 || completedSteps === totalSteps;
 
+  const activeDisplayIdx = PHASE_DISPLAY_ORDER.indexOf(selectedPhase);
+  const stepStates = getStepStates('deployment', activeDisplayIdx);
+  const navigationSteps = WIZARD_STEPS.deployment.map((step, index) => ({
+    id: String(index),
+    label: step.label,
+    status: stepStates[index],
+  }));
+  const isLastStep = activeDisplayIdx === WIZARD_STEPS.deployment.length - 1;
+
+  function handleNavigationNext() {
+    if (isLastStep) {
+      if (!allItemsChecked) {
+        toast.warning('Complete all deployment checklist items before advancing');
+        return;
+      }
+      setShowAdvanceDialog(true);
+    } else {
+      setSelectedPhase(PHASE_DISPLAY_ORDER[activeDisplayIdx + 1]);
+    }
+  }
+
+  function handleNavigationPrevious() {
+    if (activeDisplayIdx > 0) {
+      setSelectedPhase(PHASE_DISPLAY_ORDER[activeDisplayIdx - 1]);
+    }
+  }
+
+  function handleStepClick(stepId: string) {
+    const index = Number(stepId);
+    if (isStepAccessible(stepStates[index])) {
+      setSelectedPhase(PHASE_DISPLAY_ORDER[index]);
+    }
+  }
+
   const selectedItems = byPhase[selectedPhase] ?? [];
 
   function handleIspMethodChange(method: IspConfigMethod) {
@@ -127,13 +155,11 @@ function DeploymentPage() {
   return (
     <div className="p-6 space-y-4">
       <div>
-        <h1 className="text-xl font-semibold">Deployment</h1>
-        {loading ? (
-          <p className="text-sm text-muted-foreground mt-0.5">Loading...</p>
-        ) : (
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {project?.project_name ?? projectId} — {project?.customer_name ?? ''}
-          </p>
+        <h1 className="text-xl font-semibold">
+          {loading ? 'Deployment' : `Deployment — ${project?.project_name ?? projectId}`}
+        </h1>
+        {!loading && project?.customer_name && (
+          <p className="text-sm text-muted-foreground mt-0.5">{project.customer_name}</p>
         )}
       </div>
 
@@ -155,113 +181,66 @@ function DeploymentPage() {
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-0 border rounded-lg overflow-hidden min-h-[400px] md:min-h-[600px]">
-        {/* Left sidebar: phase list */}
-        <div className="md:w-60 flex-shrink-0 border-b md:border-b-0 md:border-r bg-muted/20 flex flex-col">
-          <div className="h-48 md:h-auto md:flex-1 overflow-y-auto">
-            {PHASE_DISPLAY_ORDER.map((phaseNum, displayIdx) => {
-              const phaseItems = byPhase[phaseNum] ?? [];
-              const phaseCompleted = phaseItems.filter((i) => i.is_completed).length;
-              const phaseTotal = phaseItems.length;
-              const isActive = selectedPhase === phaseNum;
-              const selectedDisplayIdx = PHASE_DISPLAY_ORDER.indexOf(selectedPhase);
-              const isCompletedPhase = displayIdx < selectedDisplayIdx;
-              const isLocked = displayIdx > selectedDisplayIdx;
-
-              return (
-                <button
-                  key={phaseNum}
-                  onClick={() => setSelectedPhase(phaseNum)}
-                  className={[
-                    'w-full text-left px-3 py-2.5 text-sm flex items-center gap-2 transition-colors',
-                    isActive
-                      ? 'bg-background border-l-2 border-primary text-foreground font-medium'
-                      : isCompletedPhase
-                      ? 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                      : isLocked
-                      ? 'opacity-50 cursor-not-allowed text-muted-foreground'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
-                  ].join(' ')}
-                  aria-current={isActive ? 'true' : undefined}
-                >
-                  <span className="flex-shrink-0 w-4 text-center">
-                    {isCompletedPhase ? <Check className="h-3 w-3 inline" /> : phaseIcon(phaseCompleted, phaseTotal)}
-                  </span>
-                  <span className="flex-1 truncate">
-                    Phase {phaseNum}: {PHASE_NAMES[phaseNum]}
-                  </span>
-                  {phaseTotal > 0 && (
-                    <span className="flex-shrink-0 text-xs text-muted-foreground">
-                      {phaseCompleted}/{phaseTotal}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Right panel: phase checklist */}
-        <div className="flex-1 p-6 overflow-y-auto">
-          {loading ? (
-            <p className="text-sm text-muted-foreground">Loading checklist...</p>
-          ) : !loading && items.length === 0 ? (
-            (() => {
-              const cfg = EMPTY_STATES.deploymentChecklistEmpty;
-              return <EmptyState icon={cfg.icon} heading={cfg.heading} description={cfg.description} />;
-            })()
-          ) : (
-            <>
-              <h2 className="text-base font-semibold mb-4">
-                Phase {selectedPhase}: {PHASE_NAMES[selectedPhase]}
-              </h2>
-
-              {/* Phase 4: VLAN Architecture Reference */}
-              {selectedPhase === 4 && project && (
-                <VlanReferencePanel tier={project.tier} />
-              )}
-
-              {/* Phase 5: ISP Router Configuration Method */}
-              {selectedPhase === 5 && project && (
-                <IspConfigMethodPanel
-                  projectId={projectId}
-                  method={project.isp_config_method}
-                  venueCountry={project.venue_country}
-                  onMethodChange={handleIspMethodChange}
-                />
-              )}
-
-              {/* Phase 9: Replay Service Version */}
-              {selectedPhase === 9 && project && (
-                <ReplayServiceVersionPanel
-                  projectId={projectId}
-                  version={project.replay_service_version}
-                  onVersionChange={handleReplayVersionChange}
-                />
-              )}
-
-              {/* Phase 12: App Lock Warning Banner (above Step 108 / Flic button pairing) */}
-              {selectedPhase === 12 && <AppLockWarningBanner />}
-
-              <SmartChecklist
-                items={selectedItems}
-                project={project ?? { customer_name: '', court_count: 0 }}
-                onToggle={toggleItem}
-              />
-            </>
-          )}
-        </div>
+      <div className="border rounded-lg p-4 bg-background">
+        <WizardNavigation
+          steps={navigationSteps}
+          onStepClick={handleStepClick}
+          onPrevious={handleNavigationPrevious}
+          onNext={handleNavigationNext}
+          isFirstStep={activeDisplayIdx === 0}
+          isLastStep={isLastStep}
+          nextLabel={isLastStep ? 'Advance to Financial Close' : undefined}
+        />
       </div>
-      {/* Advance to Financial Close */}
-      <div className="flex justify-end">
-        <button
-          onClick={() => setShowAdvanceDialog(true)}
-          disabled={!allItemsChecked || advancing}
-          title={!allItemsChecked ? 'Complete all deployment checklist items before advancing' : undefined}
-          className="px-4 py-2 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-        >
-          Advance to Financial Close →
-        </button>
+
+      <div className="border rounded-lg p-6 min-h-64">
+        {loading ? (
+          <p className="text-sm text-muted-foreground">Loading checklist...</p>
+        ) : !loading && items.length === 0 ? (
+          (() => {
+            const cfg = EMPTY_STATES.deploymentChecklistEmpty;
+            return <EmptyState icon={cfg.icon} heading={cfg.heading} description={cfg.description} />;
+          })()
+        ) : (
+          <>
+            <h2 className="text-base font-semibold mb-4">
+              Phase {selectedPhase}: {PHASE_NAMES[selectedPhase]}
+            </h2>
+
+            {/* Phase 4: VLAN Architecture Reference */}
+            {selectedPhase === 4 && project && (
+              <VlanReferencePanel tier={project.tier} />
+            )}
+
+            {/* Phase 5: ISP Router Configuration Method */}
+            {selectedPhase === 5 && project && (
+              <IspConfigMethodPanel
+                projectId={projectId}
+                method={project.isp_config_method}
+                venueCountry={project.venue_country}
+                onMethodChange={handleIspMethodChange}
+              />
+            )}
+
+            {/* Phase 9: Replay Service Version */}
+            {selectedPhase === 9 && project && (
+              <ReplayServiceVersionPanel
+                projectId={projectId}
+                version={project.replay_service_version}
+                onVersionChange={handleReplayVersionChange}
+              />
+            )}
+
+            {/* Phase 12: App Lock Warning Banner (above Step 108 / Flic button pairing) */}
+            {selectedPhase === 12 && <AppLockWarningBanner />}
+
+            <SmartChecklist
+              items={selectedItems}
+              project={project ?? { customer_name: '', court_count: 0 }}
+              onToggle={toggleItem}
+            />
+          </>
+        )}
       </div>
 
       {showAdvanceDialog && (() => {
