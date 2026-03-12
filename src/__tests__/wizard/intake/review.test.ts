@@ -207,3 +207,15 @@ test('clicking Financial Setup Edit calls onEdit(5)', () => {
   fireEvent.click(editButtons[5]);
   expect(onEdit).toHaveBeenCalledWith(5);
 });
+
+// 24. Review step shows all selected installers joined when multiple installer_ids provided
+test('renders multiple installer IDs joined when no installerName prop', () => {
+  render(
+    React.createElement(ReviewStep, {
+      installerSelection: { installer_ids: ['id-abc', 'id-def'] },
+      onEdit: vi.fn(),
+      onSubmit: vi.fn(),
+    })
+  );
+  expect(screen.getByText('id-abc, id-def')).toBeInTheDocument();
+});

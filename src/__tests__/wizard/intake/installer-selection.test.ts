@@ -1,5 +1,5 @@
-// Tests: InstallerSelectionStep — Supabase fetch, SearchableSelect options, loading/empty states,
-// installer_id form state, disabled Next until selected.
+// Tests: InstallerSelectionStep — Supabase fetch, MultiSelect options, loading/empty states,
+// installer_ids form state (array), chips display, chip removal, disabled Next until selected.
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
@@ -139,4 +139,73 @@ test('shows "No installers found" when query returns empty array', async () => {
     expect(screen.getByText(/No installers found/i)).toBeInTheDocument();
   });
   expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+});
+
+// 8. Selecting an installer shows it as a removable chip
+test('selected installer appears as a chip with remove button', async () => {
+  renderStep();
+  resolveLatest(INSTALLERS);
+  await waitFor(() => {
+    expect(screen.getByPlaceholderText(/Select an installer/i)).toBeInTheDocument();
+  });
+  const input = screen.getByPlaceholderText(/Select an installer/i);
+  fireEvent.focus(input);
+  fireEvent.mouseDown(screen.getByRole('option', { name: 'Alpha Install Co (Alpha Corp)' }));
+  expect(screen.getByRole('button', { name: /Remove Alpha Install Co/i })).toBeInTheDocument();
+});
+
+// 9. Multiple installers can be selected and all show as chips
+test('can select multiple installers and both appear as chips', async () => {
+  renderStep();
+  resolveLatest(INSTALLERS);
+  await waitFor(() => {
+    expect(screen.getByPlaceholderText(/Select an installer/i)).toBeInTheDocument();
+  });
+  // select first
+  const input = screen.getByPlaceholderText(/Select an installer/i);
+  fireEvent.focus(input);
+  fireEvent.mouseDown(screen.getByRole('option', { name: 'Alpha Install Co (Alpha Corp)' }));
+  // dropdown stays open — select second
+  fireEvent.mouseDown(screen.getByRole('option', { name: 'Beta Networks' }));
+  // both chips are present
+  expect(screen.getByRole('button', { name: /Remove Alpha Install Co/i })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /Remove Beta Networks/i })).toBeInTheDocument();
+});
+
+// 10. Removing a chip deselects that installer and disables Continue again
+test('removing a chip deselects the installer', async () => {
+  renderStep();
+  resolveLatest(INSTALLERS);
+  await waitFor(() => {
+    expect(screen.getByPlaceholderText(/Select an installer/i)).toBeInTheDocument();
+  });
+  const input = screen.getByPlaceholderText(/Select an installer/i);
+  fireEvent.focus(input);
+  fireEvent.mouseDown(screen.getByRole('option', { name: 'Alpha Install Co (Alpha Corp)' }));
+  // chip + enabled Continue
+  expect(screen.getByRole('button', { name: /Remove Alpha Install Co/i })).toBeInTheDocument();
+  // remove chip
+  fireEvent.click(screen.getByRole('button', { name: /Remove Alpha Install Co/i }));
+  // chip gone, Continue disabled
+  expect(screen.queryByRole('button', { name: /Remove Alpha Install Co/i })).not.toBeInTheDocument();
+  const continueBtn = screen.getByRole('button', { name: /continue/i }) as HTMLButtonElement;
+  expect(continueBtn.disabled).toBe(true);
+});
+
+// 11. Submitting with two installers calls onNext with array of two IDs
+test('submitting with two selected installers calls onNext with array of two IDs', async () => {
+  const onNext = vi.fn();
+  renderStep(onNext);
+  resolveLatest(INSTALLERS);
+  await waitFor(() => {
+    expect(screen.getByPlaceholderText(/Select an installer/i)).toBeInTheDocument();
+  });
+  const input = screen.getByPlaceholderText(/Select an installer/i);
+  fireEvent.focus(input);
+  fireEvent.mouseDown(screen.getByRole('option', { name: 'Alpha Install Co (Alpha Corp)' }));
+  fireEvent.mouseDown(screen.getByRole('option', { name: 'Beta Networks' }));
+  fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+  await waitFor(() => {
+    expect(onNext).toHaveBeenCalledWith({ installer_ids: ['inst-1', 'inst-2'] });
+  });
 });
