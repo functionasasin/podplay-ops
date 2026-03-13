@@ -69,7 +69,7 @@ export function OperationsGuide() {
       <section id="overview" className="space-y-4 scroll-mt-6">
         <h2 className="text-2xl font-semibold border-b pb-2">Overview</h2>
         <p>
-          PodPlay Ops is the end-to-end operations platform for deploying PodPlay badminton court
+          PodPlay Ops is the end-to-end operations platform for deploying PodPlay pickleball court
           systems across the Philippines. It manages the full lifecycle of every deployment project —
           from initial customer onboarding through hardware procurement, on-site installation, and
           final financial close.
@@ -185,7 +185,7 @@ export function OperationsGuide() {
             </p>
             <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 mt-1">
               <li>
-                <strong>Court Count</strong> — number of badminton courts in the facility
+                <strong>Court Count</strong> — number of pickleball courts in the facility
               </li>
               <li>
                 <strong>Front Desk</strong> — toggle whether the venue has a staffed front desk. If
