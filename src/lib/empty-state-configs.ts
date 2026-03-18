@@ -191,4 +191,18 @@ export const EMPTY_STATES = {
     // CTA action set at call site: opens Add Contact dialog
     cta: { label: 'Add Contact' },
   },
+
+  // Cost Analysis — per-project (no BOM items)
+  costAnalysisEmpty: {
+    icon: ClipboardList,
+    heading: 'No BOM items found',
+    description: 'Generate a BOM in the Procurement step first.',
+  },
+
+  // Cost Analysis — global dashboard (no projects with BOM data)
+  costAnalysisGlobalEmpty: {
+    icon: BarChart3,
+    heading: 'No projects with BOM data yet',
+    description: 'Add BOM items to a project to see cost analysis across projects.',
+  },
 } as const
