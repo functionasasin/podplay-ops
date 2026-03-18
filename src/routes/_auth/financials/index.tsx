@@ -4,6 +4,8 @@ import { Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { EMPTY_STATES } from '@/lib/empty-state-configs';
+import { CostAnalysisGlobal } from '@/components/financials/CostAnalysisGlobal';
+import { getSettings } from '@/services/settingsService';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -21,6 +23,7 @@ interface PipelineProject {
   customer_name: string;
   venue_name: string;
   tier: string;
+  court_count: number | null;
   project_status: string;
   revenue_stage: string;
   total_amount: number | null;
@@ -435,6 +438,8 @@ function FinancialsDashboardPage() {
   });
   const [herSnapshots, setHerSnapshots] = useState<HerSnapshot[]>([]);
   const [recurringFees, setRecurringFees] = useState<RecurringFeeRow[]>([]);
+  const [costBomItems, setCostBomItems] = useState<Array<{ project_id: string; quantity: number; unit_cost_override: number | null; hardware_catalog: { unit_cost: number | null } | null }>>([]);
+  const [costRates, setCostRates] = useState<{ tax: number; shipping: number; margin: number }>({ tax: 0, shipping: 0, margin: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -444,12 +449,12 @@ function FinancialsDashboardPage() {
       setError(null);
       try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const [projRes, invRes, expRes, bomRes, herRes, feesRes] = await Promise.all([
+        const [projRes, invRes, expRes, bomRes, herRes, feesRes, settingsData, costBomRes] = await Promise.all([
           // Projects with revenue_stage for funnel
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (supabase as any)
             .from('projects')
-            .select('id, customer_name, venue_name, tier, project_status, revenue_stage')
+            .select('id, customer_name, venue_name, tier, project_status, revenue_stage, court_count')
             .neq('project_status', 'cancelled')
             .order('created_at', { ascending: false }),
 
@@ -485,6 +490,15 @@ function FinancialsDashboardPage() {
             .from('recurring_fees')
             .select('id, amount, frequency, projects!project_id(project_name)')
             .eq('is_active', true),
+
+          // Settings for cost chain rates
+          getSettings(),
+
+          // BOM items with catalog unit_cost for cost analysis
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (supabase as any)
+            .from('project_bom_items')
+            .select('project_id, quantity, unit_cost_override, hardware_catalog!catalog_item_id(unit_cost)'),
         ]);
 
         if (projRes.error) throw new Error(projRes.error.message);
@@ -494,7 +508,7 @@ function FinancialsDashboardPage() {
         // monthly_opex_snapshots may not exist yet — treat as empty
 
         // Build pipeline projects: attach aggregate invoice amount per project
-        const rawProjects: Array<{ id: string; customer_name: string; venue_name: string; tier: string; project_status: string; revenue_stage: string }> = projRes.data ?? [];
+        const rawProjects: Array<{ id: string; customer_name: string; venue_name: string; tier: string; court_count: number | null; project_status: string; revenue_stage: string }> = projRes.data ?? [];
         // For total_amount in funnel we use a rough sum — just show project count per stage here
         const pipelineProjects: PipelineProject[] = rawProjects.map((p) => ({
           ...p,
@@ -516,6 +530,12 @@ function FinancialsDashboardPage() {
         setPnl({ totalRevenue, totalCogs, totalExpenses, grossProfit, grossMarginPct });
         setHerSnapshots(herRes.error ? [] : (herRes.data ?? []));
         setRecurringFees(feesRes.error ? [] : (feesRes.data ?? []));
+        setCostRates({
+          tax: settingsData.sales_tax_rate,
+          shipping: settingsData.shipping_rate,
+          margin: settingsData.target_margin,
+        });
+        setCostBomItems(costBomRes.error ? [] : (costBomRes.data ?? []));
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
@@ -552,6 +572,19 @@ function FinancialsDashboardPage() {
 
       <RevenueFunnel projects={projects} />
       <PnlOverview pnl={pnl} />
+      <CostAnalysisGlobal
+        projects={projects.map((p) => ({
+          id: p.id,
+          customer_name: p.customer_name,
+          venue_name: p.venue_name,
+          tier: p.tier,
+          court_count: p.court_count,
+        }))}
+        bomItems={costBomItems}
+        taxRate={costRates.tax}
+        shippingRate={costRates.shipping}
+        marginTarget={costRates.margin}
+      />
       <HerChart snapshots={herSnapshots} />
       <RecurringFeesSummary fees={recurringFees} />
     </div>
