@@ -165,8 +165,8 @@
 
   /* Print margins */
   @page {
-    margin: 1.5cm 2cm;
-    size: A4;
+    margin: 0.5in;
+    size: A4 landscape;
   }
 
   /* Section page breaks */
@@ -201,5 +201,28 @@
   /* Hide print button itself */
   .guide-print-button {
     display: none !important;
+  }
+
+  /* Scale wide tables to fit page width */
+  table {
+    font-size: 10px !important;
+  }
+
+  /* Prevent scroll containers from clipping printed content */
+  [style*="overflow"],
+  .overflow-x-auto,
+  .overflow-y-auto:not(.flex-1) {
+    overflow: visible !important;
+  }
+
+  /* Hide all action buttons during print */
+  button:not([data-print-visible]) {
+    display: none !important;
+  }
+
+  /* Preserve background colors */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 }

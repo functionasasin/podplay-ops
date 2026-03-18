@@ -18,7 +18,7 @@ export function PdfExportButton({
       variant="outline"
       size="sm"
       onClick={() => window.print()}
-      className={cn('gap-1.5', className)}
+      className={cn('gap-1.5 guide-print-button', className)}
     >
       <Printer className="size-3.5" />
       {label}
