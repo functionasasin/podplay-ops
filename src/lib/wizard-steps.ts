@@ -46,6 +46,7 @@ export const WIZARD_STEPS: Record<WizardType, WizardStepDef[]> = {
   financials: [
     { label: 'Invoicing' },
     { label: 'Expenses' },
+    { label: 'Cost Analysis' },
     { label: 'P&L Summary' },
     { label: 'Go-Live' },
     { label: 'Recurring Fees' },
