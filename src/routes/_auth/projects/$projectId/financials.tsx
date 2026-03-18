@@ -7,12 +7,16 @@ import { ExpenseTracker } from '@/components/wizard/financials/ExpenseTracker';
 import { PnlSummary } from '@/components/wizard/financials/PnlSummary';
 import { GoLive } from '@/components/wizard/financials/GoLive';
 import { RecurringFeesTab } from '@/components/wizard/financials/RecurringFeesTab';
+import { CostAnalysis } from '@/components/wizard/financials/CostAnalysis';
 import { WizardNavigation } from '@/components/wizard/WizardNavigation';
 import { WIZARD_STEPS } from '@/lib/wizard-steps';
 
 function FinancialsPage() {
   const { projectId } = Route.useParams();
-  const [activeTabIdx, setActiveTabIdx] = useState(0);
+  // Read ?tab search param for deep-linking from global financials
+  const searchParams = new URLSearchParams(window.location.search);
+  const initialTab = Number(searchParams.get('tab') ?? '0');
+  const [activeTabIdx, setActiveTabIdx] = useState(initialTab);
   const [project, setProject] = useState<{ project_name: string; customer_name: string } | null>(
     null,
   );
@@ -84,15 +88,18 @@ function FinancialsPage() {
           <ExpenseTracker projectId={projectId} />
         )}
         {activeTabIdx === 2 && (
-          <PnlSummary projectId={projectId} />
+          <CostAnalysis projectId={projectId} />
         )}
         {activeTabIdx === 3 && (
+          <PnlSummary projectId={projectId} />
+        )}
+        {activeTabIdx === 4 && (
           <div>
             <h2 className="text-base font-medium mb-4">Go-Live</h2>
             <GoLive projectId={projectId} />
           </div>
         )}
-        {activeTabIdx === 4 && <RecurringFeesTab projectId={projectId} />}
+        {activeTabIdx === 5 && <RecurringFeesTab projectId={projectId} />}
       </div>
     </div>
   );
