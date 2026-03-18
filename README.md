@@ -1,73 +1,56 @@
-# React + TypeScript + Vite
+# PodPlay Ops
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Internal operations dashboard for managing PodPlay venue installations end-to-end — from customer intake through procurement, deployment, and financial close.
 
-Currently, two official plugins are available:
+## What it does
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+PodPlay Ops tracks every installation project through a multi-stage wizard workflow:
 
-## React Compiler
+- **Intake** — Customer info, venue config, service tier, ISP, installer selection
+- **Procurement** — BOM generation, inventory check, purchase orders, packing lists
+- **Deployment** — 16-phase checklist covering network rack, cameras, replay service, Apple devices, and physical install
+- **Financials** — Invoicing, expenses, cost analysis, P&L, go-live, recurring fees
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Plus cross-project dashboards for inventory management, revenue pipeline, cost analysis, and HER (Hardware Efficiency Ratio) tracking.
 
-## Expanding the ESLint configuration
+## Tech stack
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, shadcn/ui
+- **Routing:** TanStack Router (file-based)
+- **Backend:** Supabase (Postgres + Auth + RLS)
+- **Hosting:** Fly.io (Docker + Nginx)
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Development
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Requires a Supabase project. Set these env vars (or use `.env.local`):
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
+```
+
+### Local Supabase
+
+```bash
+npx supabase start
+npx supabase db reset   # runs all migrations + seeds
+```
+
+### Tests
+
+```bash
+npm test
+```
+
+## Deploy
+
+```bash
+fly deploy
+```
+
+Build args for Supabase credentials are configured in `fly.toml`.
