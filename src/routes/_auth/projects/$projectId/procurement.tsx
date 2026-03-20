@@ -17,9 +17,14 @@ function ProcurementPage() {
   const { projectId } = Route.useParams();
   const navigate = useNavigate();
   const [activeTabIdx, setActiveTabIdx] = useState(0);
-  const [project, setProject] = useState<{ project_name: string; customer_name: string; tier: string } | null>(
-    null,
-  );
+  const [project, setProject] = useState<{
+    project_name: string;
+    customer_name: string;
+    tier: string;
+    court_count: number | null;
+    security_camera_count: number | null;
+    door_count: number | null;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [showAdvanceDialog, setShowAdvanceDialog] = useState(false);
 
@@ -27,7 +32,7 @@ function ProcurementPage() {
     async function loadProject() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data } = await (supabase.from('projects') as any)
-        .select('project_name, customer_name, tier')
+        .select('project_name, customer_name, tier, court_count, security_camera_count, door_count')
         .eq('id', projectId)
         .single();
       setProject(data);
@@ -86,7 +91,13 @@ function ProcurementPage() {
         {activeTabIdx === 0 && (
           <div>
             <h2 className="text-base font-medium mb-4">BOM Review</h2>
-            <BomReviewTable projectId={projectId} />
+            <BomReviewTable
+                projectId={projectId}
+                tier={(project?.tier ?? 'pro') as import('@/lib/types').ServiceTier}
+                courtCount={project?.court_count ?? 0}
+                securityCameraCount={project?.security_camera_count ?? 0}
+                doorCount={project?.door_count ?? 0}
+              />
           </div>
         )}
         {activeTabIdx === 1 && (

@@ -5,6 +5,8 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { EMPTY_STATES } from '@/lib/empty-state-configs';
 import { SearchableSelect } from '@/components/ui/SearchableSelect';
 import { PdfExportButton } from '@/components/ui/PdfExportButton';
+import { ExportPortTemplateButton } from '@/components/wizard/procurement/ExportPortTemplateButton';
+import type { ServiceTier } from '@/lib/types';
 
 interface CatalogItem {
   id: string;
@@ -26,9 +28,13 @@ interface RowState {
 
 interface BomReviewTableProps {
   projectId: string;
+  tier: ServiceTier;
+  courtCount: number;
+  securityCameraCount: number;
+  doorCount: number;
 }
 
-export function BomReviewTable({ projectId }: BomReviewTableProps) {
+export function BomReviewTable({ projectId, tier, courtCount, securityCameraCount, doorCount }: BomReviewTableProps) {
   const [rows, setRows] = useState<RowState[]>([]);
   const [loading, setLoading] = useState(true);
   const [catalog, setCatalog] = useState<CatalogItem[]>([]);
@@ -150,7 +156,15 @@ export function BomReviewTable({ projectId }: BomReviewTableProps) {
     <div>
       <div className="flex items-center justify-between mb-3">
         <div />
-        <PdfExportButton label="Export BOM as PDF" />
+        <div className="flex gap-2">
+          <ExportPortTemplateButton
+            tier={tier}
+            courts={courtCount}
+            cams={securityCameraCount}
+            doors={doorCount}
+          />
+          <PdfExportButton label="Export BOM as PDF" />
+        </div>
       </div>
       {/* Table view — sm and above */}
       <div className="overflow-x-auto hidden sm:block">
