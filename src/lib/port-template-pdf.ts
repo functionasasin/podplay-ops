@@ -61,7 +61,7 @@ function setTextCol(doc: jsPDF, hex: string) {
  */
 function rowWidth(ports: (number | null)[]): number {
   if (ports.length === 0) return 0;
-  const baseW = ports.reduce((sum, p) => sum + (p === null ? NULL_W : BOX_W), 0);
+  const baseW = ports.reduce<number>((sum, p) => sum + (p === null ? NULL_W : BOX_W), 0);
   const gaps   = (ports.length - 1) * GAP;
   return baseW + gaps;
 }
